@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
 import type { AsyncRemoteCallback } from 'drizzle-orm/sqlite-proxy';
-import * as schema from './schema';
+// import * as schema from './schema';
 // import { dev, building } from '$app/environment';
 // import { getRequestEvent } from '$app/server';
 import { d1HttpDriver } from '../../drizzle-d1-http';
@@ -20,6 +20,6 @@ d1Driver = async (sql: string, params: unknown[], method: "all" | "run" | "get" 
 //     d1Driver = requestEvent.platform?.env.DB
 // }
 
-export const db = drizzle(d1Driver, { schema });
+export const db = drizzle(d1Driver);
 
 export type DrizzleClient = typeof db;
