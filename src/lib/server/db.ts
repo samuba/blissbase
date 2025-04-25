@@ -3,27 +3,18 @@ import type { AsyncRemoteCallback } from 'drizzle-orm/sqlite-proxy';
 import * as schema from './schema';
 import { dev, building } from '$app/environment';
 import { getRequestEvent } from '$app/server';
+import { d1HttpDriver } from '../../drizzle-d1-http';
 
 let d1Driver: AsyncRemoteCallback;
 
-let d1HttpDriverInstance: typeof import('../../drizzle-d1-http').d1HttpDriver | undefined;
 
 if (dev || building) {
-    if (!d1HttpDriverInstance) {
-        d1HttpDriverInstance = (await import('../../drizzle-d1-http')).d1HttpDriver
-    }
-
-    const driver = d1HttpDriverInstance;
-    if (!driver) {
-        throw new Error('Failed to load d1HttpDriver');
-    }
-
     d1Driver = async (sql: string, params: unknown[], method: "all" | "run" | "get" | "values") => {
         if (method === "values") {
-            const result = await driver(sql, params, "all");
+            const result = await d1HttpDriver(sql, params, "all");
             return result;
         }
-        return driver(sql, params, method);
+        return d1HttpDriver(sql, params, method);
     };
 } else {
     const requestEvent = getRequestEvent();
