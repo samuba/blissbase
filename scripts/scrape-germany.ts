@@ -1,6 +1,6 @@
 /**
  * Main script to orchestrate scraping from multiple sources (Awara, Tribehaus, Heilnetz)
- * and store the results in a local SQLite database using Drizzle ORM.
+ * and store the results in a postgres database using Drizzle ORM.
  *
  * Requires Bun, for network requests and file system operations.
  * Usage: bun run scripts/scrape-germany.ts
@@ -13,7 +13,6 @@ import { scrapeAwaraEvents } from './scrape-awara.ts';
 import { scrapeTribehausEvents } from './scrape-tribehaus.ts';
 import { scrapeHeilnetzEvents } from './scrape-heilnetz.ts';
 import { db } from "../src/lib/server/db.ts";
-const DB_FILE = './scraped-events.db';
 
 // Map argument names (lowercase) to the expected host names used in the DB
 const SOURCE_HOST_MAP: Record<string, string> = {
@@ -87,24 +86,17 @@ if (allEvents.length === 0) {
 }
 
 // --- Connect to Database and Insert Data ---
-console.log(`Connecting to database: ${DB_FILE}`);
+console.log('Connecting to PostgreSQL database...');
 
-// Simple migration (ensures table exists)
-// For more complex scenarios, use drizzle-kit generate/push
+// Simple migration check
 console.log('Ensuring database table exists...');
-// NOTE: Drizzle migrator for libsql currently expects migrations in a specific folder structure.
-// For simplicity here, we'll just ensure the table exists via a basic query if needed,
-// or rely on the user running drizzle-kit push manually.
-// A more robust approach would be to generate migration files.
 try {
     // This is a simple check; ideally, use drizzle-kit push/generate
     await db.select({ id: schema.events.id }).from(schema.events).limit(1);
     console.log("Table 'events' seems to exist.");
 } catch (e) {
     console.error("Failed to check table existence or table doesn't exist.", e);
-    console.error("Please ensure the database schema is created. You might need to run 'npx drizzle-kit push:sqlite' or similar.");
-    // Alternatively, you could try creating the table directly here if it doesn't exist,
-    // but using drizzle-kit is the recommended approach.
+    console.error("Please ensure the database schema is created. You might need to run 'npx drizzle-kit push:postgres'.");
     process.exit(0); // Stop if we can't confirm table existence
 }
 
@@ -113,9 +105,7 @@ if (targetHostName) {
     console.log(`Clearing existing events from source '${targetHostName}'...`);
     try {
         await db.delete(schema.events).where(eq(schema.events.host, targetHostName));
-        // Note: deleteResult might not be informative depending on the driver, log count instead
         console.log(` -> Existing events for host '${targetHostName}' cleared (if any existed).`);
-        // It's hard to know exactly how many were deleted without a count return, which isn't standard.
     } catch (error) {
         console.error(`Error clearing existing events for source '${targetHostName}':`, error);
         process.exit(0);
@@ -138,8 +128,8 @@ console.log(`Inserting/Updating ${allEvents.length} events into the database...`
 // Prepare data for insertion, mapping ScrapedEvent to the schema format
 const eventsToInsert = allEvents.map(event => ({
     name: event.name,
-    startAt: event.startAt,
-    endAt: event.endAt,
+    startAt: event.startAt ? new Date(event.startAt) : null,
+    endAt: event.endAt ? new Date(event.endAt) : null,
     address: event.address,
     price: event.price,
     description: event.description,
