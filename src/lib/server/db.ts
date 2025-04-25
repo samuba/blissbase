@@ -6,6 +6,7 @@ import { getRequestEvent } from '$app/server';
 // import { d1HttpDriver } from '../../drizzle-d1-http';
 
 let d1Driver: AsyncRemoteCallback;
+dev && building;
 
 // if (dev || building) {
 // import("dotenv/config");
