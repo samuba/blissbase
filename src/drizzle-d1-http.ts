@@ -1,6 +1,5 @@
 // from https://gist.github.com/flopex/8ba626b2dc650947882d3f45769c4702
 
-import ky from 'ky';
 import "dotenv/config";
 import type { AsyncBatchRemoteCallback } from 'drizzle-orm/sqlite-proxy';
 
@@ -12,60 +11,60 @@ if (!CLOUDFLARE_D1_TOKEN || !CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_DATABASE_ID) {
 
 const D1_API_BASE_URL = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${CLOUDFLARE_DATABASE_ID}`
 
-const d1HttpClient = ky.create({
-    prefixUrl: D1_API_BASE_URL,
-    headers: {
-        Authorization: `Bearer ${CLOUDFLARE_D1_TOKEN}`,
-    },
-});
-
 export type AsyncRemoteCallback = (
     sql: string,
     params: unknown[],
     method: 'all' | 'run' | 'get' | 'values'
-) => Promise<{ rows: any }>;
+) => Promise<{ rows: unknown[] }>;
 
 export const d1HttpDriver = async (
     sql: string,
     params: unknown[],
     method: 'all' | 'run' | 'get'
 ) => {
-    const res = await d1HttpClient.post('query', {
-        json: { sql, params, method },
+    const res = await fetch(`${D1_API_BASE_URL}/query`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${CLOUDFLARE_D1_TOKEN}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sql, params, method }),
     });
 
-    const data = (await res.json()) as Record<string, any>;
+    const data = (await res.json()) as Record<string, unknown>;
 
-    if (data.errors.length > 0 || !data.success) {
+    if (Array.isArray(data.errors) && data.errors.length > 0 || data.success === false) {
         throw new Error(
             `Error from sqlite proxy server: \n${JSON.stringify(data)}}`
         );
     }
 
-    const qResult = data.result[0];
+    const qResult = (data.result as unknown[])[0] as Record<string, unknown>;
 
-    if (!qResult.success) {
+    if (qResult.success === false) {
         throw new Error(
             `Error from sqlite proxy server: \n${JSON.stringify(data)}`
         );
     }
 
     // https://orm.drizzle.team/docs/get-started-sqlite#http-proxy
-    return { rows: qResult.results.map((r: any) => Object.values(r)) };
+    return { rows: (qResult.results as Record<string, unknown>[]).map((r) => Object.values(r)) };
 };
 
 export const d1HttpBatchDriver: AsyncBatchRemoteCallback = async (
     queries: {
         sql: string;
         params: unknown[];
-        method: 'all' | 'run' | 'get'
+        method: 'all' | 'run' | 'get' | 'values';
     }[]
 ): Promise<{ rows: unknown[] }[]> => {
     const results = [];
 
     for (const query of queries) {
         const { sql, params, method } = query;
-        const result = await d1HttpDriver(sql, params, method);
+        // Cast method to compatible type for d1HttpDriver
+        const compatMethod = method === 'values' ? 'all' : method;
+        const result = await d1HttpDriver(sql, params, compatMethod);
         results.push(result);
     }
 
