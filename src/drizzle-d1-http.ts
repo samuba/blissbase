@@ -1,6 +1,5 @@
 // from https://gist.github.com/flopex/8ba626b2dc650947882d3f45769c4702
 
-import "dotenv/config";
 import type { AsyncBatchRemoteCallback } from 'drizzle-orm/sqlite-proxy';
 
 const { CLOUDFLARE_D1_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_DATABASE_ID } = process.env;
