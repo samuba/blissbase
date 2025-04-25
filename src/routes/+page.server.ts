@@ -1,4 +1,4 @@
-// import { db } from '../lib/server/db';
+import { db } from '../lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
 import { asc, count, gte, or, and, lt, isNotNull, isNull } from 'drizzle-orm';
