@@ -1,9 +1,0 @@
-name = "blissbase"
-account_id = "b8aa00ac100c685ec864d69825dcc8cc"
-compatibility_date = "2025-04-25"
-compatibility_flags = ["nodejs_compat"]
-
-[assets]
-directory = ".svelte-kit/cloudflare"
-
-
