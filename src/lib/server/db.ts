@@ -19,7 +19,7 @@ if (dev || building) {
         return { rows: [] };
     }
 } else {
-    const requestEvent = getRequestEvent();
+    // const requestEvent = getRequestEvent();
     // d1Driver = requestEvent.platform?.env.DB
     d1Driver = async () => {
         return { rows: [] };
