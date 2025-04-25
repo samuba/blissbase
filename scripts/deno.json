@@ -6,6 +6,8 @@
 		"cheerio": "npm:cheerio",
 		"drizzle-orm": "npm:drizzle-orm",
 		"@libsql/client": "npm:@libsql/client",
-		"@libsql/client/node": "npm:@libsql/client/node"
+		"@libsql/client/node": "npm:@libsql/client/node",
+		"ky": "npm:ky",
+		"dotenv": "npm:dotenv"
 	}
 }

@@ -6,17 +6,18 @@
  * Usage: deno run --allow-net --allow-read --allow-write scripts/scrape-germany.ts
  */
 
-import { drizzle } from 'drizzle-orm/libsql';
+
 import { sql, eq } from 'drizzle-orm'; // Import sql and eq from drizzle-orm directly
 import { createClient } from '@libsql/client/node'; // Use standard client for Deno
 // import { migrate } from "drizzle-orm/libsql/migrator"; // Removed unused import
-
+import { drizzle } from 'drizzle-orm/sqlite-proxy';
+import type { AsyncRemoteCallback } from 'drizzle-orm/sqlite-proxy';
 import { ScrapedEvent } from '../src/types.ts';
-import * as schema from '../src/schema.ts';
+import * as schema from '../src/lib/server/schema.ts';
 import { scrapeAwaraEvents } from './scrape-awara.ts';
 import { scrapeTribehausEvents } from './scrape-tribehaus.ts';
 import { scrapeHeilnetzEvents } from './scrape-heilnetz.ts';
-
+import { d1HttpDriver } from '../src/drizzle-d1-http.ts';
 const DB_FILE = './scraped-events.db';
 
 // Map argument names (lowercase) to the expected host names used in the DB
@@ -93,8 +94,17 @@ async function main() {
 
     // --- Connect to Database and Insert Data ---
     console.log(`Connecting to database: ${DB_FILE}`);
+
+    const wrappedDriver: AsyncRemoteCallback = async (sql: string, params: unknown[], method: "all" | "run" | "get" | "values") => {
+        if (method === "values") {
+            const result = await d1HttpDriver(sql, params, "all");
+            return result;
+        }
+        return d1HttpDriver(sql, params, method);
+    };
+
     const client = createClient({ url: `file:${DB_FILE}` });
-    const db = drizzle(client, { schema });
+    const db = drizzle(wrappedDriver, { schema });
 
     // Simple migration (ensures table exists)
     // For more complex scenarios, use drizzle-kit generate/push
@@ -163,35 +173,53 @@ async function main() {
         // scrapedAt is handled by default value in schema
     }));
 
-    try {
-        // Use insert with onConflictDoUpdate to handle potential duplicate permalinks
-        const result = await db.insert(schema.events)
-            .values(eventsToInsert)
-            .onConflictDoUpdate({
-                target: schema.events.permalink, // Conflict target
-                set: { // Update all fields except permalink and scrapedAt
-                    name: sql`excluded.name`,
-                    startAt: sql`excluded.start_at`,
-                    endAt: sql`excluded.end_at`,
-                    address: sql`excluded.address`,
-                    price: sql`excluded.price`,
-                    description: sql`excluded.description`,
-                    imageUrls: sql`excluded.image_urls`,
-                    host: sql`excluded.host`,
-                    hostLink: sql`excluded.host_link`,
-                    latitude: sql`excluded.latitude`,
-                    longitude: sql`excluded.longitude`,
-                    tags: sql`excluded.tags`,
-                    // Update scrapedAt timestamp on update as well
-                    scrapedAt: sql`CURRENT_TIMESTAMP`,
-                }
-            })
-            .returning({ insertedId: schema.events.id }); // Return IDs of inserted/updated rows
+    Deno.writeTextFileSync('events.json', JSON.stringify(eventsToInsert, null, 2));
 
-        console.log(` -> Successfully inserted/updated ${result.length} events.`);
+    try {
+        let successCount = 0;
+
+        // Insert events one by one instead of in bulk
+        for (const event of eventsToInsert) {
+            try {
+                // Use insert with onConflictDoUpdate to handle potential duplicate permalinks
+                await db.insert(schema.events)
+                    .values(event)
+                    .onConflictDoUpdate({
+                        target: schema.events.permalink, // Conflict target
+                        set: { // Update all fields except permalink and scrapedAt
+                            name: sql`excluded.name`,
+                            startAt: sql`excluded.start_at`,
+                            endAt: sql`excluded.end_at`,
+                            address: sql`excluded.address`,
+                            price: sql`excluded.price`,
+                            description: sql`excluded.description`,
+                            imageUrls: sql`excluded.image_urls`,
+                            host: sql`excluded.host`,
+                            hostLink: sql`excluded.host_link`,
+                            latitude: sql`excluded.latitude`,
+                            longitude: sql`excluded.longitude`,
+                            tags: sql`excluded.tags`,
+                            // Update scrapedAt timestamp on update as well
+                            scrapedAt: sql`CURRENT_TIMESTAMP`,
+                        }
+                    })
+                    .returning({ insertedId: schema.events.id });
+
+                successCount++;
+
+                // Log progress every 10 events
+                if (successCount % 10 === 0) {
+                    console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);
+                }
+            } catch (error) {
+                console.error(`Error inserting event "${event.name}":`, error);
+            }
+        }
+
+        console.log(` -> Successfully inserted/updated ${successCount} out of ${eventsToInsert.length} events.`);
 
     } catch (error) {
-        console.error('Error inserting events into database:', error);
+        console.error('Error in event insertion process:', error);
     } finally {
         client.close();
         console.log('Database connection closed.');

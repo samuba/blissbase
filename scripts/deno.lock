@@ -3,7 +3,9 @@
   "specifiers": {
     "npm:@libsql/client@*": "0.15.2",
     "npm:cheerio@*": "1.0.0",
-    "npm:drizzle-orm@*": "0.41.0_@libsql+client@0.15.2"
+    "npm:dotenv@*": "16.5.0",
+    "npm:drizzle-orm@*": "0.41.0_@libsql+client@0.15.2",
+    "npm:ky@*": "1.8.1"
   },
   "npm": {
     "@libsql/client@0.15.2": {
@@ -151,6 +153,9 @@
         "domhandler"
       ]
     },
+    "dotenv@16.5.0": {
+      "integrity": "sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg=="
+    },
     "drizzle-orm@0.41.0_@libsql+client@0.15.2": {
       "integrity": "sha512-7A4ZxhHk9gdlXmTdPj/lREtP+3u8KvZ4yEN6MYVxBzZGex5Wtdc+CWSbu7btgF6TB0N+MNPrvW7RKBbxJchs/Q==",
       "dependencies": [
@@ -197,6 +202,9 @@
     },
     "js-base64@3.7.7": {
       "integrity": "sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw=="
+    },
+    "ky@1.8.1": {
+      "integrity": "sha512-7Bp3TpsE+L+TARSnnDpk3xg8Idi8RwSLdj6CMbNWoOARIrGrbuLGusV0dYwbZOm4bB3jHNxSw8Wk/ByDqJEnDw=="
     },
     "libsql@0.5.4": {
       "integrity": "sha512-GEFeWca4SDAQFxjHWJBE6GK52LEtSskiujbG3rqmmeTO9t4sfSBKIURNLLpKDDF7fb7jmTuuRkDAn9BZGITQNw==",
@@ -344,7 +352,9 @@
     "dependencies": [
       "npm:@libsql/client@*",
       "npm:cheerio@*",
-      "npm:drizzle-orm@*"
+      "npm:dotenv@*",
+      "npm:drizzle-orm@*",
+      "npm:ky@*"
     ]
   }
 }
