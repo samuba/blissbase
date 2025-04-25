@@ -3,9 +3,8 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		interface Locals {
-			db: DrizzleClient;
-		}
+		// interface Locals {
+		// }
 		// interface PageData {}
 		// interface PageState {}
 		interface Platform {

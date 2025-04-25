@@ -318,6 +318,6 @@ if (import.meta.main) {
         })
         .catch(error => {
             console.error("Scraping failed:", error);
-            Deno.exit(1);
+            process.exit(1);
         });
 }

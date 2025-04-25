@@ -6,8 +6,7 @@
  * Usage: deno run --allow-net scripts/scrape-awara.ts > events.json
  */
 import { ScrapedEvent } from "../src/types.ts"; // Import shared interface
-import * as cheerio from 'https://esm.sh/cheerio@1.0.0-rc.12';
-import { delay } from "https://deno.land/std@0.208.0/async/delay.ts";
+import * as cheerio from 'cheerio';
 
 const BASE_URL = "https://www.awara.events";
 const START_PATH = "/veranstaltungen/";
@@ -24,7 +23,7 @@ async function fetchPage(url: string): Promise<string | null> {
                 'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)' // Identify bot
             }
         });
-        await delay(REQUEST_DELAY_MS / 2); // Small delay even after response starts
+        await Bun.sleep(REQUEST_DELAY_MS / 2); // Small delay even after response starts
 
         if (!response.ok) {
             console.error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
@@ -826,6 +825,6 @@ if (import.meta.main) {
         })
         .catch(error => {
             console.error("Unhandled error in main execution:", error);
-            Deno.exit(1); // Exit with error code
+            process.exit(1);
         });
 }

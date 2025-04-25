@@ -306,7 +306,7 @@ export async function scrapeHeilnetzEvents(): Promise<ScrapedEvent[]> {
         // Explicitly handle error type
         const message = error instanceof Error ? error.message : String(error);
         console.error(`Failed to fetch initial page ${startUrl}:`, message);
-        Deno.exit(1);
+        process.exit(1);
     }
 
     // Determine total number of pages
@@ -416,6 +416,16 @@ function processPage($: cheerio.CheerioAPI, allEvents: ScrapedEvent[]) {
 
         // Only push if essential data is present (e.g., name and startAt)
         if (eventData.name && eventData.startAt) {
+            // Check if an event with the same permalink already exists
+            const existingEventIndex = allEvents.findIndex(event => event.permalink === eventData.permalink);
+
+            if (existingEventIndex !== -1 && eventData.permalink) {
+                // Extract the date part from startAt (YYYY-MM-DD)
+                const datePart = eventData.startAt.substring(0, 10);
+                // Append the date to the permalink with a #
+                eventData.permalink = `${eventData.permalink}#${datePart}`;
+            }
+
             allEvents.push(eventData);
         } else {
             console.warn('Skipping event due to missing name or start date', { name: eventData.name, start: eventData.startAt, permalink: eventData.permalink });
@@ -434,6 +444,6 @@ if (import.meta.main) {
             // Explicitly handle error type
             const message = error instanceof Error ? error.message : String(error);
             console.error("Script execution failed:", message);
-            Deno.exit(1);
+            process.exit(1);
         });
 }

@@ -1,25 +1,21 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { pgTable, text, integer, real, timestamp } from 'drizzle-orm/pg-core';
 
-/**
- * Drizzle schema for storing scraped events in SQLite.
- */
-export const events = sqliteTable('events', {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    name: text('name').notNull(),
-    startAt: text('start_at').notNull(), // ISO 8601 string
-    endAt: text('end_at'), // ISO 8601 string, nullable
-    address: text('address', { mode: 'json' }).$type<string[]>(), // Store address lines as JSON array
-    price: text('price'), // Nullable string
-    description: text('description'), // Nullable string (can be long)
-    imageUrls: text('image_urls', { mode: 'json' }).$type<string[]>(), // Store image URLs as JSON array
-    host: text('host'), // Nullable string
-    hostLink: text('host_link'), // Nullable string
-    permalink: text('permalink').notNull().unique(), // Unique identifier for the event
-    latitude: real('latitude'), // Nullable float
-    longitude: real('longitude'), // Nullable float
-    tags: text('tags', { mode: 'json' }).$type<string[]>(), // Store tags as JSON array
-    scrapedAt: text('scraped_at').notNull().default(sql`(CURRENT_TIMESTAMP)`),
+export const events = pgTable('events', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    name: text().notNull(),
+    startAt: timestamp().notNull(),
+    endAt: timestamp(),
+    address: text().notNull().array(),
+    price: text(),
+    description: text(),
+    imageUrls: text().notNull().array(),
+    host: text(),
+    hostLink: text(),
+    permalink: text().notNull().unique(),
+    latitude: real(),
+    longitude: real(),
+    tags: text().array(),
+    scrapedAt: timestamp().notNull().defaultNow(),
 });
 
 export type InsertEvent = typeof events.$inferInsert;
