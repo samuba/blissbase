@@ -7,7 +7,6 @@ import { d1HttpDriver } from '../../drizzle-d1-http';
 
 let d1Driver: AsyncRemoteCallback;
 
-
 if (dev || building) {
     d1Driver = async (sql: string, params: unknown[], method: "all" | "run" | "get" | "values") => {
         if (method === "values") {
