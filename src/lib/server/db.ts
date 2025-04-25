@@ -20,7 +20,10 @@ if (dev || building) {
     }
 } else {
     const requestEvent = getRequestEvent();
-    d1Driver = requestEvent.platform?.env.DB
+    // d1Driver = requestEvent.platform?.env.DB
+    d1Driver = async () => {
+        return { rows: [] };
+    }
 }
 
 export const db = drizzle(d1Driver, { schema });
