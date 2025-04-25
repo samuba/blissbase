@@ -24,9 +24,6 @@ if (dev) {
     d1Driver = requestEvent.platform?.env.DB
 }
 
-const db = drizzle(d1Driver, { schema });
-
-
-export default db;
+export const db = drizzle(d1Driver, { schema });
 
 export type DrizzleClient = typeof db;
