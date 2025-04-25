@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
 import type { AsyncRemoteCallback } from 'drizzle-orm/sqlite-proxy';
 import * as schema from './schema';
-// import { dev, building } from '$app/environment';
+import { dev, building } from '$app/environment';
 // import { getRequestEvent } from '$app/server';
 // import { d1HttpDriver } from '../../drizzle-d1-http';
 
