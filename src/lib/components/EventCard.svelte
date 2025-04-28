@@ -82,13 +82,11 @@
 				{formatTimeStr(event.startAt, event.endAt)}
 			</time>
 
-			{#if event.address.length}
+			{#if event.address?.length}
 				<div class="text-muted-foreground flex items-center gap-1 text-sm">
 					<MapPin class="mr-1.5 size-4 min-w-4" />
 					<span class="leading-tight">
-						{#each event.address as line}
-							{line}
-						{/each}
+						{event.address.join(' · ')}
 					</span>
 				</div>
 			{/if}

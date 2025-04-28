@@ -52,13 +52,13 @@
 						{#each segments as { part, value }}
 							<div class="inline-block select-none">
 								{#if part === 'literal'}
-									<DateRangePicker.Segment {part} class="text-base-content/70 p-0.5">
+									<DateRangePicker.Segment {part} class="text-base-content/70 ">
 										{value}
 									</DateRangePicker.Segment>
 								{:else}
 									<DateRangePicker.Segment
 										{part}
-										class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] p-0.5 focus-visible:ring-0! focus-visible:ring-offset-0!"
+										class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] focus-visible:ring-0! focus-visible:ring-offset-0!"
 									>
 										{value}
 									</DateRangePicker.Segment>
