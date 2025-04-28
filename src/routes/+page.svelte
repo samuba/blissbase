@@ -1,23 +1,24 @@
 <script lang="ts">
-	import type { ScrapedEvent } from '../types';
+	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
+	import { CalendarDateTime } from '@internationalized/date';
+
 	const { data } = $props();
 	const { events, page, limit, totalEvents, totalPages } = $derived(data);
+
+	let startEndTime = $state({
+		start: new CalendarDateTime(2024, 8, 3, 12, 30),
+		end: new CalendarDateTime(2024, 8, 4, 12, 30)
+	});
 </script>
 
-<div class="container mx-auto p-4">
-	<h1 class="mb-6 text-3xl font-bold">Upcoming Events</h1>
+<div class="container mx-auto flex flex-col gap-6 p-4 sm:w-2xl">
+	<DateRangePicker bind:value={startEndTime} class="w-fit" />
 
 	{#if data.events.length > 0}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{#each data.events as event (event.permalink)}
-				{@const cardEvent = {
-					...event,
-					address: event.address ?? [],
-					imageUrls: event.imageUrls ?? [],
-					tags: event.tags ?? []
-				}}
-				<EventCard event={cardEvent} />
+		<div class="flex w-full flex-col items-center gap-6">
+			{#each data.events as event (event.id)}
+				<EventCard {event} class="w-full" />
 			{/each}
 		</div>
 	{:else}

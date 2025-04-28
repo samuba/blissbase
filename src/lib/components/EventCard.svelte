@@ -1,108 +1,109 @@
 <script lang="ts">
-	import type { ScrapedEvent } from '../../types'; // Corrected relative path
-	import PersonIcon from 'phosphor-svelte/lib/UserCircle';
-	const { event } = $props<{ event: ScrapedEvent }>();
+	import MapPin from 'phosphor-svelte/lib/MapPin';
+	import type { SelectEvent } from '$lib/types';
 
-	function areSameDay(date1: Date, date2: Date): boolean {
-		return (
-			date1.getFullYear() === date2.getFullYear() &&
-			date1.getMonth() === date2.getMonth() &&
-			date1.getDate() === date2.getDate()
-		);
-	}
+	const { event, class: className }: { event: SelectEvent; class: string } = $props();
 
-	const startDate = event.startAt ? new Date(event.startAt) : null;
-	let endDate = event.endAt ? new Date(event.endAt) : null;
-	let displayEndDate = endDate; // Date object to use for display
-	let endDateOptions: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' }; // Default options
+	let noImage = $state(event.imageUrls?.[0] === undefined);
 
-	if (startDate && endDate) {
-		// Check if end date is midnight (00:00:00.000)
-		const isMidnight =
-			endDate.getHours() === 0 &&
-			endDate.getMinutes() === 0 &&
-			endDate.getSeconds() === 0 &&
-			endDate.getMilliseconds() === 0;
+	console.log(event);
 
-		if (isMidnight) {
-			// Create a date for the day before the original end date
-			const dayBeforeEndDate = new Date(endDate);
-			dayBeforeEndDate.setDate(endDate.getDate() - 1);
+	function formatTimeStr(start: Date | undefined, end: Date | undefined | null): string {
+		if (!start) return 'Date TBD';
 
-			// If the start date is the same day as the day before the end date
-			if (areSameDay(startDate, dayBeforeEndDate)) {
-				// Adjust display date to 23:59:59 on the start date
-				displayEndDate = new Date(startDate);
-				displayEndDate.setHours(23, 59, 59, 999);
-				endDateOptions = { timeStyle: 'short' }; // Show only time
-			} else if (areSameDay(startDate, endDate)) {
-				// Original logic: If start and end are same day (even if midnight), show time only
-				// This case might be redundant if midnight is handled above, but kept for clarity
-				endDateOptions = { timeStyle: 'short' };
+		const startOptions: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' };
+		let str = start.toLocaleString('de-DE', startOptions);
+
+		if (end) {
+			const endOptionsTimeOnly: Intl.DateTimeFormatOptions = { timeStyle: 'short' };
+			const endOptionsDateTime: Intl.DateTimeFormatOptions = {
+				dateStyle: 'medium',
+				timeStyle: 'short'
+			};
+
+			const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+			const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+			const nextDayStart = new Date(startDay.getTime() + 24 * 60 * 60 * 1000);
+
+			// Check if end is on the same day as start OR if end is on the next day and before noon
+			const endsOnSameDayOrBeforeNoonNextDay =
+				startDay.getTime() === endDay.getTime() ||
+				(endDay.getTime() === nextDayStart.getTime() && end.getHours() < 12);
+
+			if (endsOnSameDayOrBeforeNoonNextDay) {
+				// Only show end time
+				str += ` - ${end.toLocaleTimeString('de-DE', endOptionsTimeOnly)}`;
+			} else {
+				// Show end date and time
+				str += ` - ${end.toLocaleString('de-DE', endOptionsDateTime)}`;
 			}
-		} else if (areSameDay(startDate, endDate)) {
-			// Original logic: If start and end are same day (and not midnight), show time only
-			endDateOptions = { timeStyle: 'short' };
 		}
-		// Otherwise, the default options (date + time) are used
+		return str;
 	}
 </script>
 
-<a
-	href={event.permalink}
-	target="_blank"
-	rel="noopener noreferrer"
-	class="block overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 hover:shadow-lg"
->
-	{#if event.imageUrls && event.imageUrls.length > 0}
-		<img src={event.imageUrls[0]} alt={event.name} class="h-48 w-full object-cover" />
-	{:else}
-		<div class="h-48 w-full bg-gradient-to-br from-fuchsia-300 to-fuchsia-700"></div>
-	{/if}
-	<div class="p-4">
-		<h2 class="mb-2 truncate text-xl font-semibold" title={event.name}>{event.name}</h2>
-		{#if event.startAt}
-			<p class="mb-1 text-sm text-gray-600">
-				<time datetime={event.startAt}>
-					{new Date(event.startAt).toLocaleString('de-DE', {
-						dateStyle: 'medium',
-						timeStyle: 'short'
-					})}
-				</time>
-				{#if event.endAt && displayEndDate}
-					-
-					<time datetime={event.endAt}>
-						{displayEndDate.toLocaleString('de-DE', endDateOptions)}
-					</time>
-				{/if}
-			</p>
-		{/if}
-		{#if event.address && event.address.length > 0}
-			<p class="mb-2 truncate text-sm text-gray-500">{event.address.join(', ')}</p>
-		{/if}
-		<div class="mt-4 flex items-center justify-between">
-			{#if event.price}
-				<span class="text-base text-gray-700">{event.price}</span>
+<a href={event.permalink} target="_blank" rel="noopener noreferrer">
+	<div
+		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:shadow-lg md:flex-row {className}"
+	>
+		<div
+			class="relative min-h-32 min-w-32 rounded-t-lg bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:rounded-l-lg sm:rounded-tr-none"
+		>
+			{#if noImage}
+				<div
+					class="from-base-200/50 to-base-300 h-full w-full rounded-t-lg bg-gradient-to-br sm:rounded-l-lg sm:rounded-tr-none"
+				>
+					<!-- image placeolder -->
+				</div>
 			{:else}
-				<span class="text-base text-gray-700">Free</span>
+				<img
+					class="h-full max-h-[90dvw] w-full rounded-t-lg object-cover object-center sm:rounded-l-lg sm:rounded-tr-none"
+					src={event.imageUrls?.[0]}
+					alt="illustration for event: {event.name}"
+					onerror={() => (noImage = true)}
+				/>
 			{/if}
-			<!-- View Event link removed -->
+			<!-- <div
+			class="text-muted-foreground absolute right-1 bottom-1 flex items-center justify-center rounded-md rounded-bl-md border-t border-r bg-slate-200 px-1 pt-1 pb-1 text-xs md:right-auto md:left-1"
+			title="Event from {event.url.split('/')[2]?.replace('www.', '')}"
+		>
+			{#if event.url.includes('facebook.com')}
+				<IconFacebook class="inline-block size-4" />
+			{:else if event.url.includes('meetup.com')}
+				<IconMeetup class="inline-block size-4" />
+			{:else if event.url.includes('retreat.guru')}
+				<IconRetreatGuru class="inline-block size-4" />
+			{:else if event.url.includes('.eventbrite.')}
+				<IconEventbrite class="inline-block size-4" />
+			{/if}
+		</div> -->
 		</div>
-		{#if event.host}
-			<p class="mt-2 flex items-center text-xs text-gray-500">
-				<PersonIcon class="mr-1 h-4 w-4 " />
-				{#if event.hostLink}
-					<a
-						href={event.hostLink}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="hover:underline"
-						on:click|stopPropagation>{event.host}</a
-					>
-				{:else}
-					<span>{event.host}</span>
-				{/if}
-			</p>
-		{/if}
+
+		<div class="card-body flex flex-col gap-2">
+			<h3 class="card-title leading-snug tracking-tight">{event.name}</h3>
+
+			<time class="text-muted-foreground text-sm">
+				{formatTimeStr(event.startAt, event.endAt)}
+			</time>
+
+			{#if event.address.length}
+				<div class="text-muted-foreground flex items-center gap-1 text-sm">
+					<MapPin class="mr-1.5 size-4 min-w-4" />
+					<span class="leading-tight">
+						{#each event.address as line}
+							{line}
+						{/each}
+					</span>
+				</div>
+			{/if}
+
+			{#if event.tags && event.tags.length}
+				<div class="mt-1 flex flex-wrap gap-1 text-xs">
+					{#each event.tags as tag}
+						<span class="badge badge-sm badge-ghost">{tag}</span>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 </a>

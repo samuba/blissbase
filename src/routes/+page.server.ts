@@ -2,28 +2,25 @@ import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
 import { asc, count, gte, or, and, lt, isNotNull } from 'drizzle-orm';
+import { today as getToday, getLocalTimeZone } from '@internationalized/date';
 
 export const load = (async ({ url }) => {
     const page = parseInt(url.searchParams.get('page') ?? '1');
     const limit = parseInt(url.searchParams.get('limit') ?? '10');
     const offset = (page - 1) * limit;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the beginning of the day
+    const timeZone = getLocalTimeZone();
+    const todayDate = getToday(timeZone);
+    const todayStart = todayDate.toDate(timeZone);
 
-    const futureDate = new Date(today);
-    futureDate.setDate(today.getDate() + 40);
+    const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
 
-    // Three cases to include:
-    // 1. Event starts today or later
-    const startsTodayOrLater = gte(eventsTable.startAt, today);
-
-    // 2. Event has already started but ends today or later, with end date within 40 days
+    // Event has already started but ends today or later, with end date within 20 days
     const acceptableOngoingEvent = and(
-        lt(eventsTable.startAt, today),
+        lt(eventsTable.startAt, todayStart),
         isNotNull(eventsTable.endAt),
-        gte(eventsTable.endAt, today),
-        lt(eventsTable.endAt, futureDate)
+        gte(eventsTable.endAt, todayStart),
+        lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
     );
 
     const finalCondition = or(

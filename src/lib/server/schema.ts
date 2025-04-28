@@ -17,6 +17,3 @@ export const events = pgTable('events', {
     tags: text().array(),
     scrapedAt: timestamp().notNull().defaultNow(),
 });
-
-export type InsertEvent = typeof events.$inferInsert;
-export type SelectEvent = typeof events.$inferSelect; 

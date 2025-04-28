@@ -1,3 +1,5 @@
+import type { events } from "./server/schema";
+
 /**
  * Shared interface for scraped event data.
  */
@@ -15,4 +17,7 @@ export interface ScrapedEvent {
     latitude: number | null;
     longitude: number | null;
     tags: string[]; // Tags/Categories from the event page
-} 
+}
+
+export type InsertEvent = typeof events.$inferInsert;
+export type SelectEvent = typeof events.$inferSelect; 
