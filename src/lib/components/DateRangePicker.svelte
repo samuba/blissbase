@@ -35,46 +35,44 @@
 <DateRangePicker.Root
 	weekdayFormat="short"
 	fixedWeeks={true}
-	class="flex w-full  flex-col gap-1.5"
+	class="flex w-fit flex-col gap-1.5"
 	bind:value
 	locale="de-DE"
 	onValueChange={onChange}
 >
-	<div
-		class="h-input input border-base-300 bg-base-100 text-base-content focus-within:border-neutral focus-within:shadow-date-field-focus hover:border-neutral flex items-center border px-4 py-3 text-sm tracking-[0.01em] select-none {className}"
-	>
-		<DateRangePicker.Trigger
-			class="text-base-content/60 hover:bg-base-200 active:bg-base-300 ml-auto inline-flex size-8 items-center justify-center rounded-[5px] transition-all"
+	<DateRangePicker.Trigger class="w-fit">
+		<div
+			class="h-input input border-base-300 bg-base-100 text-base-content focus-within:border-neutral focus-within:shadow-date-field-focus hover:border-neutral flex items-center border px-4 py-3 text-sm tracking-[0.01em] select-none {className}"
 		>
 			<Calendar class="size-6" />
-		</DateRangePicker.Trigger>
 
-		{#each ['start', 'end'] as const as type}
-			<DateRangePicker.Input {type}>
-				{#snippet children({ segments })}
-					{#each segments as { part, value }}
-						<div class="inline-block select-none">
-							{#if part === 'literal'}
-								<DateRangePicker.Segment {part} class="text-base-content/70 p-0.5">
-									{value}
-								</DateRangePicker.Segment>
-							{:else}
-								<DateRangePicker.Segment
-									{part}
-									class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] p-0.5 focus-visible:ring-0! focus-visible:ring-offset-0!"
-								>
-									{value}
-								</DateRangePicker.Segment>
-							{/if}
-						</div>
-					{/each}
-				{/snippet}
-			</DateRangePicker.Input>
-			{#if type === 'start'}
-				<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
-			{/if}
-		{/each}
-	</div>
+			{#each ['start', 'end'] as const as type}
+				<DateRangePicker.Input {type}>
+					{#snippet children({ segments })}
+						{#each segments as { part, value }}
+							<div class="inline-block select-none">
+								{#if part === 'literal'}
+									<DateRangePicker.Segment {part} class="text-base-content/70 p-0.5">
+										{value}
+									</DateRangePicker.Segment>
+								{:else}
+									<DateRangePicker.Segment
+										{part}
+										class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] p-0.5 focus-visible:ring-0! focus-visible:ring-offset-0!"
+									>
+										{value}
+									</DateRangePicker.Segment>
+								{/if}
+							</div>
+						{/each}
+					{/snippet}
+				</DateRangePicker.Input>
+				{#if type === 'start'}
+					<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
+				{/if}
+			{/each}
+		</div>
+	</DateRangePicker.Trigger>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
 		<DateRangePicker.Calendar
 			class="rounded-15px border-base-300 bg-base-200 shadow-popover mt-6 border p-[22px]"

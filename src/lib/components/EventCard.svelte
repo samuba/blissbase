@@ -47,15 +47,11 @@
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:shadow-lg md:flex-row {className}"
 	>
 		<div
-			class="relative min-h-32 min-w-32 rounded-t-lg bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:rounded-l-lg sm:rounded-tr-none"
+			class={[
+				'from-base-200/50 to-base-300 relative  min-w-32 rounded-t-lg bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:rounded-l-lg sm:rounded-tr-none'
+			]}
 		>
-			{#if noImage}
-				<div
-					class="from-base-200/50 to-base-300 h-full w-full rounded-t-lg bg-gradient-to-br sm:rounded-l-lg sm:rounded-tr-none"
-				>
-					<!-- image placeolder -->
-				</div>
-			{:else}
+			{#if noImage}{:else}
 				<img
 					class="h-full max-h-[90dvw] w-full rounded-t-lg object-cover object-center sm:rounded-l-lg sm:rounded-tr-none"
 					src={event.imageUrls?.[0]}

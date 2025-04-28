@@ -29,7 +29,7 @@
 	};
 </script>
 
-<div class="container mx-auto flex flex-col gap-6 p-4 sm:w-2xl">
+<div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
 	<DateRangePicker class="w-fit" {onChange} />
 
 	{#if navigating.to}
