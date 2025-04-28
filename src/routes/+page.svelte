@@ -1,19 +1,29 @@
 <script lang="ts">
-	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
+	import DateRangePicker, {
+		type DateRangePickerOnChange
+	} from '$lib/components/DateRangePicker.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
-	import { CalendarDateTime } from '@internationalized/date';
+	import { goto } from '$app/navigation';
+	import { routes } from '$lib/routes.js';
 
 	const { data } = $props();
-	const { events, page, limit, totalEvents, totalPages } = $derived(data);
+	const { events, pagination } = $derived(data);
 
-	let startEndTime = $state({
-		start: new CalendarDateTime(2024, 8, 3, 12, 30),
-		end: new CalendarDateTime(2024, 8, 4, 12, 30)
-	});
+	const onChange: DateRangePickerOnChange = (value) => {
+		if (value?.start && value?.end) {
+			const params = new URLSearchParams();
+			params.set('page', '1');
+			params.set('limit', pagination.limit?.toString() ?? '10');
+			// Use .toString() which should format as YYYY-MM-DD for CalendarDate
+			params.set('startDate', value.start.toString());
+			params.set('endDate', value.end.toString());
+			goto(`?${params.toString()}`, { keepFocus: true, invalidateAll: true });
+		}
+	};
 </script>
 
 <div class="container mx-auto flex flex-col gap-6 p-4 sm:w-2xl">
-	<DateRangePicker bind:value={startEndTime} class="w-fit" />
+	<DateRangePicker class="w-fit" {onChange} />
 
 	{#if data.events.length > 0}
 		<div class="flex w-full flex-col items-center gap-6">
@@ -25,31 +35,42 @@
 		<p class="text-gray-500">No events found.</p>
 	{/if}
 
-	{#if totalPages > 1}
+	{#if pagination.totalPages > 1}
 		<div class="mt-8 flex items-center justify-center space-x-4">
 			<a
-				href="?page={page - 1}&limit={limit}"
-				class="rounded border border-gray-300 px-4 py-2 text-sm font-medium {page <= 1
+				href={routes.searchPage(
+					pagination.page - 1,
+					pagination.limit,
+					pagination.startDate,
+					pagination.endDate
+				)}
+				class="rounded border border-gray-300 px-4 py-2 text-sm font-medium {pagination.page <= 1
 					? 'cursor-not-allowed bg-gray-100 text-gray-400'
 					: 'bg-white text-gray-700 hover:bg-gray-50'}"
-				aria-disabled={page <= 1}
+				aria-disabled={pagination.page <= 1}
 				onclick={(e) => {
-					if (page <= 1) e.preventDefault();
+					if (pagination.page <= 1) e.preventDefault();
 				}}
 			>
 				Previous
 			</a>
 			<span class="text-sm text-gray-700">
-				Page {page} of {totalPages}
+				Page {pagination.page} of {pagination.totalPages}
 			</span>
 			<a
-				href="?page={page + 1}&limit={limit}"
-				class="rounded border border-gray-300 px-4 py-2 text-sm font-medium {page >= totalPages
+				href={routes.searchPage(
+					pagination.page + 1,
+					pagination.limit,
+					pagination.startDate,
+					pagination.endDate
+				)}
+				class="rounded border border-gray-300 px-4 py-2 text-sm font-medium {pagination.page >=
+				pagination.totalPages
 					? 'cursor-not-allowed bg-gray-100 text-gray-400'
 					: 'bg-white text-gray-700 hover:bg-gray-50'}"
-				aria-disabled={page >= totalPages}
+				aria-disabled={pagination.page >= pagination.totalPages}
 				onclick={(e) => {
-					if (page >= totalPages) e.preventDefault();
+					if (pagination.page >= pagination.totalPages) e.preventDefault();
 				}}
 			>
 				Next

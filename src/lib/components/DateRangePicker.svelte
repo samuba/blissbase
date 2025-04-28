@@ -1,21 +1,34 @@
+<script lang="ts" module>
+	import { type DateRangePickerRootPropsWithoutHTML } from 'bits-ui';
+	export type DateRangePickerOnChange = DateRangePickerRootPropsWithoutHTML['onValueChange'];
+</script>
+
 <script lang="ts">
 	import { DateRangePicker } from 'bits-ui';
-	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
+	import Calendar from 'phosphor-svelte/lib/CalendarDots';
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CaretRight from 'phosphor-svelte/lib/CaretRight';
-	import { CalendarDateTime } from '@internationalized/date';
+	import { CalendarDate, endOfMonth } from '@internationalized/date';
 
 	type DateRangePickerProps = {
-		value: { start: CalendarDateTime; end: CalendarDateTime };
+		value?: { start: CalendarDate; end: CalendarDate };
 		class?: string;
+		onChange: DateRangePickerOnChange;
 	};
+
+	const today = new CalendarDate(
+		new Date().getFullYear(),
+		new Date().getMonth() + 1,
+		new Date().getDate()
+	);
 
 	let {
 		value = $bindable({
-			start: new CalendarDateTime(2024, 8, 3, 12, 30),
-			end: new CalendarDateTime(2024, 8, 4, 12, 30)
+			start: today,
+			end: endOfMonth(today.add({ months: 6 }))
 		}),
-		class: className
+		class: className,
+		onChange
 	}: DateRangePickerProps = $props();
 </script>
 
@@ -25,10 +38,17 @@
 	class="flex w-full  flex-col gap-1.5"
 	bind:value
 	locale="de-DE"
+	onValueChange={onChange}
 >
 	<div
-		class="h-input input border-border-input bg-base-100 text-foreground focus-within:border-border-input-hover focus-within:shadow-date-field-focus hover:border-border-input-hover flex items-center border px-2 py-3 text-sm tracking-[0.01em] select-none {className}"
+		class="h-input input border-border-input bg-base-100 text-foreground focus-within:border-border-input-hover focus-within:shadow-date-field-focus hover:border-border-input-hover flex items-center border px-4 py-3 text-sm tracking-[0.01em] select-none {className}"
 	>
+		<DateRangePicker.Trigger
+			class="text-foreground/60 hover:bg-base-200 active:bg-dark-10 ml-auto inline-flex size-8 items-center justify-center rounded-[5px] transition-all"
+		>
+			<Calendar class="size-6" />
+		</DateRangePicker.Trigger>
+
 		{#each ['start', 'end'] as const as type}
 			<DateRangePicker.Input {type}>
 				{#snippet children({ segments })}
@@ -54,12 +74,6 @@
 				<div aria-hidden="true" class="text-muted-foreground px-1">–⁠⁠⁠⁠⁠</div>
 			{/if}
 		{/each}
-
-		<DateRangePicker.Trigger
-			class="text-foreground/60 hover:bg-base-200 active:bg-dark-10 ml-auto inline-flex size-8 items-center justify-center rounded-[5px] transition-all"
-		>
-			<CalendarBlank class="size-6" />
-		</DateRangePicker.Trigger>
 	</div>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
 		<DateRangePicker.Calendar
