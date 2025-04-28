@@ -41,10 +41,10 @@
 	onValueChange={onChange}
 >
 	<div
-		class="h-input input border-border-input bg-base-100 text-foreground focus-within:border-border-input-hover focus-within:shadow-date-field-focus hover:border-border-input-hover flex items-center border px-4 py-3 text-sm tracking-[0.01em] select-none {className}"
+		class="h-input input border-base-300 bg-base-100 text-base-content focus-within:border-neutral focus-within:shadow-date-field-focus hover:border-neutral flex items-center border px-4 py-3 text-sm tracking-[0.01em] select-none {className}"
 	>
 		<DateRangePicker.Trigger
-			class="text-foreground/60 hover:bg-base-200 active:bg-dark-10 ml-auto inline-flex size-8 items-center justify-center rounded-[5px] transition-all"
+			class="text-base-content/60 hover:bg-base-200 active:bg-base-300 ml-auto inline-flex size-8 items-center justify-center rounded-[5px] transition-all"
 		>
 			<Calendar class="size-6" />
 		</DateRangePicker.Trigger>
@@ -55,13 +55,13 @@
 					{#each segments as { part, value }}
 						<div class="inline-block select-none">
 							{#if part === 'literal'}
-								<DateRangePicker.Segment {part} class="text-muted-foreground p-0.5">
+								<DateRangePicker.Segment {part} class="text-base-content/70 p-0.5">
 									{value}
 								</DateRangePicker.Segment>
 							{:else}
 								<DateRangePicker.Segment
 									{part}
-									class="hover:bg-base-200 focus:bg-base-200 focus:text-foreground aria-[valuetext=Empty]:text-muted-foreground rounded-[5px] p-0.5 focus-visible:ring-0! focus-visible:ring-offset-0!"
+									class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] p-0.5 focus-visible:ring-0! focus-visible:ring-offset-0!"
 								>
 									{value}
 								</DateRangePicker.Segment>
@@ -71,24 +71,24 @@
 				{/snippet}
 			</DateRangePicker.Input>
 			{#if type === 'start'}
-				<div aria-hidden="true" class="text-muted-foreground px-1">–⁠⁠⁠⁠⁠</div>
+				<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
 			{/if}
 		{/each}
 	</div>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
 		<DateRangePicker.Calendar
-			class="rounded-15px border-dark-10 bg-base-200 shadow-popover mt-6 border p-[22px]"
+			class="rounded-15px border-base-300 bg-base-200 shadow-popover mt-6 border p-[22px]"
 		>
 			{#snippet children({ months, weekdays })}
 				<DateRangePicker.Header class="flex items-center justify-between">
 					<DateRangePicker.PrevButton
-						class="rounded-9px bg-base-200 hover:bg-base-200 inline-flex size-10 items-center justify-center transition-all active:scale-[0.98]"
+						class="rounded-9px bg-base-200 hover:bg-base-300 inline-flex size-10 items-center justify-center transition-all active:scale-[0.98]"
 					>
 						<CaretLeft class="size-6" />
 					</DateRangePicker.PrevButton>
-					<DateRangePicker.Heading class="text-[15px] font-medium" />
+					<DateRangePicker.Heading class="text-base-content text-[15px] font-medium" />
 					<DateRangePicker.NextButton
-						class="rounded-9px bg-base-200 hover:bg-base-200 inline-flex size-10 items-center justify-center transition-all active:scale-[0.98]"
+						class="rounded-9px bg-base-200 hover:bg-base-300 inline-flex size-10 items-center justify-center transition-all active:scale-[0.98]"
 					>
 						<CaretRight class="size-6" />
 					</DateRangePicker.NextButton>
@@ -100,7 +100,7 @@
 								<DateRangePicker.GridRow class="mb-1 flex w-full justify-between">
 									{#each weekdays as day}
 										<DateRangePicker.HeadCell
-											class="text-muted-foreground w-10 rounded-md text-xs font-normal!"
+											class="text-base-content/70 w-10 rounded-md text-xs font-normal!"
 										>
 											<div>{day.slice(0, 2)}</div>
 										</DateRangePicker.HeadCell>
@@ -117,10 +117,10 @@
 												class="relative m-0 size-10 overflow-visible p-0! text-center text-sm focus-within:relative focus-within:z-20"
 											>
 												<DateRangePicker.Day
-													class={'rounded-9px text-foreground hover:border-foreground focus-visible:ring-foreground! data-selection-end:rounded-9px data-selection-start:rounded-9px data-highlighted:bg-base-200 data-selected:bg-base-200 data-selection-end:bg-foreground data-selection-start:bg-foreground data-disabled:text-foreground/30 data-selected:text-foreground data-selection-end:text-background data-selection-start:text-background data-unavailable:text-muted-foreground data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:border-foreground group relative  inline-flex size-10 items-center justify-center overflow-visible border border-transparent bg-transparent p-0 text-sm font-normal whitespace-nowrap transition-all data-disabled:pointer-events-none data-highlighted:rounded-none data-outside-month:pointer-events-none data-selected:font-medium data-selection-end:font-medium data-selection-start:font-medium data-selection-start:focus-visible:ring-2 data-selection-start:focus-visible:ring-offset-2! data-unavailable:line-through data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:rounded-none data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-0! data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-offset-0!'}
+													class={'rounded-9px text-base-content hover:border-primary focus-visible:ring-primary! data-selection-end:rounded-9px data-selection-start:rounded-9px data-highlighted:bg-base-300 data-selected:bg-base-300 data-selection-end:bg-primary data-selection-start:bg-primary data-disabled:text-base-content/30 data-selected:text-primary-content data-selection-end:text-primary-content data-selection-start:text-primary-content data-unavailable:text-base-content/50 data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:border-primary group relative  inline-flex size-10 items-center justify-center overflow-visible border border-transparent bg-transparent p-0 text-sm font-normal whitespace-nowrap transition-all data-disabled:pointer-events-none data-highlighted:rounded-none data-outside-month:pointer-events-none data-selected:font-medium data-selection-end:font-medium data-selection-start:font-medium data-selection-start:focus-visible:ring-2 data-selection-start:focus-visible:ring-offset-2! data-unavailable:line-through data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:rounded-none data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-0! data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-offset-0!'}
 												>
 													<div
-														class="bg-foreground group-data-selected:bg-base-100 absolute top-[5px] hidden size-1 rounded-full transition-all group-data-today:block"
+														class="bg-primary group-data-selected:bg-base-100 absolute top-[5px] hidden size-1 rounded-full transition-all group-data-today:block"
 													></div>
 													{date.day}
 												</DateRangePicker.Day>

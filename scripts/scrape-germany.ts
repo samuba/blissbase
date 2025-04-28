@@ -151,6 +151,7 @@ try {
     // Insert events one by one instead of in bulk
     for (const event of eventsToInsert) {
         try {
+            event.tags = [...new Set(event.tags)] // Ensure tags are unique
             // Use insert with onConflictDoUpdate to handle potential duplicate permalinks
             await db.insert(schema.events)
                 .values(event as unknown as typeof schema.events.$inferInsert)

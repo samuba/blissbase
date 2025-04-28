@@ -2,7 +2,7 @@
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import type { SelectEvent } from '$lib/types';
 
-	const { event, class: className }: { event: SelectEvent; class: string } = $props();
+	const { event, class: className }: { event: SelectEvent; class?: string } = $props();
 
 	let noImage = $state(event.imageUrls?.[0] === undefined);
 
@@ -42,7 +42,7 @@
 	}
 </script>
 
-<a href={event.permalink} target="_blank" rel="noopener noreferrer">
+<a href={event.permalink} target="_blank" rel="noopener noreferrer" class="w-full">
 	<div
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:shadow-lg md:flex-row {className}"
 	>

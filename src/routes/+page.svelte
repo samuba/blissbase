@@ -5,37 +5,49 @@
 	import EventCard from '$lib/components/EventCard.svelte';
 	import { goto } from '$app/navigation';
 	import { routes } from '$lib/routes.js';
-
+	import { navigating } from '$app/state';
+	import SpinnerBall from 'phosphor-svelte/lib/SpinnerBall';
 	const { data } = $props();
 	const { events, pagination } = $derived(data);
 
 	const onChange: DateRangePickerOnChange = (value) => {
-		if (value?.start && value?.end) {
-			const params = new URLSearchParams();
-			params.set('page', '1');
-			params.set('limit', pagination.limit?.toString() ?? '10');
-			// Use .toString() which should format as YYYY-MM-DD for CalendarDate
-			params.set('startDate', value.start.toString());
-			params.set('endDate', value.end.toString());
-			goto(`?${params.toString()}`, { keepFocus: true, invalidateAll: true });
+		if (
+			!value?.start ||
+			!value?.end ||
+			(value.start.toString() === pagination.startDate &&
+				value.end.toString() === pagination.endDate)
+		) {
+			return;
 		}
+		const params = new URLSearchParams();
+		params.set('page', '1');
+		params.set('limit', pagination.limit?.toString() ?? '10');
+		// Use .toString() which should format as YYYY-MM-DD for CalendarDate
+		params.set('startDate', value.start.toString());
+		params.set('endDate', value.end.toString());
+		goto(`?${params.toString()}`, { keepFocus: true, invalidateAll: true });
 	};
 </script>
 
 <div class="container mx-auto flex flex-col gap-6 p-4 sm:w-2xl">
 	<DateRangePicker class="w-fit" {onChange} />
 
-	{#if data.events.length > 0}
+	{#if navigating.to}
+		<div class="flex flex-col items-center justify-center gap-3">
+			<SpinnerBall class="text-primary-content size-10 animate-spin" />
+			<p class="">Lade...</p>
+		</div>
+	{:else if events.length > 0}
 		<div class="flex w-full flex-col items-center gap-6">
-			{#each data.events as event (event.id)}
-				<EventCard {event} class="w-full" />
+			{#each events as event (event.id)}
+				<EventCard {event} />
 			{/each}
 		</div>
 	{:else}
-		<p class="text-gray-500">No events found.</p>
+		<p class="text-gray-500">Keine Events gefunden.</p>
 	{/if}
 
-	{#if pagination.totalPages > 1}
+	{#if pagination.totalPages > 1 && !navigating.to}
 		<div class="mt-8 flex items-center justify-center space-x-4">
 			<a
 				href={routes.searchPage(
