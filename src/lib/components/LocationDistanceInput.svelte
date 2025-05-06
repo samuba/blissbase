@@ -2,11 +2,14 @@
 	import Crosshair from '~icons/ph/crosshair';
 	import SpinnerBall from '~icons/ph/spinner-ball';
 	import X from '~icons/ph/x';
+	import MapPin from '~icons/ph/map-pin';
 
 	export interface LocationChangeEvent {
 		location: string | null;
 		distance: string | null;
 		isUsingCurrentLocation: boolean;
+		latitude?: number | null;
+		longitude?: number | null;
 	}
 
 	export interface LocationDistanceInputProps {
@@ -34,10 +37,21 @@
 	// Effect to initialize component state from props
 	$effect(() => {
 		if (initialLocation?.startsWith('coords:')) {
-			usingCurrentLocation = true;
-			coordsForFilter = initialLocation;
-			typedPlzCity = '';
-			displayLocationText = 'Dein Standort';
+			const parts = initialLocation.substring('coords:'.length).split(',');
+			if (parts.length === 2) {
+				const lat = parseFloat(parts[0]);
+				const lng = parseFloat(parts[1]);
+				if (!isNaN(lat) && !isNaN(lng)) {
+					usingCurrentLocation = true;
+					coordsForFilter = `${lat},${lng}`;
+					typedPlzCity = '';
+					displayLocationText = 'Dein aktueller Standort';
+				} else {
+					initialLocation = null;
+				}
+			} else {
+				initialLocation = null;
+			}
 		} else if (initialLocation) {
 			usingCurrentLocation = false;
 			coordsForFilter = null;
@@ -74,14 +88,31 @@
 	function notifyChange() {
 		if (!onChange) return;
 
-		const location =
-			usingCurrentLocation && coordsForFilter ? coordsForFilter : typedPlzCity || null;
+		let eventData: LocationChangeEvent;
 
-		onChange({
-			location,
-			distance: selectedDistance || null,
-			isUsingCurrentLocation: usingCurrentLocation
-		});
+		if (usingCurrentLocation && coordsForFilter) {
+			const [latStr, lngStr] = coordsForFilter.split(',');
+			const latitude = parseFloat(latStr);
+			const longitude = parseFloat(lngStr);
+
+			eventData = {
+				location: null,
+				distance: selectedDistance || null,
+				isUsingCurrentLocation: true,
+				latitude: !isNaN(latitude) ? latitude : null,
+				longitude: !isNaN(longitude) ? longitude : null
+			};
+		} else {
+			eventData = {
+				location: typedPlzCity || null,
+				distance: selectedDistance || null,
+				isUsingCurrentLocation: false,
+				latitude: null,
+				longitude: null
+			};
+		}
+
+		onChange(eventData);
 	}
 
 	function handleFilterInputChange() {
@@ -102,9 +133,10 @@
 				navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
 			});
 
-			const newCoords = `coords:${position.coords.latitude},${position.coords.longitude}`;
+			const newCoords = `${position.coords.latitude},${position.coords.longitude}`;
 			coordsForFilter = newCoords;
 			displayLocationText = 'Dein Standort';
+			selectedDistance = distanceOptions[5].value;
 
 			notifyChange();
 		} catch (error) {
@@ -126,15 +158,15 @@
 		coordsForFilter = null;
 		typedPlzCity = '';
 		displayLocationText = '';
+		selectedDistance = '';
 		notifyChange();
 	}
 </script>
 
 <div class="form-control join w-full">
 	{#if usingCurrentLocation && !isLoadingLocation}
-		<span
-			class="input input-bordered join-item bg-base-200 text-base-content-secondary flex w-full items-center border-r-0"
-		>
+		<span class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0">
+			<MapPin class="-mr-0.5 size-4" />
 			{displayLocationText}
 		</span>
 	{:else}

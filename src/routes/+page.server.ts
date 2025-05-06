@@ -3,38 +3,9 @@ import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
 import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql } from 'drizzle-orm';
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
-import { env } from '$env/dynamic/private';
+import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 
-// Helper function to calculate distance using Haversine formula (approximates on a sphere)
-// This is a simplified version. For accurate geospatial queries, PostGIS ST_DWithin is preferred.
-// However, if PostGIS is not available, this can be used to filter after a broader DB query.
-// For direct DB filtering, we will use a raw SQL query with ST_DWithin assuming PostGIS.
 
-async function geocodeLocation(location: string): Promise<{ lat: number; lng: number } | null> {
-    if (!env.GOOGLE_MAPS_API_KEY) {
-        console.error('Google Maps API key is not set. Skipping geocoding.');
-        return null;
-    }
-    try {
-        const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${env.GOOGLE_MAPS_API_KEY}&language=de&region=DE`
-        );
-        if (!response.ok) {
-            console.error(`Geocoding API request failed with status: ${response.status}`);
-            return null;
-        }
-        const data = await response.json();
-        if (data.status === 'OK' && data.results && data.results.length > 0) {
-            return data.results[0].geometry.location; // { lat, lng }
-        } else {
-            console.error('Geocoding failed or no results:', data.status, data.error_message);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error during geocoding:', error);
-        return null;
-    }
-}
 
 export const load = (async ({ url }) => {
     // Get params as string | null
@@ -44,6 +15,8 @@ export const load = (async ({ url }) => {
     const endDateParam = url.searchParams.get('endDate');
     const plzCityParam = url.searchParams.get('plzCity');
     const distanceParam = url.searchParams.get('distance'); // in km
+    const latParam = url.searchParams.get('lat');
+    const lngParam = url.searchParams.get('lng');
 
     // Parse params with defaults for internal use
     const pageNumber = parseInt(pageParam ?? '1', 10);
@@ -112,22 +85,17 @@ export const load = (async ({ url }) => {
     let proximityCondition = undefined;
     let geocodedCoords: { lat: number; lng: number } | null = null;
 
-    if (plzCityParam && distanceParam) {
-        if (plzCityParam.startsWith('coords:')) {
-            const parts = plzCityParam.substring('coords:'.length).split(',');
-            if (parts.length === 2) {
-                const lat = parseFloat(parts[0]);
-                const lng = parseFloat(parts[1]);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    geocodedCoords = { lat, lng };
-                } else {
-                    console.error('Invalid coordinates in plzCityParam:', plzCityParam);
-                }
+    if (distanceParam) {
+        if (latParam && lngParam) {
+            const lat = parseFloat(latParam);
+            const lng = parseFloat(lngParam);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                geocodedCoords = { lat, lng };
             } else {
-                console.error('Malformed coords string in plzCityParam:', plzCityParam);
+                console.error('Invalid lat/lng parameters:', latParam, lngParam);
             }
-        } else if (plzCityParam.trim() !== '') {
-            // Only geocode if it's not coords and not an empty/whitespace string
+        } else if (plzCityParam && plzCityParam.trim() !== '') {
+            // Only geocode if plzCityParam is provided and not empty, and lat/lng are not present
             geocodedCoords = await geocodeLocation(plzCityParam);
         }
 
@@ -162,6 +130,8 @@ export const load = (async ({ url }) => {
         endDate: endDateParam,
         plzCity: plzCityParam,
         distance: distanceParam,
+        lat: latParam ? parseFloat(latParam) : null,
+        lng: lngParam ? parseFloat(lngParam) : null,
         page: pageNumber,
         limit: limitNumber
     };
@@ -169,3 +139,33 @@ export const load = (async ({ url }) => {
     return { events, pagination: paginationData };
 }) satisfies PageServerLoad;
 
+// Helper function to calculate distance using Haversine formula (approximates on a sphere)
+// This is a simplified version. For accurate geospatial queries, PostGIS ST_DWithin is preferred.
+// However, if PostGIS is not available, this can be used to filter after a broader DB query.
+// For direct DB filtering, we will use a raw SQL query with ST_DWithin assuming PostGIS.
+
+async function geocodeLocation(location: string): Promise<{ lat: number; lng: number } | null> {
+    if (!GOOGLE_MAPS_API_KEY) {
+        console.error('Google Maps API key is not set. Skipping geocoding.');
+        return null;
+    }
+    try {
+        const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${GOOGLE_MAPS_API_KEY}&language=de&region=DE`
+        );
+        if (!response.ok) {
+            console.error(`Geocoding API request failed with status: ${response.status}`);
+            return null;
+        }
+        const data = await response.json();
+        if (data.status === 'OK' && data.results && data.results.length > 0) {
+            return data.results[0].geometry.location; // { lat, lng }
+        } else {
+            console.error('Geocoding failed or no results:', data.status, data.error_message);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error during geocoding:', error);
+        return null;
+    }
+}

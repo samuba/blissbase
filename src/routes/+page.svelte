@@ -18,14 +18,22 @@
 	$effect(() => {
 		// This effect runs whenever pagination changes
 		// (e.g. when URL parameters change externally)
+		// If pagination contains lat/lng, it means the user initially searched by coords or current location.
+		// We need to ensure LocationDistanceInput reflects this.
+		// The current LocationDistanceInput takes an `initialLocation` string.
+		// If we have lat/lng, we could format it as 'coords:lat,lng' for it,
+		// or we might enhance LocationDistanceInput to take initialLat/initialLng props directly.
+		// For now, we'll rely on the 'coords:' prefix if lat/lng are present in pagination.
 	});
 
 	function buildAndGoToUrl(
 		pageReset: boolean,
 		startDateArg?: string | null,
 		endDateArg?: string | null,
-		locationArg?: string | null,
-		distanceArg?: string | null
+		plzCityArg?: string | null, // Renamed from locationArg for clarity
+		distanceArg?: string | null,
+		latitudeArg?: number | null,
+		longitudeArg?: number | null
 	) {
 		const newParams = new URLSearchParams();
 
@@ -38,12 +46,28 @@
 
 		const finalStartDate = startDateArg !== undefined ? startDateArg : pagination.startDate;
 		const finalEndDate = endDateArg !== undefined ? endDateArg : pagination.endDate;
-		const finalLocation = locationArg !== undefined ? locationArg : pagination.plzCity;
+		const finalPlzCity = plzCityArg !== undefined ? plzCityArg : pagination.plzCity;
 		const finalDistance = distanceArg !== undefined ? distanceArg : pagination.distance;
+		const finalLatitude = latitudeArg !== undefined ? latitudeArg : pagination.lat;
+		const finalLongitude = longitudeArg !== undefined ? longitudeArg : pagination.lng;
 
 		if (finalStartDate) newParams.set('startDate', finalStartDate);
 		if (finalEndDate) newParams.set('endDate', finalEndDate);
-		if (finalLocation) newParams.set('plzCity', finalLocation);
+
+		// Only set plzCity if lat/lng are not primary
+		if (finalLatitude !== null && finalLongitude !== null) {
+			newParams.set('lat', finalLatitude.toString());
+			newParams.set('lng', finalLongitude.toString());
+			// If lat/lng are present, plzCity is not used for primary search
+			// but can be kept if it was part of the original pagination data and not overridden.
+			if (finalPlzCity && plzCityArg === undefined) {
+				// Keep original plzCity if not explicitly cleared by new plzCityArg
+				newParams.set('plzCity', finalPlzCity);
+			}
+		} else if (finalPlzCity) {
+			newParams.set('plzCity', finalPlzCity);
+		}
+
 		if (finalDistance) newParams.set('distance', finalDistance);
 
 		const currentSearchParams = new URLSearchParams(window.location.search);
@@ -73,8 +97,10 @@
 			true, // pageReset
 			pagination.startDate,
 			pagination.endDate,
-			event.location,
-			event.distance
+			event.location, // This is now explicitly plzCity or null
+			event.distance,
+			event.latitude,
+			event.longitude
 		);
 	}
 </script>
@@ -84,7 +110,9 @@
 		<DateRangePicker class="w-full md:w-fit" onChange={onDateChange} />
 		<div class="flex w-full flex-col gap-2">
 			<LocationDistanceInput
-				initialLocation={pagination.plzCity}
+				initialLocation={pagination.lat && pagination.lng
+					? `coords:${pagination.lat},${pagination.lng}`
+					: pagination.plzCity}
 				initialDistance={pagination.distance}
 				onChange={handleLocationDistanceChange}
 				disabled={!!navigating.to}
@@ -116,17 +144,15 @@
 					startDate: pagination.startDate,
 					endDate: pagination.endDate,
 					plzCity: pagination.plzCity,
-					distance: pagination.distance
+					distance: pagination.distance,
+					lat: pagination.lat,
+					lng: pagination.lng
 				})}
-				class="rounded border border-gray-300 px-4 py-2 text-sm font-medium {pagination.page <= 1
-					? 'cursor-not-allowed bg-gray-100 text-gray-400'
-					: 'bg-white text-gray-700 hover:bg-gray-50'}"
-				aria-disabled={pagination.page <= 1}
 				onclick={(e) => {
 					if (pagination.page <= 1) e.preventDefault();
 				}}
 			>
-				Previous
+				<button class="btn" disabled={pagination.page <= 1}> Previous </button>
 			</a>
 			<span class="text-sm text-gray-700">
 				Page {pagination.page} of {pagination.totalPages}
@@ -138,18 +164,15 @@
 					startDate: pagination.startDate,
 					endDate: pagination.endDate,
 					plzCity: pagination.plzCity,
-					distance: pagination.distance
+					distance: pagination.distance,
+					lat: pagination.lat,
+					lng: pagination.lng
 				})}
-				class="rounded border border-gray-300 px-4 py-2 text-sm font-medium {pagination.page >=
-				pagination.totalPages
-					? 'cursor-not-allowed bg-gray-100 text-gray-400'
-					: 'bg-white text-gray-700 hover:bg-gray-50'}"
-				aria-disabled={pagination.page >= pagination.totalPages}
 				onclick={(e) => {
 					if (pagination.page >= pagination.totalPages) e.preventDefault();
 				}}
 			>
-				Next
+				<button class="btn" disabled={pagination.page >= pagination.totalPages}> Next </button>
 			</a>
 		</div>
 	{/if}
