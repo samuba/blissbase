@@ -108,16 +108,14 @@
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
 	<div class="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center">
 		<DateRangePicker class="w-full md:w-fit" onChange={onDateChange} />
-		<div class="flex w-full flex-col gap-2">
-			<LocationDistanceInput
-				initialLocation={pagination.lat && pagination.lng
-					? `coords:${pagination.lat},${pagination.lng}`
-					: pagination.plzCity}
-				initialDistance={pagination.distance}
-				onChange={handleLocationDistanceChange}
-				disabled={!!navigating.to}
-			/>
-		</div>
+		<LocationDistanceInput
+			initialLocation={pagination.lat && pagination.lng
+				? `coords:${pagination.lat},${pagination.lng}`
+				: pagination.plzCity}
+			initialDistance={pagination.distance}
+			onChange={handleLocationDistanceChange}
+			disabled={!!navigating.to}
+		/>
 	</div>
 
 	{#if navigating.to}

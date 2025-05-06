@@ -163,7 +163,7 @@
 	}
 </script>
 
-<div class="form-control join w-full">
+<div class="form-control join max-w-xs">
 	{#if usingCurrentLocation && !isLoadingLocation}
 		<span class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0">
 			<MapPin class="-mr-0.5 size-4" />
