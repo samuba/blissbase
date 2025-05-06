@@ -113,7 +113,24 @@ export const load = (async ({ url }) => {
     let geocodedCoords: { lat: number; lng: number } | null = null;
 
     if (plzCityParam && distanceParam) {
-        geocodedCoords = await geocodeLocation(plzCityParam);
+        if (plzCityParam.startsWith('coords:')) {
+            const parts = plzCityParam.substring('coords:'.length).split(',');
+            if (parts.length === 2) {
+                const lat = parseFloat(parts[0]);
+                const lng = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    geocodedCoords = { lat, lng };
+                } else {
+                    console.error('Invalid coordinates in plzCityParam:', plzCityParam);
+                }
+            } else {
+                console.error('Malformed coords string in plzCityParam:', plzCityParam);
+            }
+        } else if (plzCityParam.trim() !== '') {
+            // Only geocode if it's not coords and not an empty/whitespace string
+            geocodedCoords = await geocodeLocation(plzCityParam);
+        }
+
         if (geocodedCoords) {
             const distanceMeters = parseFloat(distanceParam) * 1000;
             // Ensure latitude and longitude columns are not null for the ST_DWithin check
@@ -138,7 +155,7 @@ export const load = (async ({ url }) => {
     const totalEvents = totalResult[0].count;
     const totalPages = Math.ceil(totalEvents / limitNumber);
 
-    const pagination = {
+    const paginationData = {
         totalEvents,
         totalPages,
         startDate: startDateParam,
@@ -149,6 +166,6 @@ export const load = (async ({ url }) => {
         limit: limitNumber
     };
 
-    return { events, pagination };
+    return { events, pagination: paginationData };
 }) satisfies PageServerLoad;
 
