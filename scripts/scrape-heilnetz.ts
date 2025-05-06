@@ -5,7 +5,7 @@
  * Requires Deno and the --allow-net permission.
  * Usage: deno run --allow-net scripts/scrape-heilnetz.ts > events.json
  */
-import { ScrapedEvent } from "../src/types.ts"; // Import shared interface
+import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
 
 const BASE_URL = 'https://www.heilnetz.de';

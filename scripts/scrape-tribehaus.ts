@@ -5,7 +5,7 @@
  * Requires Deno and the --allow-net permission.
  * Usage: deno run --allow-net scripts/scrape-tribehaus.ts > events.json
  */
-import { ScrapedEvent } from "../src/types.ts"; // Import shared interface
+import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
 
 const BASE_URL = 'https://tribehaus.org';
@@ -108,8 +108,8 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
         }
 
         // Price (look in overview section first, then potentially JSON-LD)
-        let price = 'Preis nicht angegeben';
-        const priceElement = $('.ep95 li[data-property="Preis"] span').first();
+        let price: string | null = null;
+        const priceElement = $('li[data-property="Preis"] span').first();
         if (priceElement.length) {
             price = priceElement.text().trim();
         } else {
@@ -129,7 +129,7 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
 
         // Images - Get all images from the main slider/gallery
         const imageUrls: string[] = [];
-        $('.ep10 .cb-slider-inner .item img').each((_, img) => {
+        $('.cb-slider-inner .item img').each((_, img) => {
             const src = $(img).attr('src') || $(img).attr('srcset')?.split(' ')[0]; // Prefer src, fallback to srcset first entry
             if (src) {
                 // Resolve relative URLs and remove query params if desired
@@ -220,11 +220,11 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
         }
 
         // Tags / Categories
-        const tags: string[] = [];
+        const tagsSet = new Set<string>();
         $('li[data-property="Rubrik"] div.available').each((_, div) => {
             const tagText = $(div).text().trim();
             if (tagText) {
-                tags.push(tagText);
+                tagsSet.add(tagText);
             }
         });
 
@@ -247,7 +247,7 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
             permalink,
             latitude,
             longitude,
-            tags,
+            tags: Array.from(tagsSet),
         };
 
     } catch (error) {
@@ -297,6 +297,7 @@ export async function scrapeTribehausEvents(startUrl: string = `${BASE_URL}/even
         detailCount++;
         console.error(`Fetching detail ${detailCount}/${allPermalinks.length}: ${permalink}...`);
         const eventDetail = await fetchAndParseEventDetail(permalink);
+        console.error(eventDetail)
         if (eventDetail) {
             allEvents.push(eventDetail);
         }

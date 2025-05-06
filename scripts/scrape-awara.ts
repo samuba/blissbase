@@ -5,7 +5,7 @@
  * Requires Deno and the --allow-net permission.
  * Usage: deno run --allow-net scripts/scrape-awara.ts > events.json
  */
-import { ScrapedEvent } from "../src/types.ts"; // Import shared interface
+import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
 
 const BASE_URL = "https://www.awara.events";
@@ -73,7 +73,7 @@ async function fetchListingPageData(page: number): Promise<any | null> {
             },
             body: formData.toString(),
         });
-        await delay(REQUEST_DELAY_MS / 2); // Small delay
+        await Bun.sleep(REQUEST_DELAY_MS / 2); // Small delay
 
         if (!response.ok) {
             console.error(`Error fetching listings page ${page}: ${response.status} ${response.statusText}`);
@@ -322,7 +322,7 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>): Promise<ScrapedE
         return completedEvent; // Return the partially filled event
     }
 
-    await delay(REQUEST_DELAY_MS); // Delay before fetching detail page
+    await Bun.sleep(REQUEST_DELAY_MS); // Delay before fetching detail page
     const detailHtml = await fetchPage(completedEvent.permalink);
 
     if (!detailHtml) {
@@ -707,7 +707,7 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
 
     // Initial fetch to get total pages
     console.error(`--- Fetching page 1 to determine total pages ---`);
-    await delay(REQUEST_DELAY_MS); // Delay before first fetch
+    await Bun.sleep(REQUEST_DELAY_MS); // Delay before first fetch
     const initialData = await fetchListingPageData(currentPage);
 
     if (!initialData || !initialData.html) {
@@ -764,7 +764,7 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
         pageCount++;
         console.error(`--- Processing Page ${currentPage} of ${maxPages} ---`);
 
-        await delay(REQUEST_DELAY_MS); // Delay before fetching next list page
+        await Bun.sleep(REQUEST_DELAY_MS); // Delay before fetching next list page
         const pageData = await fetchListingPageData(currentPage);
 
         if (!pageData || !pageData.html) {

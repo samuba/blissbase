@@ -7,7 +7,7 @@
  */
 
 import { sql, eq } from 'drizzle-orm'; // Import sql and eq from drizzle-orm directly
-import { ScrapedEvent } from '../src/types.ts';
+import type { ScrapedEvent } from '../src/lib/types.ts';
 import * as schema from '../src/lib/server/schema.ts';
 import { scrapeAwaraEvents } from './scrape-awara.ts';
 import { scrapeTribehausEvents } from './scrape-tribehaus.ts';

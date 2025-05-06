@@ -8,7 +8,7 @@ const USER_AGENT = 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://co
 
 // --- Helper Functions ---
 
-async function delay(ms: number): Promise<void> {
+async function Bun.sleep(ms: number): Promise < void> {
     return Bun.sleep(ms);
 }
 
@@ -21,7 +21,7 @@ async function fetchPage(url: string): Promise<{ html: string | null, redirected
             },
             redirect: 'manual' // Important: Don't follow redirects automatically
         });
-        await delay(REQUEST_DELAY_MS / 2); // Small delay even after response starts
+        await Bun.sleep(REQUEST_DELAY_MS / 2); // Small delay even after response starts
 
         // Check for redirect status codes (3xx)
         if (response.status >= 300 && response.status < 400) {
@@ -285,7 +285,7 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>): Promise<ScrapedE
         tags: event.tags ?? [],
     };
 
-    await delay(REQUEST_DELAY_MS);
+    await Bun.sleep(REQUEST_DELAY_MS);
     const detailHtml = await fetchPage(completedEvent.permalink);
 
     if (!detailHtml.html) {
@@ -591,7 +591,7 @@ export async function scrapeSeijetztEvents(): Promise<ScrapedEvent[]> {
         const pageUrl = `${BASE_URL}${START_PATH}?page=${currentPage}`;
         console.error(`\n--- Fetching Page ${currentPage}: ${pageUrl} ---`);
 
-        await delay(REQUEST_DELAY_MS); // Delay before each page fetch
+        await Bun.sleep(REQUEST_DELAY_MS); // Delay before each page fetch
         const { html: pageHtml, redirected } = await fetchPage(pageUrl);
 
         if (redirected) {

@@ -23,7 +23,7 @@
 
 import { config } from 'dotenv';
 import * as schema from '../src/lib/server/schema.ts';
-import type { ScrapedEvent } from '../src/types.ts';
+import type { ScrapedEvent } from '../src/lib/types.ts';
 import { db } from '../src/lib/server/db.ts';
 import { sql } from 'drizzle-orm';
 // Load environment variables from .env file
