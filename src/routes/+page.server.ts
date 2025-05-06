@@ -1,8 +1,40 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql } from 'drizzle-orm';
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
+import { env } from '$env/dynamic/private';
+
+// Helper function to calculate distance using Haversine formula (approximates on a sphere)
+// This is a simplified version. For accurate geospatial queries, PostGIS ST_DWithin is preferred.
+// However, if PostGIS is not available, this can be used to filter after a broader DB query.
+// For direct DB filtering, we will use a raw SQL query with ST_DWithin assuming PostGIS.
+
+async function geocodeLocation(location: string): Promise<{ lat: number; lng: number } | null> {
+    if (!env.GOOGLE_MAPS_API_KEY) {
+        console.error('Google Maps API key is not set. Skipping geocoding.');
+        return null;
+    }
+    try {
+        const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${env.GOOGLE_MAPS_API_KEY}&language=de&region=DE`
+        );
+        if (!response.ok) {
+            console.error(`Geocoding API request failed with status: ${response.status}`);
+            return null;
+        }
+        const data = await response.json();
+        if (data.status === 'OK' && data.results && data.results.length > 0) {
+            return data.results[0].geometry.location; // { lat, lng }
+        } else {
+            console.error('Geocoding failed or no results:', data.status, data.error_message);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error during geocoding:', error);
+        return null;
+    }
+}
 
 export const load = (async ({ url }) => {
     // Get params as string | null
@@ -10,25 +42,23 @@ export const load = (async ({ url }) => {
     const limitParam = url.searchParams.get('limit');
     const startDateParam = url.searchParams.get('startDate');
     const endDateParam = url.searchParams.get('endDate');
+    const plzCityParam = url.searchParams.get('plzCity');
+    const distanceParam = url.searchParams.get('distance'); // in km
 
     // Parse params with defaults for internal use
     const pageNumber = parseInt(pageParam ?? '1', 10);
     let limitNumber = parseInt(limitParam ?? '10', 10);
 
-    // Ensure limitNumber is valid and within bounds (e.g., max 20)
     if (isNaN(limitNumber) || limitNumber <= 0) {
-        limitNumber = 10; // Default limit
+        limitNumber = 10;
     }
-    limitNumber = Math.min(limitNumber, 20); // Apply max limit
+    limitNumber = Math.min(limitNumber, 20);
 
-    // Ensure pageNumber is valid
     const page = isNaN(pageNumber) || pageNumber < 1 ? 1 : pageNumber;
-
     const offset = (page - 1) * limitNumber;
-
     const timeZone = getLocalTimeZone();
 
-    let finalCondition;
+    let dateCondition;
 
     if (startDateParam && endDateParam) {
         try {
@@ -37,32 +67,24 @@ export const load = (async ({ url }) => {
             const startDate = startCalDate.toDate(timeZone);
             const endDate = endCalDate.add({ days: 1 }).toDate(timeZone);
 
-            // Events starting within the selected range
             const startsInRange = and(
                 gte(eventsTable.startAt, startDate),
                 lte(eventsTable.startAt, endDate)
             );
-
-            // Events ending within the selected range (for multi-day events starting before the range)
             const endsInRange = and(
                 lt(eventsTable.startAt, startDate),
                 isNotNull(eventsTable.endAt),
                 gte(eventsTable.endAt, startDate),
                 lte(eventsTable.endAt, endDate)
             );
-
-            // Events that span the entire selected range
             const spansRange = and(
                 lt(eventsTable.startAt, startDate),
                 isNotNull(eventsTable.endAt),
                 gt(eventsTable.endAt, endDate)
             );
-
-            finalCondition = or(startsInRange, endsInRange, spansRange);
-
+            dateCondition = or(startsInRange, endsInRange, spansRange);
         } catch (error) {
-            console.error("Error parsing date parameters:", error);
-            // Fallback to default condition if parsing fails
+            console.error('Error parsing date parameters:', error);
             const todayDate = getToday(timeZone);
             const todayStart = todayDate.toDate(timeZone);
             const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
@@ -72,46 +94,57 @@ export const load = (async ({ url }) => {
                 gte(eventsTable.endAt, todayStart),
                 lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
             );
-            finalCondition = or(startsTodayOrLater, acceptableOngoingEvent);
+            dateCondition = or(startsTodayOrLater, acceptableOngoingEvent);
         }
-
     } else {
-        // Default condition if no time range is provided
         const todayDate = getToday(timeZone);
         const todayStart = todayDate.toDate(timeZone);
         const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
-        // Event has already started but ends today or later, with end date within 20 days
         const acceptableOngoingEvent = and(
             lt(eventsTable.startAt, todayStart),
             isNotNull(eventsTable.endAt),
             gte(eventsTable.endAt, todayStart),
             lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
         );
-        finalCondition = or(startsTodayOrLater, acceptableOngoingEvent);
+        dateCondition = or(startsTodayOrLater, acceptableOngoingEvent);
     }
+
+    let proximityCondition = undefined;
+    let geocodedCoords: { lat: number; lng: number } | null = null;
+
+    if (plzCityParam && distanceParam) {
+        geocodedCoords = await geocodeLocation(plzCityParam);
+        if (geocodedCoords) {
+            const distanceMeters = parseFloat(distanceParam) * 1000;
+            // Ensure latitude and longitude columns are not null for the ST_DWithin check
+            proximityCondition = sql`ST_DWithin(ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography, ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography, ${distanceMeters}) AND ${eventsTable.latitude} IS NOT NULL AND ${eventsTable.longitude} IS NOT NULL`;
+        }
+    }
+
+    const allConditions = [dateCondition, proximityCondition].filter(Boolean);
+    const finalCondition = allConditions.length > 0 ? and(...allConditions) : undefined;
 
     const eventsQuery = db.query.events.findMany({
         where: finalCondition,
         orderBy: [asc(eventsTable.startAt)],
-        limit: limitNumber, // Use parsed limitNumber
+        limit: limitNumber,
         offset: offset
     });
 
-    const totalEventsQuery = db
-        .select({ count: count() })
-        .from(eventsTable)
-        .where(finalCondition);
+    const totalEventsQuery = db.select({ count: count() }).from(eventsTable).where(finalCondition);
 
     const [events, totalResult] = await Promise.all([eventsQuery, totalEventsQuery]);
 
     const totalEvents = totalResult[0].count;
-    const totalPages = Math.ceil(totalEvents / limitNumber); // Use parsed limitNumber
+    const totalPages = Math.ceil(totalEvents / limitNumber);
 
     const pagination = {
         totalEvents,
         totalPages,
         startDate: startDateParam,
         endDate: endDateParam,
+        plzCity: plzCityParam,
+        distance: distanceParam,
         page: pageNumber,
         limit: limitNumber
     };

@@ -42,7 +42,7 @@
 >
 	<DateRangePicker.Trigger class="w-fit">
 		<div
-			class="h-input input border-base-300 bg-base-100 text-base-content focus-within:border-neutral focus-within:shadow-date-field-focus hover:border-neutral flex items-center border px-4 py-3 text-sm tracking-[0.01em] select-none {className}"
+			class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus px-3 select-none {className}"
 		>
 			<Calendar class="size-6" />
 

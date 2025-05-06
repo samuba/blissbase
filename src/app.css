@@ -5,3 +5,9 @@
 		cupcake --prefersdark,
 		cupcake;
 }
+
+@theme {
+	/* from daisyUI internals, color for input borders */
+	--input-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);
+	--color-base-500: var(--input-color);
+}

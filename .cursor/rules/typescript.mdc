@@ -1,0 +1,10 @@
+---
+description: 
+globs: *.ts,*.tsx,*.svelte
+alwaysApply: false
+---
+- Always use early returns, early continues and early breaks. 
+- always use backticks for strings except for: imports, nested strings, console.log, console.error.
+- Always use string interpolation when possible instead of concatenating strings. Do this: `${foo} ${bar}` Instead of this: foo + " " + bar
+- Always use an object named 'args' instead of individual arguments for functions when the function exceeds 2 arguments
+- Always place root level Typescript type definitions at the bottom of the file 
