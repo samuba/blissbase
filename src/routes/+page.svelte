@@ -10,6 +10,8 @@
 	import { routes } from '$lib/routes.js';
 	import { navigating } from '$app/state';
 	import SpinnerBall from 'phosphor-svelte/lib/SpinnerBall';
+	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
+	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
 
 	const { data } = $props();
 	const { events, pagination } = $derived(data); // pagination is reactive, reflects URL params
@@ -138,10 +140,12 @@
 					if (pagination.page <= 1) e.preventDefault();
 				}}
 			>
-				<button class="btn" disabled={pagination.page <= 1}> Previous </button>
+				<button class="btn" disabled={pagination.page <= 1}>
+					<ArrowLeft class="size-5" />
+				</button>
 			</a>
 			<span class="text-sm text-gray-700">
-				Page {pagination.page} of {pagination.totalPages}
+				{pagination.page} von {pagination.totalPages}
 			</span>
 			<a
 				href={routes.searchPage({
@@ -158,7 +162,9 @@
 					if (pagination.page >= pagination.totalPages) e.preventDefault();
 				}}
 			>
-				<button class="btn" disabled={pagination.page >= pagination.totalPages}> Next </button>
+				<button class="btn" disabled={pagination.page >= pagination.totalPages}>
+					<ArrowRight class="size-5" />
+				</button>
 			</a>
 		</div>
 	{/if}
