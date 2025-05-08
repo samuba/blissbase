@@ -14,18 +14,6 @@
 	const { data } = $props();
 	const { events, pagination } = $derived(data); // pagination is reactive, reflects URL params
 
-	// Effect to synchronize UI state from URL changes (via pagination prop)
-	$effect(() => {
-		// This effect runs whenever pagination changes
-		// (e.g. when URL parameters change externally)
-		// If pagination contains lat/lng, it means the user initially searched by coords or current location.
-		// We need to ensure LocationDistanceInput reflects this.
-		// The current LocationDistanceInput takes an `initialLocation` string.
-		// If we have lat/lng, we could format it as 'coords:lat,lng' for it,
-		// or we might enhance LocationDistanceInput to take initialLat/initialLng props directly.
-		// For now, we'll rely on the 'coords:' prefix if lat/lng are present in pagination.
-	});
-
 	function buildAndGoToUrl(
 		pageReset: boolean,
 		startDateArg?: string | null,

@@ -42,10 +42,8 @@
 >
 	<DateRangePicker.Trigger class="w-fit">
 		<div
-			class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus px-3 select-none {className}"
+			class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus px-3.5 select-none {className}"
 		>
-			<Calendar class="size-6" />
-
 			{#each ['start', 'end'] as const as type}
 				<DateRangePicker.Input {type}>
 					{#snippet children({ segments })}
@@ -71,23 +69,19 @@
 					<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
 				{/if}
 			{/each}
+
+			<Calendar class="size-6" />
 		</div>
 	</DateRangePicker.Trigger>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
-		<DateRangePicker.Calendar
-			class="rounded-15px border-base-300 bg-base-200 shadow-popover mt-6 border p-[22px]"
-		>
+		<DateRangePicker.Calendar class="card card-border rounded-15px bg-base-100 p-4 shadow-xl">
 			{#snippet children({ months, weekdays })}
 				<DateRangePicker.Header class="flex items-center justify-between">
-					<DateRangePicker.PrevButton
-						class="rounded-9px bg-base-200 hover:bg-base-300 inline-flex size-10 items-center justify-center transition-all active:scale-[0.98]"
-					>
+					<DateRangePicker.PrevButton class="btn btn-ghost p-1.5 active:scale-[0.98]">
 						<CaretLeft class="size-6" />
 					</DateRangePicker.PrevButton>
-					<DateRangePicker.Heading class="text-base-content text-[15px] font-medium" />
-					<DateRangePicker.NextButton
-						class="rounded-9px bg-base-200 hover:bg-base-300 inline-flex size-10 items-center justify-center transition-all active:scale-[0.98]"
-					>
+					<DateRangePicker.Heading class="text-base-content text-lg font-medium" />
+					<DateRangePicker.NextButton class="btn btn-ghost p-1.5 active:scale-[0.98]">
 						<CaretRight class="size-6" />
 					</DateRangePicker.NextButton>
 				</DateRangePicker.Header>
@@ -115,7 +109,7 @@
 												class="relative m-0 size-10 overflow-visible p-0! text-center text-sm focus-within:relative focus-within:z-20"
 											>
 												<DateRangePicker.Day
-													class={'rounded-9px text-base-content hover:border-primary focus-visible:ring-primary! data-selection-end:rounded-9px data-selection-start:rounded-9px data-highlighted:bg-base-300 data-selected:bg-base-300 data-selection-end:bg-primary data-selection-start:bg-primary data-disabled:text-base-content/30 data-selected:text-primary-content data-selection-end:text-primary-content data-selection-start:text-primary-content data-unavailable:text-base-content/50 data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:border-primary group relative  inline-flex size-10 items-center justify-center overflow-visible border border-transparent bg-transparent p-0 text-sm font-normal whitespace-nowrap transition-all data-disabled:pointer-events-none data-highlighted:rounded-none data-outside-month:pointer-events-none data-selected:font-medium data-selection-end:font-medium data-selection-start:font-medium data-selection-start:focus-visible:ring-2 data-selection-start:focus-visible:ring-offset-2! data-unavailable:line-through data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:rounded-none data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-0! data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-offset-0!'}
+													class={'rounded-9px text-base-content hover:border-primary focus-visible:ring-primary! data-highlighted:bg-base-300 data-selected:bg-base-300 data-selection-end:bg-primary data-selection-start:bg-primary data-disabled:text-base-content/30 data-selected:text-primary-content data-selection-end:text-primary-content data-selection-start:text-primary-content data-unavailable:text-base-content/50 data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:border-primary group relative inline-flex size-10  items-center justify-center overflow-visible border border-transparent bg-transparent p-0 text-sm font-normal whitespace-nowrap transition-all data-disabled:pointer-events-none data-highlighted:rounded-none data-outside-month:pointer-events-none data-selected:font-medium data-selection-end:rounded-r-3xl data-selection-end:font-medium data-selection-start:rounded-l-3xl data-selection-start:font-medium data-selection-start:focus-visible:ring-2 data-selection-start:focus-visible:ring-offset-2! data-unavailable:line-through data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:rounded-none data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-0! data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-offset-0!'}
 												>
 													<div
 														class="bg-primary group-data-selected:bg-base-100 absolute top-[5px] hidden size-1 rounded-full transition-all group-data-today:block"

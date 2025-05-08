@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import type { SelectEvent } from '$lib/types';
+	import {} from '@internationalized/date';
 
 	const { event, class: className }: { event: SelectEvent; class?: string } = $props();
 
@@ -11,16 +12,28 @@
 	function formatTimeStr(start: Date | undefined, end: Date | undefined | null): string {
 		if (!start) return 'Date TBD';
 
-		const startOptions: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' };
-		let str = start.toLocaleString('de-DE', startOptions);
+		const now = new Date();
+		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+		const eventStartDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+
+		const diffTime = eventStartDay.getTime() - today.getTime();
+		const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+		const rtf = new Intl.RelativeTimeFormat('de', { numeric: 'auto' });
+
+		let dateString: string;
+
+		if (diffDays === 1 || diffDays === 0 || diffDays === -1) {
+			const relativeDate = rtf.format(diffDays, 'day');
+			// Capitalize first letter for German "Gestern", "Heute", "Morgen"
+			dateString = relativeDate.charAt(0).toUpperCase() + relativeDate.slice(1);
+		} else {
+			dateString = start.toLocaleDateString('de-DE', { dateStyle: 'medium' });
+		}
+
+		let str = `${dateString}, ${start.toLocaleTimeString('de-DE', { timeStyle: 'short' })}`;
 
 		if (end) {
-			const endOptionsTimeOnly: Intl.DateTimeFormatOptions = { timeStyle: 'short' };
-			const endOptionsDateTime: Intl.DateTimeFormatOptions = {
-				dateStyle: 'medium',
-				timeStyle: 'short'
-			};
-
 			const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
 			const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
 			const nextDayStart = new Date(startDay.getTime() + 24 * 60 * 60 * 1000);
@@ -32,10 +45,13 @@
 
 			if (endsOnSameDayOrBeforeNoonNextDay) {
 				// Only show end time
-				str += ` - ${end.toLocaleTimeString('de-DE', endOptionsTimeOnly)}`;
+				str += ` – ${end.toLocaleTimeString('de-DE', { timeStyle: 'short' })}`;
 			} else {
 				// Show end date and time
-				str += ` - ${end.toLocaleString('de-DE', endOptionsDateTime)}`;
+				str += ` – ${end.toLocaleString('de-DE', {
+					dateStyle: 'medium',
+					timeStyle: 'short'
+				})}`;
 			}
 		}
 		return str;

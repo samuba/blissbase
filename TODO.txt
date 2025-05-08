@@ -1,6 +1,17 @@
+events: 
+  relative zeit (morgen)
+  relative distanz 12km entfernt
 
-radius filter
+date picker: anzeige: heute im input
+
+deduplicate: wenn hostUrl schon einen hat zur selben zeit nimm den letzteren
+
+
 
 reverse geocoding
   adress cache
 download images and serve
+
+
+tribehaus
+  ganztägig korrekt erfassen https://tribehaus.org/event/lebensgeschenk

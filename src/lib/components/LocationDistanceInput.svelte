@@ -189,7 +189,7 @@
 	{/if}
 	<button
 		class={[
-			'btn btn-ghost join-item border-base-500 border-r-0 border-l p-2.5',
+			'btn btn-ghost bg-base-100 join-item border-base-500 border-r-0 border-l p-2.5',
 			usingCurrentLocation && 'bg-base-200 hover:bg-base-300'
 		]}
 		title="Aktuellen Standort verwenden"
