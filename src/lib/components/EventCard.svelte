@@ -1,9 +1,8 @@
 <script lang="ts">
 	import MapPin from 'phosphor-svelte/lib/MapPin';
-	import type { SelectEvent } from '$lib/types';
-	import {} from '@internationalized/date';
+	import type { UiEvent } from '$lib/../routes/+page.server';
 
-	const { event, class: className }: { event: SelectEvent; class?: string } = $props();
+	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
 	let noImage = $state(event.imageUrls?.[0] === undefined);
 
@@ -76,7 +75,7 @@
 				/>
 			{/if}
 			<!-- <div
-			class="text-muted-foreground absolute right-1 bottom-1 flex items-center justify-center rounded-md rounded-bl-md border-t border-r bg-slate-200 px-1 pt-1 pb-1 text-xs md:right-auto md:left-1"
+			class="absolute right-1 bottom-1 flex items-center justify-center rounded-md rounded-bl-md border-t border-r bg-slate-200 px-1 pt-1 pb-1 text-xs md:right-auto md:left-1"
 			title="Event from {event.url.split('/')[2]?.replace('www.', '')}"
 		>
 			{#if event.url.includes('facebook.com')}
@@ -94,16 +93,25 @@
 		<div class="card-body flex flex-col gap-2">
 			<h3 class="card-title leading-snug tracking-tight">{event.name}</h3>
 
-			<time class="text-muted-foreground text-sm">
+			<time class="text-sm">
 				{formatTimeStr(event.startAt, event.endAt)}
 			</time>
 
 			{#if event.address?.length}
-				<div class="text-muted-foreground flex items-center gap-1 text-sm">
+				<div class="flex items-center gap-1 text-sm">
 					<MapPin class="mr-1.5 size-4 min-w-4" />
-					<span class="leading-tight">
-						{event.address.join(' · ')}
-					</span>
+
+					<div class="leading-tight">
+						{#if event.distanceKm}
+							<span class="font-medium">
+								{event.distanceKm} km entfernt
+							</span>
+						{/if}
+						<div>
+							{#if event.distanceKm}{/if}
+							{event.address.join(' · ')}
+						</div>
+					</div>
 				</div>
 			{/if}
 

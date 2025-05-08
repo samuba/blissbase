@@ -20,4 +20,3 @@ export interface ScrapedEvent {
 }
 
 export type InsertEvent = typeof events.$inferInsert;
-export type SelectEvent = typeof events.$inferSelect; 

@@ -113,7 +113,19 @@ export const load = (async ({ url }) => {
         where: finalCondition,
         orderBy: [asc(eventsTable.startAt)],
         limit: limitNumber,
-        offset: offset
+        offset: offset,
+        extras: {
+            distanceKm: geocodedCoords ? sql<number | null>`
+            CASE
+                WHEN ${eventsTable.longitude} IS NOT NULL AND ${eventsTable.latitude} IS NOT NULL THEN
+                    ROUND(ST_Distance(
+                        ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography,
+                        ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
+                    ) / 1000)
+                ELSE NULL
+            END
+        `.as('distance_km') : sql<null>`NULL`.as('distance_km')
+        }
     });
 
     const totalEventsQuery = db.select({ count: count() }).from(eventsTable).where(finalCondition);
@@ -169,3 +181,5 @@ async function geocodeLocation(location: string): Promise<{ lat: number; lng: nu
         return null;
     }
 }
+
+export type UiEvent = Awaited<ReturnType<typeof load>>['events'][number];

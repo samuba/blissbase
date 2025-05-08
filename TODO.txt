@@ -1,8 +1,4 @@
 events: 
-  relative zeit (morgen)
-  relative distanz 12km entfernt
-
-date picker: anzeige: heute im input
 
 deduplicate: wenn hostUrl schon einen hat zur selben zeit nimm den letzteren
 
