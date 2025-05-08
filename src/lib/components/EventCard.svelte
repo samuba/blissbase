@@ -89,35 +89,21 @@
 
 <a href={event.permalink} target="_blank" rel="noopener noreferrer" class="w-full">
 	<div
-		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg md:flex-row {className}"
+		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg sm:flex-row {className}"
 	>
 		<div
 			class={[
-				'from-base-200/50 to-base-300 relative  min-w-32 rounded-t-lg bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:rounded-l-lg sm:rounded-tr-none'
+				'from-base-200/50 to-base-300 relative min-w-32 rounded-t-lg bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-l-lg sm:rounded-tr-none'
 			]}
 		>
 			{#if noImage}{:else}
 				<img
-					class="h-full max-h-[90dvw] w-full rounded-t-lg object-cover object-center sm:rounded-l-lg sm:rounded-tr-none"
+					class="h-full w-full rounded-t-lg object-cover object-center sm:absolute sm:inset-0 sm:rounded-l-lg sm:rounded-tr-none"
 					src={event.imageUrls?.[0]}
 					alt="illustration for event: {event.name}"
 					onerror={() => (noImage = true)}
 				/>
 			{/if}
-			<!-- <div
-			class="absolute right-1 bottom-1 flex items-center justify-center rounded-md rounded-bl-md border-t border-r bg-slate-200 px-1 pt-1 pb-1 text-xs md:right-auto md:left-1"
-			title="Event from {event.url.split('/')[2]?.replace('www.', '')}"
-		>
-			{#if event.url.includes('facebook.com')}
-				<IconFacebook class="inline-block size-4" />
-			{:else if event.url.includes('meetup.com')}
-				<IconMeetup class="inline-block size-4" />
-			{:else if event.url.includes('retreat.guru')}
-				<IconRetreatGuru class="inline-block size-4" />
-			{:else if event.url.includes('.eventbrite.')}
-				<IconEventbrite class="inline-block size-4" />
-			{/if}
-		</div> -->
 		</div>
 
 		<div class="card-body flex flex-col gap-2">
