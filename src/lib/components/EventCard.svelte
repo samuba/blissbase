@@ -6,8 +6,6 @@
 
 	let noImage = $state(event.imageUrls?.[0] === undefined);
 
-	console.log(event);
-
 	function formatTimeStr(start: Date | undefined, end: Date | undefined | null): string {
 		if (!start) return 'Date TBD';
 
@@ -46,14 +44,46 @@
 				// Only show end time
 				str += ` – ${end.toLocaleTimeString('de-DE', { timeStyle: 'short' })}`;
 			} else {
-				// Show end date and time
-				str += ` – ${end.toLocaleString('de-DE', {
-					dateStyle: 'medium',
-					timeStyle: 'short'
-				})}`;
+				// Show start date – end date (no times)
+				str = dateString; // Initialize str with only the date string, removing the start time
+				str += ` – ${end.toLocaleDateString('de-DE', { dateStyle: 'medium' })}`;
 			}
 		}
 		return str;
+	}
+
+	function formatAddress(address: string[]): string {
+		const bundeslaender = [
+			'Bayern',
+			'Baden-Württemberg',
+			'Berlin',
+			'Brandenburg',
+			'Bremen',
+			'Hamburg',
+			'Hessen',
+			'Mecklenburg-Vorpommern',
+			'Niedersachsen',
+			'Nordrhein-Westfalen',
+			'Rheinland-Pfalz',
+			'Saarland',
+			'Sachsen',
+			'Sachsen-Anhalt',
+			'Schleswig-Holstein',
+			'Thüringen'
+		];
+
+		const formattedAddress = address
+			.filter(
+				(x) => !bundeslaender.includes(x.trim()) && !x.trim().match(/\d{5}/) // no zip codes
+			)
+			.map((x) => {
+				return x
+					.replace(/Deutschland/g, 'DE')
+					.replace(/Österreich/g, 'AT')
+					.replace(/Schweiz/g, 'CH');
+			});
+
+		return formattedAddress.join(' · ');
 	}
 </script>
 
@@ -108,8 +138,7 @@
 							</span>
 						{/if}
 						<div>
-							{#if event.distanceKm}{/if}
-							{event.address.join(' · ')}
+							{formatAddress(event.address)}
 						</div>
 					</div>
 				</div>

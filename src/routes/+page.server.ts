@@ -130,7 +130,10 @@ export const load = (async ({ url }) => {
 
     const totalEventsQuery = db.select({ count: count() }).from(eventsTable).where(finalCondition);
 
+    const startTime = performance.now();
     const [events, totalResult] = await Promise.all([eventsQuery, totalEventsQuery]);
+    const endTime = performance.now();
+    console.log(`Query execution time: ${endTime - startTime}ms`);
 
     const totalEvents = totalResult[0].count;
     const totalPages = Math.ceil(totalEvents / limitNumber);
