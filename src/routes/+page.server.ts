@@ -5,8 +5,6 @@ import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql } from 'drizzle-o
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 
-
-
 export const load = (async ({ url }) => {
     // Get params as string | null
     const pageParam = url.searchParams.get('page');
@@ -30,6 +28,7 @@ export const load = (async ({ url }) => {
     const page = isNaN(pageNumber) || pageNumber < 1 ? 1 : pageNumber;
     const offset = (page - 1) * limitNumber;
     const timeZone = getLocalTimeZone();
+    const sixHoursAgo = new Date(new Date().getTime() - 6 * 60 * 60 * 1000);
 
     let dateCondition;
 
@@ -48,12 +47,14 @@ export const load = (async ({ url }) => {
                 lt(eventsTable.startAt, startDate),
                 isNotNull(eventsTable.endAt),
                 gte(eventsTable.endAt, startDate),
-                lte(eventsTable.endAt, endDate)
+                lte(eventsTable.endAt, endDate),
+                gte(eventsTable.startAt, sixHoursAgo) // Only include events that started within the last 6 hours
             );
             const spansRange = and(
                 lt(eventsTable.startAt, startDate),
                 isNotNull(eventsTable.endAt),
-                gt(eventsTable.endAt, endDate)
+                gt(eventsTable.endAt, endDate),
+                gte(eventsTable.startAt, sixHoursAgo) // Only include events that started within the last 6 hours
             );
             dateCondition = or(startsInRange, endsInRange, spansRange);
         } catch (error) {
@@ -63,6 +64,7 @@ export const load = (async ({ url }) => {
             const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
             const acceptableOngoingEvent = and(
                 lt(eventsTable.startAt, todayStart),
+                gte(eventsTable.startAt, sixHoursAgo), // Only include events that started within the last 6 hours
                 isNotNull(eventsTable.endAt),
                 gte(eventsTable.endAt, todayStart),
                 lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
@@ -75,6 +77,7 @@ export const load = (async ({ url }) => {
         const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
         const acceptableOngoingEvent = and(
             lt(eventsTable.startAt, todayStart),
+            gte(eventsTable.startAt, sixHoursAgo), // Only include events that started within the last 12 hours
             isNotNull(eventsTable.endAt),
             gte(eventsTable.endAt, todayStart),
             lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
