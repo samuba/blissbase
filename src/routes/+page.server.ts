@@ -1,9 +1,10 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, like } from 'drizzle-orm';
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import { geocodeLocation } from '$lib/common';
 
 export const load = (async ({ url }) => {
     // Get params as string | null
@@ -99,7 +100,7 @@ export const load = (async ({ url }) => {
             }
         } else if (plzCityParam && plzCityParam.trim() !== '') {
             // Only geocode if plzCityParam is provided and not empty, and lat/lng are not present
-            geocodedCoords = await geocodeLocation(plzCityParam);
+            geocodedCoords = await geocodeLocation(plzCityParam, GOOGLE_MAPS_API_KEY);
         }
 
         if (geocodedCoords) {
@@ -157,35 +158,5 @@ export const load = (async ({ url }) => {
     return { events, pagination: paginationData };
 }) satisfies PageServerLoad;
 
-// Helper function to calculate distance using Haversine formula (approximates on a sphere)
-// This is a simplified version. For accurate geospatial queries, PostGIS ST_DWithin is preferred.
-// However, if PostGIS is not available, this can be used to filter after a broader DB query.
-// For direct DB filtering, we will use a raw SQL query with ST_DWithin assuming PostGIS.
-
-async function geocodeLocation(location: string): Promise<{ lat: number; lng: number } | null> {
-    if (!GOOGLE_MAPS_API_KEY) {
-        console.error('Google Maps API key is not set. Skipping geocoding.');
-        return null;
-    }
-    try {
-        const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${GOOGLE_MAPS_API_KEY}&language=de&region=DE`
-        );
-        if (!response.ok) {
-            console.error(`Geocoding API request failed with status: ${response.status}`);
-            return null;
-        }
-        const data = await response.json();
-        if (data.status === 'OK' && data.results && data.results.length > 0) {
-            return data.results[0].geometry.location; // { lat, lng }
-        } else {
-            console.error('Geocoding failed or no results:', data.status, data.error_message);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error during geocoding:', error);
-        return null;
-    }
-}
 
 export type UiEvent = Awaited<ReturnType<typeof load>>['events'][number];
