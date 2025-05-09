@@ -1,27 +1,12 @@
 /**
  * Fetches event pages from awara.events (starting from https://awara.events/veranstaltungen)
- * or processes a local HTML file if a path is provided as a command-line argument.
- *
- * When scraping from awara.events:
- * - Uses AJAX-based pagination to iterate through all pages.
- * - Fetches each event's detail page.
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- * - Prioritizes data from LD+JSON script tags if available.
- *
- * When a local HTML file path is provided:
- * - Parses only that single HTML file.
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- * - Prints the single event JSON to standard output.
- *
- * Requires Bun (https://bun.sh/).
- *
- * Usage:
- *   To scrape from the web: bun run scripts/scrape-awara.ts > events.json
- *   To parse a local file:  bun run scripts/scrape-awara.ts <path_to_html_file> > event.json
+ * iterates through all pagination pages, and extracts all events as JSON according to the ScrapedEvent interface.
+ * 
+ * Requires Deno and the --allow-net permission.
+ * Usage: deno run --allow-net scripts/scrape-awara.ts > events.json
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
-import { geocodeAddressFromEvent } from "./common.ts";
 
 const BASE_URL = "https://www.awara.events";
 const START_PATH = "/veranstaltungen/";
@@ -59,7 +44,7 @@ async function fetchPage(url: string): Promise<string | null> {
 /**
  * Fetches event listing data from the AJAX endpoint.
  */
-async function fetchListingPageData(page: number): Promise<{ html: string; max_num_pages: string } | null> {
+async function fetchListingPageData(page: number): Promise<any | null> {
     const formData = new URLSearchParams();
     formData.append('lang', '');
     formData.append('search_keywords', '');
@@ -98,8 +83,7 @@ async function fetchListingPageData(page: number): Promise<{ html: string; max_n
             } catch { /* ignore read error */ }
             return null;
         }
-        const jsonResponse = await response.json();
-        return { html: jsonResponse.html, max_num_pages: jsonResponse.max_num_pages };
+        return await response.json(); // Expecting JSON response
     } catch (error) {
         console.error(`Network error fetching listings page ${page}:`, error);
         return null;
@@ -294,7 +278,7 @@ async function parseListPage(html: string): Promise<{ events: Partial<ScrapedEve
 /**
  * Fetches and parses the detail page for an event, adding missing details.
  */
-async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: string): Promise<ScrapedEvent> {
+async function fetchEventDetails(event: Partial<ScrapedEvent>): Promise<ScrapedEvent> {
     // Robust check: Ensure essential data from list view is present
     if (!event.name || !event.permalink || !event.startAt) {
         console.error("Cannot fetch details for event with missing name, permalink, or startAt:", event);
@@ -333,18 +317,13 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
         tags: event.tags ?? [],
     };
 
-    let detailHtml: string | null = null;
-
-    if (htmlString) {
-        detailHtml = htmlString;
-    } else {
-        if (!completedEvent.permalink) {
-            console.error(`Skipping detail fetch for event "${completedEvent.name}" due to missing permalink.`);
-            return completedEvent; // Return the partially filled event
-        }
-        await Bun.sleep(REQUEST_DELAY_MS); // Delay before fetching detail page
-        detailHtml = await fetchPage(completedEvent.permalink);
+    if (!completedEvent.permalink) {
+        console.error(`Skipping detail fetch for event "${completedEvent.name}" due to missing permalink.`);
+        return completedEvent; // Return the partially filled event
     }
+
+    await Bun.sleep(REQUEST_DELAY_MS); // Delay before fetching detail page
+    const detailHtml = await fetchPage(completedEvent.permalink);
 
     if (!detailHtml) {
         console.error(`Failed to fetch details for: ${completedEvent.permalink}`);
@@ -369,7 +348,7 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
         ];
 
         // Helper function to recursively extract text content with basic formatting
-        function extractTextWithFormatting(element: cheerio.Cheerio): string {
+        function extractTextWithFormatting(element: cheerio.Cheerio<cheerio.AnyNode>): string { // Accept AnyNode
             let text = '';
             element.contents().each((_i, node) => {
                 const $node = $(node);
@@ -382,8 +361,8 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
                         text += trimmedText + (text.length > 0 && !/\s$/.test(text) ? ' ' : '');
                     }
                 } else if (node.type === 'tag') {
-                    // Use nodeName which is available in both Element and Tag
-                    const tagName = (node as cheerio.TagElement).name.toLowerCase();
+                    const elementNode = node as cheerio.Element; // Cast to Element for tagName access
+                    const tagName = elementNode.tagName.toLowerCase();
 
                     if (tagName === 'br') {
                         text += '\n';
@@ -392,12 +371,12 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
                         if (text.length > 0 && !text.endsWith('\n') && !text.endsWith('\n\n')) {
                             text += '\n';
                         }
-                        text += extractTextWithFormatting($node);
+                        text += extractTextWithFormatting($node as cheerio.Cheerio<cheerio.Element>);
                         // Add double newline after block elements for separation
                         text += '\n\n';
 
                     } else if (tagName === 'li') {
-                        text += '- ' + extractTextWithFormatting($node).trim() + '\n'; // Add bullet point and newline
+                        text += '- ' + extractTextWithFormatting($node as cheerio.Cheerio<cheerio.Element>).trim() + '\n'; // Add bullet point and newline
 
                     } else if (['script', 'style', 'img', 'iframe', 'button', 'input', 'select', 'textarea', 'nav', 'footer', 'header'].includes(tagName)) {
                         // Ignore these tags entirely
@@ -411,7 +390,7 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
                     }
                     else {
                         // For other inline tags like span, strong, em, just recurse
-                        text += extractTextWithFormatting($node);
+                        text += extractTextWithFormatting($node as cheerio.Cheerio<cheerio.Element>);
                     }
                 } else if (node.type === 'comment') {
                     // Ignore comments
@@ -420,11 +399,12 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
             return text;
         }
 
+
         for (const selector of potentialDescSelectors) {
             const element = $(selector).first();
             if (element.length > 0) {
                 // Use the helper function to extract text
-                let extractedText = extractTextWithFormatting(element);
+                let extractedText = extractTextWithFormatting(element as cheerio.Cheerio<cheerio.AnyNode>);
 
                 // Clean up extra whitespace and multiple newlines
                 extractedText = extractedText
@@ -647,19 +627,6 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
         completedEvent.latitude = (lat !== null && !isNaN(lat)) ? lat : null;
         completedEvent.longitude = (lon !== null && !isNaN(lon)) ? lon : null;
 
-        // Try to geocode if we don't have coordinates but have an address
-        if ((completedEvent.latitude === null || completedEvent.longitude === null) && completedEvent.address && completedEvent.address.length > 0) {
-            try {
-                const coordinates = await geocodeAddressFromEvent(completedEvent.address);
-                if (coordinates) {
-                    completedEvent.latitude = coordinates.lat;
-                    completedEvent.longitude = coordinates.lng;
-                    console.error(`Geocoded address for "${completedEvent.name}"`);
-                }
-            } catch (error) {
-                console.error(`Error geocoding address for "${completedEvent.name}":`, error);
-            }
-        }
 
         // Tags/Categories (Combine schema keywords, visible tags/categories, event type)
         const tags: Set<string> = new Set(completedEvent.tags); // Start with any tags from list view
@@ -679,9 +646,9 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
                     let potentialCats = item.about || item.additionalType;
                     if (potentialCats) {
                         if (!Array.isArray(potentialCats)) potentialCats = [potentialCats];
-                        potentialCats.forEach((cat: unknown) => {
+                        potentialCats.forEach((cat: any) => { // Add explicit 'any' type for cat
                             if (typeof cat === 'string' && cat) tags.add(cat);
-                            else if (cat && typeof cat === 'object' && 'name' in cat && typeof cat.name === 'string') tags.add(cat.name);
+                            else if (typeof cat === 'object' && cat.name) tags.add(cat.name);
                         });
                     }
                 }
@@ -706,9 +673,8 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
             for (const tagEl of tagElements.get()) { // .get() returns an array of DOM elements
                 // Check if it's an Element node before accessing text()
                 if (tagEl.type === 'tag') {
-                    const rawTagText = $(tagEl).text();
-                    const cleanedTagText = rawTagText.replace(/\s+/g, ' ').trim();
-                    if (cleanedTagText) tags.add(cleanedTagText);
+                    const tagText = $(tagEl).text().trim();
+                    if (tagText) tags.add(tagText);
                 }
             }
         }
@@ -720,136 +686,12 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>, htmlString?: stri
         console.error(`Error parsing detail page ${completedEvent.permalink}:`, error);
     }
 
-    console.log(completedEvent);
-
     return completedEvent;
 }
 
-/**
- * Process a single HTML file (provided as a path) and extract event data.
- * @param htmlContent The HTML content to process
- * @param filePath The file path (used as fallback permalink)
- * @returns A ScrapedEvent object or null if extraction failed
- */
-async function processLocalHtmlFile(htmlContent: string, filePath: string): Promise<ScrapedEvent | null> {
-    // Create a placeholder permalink using the file path
-    const permalink = `file://${filePath}`;
 
-    try {
-        const $ = cheerio.load(htmlContent);
+// --- Main Execution ---
 
-        // Attempt to find the actual URL if it exists in the HTML
-        let actualUrl = $('meta[property="og:url"]').attr('content');
-        if (!actualUrl) {
-            actualUrl = $('link[rel="canonical"]').attr('href');
-        }
-
-        // Extract more details directly from the HTML for local file processing
-        let name = $('h1.entry-title').first().text().trim();
-        if (!name) {
-            name = $('.wpem-event-title h3.wpem-heading-text').first().text().trim();
-        }
-        if (!name) {
-            name = $('title').first().text().trim().replace(" - AWARA Events", ""); // Fallback to title tag
-        }
-
-
-        const dateTimeElements = $('.wpem-event-date-time span.wpem-event-date-time-text');
-        let startAtLocal: string | null = null;
-        let endAtLocal: string | null = null;
-
-        if (dateTimeElements.length > 0) {
-            const dateTimeStr = dateTimeElements.map((_i, el) => $(el).text().trim()).get().join(' - ');
-            const parsedDates = parseDateTimeRange(dateTimeStr);
-            startAtLocal = parsedDates.startAt;
-            endAtLocal = parsedDates.endAt;
-        }
-
-        let addressLocal: string[] = [];
-        const addressHeading = $('h3.wpem-heading-text').filter((_i, el) => $(el).text().trim() === "Adresse");
-        if (addressHeading.length > 0) {
-            const addressDiv = addressHeading.first().next('div');
-            if (addressDiv.length > 0) {
-                // Get raw HTML, replace <br> with newlines for parseAddress
-                const addressHtml = addressDiv.html()?.replace(/<br\s*\/?>/gi, '\n');
-                const $tempAddress = cheerio.load(`<div>${addressHtml || ''}</div>`);
-                addressLocal = parseAddress($tempAddress('div').text());
-            }
-        }
-
-
-        const imageUrlsLocal: string[] = [];
-        const mainImageSrc = $('.wpem-event-single-image img').attr('src');
-        if (mainImageSrc) {
-            imageUrlsLocal.push(mainImageSrc);
-        }
-
-        let hostLocal: string | null = null;
-        let hostLinkLocal: string | null = null;
-        const organizerLinkElement = $('.wpem-event-organizer-name a').first();
-        if (organizerLinkElement.length > 0) {
-            hostLocal = organizerLinkElement.text().trim();
-            hostLinkLocal = organizerLinkElement.attr('href') || null;
-        } else {
-            const organizerNameText = $('.wpem-event-organizer-name').first().text().trim();
-            if (organizerNameText.startsWith('von ')) {
-                hostLocal = organizerNameText.substring(4).trim();
-            }
-        }
-        if (hostLinkLocal && hostLinkLocal.startsWith('/')) {
-            hostLinkLocal = BASE_URL + hostLinkLocal;
-        }
-
-
-        let priceLocal: string | null = null;
-        const priceHeading = $('h3.wpem-heading-text').filter((_i, el) => $(el).text().trim() === "Preis");
-        if (priceHeading.length > 0) {
-            const priceDiv = priceHeading.first().next('div');
-            if (priceDiv.length > 0) {
-                priceLocal = priceDiv.text().trim();
-                // Basic price cleaning, can be expanded
-                if (priceLocal) {
-                    priceLocal = priceLocal.replace(/EUR/gi, '').replace(/ab /gi, '').replace(/bis /gi, '- ').trim();
-                    if (priceLocal.endsWith("-")) priceLocal = priceLocal.slice(0, -1).trim();
-                }
-            }
-        }
-
-        const tagsLocal: string[] = [];
-        $('.wpem-event-type a .wpem-event-type-text').each((_i, el) => {
-            const rawTagText = $(el).text();
-            const cleanedTagText = rawTagText.replace(/\s+/g, ' ').trim();
-            if (cleanedTagText) tagsLocal.push(cleanedTagText);
-        });
-        $('.wpem-event-category a .wpem-event-category-text').each((_i, el) => {
-            const rawTagText = $(el).text();
-            const cleanedTagText = rawTagText.replace(/\s+/g, ' ').trim();
-            if (cleanedTagText) tagsLocal.push(cleanedTagText);
-        });
-
-        // Create a partial event with basic info
-        const partialEvent: Partial<ScrapedEvent> = {
-            permalink: actualUrl || permalink,
-            name: name || 'Unknown Event',
-            startAt: startAtLocal === null ? undefined : startAtLocal,
-            endAt: endAtLocal === null ? undefined : endAtLocal,
-            address: addressLocal,
-            imageUrls: imageUrlsLocal,
-            host: hostLocal === null ? undefined : hostLocal,
-            hostLink: hostLinkLocal === null ? undefined : hostLinkLocal,
-            price: priceLocal === null ? undefined : priceLocal,
-            tags: Array.from(new Set(tagsLocal)), // Remove duplicates
-        };
-
-        // Use the existing detail page processing logic which will handle LD+JSON and further refine/add fields
-        return await fetchEventDetails(partialEvent, htmlContent);
-    } catch (error) {
-        console.error(`Error processing local HTML file ${filePath}:`, error);
-        return null;
-    }
-}
-
-// --- Main Scraping Function ---
 /**
  * Main function to scrape Awara events.
  * Returns a promise that resolves to an array of ScrapedEvent objects.
@@ -967,44 +809,22 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
         console.error(`Stopped scraping after reaching maximum page limit (${safetyBreak}). Potential issue or many pages.`);
     }
 
+    // Output the final JSON array to standard output
+    // console.log(JSON.stringify(allEvents, null, 2));
     console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
+
     return allEvents; // Return the collected events
 }
 
-// --- Run Main --- Only when executed directly
+// Execute the main function only when run directly
 if (import.meta.main) {
-    // Bun uses process.argv. process.argv[0] is bun exe, process.argv[1] is script path.
-    const filePathArg = process.argv[2];
-
-    if (filePathArg) {
-        // If a file path is provided, process that single file
-        console.error(`Processing local HTML file: ${filePathArg}...`);
-        Bun.file(filePathArg).text()
-            .then(async htmlContent => {
-                const event = await processLocalHtmlFile(htmlContent, filePathArg);
-                if (event) {
-                    console.log(JSON.stringify(event, null, 2));
-                    console.error(`--- Successfully processed ${filePathArg} ---`);
-                } else {
-                    console.error(`Could not extract event data from ${filePathArg}.`);
-                    process.exit(1);
-                }
-            })
-            .catch(error => {
-                const message = error instanceof Error ? error.message : String(error);
-                console.error(`Error processing file ${filePathArg}:`, message);
-                process.exit(1);
-            });
-    } else {
-        // Otherwise, run the full scraping process
-        scrapeAwaraEvents()
-            .then(events => {
-                console.log(JSON.stringify(events, null, 2));
-            })
-            .catch(error => {
-                const message = error instanceof Error ? error.message : String(error);
-                console.error("Script execution failed:", message);
-                process.exit(1);
-            });
-    }
+    scrapeAwaraEvents()
+        .then(events => {
+            // Output JSON when run directly
+            console.log(JSON.stringify(events, null, 2));
+        })
+        .catch(error => {
+            console.error("Unhandled error in main execution:", error);
+            process.exit(1);
+        });
 }

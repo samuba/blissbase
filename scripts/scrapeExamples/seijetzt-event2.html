@@ -5,30 +5,208 @@
     <meta charset="utf-8" />
 
     <meta name="application-name" content="sei.jetzt" />
-    <meta name="csrf-token" content="C6OWW5qvV2DYbi2YosduD24G5968QJVkC5Axq8rc" />
+    <meta name="csrf-token" content="ARAzqXB8pxoZqlq4DLSJVW50hqZFwBmY4Woz7TQ9" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link rel="icon" href="/favicon.svg">
 
-    <title>Acroyoga Beginner Workshop im Zenit | sei.jetzt</title>
+    <title>Yin Yoga im Osnabloc | sei.jetzt</title>
 
 
-    <meta property="og:title" content="Acroyoga Beginner Workshop im Zenit | sei.jetzt">
+    <meta property="og:title" content="Yin Yoga im Osnabloc | sei.jetzt">
 
     <meta property="og:description"
-        content="Dieser Workshop ist für alle, die schon immer einmal AcroYoga ausprobieren wollten oder einfach Lust...">
+        content="Yin Yoga, bekannt für seine ruhige und meditative Praxis, ist die perfekte Antwort für jeden, der si...">
     <meta name="description"
-        content="Dieser Workshop ist für alle, die schon immer einmal AcroYoga ausprobieren wollten oder einfach Lust...">
+        content="Yin Yoga, bekannt für seine ruhige und meditative Praxis, ist die perfekte Antwort für jeden, der si...">
 
 
     <meta property="og:type" content="website">
 
     <meta property="og:site_name" content="sei.jetzt">
 
-    <meta property="og:image" content="https://sei.jetzt">
+    <meta property="og:image" content="https://sei.jetzt/storage/1875/conversions/01JH0GMC3JV5R7H0KF4EMZH5KF-thumb.jpg">
 
     <meta property="robots" content="noindex">
 
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+    </style>
+
+    <script>
+        const theme = localStorage.getItem('theme') ?? 'system'
+
+        if (
+            theme === 'dark' ||
+            (theme === 'system' &&
+                window.matchMedia('(prefers-color-scheme: dark)')
+                    .matches)
+        ) {
+            document.documentElement.classList.add('dark')
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=ysabeau:400,500,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=alata:400&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            font-family: 'Ysabeau', sans-serif;
+        }
+    </style>
+
+    <!-- Livewire Styles -->
+    <style>
+        [wire\:loading][wire\:loading],
+        [wire\:loading\.delay][wire\:loading\.delay],
+        [wire\:loading\.inline-block][wire\:loading\.inline-block],
+        [wire\:loading\.inline][wire\:loading\.inline],
+        [wire\:loading\.block][wire\:loading\.block],
+        [wire\:loading\.flex][wire\:loading\.flex],
+        [wire\:loading\.table][wire\:loading\.table],
+        [wire\:loading\.grid][wire\:loading\.grid],
+        [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
+            display: none;
+        }
+
+        [wire\:loading\.delay\.none][wire\:loading\.delay\.none],
+        [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest],
+        [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter],
+        [wire\:loading\.delay\.short][wire\:loading\.delay\.short],
+        [wire\:loading\.delay\.default][wire\:loading\.delay\.default],
+        [wire\:loading\.delay\.long][wire\:loading\.delay\.long],
+        [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer],
+        [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {
+            display: none;
+        }
+
+        [wire\:offline][wire\:offline] {
+            display: none;
+        }
+
+        [wire\:dirty]:not(textarea):not(input):not(select) {
+            display: none;
+        }
+
+        :root {
+            --livewire-progress-bar-color: #2299dd;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+    <script src="/livewire/livewire.min.js?id=13b7c601" data-csrf="ARAzqXB8pxoZqlq4DLSJVW50hqZFwBmY4Woz7TQ9"
+        data-update-uri="/livewire/update" data-navigate-once="true"></script>
+    <link href="https://sei.jetzt/css/bezhansalleh/filament-exceptions/filament-exceptions.css?v=2.1.2.0"
+        rel="stylesheet" data-navigate-track />
+    <link href="https://sei.jetzt/css/dotswan/filament-map-picker/filament-map-picker-styles.css?v=1.8.0.0"
+        rel="stylesheet" data-navigate-track />
+    <link href="https://sei.jetzt/css/pboivin/filament-peek/filament-peek.css?v=2.2.11.0" rel="stylesheet"
+        data-navigate-track />
+    <link href="https://sei.jetzt/css/filament/forms/forms.css?v=3.2.140.0" rel="stylesheet" data-navigate-track />
+    <link href="https://sei.jetzt/css/filament/support/support.css?v=3.2.140.0" rel="stylesheet" data-navigate-track />
+    <link href="https://sei.jetzt/css/guava/filament-icon-picker/filament-icon-picker-stylesheet.css?v=2.2.4.0"
+        rel="stylesheet" data-navigate-track />
+    <link
+        href="https://sei.jetzt/css/filament-daterangepicker-filter/filament-daterangepicker-filter2.8.0.0.css?v=3.2.140.0"
+        rel="stylesheet" data-navigate-track />
+
+    <style>
+        :root {
+            --danger-50: 250, 249, 250;
+            --danger-100: 246, 243, 245;
+            --danger-200: 232, 224, 230;
+            --danger-300: 217, 205, 215;
+            --danger-400: 189, 168, 185;
+            --danger-500: 161, 130, 155;
+            --danger-600: 145, 117, 140;
+            --danger-700: 121, 98, 116;
+            --danger-800: 97, 78, 93;
+            --danger-900: 79, 64, 76;
+            --danger-950: 48, 39, 47;
+            --gray-50: 249, 249, 249;
+            --gray-100: 244, 244, 243;
+            --gray-200: 227, 226, 226;
+            --gray-300: 209, 209, 208;
+            --gray-400: 175, 175, 173;
+            --gray-500: 141, 140, 138;
+            --gray-600: 127, 126, 124;
+            --gray-700: 106, 105, 104;
+            --gray-800: 85, 84, 83;
+            --gray-900: 69, 69, 68;
+            --gray-950: 42, 42, 41;
+            --info-50: 249, 249, 250;
+            --info-100: 243, 243, 246;
+            --info-200: 224, 226, 232;
+            --info-300: 205, 209, 217;
+            --info-400: 168, 174, 189;
+            --info-500: 130, 139, 161;
+            --info-600: 117, 125, 145;
+            --info-700: 98, 104, 121;
+            --info-800: 78, 83, 97;
+            --info-900: 64, 68, 79;
+            --info-950: 39, 42, 48;
+            --primary-50: 250, 250, 249;
+            --primary-100: 246, 245, 243;
+            --primary-200: 232, 229, 224;
+            --primary-300: 217, 214, 205;
+            --primary-400: 189, 183, 168;
+            --primary-500: 161, 152, 130;
+            --primary-600: 145, 137, 117;
+            --primary-700: 121, 114, 98;
+            --primary-800: 97, 91, 78;
+            --primary-900: 79, 74, 64;
+            --primary-950: 48, 46, 39;
+            --success-50: 249, 250, 249;
+            --success-100: 243, 246, 243;
+            --success-200: 224, 232, 226;
+            --success-300: 205, 217, 208;
+            --success-400: 168, 189, 172;
+            --success-500: 130, 161, 137;
+            --success-600: 117, 145, 123;
+            --success-700: 98, 121, 103;
+            --success-800: 78, 97, 82;
+            --success-900: 64, 79, 67;
+            --success-950: 39, 48, 41;
+            --warning-50: 255, 253, 247;
+            --warning-100: 255, 251, 240;
+            --warning-200: 255, 245, 216;
+            --warning-300: 255, 239, 193;
+            --warning-400: 255, 226, 147;
+            --warning-500: 255, 214, 100;
+            --warning-600: 230, 193, 90;
+            --warning-700: 191, 161, 75;
+            --warning-800: 153, 128, 60;
+            --warning-900: 125, 105, 49;
+            --warning-950: 77, 64, 30;
+        }
+    </style>
+    <link rel="preload" as="style" href="https://sei.jetzt/build/assets/app-8c638eb9.css" />
+    <link rel="stylesheet" href="https://sei.jetzt/build/assets/app-8c638eb9.css" data-navigate-track="reload" />
+    <!-- Matomo -->
+    <script>
+        var _paq = window._paq = window._paq || [];
+        /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+        _paq.push(['disableCookies']);
+        _paq.push(["setDoNotTrack", true]);
+        _paq.push(['trackPageView']);
+        _paq.push(['enableLinkTracking']);
+        (function () {
+            var u = "//matomo.josef-behr.de/";
+            _paq.push(['setTrackerUrl', u + 'matomo.php']);
+            _paq.push(['setSiteId', '2']);
+            var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+            g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+        })();
+    </script>
     <!-- End Matomo Code -->
 </head>
 
@@ -184,27 +362,25 @@
             <main
                 class="my-16 sm:mt-28 w-full md:bg-white px-4 sm:px-12 py-6 lg:py-12 shadow-sm lg:ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-0 dark:text-white lg:rounded-xl">
                 <div class="flex flex-row gap-4 ml-2 z-30 relative items-center mb-4 justify-center">
-                    <a href="https://sei.jetzt/o/susanne-fabel-yoga-acroyoga-handstand-movement-flow"
-                        class="focus:scale-95 transition">
+                    <a href="https://sei.jetzt/o/kendralahyoga" class="focus:scale-95 transition">
                         <div class="rounded-full w-10 h-10 object-scale-down overflow-hidden">
-                            <img srcset="https://sei.jetzt/storage/1650/responsive-images/01JPDGTBQS3XNDE2FA2DWSW5VY___media_library_original_500_500.jpg 500w, https://sei.jetzt/storage/1650/responsive-images/01JPDGTBQS3XNDE2FA2DWSW5VY___media_library_original_418_418.jpg 418w, https://sei.jetzt/storage/1650/responsive-images/01JPDGTBQS3XNDE2FA2DWSW5VY___media_library_original_350_350.jpg 350w, https://sei.jetzt/storage/1650/responsive-images/01JPDGTBQS3XNDE2FA2DWSW5VY___media_library_original_292_292.jpg 292w, https://sei.jetzt/storage/1650/responsive-images/01JPDGTBQS3XNDE2FA2DWSW5VY___media_library_original_245_245.jpg 245w, https://sei.jetzt/storage/1650/responsive-images/01JPDGTBQS3XNDE2FA2DWSW5VY___media_library_original_204_204.jpg 204w, https://sei.jetzt/storage/1650/responsive-images/01JPDGTBQS3XNDE2FA2DWSW5VY___media_library_original_171_171.jpg 171w, data:image/svg+xml;base64,PCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHg9IjAiCiB5PSIwIiB2aWV3Qm94PSIwIDAgNTAwIDUwMCI+Cgk8aW1hZ2Ugd2lkdGg9IjUwMCIgaGVpZ2h0PSI1MDAiIHhsaW5rOmhyZWY9ImRhdGE6aW1hZ2UvanBlZztiYXNlNjQsLzlqLzRBQVFTa1pKUmdBQkFRRUFZQUJnQUFELy9nQStRMUpGUVZSUFVqb2daMlF0YW5CbFp5QjJNUzR3SUNoMWMybHVaeUJKU2tjZ1NsQkZSeUIyT0RBcExDQmtaV1poZFd4MElIRjFZV3hwZEhrSy85c0FRd0FJQmdZSEJnVUlCd2NIQ1FrSUNnd1VEUXdMQ3d3WkVoTVBGQjBhSHg0ZEdod2NJQ1F1SnlBaUxDTWNIQ2czS1N3d01UUTBOQjhuT1QwNE1qd3VNelF5LzlzQVF3RUpDUWtNQ3d3WURRMFlNaUVjSVRJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXkvOEFBRVFnQUlBQWdBd0VpQUFJUkFRTVJBZi9FQUI4QUFBRUZBUUVCQVFFQkFBQUFBQUFBQUFBQkFnTUVCUVlIQ0FrS0MvL0VBTFVRQUFJQkF3TUNCQU1GQlFRRUFBQUJmUUVDQXdBRUVRVVNJVEZCQmhOUllRY2ljUlF5Z1pHaENDTkNzY0VWVXRId0pETmljb0lKQ2hZWEdCa2FKU1luS0NrcU5EVTJOemc1T2tORVJVWkhTRWxLVTFSVlZsZFlXVnBqWkdWbVoyaHBhbk4wZFhaM2VIbDZnNFNGaG9lSWlZcVNrNVNWbHBlWW1acWlvNlNscHFlb3FhcXlzN1MxdHJlNHVickN3OFRGeHNmSXljclMwOVRWMXRmWTJkcmg0dVBrNWVibjZPbnE4Zkx6OVBYMjkvajUrdi9FQUI4QkFBTUJBUUVCQVFFQkFRRUFBQUFBQUFBQkFnTUVCUVlIQ0FrS0MvL0VBTFVSQUFJQkFnUUVBd1FIQlFRRUFBRUNkd0FCQWdNUkJBVWhNUVlTUVZFSFlYRVRJaktCQ0JSQ2thR3h3UWtqTTFMd0ZXSnkwUW9XSkRUaEpmRVhHQmthSmljb0tTbzFOamM0T1RwRFJFVkdSMGhKU2xOVVZWWlhXRmxhWTJSbFptZG9hV3B6ZEhWMmQzaDVlb0tEaElXR2g0aUppcEtUbEpXV2w1aVptcUtqcEtXbXA2aXBxckt6dExXMnQ3aTV1c0xEeE1YR3g4akp5dExUMU5YVzE5aloydUxqNU9YbTUranA2dkx6OVBYMjkvajUrdi9hQUF3REFRQUNFUU1SQUQ4QTVUVENzdDY4Z3JyYlBTSnJ0Qkt2QXJ6YlJiOWx2UW9QM3E5WDBkNWpib1JJQjZpc2Eyak9uRHhUVmlhWFJDdHZ1L2lGWWx5b1E0STVGZHloOHhkaE9lSzVIWExjeFhEQURyVTA2anRabU5hRm5jOGswK0Ixdmxia1lOZW1hSmV4eHIrOGsvQ3VUc3JSV3Y4QUdPSzZLSFRXU1lGZWxGYVYzWTF3N2ExT3gweSs4NlZnT2dxajRpa1VNR0pBcXRwVXhndTl0UDFpemZWWi9MamJGY3lUVE5aeDV6Ly8yUT09Ij4KCTwvaW1hZ2U+Cjwvc3ZnPg== 32w"
+                            <img srcset="https://sei.jetzt/storage/1343/responsive-images/01JH0F600DW9A6PC39C2NQ754X___media_library_original_500_500.jpg 500w, https://sei.jetzt/storage/1343/responsive-images/01JH0F600DW9A6PC39C2NQ754X___media_library_original_418_418.jpg 418w, https://sei.jetzt/storage/1343/responsive-images/01JH0F600DW9A6PC39C2NQ754X___media_library_original_349_349.jpg 349w, https://sei.jetzt/storage/1343/responsive-images/01JH0F600DW9A6PC39C2NQ754X___media_library_original_292_292.jpg 292w, data:image/svg+xml;base64,PCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHg9IjAiCiB5PSIwIiB2aWV3Qm94PSIwIDAgNTAwIDUwMCI+Cgk8aW1hZ2Ugd2lkdGg9IjUwMCIgaGVpZ2h0PSI1MDAiIHhsaW5rOmhyZWY9ImRhdGE6aW1hZ2UvanBlZztiYXNlNjQsLzlqLzRBQVFTa1pKUmdBQkFRRUFZQUJnQUFELy9nQStRMUpGUVZSUFVqb2daMlF0YW5CbFp5QjJNUzR3SUNoMWMybHVaeUJKU2tjZ1NsQkZSeUIyT0RBcExDQmtaV1poZFd4MElIRjFZV3hwZEhrSy85c0FRd0FJQmdZSEJnVUlCd2NIQ1FrSUNnd1VEUXdMQ3d3WkVoTVBGQjBhSHg0ZEdod2NJQ1F1SnlBaUxDTWNIQ2czS1N3d01UUTBOQjhuT1QwNE1qd3VNelF5LzlzQVF3RUpDUWtNQ3d3WURRMFlNaUVjSVRJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXkvOEFBRVFnQUlBQWdBd0VpQUFJUkFRTVJBZi9FQUI4QUFBRUZBUUVCQVFFQkFBQUFBQUFBQUFBQkFnTUVCUVlIQ0FrS0MvL0VBTFVRQUFJQkF3TUNCQU1GQlFRRUFBQUJmUUVDQXdBRUVRVVNJVEZCQmhOUllRY2ljUlF5Z1pHaENDTkNzY0VWVXRId0pETmljb0lKQ2hZWEdCa2FKU1luS0NrcU5EVTJOemc1T2tORVJVWkhTRWxLVTFSVlZsZFlXVnBqWkdWbVoyaHBhbk4wZFhaM2VIbDZnNFNGaG9lSWlZcVNrNVNWbHBlWW1acWlvNlNscHFlb3FhcXlzN1MxdHJlNHVickN3OFRGeHNmSXljclMwOVRWMXRmWTJkcmg0dVBrNWVibjZPbnE4Zkx6OVBYMjkvajUrdi9FQUI4QkFBTUJBUUVCQVFFQkFRRUFBQUFBQUFBQkFnTUVCUVlIQ0FrS0MvL0VBTFVSQUFJQkFnUUVBd1FIQlFRRUFBRUNkd0FCQWdNUkJBVWhNUVlTUVZFSFlYRVRJaktCQ0JSQ2thR3h3UWtqTTFMd0ZXSnkwUW9XSkRUaEpmRVhHQmthSmljb0tTbzFOamM0T1RwRFJFVkdSMGhKU2xOVVZWWlhXRmxhWTJSbFptZG9hV3B6ZEhWMmQzaDVlb0tEaElXR2g0aUppcEtUbEpXV2w1aVptcUtqcEtXbXA2aXBxckt6dExXMnQ3aTV1c0xEeE1YR3g4akp5dExUMU5YVzE5aloydUxqNU9YbTUranA2dkx6OVBYMjkvajUrdi9hQUF3REFRQUNFUU1SQUQ4QTk5SnhVVHlZSEZQa3FQanZVc2FGV1hJNXFVSE5SREdLa1RwUkc0TUpDQU9hcm1WQjNxYVpONkVWUyt5dG1oazNaWVdSTWRhblFnamlxQnRYN0dya0NGRXdhRUZ6LzlrPSI+Cgk8L2ltYWdlPgo8L3N2Zz4= 32w"
                                 onload="window.requestAnimationFrame(function(){if(!(size=getBoundingClientRect().width))return;onload=null;sizes=Math.ceil(size/window.innerWidth*100)+'vw';});"
-                                sizes="1px" src="https://sei.jetzt/storage/1650/01JPDGTBQS3XNDE2FA2DWSW5VY.jpg"
-                                width="500" height="500" alt="IMG_7233">
+                                sizes="1px" src="https://sei.jetzt/storage/1343/01JH0F600DW9A6PC39C2NQ754X.jpg"
+                                width="500" height="500" alt="photo_2025-01-07_14-16-07">
 
                         </div>
                     </a>
-                    <a href="https://sei.jetzt/o/susanne-fabel-yoga-acroyoga-handstand-movement-flow"
-                        class="hover:underline">
+                    <a href="https://sei.jetzt/o/kendralahyoga" class="hover:underline">
                         <div class="text-md lg:text-xl font-bold">
-                            Susanne Fabel - Yoga, Acroyoga, Handstand, Movement Flow
+                            KendraLahYoga
                         </div>
                     </a>
                 </div>
                 <div class="flex flex-col lg:grid lg:grid-cols-2 gap-y-4 md:gap-6">
                     <div>
                         <div class="lg:hidden flex justify-center text-2xl font-bold mb-4">
-                            Acroyoga Beginner Workshop im Zenit
+                            Yin Yoga im Osnabloc
                         </div>
                         <div>
                             <style>
@@ -242,11 +418,11 @@
                                             <div class="embla__slide__inner overflow-hidden rounded-xl">
                                                 <div
                                                     class="embla__slide__img inset-0 w-full object-contain opacity-100 rounded-xl">
-                                                    <img srcset="https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_6000_4000.jpg 6000w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_5019_3346.jpg 5019w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_4200_2800.jpg 4200w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_3513_2342.jpg 3513w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_2939_1959.jpg 2939w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_2459_1639.jpg 2459w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_2057_1371.jpg 2057w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1721_1147.jpg 1721w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1440_960.jpg 1440w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1205_803.jpg 1205w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1008_672.jpg 1008w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_843_562.jpg 843w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_705_470.jpg 705w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_590_393.jpg 590w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_494_329.jpg 494w, data:image/svg+xml;base64,PCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHg9IjAiCiB5PSIwIiB2aWV3Qm94PSIwIDAgNjAwMCA0MDAwIj4KCTxpbWFnZSB3aWR0aD0iNjAwMCIgaGVpZ2h0PSI0MDAwIiB4bGluazpocmVmPSJkYXRhOmltYWdlL2pwZWc7YmFzZTY0LC85ai80QUFRU2taSlJnQUJBUUVBWUFCZ0FBRC8vZ0ErUTFKRlFWUlBVam9nWjJRdGFuQmxaeUIyTVM0d0lDaDFjMmx1WnlCSlNrY2dTbEJGUnlCMk9EQXBMQ0JrWldaaGRXeDBJSEYxWVd4cGRIa0svOXNBUXdBSUJnWUhCZ1VJQndjSENRa0lDZ3dVRFF3TEN3d1pFaE1QRkIwYUh4NGRHaHdjSUNRdUp5QWlMQ01jSENnM0tTd3dNVFEwTkI4bk9UMDRNand1TXpReS85c0FRd0VKQ1FrTUN3d1lEUTBZTWlFY0lUSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5LzhBQUVRZ0FGUUFnQXdFaUFBSVJBUU1SQWYvRUFCOEFBQUVGQVFFQkFRRUJBQUFBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUUFBSUJBd01DQkFNRkJRUUVBQUFCZlFFQ0F3QUVFUVVTSVRGQkJoTlJZUWNpY1JReWdaR2hDQ05Dc2NFVlV0SHdKRE5pY29JSkNoWVhHQmthSlNZbktDa3FORFUyTnpnNU9rTkVSVVpIU0VsS1UxUlZWbGRZV1ZwalpHVm1aMmhwYW5OMGRYWjNlSGw2ZzRTRmhvZUlpWXFTazVTVmxwZVltWnFpbzZTbHBxZW9xYXF5czdTMXRyZTR1YnJDdzhURnhzZkl5Y3JTMDlUVjF0ZlkyZHJoNHVQazVlYm42T25xOGZMejlQWDI5L2o1K3YvRUFCOEJBQU1CQVFFQkFRRUJBUUVBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUkFBSUJBZ1FFQXdRSEJRUUVBQUVDZHdBQkFnTVJCQVVoTVFZU1FWRUhZWEVUSWpLQkNCUkNrYUd4d1Frak0xTHdGV0p5MFFvV0pEVGhKZkVYR0JrYUppY29LU28xTmpjNE9UcERSRVZHUjBoSlNsTlVWVlpYV0ZsYVkyUmxabWRvYVdwemRIVjJkM2g1ZW9LRGhJV0doNGlKaXBLVGxKV1dsNWlabXFLanBLV21wNmlwcXJLenRMVzJ0N2k1dXNMRHhNWEd4OGpKeXRMVDFOWFcxOWpaMnVMajVPWG01K2pwNnZMejlQWDI5L2o1K3YvYUFBd0RBUUFDRVFNUkFEOEFxeFdlcVJMZ1M4VklaTlY4c3dpVVpxY1h6NHFoUGN5eHppVlcvQ3VXT0pxTjdsT2hBbnNWMWUwbjNsOXdycEl0YnUxakFkT2E1aTMxbDVaOW5ZVmRhK0lwL1dxa2RBZUhnVkZVRVZYdTR3WVNhS0s1bzduVTBRMkZ1Z1F0M3EzdG9vb2s5UldQLzlrPSI+Cgk8L2ltYWdlPgo8L3N2Zz4= 32w"
+                                                    <img srcset="https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_1080_1062.jpg 1080w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_903_888.jpg 903w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_755_742.jpg 755w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_632_621.jpg 632w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_529_520.jpg 529w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_442_435.jpg 442w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_370_364.jpg 370w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_309_304.jpg 309w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_259_255.jpg 259w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_216_212.jpg 216w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_181_178.jpg 181w, data:image/svg+xml;base64,PCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHg9IjAiCiB5PSIwIiB2aWV3Qm94PSIwIDAgMTA4MCAxMDYyIj4KCTxpbWFnZSB3aWR0aD0iMTA4MCIgaGVpZ2h0PSIxMDYyIiB4bGluazpocmVmPSJkYXRhOmltYWdlL2pwZWc7YmFzZTY0LC85ai80QUFRU2taSlJnQUJBUUVBWUFCZ0FBRC8vZ0ErUTFKRlFWUlBVam9nWjJRdGFuQmxaeUIyTVM0d0lDaDFjMmx1WnlCSlNrY2dTbEJGUnlCMk9EQXBMQ0JrWldaaGRXeDBJSEYxWVd4cGRIa0svOXNBUXdBSUJnWUhCZ1VJQndjSENRa0lDZ3dVRFF3TEN3d1pFaE1QRkIwYUh4NGRHaHdjSUNRdUp5QWlMQ01jSENnM0tTd3dNVFEwTkI4bk9UMDRNand1TXpReS85c0FRd0VKQ1FrTUN3d1lEUTBZTWlFY0lUSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5LzhBQUVRZ0FId0FnQXdFaUFBSVJBUU1SQWYvRUFCOEFBQUVGQVFFQkFRRUJBQUFBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUUFBSUJBd01DQkFNRkJRUUVBQUFCZlFFQ0F3QUVFUVVTSVRGQkJoTlJZUWNpY1JReWdaR2hDQ05Dc2NFVlV0SHdKRE5pY29JSkNoWVhHQmthSlNZbktDa3FORFUyTnpnNU9rTkVSVVpIU0VsS1UxUlZWbGRZV1ZwalpHVm1aMmhwYW5OMGRYWjNlSGw2ZzRTRmhvZUlpWXFTazVTVmxwZVltWnFpbzZTbHBxZW9xYXF5czdTMXRyZTR1YnJDdzhURnhzZkl5Y3JTMDlUVjF0ZlkyZHJoNHVQazVlYm42T25xOGZMejlQWDI5L2o1K3YvRUFCOEJBQU1CQVFFQkFRRUJBUUVBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUkFBSUJBZ1FFQXdRSEJRUUVBQUVDZHdBQkFnTVJCQVVoTVFZU1FWRUhZWEVUSWpLQkNCUkNrYUd4d1Frak0xTHdGV0p5MFFvV0pEVGhKZkVYR0JrYUppY29LU28xTmpjNE9UcERSRVZHUjBoSlNsTlVWVlpYV0ZsYVkyUmxabWRvYVdwemRIVjJkM2g1ZW9LRGhJV0doNGlKaXBLVGxKV1dsNWlabXFLanBLV21wNmlwcXJLenRMVzJ0N2k1dXNMRHhNWEd4OGpKeXRMVDFOWFcxOWpaMnVMajVPWG01K2pwNnZMejlQWDI5L2o1K3YvYUFBd0RBUUFDRVFNUkFEOEF1UWxBT0RUaXlzYXhVbGNxZHJWVWsxQzV0M3d3TzA5NitiaGhlWjJUMU9pMStwdlRScDNyT3VFakl4aW5KTGkxODFuM0UxQjVvbEdSWFRMQzFLTHU5akNwSzJ3eUtkUU1BWnFPOHVsOGtxWXMrOVpscGVibXhXaWs2dnd5NXJyajdtclFKdDZrR202aGJ5VGkzbEpWVHh6VnJWbzRyUEJ0NWd5bjBOUVMyRVZ3Y29vVnZXc3k2aThnN1hjdGl1aXBpWFVqWm8ycDA0U1h2SC8vMlE9PSI+Cgk8L2ltYWdlPgo8L3N2Zz4= 32w"
                                                         onload="window.requestAnimationFrame(function(){if(!(size=getBoundingClientRect().width))return;onload=null;sizes=Math.ceil(size/window.innerWidth*100)+'vw';});"
                                                         sizes="1px"
-                                                        src="https://sei.jetzt/storage/1651/01JPDGTC41G4S4R8GRS890NXTG.jpg"
-                                                        width="6000" height="4000" alt="online komprimiert">
+                                                        src="https://sei.jetzt/storage/1875/01JH0GMC3JV5R7H0KF4EMZH5KF.jpg"
+                                                        width="1080" height="1062" alt="photo_2025-01-07_14-35-02">
 
                                                 </div>
                                             </div>
@@ -278,16 +454,19 @@
 
                             <div
                                 class="ring-1 ring-gray-200 rounded-xl prose dark:prose-invert p-4 bg-white dark:bg-gray-900 dark:ring-white/10 md:bg-none max-w-full">
-                                <p>Dieser Workshop ist für alle, die schon immer einmal AcroYoga ausprobieren wollten
-                                    oder einfach Lust auf eine neue Körpererfahrung haben. Sei gespannt auf deine ersten
-                                    partnerakrobatischen Erlebnisse und lass dich überraschen, was alles möglich ist. Du
-                                    kannst einen Workshop mit viel Spaß in der Gruppe erwarten, bei dem du mit dem
-                                    richtigen Know-How und der Unterstützung der anderen Teilnehmer/innen neue
-                                    körperliche Herausforderungen meistern und deinen Bewegungsspielraum erweitern
-                                    wirst.</p>
-                                <p>Weitere Infos findest du auf meiner Webseite&nbsp;<a
-                                        href="https://www.susanne-fabel.de/events">https://www.susanne-fabel.de/events</a>
-                                </p>
+                                <p><strong>Yin Yoga, bekannt für seine ruhige und meditative Praxis</strong>, ist die
+                                    perfekte Antwort für jeden, der sich nach tiefer Entspannung und Regeneration
+                                    sehnt.<br>Yin Yoga zeichnet sich durch lang gehaltene Asanas aus, die gezielt das
+                                    Fasziengewebe ansprechen und Deine Flexibilität verbessern. Diese sanfte Yoga-Form
+                                    ist ideal für all jene, die im hektischen Alltag einen Moment der Stille und des
+                                    Ausgleichs suchen. Die ruhigen, langen Haltungen in Verbindung mit bewusstem Atmen
+                                    laden Dich ein, vollständig im Jetzt anzukommen, Verspannungen zu lösen und
+                                    Blockaden zu überwinden – ein Weg zu mehr innerer Ruhe und Gelassenheit.<br>Ganz
+                                    gleich, ob Du Yoga-Neuling bist oder bereits Erfahrung mitbringst, mein
+                                    Yin-Yoga-Kurs bietet Dir den idealen Gegenpol zu aktiveren Betätigungen wie dem
+                                    dynamischen Bouldern. Ich freue mich darauf, Dich bald in einem meiner Kurse
+                                    willkommen zu heißen und Dich auf Deinem Pfad zu tieferer Entspannung und innerem
+                                    Gleichgewicht zu begleiten.</p>
                             </div>
                         </div>
                     </div>
@@ -302,7 +481,7 @@
                                         d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z"
                                         clip-rule="evenodd" />
                                 </svg> <span x-data="{
-        date: new Date(2025, 4, 10, 10, 0),
+        date: new Date(2025, 4, 13, 18, 0),
         options: {
             weekday: 'short',
             year: 'numeric',
@@ -315,7 +494,7 @@
                                 </span>
                                 -
                                 <span x-data="{
-        date: new Date(2025, 4, 10, 13, 0),
+        date: new Date(2025, 4, 13, 19, 30),
         options: {
             weekday: 'short',
             year: 'numeric',
@@ -327,13 +506,59 @@
     }" x-text="date.toLocaleString(undefined, options)">
                                 </span>
                             </div>
+                            <div class="flex flex-grow-1 items-center gap-2">
+                                <div style="--c-50:var(--primary-50);--c-300:var(--primary-300);--c-400:var(--primary-400);--c-600:var(--primary-600);"
+                                    class="flex items-center justify-center gap-x-1 rounded-md text-xs font-medium ring-1 ring-inset px-2 min-w-[theme(spacing.6)] py-1 bg-custom-50 text-custom-600 ring-custom-600/10 dark:bg-custom-400/10 dark:text-custom-400 dark:ring-custom-400/30">
+                                    Achtsamkeit und Stressbewältigung
+                                </div>
+                                <div style="--c-50:var(--primary-50);--c-300:var(--primary-300);--c-400:var(--primary-400);--c-600:var(--primary-600);"
+                                    class="flex items-center justify-center gap-x-1 rounded-md text-xs font-medium ring-1 ring-inset px-2 min-w-[theme(spacing.6)] py-1 bg-custom-50 text-custom-600 ring-custom-600/10 dark:bg-custom-400/10 dark:text-custom-400 dark:ring-custom-400/30">
+                                    Yoga
+                                </div>
+                                <div style="--c-50:var(--primary-50);--c-300:var(--primary-300);--c-400:var(--primary-400);--c-600:var(--primary-600);"
+                                    class="flex items-center justify-center gap-x-1 rounded-md text-xs font-medium ring-1 ring-inset px-2 min-w-[theme(spacing.6)] py-1 bg-custom-50 text-custom-600 ring-custom-600/10 dark:bg-custom-400/10 dark:text-custom-400 dark:ring-custom-400/30">
+                                    Atemtechniken / Breathwork
+                                </div>
+                            </div>
                             <h1 class="text-xl lg:text-3xl font-bold">
-                                Acroyoga Beginner Workshop im Zenit
+                                Yin Yoga im Osnabloc
                             </h1>
                         </div>
 
                         <div
                             class="text-sm mb-4 grid grid-cols-2 gap-4 ring-1 ring-gray-200 rounded-xl p-4 bg-white dark:bg-gray-900 dark:ring-white/10 md:bg-none">
+                            <div>
+                                <div class="font-bold">
+                                    <svg class="w-4 h-4 inline-block pb-1 mr-1/2" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                        <path fill-rule="evenodd"
+                                            d="M14.5 1A4.5 4.5 0 0 0 10 5.5V9H3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1.5V5.5a3 3 0 1 1 6 0v2.75a.75.75 0 0 0 1.5 0V5.5A4.5 4.5 0 0 0 14.5 1Z"
+                                            clip-rule="evenodd" />
+                                    </svg> Buchung möglich
+                                </div>
+                            </div>
+                            <div class="">
+                                <div class="font-bold">
+                                    <svg class="w-4 h-4 inline-block pb-1 mr-1/2" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                        <path fill-rule="evenodd"
+                                            d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z"
+                                            clip-rule="evenodd" />
+                                    </svg> Buchung schließt
+                                </div>
+                                <span x-data="{
+        date: new Date(2025, 4, 12, 21, 0),
+        options: {
+            weekday: 'short',
+            year: 'numeric',
+            month: '2-digit',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }
+    }" x-text="date.toLocaleString(undefined, options)">
+                                </span>
+                            </div>
                             <div>
                                 <div class="font-bold">
                                     <svg class="w-4 h-4 inline-block pb-1 mr-1/2" xmlns="http://www.w3.org/2000/svg"
@@ -345,19 +570,29 @@
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <div>
-                                        <a href="https://www.zenit-klettern.de" class="text-primary-500 hover:underline"
+                                        <a href="https://osnabloc.de" class="text-primary-500 hover:underline"
                                             target="_blank">
-                                            Zenit Boulderhalle
+                                            Osnabloc
                                         </a>
                                         <br>
-                                        Dammstraße 2<br>
-                                        49082 Osnabrück<br>
-                                        <a href="https://maps.google.com?q=Dammstra%C3%9Fe+2%2C+49082+Osnabr%C3%BCck"
+                                        Großer Fledderweg 89<br>
+                                        49084 Osnabrück <br>
+                                        <a href="https://maps.google.com?q=Gro%C3%9Fer+Fledderweg+89%2C+49084+Osnabr%C3%BCck+"
                                             class="text-primary-500 hover:underline">Auf Google Maps suchen</a>
                                     </div>
                                 </div>
                             </div>
 
+                            <div>
+                                <div class="font-bold">
+                                    <svg class="w-4 h-4 inline-block pb-1 mr-1/2" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                        <path
+                                            d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 18a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.818.818 0 0 1-.36.98A7.465 7.465 0 0 1 14.5 16Z" />
+                                    </svg> Verfügbare Plätze
+                                </div>
+                                6
+                            </div>
 
                             <div class="col-span-2">
                                 <div class="font-bold">
@@ -370,20 +605,24 @@
                                 </div>
 
                                 <div>
-                                    €38,00 Frühbucher Zenit Abo-Mensch
-                                    (<span class="text-gray-500 dark:text-gray-400">(bis 12.04.2025)</span>)
+                                    €15,00 Einzeleinheit
                                 </div>
                                 <div>
-                                    €43,00 Frühbucher ohne Zenit-Abo
-                                    (<span class="text-gray-500 dark:text-gray-400">(bis 12.04.2025)</span>)
+                                    €13,50 Schnupperstunde
                                 </div>
                                 <div>
-                                    €43,00 Normalpreis Zenit Ab0-Mensch
-                                    (<span class="text-gray-500 dark:text-gray-400">(ab 13.04.2025)</span>)
+                                    €135,00 10er Karte
+                                    (<span class="text-gray-500 dark:text-gray-400">Auch für HathaYoga
+                                        einsetzbar</span>)
                                 </div>
                                 <div>
-                                    €48,00 Normalpreis ohne Zenit-Abo
-                                    (<span class="text-gray-500 dark:text-gray-400">(ab 13.04.2025)</span>)
+                                    €70,00 5er Karte
+                                    (<span class="text-gray-500 dark:text-gray-400">Auch für HathaYoga
+                                        einsetzbar</span>)
+                                </div>
+                                <div>
+                                    €0,00 Mit Hansefit QR- Code vor Ort einchecken
+                                    (<span class="text-gray-500 dark:text-gray-400">Nur für Hansefitmitglieder</span>)
                                 </div>
                             </div>
 
@@ -485,13 +724,13 @@
 
                                                     <!--[if BLOCK]><![endif]-->
                                                     <div class="fi-modal-content flex flex-col gap-y-4 py-6 px-6">
-                                                        <p x-data="{ link: 'info@susanne-fabel.de' }">
+                                                        <p x-data="{ link: 'kendralah.yoga@gmail.com' }">
                                                             Kontaktiere den Veranstalter per E-Mail an:
                                                             <strong title="Zum Kopieren klicken"
                                                                 class="hover:cursor-pointer"
-                                                                @click="$clipboard(link)">info@susanne-fabel.de</strong>
+                                                                @click="$clipboard(link)">kendralah.yoga@gmail.com</strong>
                                                         </p>
-                                                        <a href="mailto:info@susanne-fabel.de" target="_blank"
+                                                        <a href="mailto:kendralah.yoga@gmail.com" target="_blank"
                                                             style="--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);"
                                                             class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 focus-visible:ring-custom-500/50 dark:bg-custom-500 dark:hover:bg-custom-400 dark:focus-visible:ring-custom-400/50">
                                                             <!--[if BLOCK]><![endif]--> <svg
@@ -535,21 +774,21 @@
                                 </svg> Veranstaltung teilen
                             </div>
                             <div class="flex flex-row gap-2 justify-end items-end">
-                                <a href="https://t.me/share/url?url=https://sei.jetzt/event/2025-05-10-acroyoga-beginner-workshop-im-zenit&text=Acroyoga Beginner Workshop im Zenit"
+                                <a href="https://t.me/share/url?url=https://sei.jetzt/event/2025-05-13-yin-yoga-im-osnabloc&text=Yin Yoga im Osnabloc"
                                     title="Telegram">
                                     <svg class="h-6 w-6 hover:text-primary-500" fill="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M12.001 22C6.47813 22 2.00098 17.5228 2.00098 12C2.00098 6.47715 6.47813 2 12.001 2C17.5238 2 22.001 6.47715 22.001 12C22.001 17.5228 17.5238 22 12.001 22ZM8.89113 13.1708L8.90378 13.1628C9.48351 15.0767 9.77337 16.0337 9.77337 16.0337C9.88564 16.3442 10.04 16.3996 10.2273 16.3743C10.4145 16.3489 10.5139 16.2476 10.6361 16.1297C10.6361 16.1297 11.0324 15.7472 11.825 14.9823L14.3759 16.8698C14.8407 17.1266 15.1763 16.9941 15.2917 16.4377L16.9495 8.61641C17.1325 7.88842 16.8115 7.59644 16.247 7.82754L6.51397 11.5871C5.84996 11.854 5.85317 12.2255 6.39308 12.3911L8.89113 13.1708Z" />
                                     </svg> </a>
-                                <a href="https://wa.me/?text=https://sei.jetzt/event/2025-05-10-acroyoga-beginner-workshop-im-zenit | Acroyoga Beginner Workshop im Zenit"
+                                <a href="https://wa.me/?text=https://sei.jetzt/event/2025-05-13-yin-yoga-im-osnabloc | Yin Yoga im Osnabloc"
                                     data-action="share/whatsapp/share" title="WhatsApp">
                                     <svg class="h-6 w-6 hover:text-primary-500" fill="currentColor" viewBox="0 0 24 24"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M12.001 2C17.5238 2 22.001 6.47715 22.001 12C22.001 17.5228 17.5238 22 12.001 22C10.1671 22 8.44851 21.5064 6.97086 20.6447L2.00516 22L3.35712 17.0315C2.49494 15.5536 2.00098 13.8345 2.00098 12C2.00098 6.47715 6.47813 2 12.001 2ZM8.59339 7.30019L8.39232 7.30833C8.26293 7.31742 8.13607 7.34902 8.02057 7.40811C7.93392 7.45244 7.85348 7.51651 7.72709 7.63586C7.60774 7.74855 7.53857 7.84697 7.46569 7.94186C7.09599 8.4232 6.89729 9.01405 6.90098 9.62098C6.90299 10.1116 7.03043 10.5884 7.23169 11.0336C7.63982 11.9364 8.31288 12.8908 9.20194 13.7759C9.4155 13.9885 9.62473 14.2034 9.85034 14.402C10.9538 15.3736 12.2688 16.0742 13.6907 16.4482C13.6907 16.4482 14.2507 16.5342 14.2589 16.5347C14.4444 16.5447 14.6296 16.5313 14.8153 16.5218C15.1066 16.5068 15.391 16.428 15.6484 16.2909C15.8139 16.2028 15.8922 16.159 16.0311 16.0714C16.0311 16.0714 16.0737 16.0426 16.1559 15.9814C16.2909 15.8808 16.3743 15.81 16.4866 15.6934C16.5694 15.6074 16.6406 15.5058 16.6956 15.3913C16.7738 15.2281 16.8525 14.9166 16.8838 14.6579C16.9077 14.4603 16.9005 14.3523 16.8979 14.2854C16.8936 14.1778 16.8047 14.0671 16.7073 14.0201L16.1258 13.7587C16.1258 13.7587 15.2563 13.3803 14.7245 13.1377C14.6691 13.1124 14.6085 13.1007 14.5476 13.097C14.4142 13.0888 14.2647 13.1236 14.1696 13.2238C14.1646 13.2218 14.0984 13.279 13.3749 14.1555C13.335 14.2032 13.2415 14.3069 13.0798 14.2972C13.0554 14.2955 13.0311 14.292 13.0074 14.2858C12.9419 14.2685 12.8781 14.2457 12.8157 14.2193C12.692 14.1668 12.6486 14.1469 12.5641 14.1105C11.9868 13.8583 11.457 13.5209 10.9887 13.108C10.8631 12.9974 10.7463 12.8783 10.6259 12.7616C10.2057 12.3543 9.86169 11.9211 9.60577 11.4938C9.5918 11.4705 9.57027 11.4368 9.54708 11.3991C9.50521 11.331 9.45903 11.25 9.44455 11.1944C9.40738 11.0473 9.50599 10.9291 9.50599 10.9291C9.50599 10.9291 9.74939 10.663 9.86248 10.5183C9.97128 10.379 10.0652 10.2428 10.125 10.1457C10.2428 9.95633 10.2801 9.76062 10.2182 9.60963C9.93764 8.92565 9.64818 8.24536 9.34986 7.56894C9.29098 7.43545 9.11585 7.33846 8.95659 7.32007C8.90265 7.31384 8.84875 7.30758 8.79459 7.30402C8.66053 7.29748 8.5262 7.29892 8.39232 7.30833L8.59339 7.30019Z" />
                                     </svg> </a>
-                                <a href="mailto:?subject=Acroyoga Beginner Workshop im Zenit&body=Hey, schau mal, was ich auf sei.jetzt gefunden habe: https://sei.jetzt/event/2025-05-10-acroyoga-beginner-workshop-im-zenit"
+                                <a href="mailto:?subject=Yin Yoga im Osnabloc&body=Hey, schau mal, was ich auf sei.jetzt gefunden habe: https://sei.jetzt/event/2025-05-13-yin-yoga-im-osnabloc"
                                     title="Email">
                                     <svg class="h-6 w-6 hover:text-primary-500" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
@@ -559,7 +798,7 @@
                                             d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
                                     </svg> </a>
                                 <div x-data="{
-                        url: 'https://sei.jetzt/event/2025-05-10-acroyoga-beginner-workshop-im-zenit',
+                        url: 'https://sei.jetzt/event/2025-05-13-yin-yoga-im-osnabloc',
                         copy () {
                             $clipboard(this.url)
                             this.copied = true
@@ -711,38 +950,1055 @@
 
                                                 <!--[if BLOCK]><![endif]-->
                                                 <div class="fi-modal-content flex flex-col gap-y-4 py-6 px-6">
-                                                    <p x-data="{
-                                link: 'https://www.susanne-fabel.de/events/acroyoga-beginner-workshop-mit-susanne-max-65w6p-hjkg3'
-                            }">
-                                                        Die Anmeldung für diese Veranstaltung wird über eine externe
-                                                        Webseite abgewickelt:
-                                                        <strong title="Zum Kopieren klicken"
-                                                            class="hover:cursor-pointer"
-                                                            @click="$clipboard(link)">https://www.susanne-fabel.de/events/acroyoga-beginner-workshop-mit-susanne-max-65w6p-hjkg3</strong>
-                                                    </p>
-                                                    <a href="https://www.susanne-fabel.de/events/acroyoga-beginner-workshop-mit-susanne-max-65w6p-hjkg3"
-                                                        target="_blank"
-                                                        style="--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);"
-                                                        class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 focus-visible:ring-custom-500/50 dark:bg-custom-500 dark:hover:bg-custom-400 dark:focus-visible:ring-custom-400/50">
-                                                        <!--[if BLOCK]><![endif]--> <svg
-                                                            class="fi-btn-icon transition duration-75 h-5 w-5 text-white"
-                                                            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                                            fill="currentColor" aria-hidden="true" data-slot="icon">
-                                                            <path
-                                                                d="M12.232 4.232a2.5 2.5 0 0 1 3.536 3.536l-1.225 1.224a.75.75 0 0 0 1.061 1.06l1.224-1.224a4 4 0 0 0-5.656-5.656l-3 3a4 4 0 0 0 .225 5.865.75.75 0 0 0 .977-1.138 2.5 2.5 0 0 1-.142-3.667l3-3Z" />
-                                                            <path
-                                                                d="M11.603 7.963a.75.75 0 0 0-.977 1.138 2.5 2.5 0 0 1 .142 3.667l-3 3a2.5 2.5 0 0 1-3.536-3.536l1.225-1.224a.75.75 0 0 0-1.061-1.06l-1.224 1.224a4 4 0 1 0 5.656 5.656l3-3a4 4 0 0 0-.225-5.865Z" />
-                                                        </svg><!--[if ENDBLOCK]><![endif]-->
+                                                    <div wire:snapshot="{&quot;data&quot;:{&quot;event&quot;:[null,{&quot;class&quot;:&quot;App\\Models\\Event&quot;,&quot;key&quot;:&quot;9eb0e0c7-7077-4266-a3d0-06553e9c71ef&quot;,&quot;s&quot;:&quot;mdl&quot;}],&quot;booking&quot;:null,&quot;waitingListEntry&quot;:null,&quot;data&quot;:[{&quot;attendee&quot;:[{&quot;first_name&quot;:null,&quot;last_name&quot;:null,&quot;email&quot;:null,&quot;price&quot;:null},{&quot;s&quot;:&quot;arr&quot;}],&quot;attendees&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}],&quot;payment_method&quot;:null,&quot;tos&quot;:false,&quot;attendees_count&quot;:null,&quot;total&quot;:null,&quot;buyer&quot;:null},{&quot;s&quot;:&quot;arr&quot;}],&quot;bookingOpen&quot;:true,&quot;bookingClosed&quot;:false,&quot;validPrices&quot;:false,&quot;preview&quot;:false,&quot;componentFileAttachments&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}],&quot;mountedFormComponentActions&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}],&quot;mountedFormComponentActionsArguments&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}],&quot;mountedFormComponentActionsData&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}],&quot;mountedFormComponentActionsComponents&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}]},&quot;memo&quot;:{&quot;id&quot;:&quot;Klgm7vulaY7UZURHEKPt&quot;,&quot;name&quot;:&quot;booking.booking-form&quot;,&quot;path&quot;:&quot;event\/2025-05-13-yin-yoga-im-osnabloc&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;de&quot;},&quot;checksum&quot;:&quot;7161eef904451150c604282b590e24e9d9de1dd11bfc586cd90628cf67ffc70e&quot;}"
+                                                        wire:effects="[]" wire:id="Klgm7vulaY7UZURHEKPt">
+                                                        <h2 class="flex justify-start text-2xl mb-4 font-bold">
+                                                            <svg class="w-8 h-8 mr-2" xmlns="http://www.w3.org/2000/svg"
+                                                                fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                                                stroke="currentColor" aria-hidden="true"
+                                                                data-slot="icon">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                            </svg>Buchung
+                                                        </h2>
+
+                                                        <form wire:submit="submit">
+                                                            <div style="--cols-default: repeat(1, minmax(0, 1fr));"
+                                                                class="grid grid-cols-[--cols-default] fi-fo-component-ctn gap-6"
+                                                                x-data="{}" x-on:form-validation-error.window="if ($event.detail.livewireId !== &#039;Klgm7vulaY7UZURHEKPt&#039;) {
+                return
+            }
+
+            $nextTick(() =&gt; {
+                let error = $el.querySelector(&#039;[data-validation-error]&#039;)
+
+                if (! error) {
+                    return
+                }
+
+                let elementToExpand = error
+
+                while (elementToExpand) {
+                    elementToExpand.dispatchEvent(new CustomEvent(&#039;expand&#039;))
+
+                    elementToExpand = elementToExpand.parentNode
+                }
+
+                setTimeout(
+                    () =&gt;
+                        error.closest(&#039;[data-field-wrapper]&#039;).scrollIntoView({
+                            behavior: &#039;smooth&#039;,
+                            block: &#039;start&#039;,
+                            inline: &#039;start&#039;,
+                        }),
+                    200,
+                )
+        })">
+                                                                <!--[if BLOCK]><![endif]-->
+                                                                <div style="--col-span-default: 1 / -1;"
+                                                                    class="col-[--col-span-default]">
+                                                                    <!--[if BLOCK]><![endif]-->
+                                                                    <div>
+                                                                        <div style="--cols-default: repeat(1, minmax(0, 1fr)); --cols-lg: repeat(1, minmax(0, 1fr));"
+                                                                            class="grid grid-cols-[--cols-default] lg:grid-cols-[--cols-lg] fi-fo-component-ctn gap-6">
+                                                                            <!--[if BLOCK]><![endif]-->
+                                                                            <div style="--col-span-default: 1 / -1;"
+                                                                                class="col-[--col-span-default]">
+                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                <fieldset
+                                                                                    class="fi-fieldset rounded-xl border border-gray-200 p-6 dark:border-white/10">
+                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                    <div style="--cols-default: repeat(1, minmax(0, 1fr)); --cols-lg: repeat(1, minmax(0, 1fr));"
+                                                                                        class="grid grid-cols-[--cols-default] lg:grid-cols-[--cols-lg] fi-fo-component-ctn gap-6">
+                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                        <div style="--col-span-default: 1 / -1;"
+                                                                                            class="col-[--col-span-default]">
+                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                            <div>
+                                                                                                <div style="--cols-default: repeat(1, minmax(0, 1fr)); --cols-lg: repeat(1, minmax(0, 1fr));"
+                                                                                                    class="grid grid-cols-[--cols-default] lg:grid-cols-[--cols-lg] fi-fo-component-ctn gap-6">
+                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                    <div style="--col-span-default: 1 / -1;"
+                                                                                                        class="col-[--col-span-default]">
+                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                        <div>
+                                                                                                            <div style="--cols-default: repeat(1, minmax(0, 1fr)); --cols-lg: repeat(1, minmax(0, 1fr));"
+                                                                                                                class="grid grid-cols-[--cols-default] lg:grid-cols-[--cols-lg] fi-fo-component-ctn gap-6">
+                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                <div style="--col-span-default: 1 / -1;"
+                                                                                                                    class="col-[--col-span-default]">
+                                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                                    <div>
+                                                                                                                        <div style="--cols-default: repeat(1, minmax(0, 1fr)); --cols-lg: repeat(2, minmax(0, 1fr));"
+                                                                                                                            class="grid grid-cols-[--cols-default] lg:grid-cols-[--cols-lg] fi-fo-component-ctn gap-6">
+                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                            <div style="--col-span-default: span 1 / span 1;"
+                                                                                                                                class="col-[--col-span-default]"
+                                                                                                                                wire:key="Klgm7vulaY7UZURHEKPt.data.attendee.first_name.Filament\Forms\Components\TextInput">
+                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                <div data-field-wrapper
+                                                                                                                                    class="fi-fo-field-wrp">
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <div
+                                                                                                                                        class="grid gap-y-2">
+                                                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                                                        <div
+                                                                                                                                            class="flex items-center gap-x-3 justify-between ">
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <label
+                                                                                                                                                class="fi-fo-field-wrp-label inline-flex items-center gap-x-3"
+                                                                                                                                                for="data.attendee.first_name">
+
+
+                                                                                                                                                <span
+                                                                                                                                                    class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
+
+                                                                                                                                                    Vorname<!--[if BLOCK]><![endif]--><sup
+                                                                                                                                                        class="text-danger-600 dark:text-danger-400 font-medium">*</sup>
+                                                                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                                </span>
+
+
+                                                                                                                                            </label>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                        </div>
+                                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                                                        <div
+                                                                                                                                            class="grid auto-cols-fr gap-y-2">
+                                                                                                                                            <div
+                                                                                                                                                class="fi-input-wrp flex rounded-lg shadow-sm ring-1 transition duration-75 bg-white dark:bg-white/5 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-2 ring-gray-950/10 dark:ring-white/20 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-600 dark:[&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500 fi-fo-text-input overflow-hidden">
+                                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                                <div
+                                                                                                                                                    class="fi-input-wrp-input min-w-0 flex-1">
+                                                                                                                                                    <input
+                                                                                                                                                        class="fi-input block w-full border-none py-1.5 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 bg-white/0 ps-3 pe-3"
+                                                                                                                                                        id="data.attendee.first_name"
+                                                                                                                                                        required="required"
+                                                                                                                                                        type="text"
+                                                                                                                                                        wire:model.blur="data.attendee.first_name" />
+                                                                                                                                                </div>
+
+                                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </div>
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                        </div>
+                                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                    </div>
+                                                                                                                                </div>
+
+                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                            </div>
+
+                                                                                                                            <div style="--col-span-default: span 1 / span 1;"
+                                                                                                                                class="col-[--col-span-default]"
+                                                                                                                                wire:key="Klgm7vulaY7UZURHEKPt.data.attendee.last_name.Filament\Forms\Components\TextInput">
+                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                <div data-field-wrapper
+                                                                                                                                    class="fi-fo-field-wrp">
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <div
+                                                                                                                                        class="grid gap-y-2">
+                                                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                                                        <div
+                                                                                                                                            class="flex items-center gap-x-3 justify-between ">
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <label
+                                                                                                                                                class="fi-fo-field-wrp-label inline-flex items-center gap-x-3"
+                                                                                                                                                for="data.attendee.last_name">
+
+
+                                                                                                                                                <span
+                                                                                                                                                    class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
+
+                                                                                                                                                    Nachname<!--[if BLOCK]><![endif]--><sup
+                                                                                                                                                        class="text-danger-600 dark:text-danger-400 font-medium">*</sup>
+                                                                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                                </span>
+
+
+                                                                                                                                            </label>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                        </div>
+                                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                                                        <div
+                                                                                                                                            class="grid auto-cols-fr gap-y-2">
+                                                                                                                                            <div
+                                                                                                                                                class="fi-input-wrp flex rounded-lg shadow-sm ring-1 transition duration-75 bg-white dark:bg-white/5 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-2 ring-gray-950/10 dark:ring-white/20 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-600 dark:[&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500 fi-fo-text-input overflow-hidden">
+                                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                                <div
+                                                                                                                                                    class="fi-input-wrp-input min-w-0 flex-1">
+                                                                                                                                                    <input
+                                                                                                                                                        class="fi-input block w-full border-none py-1.5 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 bg-white/0 ps-3 pe-3"
+                                                                                                                                                        id="data.attendee.last_name"
+                                                                                                                                                        required="required"
+                                                                                                                                                        type="text"
+                                                                                                                                                        wire:model.blur="data.attendee.last_name" />
+                                                                                                                                                </div>
+
+                                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </div>
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                        </div>
+                                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                    </div>
+                                                                                                                                </div>
+
+                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                            </div>
+                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                        </div>
+
+                                                                                                                    </div>
+
+                                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                </div>
+
+                                                                                                                <div style="--col-span-default: span 1 / span 1;"
+                                                                                                                    class="col-[--col-span-default]"
+                                                                                                                    wire:key="Klgm7vulaY7UZURHEKPt.data.attendee.email.Filament\Forms\Components\TextInput">
+                                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                                    <div data-field-wrapper
+                                                                                                                        class="fi-fo-field-wrp">
+                                                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                        <div
+                                                                                                                            class="grid gap-y-2">
+                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                            <div
+                                                                                                                                class="flex items-center gap-x-3 justify-between ">
+                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                <label
+                                                                                                                                    class="fi-fo-field-wrp-label inline-flex items-center gap-x-3"
+                                                                                                                                    for="data.attendee.email">
+
+
+                                                                                                                                    <span
+                                                                                                                                        class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
+
+                                                                                                                                        Email<!--[if BLOCK]><![endif]--><sup
+                                                                                                                                            class="text-danger-600 dark:text-danger-400 font-medium">*</sup>
+                                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                    </span>
+
+
+                                                                                                                                </label>
+                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                            </div>
+                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                            <div
+                                                                                                                                class="grid auto-cols-fr gap-y-2">
+                                                                                                                                <div
+                                                                                                                                    class="fi-input-wrp flex rounded-lg shadow-sm ring-1 transition duration-75 bg-white dark:bg-white/5 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-2 ring-gray-950/10 dark:ring-white/20 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-600 dark:[&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500 fi-fo-text-input overflow-hidden">
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <div
+                                                                                                                                        class="fi-input-wrp-input min-w-0 flex-1">
+                                                                                                                                        <input
+                                                                                                                                            class="fi-input block w-full border-none py-1.5 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 bg-white/0 ps-3 pe-3"
+                                                                                                                                            id="data.attendee.email"
+                                                                                                                                            required="required"
+                                                                                                                                            type="email"
+                                                                                                                                            wire:model.blur="data.attendee.email" />
+                                                                                                                                    </div>
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                </div>
+
+                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                            </div>
+                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                        </div>
+                                                                                                                    </div>
+
+                                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                </div>
+
+                                                                                                                <div style="--col-span-default: span 1 / span 1;"
+                                                                                                                    class="col-[--col-span-default]"
+                                                                                                                    wire:key="Klgm7vulaY7UZURHEKPt.data.attendee.price.Filament\Forms\Components\Select">
+                                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                                    <div data-field-wrapper
+                                                                                                                        class="fi-fo-field-wrp">
+                                                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                        <div
+                                                                                                                            class="grid gap-y-2">
+                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                            <div
+                                                                                                                                class="flex items-center gap-x-3 justify-between ">
+                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                <label
+                                                                                                                                    class="fi-fo-field-wrp-label inline-flex items-center gap-x-3"
+                                                                                                                                    for="data.attendee.price">
+
+
+                                                                                                                                    <span
+                                                                                                                                        class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
+
+                                                                                                                                        Wähle
+                                                                                                                                        eine
+                                                                                                                                        Preiskategorie<!--[if BLOCK]><![endif]--><sup
+                                                                                                                                            class="text-danger-600 dark:text-danger-400 font-medium">*</sup>
+                                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                    </span>
+
+
+                                                                                                                                </label>
+                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                            </div>
+                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                            <div
+                                                                                                                                class="grid auto-cols-fr gap-y-2">
+                                                                                                                                <div
+                                                                                                                                    class="fi-input-wrp flex rounded-lg shadow-sm ring-1 transition duration-75 bg-white dark:bg-white/5 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-2 ring-gray-950/10 dark:ring-white/20 [&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-600 dark:[&amp;:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500 fi-fo-select">
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <div
+                                                                                                                                        class="fi-input-wrp-input min-w-0 flex-1">
+                                                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                                                        <select
+                                                                                                                                            class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 text-base text-gray-950 transition duration-75 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] dark:text-white dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] sm:text-sm sm:leading-6 [&amp;_optgroup]:bg-white [&amp;_optgroup]:dark:bg-gray-900 [&amp;_option]:bg-white [&amp;_option]:dark:bg-gray-900 ps-3"
+                                                                                                                                            id="data.attendee.price"
+                                                                                                                                            required="required"
+                                                                                                                                            wire:model.live="data.attendee.price">
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <option
+                                                                                                                                                value="">
+                                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                                Wähle
+                                                                                                                                                eine
+                                                                                                                                                Option
+                                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </option>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <option
+                                                                                                                                                value="9eb0e0c7-7910-42d9-810f-4e36bc07570d">
+                                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                                €15,00
+                                                                                                                                                Einzeleinheit
+                                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </option>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <option
+                                                                                                                                                value="9eb0e0c7-7b0e-46c8-8ccf-65663dd6f9c7">
+                                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                                €13,50
+                                                                                                                                                Schnupperstunde
+                                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </option>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <option
+                                                                                                                                                value="9eb0e0c7-7c32-40f9-98d0-1b2cd42c74f3">
+                                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                                €135,00
+                                                                                                                                                10er
+                                                                                                                                                Karte
+                                                                                                                                                (Auch
+                                                                                                                                                für
+                                                                                                                                                HathaYoga
+                                                                                                                                                einsetzbar)
+                                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </option>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <option
+                                                                                                                                                value="9eb0e0c7-7d44-457d-8c9f-a179cfc14ae7">
+                                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                                €70,00
+                                                                                                                                                5er
+                                                                                                                                                Karte
+                                                                                                                                                (Auch
+                                                                                                                                                für
+                                                                                                                                                HathaYoga
+                                                                                                                                                einsetzbar)
+                                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </option>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                                            <option
+                                                                                                                                                value="9eb0e0c7-7e51-4433-982b-677ceddf36b7">
+                                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                                €0,00
+                                                                                                                                                Mit
+                                                                                                                                                Hansefit
+                                                                                                                                                QR-
+                                                                                                                                                Code
+                                                                                                                                                vor
+                                                                                                                                                Ort
+                                                                                                                                                einchecken
+                                                                                                                                                (Nur
+                                                                                                                                                für
+                                                                                                                                                Hansefitmitglieder)
+                                                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            </option>
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                        </select>
+                                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                    </div>
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                </div>
+
+                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                            </div>
+                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                        </div>
+                                                                                                                    </div>
+
+                                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                </div>
+                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                            </div>
+
+                                                                                                        </div>
+
+                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                    </div>
+
+                                                                                                    <div style="--col-span-default: span 1 / span 1;"
+                                                                                                        class="col-[--col-span-default]"
+                                                                                                        wire:key="Klgm7vulaY7UZURHEKPt.data.attendees.Filament\Forms\Components\Repeater">
+                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                        <div data-field-wrapper
+                                                                                                            class="fi-fo-field-wrp">
+                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                            <label
+                                                                                                                for="data.attendees"
+                                                                                                                class="sr-only">
+                                                                                                                Attendees
+                                                                                                            </label>
+                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                            <div
+                                                                                                                class="grid gap-y-2">
+                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                <div
+                                                                                                                    class="grid auto-cols-fr gap-y-2">
+                                                                                                                    <div x-data="{}"
+                                                                                                                        class="fi-fo-repeater grid gap-y-4">
+                                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                                        <div
+                                                                                                                            class="flex gap-x-3 hidden">
+                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                            <span
+                                                                                                                                x-on:click="$dispatch('repeater-collapse', 'data.attendees')">
+                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                <button
+                                                                                                                                    class="fi-link group/link relative inline-flex items-center justify-center outline-none fi-size-sm fi-link-size-sm gap-1  fi-color-gray fi-ac-action fi-ac-link-action"
+                                                                                                                                    type="button"
+                                                                                                                                    wire:loading.attr="disabled">
+                                                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <span
+                                                                                                                                        class="font-semibold text-sm text-gray-700 dark:text-gray-200 group-hover/link:underline group-focus-visible/link:underline"
+                                                                                                                                        style="">
+                                                                                                                                        Alle
+                                                                                                                                        einklappen
+                                                                                                                                    </span>
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                </button><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                            </span>
+                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                                            <span
+                                                                                                                                x-on:click="$dispatch('repeater-expand', 'data.attendees')">
+                                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                                <button
+                                                                                                                                    class="fi-link group/link relative inline-flex items-center justify-center outline-none fi-size-sm fi-link-size-sm gap-1  fi-color-gray fi-ac-action fi-ac-link-action"
+                                                                                                                                    type="button"
+                                                                                                                                    wire:loading.attr="disabled">
+                                                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <span
+                                                                                                                                        class="font-semibold text-sm text-gray-700 dark:text-gray-200 group-hover/link:underline group-focus-visible/link:underline"
+                                                                                                                                        style="">
+                                                                                                                                        Alle
+                                                                                                                                        ausklappen
+                                                                                                                                    </span>
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                                </button><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                            </span>
+                                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                        </div>
+                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                                        <div
+                                                                                                                            class="flex justify-center">
+                                                                                                                            <button
+                                                                                                                                style=";"
+                                                                                                                                class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg  fi-btn-color-gray fi-color-gray fi-size-sm fi-btn-size-sm gap-1 px-2.5 py-1.5 text-sm inline-grid shadow-sm bg-white text-gray-950 hover:bg-gray-50 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 ring-1 ring-gray-950/10 dark:ring-white/20 [input:checked+&amp;]:bg-gray-400 [input:checked+&amp;]:text-white [input:checked+&amp;]:ring-0 [input:checked+&amp;]:hover:bg-gray-300 dark:[input:checked+&amp;]:bg-gray-600 dark:[input:checked+&amp;]:hover:bg-gray-500 fi-ac-action fi-ac-btn-action"
+                                                                                                                                type="button"
+                                                                                                                                wire:loading.attr="disabled"
+                                                                                                                                wire:click="mountFormComponentAction(&#039;data.attendees&#039;, &#039;add&#039;)">
+
+                                                                                                                                <svg fill="none"
+                                                                                                                                    viewBox="0 0 24 24"
+                                                                                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                                                                                    class="animate-spin fi-btn-icon transition duration-75 h-4 w-4 text-gray-400 dark:text-gray-500"
+                                                                                                                                    wire:loading.delay.default=""
+                                                                                                                                    wire:target="mountFormComponentAction('data.attendees', 'add')">
+                                                                                                                                    <path
+                                                                                                                                        clip-rule="evenodd"
+                                                                                                                                        d="M12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                                                                                                                        fill-rule="evenodd"
+                                                                                                                                        fill="currentColor"
+                                                                                                                                        opacity="0.2">
+                                                                                                                                    </path>
+                                                                                                                                    <path
+                                                                                                                                        d="M2 12C2 6.47715 6.47715 2 12 2V5C8.13401 5 5 8.13401 5 12H2Z"
+                                                                                                                                        fill="currentColor">
+                                                                                                                                    </path>
+                                                                                                                                </svg>
+
+
+                                                                                                                                <span
+                                                                                                                                    class="fi-btn-label">
+                                                                                                                                    Weitere
+                                                                                                                                    Teilnehmende
+                                                                                                                                </span>
 
 
 
-                                                        <span class="fi-btn-label">
-                                                            Zur Veranstalterseite
-                                                        </span>
+                                                                                                                            </button>
+
+                                                                                                                        </div>
+                                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                                    </div>
+
+                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                </div>
+                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                            </div>
+                                                                                                        </div>
+
+                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                                    </div>
+                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                </div>
+
+                                                                                            </div>
+
+                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                        </div>
+                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                    </div>
+                                                                                </fieldset>
+
+                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                            </div>
+
+                                                                            <div style="--col-span-default: 1 / -1;"
+                                                                                class="hidden">
+                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                            </div>
+
+                                                                            <div style="--col-span-default: 1 / -1;"
+                                                                                class="col-[--col-span-default]">
+                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                <fieldset
+                                                                                    class="fi-fieldset rounded-xl border border-gray-200 p-6 dark:border-white/10">
+                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                    <legend
+                                                                                        class="-ms-2 px-2 text-sm font-medium leading-6 text-gray-950 dark:text-white">
+                                                                                        Vereinbarung
+                                                                                    </legend>
+                                                                                    <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                    <div style="--cols-default: repeat(1, minmax(0, 1fr)); --cols-lg: repeat(1, minmax(0, 1fr));"
+                                                                                        class="grid grid-cols-[--cols-default] lg:grid-cols-[--cols-lg] fi-fo-component-ctn gap-6">
+                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                        <div style="--col-span-default: span 1 / span 1;"
+                                                                                            class="col-[--col-span-default]"
+                                                                                            wire:key="Klgm7vulaY7UZURHEKPt.data.tos.Filament\Forms\Components\Checkbox">
+                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                            <div data-field-wrapper
+                                                                                                class="fi-fo-field-wrp">
+                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                <div
+                                                                                                    class="grid gap-y-2">
+                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                    <div
+                                                                                                        class="flex items-center gap-x-3 justify-between ">
+                                                                                                        <!--[if BLOCK]><![endif]-->
+                                                                                                        <label
+                                                                                                            class="fi-fo-field-wrp-label inline-flex items-center gap-x-3"
+                                                                                                            for="data.tos">
+                                                                                                            <input
+                                                                                                                type="checkbox"
+                                                                                                                class="fi-checkbox-input rounded border-none bg-white shadow-sm ring-1 transition duration-75 checked:ring-0 focus:ring-2 focus:ring-offset-0 disabled:pointer-events-none disabled:bg-gray-50 disabled:text-gray-50 disabled:checked:bg-gray-400 disabled:checked:text-gray-400 dark:bg-white/5 dark:disabled:bg-transparent dark:disabled:checked:bg-gray-600 text-primary-600 ring-gray-950/10 focus:ring-primary-600 checked:focus:ring-primary-500/50 dark:text-primary-500 dark:ring-white/20 dark:checked:bg-primary-500 dark:focus:ring-primary-500 dark:checked:focus:ring-primary-400/50 dark:disabled:ring-white/10"
+                                                                                                                id="data.tos"
+                                                                                                                required="required"
+                                                                                                                wire:loading.attr="disabled"
+                                                                                                                wire:model="data.tos" />
+
+                                                                                                            <span
+                                                                                                                class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
+
+                                                                                                                Ich habe
+                                                                                                                die AGB
+                                                                                                                von
+                                                                                                                sei.jetzt
+                                                                                                                gelesen
+                                                                                                                und
+                                                                                                                akzeptiere
+                                                                                                                diese
+                                                                                                                <svg class="w-3 h-3 inline mr-1 ml-2"
+                                                                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                                                                    viewBox="0 0 20 20"
+                                                                                                                    fill="currentColor"
+                                                                                                                    aria-hidden="true"
+                                                                                                                    data-slot="icon">
+                                                                                                                    <path
+                                                                                                                        fill-rule="evenodd"
+                                                                                                                        d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Zm2.25 8.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z"
+                                                                                                                        clip-rule="evenodd" />
+                                                                                                                </svg><a
+                                                                                                                    href="https://sei.jetzt/tos"
+                                                                                                                    class="hover:underline text-primary-500"
+                                                                                                                    target="_blank">anzeigen</a><!--[if BLOCK]><![endif]--><sup
+                                                                                                                    class="text-danger-600 dark:text-danger-400 font-medium">*</sup>
+                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                                            </span>
+
+
+                                                                                                        </label>
+                                                                                                        <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                    </div>
+                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                </div>
+                                                                                            </div>
+
+                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                        </div>
+                                                                                        <!--[if ENDBLOCK]><![endif]-->
+                                                                                    </div>
+                                                                                </fieldset>
+
+                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                            </div>
+
+                                                                            <div style="--col-span-default: 1 / -1;"
+                                                                                class="col-[--col-span-default]">
+                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                <section x-data="{
+        isCollapsed:  false ,
+    }" x-on:collapse-section.window="if ($event.detail.id == $el.id) isCollapsed = true"
+                                                                                    x-on:expand="isCollapsed = false"
+                                                                                    x-on:open-section.window="if ($event.detail.id == $el.id) isCollapsed = false"
+                                                                                    x-on:toggle-section.window="if ($event.detail.id == $el.id) isCollapsed = ! isCollapsed"
+                                                                                    x-bind:class="isCollapsed && 'fi-collapsed'"
+                                                                                    class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+                                                                                    id="data.zusammenfassung">
+                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                    <header
+                                                                                        x-on:click="isCollapsed = ! isCollapsed"
+                                                                                        class="fi-section-header flex flex-col gap-3 cursor-pointer px-6 py-4">
+                                                                                        <div
+                                                                                            class="flex items-center gap-3">
+                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                            <svg style="--c-400:var(--black-400);--c-500:var(--black-500);"
+                                                                                                class="fi-section-header-icon self-start fi-color-custom text-custom-500 dark:text-custom-400 fi-color-{$iconColor} h-6 w-6"
+                                                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                                                fill="none"
+                                                                                                viewBox="0 0 24 24"
+                                                                                                stroke-width="1.5"
+                                                                                                stroke="currentColor"
+                                                                                                aria-hidden="true"
+                                                                                                data-slot="icon">
+                                                                                                <path
+                                                                                                    stroke-linecap="round"
+                                                                                                    stroke-linejoin="round"
+                                                                                                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                                                                                            </svg><!--[if ENDBLOCK]><![endif]-->
+                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                            <div
+                                                                                                class="grid flex-1 gap-y-1">
+                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                <h3
+                                                                                                    class="fi-section-header-heading text-base font-semibold leading-6 text-gray-950 dark:text-white">
+                                                                                                    Zusammenfassung
+                                                                                                </h3>
+                                                                                                <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                            </div>
+                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                            <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
 
 
 
-                                                    </a>
+                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                            <button
+                                                                                                style="--c-300:var(--gray-300);--c-400:var(--gray-400);--c-500:var(--gray-500);--c-600:var(--gray-600);"
+                                                                                                class="fi-icon-btn relative flex items-center justify-center rounded-lg outline-none transition duration-75 focus-visible:ring-2 -m-2 h-9 w-9 text-gray-400 hover:text-gray-500 focus-visible:ring-primary-600 dark:text-gray-500 dark:hover:text-gray-400 dark:focus-visible:ring-primary-500 fi-color-gray"
+                                                                                                type="button"
+                                                                                                wire:loading.attr="disabled"
+                                                                                                x-on:click.stop="isCollapsed = ! isCollapsed"
+                                                                                                x-bind:class="{ 'rotate-180': ! isCollapsed }">
+                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                <svg class="fi-icon-btn-icon h-5 w-5"
+                                                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                                                    viewBox="0 0 20 20"
+                                                                                                    fill="currentColor"
+                                                                                                    aria-hidden="true"
+                                                                                                    data-slot="icon">
+                                                                                                    <path
+                                                                                                        fill-rule="evenodd"
+                                                                                                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                                                                                                        clip-rule="evenodd" />
+                                                                                                </svg><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                            </button>
+                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                        </div>
+
+                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                    </header>
+                                                                                    <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                    <div x-bind:aria-expanded="(! isCollapsed).toString()"
+                                                                                        x-bind:class="{
+                'invisible absolute h-0 overflow-hidden border-none': isCollapsed,
+            }" class="fi-section-content-ctn border-t border-gray-200 dark:border-white/10">
+                                                                                        <div
+                                                                                            class="fi-section-content p-6">
+                                                                                            <div style="--cols-default: repeat(1, minmax(0, 1fr)); --cols-lg: repeat(3, minmax(0, 1fr));"
+                                                                                                class="grid grid-cols-[--cols-default] lg:grid-cols-[--cols-lg] fi-fo-component-ctn gap-6">
+                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                <div style="--col-span-default: span 1 / span 1;"
+                                                                                                    class="col-[--col-span-default]">
+                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                    <div data-field-wrapper
+                                                                                                        class="fi-fo-field-wrp">
+                                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                        <div
+                                                                                                            class="grid gap-y-2">
+                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                            <div
+                                                                                                                class="flex items-center gap-x-3 justify-between ">
+                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                <label
+                                                                                                                    class="fi-fo-field-wrp-label inline-flex items-center gap-x-3"
+                                                                                                                    for="data.attendees_count">
+
+
+                                                                                                                    <span
+                                                                                                                        class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
+
+                                                                                                                        #
+                                                                                                                        Teilnehmende<!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                    </span>
+
+
+                                                                                                                </label>
+                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                            </div>
+                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                            <div
+                                                                                                                class="grid auto-cols-fr gap-y-2">
+                                                                                                                <div
+                                                                                                                    class="fi-fo-placeholder text-sm leading-6">
+                                                                                                                    1
+                                                                                                                </div>
+
+                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                            </div>
+                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                        </div>
+                                                                                                    </div>
+
+                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                </div>
+
+                                                                                                <div style="--col-span-default: span 1 / span 1;"
+                                                                                                    class="col-[--col-span-default]">
+                                                                                                    <!--[if BLOCK]><![endif]-->
+                                                                                                    <div data-field-wrapper
+                                                                                                        class="fi-fo-field-wrp">
+                                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                        <div
+                                                                                                            class="grid gap-y-2">
+                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                            <div
+                                                                                                                class="flex items-center gap-x-3 justify-between ">
+                                                                                                                <!--[if BLOCK]><![endif]-->
+                                                                                                                <label
+                                                                                                                    class="fi-fo-field-wrp-label inline-flex items-center gap-x-3"
+                                                                                                                    for="data.total">
+
+
+                                                                                                                    <span
+                                                                                                                        class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
+
+                                                                                                                        Summe
+                                                                                                                        gesamt<!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                                    </span>
+
+
+                                                                                                                </label>
+                                                                                                                <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                            </div>
+                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                            <!--[if BLOCK]><![endif]-->
+                                                                                                            <div
+                                                                                                                class="grid auto-cols-fr gap-y-2">
+                                                                                                                <div
+                                                                                                                    class="fi-fo-placeholder text-sm leading-6">
+                                                                                                                    €0,00
+                                                                                                                </div>
+
+                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                            </div>
+                                                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                                                        </div>
+                                                                                                    </div>
+
+                                                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                                                </div>
+
+                                                                                                <div style="--col-span-default: span 1 / span 1;"
+                                                                                                    class="hidden">
+                                                                                                    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                                </div>
+                                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                                    </div>
+                                                                                </section>
+
+                                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                                            </div>
+                                                                            <!--[if ENDBLOCK]><![endif]-->
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <!--[if ENDBLOCK]><![endif]-->
+                                                                </div>
+                                                                <!--[if ENDBLOCK]><![endif]-->
+                                                            </div>
+
+
+                                                            <div class="flex justify-center items-center">
+                                                                <button
+                                                                    style="--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);"
+                                                                    class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 focus-visible:ring-custom-500/50 dark:bg-custom-500 dark:hover:bg-custom-400 dark:focus-visible:ring-custom-400/50 mt-6 disabled:bg-opacity-50"
+                                                                    type="submit" wire:loading.attr="disabled"
+                                                                    wire:target="submit" x-bind:disabled="preview"
+                                                                    id="submit-button-container" x-data="{
+                        preview: false
+
+                    }">
+
+                                                                    <svg fill="none" viewBox="0 0 24 24"
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        class="animate-spin fi-btn-icon transition duration-75 h-5 w-5 text-white"
+                                                                        wire:loading.delay.default=""
+                                                                        wire:target="submit">
+                                                                        <path clip-rule="evenodd"
+                                                                            d="M12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                                                            fill-rule="evenodd" fill="currentColor"
+                                                                            opacity="0.2"></path>
+                                                                        <path
+                                                                            d="M2 12C2 6.47715 6.47715 2 12 2V5C8.13401 5 5 8.13401 5 12H2Z"
+                                                                            fill="currentColor"></path>
+                                                                    </svg>
+
+
+                                                                    <span class="fi-btn-label">
+                                                                        Verbindlich anmelden
+                                                                    </span>
+
+
+
+                                                                </button>
+                                                            </div>
+                                                        </form>
+
+                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                        <!--[if BLOCK]><![endif]-->
+                                                        <form wire:submit.prevent="callMountedFormComponentAction">
+                                                            <div aria-modal="true" role="dialog" x-data="{
+        isOpen: false,
+
+        livewire: null,
+
+        close: function () {
+            this.isOpen = false
+
+            this.$refs.modalContainer.dispatchEvent(
+                new CustomEvent('modal-closed', { id: 'Klgm7vulaY7UZURHEKPt-form-component-action' }),
+            )
+        },
+
+        open: function () {
+            this.$nextTick(() => {
+                this.isOpen = true
+
+                
+                this.$refs.modalContainer.dispatchEvent(
+                    new CustomEvent('modal-opened', { id: 'Klgm7vulaY7UZURHEKPt-form-component-action' }),
+                )
+            })
+        },
+    }" x-on:close-modal.window="if ($event.detail.id === 'Klgm7vulaY7UZURHEKPt-form-component-action') close()"
+                                                                x-on:open-modal.window="if ($event.detail.id === 'Klgm7vulaY7UZURHEKPt-form-component-action') open()"
+                                                                x-trap.noscroll="isOpen" x-bind:class="{
+        'fi-modal-open': isOpen,
+    }" class="fi-modal block">
+                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                <div x-cloak x-show="isOpen">
+                                                                    <div aria-hidden="true" x-show="isOpen"
+                                                                        x-transition.duration.300ms.opacity
+                                                                        class="fi-modal-close-overlay fixed inset-0 z-40 bg-gray-950/50 dark:bg-gray-950/75">
+                                                                    </div>
+
+                                                                    <div
+                                                                        class="fixed inset-0 z-40 overflow-y-auto cursor-pointer">
+                                                                        <div x-ref="modalContainer" x-on:click.self="
+                        document.activeElement.selectionStart === undefined &&
+                            document.activeElement.selectionEnd === undefined &&
+                            $dispatch(&#039;close-modal&#039;, { id: &#039;Klgm7vulaY7UZURHEKPt-form-component-action&#039; })
+                    " class="relative grid min-h-full grid-rows-[1fr_auto_1fr] justify-items-center sm:grid-rows-[1fr_auto_3fr] p-4"
+                                                                            x-on:modal-closed.stop="const mountedFormComponentActionShouldOpenModal = false
+
+
+                if (mountedFormComponentActionShouldOpenModal) {
+                    $wire.unmountFormComponentAction(false, false)
+                }">
+                                                                            <div x-data="{ isShown: false }" x-init="
+                        $nextTick(() => {
+                            isShown = isOpen
+                            $watch('isOpen', () => (isShown = isOpen))
+                        })
+                    " x-on:keydown.window.escape="$dispatch(&#039;close-modal&#039;, { id: &#039;Klgm7vulaY7UZURHEKPt-form-component-action&#039; })"
+                                                                                x-show="isShown"
+                                                                                x-transition:enter="duration-300"
+                                                                                x-transition:leave="duration-300"
+                                                                                x-transition:enter-start="scale-95 opacity-0"
+                                                                                x-transition:enter-end="scale-100 opacity-100"
+                                                                                x-transition:leave-start="scale-100 opacity-100"
+                                                                                x-transition:leave-end="scale-95 opacity-0"
+                                                                                class="fi-modal-window pointer-events-auto relative row-start-2 flex w-full cursor-default flex-col bg-white shadow-xl ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 mx-auto rounded-xl hidden max-w-sm">
+                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+
+                                                                                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+
+                                                        <!--[if ENDBLOCK]><![endif]-->
+
+                                                    </div>
                                                 </div>
                                                 <!--[if ENDBLOCK]><![endif]-->
 
@@ -838,6 +2094,34 @@
                                         </div>
                                         <div class="px-4 text-xs text-gray-800 dark:text-gray-200 h-4 mb-2">
                                             09.05.2025 18:00
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="embla__slide rounded-xl border border-gray-200 dark:border-gray-800 mx-2 hover:bg-gray-200 dark:hover:bg-gray-800"
+                                    href="https://sei.jetzt/event/2025-05-10-acroyoga-beginner-workshop-im-zenit">
+                                    <div class="embla__slide__inner overflow-hidden rounded-xl flex flex-col gap-2">
+                                        <div class="embla__slide__img inset-0 object-contain opacity-100 rounded-xl h-40 w-40 aspect-square flex"
+                                            style="background:url('https://sei.jetzt/storage/1651/01JPDGTC41G4S4R8GRS890NXTG.jpg')">
+                                            <div
+                                                class="flex p-1 w-full h-full backdrop-blur-md rounded-t-xl bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-80 items-center justify-center">
+                                                <div class="rounded-lg overflow-hidden object-contain max-h-full">
+                                                    <img srcset="https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_6000_4000.jpg 6000w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_5019_3346.jpg 5019w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_4200_2800.jpg 4200w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_3513_2342.jpg 3513w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_2939_1959.jpg 2939w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_2459_1639.jpg 2459w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_2057_1371.jpg 2057w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1721_1147.jpg 1721w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1440_960.jpg 1440w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1205_803.jpg 1205w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_1008_672.jpg 1008w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_843_562.jpg 843w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_705_470.jpg 705w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_590_393.jpg 590w, https://sei.jetzt/storage/1651/responsive-images/01JPDGTC41G4S4R8GRS890NXTG___media_library_original_494_329.jpg 494w, data:image/svg+xml;base64,PCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHg9IjAiCiB5PSIwIiB2aWV3Qm94PSIwIDAgNjAwMCA0MDAwIj4KCTxpbWFnZSB3aWR0aD0iNjAwMCIgaGVpZ2h0PSI0MDAwIiB4bGluazpocmVmPSJkYXRhOmltYWdlL2pwZWc7YmFzZTY0LC85ai80QUFRU2taSlJnQUJBUUVBWUFCZ0FBRC8vZ0ErUTFKRlFWUlBVam9nWjJRdGFuQmxaeUIyTVM0d0lDaDFjMmx1WnlCSlNrY2dTbEJGUnlCMk9EQXBMQ0JrWldaaGRXeDBJSEYxWVd4cGRIa0svOXNBUXdBSUJnWUhCZ1VJQndjSENRa0lDZ3dVRFF3TEN3d1pFaE1QRkIwYUh4NGRHaHdjSUNRdUp5QWlMQ01jSENnM0tTd3dNVFEwTkI4bk9UMDRNand1TXpReS85c0FRd0VKQ1FrTUN3d1lEUTBZTWlFY0lUSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5LzhBQUVRZ0FGUUFnQXdFaUFBSVJBUU1SQWYvRUFCOEFBQUVGQVFFQkFRRUJBQUFBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUUFBSUJBd01DQkFNRkJRUUVBQUFCZlFFQ0F3QUVFUVVTSVRGQkJoTlJZUWNpY1JReWdaR2hDQ05Dc2NFVlV0SHdKRE5pY29JSkNoWVhHQmthSlNZbktDa3FORFUyTnpnNU9rTkVSVVpIU0VsS1UxUlZWbGRZV1ZwalpHVm1aMmhwYW5OMGRYWjNlSGw2ZzRTRmhvZUlpWXFTazVTVmxwZVltWnFpbzZTbHBxZW9xYXF5czdTMXRyZTR1YnJDdzhURnhzZkl5Y3JTMDlUVjF0ZlkyZHJoNHVQazVlYm42T25xOGZMejlQWDI5L2o1K3YvRUFCOEJBQU1CQVFFQkFRRUJBUUVBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUkFBSUJBZ1FFQXdRSEJRUUVBQUVDZHdBQkFnTVJCQVVoTVFZU1FWRUhZWEVUSWpLQkNCUkNrYUd4d1Frak0xTHdGV0p5MFFvV0pEVGhKZkVYR0JrYUppY29LU28xTmpjNE9UcERSRVZHUjBoSlNsTlVWVlpYV0ZsYVkyUmxabWRvYVdwemRIVjJkM2g1ZW9LRGhJV0doNGlKaXBLVGxKV1dsNWlabXFLanBLV21wNmlwcXJLenRMVzJ0N2k1dXNMRHhNWEd4OGpKeXRMVDFOWFcxOWpaMnVMajVPWG01K2pwNnZMejlQWDI5L2o1K3YvYUFBd0RBUUFDRVFNUkFEOEFxeFdlcVJMZ1M4VklaTlY4c3dpVVpxY1h6NHFoUGN5eHppVlcvQ3VXT0pxTjdsT2hBbnNWMWUwbjNsOXdycEl0YnUxakFkT2E1aTMxbDVaOW5ZVmRhK0lwL1dxa2RBZUhnVkZVRVZYdTR3WVNhS0s1bzduVTBRMkZ1Z1F0M3EzdG9vb2s5UldQLzlrPSI+Cgk8L2ltYWdlPgo8L3N2Zz4= 32w"
+                                                        onload="window.requestAnimationFrame(function(){if(!(size=getBoundingClientRect().width))return;onload=null;sizes=Math.ceil(size/window.innerWidth*100)+'vw';});"
+                                                        sizes="1px"
+                                                        src="https://sei.jetzt/storage/1651/01JPDGTC41G4S4R8GRS890NXTG.jpg"
+                                                        width="6000" height="4000" alt="online komprimiert">
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="px-4 text-gray-800 dark:text-gray-200 text-xs h-4 overflow-hidden">
+                                            Susanne Fabel - Yoga...
+                                        </div>
+                                        <div class="px-4 font-bold text-sm h-10 flex align-middle place-items-center">
+                                            Acroyoga Beginner Workshop im...
+                                        </div>
+                                        <div class="px-4 text-xs text-gray-800 dark:text-gray-200 h-4 mb-2">
+                                            10.05.2025 10:00
                                         </div>
                                     </div>
                                 </a>
@@ -1003,34 +2287,6 @@
                                         </div>
                                         <div class="px-4 font-bold text-sm h-10 flex align-middle place-items-center">
                                             Töpfern Entspannung Achtsamkei...
-                                        </div>
-                                        <div class="px-4 text-xs text-gray-800 dark:text-gray-200 h-4 mb-2">
-                                            13.05.2025 18:00
-                                        </div>
-                                    </div>
-                                </a>
-                                <a class="embla__slide rounded-xl border border-gray-200 dark:border-gray-800 mx-2 hover:bg-gray-200 dark:hover:bg-gray-800"
-                                    href="https://sei.jetzt/event/2025-05-13-yin-yoga-im-osnabloc">
-                                    <div class="embla__slide__inner overflow-hidden rounded-xl flex flex-col gap-2">
-                                        <div class="embla__slide__img inset-0 object-contain opacity-100 rounded-xl h-40 w-40 aspect-square flex"
-                                            style="background:url('https://sei.jetzt/storage/1875/conversions/01JH0GMC3JV5R7H0KF4EMZH5KF-thumb.jpg')">
-                                            <div
-                                                class="flex p-1 w-full h-full backdrop-blur-md rounded-t-xl bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-80 items-center justify-center">
-                                                <div class="rounded-lg overflow-hidden object-contain max-h-full">
-                                                    <img srcset="https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_1080_1062.jpg 1080w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_903_888.jpg 903w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_755_742.jpg 755w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_632_621.jpg 632w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_529_520.jpg 529w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_442_435.jpg 442w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_370_364.jpg 370w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_309_304.jpg 309w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_259_255.jpg 259w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_216_212.jpg 216w, https://sei.jetzt/storage/1875/responsive-images/01JH0GMC3JV5R7H0KF4EMZH5KF___media_library_original_181_178.jpg 181w, data:image/svg+xml;base64,PCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHg9IjAiCiB5PSIwIiB2aWV3Qm94PSIwIDAgMTA4MCAxMDYyIj4KCTxpbWFnZSB3aWR0aD0iMTA4MCIgaGVpZ2h0PSIxMDYyIiB4bGluazpocmVmPSJkYXRhOmltYWdlL2pwZWc7YmFzZTY0LC85ai80QUFRU2taSlJnQUJBUUVBWUFCZ0FBRC8vZ0ErUTFKRlFWUlBVam9nWjJRdGFuQmxaeUIyTVM0d0lDaDFjMmx1WnlCSlNrY2dTbEJGUnlCMk9EQXBMQ0JrWldaaGRXeDBJSEYxWVd4cGRIa0svOXNBUXdBSUJnWUhCZ1VJQndjSENRa0lDZ3dVRFF3TEN3d1pFaE1QRkIwYUh4NGRHaHdjSUNRdUp5QWlMQ01jSENnM0tTd3dNVFEwTkI4bk9UMDRNand1TXpReS85c0FRd0VKQ1FrTUN3d1lEUTBZTWlFY0lUSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5TWpJeU1qSXlNakl5LzhBQUVRZ0FId0FnQXdFaUFBSVJBUU1SQWYvRUFCOEFBQUVGQVFFQkFRRUJBQUFBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUUFBSUJBd01DQkFNRkJRUUVBQUFCZlFFQ0F3QUVFUVVTSVRGQkJoTlJZUWNpY1JReWdaR2hDQ05Dc2NFVlV0SHdKRE5pY29JSkNoWVhHQmthSlNZbktDa3FORFUyTnpnNU9rTkVSVVpIU0VsS1UxUlZWbGRZV1ZwalpHVm1aMmhwYW5OMGRYWjNlSGw2ZzRTRmhvZUlpWXFTazVTVmxwZVltWnFpbzZTbHBxZW9xYXF5czdTMXRyZTR1YnJDdzhURnhzZkl5Y3JTMDlUVjF0ZlkyZHJoNHVQazVlYm42T25xOGZMejlQWDI5L2o1K3YvRUFCOEJBQU1CQVFFQkFRRUJBUUVBQUFBQUFBQUJBZ01FQlFZSENBa0tDLy9FQUxVUkFBSUJBZ1FFQXdRSEJRUUVBQUVDZHdBQkFnTVJCQVVoTVFZU1FWRUhZWEVUSWpLQkNCUkNrYUd4d1Frak0xTHdGV0p5MFFvV0pEVGhKZkVYR0JrYUppY29LU28xTmpjNE9UcERSRVZHUjBoSlNsTlVWVlpYV0ZsYVkyUmxabWRvYVdwemRIVjJkM2g1ZW9LRGhJV0doNGlKaXBLVGxKV1dsNWlabXFLanBLV21wNmlwcXJLenRMVzJ0N2k1dXNMRHhNWEd4OGpKeXRMVDFOWFcxOWpaMnVMajVPWG01K2pwNnZMejlQWDI5L2o1K3YvYUFBd0RBUUFDRVFNUkFEOEF1UWxBT0RUaXlzYXhVbGNxZHJWVWsxQzV0M3d3TzA5NitiaGhlWjJUMU9pMStwdlRScDNyT3VFakl4aW5KTGkxODFuM0UxQjVvbEdSWFRMQzFLTHU5akNwSzJ3eUtkUU1BWnFPOHVsOGtxWXMrOVpscGVibXhXaWs2dnd5NXJyajdtclFKdDZrR202aGJ5VGkzbEpWVHh6VnJWbzRyUEJ0NWd5bjBOUVMyRVZ3Y29vVnZXc3k2aThnN1hjdGl1aXBpWFVqWm8ycDA0U1h2SC8vMlE9PSI+Cgk8L2ltYWdlPgo8L3N2Zz4= 32w"
-                                                        onload="window.requestAnimationFrame(function(){if(!(size=getBoundingClientRect().width))return;onload=null;sizes=Math.ceil(size/window.innerWidth*100)+'vw';});"
-                                                        sizes="1px"
-                                                        src="https://sei.jetzt/storage/1875/01JH0GMC3JV5R7H0KF4EMZH5KF.jpg"
-                                                        width="1080" height="1062" alt="photo_2025-01-07_14-35-02">
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="px-4 text-gray-800 dark:text-gray-200 text-xs h-4 overflow-hidden">
-                                            KendraLahYoga
-                                        </div>
-                                        <div class="px-4 font-bold text-sm h-10 flex align-middle place-items-center">
-                                            Yin Yoga im Osnabloc
                                         </div>
                                         <div class="px-4 text-xs text-gray-800 dark:text-gray-200 h-4 mb-2">
                                             13.05.2025 18:00
@@ -2030,9 +3286,9 @@
         </div>
     </div>
 
-    <div wire:snapshot="{&quot;data&quot;:{&quot;isFilamentNotificationsComponent&quot;:true,&quot;notifications&quot;:[[],{&quot;class&quot;:&quot;Filament\\Notifications\\Collection&quot;,&quot;s&quot;:&quot;wrbl&quot;}]},&quot;memo&quot;:{&quot;id&quot;:&quot;rtB05FkLPYSg79ZC3juH&quot;,&quot;name&quot;:&quot;notifications&quot;,&quot;path&quot;:&quot;event\/2025-05-10-acroyoga-beginner-workshop-im-zenit&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;de&quot;},&quot;checksum&quot;:&quot;dc6cf22407edaf58729d1fb2453cf79078b42ffb62e903fb73a6a6f6c1548a33&quot;}"
+    <div wire:snapshot="{&quot;data&quot;:{&quot;isFilamentNotificationsComponent&quot;:true,&quot;notifications&quot;:[[],{&quot;class&quot;:&quot;Filament\\Notifications\\Collection&quot;,&quot;s&quot;:&quot;wrbl&quot;}]},&quot;memo&quot;:{&quot;id&quot;:&quot;a4MBkMjRbjkghoW8lxJy&quot;,&quot;name&quot;:&quot;notifications&quot;,&quot;path&quot;:&quot;event\/2025-05-13-yin-yoga-im-osnabloc&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;de&quot;},&quot;checksum&quot;:&quot;b7c4e7966e06764bd0ee9707388745c42718c5d690763dcd33f911a89ad58661&quot;}"
         wire:effects="{&quot;listeners&quot;:[&quot;notificationsSent&quot;,&quot;notificationSent&quot;,&quot;notificationClosed&quot;]}"
-        wire:id="rtB05FkLPYSg79ZC3juH">
+        wire:id="a4MBkMjRbjkghoW8lxJy">
         <div class="fi-no pointer-events-none fixed inset-4 z-50 mx-auto flex gap-3 items-center flex-col-reverse justify-end"
             role="status">
             <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
@@ -2041,6 +3297,45 @@
         <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
     </div>
 
+    <script>
+        window.filamentData = []    </script>
+
+
+    <script src="https://sei.jetzt/js/bezhansalleh/filament-exceptions/filament-exceptions.js?v=2.1.2.0"></script>
+
+
+    <script src="https://sei.jetzt/js/dotswan/filament-map-picker/filament-map-picker-scripts.js?v=1.8.0.0"></script>
+
+
+    <script src="https://sei.jetzt/js/pboivin/filament-peek/filament-peek.js?v=2.2.11.0"></script>
+
+
+    <script src="https://sei.jetzt/js/filament/notifications/notifications.js?v=3.2.140.0"></script>
+
+
+    <script src="https://sei.jetzt/js/filament/support/support.js?v=3.2.140.0"></script>
+
+
+    <script
+        src="https://sei.jetzt/js/filament-daterangepicker-filter/filament-daterangepicker-filter2.8.0.0.js?v=3.2.140.0"></script>
+
+
+    <style>
+        :root {}
+    </style>
+    <link rel="modulepreload" href="https://sei.jetzt/build/assets/app-92d7e4f5.js" />
+    <link rel="modulepreload" href="https://sei.jetzt/build/assets/embla-carousel-autoplay.esm-3d4c5f77.js" />
+    <script type="module" src="https://sei.jetzt/build/assets/app-92d7e4f5.js" data-navigate-track="reload"></script>
+    <svg preserveAspectRatio="xMidYMid slice" viewBox="10 10 80 80" class="background-animation">
+        <path fill="#a19882" class="out-top"
+            d="M37-5C25.1-14.7,5.7-19.1-9.2-10-28.5,1.8-32.7,31.1-19.8,49c15.5,21.5,52.6,22,67.2,2.3C59.4,35,53.7,8.5,37-5Z" />
+        <path fill="#F2EAD3" class="in-top"
+            d="M20.6,4.1C11.6,1.5-1.9,2.5-8,11.2-16.3,23.1-8.2,45.6,7.4,50S42.1,38.9,41,24.5C40.2,14.1,29.4,6.6,20.6,4.1Z" />
+        <path fill="#a19882" class="out-bottom"
+            d="M105.9,48.6c-12.4-8.2-29.3-4.8-39.4.8-23.4,12.8-37.7,51.9-19.1,74.1s63.9,15.3,76-5.6c7.6-13.3,1.8-31.1-2.3-43.8C117.6,63.3,114.7,54.3,105.9,48.6Z" />
+        <path fill="#F2EAD3" class="in-bottom"
+            d="M102,67.1c-9.6-6.1-22-3.1-29.5,2-15.4,10.7-19.6,37.5-7.6,47.8s35.9,3.9,44.5-12.5C115.5,92.6,113.9,74.6,102,67.1Z" />
+    </svg>
 </body>
 
 </html>

@@ -1,3 +1,7 @@
+scraping perfektionieren
+  tribehaus
+
+
 events: 
 
 deduplicate: wenn hostUrl schon einen hat zur selben zeit nimm den letzteren

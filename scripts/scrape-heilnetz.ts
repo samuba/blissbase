@@ -21,6 +21,7 @@
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
+import type { Cheerio as CheerioType, Element as CheerioElementType } from 'cheerio';
 import { geocodeAddressFromEvent } from "./common.ts";
 
 const BASE_URL = 'https://www.heilnetz.de';
@@ -59,7 +60,7 @@ function makeAbsoluteUrl(url: string | undefined, baseUrl: string): string | und
  */
 function getTableCellValueByLabel(
     $: cheerio.Root,
-    tableEl: cheerio.Cheerio<cheerio.Element>,
+    tableEl: CheerioType<CheerioElementType>,
     labelText: string,
     returnHtml = false
 ): string | null {
@@ -428,10 +429,16 @@ async function extractEventDataFromDetailPageWithGeocoding(html: string, eventPa
 
     // Geocode the address if we have address lines
     if (eventData.address.length > 0) {
-        const coordinates = await geocodeAddressFromEvent(eventData.address);
-        if (coordinates) {
-            eventData.latitude = coordinates.lat;
-            eventData.longitude = coordinates.lng;
+        // Ensure eventData.address is string[]
+        const addressToGeocode = Array.isArray(eventData.address) ? eventData.address : [String(eventData.address)];
+        if (addressToGeocode.every(item => typeof item === 'string')) {
+            const coordinates = await geocodeAddressFromEvent(addressToGeocode as string[]);
+            if (coordinates) {
+                eventData.latitude = coordinates.lat;
+                eventData.longitude = coordinates.lng;
+            }
+        } else {
+            console.warn(`Address for geocoding is not in expected format (string[]):`, eventData.address);
         }
     }
 
