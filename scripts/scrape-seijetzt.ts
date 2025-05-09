@@ -36,12 +36,17 @@ function sleep(ms: number): Promise<void> {
 async function fetchPage(url: string): Promise<{ html: string | null, redirected: boolean }> {
     try {
         console.error(`Fetching: ${url}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const response = await fetch(url, {
             headers: {
                 'User-Agent': USER_AGENT
             },
-            redirect: 'manual' // Important: Don't follow redirects automatically
+            redirect: 'manual', // Important: Don't follow redirects automatically
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
         await sleep(REQUEST_DELAY_MS / 2); // Small delay even after response starts
 
         // Check for redirect status codes (3xx)
@@ -60,7 +65,11 @@ async function fetchPage(url: string): Promise<{ html: string | null, redirected
         }
         return { html: await response.text(), redirected: false };
     } catch (error) {
-        console.error(`Network error fetching ${url}:`, error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            console.error(`Timeout fetching ${url}: Request took longer than 10 seconds`);
+        } else {
+            console.error(`Network error fetching ${url}:`, error);
+        }
         return { html: null, redirected: false }; // Network error
     }
 }
@@ -483,7 +492,7 @@ function extractEventDataFromDetailHtml(htmlContent: string, permalink: string, 
             let descHostName: string | null = null;
             let descHostUrl: string | null = null;
 
-            const urlRegex = /https?:\/\/(?:www\.)?([^\/\s]+\.[^\/\s]+)(?:\/[^\s]*)?/g;
+            const urlRegex = /https?:\/\/(?:www\.)?([^/\s]+\.[^/\s]+)(?:\/[^\s]*)?/g;
             const matches = [...eventToUpdate.description.matchAll(urlRegex)];
 
             if (matches.length > 0) {
@@ -518,7 +527,8 @@ function extractEventDataFromDetailHtml(htmlContent: string, permalink: string, 
                                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                                 .join(' ');
                         }
-                    } catch (_) {
+                    } catch (/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+                    _unused) {
                         // If we can't parse the URL, keep the default name
                     }
 
@@ -825,32 +835,38 @@ async function fetchEventDetails(partialEventFromList: Partial<ScrapedEvent>): P
     }
 
     // Populate/update the event with details from the fetched HTML
-    const updatedEvent = extractEventDataFromDetailHtml(detailHtmlResult.html, completedEvent.permalink, completedEvent);
+    try {
+        const updatedEvent = extractEventDataFromDetailHtml(detailHtmlResult.html, completedEvent.permalink, completedEvent);
 
-    // Apply geocoding if we have address data
-    if (updatedEvent && updatedEvent.address.length > 0) {
-        try {
-            // Ensure address is in the correct format for geocoding
-            const addressToGeocode = Array.isArray(updatedEvent.address) ? updatedEvent.address : [String(updatedEvent.address)];
-            if (addressToGeocode.every(item => typeof item === 'string')) {
-                console.error(`Geocoding address: ${addressToGeocode.join(', ')}`);
-                const coordinates = await geocodeAddressFromEvent(addressToGeocode as string[]);
-                if (coordinates) {
-                    updatedEvent.latitude = coordinates.lat;
-                    updatedEvent.longitude = coordinates.lng;
-                    console.error(`Geocoded address to coordinates: ${coordinates.lat}, ${coordinates.lng}`);
+        // Apply geocoding if we have address data
+        if (updatedEvent && updatedEvent.address.length > 0) {
+            try {
+                // Ensure address is in the correct format for geocoding
+                const addressToGeocode = Array.isArray(updatedEvent.address) ? updatedEvent.address : [String(updatedEvent.address)];
+                if (addressToGeocode.every(item => typeof item === 'string')) {
+                    console.error(`Geocoding address: ${addressToGeocode.join(', ')}`);
+                    const coordinates = await geocodeAddressFromEvent(addressToGeocode as string[]);
+                    if (coordinates) {
+                        updatedEvent.latitude = coordinates.lat;
+                        updatedEvent.longitude = coordinates.lng;
+                        console.error(`Geocoded address to coordinates: ${coordinates.lat}, ${coordinates.lng}`);
+                    } else {
+                        console.error('Geocoding returned no coordinates');
+                    }
                 } else {
-                    console.error('Geocoding returned no coordinates');
+                    console.warn(`Address for geocoding is not in expected format (string[]):`, updatedEvent.address);
                 }
-            } else {
-                console.warn(`Address for geocoding is not in expected format (string[]):`, updatedEvent.address);
+            } catch (error) {
+                console.error(`Error during geocoding:`, error instanceof Error ? error.message : String(error));
+                // Continue despite geocoding error
             }
-        } catch (error) {
-            console.error(`Error during geocoding:`, error instanceof Error ? error.message : String(error));
         }
-    }
 
-    return updatedEvent;
+        return updatedEvent;
+    } catch (error) {
+        console.error(`Error extracting event data from detail page:`, error);
+        return completedEvent; // Return the event with whatever data we have
+    }
 }
 
 
@@ -900,26 +916,33 @@ export async function scrapeSeijetztEvents(): Promise<ScrapedEvent[]> {
                 break;
             }
 
-
             console.error(` Processing ${partialEvents.length} events from page ${currentPage}...`);
 
+            // Process events in series to avoid overloading the server
             for (const partialEvent of partialEvents) {
-                if (!partialEvent.name || !partialEvent.permalink || !partialEvent.startAt) {
-                    console.error(` Skipping detail fetch for invalid partial event:`, partialEvent.permalink || 'No permalink');
-                    continue;
-                }
-                console.error(`  Fetching details for: ${partialEvent.name}`);
-                const detailedEvent = await fetchEventDetails(partialEvent);
-                if (detailedEvent) {
-                    allEvents.push(detailedEvent);
-                } else {
-                    console.warn(`Failed to get complete details for event: ${partialEvent.name} (${partialEvent.permalink})`);
+                try {
+                    if (!partialEvent.name || !partialEvent.permalink || !partialEvent.startAt) {
+                        console.error(` Skipping detail fetch for invalid partial event:`, partialEvent.permalink || 'No permalink');
+                        continue;
+                    }
+                    console.error(`  Fetching details for: ${partialEvent.name}`);
+                    const detailedEvent = await fetchEventDetails(partialEvent);
+                    if (detailedEvent) {
+                        allEvents.push(detailedEvent);
+                    } else {
+                        console.warn(`Failed to get complete details for event: ${partialEvent.name} (${partialEvent.permalink})`);
+                    }
+                } catch (error) {
+                    console.error(`Error processing event "${partialEvent.name || 'Unknown'}":`, error);
+                    // Continue to next event, don't break the loop
                 }
             }
 
         } catch (error) {
             console.error(`Error processing page ${currentPage}:`, error);
-            // keepFetching = false; // Optionally stop on page processing error
+            // Continue to next page rather than stopping completely
+            currentPage++;
+            continue;
         }
 
         currentPage++;

@@ -12,6 +12,7 @@ import * as schema from '../src/lib/server/schema.ts';
 import { scrapeAwaraEvents } from './scrape-awara.ts';
 import { scrapeTribehausEvents } from './scrape-tribehaus.ts';
 import { scrapeHeilnetzEvents } from './scrape-heilnetz.ts';
+import { scrapeSeijetztEvents } from './scrape-seijetzt.ts';
 import { db } from "../src/lib/server/db.ts";
 
 // Map argument names (lowercase) to the expected host names used in the DB
@@ -19,6 +20,7 @@ const SOURCE_HOST_MAP: Record<string, string> = {
     'awara': 'Awara',
     'tribehaus': 'Tribehaus',
     'heilnetz': 'Heilnetz',
+    'seijetzt': 'SeiJetzt',
 };
 const VALID_SOURCES = Object.keys(SOURCE_HOST_MAP);
 
@@ -75,6 +77,17 @@ if (!targetSourceArg || targetSourceArg === 'heilnetz') {
         allEvents = allEvents.concat(heilnetzEvents);
     } catch (error) {
         console.error('Error scraping Heilnetz:', error);
+    }
+}
+
+if (!targetSourceArg || targetSourceArg === 'seijetzt') {
+    try {
+        console.log('Scraping SeiJetzt...');
+        const seijetztEvents = await scrapeSeijetztEvents();
+        console.log(` -> Found ${seijetztEvents.length} events.`);
+        allEvents = allEvents.concat(seijetztEvents);
+    } catch (error) {
+        console.error('Error scraping SeiJetzt:', error);
     }
 }
 

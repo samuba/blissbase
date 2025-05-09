@@ -41,13 +41,27 @@ function parseGermanDateTime(dateStr: string, timeStr: string | null): string | 
 
 async function fetchPage(url: string): Promise<string> {
     try {
-        const response = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)'
+            },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status} for ${url}`);
         }
         return await response.text();
     } catch (error) {
-        console.error(`Failed to fetch ${url}:`, error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            console.error(`Timeout fetching ${url}: Request took longer than 10 seconds`);
+        } else {
+            console.error(`Failed to fetch ${url}:`, error);
+        }
         throw error; // Re-throw to handle upstream
     }
 }
@@ -121,7 +135,9 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     if (jsonData.priceRange) {
                         price = jsonData.priceRange;
                     }
-                } catch /*(e)*/ { /* ignore json parsing errors */ }
+                } catch (/* eslint-disable-next-line @typescript-eslint/no-unused-vars */ _unused) {
+                    /* ignore json parsing errors */
+                }
             }
         }
 
@@ -179,7 +195,7 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     latitude = parseFloat(jsonData.geo.latitude) || null;
                     longitude = parseFloat(jsonData.geo.longitude) || null;
                 }
-            } catch /*(e)*/ { /* ignore json parsing errors */ }
+            } catch (_unused) { /* ignore json parsing errors */ }
         }
 
         // Date and Time
@@ -205,7 +221,7 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     const [day, month, year] = dateStr.split('.');
                     const isoDatePart = `${year}-${month}-${day}`;
                     endAt = `${isoDatePart}T${timeRangeMatch[1]}:00Z`; // Assume UTC
-                    try { new Date(endAt).toISOString(); } catch /* (e) */ { endAt = null; }
+                    try { new Date(endAt).toISOString(); } catch (_unused) { endAt = null; }
                 }
             }
         } else {
@@ -215,7 +231,7 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     const jsonData = JSON.parse(jsonLdScript);
                     if (jsonData.startDate) startAt = parseGermanDateTime(jsonData.startDate.replace(/-/g, '.'), null); // JSON uses YYYY-MM-DD
                     if (jsonData.endDate) endAt = parseGermanDateTime(jsonData.endDate.replace(/-/g, '.'), null); // JSON uses YYYY-MM-DD
-                } catch /*(e)*/ { /* ignore json parsing errors */ }
+                } catch (_unused) { /* ignore json parsing errors */ }
             }
         }
 
@@ -280,8 +296,8 @@ export async function scrapeTribehausEvents(startUrl: string = `${BASE_URL}/even
                 allPermalinks = allPermalinks.concat(permalinks);
                 currentListUrl = nextPageUrl;
                 pageCount++;
-                // Optional: Add delay between list page fetches
-                // await new Promise(resolve => setTimeout(resolve, 200));
+                // Add delay between list page fetches
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
         } catch (error) {
             console.error(`Error processing list page ${currentListUrl}:`, error);
@@ -296,12 +312,18 @@ export async function scrapeTribehausEvents(startUrl: string = `${BASE_URL}/even
     for (const permalink of allPermalinks) {
         detailCount++;
         console.error(`Fetching detail ${detailCount}/${allPermalinks.length}: ${permalink}...`);
-        const eventDetail = await fetchAndParseEventDetail(permalink);
-        console.error(eventDetail)
-        if (eventDetail) {
-            allEvents.push(eventDetail);
+
+        try {
+            const eventDetail = await fetchAndParseEventDetail(permalink);
+            if (eventDetail) {
+                allEvents.push(eventDetail);
+            }
+        } catch (error) {
+            console.error(`Failed to process event detail ${permalink}:`, error);
+            // Continue to next permalink despite error
         }
-        // Optional: Add significant delay between detail page fetches to be very polite
+
+        // Add significant delay between detail page fetches to be very polite
         await new Promise(resolve => setTimeout(resolve, 500));
     }
     console.error(`--- Finished Phase 2: Successfully parsed ${allEvents.length} events ---`);

@@ -21,7 +21,6 @@
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
-import type { Cheerio as CheerioType, Element as CheerioElementType } from 'cheerio';
 import { geocodeAddressFromEvent } from "./common.ts";
 
 const BASE_URL = 'https://www.heilnetz.de';
@@ -59,8 +58,8 @@ function makeAbsoluteUrl(url: string | undefined, baseUrl: string): string | und
  * @returns The cleaned text/HTML content or null if not found.
  */
 function getTableCellValueByLabel(
-    $: cheerio.Root,
-    tableEl: CheerioType<CheerioElementType>,
+    $: cheerio.CheerioAPI,
+    tableEl: cheerio.Cheerio,
     labelText: string,
     returnHtml = false
 ): string | null {
@@ -92,7 +91,6 @@ function getTableCellValueByLabel(
     return foundValue;
 }
 
-
 /**
  * Parses address details from HTML string (typically from the "Ort:" cell).
  * @param rawHtmlLocationString Raw HTML from the "Ort:" section.
@@ -122,7 +120,7 @@ function parseAddress(rawHtmlLocationString: string | null): string[] {
  * Extracts and cleans the event description HTML from the main content area.
  * This is a fallback if LD+JSON description is not available or insufficient.
  */
-function extractHtmlDescription($: cheerio.Root): string | null {
+function extractHtmlDescription($: cheerio.CheerioAPI): string | null {
     // Selector for the description container based on the new example page
     const descriptionContainer = $('.mod_eventreader .col-12.col-lg-7').first();
     if (!descriptionContainer.length) return null;
@@ -157,14 +155,28 @@ function extractHtmlDescription($: cheerio.Root): string | null {
  */
 async function fetchHtml(url: string): Promise<string> {
     try {
-        const response = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)'
+            },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status} for ${url}`);
         }
         return await response.text();
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        console.error(`Error fetching URL "${url}":`, message);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            console.error(`Timeout fetching URL "${url}": Request took longer than 10 seconds`);
+        } else {
+            console.error(`Error fetching URL "${url}":`, message);
+        }
         throw error; // Re-throw the error to allow main script to handle
     }
 }
@@ -174,7 +186,7 @@ async function fetchHtml(url: string): Promise<string> {
  * @param $ CheerioAPI instance loaded with the HTML of a page containing pagination.
  * @returns The last page number, or 1 if pagination is not found.
  */
-function getLastPageNumber($: cheerio.Root): number {
+function getLastPageNumber($: cheerio.CheerioAPI): number {
     const paginationEndLink = $('nav[aria-label="Pagination"] a[aria-label="Ende"]');
     if (paginationEndLink.length > 0) {
         const href = paginationEndLink.attr('href');
@@ -202,7 +214,6 @@ function getLastPageNumber($: cheerio.Root): number {
     console.warn("Could not determine last page number from pagination. Assuming only one page.");
     return 1; // Default to 1 if pagination or last page number isn't found
 }
-
 
 /**
  * Extracts event data from an event detail page HTML.
@@ -462,10 +473,8 @@ export async function scrapeHeilnetzEvents(): Promise<ScrapedEvent[]> {
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         console.error(`Failed to fetch initial page ${startUrl}:`, message);
-        // Depending on desired behavior, either exit or return empty array
-        // For this script, exiting makes sense as it cannot proceed.
-        if (typeof process !== 'undefined' && process.exit) process.exit(1); else throw error;
-        return []; // Should not be reached if process.exit works
+        // If we can't fetch the first page, return empty array rather than exiting
+        return [];
     }
 
     const $firstPage = cheerio.load(firstPageHtml);
@@ -520,9 +529,14 @@ export async function scrapeHeilnetzEvents(): Promise<ScrapedEvent[]> {
     }
 
     if (pagePromises.length > 0) {
-        const resultsFromOtherPages: string[][] = await Promise.all(pagePromises);
-        resultsFromOtherPages.forEach(urlsFromPage => {
-            urlsFromPage.forEach(url => eventDetailUrlSet.add(url));
+        // Use Promise.allSettled instead of Promise.all to handle errors gracefully
+        const settledPromises = await Promise.allSettled(pagePromises);
+        settledPromises.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                result.value.forEach(url => eventDetailUrlSet.add(url));
+            } else {
+                console.error(`Failed to process page ${index + 2}: ${result.reason}`);
+            }
         });
     }
 
@@ -532,22 +546,22 @@ export async function scrapeHeilnetzEvents(): Promise<ScrapedEvent[]> {
     // Now, fetch and process each event detail page sequentially
     for (const detailUrl of eventDetailUrls) {
         console.error(`Fetching and processing event detail page: ${detailUrl}...`);
-        let eventHtml: string;
         try {
-            eventHtml = await fetchHtml(detailUrl);
-        } catch {
-            console.error(`Skipping event detail page ${detailUrl} due to fetch error.`);
-            continue;
-        }
+            let eventHtml: string;
+            try {
+                eventHtml = await fetchHtml(detailUrl);
+            } catch (error) {
+                console.error(`Skipping event detail page ${detailUrl} due to fetch error.`);
+                continue; // Skip to next event URL
+            }
 
-        const event = await extractEventDataFromDetailPageWithGeocoding(eventHtml, detailUrl);
-        console.log(event);
-        if (event) {
-            // Handle cases where multiple dates on one page might imply multiple events (if permalink logic needs adjustment)
-            // For now, assume one ScrapedEvent per detail page, LD+JSON start/end are primary.
-            // The old permalink adjustment for multiple dates on the *same listing item* might not apply here
-            // if each detail page represents one event or series.
-            allEvents.push(event);
+            const event = await extractEventDataFromDetailPageWithGeocoding(eventHtml, detailUrl);
+            if (event) {
+                allEvents.push(event);
+            }
+        } catch (error) {
+            console.error(`Failed to process event detail page ${detailUrl}:`, error);
+            // Continue to next event, don't break the loop
         }
     }
 
@@ -565,13 +579,18 @@ if (import.meta.main) {
         console.error(`Processing local HTML file: ${filePathArg}...`);
         Bun.file(filePathArg).text()
             .then(async htmlContent => {
-                const event = await extractEventDataFromDetailPageWithGeocoding(htmlContent, filePathArg); // Use filePathArg as URL for permalink
-                if (event) {
-                    console.log(JSON.stringify(event, null, 2));
-                    console.error(`--- Successfully processed ${filePathArg} ---`);
-                } else {
-                    console.error(`Could not extract event data from ${filePathArg}.`);
-                    // Bun typically exits on unhandled promise rejection or error, but explicit exit can be used.
+                try {
+                    const event = await extractEventDataFromDetailPageWithGeocoding(htmlContent, filePathArg); // Use filePathArg as URL for permalink
+                    if (event) {
+                        console.log(JSON.stringify(event, null, 2));
+                        console.error(`--- Successfully processed ${filePathArg} ---`);
+                    } else {
+                        console.error(`Could not extract event data from ${filePathArg}.`);
+                        // Bun typically exits on unhandled promise rejection or error, but explicit exit can be used.
+                        process.exit(1);
+                    }
+                } catch (error) {
+                    console.error(`Error extracting event data from ${filePathArg}:`, error);
                     process.exit(1);
                 }
             })

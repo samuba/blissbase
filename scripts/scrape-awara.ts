@@ -18,11 +18,16 @@ const LISTINGS_URL = `${BASE_URL}/em-ajax/get_listings/`;
 async function fetchPage(url: string): Promise<string | null> {
     try {
         console.error(`Fetching: ${url}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)' // Identify bot
-            }
+            },
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
         await Bun.sleep(REQUEST_DELAY_MS / 2); // Small delay even after response starts
 
         if (!response.ok) {
@@ -36,7 +41,11 @@ async function fetchPage(url: string): Promise<string | null> {
         }
         return await response.text();
     } catch (error) {
-        console.error(`Network error fetching ${url}:`, error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            console.error(`Timeout fetching ${url}: Request took longer than 10 seconds`);
+        } else {
+            console.error(`Network error fetching ${url}:`, error);
+        }
         return null;
     }
 }
@@ -44,7 +53,7 @@ async function fetchPage(url: string): Promise<string | null> {
 /**
  * Fetches event listing data from the AJAX endpoint.
  */
-async function fetchListingPageData(page: number): Promise<any | null> {
+async function fetchListingPageData(page: number): Promise<Record<string, unknown> | null> {
     const formData = new URLSearchParams();
     formData.append('lang', '');
     formData.append('search_keywords', '');
@@ -61,6 +70,9 @@ async function fetchListingPageData(page: number): Promise<any | null> {
 
     try {
         console.error(`Fetching listings page: ${page}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const response = await fetch(LISTINGS_URL, {
             method: 'POST',
             headers: {
@@ -72,7 +84,9 @@ async function fetchListingPageData(page: number): Promise<any | null> {
                 'Origin': BASE_URL, // Important for CORS
             },
             body: formData.toString(),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
         await Bun.sleep(REQUEST_DELAY_MS / 2); // Small delay
 
         if (!response.ok) {
@@ -85,7 +99,11 @@ async function fetchListingPageData(page: number): Promise<any | null> {
         }
         return await response.json(); // Expecting JSON response
     } catch (error) {
-        console.error(`Network error fetching listings page ${page}:`, error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            console.error(`Timeout fetching listings page ${page}: Request took longer than 10 seconds`);
+        } else {
+            console.error(`Network error fetching listings page ${page}:`, error);
+        }
         return null;
     }
 }
@@ -740,22 +758,25 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
 
         console.error(`Processing ${initialPartialEvents.length} events from page ${currentPage}...`);
         for (const partialEvent of initialPartialEvents) {
-            if (!partialEvent.name || !partialEvent.permalink || !partialEvent.startAt) {
-                console.error(`Skipping detail fetch for invalid partial event on page ${currentPage}:`, partialEvent);
-                continue;
+            try {
+                if (!partialEvent.name || !partialEvent.permalink || !partialEvent.startAt) {
+                    console.error(`Skipping detail fetch for invalid partial event on page ${currentPage}:`, partialEvent);
+                    continue;
+                }
+                console.error(` Fetching details for: ${partialEvent.name}`);
+                const detailedEvent = await fetchEventDetails(partialEvent);
+                allEvents.push(detailedEvent);
+            } catch (error) {
+                console.error(`Error processing event "${partialEvent.name || 'Unknown'}" from page ${currentPage}:`, error);
+                // Continue with next event, don't break the loop
             }
-            console.error(` Fetching details for: ${partialEvent.name}`);
-            const detailedEvent = await fetchEventDetails(partialEvent);
-            allEvents.push(detailedEvent);
         }
         pageCount++;
         currentPage++; // Move to page 2 for the loop
 
     } catch (error) {
         console.error(`Error processing initial list page data (page 1):`, error);
-        // Decide if we should stop or try to continue? Stopping is safer.
-        console.error("Stopping due to error on initial page processing.");
-        return [];
+        // Continue to process other pages if available rather than stopping completely
     }
 
 
@@ -768,11 +789,10 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
         const pageData = await fetchListingPageData(currentPage);
 
         if (!pageData || !pageData.html) {
-            console.error(`Failed to fetch listing data for page ${currentPage}. Attempting to continue or stopping? (Stopping for now)`);
-            // Optionally: could implement retry logic here
-            break; // Stop if a page fetch fails
+            console.error(`Failed to fetch listing data for page ${currentPage}. Skipping to next page.`);
+            currentPage++; // Try the next page instead of stopping
+            continue;
         }
-
 
         try {
             const { events: partialEvents } = await parseListPage(pageData.html);
@@ -786,19 +806,23 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
 
             console.error(`Processing ${partialEvents.length} events from page ${currentPage}...`);
             for (const partialEvent of partialEvents) {
-                if (!partialEvent.name || !partialEvent.permalink || !partialEvent.startAt) {
-                    console.error(`Skipping detail fetch for invalid partial event on page ${currentPage}:`, partialEvent);
-                    continue;
+                try {
+                    if (!partialEvent.name || !partialEvent.permalink || !partialEvent.startAt) {
+                        console.error(`Skipping detail fetch for invalid partial event on page ${currentPage}:`, partialEvent);
+                        continue;
+                    }
+                    console.error(` Fetching details for: ${partialEvent.name}`);
+                    const detailedEvent = await fetchEventDetails(partialEvent);
+                    allEvents.push(detailedEvent);
+                } catch (error) {
+                    console.error(`Error processing event "${partialEvent.name || 'Unknown'}" from page ${currentPage}:`, error);
+                    // Continue with next event, don't break the loop
                 }
-                console.error(` Fetching details for: ${partialEvent.name}`);
-                const detailedEvent = await fetchEventDetails(partialEvent);
-                allEvents.push(detailedEvent);
             }
 
         } catch (error) {
             console.error(`Error processing list page ${currentPage}:`, error);
-            console.error("Stopping loop due to error processing page data.");
-            break; // Stop the loop if parsing fails
+            // Continue to next page rather than stopping the whole process
         }
 
         currentPage++; // Move to the next page
@@ -809,8 +833,6 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
         console.error(`Stopped scraping after reaching maximum page limit (${safetyBreak}). Potential issue or many pages.`);
     }
 
-    // Output the final JSON array to standard output
-    // console.log(JSON.stringify(allEvents, null, 2));
     console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
 
     return allEvents; // Return the collected events
