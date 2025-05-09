@@ -17,3 +17,11 @@ export const events = pgTable('events', {
     tags: text().array(),
     scrapedAt: timestamp().notNull().defaultNow(),
 });
+
+export const geocodeCache = pgTable('geocode_cache', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    address: text().notNull().unique(),
+    latitude: real().notNull(),
+    longitude: real().notNull(),
+    cachedAt: timestamp().notNull().defaultNow(),
+});

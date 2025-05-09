@@ -14,7 +14,6 @@
  * - Prints the single event JSON to standard output.
  *
  * Requires Bun (https://bun.sh/).
- * Network access is required for web scraping (usually allowed by default in Bun).
  *
  * Usage:
  *   To scrape from the web: bun run scripts/scrape-heilnetz.ts > events.json
@@ -22,9 +21,12 @@
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
+import { geocodeLocation } from '../src/lib/common.ts';
+import { db, eq } from '../src/lib/server/db.ts';
+import { geocodeCache } from '../src/lib/server/schema.ts';
 
 const BASE_URL = 'https://www.heilnetz.de';
-
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 /**
  * Tries to make a URL absolute if it's relative (starts with /).
@@ -203,6 +205,57 @@ function getLastPageNumber($: cheerio.Root): number {
     return 1; // Default to 1 if pagination or last page number isn't found
 }
 
+/**
+ * Geocodes a location address and returns latitude and longitude.
+ * First checks the database cache, then calls the geocoding API if not found.
+ * @param addressLines Array of address lines to geocode.
+ * @returns Promise resolving to coordinates object or null if geocoding failed.
+ */
+async function geocodeAddressFromEvent(addressLines: string[]): Promise<{ lat: number; lng: number } | null> {
+    if (!addressLines.length) return null;
+
+    // Join the address lines to create a complete address string
+    const addressString = addressLines.join(', ');
+
+    try {
+        // First, check the cache
+        const cachedResult = await db.select()
+            .from(geocodeCache)
+            .where(eq(geocodeCache.address, addressString))
+            .limit(1);
+
+        if (cachedResult.length > 0) {
+            console.error(`Found cached geocoding result for "${addressString}"`);
+            return {
+                lat: Number(cachedResult[0].latitude),
+                lng: Number(cachedResult[0].longitude)
+            };
+        }
+
+        // If not in cache, use the geocoding API
+        const coordinates = await geocodeLocation(addressString, GOOGLE_MAPS_API_KEY || '');
+
+        // If successful, store in cache
+        if (coordinates) {
+            try {
+                await db.insert(geocodeCache).values({
+                    address: addressString,
+                    latitude: coordinates.lat,
+                    longitude: coordinates.lng,
+                });
+                console.error(`Cached geocoding result for "${addressString}"`);
+            } catch (cacheError) {
+                // Log but don't fail if caching fails
+                console.error(`Error caching geocoding result: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
+            }
+        }
+
+        return coordinates;
+    } catch (error) {
+        console.error(`Error geocoding address "${addressString}":`, error instanceof Error ? error.message : String(error));
+        return null;
+    }
+}
 
 /**
  * Extracts event data from an event detail page HTML.
@@ -417,6 +470,27 @@ function extractEventDataFromDetailPage(html: string, eventPageUrl: string): Scr
     return eventData;
 }
 
+/**
+ * Extracts event data from an event detail page HTML.
+ * @param html The HTML content of the event detail page.
+ * @param eventPageUrl The URL of the event detail page (for context and permalink).
+ * @returns A ScrapedEvent object or null if essential data is missing.
+ */
+async function extractEventDataFromDetailPageWithGeocoding(html: string, eventPageUrl: string): Promise<ScrapedEvent | null> {
+    const eventData = extractEventDataFromDetailPage(html, eventPageUrl);
+    if (!eventData) return null;
+
+    // Geocode the address if we have address lines
+    if (eventData.address.length > 0) {
+        const coordinates = await geocodeAddressFromEvent(eventData.address);
+        if (coordinates) {
+            eventData.latitude = coordinates.lat;
+            eventData.longitude = coordinates.lng;
+        }
+    }
+
+    return eventData;
+}
 
 // --- Main Scraping Function ---
 /**
@@ -513,7 +587,7 @@ export async function scrapeHeilnetzEvents(): Promise<ScrapedEvent[]> {
             continue;
         }
 
-        const event = extractEventDataFromDetailPage(eventHtml, detailUrl);
+        const event = await extractEventDataFromDetailPageWithGeocoding(eventHtml, detailUrl);
         console.log(event);
         if (event) {
             // Handle cases where multiple dates on one page might imply multiple events (if permalink logic needs adjustment)
@@ -528,7 +602,6 @@ export async function scrapeHeilnetzEvents(): Promise<ScrapedEvent[]> {
     return allEvents;
 }
 
-
 // --- Run Main --- Only when executed directly
 if (import.meta.main) {
     // Bun uses process.argv. process.argv[0] is bun exe, process.argv[1] is script path.
@@ -538,8 +611,8 @@ if (import.meta.main) {
         // If a file path is provided, process that single file
         console.error(`Processing local HTML file: ${filePathArg}...`);
         Bun.file(filePathArg).text()
-            .then(htmlContent => {
-                const event = extractEventDataFromDetailPage(htmlContent, filePathArg); // Use filePathArg as URL for permalink
+            .then(async htmlContent => {
+                const event = await extractEventDataFromDetailPageWithGeocoding(htmlContent, filePathArg); // Use filePathArg as URL for permalink
                 if (event) {
                     console.log(JSON.stringify(event, null, 2));
                     console.error(`--- Successfully processed ${filePathArg} ---`);
