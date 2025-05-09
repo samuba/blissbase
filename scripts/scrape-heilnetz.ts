@@ -21,44 +21,32 @@
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
-import { geocodeAddressFromEvent } from "./common.ts";
+import {
+    fetchWithTimeout,
+    makeAbsoluteUrl as makeAbsoluteUrlCommon,
+    geocodeAddressFromEvent
+} from "./common.ts";
 
 const BASE_URL = 'https://www.heilnetz.de';
 
 /**
- * Tries to make a URL absolute if it's relative (starts with /).
- * @param url The URL string.
- * @param baseUrl The base URL to prepend.
- * @returns Absolute URL or the original URL if it's already absolute or not a valid relative path.
+ * Wrapper around the common makeAbsoluteUrl function to maintain
+ * compatibility with existing code.
  */
 function makeAbsoluteUrl(url: string | undefined, baseUrl: string): string | undefined {
-    if (!url) return undefined; // Changed from returning url to undefined for clarity
-
-    if (url.startsWith('/')) {
-        return baseUrl + url;
-    }
-
-    // Check if URL doesn't start with http:// or https:// and is not a mailto or tel link
-    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
-        // check if it's a relative path without leading slash
-        if (!url.includes(':') && !url.startsWith('#')) { // simple check to avoid mangling full URLs without scheme
-            return baseUrl + '/' + url;
-        }
-    }
-
-    return url;
+    return makeAbsoluteUrlCommon(url, baseUrl);
 }
 
 /**
  * Extracts text or HTML content of the next TD element after a TD containing a specific label.
- * @param $ CheerioAPI instance.
+ * @param $ Cheerio instance.
  * @param tableEl The Cheerio element for the table to search within.
  * @param labelText The text of the <strong> tag inside the label TD (e.g., "Ort:", "Kosten:").
  * @param returnHtml If true, returns inner HTML, otherwise returns text.
  * @returns The cleaned text/HTML content or null if not found.
  */
 function getTableCellValueByLabel(
-    $: cheerio.CheerioAPI,
+    $: cheerio.CheerioAPI | cheerio.Root,
     tableEl: cheerio.Cheerio,
     labelText: string,
     returnHtml = false
@@ -120,7 +108,7 @@ function parseAddress(rawHtmlLocationString: string | null): string[] {
  * Extracts and cleans the event description HTML from the main content area.
  * This is a fallback if LD+JSON description is not available or insufficient.
  */
-function extractHtmlDescription($: cheerio.CheerioAPI): string | null {
+function extractHtmlDescription($: cheerio.CheerioAPI | cheerio.Root): string | null {
     // Selector for the description container based on the new example page
     const descriptionContainer = $('.mod_eventreader .col-12.col-lg-7').first();
     if (!descriptionContainer.length) return null;
@@ -143,50 +131,12 @@ function extractHtmlDescription($: cheerio.CheerioAPI): string | null {
     return descriptionHtml.trim() || null;
 }
 
-// parseDateTimeRange is removed as LD+JSON provides full ISO dates.
-// If HTML fallback is needed later, it can be re-added/modified.
-
-// --- Helper Functions ---
-
-/**
- * Fetches HTML content from a URL.
- * @param url The URL to fetch.
- * @returns Promise resolving to the HTML text content.
- */
-async function fetchHtml(url: string): Promise<string> {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)'
-            },
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} for ${url}`);
-        }
-        return await response.text();
-    } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            console.error(`Timeout fetching URL "${url}": Request took longer than 10 seconds`);
-        } else {
-            console.error(`Error fetching URL "${url}":`, message);
-        }
-        throw error; // Re-throw the error to allow main script to handle
-    }
-}
-
 /**
  * Extracts the last page number from the pagination block.
  * @param $ CheerioAPI instance loaded with the HTML of a page containing pagination.
  * @returns The last page number, or 1 if pagination is not found.
  */
-function getLastPageNumber($: cheerio.CheerioAPI): number {
+function getLastPageNumber($: cheerio.CheerioAPI | cheerio.Root): number {
     const paginationEndLink = $('nav[aria-label="Pagination"] a[aria-label="Ende"]');
     if (paginationEndLink.length > 0) {
         const href = paginationEndLink.attr('href');
@@ -429,6 +379,19 @@ function extractEventDataFromDetailPage(html: string, eventPageUrl: string): Scr
 }
 
 /**
+ * Fetches HTML content from a URL.
+ * @param url The URL to fetch.
+ * @returns Promise resolving to the HTML text content.
+ */
+async function fetchHtml(url: string): Promise<string> {
+    const html = await fetchWithTimeout(url);
+    if (html === null) {
+        throw new Error(`Failed to fetch ${url}`);
+    }
+    return html;
+}
+
+/**
  * Extracts event data from an event detail page HTML.
  * @param html The HTML content of the event detail page.
  * @param eventPageUrl The URL of the event detail page (for context and permalink).
@@ -551,6 +514,7 @@ export async function scrapeHeilnetzEvents(): Promise<ScrapedEvent[]> {
             try {
                 eventHtml = await fetchHtml(detailUrl);
             } catch (error) {
+                void error; // Mark as intentionally unused
                 console.error(`Skipping event detail page ${detailUrl} due to fetch error.`);
                 continue; // Skip to next event URL
             }

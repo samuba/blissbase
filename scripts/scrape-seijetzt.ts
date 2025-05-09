@@ -20,11 +20,14 @@
  */
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
-import { geocodeAddressFromEvent } from "./common.ts";
+import {
+    parseGermanDate,
+    REQUEST_DELAY_MS,
+    geocodeAddressFromEvent
+} from "./common.ts";
 
 const BASE_URL = "https://sei.jetzt";
 const START_PATH = "/"; // Main page seems to list events
-const REQUEST_DELAY_MS = 600; // Be polite with requests
 const USER_AGENT = 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)';
 
 // --- Helper Functions ---
@@ -36,6 +39,8 @@ function sleep(ms: number): Promise<void> {
 async function fetchPage(url: string): Promise<{ html: string | null, redirected: boolean }> {
     try {
         console.error(`Fetching: ${url}`);
+
+        // We need a custom fetch for this site since we want to handle redirects manually
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
@@ -72,48 +77,6 @@ async function fetchPage(url: string): Promise<{ html: string | null, redirected
         }
         return { html: null, redirected: false }; // Network error
     }
-}
-
-/**
- * Attempts to parse German date/time strings into ISO 8601 format.
- * Handles formats like: DD.MM.YYYY, DD.MM.YYYY HH:mm
- * Returns YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss (local time implied)
- */
-function parseGermanDate(dateStr: string): string | null {
-    if (!dateStr) return null;
-    dateStr = dateStr.trim();
-
-    const dateTimeRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{2})/;
-    const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})/;
-
-    let match = dateStr.match(dateTimeRegex);
-    if (match) {
-        const [, day, month, year, hour, minute] = match;
-        const parsedMonth = parseInt(month);
-        const parsedDay = parseInt(day);
-        const parsedYear = parseInt(year);
-        const parsedHour = parseInt(hour);
-        const parsedMinute = parseInt(minute);
-
-        if (parsedMonth > 0 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900 && parsedHour >= 0 && parsedHour < 24 && parsedMinute >= 0 && parsedMinute < 60) {
-            return `${parsedYear}-${String(parsedMonth).padStart(2, '0')}-${String(parsedDay).padStart(2, '0')}T${String(parsedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')}:00`;
-        }
-    }
-
-    match = dateStr.match(dateRegex);
-    if (match) {
-        const [, day, month, year] = match;
-        const parsedMonth = parseInt(month);
-        const parsedDay = parseInt(day);
-        const parsedYear = parseInt(year);
-
-        if (parsedMonth > 0 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
-            return `${parsedYear}-${String(parsedMonth).padStart(2, '0')}-${String(parsedDay).padStart(2, '0')}`;
-        }
-    }
-
-    console.error(`Could not parse date: "${dateStr}"`);
-    return null;
 }
 
 /**

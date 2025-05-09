@@ -7,63 +7,20 @@
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
+import {
+    fetchWithTimeout,
+    parseGermanDateTime,
+    REQUEST_DELAY_MS
+} from "./common.ts";
 
 const BASE_URL = 'https://tribehaus.org';
 
-// Helper to parse German date/time into ISO string
-// Example inputs: "11.05.2025", "13:00 - 17:00"
-function parseGermanDateTime(dateStr: string, timeStr: string | null): string | null {
-    if (!dateStr || !/\d{2}\.\d{2}\.\d{4}/.test(dateStr)) {
-        return null; // Invalid date format
-    }
-    const [day, month, year] = dateStr.split('.');
-    let isoStr = `${year}-${month}-${day}`;
-
-    if (timeStr) {
-        const timeMatch = timeStr.match(/(\d{2}):(\d{2})/); // Match the start time (e.g., 13:00)
-        if (timeMatch) {
-            isoStr += `T${timeMatch[1]}:${timeMatch[2]}:00Z`; // Assume UTC for now
-        } else {
-            isoStr += `T00:00:00Z`; // Fallback if time format is unexpected
-        }
-    } else {
-        isoStr += `T00:00:00Z`; // Default time if none specified
-    }
-    // Basic validation - could be improved with a date library
-    try {
-        new Date(isoStr).toISOString();
-        return isoStr;
-    } catch /* (e) */ {
-        console.error(`Invalid date generated: ${isoStr} from ${dateStr} ${timeStr}`);
-        return null;
-    }
-}
-
 async function fetchPage(url: string): Promise<string> {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)'
-            },
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} for ${url}`);
-        }
-        return await response.text();
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            console.error(`Timeout fetching ${url}: Request took longer than 10 seconds`);
-        } else {
-            console.error(`Failed to fetch ${url}:`, error);
-        }
-        throw error; // Re-throw to handle upstream
+    const response = await fetchWithTimeout(url);
+    if (response === null) {
+        throw new Error(`Failed to fetch ${url}`);
     }
+    return response;
 }
 
 // Parses a listing page to get event permalinks and the next page URL
@@ -135,7 +92,8 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     if (jsonData.priceRange) {
                         price = jsonData.priceRange;
                     }
-                } catch (/* eslint-disable-next-line @typescript-eslint/no-unused-vars */ _unused) {
+                } catch (error) {
+                    void error; // Mark as intentionally unused
                     /* ignore json parsing errors */
                 }
             }
@@ -195,7 +153,10 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     latitude = parseFloat(jsonData.geo.latitude) || null;
                     longitude = parseFloat(jsonData.geo.longitude) || null;
                 }
-            } catch (_unused) { /* ignore json parsing errors */ }
+            } catch (error) {
+                void error; // Mark as intentionally unused
+                /* ignore json parsing errors */
+            }
         }
 
         // Date and Time
@@ -221,7 +182,12 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     const [day, month, year] = dateStr.split('.');
                     const isoDatePart = `${year}-${month}-${day}`;
                     endAt = `${isoDatePart}T${timeRangeMatch[1]}:00Z`; // Assume UTC
-                    try { new Date(endAt).toISOString(); } catch (_unused) { endAt = null; }
+                    try {
+                        new Date(endAt).toISOString();
+                    } catch (error) {
+                        void error; // Mark as intentionally unused
+                        endAt = null;
+                    }
                 }
             }
         } else {
@@ -231,7 +197,10 @@ async function fetchAndParseEventDetail(permalink: string): Promise<ScrapedEvent
                     const jsonData = JSON.parse(jsonLdScript);
                     if (jsonData.startDate) startAt = parseGermanDateTime(jsonData.startDate.replace(/-/g, '.'), null); // JSON uses YYYY-MM-DD
                     if (jsonData.endDate) endAt = parseGermanDateTime(jsonData.endDate.replace(/-/g, '.'), null); // JSON uses YYYY-MM-DD
-                } catch (_unused) { /* ignore json parsing errors */ }
+                } catch (error) {
+                    void error; // Mark as intentionally unused
+                    /* ignore json parsing errors */
+                }
             }
         }
 
@@ -297,7 +266,7 @@ export async function scrapeTribehausEvents(startUrl: string = `${BASE_URL}/even
                 currentListUrl = nextPageUrl;
                 pageCount++;
                 // Add delay between list page fetches
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY_MS));
             }
         } catch (error) {
             console.error(`Error processing list page ${currentListUrl}:`, error);
@@ -324,7 +293,7 @@ export async function scrapeTribehausEvents(startUrl: string = `${BASE_URL}/even
         }
 
         // Add significant delay between detail page fetches to be very polite
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY_MS));
     }
     console.error(`--- Finished Phase 2: Successfully parsed ${allEvents.length} events ---`);
 

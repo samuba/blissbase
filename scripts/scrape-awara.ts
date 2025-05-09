@@ -7,47 +7,20 @@
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
+import {
+    fetchWithTimeout,
+    parseDateTimeRange,
+    REQUEST_DELAY_MS
+} from './common.ts';
 
 const BASE_URL = "https://www.awara.events";
 const START_PATH = "/veranstaltungen/";
-const REQUEST_DELAY_MS = 500; // Delay between requests to be polite
 const LISTINGS_URL = `${BASE_URL}/em-ajax/get_listings/`;
 
 // --- Helper Functions ---
 
 async function fetchPage(url: string): Promise<string | null> {
-    try {
-        console.error(`Fetching: ${url}`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)' // Identify bot
-            },
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        await Bun.sleep(REQUEST_DELAY_MS / 2); // Small delay even after response starts
-
-        if (!response.ok) {
-            console.error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
-            // Attempt to read body for more details, e.g. rate limiting messages
-            try {
-                const errorBody = await response.text();
-                console.error(`Error body: ${errorBody.slice(0, 500)}...`);
-            } catch { /* ignore read error */ }
-            return null;
-        }
-        return await response.text();
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            console.error(`Timeout fetching ${url}: Request took longer than 10 seconds`);
-        } else {
-            console.error(`Network error fetching ${url}:`, error);
-        }
-        return null;
-    }
+    return fetchWithTimeout(url);
 }
 
 /**
@@ -68,123 +41,25 @@ async function fetchListingPageData(page: number): Promise<Record<string, unknow
     // Simplified form_data, check if more fields are strictly required by the server
     formData.append('form_data', 'search_keywords=&search_location=&search_within_radius%5B%5D=10&search_distance_units%5B%5D=km&google_map_lat=&google_map_lng=&search_datetimes%5B%5D=&search_orderby%5B%5D=');
 
-    try {
-        console.error(`Fetching listings page: ${page}`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch(LISTINGS_URL, {
-            method: 'POST',
-            headers: {
-                'Accept': '*/*',
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'Referer': `${BASE_URL}${START_PATH}`, // Important for some checks
-                'X-Requested-With': 'XMLHttpRequest', // Important for AJAX detection
-                'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)', // Identify bot
-                'Origin': BASE_URL, // Important for CORS
-            },
-            body: formData.toString(),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        await Bun.sleep(REQUEST_DELAY_MS / 2); // Small delay
-
-        if (!response.ok) {
-            console.error(`Error fetching listings page ${page}: ${response.status} ${response.statusText}`);
-            try {
-                const errorBody = await response.text();
-                console.error(`Error body: ${errorBody.slice(0, 500)}...`);
-            } catch { /* ignore read error */ }
+    return fetchWithTimeout(LISTINGS_URL, {
+        method: 'POST',
+        headers: {
+            'Accept': '*/*',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Referer': `${BASE_URL}${START_PATH}`, // Important for some checks
+            'X-Requested-With': 'XMLHttpRequest', // Important for AJAX detection
+            'Origin': BASE_URL, // Important for CORS
+        },
+        body: formData.toString()
+    }).then(responseText => {
+        if (!responseText) return null;
+        try {
+            return JSON.parse(responseText) as Record<string, unknown>;
+        } catch (error) {
+            console.error(`Error parsing JSON from listings response:`, error);
             return null;
         }
-        return await response.json(); // Expecting JSON response
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            console.error(`Timeout fetching listings page ${page}: Request took longer than 10 seconds`);
-        } else {
-            console.error(`Network error fetching listings page ${page}:`, error);
-        }
-        return null;
-    }
-}
-
-/**
- * Attempts to parse German date/time strings into ISO 8601 format.
- * Handles formats like: DD.MM.YYYY, DD.MM.YYYY HH:mm
- * Returns YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss (local time implied)
- */
-function parseGermanDate(dateStr: string): string | null {
-    if (!dateStr) return null;
-    dateStr = dateStr.trim();
-
-    const dateTimeRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{2})/;
-    const dateRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})/;
-
-    let match = dateStr.match(dateTimeRegex);
-    if (match) {
-        const [, day, month, year, hour, minute] = match;
-        const parsedMonth = parseInt(month);
-        const parsedDay = parseInt(day);
-        const parsedYear = parseInt(year);
-        const parsedHour = parseInt(hour);
-        const parsedMinute = parseInt(minute);
-
-        // Basic validation
-        if (parsedMonth > 0 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900 && parsedHour >= 0 && parsedHour < 24 && parsedMinute >= 0 && parsedMinute < 60) {
-            // Construct ISO string
-            // Note: This doesn't handle timezone conversion. Assumes server/client context is sufficient.
-            return `${parsedYear}-${String(parsedMonth).padStart(2, '0')}-${String(parsedDay).padStart(2, '0')}T${String(parsedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')}:00`;
-        }
-    }
-
-    match = dateStr.match(dateRegex);
-    if (match) {
-        const [, day, month, year] = match;
-        const parsedMonth = parseInt(month);
-        const parsedDay = parseInt(day);
-        const parsedYear = parseInt(year);
-
-        if (parsedMonth > 0 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
-            // Format as date only
-            return `${parsedYear}-${String(parsedMonth).padStart(2, '0')}-${String(parsedDay).padStart(2, '0')}`;
-        }
-    }
-
-    console.error(`Could not parse date: "${dateStr}"`);
-    return null;
-}
-
-/**
- * Parses date/time range strings like "DD.MM.YYYY [HH:mm] - DD.MM.YYYY [HH:mm]"
- * or single dates "DD.MM.YYYY [HH:mm]".
- */
-function parseDateTimeRange(dateTimeStr: string): { startAt: string | null, endAt: string | null } {
-    const parts = dateTimeStr.split(' - ').map(part => part.trim());
-    let startAt: string | null = null;
-    let endAt: string | null = null;
-
-    if (parts.length === 0 || !parts[0]) {
-        return { startAt: null, endAt: null };
-    }
-
-    startAt = parseGermanDate(parts[0]);
-
-    if (parts.length === 2 && parts[1]) {
-        // Handle cases like "15:00 - 19:00" where end date is implicit (assume same day as start)
-        if (startAt && parts[1].match(/^\d{1,2}:\d{2}$/) && startAt.includes('T')) {
-            const startDatePart = startAt.split('T')[0]; // Get YYYY-MM-DD part
-            const day = startDatePart.split('-')[2];
-            const month = startDatePart.split('-')[1];
-            const year = startDatePart.split('-')[0];
-            const endDateStr = `${day}.${month}.${year} ${parts[1]}`; // Reconstruct DD.MM.YYYY HH:mm format for parsing
-            endAt = parseGermanDate(endDateStr);
-        } else {
-            // Handle standard end date/datetime
-            endAt = parseGermanDate(parts[1]);
-        }
-    }
-
-    return { startAt, endAt };
+    });
 }
 
 /**
@@ -664,9 +539,9 @@ async function fetchEventDetails(event: Partial<ScrapedEvent>): Promise<ScrapedE
                     let potentialCats = item.about || item.additionalType;
                     if (potentialCats) {
                         if (!Array.isArray(potentialCats)) potentialCats = [potentialCats];
-                        potentialCats.forEach((cat: any) => { // Add explicit 'any' type for cat
+                        potentialCats.forEach((cat: unknown) => {
                             if (typeof cat === 'string' && cat) tags.add(cat);
-                            else if (typeof cat === 'object' && cat.name) tags.add(cat.name);
+                            else if (typeof cat === 'object' && cat && 'name' in cat && typeof cat.name === 'string') tags.add(cat.name);
                         });
                     }
                 }
@@ -734,9 +609,10 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
     }
 
     if (initialData.max_num_pages) {
-        maxPages = parseInt(initialData.max_num_pages, 10);
+        const maxPagesStr = String(initialData.max_num_pages);
+        maxPages = parseInt(maxPagesStr, 10);
         if (isNaN(maxPages) || maxPages <= 0) {
-            console.error(`Invalid max_num_pages received: ${initialData.max_num_pages}. Assuming 1 page.`);
+            console.error(`Invalid max_num_pages received: ${maxPagesStr}. Assuming 1 page.`);
             maxPages = 1;
         } else {
             console.error(`Total pages determined: ${maxPages}`);
@@ -749,7 +625,8 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
 
     // Process the first page's data before starting the loop for subsequent pages
     try {
-        const { events: initialPartialEvents } = await parseListPage(initialData.html);
+        const htmlContent = initialData.html ? String(initialData.html) : '';
+        const { events: initialPartialEvents } = await parseListPage(htmlContent);
 
         if (initialPartialEvents.length === 0 && maxPages <= 1) {
             console.error("No events found on the first page and no other pages indicated. Exiting.");
@@ -795,7 +672,8 @@ export async function scrapeAwaraEvents(): Promise<ScrapedEvent[]> {
         }
 
         try {
-            const { events: partialEvents } = await parseListPage(pageData.html);
+            const htmlContent = String(pageData.html);
+            const { events: partialEvents } = await parseListPage(htmlContent);
 
             if (partialEvents.length === 0 && currentPage === maxPages) {
                 console.error(`No events found on the last page (${currentPage}).`);
