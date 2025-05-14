@@ -302,3 +302,7 @@ export interface WebsiteScraper {
     extractHostLink(html: string): string | undefined;
     extractTags(html: string): string[] | undefined;
 }
+
+export function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

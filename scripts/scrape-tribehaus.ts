@@ -2,8 +2,11 @@
  * Fetches event pages from tribehaus.org (starting from https://tribehaus.org/events)
  * iterates through all pagination pages, and extracts all events as JSON according to the ScrapedEvent interface.
  * 
- * Requires Deno and the --allow-net permission.
- * Usage: deno run --allow-net scripts/scrape-tribehaus.ts > events.json
+ * Requires Bun (https://bun.sh/).
+ *
+ * Usage:
+ *   To scrape from the web: bun run scripts/scrape-tribehaus.ts > events.json
+ *   To parse a local files:  bun run scripts/scrape-tribehaus.ts <path_to_html_file> <path_to_html_file> > event.json
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
