@@ -3,16 +3,18 @@
  * and store the results in a postgres database using Drizzle ORM.
  *
  * Requires Bun, for network requests and file system operations.
- * Usage: bun run scripts/scrape-germany.ts
+ * Usage: 
+ * bun run scripts/scrape-germany.ts
+ * bun run scripts/scrape-germany.ts awara
  */
 
 import { sql, eq } from 'drizzle-orm'; // Import sql and eq from drizzle-orm directly
 import type { ScrapedEvent } from '../src/lib/types.ts';
 import * as schema from '../src/lib/server/schema.ts';
-import { scrapeAwaraEvents } from './scrape-awara.ts';
-import { scrapeTribehausEvents } from './scrape-tribehaus.ts';
-import { scrapeHeilnetzEvents } from './scrape-heilnetz.ts';
-import { scrapeSeijetztEvents } from './scrape-seijetzt.ts';
+import { AwaraScraper } from './scrape-awara.ts';
+import { TribehausScraper } from './scrape-tribehaus.ts';
+import { HeilnetzScraper } from './scrape-heilnetz.ts';
+import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db } from "../src/lib/server/db.ts";
 
 // Map argument names (lowercase) to the expected host names used in the DB
@@ -50,7 +52,7 @@ let allEvents: ScrapedEvent[] = [];
 if (!targetSourceArg || targetSourceArg === 'awara') {
     try {
         console.log('Scraping Awara...');
-        const awaraEvents = await scrapeAwaraEvents();
+        const awaraEvents = await new AwaraScraper().scrapeWebsite();
         console.log(` -> Found ${awaraEvents.length} events.`);
         allEvents = allEvents.concat(awaraEvents);
     } catch (error) {
@@ -61,7 +63,7 @@ if (!targetSourceArg || targetSourceArg === 'awara') {
 if (!targetSourceArg || targetSourceArg === 'tribehaus') {
     try {
         console.log('Scraping Tribehaus...');
-        const tribehausEvents = await scrapeTribehausEvents();
+        const tribehausEvents = await new TribehausScraper().scrapeWebsite();
         console.log(` -> Found ${tribehausEvents.length} events.`);
         allEvents = allEvents.concat(tribehausEvents);
     } catch (error) {
@@ -72,7 +74,7 @@ if (!targetSourceArg || targetSourceArg === 'tribehaus') {
 if (!targetSourceArg || targetSourceArg === 'heilnetz') {
     try {
         console.log('Scraping Heilnetz...');
-        const heilnetzEvents = await scrapeHeilnetzEvents();
+        const heilnetzEvents = await new HeilnetzScraper().scrapeWebsite();
         console.log(` -> Found ${heilnetzEvents.length} events.`);
         allEvents = allEvents.concat(heilnetzEvents);
     } catch (error) {
@@ -83,7 +85,7 @@ if (!targetSourceArg || targetSourceArg === 'heilnetz') {
 if (!targetSourceArg || targetSourceArg === 'seijetzt') {
     try {
         console.log('Scraping SeiJetzt...');
-        const seijetztEvents = await scrapeSeijetztEvents();
+        const seijetztEvents = await new SeijetztScraper().scrapeWebsite();
         console.log(` -> Found ${seijetztEvents.length} events.`);
         allEvents = allEvents.concat(seijetztEvents);
     } catch (error) {

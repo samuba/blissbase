@@ -687,7 +687,6 @@ export class SeijetztScraper implements WebsiteScraper {
     }
 }
 
-
 if (import.meta.main) {
     const scraper = new SeijetztScraper();
     if (process.argv.length > 2) {

@@ -27,7 +27,7 @@ function makeAbsoluteUrl(url: string | undefined): string | undefined {
     return commonMakeAbsoluteUrl(url, BASE_URL);
 }
 
-class TribehausScraper implements WebsiteScraper {
+export class TribehausScraper implements WebsiteScraper {
     // Parses a listing page to get event permalinks and the next page URL
     private parseEventList(html: string): { permalinks: string[], nextPageUrl: string | null } {
         const $ = cheerio.load(html);

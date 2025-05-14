@@ -1,0 +1,40 @@
+name: Scrape Events
+
+on:
+  schedule:
+    # Runs at 00:00 and 12:00 UTC every day
+    - cron: '0 0,12 * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+        # If you don't have a bun.lockb or package.json for dependencies,
+        # and your script has no external Bun dependencies other than what's built-in
+        # or vendored, you might be able to skip this step.
+        # However, it's good practice if your scrapers or common.ts might add some.
+
+      - name: Run scraping script
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          # Add other environment variables your script needs here, e.g., DB connection strings
+          # DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bun run scripts/scrape-germany.ts
+
+      # Optional: Add a step to commit and push if your script generates files that need to be versioned
+      # - name: Commit and push changes
+      #   run: |
+      #     git config --global user.name 'GitHub Actions Bot'
+      #     git config --global user.email 'actions@github.com'
+      #     git add events.json # Or any other file generated
+      #     git commit -m "Automated event scrape: $(date)" || echo "No changes to commit"
+      #     git push
+      #   if: success() # Only run if the scrape was successful
