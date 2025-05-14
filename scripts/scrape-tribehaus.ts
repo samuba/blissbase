@@ -284,42 +284,43 @@ class TribehausScraper implements WebsiteScraper {
         return tagsSet.size > 0 ? Array.from(tagsSet) : undefined;
     }
 
-    extractLatitude(html: string): number | null {
+    extractCoordinates(html: string): { latitude: number | null, longitude: number | null } {
         const $ = cheerio.load(html);
         const jsonLdScript = $('script[type="application/ld+json"]').html();
-        if (jsonLdScript) {
-            try {
-                const jsonData = JSON.parse(jsonLdScript);
-                if (jsonData.geo && jsonData.geo.latitude) {
-                    const lat = parseFloat(jsonData.geo.latitude);
-                    return !isNaN(lat) ? lat : null;
-                }
-                if (jsonData.location && jsonData.location.geo && jsonData.location.geo.latitude) {
-                    const lat = parseFloat(jsonData.location.geo.latitude);
-                    return !isNaN(lat) ? lat : null;
-                }
-            } catch (error) { void error; }
-        }
-        return null;
-    }
+        let latitude: number | null = null;
+        let longitude: number | null = null;
 
-    extractLongitude(html: string): number | null {
-        const $ = cheerio.load(html);
-        const jsonLdScript = $('script[type="application/ld+json"]').html();
         if (jsonLdScript) {
             try {
                 const jsonData = JSON.parse(jsonLdScript);
-                if (jsonData.geo && jsonData.geo.longitude) {
-                    const lng = parseFloat(jsonData.geo.longitude);
-                    return !isNaN(lng) ? lng : null;
+
+                // Check direct geo property
+                if (jsonData.geo) {
+                    if (jsonData.geo.latitude) {
+                        const lat = parseFloat(jsonData.geo.latitude);
+                        latitude = !isNaN(lat) ? lat : null;
+                    }
+                    if (jsonData.geo.longitude) {
+                        const lng = parseFloat(jsonData.geo.longitude);
+                        longitude = !isNaN(lng) ? lng : null;
+                    }
                 }
-                if (jsonData.location && jsonData.location.geo && jsonData.location.geo.longitude) {
-                    const lng = parseFloat(jsonData.location.geo.longitude);
-                    return !isNaN(lng) ? lng : null;
+
+                // Check location.geo property if direct geo wasn't found
+                if ((!latitude || !longitude) && jsonData.location && jsonData.location.geo) {
+                    if (!latitude && jsonData.location.geo.latitude) {
+                        const lat = parseFloat(jsonData.location.geo.latitude);
+                        latitude = !isNaN(lat) ? lat : null;
+                    }
+                    if (!longitude && jsonData.location.geo.longitude) {
+                        const lng = parseFloat(jsonData.location.geo.longitude);
+                        longitude = !isNaN(lng) ? lng : null;
+                    }
                 }
             } catch (error) { void error; }
         }
-        return null;
+
+        return { latitude, longitude };
     }
 
 
@@ -336,15 +337,12 @@ class TribehausScraper implements WebsiteScraper {
             return undefined;
         }
 
-        const endAt = this.extractEndAt(html);
-
-        const latitude = this.extractLatitude(html);
-        const longitude = this.extractLongitude(html);
+        const { latitude, longitude } = this.extractCoordinates(html);
 
         return {
             name,
             startAt,
-            endAt: endAt === undefined ? null : endAt, // Ensure null if undefined for ScrapedEvent type if it expects Date | null
+            endAt: this.extractEndAt(html),
             address: this.extractAddress(html) || [],
             price: this.extractPrice(html),
             description: this.extractDescription(html) || '',
