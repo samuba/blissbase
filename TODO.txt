@@ -1,4 +1,4 @@
-fix seijetzt bilder
+awara: fixen events aussortieren die mehrere wochen gehen
 
 
 events: 

@@ -648,10 +648,6 @@ export class SeijetztScraper implements WebsiteScraper {
             }
 
             currentPage++;
-            if (currentPage > 1) { // Process only first page for now.
-                console.error("Limiting to first page of results for now. Modify script to remove this limit.");
-                keepFetching = false;
-            }
         }
         console.error(`\n--- Scraping finished. Total events collected: ${allEvents.length} ---`);
         return allEvents;
