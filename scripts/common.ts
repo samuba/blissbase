@@ -24,7 +24,7 @@ export const REQUEST_DELAY_MS = 500;
 export async function fetchWithTimeout(
     url: string,
     options: RequestInit = {}
-): Promise<string | null> {
+): Promise<string> {
     try {
         console.error(`Fetching: ${url}`);
 
@@ -53,11 +53,8 @@ export async function fetchWithTimeout(
 
         if (!response.ok) {
             console.error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
-            try {
-                const errorBody = await response.text();
-                console.error(`Error body: ${errorBody.slice(0, 500)}...`);
-            } catch { /* ignore read error */ }
-            return null;
+            console.error(`Error body: ${await response.text()}`);
+            throw new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
         }
 
         return await response.text();
@@ -67,7 +64,7 @@ export async function fetchWithTimeout(
         } else {
             console.error(`Network error fetching ${url}:`, error);
         }
-        return null;
+        throw error;
     }
 }
 

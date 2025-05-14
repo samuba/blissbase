@@ -16,7 +16,7 @@
  * 
  * Usage:
  *   To scrape from the web: bun run scripts/scrape-awara.ts > events.json
- *   To parse a local file:  bun run scripts/scrape-awara.ts <path_to_html_file> > event.json
+ *   To parse a local files:  bun run scripts/scrape-awara.ts <path_to_html_file> <path_to_html_file> > event.json
  */
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';

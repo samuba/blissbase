@@ -21,7 +21,7 @@ export const events = pgTable('events', {
 export const geocodeCache = pgTable('geocode_cache', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     address: text().notNull().unique(),
-    latitude: real().notNull(),
-    longitude: real().notNull(),
+    latitude: real(),
+    longitude: real(),
     cachedAt: timestamp().notNull().defaultNow(),
 });
