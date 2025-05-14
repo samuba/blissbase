@@ -26,6 +26,7 @@ jobs:
       - name: Run scraping script
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           # Add other environment variables your script needs here, e.g., DB connection strings
           # DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: bun run scripts/scrape-germany.ts
