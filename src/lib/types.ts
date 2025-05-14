@@ -5,17 +5,17 @@ import type { events } from "./server/schema";
  */
 export interface ScrapedEvent {
     name: string;
-    startAt: string; // ISO 8601 includes time if available, otherwise YYYY-MM-DD
-    endAt: string | null; // ISO 8601 includes time if available, otherwise YYYY-MM-DD, optional
+    startAt: Date;
+    endAt: Date | null | undefined;
     address: string[]; // Array of address lines
-    price: string | null; // From priceRange or specific price element, can be null
-    description: string | null; // Description as HTML or cleaned text, can be null
+    price: string | null | undefined; // From priceRange or specific price element, can be null | undefined
+    description: string | null | undefined; // Description as HTML or cleaned text, can be null | undefined
     imageUrls: string[]; // All images from detail page
-    host: string | null; // Host name (artist/organizer)
-    hostLink: string | null; // Link to host profile
+    host: string | null | undefined; // Host name (artist/organizer)
+    hostLink: string | null | undefined; // Link to host profile
     permalink: string; // Event detail page URL (should be unique)
-    latitude: number | null;
-    longitude: number | null;
+    latitude: number | null | undefined;
+    longitude: number | null | undefined;
     tags: string[]; // Tags/Categories from the event page
 }
 
