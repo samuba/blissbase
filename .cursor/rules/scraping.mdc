@@ -1,0 +1,10 @@
+---
+description: 
+globs: scrape-*.ts
+alwaysApply: false
+---
+- always assume the scripts are running in bun runtime
+- make sure a error when processing or parsing a item can never stop the whole script
+- one `scrape-{site_name}.ts` file for each website were scraping
+- scrape scripts should have a function for every field in the event object. Like `getName`, `getDescription`, `getTags` etc.
+- each scrape script should get the entire html and pass it down to the individual field functions, e.g. `getName(html)`, `getTags(html)`

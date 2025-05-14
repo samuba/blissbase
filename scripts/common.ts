@@ -1,6 +1,7 @@
 import { geocodeLocation } from "../src/lib/common";
 import { geocodeCache } from "../src/lib/server/schema";
 import { db, eq } from '../src/lib/server/db.ts';
+import { ScrapedEvent } from "../src/lib/types.ts";
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
@@ -26,8 +27,14 @@ export async function fetchWithTimeout(
 ): Promise<string | null> {
     try {
         console.error(`Fetching: ${url}`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+        // Create a timeout signal
+        const timeoutSignal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+
+        // Combine with any existing signal if provided in options
+        const signal = options.signal
+            ? AbortSignal.any([options.signal, timeoutSignal])
+            : timeoutSignal;
 
         const response = await fetch(url, {
             ...options,
@@ -35,14 +42,13 @@ export async function fetchWithTimeout(
                 'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)',
                 ...(options.headers || {})
             },
-            signal: controller.signal
+            signal
         });
-        clearTimeout(timeoutId);
 
         // Optional delay after fetch starts (can be adjusted by caller)
-        if (options.signal !== controller.signal) {
+        if (!signal.aborted) {
             // Only sleep if not already aborted
-            await new Promise(r => setTimeout(r, 100));
+            await Bun.sleep(100);
         }
 
         if (!response.ok) {
@@ -91,13 +97,13 @@ export function makeAbsoluteUrl(url: string | undefined, baseUrl: string): strin
 }
 
 /**
- * Attempts to parse German date/time strings into ISO 8601 format.
+ * Attempts to parse German date/time strings into Date objects.
  * Handles formats like: DD.MM.YYYY, DD.MM.YYYY HH:mm
  * @param dateStr German format date string
- * @returns ISO date string (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss) or null if parsing fails
+ * @returns Date object or null if parsing fails
  */
-export function parseGermanDate(dateStr: string): string | null {
-    if (!dateStr) return null;
+export function parseGermanDate(dateStr: string | undefined | null) {
+    if (!dateStr) return undefined;
     dateStr = dateStr.trim();
 
     const dateTimeRegex = /(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{2})/;
@@ -106,33 +112,33 @@ export function parseGermanDate(dateStr: string): string | null {
     let match = dateStr.match(dateTimeRegex);
     if (match) {
         const [, day, month, year, hour, minute] = match;
-        const parsedMonth = parseInt(month);
+        const parsedMonth = parseInt(month) - 1; // JavaScript months are 0-indexed
         const parsedDay = parseInt(day);
         const parsedYear = parseInt(year);
         const parsedHour = parseInt(hour);
         const parsedMinute = parseInt(minute);
 
         // Basic validation
-        if (parsedMonth > 0 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 &&
+        if (parsedMonth >= 0 && parsedMonth < 12 && parsedDay > 0 && parsedDay <= 31 &&
             parsedYear > 1900 && parsedHour >= 0 && parsedHour < 24 && parsedMinute >= 0 && parsedMinute < 60) {
-            return `${parsedYear}-${String(parsedMonth).padStart(2, '0')}-${String(parsedDay).padStart(2, '0')}T${String(parsedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')}:00`;
+            return new Date(parsedYear, parsedMonth, parsedDay, parsedHour, parsedMinute, 0);
         }
     }
 
     match = dateStr.match(dateRegex);
     if (match) {
         const [, day, month, year] = match;
-        const parsedMonth = parseInt(month);
+        const parsedMonth = parseInt(month) - 1; // JavaScript months are 0-indexed
         const parsedDay = parseInt(day);
         const parsedYear = parseInt(year);
 
-        if (parsedMonth > 0 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
-            return `${parsedYear}-${String(parsedMonth).padStart(2, '0')}-${String(parsedDay).padStart(2, '0')}`;
+        if (parsedMonth >= 0 && parsedMonth < 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
+            return new Date(parsedYear, parsedMonth, parsedDay);
         }
     }
 
     console.error(`Could not parse date: "${dateStr}"`);
-    return null;
+    return undefined;
 }
 
 /**
@@ -252,4 +258,32 @@ export async function geocodeAddressFromEvent(addressLines: string[]): Promise<{
         console.error(`Error geocoding address "${addressString}":`, error instanceof Error ? error.message : String(error));
         return null;
     }
+}
+
+export function superTrim(str: string | undefined | null) {
+    if (!str) return undefined;
+    return str.trim().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+}
+
+
+export interface WebsiteScraper {
+    // scrapes the entire website and returns a list of events
+    scrapeWebsite(): Promise<ScrapedEvent[]>;
+
+    // scrapes HTML files and returns a list of events
+    scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]>;
+
+
+    // methods for extracting data from a single event page
+    extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined>;
+    extractName(html: string): string | undefined;
+    extractStartAt(html: string): Date | undefined;
+    extractEndAt(html: string): Date | undefined;
+    extractAddress(html: string): string[] | undefined;
+    extractPrice(html: string): string | undefined;
+    extractDescription(html: string): string | undefined;
+    extractImageUrls(html: string): string[] | undefined;
+    extractHost(html: string): string | undefined;
+    extractHostLink(html: string): string | undefined;
+    extractTags(html: string): string[] | undefined;
 }
