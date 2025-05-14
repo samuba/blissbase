@@ -220,6 +220,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                     }
                 }
             } catch (_) {
+                void _;
                 // Silently continue on JSON parse error
             }
         });
@@ -247,6 +248,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                     }
                 }
             } catch (_) {
+                void _;
                 // Silently continue on JSON parse error
             }
         });
@@ -255,6 +257,7 @@ export class HeilnetzScraper implements WebsiteScraper {
             try {
                 return new Date(startDate);
             } catch (_) {
+                void _;
                 console.error(`Error parsing start date from LD+JSON: ${startDate}`);
             }
         }
@@ -278,6 +281,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                     }
                 }
             } catch (_) {
+                void _;
                 // Silently continue on JSON parse error
             }
         });
@@ -286,6 +290,7 @@ export class HeilnetzScraper implements WebsiteScraper {
             try {
                 return new Date(endDate);
             } catch (_) {
+                void _;
                 console.error(`Error parsing end date from LD+JSON: ${endDate}`);
             }
         }
@@ -334,6 +339,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                     }
                 }
             } catch (_) {
+                void _;
                 // Silently continue on JSON parse error
             }
         });
@@ -384,6 +390,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                     }
                 }
             } catch (_) {
+                void _;
                 // Silently handle JSON parsing errors
             }
         });

@@ -39,7 +39,7 @@ export async function fetchWithTimeout(
         const response = await fetch(url, {
             ...options,
             headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; ConsciousPlacesBot/1.0; +https://conscious.place)',
+                'User-Agent': 'BlissBase',
                 ...(options.headers || {})
             },
             signal
@@ -99,7 +99,7 @@ export function makeAbsoluteUrl(url: string | undefined, baseUrl: string): strin
  * @param dateStr German format date string
  * @returns Date object or null if parsing fails
  */
-export function parseGermanDate(dateStr: string | undefined | null) {
+export function parseGermanDate(dateStr: string | undefined | null): string | undefined {
     if (!dateStr) return undefined;
     dateStr = dateStr.trim();
 
@@ -109,28 +109,42 @@ export function parseGermanDate(dateStr: string | undefined | null) {
     let match = dateStr.match(dateTimeRegex);
     if (match) {
         const [, day, month, year, hour, minute] = match;
-        const parsedMonth = parseInt(month) - 1; // JavaScript months are 0-indexed
+        const parsedMonth = parseInt(month); // Month is 1-indexed in input
         const parsedDay = parseInt(day);
         const parsedYear = parseInt(year);
         const parsedHour = parseInt(hour);
         const parsedMinute = parseInt(minute);
 
-        // Basic validation
-        if (parsedMonth >= 0 && parsedMonth < 12 && parsedDay > 0 && parsedDay <= 31 &&
+        // Basic validation (month 1-12)
+        if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 &&
             parsedYear > 1900 && parsedHour >= 0 && parsedHour < 24 && parsedMinute >= 0 && parsedMinute < 60) {
-            return new Date(parsedYear, parsedMonth, parsedDay, parsedHour, parsedMinute, 0);
+            // Format to ISO string YYYY-MM-DDTHH:mm:ss
+            const date = new Date(parsedYear, parsedMonth - 1, parsedDay, parsedHour, parsedMinute, 0);
+            try {
+                return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+            } catch {
+                console.error(`Could not convert to ISO string: "${dateStr}"`);
+                return undefined;
+            }
         }
     }
 
     match = dateStr.match(dateRegex);
     if (match) {
         const [, day, month, year] = match;
-        const parsedMonth = parseInt(month) - 1; // JavaScript months are 0-indexed
+        const parsedMonth = parseInt(month); // Month is 1-indexed in input
         const parsedDay = parseInt(day);
         const parsedYear = parseInt(year);
 
-        if (parsedMonth >= 0 && parsedMonth < 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
-            return new Date(parsedYear, parsedMonth, parsedDay);
+        if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
+            // Format to ISO string YYYY-MM-DD
+            const date = new Date(parsedYear, parsedMonth - 1, parsedDay);
+            try {
+                return date.toISOString().slice(0, 10); // YYYY-MM-DD
+            } catch {
+                console.error(`Could not convert to ISO string: "${dateStr}"`);
+                return undefined;
+            }
         }
     }
 
@@ -187,20 +201,24 @@ export function parseDateTimeRange(dateTimeStr: string): { startAt: string | nul
         return { startAt: null, endAt: null };
     }
 
-    startAt = parseGermanDate(parts[0]);
+    const parsedStart = parseGermanDate(parts[0]);
+    startAt = parsedStart !== undefined ? parsedStart : null;
 
     if (parts.length === 2 && parts[1]) {
         // Handle cases like "15:00 - 19:00" where end date is implicit (assume same day as start)
-        if (startAt && parts[1].match(/^\d{1,2}:\d{2}$/) && startAt.includes('T')) {
+        if (startAt && startAt.includes('T') && parts[1].match(/^\d{1,2}:\d{2}$/)) { // Check if startAt has time and part[1] is only time
             const startDatePart = startAt.split('T')[0]; // Get YYYY-MM-DD part
-            const day = startDatePart.split('-')[2];
-            const month = startDatePart.split('-')[1];
-            const year = startDatePart.split('-')[0];
-            const endDateStr = `${day}.${month}.${year} ${parts[1]}`; // Reconstruct DD.MM.YYYY HH:mm format for parsing
-            endAt = parseGermanDate(endDateStr);
+            const [year, month, day] = startDatePart.split('-'); // Correct order YYYY-MM-DD
+
+            // Reconstruct DD.MM.YYYY HH:mm format for parsing
+            // Ensure month and day are two digits for consistency if needed, though parseGermanDate handles 1 or 2 digits
+            const endDateStr = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year} ${parts[1]}`;
+            const parsedEnd = parseGermanDate(endDateStr);
+            endAt = parsedEnd !== undefined ? parsedEnd : null;
         } else {
             // Handle standard end date/datetime
-            endAt = parseGermanDate(parts[1]);
+            const parsedEnd = parseGermanDate(parts[1]);
+            endAt = parsedEnd !== undefined ? parsedEnd : null;
         }
     }
 
