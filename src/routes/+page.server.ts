@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, like } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql } from 'drizzle-orm';
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { geocodeLocation } from '$lib/common';
@@ -122,10 +122,10 @@ export const load = (async ({ url }) => {
             distanceKm: geocodedCoords ? sql<number | null>`
             CASE
                 WHEN ${eventsTable.longitude} IS NOT NULL AND ${eventsTable.latitude} IS NOT NULL THEN
-                    ROUND(ST_Distance(
+                    GREATEST(1, ROUND(ST_Distance(
                         ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography,
                         ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
-                    ) / 1000)
+                    ) / 1000))
                 ELSE NULL
             END
         `.as('distance_km') : sql<null>`NULL`.as('distance_km')

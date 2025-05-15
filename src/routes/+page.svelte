@@ -124,7 +124,7 @@
 	{/if}
 
 	{#if pagination.totalPages > 1 && !navigating.to}
-		<div class="mt-8 flex items-center justify-center space-x-4">
+		<div class=" flex items-center justify-center space-x-4">
 			<a
 				href={routes.searchPage({
 					page: pagination.page - 1,

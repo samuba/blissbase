@@ -36,30 +36,62 @@
 
 	// Effect to initialize component state from props
 	$effect(() => {
-		if (initialLocation?.startsWith('coords:')) {
-			const parts = initialLocation.substring('coords:'.length).split(',');
-			if (parts.length === 2) {
-				const lat = parseFloat(parts[0]);
-				const lng = parseFloat(parts[1]);
-				if (!isNaN(lat) && !isNaN(lng)) {
-					usingCurrentLocation = true;
-					coordsForFilter = `${lat},${lng}`;
-					typedPlzCity = '';
-					displayLocationText = 'Dein aktueller Standort';
+		async function initializeLocationState() {
+			// First, check for existing geolocation permission if no initial location/distance is provided
+			if (!initialLocation && !initialDistance) {
+				try {
+					const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+					if (permissionStatus.state === 'granted') {
+						// If permission is granted, and no initial location is set, use current location.
+						// We also ensure `usingCurrentLocation` isn't already true from a 'coords:' initialLocation.
+						if (!usingCurrentLocation) {
+							handleUseCurrentLocationClick(); // This function now handles its own state updates.
+							return; // Exit early as location is being fetched.
+						}
+					}
+				} catch (error) {
+					console.warn('Could not query geolocation permission:', error);
+					// Proceed to manual/prop initialization if permission query fails
+				}
+			}
+
+			// Existing logic for initializing from props
+			if (initialLocation?.startsWith('coords:')) {
+				const parts = initialLocation.substring('coords:'.length).split(',');
+				if (parts.length === 2) {
+					const lat = parseFloat(parts[0]);
+					const lng = parseFloat(parts[1]);
+					if (!isNaN(lat) && !isNaN(lng)) {
+						usingCurrentLocation = true;
+						coordsForFilter = `${lat},${lng}`;
+						typedPlzCity = '';
+						displayLocationText = 'Dein Standort';
+					} else {
+						// Invalid coords, reset initialLocation
+						initialLocation = null;
+					}
 				} else {
+					// Invalid coords format, reset initialLocation
 					initialLocation = null;
 				}
+			} else if (initialLocation) {
+				// Handle regular initialLocation string
+				usingCurrentLocation = false;
+				coordsForFilter = null;
+				typedPlzCity = initialLocation;
+				displayLocationText = ''; // No special display text for typed locations
 			} else {
-				initialLocation = null;
+				// No initialLocation provided, ensure fields are clear if not using current location (which would be handled above)
+				if (!usingCurrentLocation) {
+					typedPlzCity = '';
+					displayLocationText = '';
+				}
 			}
-		} else if (initialLocation) {
-			usingCurrentLocation = false;
-			coordsForFilter = null;
-			typedPlzCity = initialLocation;
-			displayLocationText = '';
+
+			selectedDistance = initialDistance || '';
 		}
 
-		selectedDistance = initialDistance || '';
+		initializeLocationState(); // Call the async function to set up the component state.
 	});
 
 	// Effect to ensure "Überall" is selected when no location is specified
@@ -71,7 +103,6 @@
 		}
 	});
 
-	// Distance options
 	const distanceOptions = [
 		{ value: '5', label: '< 5 km' },
 		{ value: '10', label: '< 10 km' },
