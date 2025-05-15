@@ -22,6 +22,21 @@
 	let searchTermInput = $state(pagination.searchTerm ?? '');
 	let searchInputElement = $state<HTMLInputElement | null>(null);
 
+	const sortOptions = $state([
+		{ value: 'time_asc', label: 'Sort: Startzeit' },
+		// { value: 'time_desc', label: 'Time (Latest First)' },
+		{ value: 'distance_asc', label: 'Sort: Distanz' }
+		// { value: 'distance_desc', label: 'Distance (Farthest First)' }
+	]);
+
+	function getSortValue(sortBy?: string | null, sortOrder?: string | null) {
+		const sb = sortBy ?? 'time';
+		const so = sortOrder ?? 'asc';
+		return `${sb}_${so}`;
+	}
+
+	let selectedSortValue = $state(getSortValue(pagination.sortBy, pagination.sortOrder));
+
 	function buildAndGoToUrl(
 		pageReset: boolean,
 		startDateArg?: string | null,
@@ -30,7 +45,9 @@
 		distanceArg?: string | null,
 		latitudeArg?: number | null,
 		longitudeArg?: number | null,
-		searchTermArg?: string | null
+		searchTermArg?: string | null,
+		sortByArg?: string | null,
+		sortOrderArg?: string | null
 	) {
 		const newParams = new URLSearchParams();
 
@@ -48,6 +65,8 @@
 		const finalLatitude = latitudeArg !== undefined ? latitudeArg : pagination.lat;
 		const finalLongitude = longitudeArg !== undefined ? longitudeArg : pagination.lng;
 		const finalSearchTerm = searchTermArg !== undefined ? searchTermArg : pagination.searchTerm;
+		const finalSortBy = sortByArg !== undefined ? sortByArg : pagination.sortBy;
+		const finalSortOrder = sortOrderArg !== undefined ? sortOrderArg : pagination.sortOrder;
 
 		if (finalStartDate) newParams.set('startDate', finalStartDate);
 		if (finalEndDate) newParams.set('endDate', finalEndDate);
@@ -69,6 +88,8 @@
 		if (finalDistance) newParams.set('distance', finalDistance);
 		if (finalSearchTerm && finalSearchTerm.trim() !== '')
 			newParams.set('searchTerm', finalSearchTerm);
+		if (finalSortBy) newParams.set('sortBy', finalSortBy);
+		if (finalSortOrder) newParams.set('sortOrder', finalSortOrder);
 
 		const currentSearchParams = new URLSearchParams(window.location.search);
 		const normalize = (p: URLSearchParams) => {
@@ -97,7 +118,9 @@
 			pagination.distance,
 			pagination.lat,
 			pagination.lng,
-			searchTermInput
+			searchTermInput,
+			pagination.sortBy,
+			pagination.sortOrder
 		);
 	};
 
@@ -110,7 +133,9 @@
 			event.distance,
 			event.latitude,
 			event.longitude,
-			searchTermInput
+			searchTermInput,
+			pagination.sortBy,
+			pagination.sortOrder
 		);
 	}
 
@@ -124,9 +149,30 @@
 			pagination.distance,
 			pagination.lat,
 			pagination.lng,
-			searchTermInput
+			searchTermInput,
+			pagination.sortBy,
+			pagination.sortOrder
 		);
 	}, 400);
+
+	function handleSortSelect(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		const value = target.value;
+		const [sortBy, sortOrder] = value.split('_');
+
+		buildAndGoToUrl(
+			true, // pageReset
+			pagination.startDate,
+			pagination.endDate,
+			pagination.plzCity,
+			pagination.distance,
+			pagination.lat,
+			pagination.lng,
+			searchTermInput,
+			sortBy,
+			sortOrder
+		);
+	}
 
 	$effect(() => {
 		if (!browser) return; // Guard for SSR
@@ -139,6 +185,12 @@
 			searchTermInput !== authoritativeSearchTerm
 		) {
 			searchTermInput = authoritativeSearchTerm;
+		}
+
+		// Sync selectedSortValue with pagination data from URL
+		const newSortValue = getSortValue(pagination.sortBy, pagination.sortOrder);
+		if (selectedSortValue !== newSortValue) {
+			selectedSortValue = newSortValue;
 		}
 	});
 </script>
@@ -155,17 +207,38 @@
 			disabled={!!navigating.to}
 		/>
 	</div>
-	<label class="input">
-		<MagnifyingGlass class="size-5 text-gray-400" />
-		<input
-			bind:this={searchInputElement}
-			bind:value={searchTermInput}
-			oninput={debouncedSearch}
-			type="search"
-			class=""
-			placeholder="Suchbegriff"
-		/>
-	</label>
+	<div class="flex w-full items-center justify-center gap-4">
+		<label class="input w-fit">
+			<MagnifyingGlass class="size-5 text-gray-400" />
+			<input
+				bind:this={searchInputElement}
+				bind:value={searchTermInput}
+				oninput={debouncedSearch}
+				type="search"
+				class=""
+				placeholder="Suchbegriff"
+			/>
+		</label>
+		<div class="">
+			<label for="sort-select" class="sr-only">Sortieren nach</label>
+			<select
+				id="sort-select"
+				class="select select-bordered"
+				value={selectedSortValue}
+				onchange={(e) => handleSortSelect(e)}
+			>
+				{#each sortOptions as option (option.value)}
+					<option
+						value={option.value}
+						disabled={option.value.startsWith('distance_') &&
+							(pagination.lat == null || pagination.lng == null || !pagination.distance)}
+					>
+						{option.label}
+					</option>
+				{/each}
+			</select>
+		</div>
+	</div>
 
 	{#if navigating.to}
 		<div class="flex flex-col items-center justify-center gap-3">
@@ -194,7 +267,9 @@
 					distance: pagination.distance,
 					lat: pagination.lat,
 					lng: pagination.lng,
-					searchTerm: pagination.searchTerm
+					searchTerm: pagination.searchTerm,
+					sortBy: pagination.sortBy,
+					sortOrder: pagination.sortOrder
 				})}
 				onclick={(e) => {
 					if (pagination.page <= 1) e.preventDefault();
@@ -217,7 +292,9 @@
 					distance: pagination.distance,
 					lat: pagination.lat,
 					lng: pagination.lng,
-					searchTerm: pagination.searchTerm
+					searchTerm: pagination.searchTerm,
+					sortBy: pagination.sortBy,
+					sortOrder: pagination.sortOrder
 				})}
 				onclick={(e) => {
 					if (pagination.page >= pagination.totalPages) e.preventDefault();

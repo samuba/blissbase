@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } from 'drizzle-orm';
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { geocodeLocation } from '$lib/common';
@@ -17,6 +17,8 @@ export const load = (async ({ url }) => {
     const latParam = url.searchParams.get('lat');
     const lngParam = url.searchParams.get('lng');
     const searchTermParam = url.searchParams.get('searchTerm');
+    const sortByParam = url.searchParams.get('sortBy');
+    const sortOrderParam = url.searchParams.get('sortOrder');
 
     // Parse params with defaults for internal use
     const pageNumber = parseInt(pageParam ?? '1', 10);
@@ -111,6 +113,41 @@ export const load = (async ({ url }) => {
         }
     }
 
+    // Parse sort params
+    let sortBy = sortByParam === 'distance' ? 'distance' : 'time'; // Default to 'time'
+    const sortOrder = sortOrderParam === 'desc' ? 'desc' : 'asc';   // Default to 'asc'
+
+    // If trying to sort by distance but no geocoded coords are available (e.g. no location provided for search), fallback to time sort.
+    if (sortBy === 'distance' && !geocodedCoords) {
+        sortBy = 'time';
+    }
+
+    let orderByClause;
+    if (sortBy === 'distance' && geocodedCoords) {
+        // Using the ST_Distance directly as previously defined in extras for sorting to ensure consistency.
+        // This SQL expression calculates distance or returns NULL if event lat/lng is missing.
+        const distanceSortSql = sql`
+            CASE
+                WHEN ${eventsTable.longitude} IS NOT NULL AND ${eventsTable.latitude} IS NOT NULL THEN
+                    ST_Distance(
+                        ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography,
+                        ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
+                    )
+                ELSE NULL
+            END`;
+        if (sortOrder === 'asc') {
+            orderByClause = [sql`${distanceSortSql} ASC NULLS LAST`];
+        } else {
+            orderByClause = [sql`${distanceSortSql} DESC NULLS LAST`];
+        }
+    } else { // Default to time sort or if distance sort is not possible
+        if (sortOrder === 'asc') {
+            orderByClause = [asc(eventsTable.startAt)];
+        } else {
+            orderByClause = [desc(eventsTable.startAt)];
+        }
+    }
+
     const allConditions = [dateCondition, proximityCondition].filter(Boolean);
 
     if (searchTermParam && searchTermParam.trim() !== '') {
@@ -132,7 +169,7 @@ export const load = (async ({ url }) => {
 
     const eventsQuery = db.query.events.findMany({
         where: finalCondition,
-        orderBy: [asc(eventsTable.startAt)],
+        orderBy: orderByClause,
         limit: limitNumber,
         offset: offset,
         extras: {
@@ -159,6 +196,9 @@ export const load = (async ({ url }) => {
     const totalEvents = totalResult[0].count;
     const totalPages = Math.ceil(totalEvents / limitNumber);
 
+    const usedLat = geocodedCoords ? geocodedCoords.lat : (latParam ? parseFloat(latParam) : null);
+    const usedLng = geocodedCoords ? geocodedCoords.lng : (lngParam ? parseFloat(lngParam) : null);
+
     const paginationData = {
         totalEvents,
         totalPages,
@@ -166,11 +206,13 @@ export const load = (async ({ url }) => {
         endDate: endDateParam,
         plzCity: plzCityParam,
         distance: distanceParam,
-        lat: latParam ? parseFloat(latParam) : null,
-        lng: lngParam ? parseFloat(lngParam) : null,
+        lat: usedLat,
+        lng: usedLng,
         page: pageNumber,
         limit: limitNumber,
-        searchTerm: searchTermParam
+        searchTerm: searchTermParam,
+        sortBy: sortBy,
+        sortOrder: sortOrder
     };
 
     return { events, pagination: paginationData };

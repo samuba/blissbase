@@ -8,12 +8,14 @@ export interface SearchPageArgs {
     lat?: number | null;
     lng?: number | null;
     searchTerm?: string | null;
+    sortBy?: string | null;
+    sortOrder?: string | null;
 }
 
 export const routes = {
     searchPage: (args: SearchPageArgs = {}) => {
         const params = new URLSearchParams();
-        const { page, limit, startDate, endDate, plzCity, distance, lat, lng, searchTerm } = args;
+        const { page, limit, startDate, endDate, plzCity, distance, lat, lng, searchTerm, sortBy, sortOrder } = args;
 
         if (page !== undefined) params.set('page', page.toString());
         if (limit !== undefined) params.set('limit', limit.toString());
@@ -24,6 +26,8 @@ export const routes = {
         if (lat !== undefined && lat !== null) params.set('lat', lat.toString());
         if (lng !== undefined && lng !== null) params.set('lng', lng.toString());
         if (searchTerm) params.set('searchTerm', searchTerm);
+        if (sortBy) params.set('sortBy', sortBy);
+        if (sortOrder) params.set('sortOrder', sortOrder);
 
         const queryString = params.toString();
         return `/${queryString ? '?' + queryString : ''}`;
