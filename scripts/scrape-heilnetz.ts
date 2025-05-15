@@ -136,6 +136,7 @@ export class HeilnetzScraper implements WebsiteScraper {
 
                 const event = await this.extractEventData(eventHtml, detailUrl);
                 if (event) {
+                    console.log(event);
                     allEvents.push(event);
                 }
             } catch (error) {

@@ -1,4 +1,4 @@
-awara: fixen events aussortieren die mehrere wochen gehen
+  seijetzt: datum zeit falsch
 
 
 events: 

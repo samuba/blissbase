@@ -437,27 +437,15 @@ export class TribehausScraper implements WebsiteScraper {
 
 // Main execution
 if (import.meta.main) {
-    const scraper = new TribehausScraper();
-    const args = process.argv.slice(2);
-
-    if (args.length > 0) {
-        scraper.scrapeHtmlFiles(args)
-            .then(allEvents => {
-                console.log(JSON.stringify(allEvents, null, 2));
-            })
-            .catch(error => {
-                console.error("Scraping from HTML files failed:", error);
-                process.exit(1);
-            });
-    } else {
-        const startUrl = `${BASE_URL}/events`;
-        scraper.scrapeWebsite(startUrl)
-            .then(allEvents => {
-                console.log(JSON.stringify(allEvents, null, 2));
-            })
-            .catch(error => {
-                console.error("Website scraping failed:", error);
-                process.exit(1);
-            });
+    try {
+        const scraper = new TribehausScraper();
+        if (process.argv.length > 2) {
+            console.log(await scraper.scrapeHtmlFiles(process.argv.slice(2)))
+        } else {
+            console.log(await scraper.scrapeWebsite())
+        }
+    } catch (error) {
+        console.error("Unhandled error in main execution:", error);
+        process.exit(1);
     }
 }
