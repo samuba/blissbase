@@ -139,6 +139,7 @@ export class AwaraScraper implements WebsiteScraper {
             hostLink: this.extractHostLink(html),
             tags: this.extractTags(html),
             permalink: url,
+            source: 'awara',
         };
     }
     extractName(html: string) {

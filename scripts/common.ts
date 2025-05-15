@@ -99,7 +99,7 @@ export function makeAbsoluteUrl(url: string | undefined, baseUrl: string): strin
  * @param dateStr German format date string
  * @returns Date object or null if parsing fails
  */
-export function parseGermanDate(dateStr: string | undefined | null): string | undefined {
+export function parseGermanDate(dateStr: string | undefined | null): Date | undefined {
     if (!dateStr) return undefined;
     dateStr = dateStr.trim();
 
@@ -119,13 +119,7 @@ export function parseGermanDate(dateStr: string | undefined | null): string | un
         if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 &&
             parsedYear > 1900 && parsedHour >= 0 && parsedHour < 24 && parsedMinute >= 0 && parsedMinute < 60) {
             // Format to ISO string YYYY-MM-DDTHH:mm:ss
-            const date = new Date(parsedYear, parsedMonth - 1, parsedDay, parsedHour, parsedMinute, 0);
-            try {
-                return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
-            } catch {
-                console.error(`Could not convert to ISO string: "${dateStr}"`);
-                return undefined;
-            }
+            return new Date(parsedYear, parsedMonth - 1, parsedDay, parsedHour, parsedMinute, 0);
         }
     }
 
@@ -138,13 +132,7 @@ export function parseGermanDate(dateStr: string | undefined | null): string | un
 
         if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
             // Format to ISO string YYYY-MM-DD
-            const date = new Date(parsedYear, parsedMonth - 1, parsedDay);
-            try {
-                return date.toISOString().slice(0, 10); // YYYY-MM-DD
-            } catch {
-                console.error(`Could not convert to ISO string: "${dateStr}"`);
-                return undefined;
-            }
+            return new Date(parsedYear, parsedMonth - 1, parsedDay);
         }
     }
 

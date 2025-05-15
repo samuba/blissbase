@@ -17,30 +17,21 @@ import { HeilnetzScraper } from './scrape-heilnetz.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db } from "../src/lib/server/db.ts";
 
-// Map argument names (lowercase) to the expected host names used in the DB
-const SOURCE_HOST_MAP: Record<string, string> = {
-    'awara': 'Awara',
-    'tribehaus': 'Tribehaus',
-    'heilnetz': 'Heilnetz',
-    'seijetzt': 'SeiJetzt',
-};
-const VALID_SOURCES = Object.keys(SOURCE_HOST_MAP);
+const SOURCE_HOSTS = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
 
 console.log('--- Starting Germany Event Scraper ---');
 
 // --- Process Arguments ---
 const args = process.argv.slice(2);
 let targetSourceArg: string | null = null;
-let targetHostName: string | null = null;
 
 if (args.length > 0) {
     const sourceArgLower = args[0].toLowerCase();
-    if (VALID_SOURCES.includes(sourceArgLower)) {
+    if (SOURCE_HOSTS.includes(sourceArgLower)) {
         targetSourceArg = sourceArgLower;
-        targetHostName = SOURCE_HOST_MAP[sourceArgLower];
-        console.log(`Targeting single source: ${targetHostName}`);
+        console.log(`Targeting single source: ${targetSourceArg}`);
     } else {
-        console.warn(`Invalid source argument: ${args[0]}. Valid sources are: ${VALID_SOURCES.join(', ')}. Scraping all sources.`);
+        console.warn(`Invalid source argument: ${args[0]}. Valid sources are: ${SOURCE_HOSTS.join(', ')}. Scraping all sources.`);
     }
 } else {
     console.log('No source specified, scraping all sources.');
@@ -116,13 +107,13 @@ try {
 }
 
 // --- Clear existing data (conditionally) ---
-if (targetHostName) {
-    console.log(`Clearing existing events from source '${targetHostName}'...`);
+if (targetSourceArg) {
+    console.log(`Clearing existing events from source '${targetSourceArg}'...`);
     try {
-        await db.delete(schema.events).where(eq(schema.events.host, targetHostName));
-        console.log(` -> Existing events for host '${targetHostName}' cleared (if any existed).`);
+        const re = await db.delete(schema.events).where(eq(schema.events.host, targetSourceArg));
+        console.log(` -> ${re.rowCount} existing events for host '${targetSourceArg}' cleared `);
     } catch (error) {
-        console.error(`Error clearing existing events for source '${targetHostName}':`, error);
+        console.error(`Error clearing existing events for source '${targetSourceArg}':`, error);
         process.exit(0);
     }
 } else {
@@ -142,19 +133,7 @@ console.log(`Inserting/Updating ${allEvents.length} events into the database...`
 
 // Prepare data for insertion, mapping ScrapedEvent to the schema format
 const eventsToInsert = allEvents.map(event => ({
-    name: event.name,
-    startAt: event.startAt ? new Date(event.startAt) : null,
-    endAt: event.endAt ? new Date(event.endAt) : null,
-    address: event.address,
-    price: event.price,
-    description: event.description,
-    imageUrls: event.imageUrls,
-    host: event.host,
-    hostLink: event.hostLink,
-    permalink: event.permalink,
-    latitude: event.latitude,
-    longitude: event.longitude,
-    tags: event.tags,
+    ...event,
     // scrapedAt is handled by default value in schema
 }));
 

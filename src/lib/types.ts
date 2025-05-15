@@ -17,6 +17,7 @@ export interface ScrapedEvent {
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     tags: string[]; // Tags/Categories from the event page
+    source: string; // Source of the event e.g. 'awara', 'tribehaus', 'heilnetz', 'seijetzt'
 }
 
 export type InsertEvent = typeof events.$inferInsert;

@@ -356,6 +356,7 @@ export class TribehausScraper implements WebsiteScraper {
             latitude,
             longitude,
             tags: this.extractTags(html) || [],
+            source: 'tribehaus',
         };
     }
 

@@ -198,6 +198,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                 latitude: coordinates?.lat || null,
                 longitude: coordinates?.lng || null,
                 tags: this.extractTags(html) || [],
+                source: 'heilnetz',
             };
         } catch (error) {
             console.error(`Error extracting event data from ${url}:`, error);

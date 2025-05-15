@@ -74,13 +74,14 @@
 
 		const formattedAddress = address
 			.filter(
-				(x) => !bundeslaender.includes(x.trim()) && !x.trim().match(/\d{5}/) // no zip codes
+				(x) => !bundeslaender.includes(x.trim()) && !x.trim().match(/\d{5}$/) // no zip codes at end of string
 			)
 			.map((x) => {
 				return x
 					.replace(/Deutschland/g, 'DE')
 					.replace(/Österreich/g, 'AT')
-					.replace(/Schweiz/g, 'CH');
+					.replace(/Schweiz/g, 'CH')
+					.replace(/\d{5} /, ''); // some addresses have: "{zipCode} {city}"
 			});
 
 		return formattedAddress.join(' · ');
@@ -109,7 +110,7 @@
 		<div class="card-body flex flex-col gap-2">
 			<h3 class="card-title leading-snug tracking-tight">{event.name}</h3>
 
-			<time class="text-sm">
+			<time class="text-sm" title={event.startAt?.toLocaleString()}>
 				{formatTimeStr(event.startAt, event.endAt)}
 			</time>
 
@@ -123,7 +124,7 @@
 								{event.distanceKm} km entfernt
 							</span>
 						{/if}
-						<div>
+						<div title={event.address?.join(', ')}>
 							{formatAddress(event.address)}
 						</div>
 					</div>

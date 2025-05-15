@@ -21,7 +21,6 @@
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 import {
-    parseGermanDate as commonParseGermanDateString, // Renamed to avoid conflict
     REQUEST_DELAY_MS,
     geocodeAddressFromEvent,
     WebsiteScraper, // Import WebsiteScraper
@@ -43,35 +42,6 @@ export class SeijetztScraper implements WebsiteScraper {
         this.requestDelayMs = REQUEST_DELAY_MS;
     }
 
-    private _parseGermanDateStringToDate(dateStr: string | undefined | null): Date | null {
-        if (!dateStr) return null;
-        const isoStr = commonParseGermanDateString(dateStr);
-        if (!isoStr) return null;
-        const dateObj = new Date(isoStr);
-        return !isNaN(dateObj.getTime()) ? dateObj : null;
-    }
-
-    private _parseSeiJetztDateTimeObjectsFromListPage(startStr: string, endStrRaw: string | null): { startAt: Date | null, endAt: Date | null } {
-        const startAt = this._parseGermanDateStringToDate(startStr);
-        let endAt: Date | null = null;
-
-        if (endStrRaw && endStrRaw.startsWith('- ')) {
-            const endStr = endStrRaw.substring(2).trim();
-            if (startAt && /^\d{1,2}:\d{2}$/.test(endStr)) {
-                const startAtISO = commonParseGermanDateString(startStr); // Get ISO string again for manipulation
-                const startDatePart = startAtISO?.split('T')[0];
-                if (startDatePart) {
-                    const [year, month, day] = startDatePart.split('-');
-                    const endDateForParse = `${day}.${month}.${year} ${endStr}`;
-                    endAt = this._parseGermanDateStringToDate(endDateForParse);
-                }
-            } else {
-                endAt = this._parseGermanDateStringToDate(endStr);
-            }
-        }
-        return { startAt, endAt };
-    }
-
     private _parseAddressLines(addressStr: string | undefined): string[] {
         if (!addressStr) return [];
         // console.error(`Parsing address HTML: ${addressStr.substring(0, 150)}...`);
@@ -89,77 +59,22 @@ export class SeijetztScraper implements WebsiteScraper {
         return lines;
     }
 
-    private async _parseListPage(html: string): Promise<Partial<ScrapedEvent>[]> {
+    private async extractEventUrls(html: string): Promise<string[]> {
         const $ = cheerio.load(html);
-        const events: Partial<ScrapedEvent>[] = [];
+        const permalinks: string[] = [];
         const eventCards = $('div.fi-ta-record');
-        // console.error(`Found ${eventCards.length} event cards on the page.`);
 
         eventCards.each((_index, element) => {
             const $card = $(element);
             const $link = $card.find('a[href^="https://sei.jetzt/event/"]').first();
-
             const permalink = $link.attr('href');
-            const name = $link.find('span.text-lg.font-bold').first().text().trim();
 
-            const dateTimeSpans = $link.find('span.text-base.font-bold');
-            const startStr = dateTimeSpans.eq(0).text().trim();
-            const endStrRaw = dateTimeSpans.length > 1 ? dateTimeSpans.eq(1).text().trim() : null;
-
-            const host = $link.find('span.text-lg.font-bold').closest('.fi-ta-col-wrp').next().find('span.text-sm').first().text().trim();
-
-            let locationName: string | null = null;
-            let address: string[] = [];
-            const locationIcon = $link.find('svg path[d^="m11.54"]');
-            if (locationIcon.length > 0) {
-                const locationNameWrapper = locationIcon.closest('.fi-ta-col-wrp')?.next();
-                if (locationNameWrapper) {
-                    locationName = locationNameWrapper.find('span.text-sm').first().text().trim();
-                    const tooltipWrapper = locationNameWrapper.find('.fi-ta-col-wrp[x-tooltip]');
-                    const tooltipAttr = tooltipWrapper.attr('x-tooltip');
-                    if (tooltipAttr) {
-                        const match = tooltipAttr.match(/content:\s*'([^']*)'/);
-                        if (match && match[1]) {
-                            address = this._parseAddressLines(match[1]);
-                        }
-                    }
-                    if (address.length === 0 && locationName) {
-                        address = [locationName];
-                    }
-                }
+            if (permalink) {
+                permalinks.push(permalink);
             }
-
-            if (!permalink || !name || !startStr) {
-                // console.error("Skipping event card due to missing permalink, name, or start date string.");
-                return;
-            }
-
-            const { startAt, endAt } = this._parseSeiJetztDateTimeObjectsFromListPage(startStr, endStrRaw);
-
-            if (!startAt) {
-                // console.error(`Skipping event "${name}" due to failed date parsing for start: "${startStr}"`);
-                return;
-            }
-
-            const partialEvent: Partial<ScrapedEvent> = {
-                permalink,
-                name,
-                startAt, // This is now Date | null
-                endAt,   // This is now Date | null
-                address,
-                host,
-                hostLink: null,
-                price: null,
-                description: null,
-                latitude: null,
-                longitude: null,
-                tags: [],
-            };
-            events.push(partialEvent);
         });
 
-        // console.error(`Parsed ${events.length} partial events from the list page.`);
-        return events;
+        return permalinks;
     }
 
     // ---- WebsiteScraper Interface Methods for Extracting Fields from Detail Page HTML ----
@@ -185,69 +100,40 @@ export class SeijetztScraper implements WebsiteScraper {
         return undefined;
     }
 
-    private _extractDateTimeInfoFromDetailPage(html: string): { startAt?: Date, endAt?: Date } {
-        const $ = cheerio.load(html, { decodeEntities: true });
-        let dateString: string | null = null;
-
-        const dateFinders = [
-            () => {
-                const $dl = $('dl.fi-description-list').first();
-                if ($dl.length > 0) {
-                    const dateDt = $dl.find('dt:contains("Datum")').first();
-                    if (dateDt.length > 0) return dateDt.next('dd').text().trim();
-                } return null;
-            },
-            () => {
-                const datePatterns = [/(\d{1,2}\.\d{1,2}\.\d{4}\s+\d{1,2}:\d{2})/g, /(\d{1,2}\.\d{1,2}\.\d{4})/g];
-                for (const pattern of datePatterns) {
-                    const matches = $('body').text().match(pattern);
-                    if (matches && matches.length > 0) return matches[0];
-                } return null;
-            },
-            () => {
-                const dateElements = $('[class*="date"], [class*="time"], [class*="termin"], div:contains("Datum:"), div:contains("Termin:"), span:contains("Datum:")');
-                if (dateElements.length > 0) {
-                    for (let i = 0; i < dateElements.length; i++) {
-                        const text = $(dateElements[i]).text().trim();
-                        if (text.length > 5 && /\d{1,2}\.\d{1,2}\./.test(text)) return text;
-                    }
-                } return null;
-            }
-        ];
-        for (const finder of dateFinders) { dateString = finder(); if (dateString) break; }
-
-        if (!dateString) return {};
-
-        let parsedStartAt: Date | null = null;
-        let parsedEndAt: Date | null = null;
-
-        const dateTimeRangeMatch = dateString.match(/(\d{1,2}\.\d{1,2}\.\d{4}(?:\s+\d{1,2}:\d{2})?)\s*-\s*(\d{1,2}\.\d{1,2}\.\d{4}(?:\s+\d{1,2}:\d{2})?)/);
-        if (dateTimeRangeMatch) {
-            parsedStartAt = this._parseGermanDateStringToDate(dateTimeRangeMatch[1].trim());
-            parsedEndAt = this._parseGermanDateStringToDate(dateTimeRangeMatch[2].trim());
-        } else {
-            const startDateTimeMatch = dateString.match(/(\d{1,2}\.\d{1,2}\.\d{4}(?:\s+\d{1,2}:\d{2})?)/);
-            if (startDateTimeMatch) {
-                parsedStartAt = this._parseGermanDateStringToDate(startDateTimeMatch[1].trim());
-
-                const endTimeOnlyMatch = dateString.match(/-\s*(\d{1,2}:\d{2})/);
-                if (endTimeOnlyMatch && parsedStartAt) {
-                    const startDateIso = parsedStartAt.toISOString().split('T')[0]; // YYYY-MM-DD
-                    const [year, month, day] = startDateIso.split('-');
-                    const endDateForParse = `${day}.${month}.${year} ${endTimeOnlyMatch[1].trim()}`;
-                    parsedEndAt = this._parseGermanDateStringToDate(endDateForParse);
-                }
-            }
-        }
-        return { startAt: parsedStartAt ?? undefined, endAt: parsedEndAt ?? undefined };
-    }
-
     extractStartAt(html: string): Date | undefined {
-        return this._extractDateTimeInfoFromDetailPage(html).startAt;
+        const $ = cheerio.load(html);
+
+        const dateElement = $('[x-data*="date"]')?.[0];
+        if (!dateElement) throw new Error('No startAt elements found in HTML');
+
+        return this._extractDateFromXDataElement($, dateElement);
     }
 
     extractEndAt(html: string): Date | undefined {
-        return this._extractDateTimeInfoFromDetailPage(html).endAt;
+        const $ = cheerio.load(html);
+
+        const dateElement = $('[x-data*="date"]')?.[1];
+        if (!dateElement) return undefined;
+
+        return this._extractDateFromXDataElement($, dateElement);
+    }
+
+    private _extractDateFromXDataElement($: cheerio.Root, dateElement: cheerio.Element) {
+        const xDataAttr = $(dateElement).attr('x-data');
+        if (!xDataAttr) throw new Error('No x-data attribute found in HTML');
+
+        const dateMatch = xDataAttr.match(/new Date\((.*?)\)/);
+        if (!dateMatch || !dateMatch[1]) throw new Error('No date match found in x-data attribute');
+
+        const dateParams = dateMatch[1].split(',').map(param => param.trim());
+        if (dateParams.length < 5) throw new Error('Invalid date parameters');
+
+        const year = parseInt(dateParams[0]);
+        const month = parseInt(dateParams[1]);
+        const day = parseInt(dateParams[2]);
+        const hour = parseInt(dateParams[3]);
+        const minute = parseInt(dateParams[4]);
+        return new Date(year, month, day, hour, minute);
     }
 
     extractAddress(html: string): string[] | undefined {
@@ -493,10 +379,12 @@ export class SeijetztScraper implements WebsiteScraper {
     public async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
         const name = this.extractName(html);
         const startAt = this.extractStartAt(html);
+        let endAt = this.extractEndAt(html);
+        if (!name || !startAt) return undefined;
 
-        if (!name || !startAt) {
-            // console.error(`Skipping event from ${url} (detail page) due to missing name or start date.`);
-            return undefined;
+        if (endAt && startAt && (endAt < startAt)) {
+            console.warn(`Event ${name} has endAt (${endAt}) before startAt (${startAt}). Setting endAt to undefined.`);
+            endAt = undefined;
         }
 
         const coordinates = await geocodeAddressFromEvent(this.extractAddress(html) || []);
@@ -504,7 +392,7 @@ export class SeijetztScraper implements WebsiteScraper {
         return {
             name,
             startAt,
-            endAt: this.extractEndAt(html) ?? null,
+            endAt,
             address: this.extractAddress(html) || [],
             price: this.extractPrice(html) ?? null,
             description: this.extractDescription(html) ?? null,
@@ -515,91 +403,9 @@ export class SeijetztScraper implements WebsiteScraper {
             latitude: coordinates?.lat ?? null,
             longitude: coordinates?.lng ?? null,
             tags: this.extractTags(html) || [],
+            source: 'seijetzt',
         };
     }
-
-    private async _processListItem(partialEventFromList: Partial<ScrapedEvent>): Promise<ScrapedEvent | null> {
-        if (!partialEventFromList.permalink) {
-            console.error("Cannot process event with missing permalink.");
-            return null;
-        }
-        if (!partialEventFromList.name || !partialEventFromList.startAt) { // startAt is Date here
-            console.error(`Skipping detail fetch for invalid partial event (name/startAt missing):`, partialEventFromList.permalink);
-            return null;
-        }
-
-        await sleep(this.requestDelayMs);
-        const html = await fetchWithTimeout(partialEventFromList.permalink);
-
-        if (!html) {
-            console.error(`Failed to fetch details for: ${partialEventFromList.permalink}. Using list data.`);
-            const coordinates = partialEventFromList.address && partialEventFromList.address.length > 0 ? await geocodeAddressFromEvent(partialEventFromList.address) : null;
-            return {
-                name: partialEventFromList.name,
-                startAt: partialEventFromList.startAt,
-                endAt: partialEventFromList.endAt ?? null,
-                address: partialEventFromList.address ?? [],
-                price: partialEventFromList.price ?? null,
-                description: partialEventFromList.description ?? 'Failed to fetch event details.',
-                imageUrls: partialEventFromList.imageUrls ?? [],
-                host: partialEventFromList.host ?? null,
-                hostLink: partialEventFromList.hostLink ?? null,
-                permalink: partialEventFromList.permalink,
-                latitude: coordinates?.lat ?? null,
-                longitude: coordinates?.lng ?? null,
-                tags: partialEventFromList.tags ?? [],
-            };
-        }
-
-        const detailPageEventData = await this.extractEventData(html, partialEventFromList.permalink);
-
-        if (!detailPageEventData) {
-            console.warn(`Failed to extract core data from detail page: ${partialEventFromList.permalink}. Using list data primarily.`);
-            const coordinates = partialEventFromList.address && partialEventFromList.address.length > 0 ? await geocodeAddressFromEvent(partialEventFromList.address) : null;
-            return {
-                name: partialEventFromList.name,
-                startAt: partialEventFromList.startAt,
-                endAt: partialEventFromList.endAt ?? null,
-                address: partialEventFromList.address ?? [],
-                price: partialEventFromList.price ?? null,
-                description: partialEventFromList.description ?? 'Detail page parsing failed.',
-                imageUrls: partialEventFromList.imageUrls ?? [],
-                host: partialEventFromList.host ?? null,
-                hostLink: partialEventFromList.hostLink ?? null,
-                permalink: partialEventFromList.permalink,
-                latitude: coordinates?.lat ?? null,
-                longitude: coordinates?.lng ?? null,
-                tags: partialEventFromList.tags ?? [],
-            };
-        }
-
-        // Merge strategy: Prioritize detail page, supplement with list page
-        const finalEvent: ScrapedEvent = {
-            ...detailPageEventData, // Base from detail page (includes permalink, lat, long from detail's address)
-            name: detailPageEventData.name, // Detail page name is primary
-            startAt: detailPageEventData.startAt, // Detail page startAt is primary
-            endAt: detailPageEventData.endAt,
-            imageUrls: Array.from(new Set([...(partialEventFromList.imageUrls || []), ...(detailPageEventData.imageUrls || [])])),
-            host: detailPageEventData.host ?? partialEventFromList.host ?? null,
-            hostLink: detailPageEventData.hostLink ?? partialEventFromList.hostLink ?? null,
-            description: detailPageEventData.description || partialEventFromList.description || null,
-            price: detailPageEventData.price ?? partialEventFromList.price ?? null,
-            // Use detail page address and its geocoding by default. If detail address is empty, use list's.
-            address: detailPageEventData.address.length > 0 ? detailPageEventData.address : partialEventFromList.address || [],
-            tags: Array.from(new Set([...(partialEventFromList.tags || []), ...(detailPageEventData.tags || [])])),
-        };
-
-        // If address came from list or was empty on detail, re-geocode if necessary
-        if (finalEvent.address.length > 0 && (detailPageEventData.address.length === 0 || !finalEvent.latitude || !finalEvent.longitude)) {
-            if (JSON.stringify(finalEvent.address) !== JSON.stringify(detailPageEventData.address)) { // Address changed due to merge
-                const coords = await geocodeAddressFromEvent(finalEvent.address);
-                finalEvent.latitude = coords?.lat ?? null;
-                finalEvent.longitude = coords?.lng ?? null;
-            }
-        }
-        return finalEvent;
-    }
-
 
     async scrapeWebsite(): Promise<ScrapedEvent[]> {
         const allEvents: ScrapedEvent[] = [];
@@ -621,28 +427,36 @@ export class SeijetztScraper implements WebsiteScraper {
             }
 
             try {
-                const partialEvents = await this._parseListPage(pageHtml);
-                if (partialEvents.length === 0) {
+                const eventUrls = await this.extractEventUrls(pageHtml);
+                if (eventUrls.length === 0) {
                     console.error(`Stopped fetching: No events found on page ${currentPage}.`);
                     keepFetching = false;
                     break;
                 }
 
-                console.error(` Processing ${partialEvents.length} events from page ${currentPage}...`);
-                for (const partialEvent of partialEvents) {
+                console.error(` Processing ${eventUrls.length} events from page ${currentPage}...`);
+                for (const eventUrl of eventUrls) {
                     try {
-                        // console.error(`  Fetching details for: ${partialEvent.name}`);
-                        const detailedEvent = await this._processListItem(partialEvent);
-                        console.error(detailedEvent);
-                        if (detailedEvent) {
-                            allEvents.push(detailedEvent);
+                        await sleep(this.requestDelayMs);
+                        const html = await fetchWithTimeout(eventUrl);
+
+                        if (!html) {
+                            console.error(`Failed to fetch details for: ${eventUrl}. Skipping event.`);
+                            continue;
+                        }
+
+                        const event = await this.extractEventData(html, eventUrl);
+                        console.error(event);
+                        if (event) {
+                            allEvents.push(event);
                         } else {
-                            // console.warn(`Failed to get complete details for event: ${partialEvent.name} (${partialEvent.permalink})`);
+                            console.warn(`Failed to get complete details for event: ${eventUrl}`);
                         }
                     } catch (error) {
-                        console.error(`Error processing event item "${partialEvent.name || 'Unknown'}":`, error);
+                        console.error(`Error processing event item "${eventUrl}":`, error);
                     }
                 }
+                return allEvents
             } catch (error) {
                 console.error(`Error processing page ${currentPage}:`, error);
             }

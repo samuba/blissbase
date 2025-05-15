@@ -15,6 +15,7 @@ export const events = pgTable('events', {
     latitude: real(),
     longitude: real(),
     tags: text().array(),
+    source: text().notNull(),
     scrapedAt: timestamp().notNull().defaultNow(),
 });
 
