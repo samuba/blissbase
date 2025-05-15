@@ -456,7 +456,6 @@ export class SeijetztScraper implements WebsiteScraper {
                         console.error(`Error processing event item "${eventUrl}":`, error);
                     }
                 }
-                return allEvents
             } catch (error) {
                 console.error(`Error processing page ${currentPage}:`, error);
             }

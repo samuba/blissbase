@@ -1,5 +1,4 @@
   seijetzt: datum zeit falsch
-  stadt fehlt
 location automatisch benutzen 
 
 
