@@ -13,8 +13,11 @@
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
 	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
+
 	import { debounce } from '$lib/common';
 	import { browser } from '$app/environment';
+	import Select from '$lib/components/Select.svelte';
+	import SortAscendingSvg from '~icons/ph/sort-ascending?raw';
 
 	const { data } = $props();
 	const { events, pagination } = $derived(data); // pagination is reactive, reflects URL params
@@ -26,6 +29,13 @@
 		{ value: 'time_asc', label: 'Sort: Startzeit' },
 		// { value: 'time_desc', label: 'Time (Latest First)' },
 		{ value: 'distance_asc', label: 'Sort: Distanz' }
+		// { value: 'distance_desc', label: 'Distance (Farthest First)' }
+	]);
+
+	const sortOptions2 = $state([
+		{ value: 'time_asc', label: 'Startzeit', icon: SortAscendingSvg },
+		// { value: 'time_desc', label: 'Time (Latest First)' },
+		{ value: 'distance_asc', label: 'Distanz', icon: SortAscendingSvg }
 		// { value: 'distance_desc', label: 'Distance (Farthest First)' }
 	]);
 
@@ -155,9 +165,7 @@
 		);
 	}, 400);
 
-	function handleSortSelect(event: Event) {
-		const target = event.target as HTMLSelectElement;
-		const value = target.value;
+	function handleSortChanged(value: string) {
 		const [sortBy, sortOrder] = value.split('_');
 
 		buildAndGoToUrl(
@@ -221,22 +229,12 @@
 		</label>
 		<div class="">
 			<label for="sort-select" class="sr-only">Sortieren nach</label>
-			<select
-				id="sort-select"
-				class="select select-bordered"
+			<Select
+				items={sortOptions2}
+				type="single"
 				value={selectedSortValue}
-				onchange={(e) => handleSortSelect(e)}
-			>
-				{#each sortOptions as option (option.value)}
-					<option
-						value={option.value}
-						disabled={option.value.startsWith('distance_') &&
-							(pagination.lat == null || pagination.lng == null || !pagination.distance)}
-					>
-						{option.label}
-					</option>
-				{/each}
-			</select>
+				onValueChange={handleSortChanged}
+			/>
 		</div>
 	</div>
 
