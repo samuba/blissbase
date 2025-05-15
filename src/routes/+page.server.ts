@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike } from 'drizzle-orm';
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { geocodeLocation } from '$lib/common';
@@ -16,6 +16,7 @@ export const load = (async ({ url }) => {
     const distanceParam = url.searchParams.get('distance'); // in km
     const latParam = url.searchParams.get('lat');
     const lngParam = url.searchParams.get('lng');
+    const searchTermParam = url.searchParams.get('searchTerm');
 
     // Parse params with defaults for internal use
     const pageNumber = parseInt(pageParam ?? '1', 10);
@@ -111,6 +112,22 @@ export const load = (async ({ url }) => {
     }
 
     const allConditions = [dateCondition, proximityCondition].filter(Boolean);
+
+    if (searchTermParam && searchTermParam.trim() !== '') {
+        const searchTermCondition = or(
+            ilike(eventsTable.name, `%${searchTermParam}%`),
+            // Check if any element in the tags array contains the search term (case-insensitive)
+            // This requires converting the array to a string or using a specific PostgreSQL array function.
+            // For simplicity and broader compatibility, we can check if the search term is a substring of any tag.
+            // A more robust solution might involve unnesting or specific array operators if performance is critical.
+            sql<boolean>`EXISTS (SELECT 1 FROM unnest(${eventsTable.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${searchTermParam}%`})`,
+            ilike(eventsTable.description, `%${searchTermParam}%`)
+        );
+        if (searchTermCondition) { // Ensure it's not undefined if searchTermParam was just spaces
+            allConditions.push(searchTermCondition);
+        }
+    }
+
     const finalCondition = allConditions.length > 0 ? and(...allConditions) : undefined;
 
     const eventsQuery = db.query.events.findMany({
@@ -152,7 +169,8 @@ export const load = (async ({ url }) => {
         lat: latParam ? parseFloat(latParam) : null,
         lng: lngParam ? parseFloat(lngParam) : null,
         page: pageNumber,
-        limit: limitNumber
+        limit: limitNumber,
+        searchTerm: searchTermParam
     };
 
     return { events, pagination: paginationData };

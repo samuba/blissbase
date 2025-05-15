@@ -7,14 +7,20 @@
 		type LocationChangeEvent
 	} from '$lib/components/LocationDistanceInput.svelte';
 	import { goto } from '$app/navigation';
-	import { routes } from '$lib/routes.js';
+	import { routes } from '$lib/routes';
 	import { navigating } from '$app/state';
 	import SpinnerBall from 'phosphor-svelte/lib/SpinnerBall';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
 	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
+	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
+	import { debounce } from '$lib/common';
+	import { browser } from '$app/environment';
 
 	const { data } = $props();
 	const { events, pagination } = $derived(data); // pagination is reactive, reflects URL params
+
+	let searchTermInput = $state(pagination.searchTerm ?? '');
+	let searchInputElement = $state<HTMLInputElement | null>(null);
 
 	function buildAndGoToUrl(
 		pageReset: boolean,
@@ -23,7 +29,8 @@
 		plzCityArg?: string | null, // Renamed from locationArg for clarity
 		distanceArg?: string | null,
 		latitudeArg?: number | null,
-		longitudeArg?: number | null
+		longitudeArg?: number | null,
+		searchTermArg?: string | null
 	) {
 		const newParams = new URLSearchParams();
 
@@ -40,6 +47,7 @@
 		const finalDistance = distanceArg !== undefined ? distanceArg : pagination.distance;
 		const finalLatitude = latitudeArg !== undefined ? latitudeArg : pagination.lat;
 		const finalLongitude = longitudeArg !== undefined ? longitudeArg : pagination.lng;
+		const finalSearchTerm = searchTermArg !== undefined ? searchTermArg : pagination.searchTerm;
 
 		if (finalStartDate) newParams.set('startDate', finalStartDate);
 		if (finalEndDate) newParams.set('endDate', finalEndDate);
@@ -59,6 +67,8 @@
 		}
 
 		if (finalDistance) newParams.set('distance', finalDistance);
+		if (finalSearchTerm && finalSearchTerm.trim() !== '')
+			newParams.set('searchTerm', finalSearchTerm);
 
 		const currentSearchParams = new URLSearchParams(window.location.search);
 		const normalize = (p: URLSearchParams) => {
@@ -79,7 +89,16 @@
 	}
 
 	const onDateChange: DateRangePickerOnChange = (value) => {
-		buildAndGoToUrl(true, value?.start?.toString() ?? null, value?.end?.toString() ?? null);
+		buildAndGoToUrl(
+			true,
+			value?.start?.toString() ?? null,
+			value?.end?.toString() ?? null,
+			pagination.plzCity,
+			pagination.distance,
+			pagination.lat,
+			pagination.lng,
+			searchTermInput
+		);
 	};
 
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
@@ -87,12 +106,41 @@
 			true, // pageReset
 			pagination.startDate,
 			pagination.endDate,
-			event.location, // This is now explicitly plzCity or null
+			event.location,
 			event.distance,
 			event.latitude,
-			event.longitude
+			event.longitude,
+			searchTermInput
 		);
 	}
+
+	const debouncedSearch = debounce(() => {
+		if (navigating.to) return; // Prevent search if already navigating
+		buildAndGoToUrl(
+			true, // pageReset
+			pagination.startDate,
+			pagination.endDate,
+			pagination.plzCity,
+			pagination.distance,
+			pagination.lat,
+			pagination.lng,
+			searchTermInput
+		);
+	}, 400);
+
+	$effect(() => {
+		if (!browser) return; // Guard for SSR
+
+		const authoritativeSearchTerm = pagination.searchTerm ?? '';
+		// Only update local state from URL if the input is not focused
+		// and the values actually differ.
+		if (
+			document.activeElement !== searchInputElement &&
+			searchTermInput !== authoritativeSearchTerm
+		) {
+			searchTermInput = authoritativeSearchTerm;
+		}
+	});
 </script>
 
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
@@ -107,6 +155,17 @@
 			disabled={!!navigating.to}
 		/>
 	</div>
+	<label class="input">
+		<MagnifyingGlass class="size-5 text-gray-400" />
+		<input
+			bind:this={searchInputElement}
+			bind:value={searchTermInput}
+			oninput={debouncedSearch}
+			type="search"
+			class=""
+			placeholder="Suchbegriff"
+		/>
+	</label>
 
 	{#if navigating.to}
 		<div class="flex flex-col items-center justify-center gap-3">
@@ -134,7 +193,8 @@
 					plzCity: pagination.plzCity,
 					distance: pagination.distance,
 					lat: pagination.lat,
-					lng: pagination.lng
+					lng: pagination.lng,
+					searchTerm: pagination.searchTerm
 				})}
 				onclick={(e) => {
 					if (pagination.page <= 1) e.preventDefault();
@@ -156,7 +216,8 @@
 					plzCity: pagination.plzCity,
 					distance: pagination.distance,
 					lat: pagination.lat,
-					lng: pagination.lng
+					lng: pagination.lng,
+					searchTerm: pagination.searchTerm
 				})}
 				onclick={(e) => {
 					if (pagination.page >= pagination.totalPages) e.preventDefault();
