@@ -9,3 +9,4 @@ alwaysApply: false
 - Always use an object named 'args' instead of individual arguments for functions when the function exceeds 2 arguments
 - Always place root level Typescript type definitions at the bottom of the file 
 - Never type a variable if typescript can infer the type correctly on its own.
+- Always check if an array is defined and has values like this: `arr?.length` not `arr && arr.length > 0`

@@ -67,7 +67,7 @@ Your purpose is to anaylze text messages and extract infos from them.
 Answer only in valid, raw JSON. Do not wrap it inside markdown or anything else.
 Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
-Never make up any information.
+Never make up any information. Only use the information provided in the message!
 Do not remove html tags.
 
 Extract the following information from the messages:
@@ -78,19 +78,21 @@ Extract the following information from the messages:
 
 "description": string. A exact copy from the message. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the name of the event at the start of the description.
 
+"descriptionBrief": string. The same content as in "description" field but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it.
+
 "summary": string. Summarise what the event is about in one descriptive sentence. Always use same language as the message. Never mention name of the event. Never mention date or location. Always sound friendly and keep it about this event.
 
 "startDate": string. The date and time of the event start, in ISO 8601 format.
 
 "endDate": string. The date and time of the event end, in ISO 8601 format. ONLY if specified in the message.
 
-"url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. 
+"url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider urls for this that start with "https://t.me".
 
 "contact": string. If the text contains contact information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host.
 
 "contactAuthorForMore": boolean. Wether the message states to contact the sender/author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
 
-"price": string. The price or costs of the event for the guest.
+"price": string. The price or costs of the event for the guest. If the price information includes new lines do not extract the price.
 
 "venue": string. Name of the location/venue where the event is taking place.
 
@@ -102,6 +104,7 @@ Extract the following information from the messages:
 
 "emojis": string. Up to 3 emojis that describe the event.
 
+
 `
 
 
@@ -109,11 +112,12 @@ export type MsgAnalysisAnswer = {
     hasEventData: boolean;
     name: string;
     description: string;
+    descriptionBrief: string;
     summary: string;
     startDate: string;
-    endDate: string;
+    endDate?: string;
     url: string;
-    contact: string;
+    contact?: string;
     contactAuthorForMore: boolean;
     price: string;
     venue: string;

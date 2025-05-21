@@ -1,4 +1,4 @@
-import { pgTable, text, integer, real, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, unique } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -18,6 +18,10 @@ export const events = pgTable('events', {
     tags: text().array(),
     source: text().notNull(),
     scrapedAt: timestamp().notNull().defaultNow(),
+}, (table) => {
+    return {
+        uniqueNameStartAtAddress: unique().on(table.name, table.startAt, table.address),
+    };
 });
 
 export const geocodeCache = pgTable('geocode_cache', {

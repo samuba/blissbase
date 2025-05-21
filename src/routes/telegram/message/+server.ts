@@ -57,7 +57,16 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
 
         const addressArr = [aiAnswer.venue, aiAnswer.address ?? aiAnswer.city].filter(x => x?.trim())
         const coords = await geocodeAddressCached(addressArr, GOOGLE_MAPS_API_KEY || '')
-        const contact = aiAnswer.contactAuthorForMore ? getTelegramLinkToOriginalAuthor(ctx) : aiAnswer.contact;
+        let contact = aiAnswer.contact;
+        const telegramAuthor = getTelegramOriginalAuthor(ctx.message)
+        if (aiAnswer.contactAuthorForMore) {
+            contact = telegramAuthor?.link
+            if (!contact) {
+                await reply(ctx, "⚠️ In deiner Nachricht forderst du Teilnehmer auf sich bei dir per Telegram zu melden, allerdings hast du in deinem Profil keinen Telegram Username eingetragen.\n\nBitte lege erst einen Telegram Username fest damit dich Teilnehmer per Telegram Link erreichen können. Danach kannst du mir die Nachricht erneut senden.")
+                return
+            }
+        }
+        console.log({ contact })
         const dbEntry = {
             name: aiAnswer.name,
             imageUrls: imageUrl ? [imageUrl] : [],
@@ -68,9 +77,11 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             latitude: coords?.lat,
             longitude: coords?.lng,
             price: aiAnswer.price,
-            description: aiAnswer.description,
+            description: aiAnswer.descriptionBrief,
+            host: telegramAuthor?.name,
+            hostLink: telegramAuthor?.link,
             sourceUrl: aiAnswer.url,
-            contact: aiAnswer.contactAuthorForMore ? aiAnswer.contact : undefined,
+            contact,
             source: "telegram",
         } satisfies InsertEvent
 
@@ -104,24 +115,61 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response('OK', { status: 200 });
 };
 
-
-function getTelegramLinkToOriginalAuthor(ctx: Context): string | undefined {
-    // Check if the message is a forwarded message and has 'forward_from' (user)
-    if (
-        ctx.message &&
-        'forward_from' in ctx.message &&
-        ctx.message.forward_from && // Ensure it's not null/undefined
-        typeof ctx.message.forward_from === 'object' && // Ensure it's an object
-        'id' in ctx.message.forward_from &&
-        ctx.message.forward_from.id // Ensure id is present and truthy (though id is a number)
-    ) {
-        const originalAuthorId = ctx.message.forward_from.id;
-        return `tg://user?id=${originalAuthorId}`;
+async function reply(ctx: Context, text: string) {
+    if (ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup") {
+        return // do not reply in groups
     }
-    // If forwarded from a channel ('forward_from_chat'), we could link to the channel,
-    // but the request is for the *author*.
-    // If 'forward_sender_name' is present, the user hid their account, so no direct ID link.
-    return undefined;
+    return ctx.reply(text)
+}
+
+function wasMessageForwarded(message: Context['message']): boolean {
+    if (!message) return false;
+    return 'forward_from' in message || 'forward_origin' in message;
+}
+
+function getTelegramOriginalAuthor(message: Context['message']) {
+    if (!message) return undefined;
+
+    let username: string | undefined;
+    let firstName: string | undefined;
+    let lastName: string | undefined;
+
+    if (wasMessageForwarded(message)) {
+        const msg = message as any;
+        username = msg?.forward_from?.username ??
+            msg.forward_origin?.chat?.username ??
+            msg.forward_origin?.sender_user?.username
+        firstName = msg?.forward_from?.first_name ??
+            msg.forward_origin?.chat?.first_name ??
+            msg.forward_origin?.sender_user?.first_name
+        lastName = msg?.forward_from?.last_name ??
+            msg.forward_origin?.chat?.last_name ??
+            msg.forward_origin?.sender_user?.last_name
+    } else {
+        firstName = message?.from.first_name;
+        lastName = message?.from.last_name;
+        username = message?.from.username;
+    }
+
+    console.log({ username, firstName, lastName })
+
+    let name: string | undefined;
+    if (firstName && lastName && username) {
+        name = `${firstName} ${lastName} (@${username})`;
+    } else if (firstName && lastName) {
+        name = `${firstName} ${lastName}`;
+    } else if (firstName && username) {
+        name = `${firstName} (@${username})`;
+    } else if (firstName) {
+        name = firstName;
+    } else if (username) {
+        name = username;
+    }
+    return {
+        name,
+        id: message?.from.id,
+        link: username ? `https://t.me/${username}` : undefined
+    };
 }
 
 async function wrapInTyping<T>(ctx: Context, fn: () => Promise<T>, enabled: boolean) {

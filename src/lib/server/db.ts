@@ -29,7 +29,7 @@ export async function insertEvent(event: InsertEvent) {
     return db.insert(s.events)
         .values(event)
         .onConflictDoUpdate({
-            target: schema.events.sourceUrl,
+            target: [schema.events.name, schema.events.startAt, schema.events.address],
             set: {
                 name: sql`excluded.name`,
                 startAt: sql`excluded.start_at`,

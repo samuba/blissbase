@@ -5,6 +5,8 @@ events:
 location settings:
   save to localstorage
 
+PWA installierbar
+
 deduplicate: wenn hostUrl schon einen hat zur selben zeit nimm den letzteren
 
 
