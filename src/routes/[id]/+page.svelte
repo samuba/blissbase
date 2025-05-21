@@ -5,10 +5,28 @@
 	import Money from '~icons/ph/money';
 	import ArrowLeft from '~icons/ph/arrow-left';
 	import Person from '~icons/ph/user-circle';
+	import TelegramLogo from '~icons/ph/telegram-logo';
+	import WhatsAppLogo from '~icons/ph/whatsapp-logo';
+	import Phone from '~icons/ph/phone';
+	import Envelope from '~icons/ph/envelope';
+	import PopOver from '$lib/components/PopOver.svelte';
 	let { data } = $props();
 	const { event } = $derived(data);
 
-	let registerUrl = $derived(event.sourceUrl ?? event.contact);
+	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | undefined = $derived.by(() => {
+		if (event.contact?.startsWith('https://t.me/')) {
+			return 'Telegram';
+		}
+		if (event.contact?.startsWith('https://wa.me/')) {
+			return 'WhatsApp';
+		}
+		if (event.contact?.startsWith('tel:')) {
+			return 'Telefon';
+		}
+		if (event.contact?.startsWith('mailto:')) {
+			return 'Email';
+		}
+	});
 </script>
 
 <div class="container mx-auto max-w-2xl sm:p-2">
@@ -19,7 +37,7 @@
 				Zurück
 			</button>
 		</div>
-		<div class="card bg-base-100 shadow-xl">
+		<div class="card card-border bg-base-100 shadow-xl">
 			{#if event.imageUrls && event.imageUrls.length > 0}
 				<div
 					class="rounded-t-2xl bg-cover bg-center"
@@ -62,9 +80,70 @@
 							</div>
 						{/if}
 
-						<a href={registerUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
-							Anmelden
-						</a>
+						{#if event.sourceUrl}
+							<a
+								href={event.sourceUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="btn-primary btn"
+							>
+								Anmelden
+							</a>
+						{:else if event.contact}
+							<PopOver contentClass="bg-base-100 p-4">
+								{#snippet trigger()}
+									<button class="btn btn-primary">Anmelden</button>
+								{/snippet}
+								{#snippet content()}
+									<span class="word-wrap">
+										Der Veranstalter möchte Anmeldungen per {contactMethod} erhalten.
+									</span>
+									<div class="mt-3 flex justify-center">
+										{#if contactMethod === 'Telegram'}
+											<a
+												href={event.contact}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="btn btn-primary"
+											>
+												<TelegramLogo class="size-5" />
+												Nachricht senden
+											</a>
+										{:else if contactMethod === 'WhatsApp'}
+											<a
+												href={event.contact}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="btn btn-primary"
+											>
+												<WhatsAppLogo class="size-5" />
+												Nachricht senden
+											</a>
+										{:else if contactMethod === 'Telefon'}
+											<a
+												href={event.contact}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="btn btn-primary"
+											>
+												<Phone class="size-5" />
+												Anrufen
+											</a>
+										{:else if contactMethod === 'Email'}
+											<a
+												href={event.contact}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="btn btn-primary"
+											>
+												<Envelope class="size-5" />
+												Email senden
+											</a>
+										{/if}
+									</div>
+								{/snippet}
+							</PopOver>
+						{/if}
 					</div>
 
 					{#if event.description}
@@ -111,14 +190,6 @@
 						<ArrowLeft class="mr-1 size-5" />
 						Zurück zur Übersicht
 					</a>
-					{#if event.sourceUrl}
-						<a
-							href={event.sourceUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="btn btn-secondary">View Source</a
-						>
-					{/if}
 				</div>
 			</div>
 		</div>

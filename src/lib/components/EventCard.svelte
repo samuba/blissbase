@@ -8,12 +8,7 @@
 	let noImage = $state(event.imageUrls?.[0] === undefined);
 </script>
 
-<a
-	href={event.sourceUrl ?? `/${event.id}`}
-	target={event.sourceUrl ? '_blank' : undefined}
-	rel={event.sourceUrl ? 'noopener noreferrer' : undefined}
-	class="w-full"
->
+<a href={`/${event.id}`} class="w-full">
 	<div
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg sm:flex-row {className}"
 	>

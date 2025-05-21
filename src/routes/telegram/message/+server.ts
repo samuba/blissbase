@@ -57,7 +57,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
 
         const addressArr = [aiAnswer.venue, aiAnswer.address ?? aiAnswer.city].filter(x => x?.trim())
         const coords = await geocodeAddressCached(addressArr, GOOGLE_MAPS_API_KEY || '')
-        let contact = aiAnswer.contact;
+        let contact = parseContact(aiAnswer.contact);
         const telegramAuthor = getTelegramOriginalAuthor(ctx.message)
         if (aiAnswer.contactAuthorForMore) {
             contact = telegramAuthor?.link
@@ -114,6 +114,24 @@ export const POST: RequestHandler = async ({ request }) => {
 
     return new Response('OK', { status: 200 });
 };
+
+function parseContact(contact: string | undefined) {
+    if (!contact?.trim()) return undefined;
+
+    if (contact.startsWith('@')) {
+        return `https://t.me/${contact.slice(1)}`
+    }
+    if (contact.startsWith('+')) {
+        return `tel:${contact}`
+    }
+    if (contact.startsWith('http')) {
+        return contact
+    }
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+        return `mailto:${contact}`
+    }
+    return contact;
+}
 
 async function reply(ctx: Context, text: string) {
     if (ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup") {
