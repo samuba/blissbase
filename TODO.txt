@@ -1,8 +1,9 @@
-  seijetzt: datum zeit falsch
-location automatisch benutzen 
-
+images telegram: selber hosten. Halten nur 1std
 
 events: 
+
+location settings:
+  save to localstorage
 
 deduplicate: wenn hostUrl schon einen hat zur selben zeit nimm den letzteren
 

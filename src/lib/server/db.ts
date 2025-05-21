@@ -3,7 +3,8 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import { neon, neonConfig } from '@neondatabase/serverless';
 import * as schema from './schema';
 import ws from 'ws';
-// import { DATABASE_URL } from '$env/static/private';
+import { sql } from 'drizzle-orm';
+import type { InsertEvent } from '$lib/types';
 
 neonConfig.webSocketConstructor = ws;
 
@@ -21,3 +22,31 @@ export const db = drizzle({
 });
 
 export * from 'drizzle-orm';
+
+export const s = schema
+
+export async function insertEvent(event: InsertEvent) {
+    return db.insert(s.events)
+        .values(event)
+        .onConflictDoUpdate({
+            target: schema.events.sourceUrl,
+            set: {
+                name: sql`excluded.name`,
+                startAt: sql`excluded.start_at`,
+                endAt: sql`excluded.end_at`,
+                address: sql`excluded.address`,
+                price: sql`excluded.price`,
+                description: sql`excluded.description`,
+                imageUrls: sql`excluded.image_urls`,
+                host: sql`excluded.host`,
+                hostLink: sql`excluded.host_link`,
+                contact: sql`excluded.contact`,
+                latitude: sql`excluded.latitude`,
+                longitude: sql`excluded.longitude`,
+                tags: sql`excluded.tags`,
+                source: sql`excluded.source`,
+                scrapedAt: sql`CURRENT_TIMESTAMP`,
+            }
+        })
+        .returning({ insertedId: schema.events.id });
+}

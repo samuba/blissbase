@@ -21,14 +21,13 @@
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
 import {
-    geocodeAddressFromEvent,
     WebsiteScraper,
     superTrim,
     parseGermanDate,
     fetchWithTimeout,
     REQUEST_DELAY_MS
 } from './common.ts';
-
+import { geocodeAddressCached } from '../src/lib/server/google.ts';
 export class AwaraScraper implements WebsiteScraper {
 
     async scrapeWebsite(): Promise<ScrapedEvent[]> {
@@ -121,7 +120,7 @@ export class AwaraScraper implements WebsiteScraper {
 
     async extractEventData(html: string, url: string) {
         const address = this.extractAddress(html);
-        const coordinates = await geocodeAddressFromEvent(address);
+        const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
         const startAt = this.extractStartAt(html);
         if (!startAt) return undefined;
 

@@ -24,10 +24,10 @@ import * as cheerio from 'cheerio';
 import {
     fetchWithTimeout,
     makeAbsoluteUrl as makeAbsoluteUrlCommon,
-    geocodeAddressFromEvent,
     WebsiteScraper,
     REQUEST_DELAY_MS
 } from "./common.ts";
+import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
 const BASE_URL = 'https://www.heilnetz.de';
 
@@ -182,7 +182,7 @@ export class HeilnetzScraper implements WebsiteScraper {
             }
 
             const address = this.extractAddress(html) || [];
-            const coordinates = await geocodeAddressFromEvent(address);
+            const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
 
             return {
                 name,

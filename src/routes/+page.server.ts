@@ -1,10 +1,10 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { events as eventsTable } from '../lib/server/schema';
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc, eq } from 'drizzle-orm';
 import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { geocodeLocation } from '$lib/common';
+import { geocodeAddressCached } from '$lib/server/google';
 
 export const load = (async ({ url }) => {
     // Get params as string | null
@@ -103,7 +103,7 @@ export const load = (async ({ url }) => {
             }
         } else if (plzCityParam && plzCityParam.trim() !== '') {
             // Only geocode if plzCityParam is provided and not empty, and lat/lng are not present
-            geocodedCoords = await geocodeLocation(plzCityParam, GOOGLE_MAPS_API_KEY);
+            geocodedCoords = await geocodeAddressCached([plzCityParam], GOOGLE_MAPS_API_KEY);
         }
 
         if (geocodedCoords) {
@@ -164,6 +164,8 @@ export const load = (async ({ url }) => {
             allConditions.push(searchTermCondition);
         }
     }
+
+    allConditions.push(eq(eventsTable.source, 'telegram'))
 
     const finalCondition = allConditions.length > 0 ? and(...allConditions) : undefined;
 

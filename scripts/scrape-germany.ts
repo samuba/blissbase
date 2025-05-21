@@ -148,7 +148,7 @@ try {
             event.tags = [...new Set(event.tags)] // Ensure tags are unique
             // Use insert with onConflictDoUpdate to handle potential duplicate permalinks
             await db.insert(schema.events)
-                .values(event as unknown as typeof schema.events.$inferInsert)
+                .values(event)
                 .onConflictDoUpdate({
                     target: schema.events.permalink, // Conflict target
                     set: { // Update all fields except permalink and scrapedAt

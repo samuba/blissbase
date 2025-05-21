@@ -88,7 +88,7 @@
 	}
 </script>
 
-<a href={event.permalink} target="_blank" rel="noopener noreferrer" class="w-full">
+<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="w-full">
 	<div
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg sm:flex-row {className}"
 	>

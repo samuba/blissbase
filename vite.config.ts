@@ -8,5 +8,8 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit(),
 		Icons({ compiler: 'svelte', })
-	]
+	],
+	server: {
+		allowedHosts: ['localdev.soulspots.app', 'localhost', '127.0.0.1']
+	}
 });

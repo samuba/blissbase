@@ -22,11 +22,11 @@ import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 import {
     REQUEST_DELAY_MS,
-    geocodeAddressFromEvent,
     WebsiteScraper, // Import WebsiteScraper
     fetchWithTimeout
 } from "./common.ts";
 import { sleep } from "bun";
+import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
 const BASE_URL = "https://sei.jetzt";
 const START_PATH = "/"; // Main page seems to list events
@@ -387,7 +387,7 @@ export class SeijetztScraper implements WebsiteScraper {
             endAt = undefined;
         }
 
-        const coordinates = await geocodeAddressFromEvent(this.extractAddress(html) || []);
+        const coordinates = await geocodeAddressCached(this.extractAddress(html) || [], process.env.GOOGLE_MAPS_API_KEY || '');
 
         return {
             name,
