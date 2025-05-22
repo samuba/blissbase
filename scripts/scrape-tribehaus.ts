@@ -352,7 +352,7 @@ export class TribehausScraper implements WebsiteScraper {
             imageUrls: this.extractImageUrls(html) || [],
             host: this.extractHost(html),
             hostLink: this.extractHostLink(html),
-            permalink,
+            sourceUrl: permalink,
             latitude,
             longitude,
             tags: this.extractTags(html) || [],

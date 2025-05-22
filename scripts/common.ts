@@ -1,8 +1,5 @@
-import { geocodeCache } from "../src/lib/server/schema";
-import { db, eq } from '../src/lib/server/db.ts';
 import { ScrapedEvent } from "../src/lib/types.ts";
 
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 /**
  * Common timeout for fetch requests in milliseconds

@@ -194,7 +194,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                 imageUrls: this.extractImageUrls(html) || [],
                 host: this.extractHost(html),
                 hostLink: this.extractHostLink(html),
-                permalink: url,
+                sourceUrl: url,
                 latitude: coordinates?.lat || null,
                 longitude: coordinates?.lng || null,
                 tags: this.extractTags(html) || [],

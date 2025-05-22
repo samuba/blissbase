@@ -91,7 +91,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
 
         if (isGroup) return; // dont answer in groups
 
-        await ctx.reply(JSON.stringify({ ...aiAnswer, imageUrl, coords, permalink: aiAnswer.url, contact }, null, 2))
+        await ctx.reply(JSON.stringify({ ...aiAnswer, imageUrl, coords, sourceUrl: aiAnswer.url, contact }, null, 2))
         await ctx.reply("Der Event wurde erfolgreich erstellt")
 
     } catch (error) {

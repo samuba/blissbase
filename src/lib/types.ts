@@ -13,10 +13,10 @@ export interface ScrapedEvent {
     imageUrls: string[]; // All images from detail page
     host: string | null | undefined; // Host name (artist/organizer)
     hostLink: string | null | undefined; // Link to host profile
-    permalink: string; // Event detail page URL (should be unique)
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     tags: string[]; // Tags/Categories from the event page
+    sourceUrl: string; // Event detail page URL (should be unique)
     source: string; // Source of the event e.g. 'awara', 'tribehaus', 'heilnetz', 'seijetzt'
 }
 
