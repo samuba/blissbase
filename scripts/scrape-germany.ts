@@ -15,7 +15,7 @@ import { AwaraScraper } from './scrape-awara.ts';
 import { TribehausScraper } from './scrape-tribehaus.ts';
 import { HeilnetzScraper } from './scrape-heilnetz.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
-import { db } from "../src/lib/server/db.ts";
+import { db, insertEvent } from "../src/lib/server/db.ts";
 
 const SOURCE_HOSTS = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
 
@@ -146,29 +146,8 @@ try {
     for (const event of eventsToInsert) {
         try {
             event.tags = [...new Set(event.tags)] // Ensure tags are unique
-            // Use insert with onConflictDoUpdate to handle potential duplicate permalinks
-            await db.insert(schema.events)
-                .values(event)
-                .onConflictDoUpdate({
-                    target: schema.events.permalink, // Conflict target
-                    set: { // Update all fields except permalink and scrapedAt
-                        name: sql`excluded.name`,
-                        startAt: sql`excluded.start_at`,
-                        endAt: sql`excluded.end_at`,
-                        address: sql`excluded.address`,
-                        price: sql`excluded.price`,
-                        description: sql`excluded.description`,
-                        imageUrls: sql`excluded.image_urls`,
-                        host: sql`excluded.host`,
-                        hostLink: sql`excluded.host_link`,
-                        latitude: sql`excluded.latitude`,
-                        longitude: sql`excluded.longitude`,
-                        tags: sql`excluded.tags`,
-                        // Update scrapedAt timestamp on update as well
-                        scrapedAt: sql`CURRENT_TIMESTAMP`,
-                    }
-                })
-                .returning({ insertedId: schema.events.id });
+
+            await insertEvent(event);
 
             successCount++;
 
@@ -178,6 +157,7 @@ try {
             }
         } catch (error) {
             console.error(`Error inserting event "${event.name}":`, error);
+            throw error;
         }
     }
 
