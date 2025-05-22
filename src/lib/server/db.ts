@@ -45,6 +45,7 @@ export async function insertEvent(event: InsertEvent) {
                 longitude: sql`excluded.longitude`,
                 tags: sql`excluded.tags`,
                 source: sql`excluded.source`,
+                sourceUrl: sql`excluded.source_url`,
                 scrapedAt: sql`CURRENT_TIMESTAMP`,
             }
         })
