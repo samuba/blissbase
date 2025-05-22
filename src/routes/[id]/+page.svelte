@@ -7,6 +7,7 @@
 	import Person from '~icons/ph/user-circle';
 	import TelegramLogo from '~icons/ph/telegram-logo';
 	import WhatsAppLogo from '~icons/ph/whatsapp-logo';
+	import ArrowSquareOut from '~icons/ph/arrow-square-out';
 	import Phone from '~icons/ph/phone';
 	import Envelope from '~icons/ph/envelope';
 	import PopOver from '$lib/components/PopOver.svelte';
@@ -87,11 +88,12 @@
 							class="btn-primary btn"
 						>
 							Anmelden
+							<ArrowSquareOut class="size-5" />
 						</a>
 					{:else if event.contact}
 						<PopOver contentClass="bg-base-100 p-4">
 							{#snippet trigger()}
-								<button class="btn btn-primary">Anmelden</button>
+								<button class="btn btn-primary"> Anmelden </button>
 							{/snippet}
 							{#snippet content()}
 								<span class="word-wrap">
