@@ -8,7 +8,7 @@
  * bun run scripts/scrape-germany.ts awara
  */
 
-import { eq } from 'drizzle-orm'; // Import eq from drizzle-orm directly
+import { eq, inArray } from 'drizzle-orm'; // Import eq from drizzle-orm directly
 import type { ScrapedEvent } from '../src/lib/types.ts';
 import * as schema from '../src/lib/server/schema.ts';
 import { AwaraScraper } from './scrape-awara.ts';
@@ -17,7 +17,7 @@ import { HeilnetzScraper } from './scrape-heilnetz.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db, insertEvent } from "../src/lib/server/db.ts";
 
-const SOURCE_HOSTS = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
+const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
 
 console.log('--- Starting Germany Event Scraper ---');
 
@@ -32,20 +32,20 @@ if (args.length > 0) {
         console.log(`Attempting to load events from JSON file: ${jsonFilePath}`);
         if (args.length > 1) {
             const sourceArgLower = args[1].toLowerCase();
-            if (SOURCE_HOSTS.includes(sourceArgLower)) {
+            if (SCRAPE_SOURCES.includes(sourceArgLower)) {
                 targetSourceArg = sourceArgLower;
                 console.log(`Targeting source: '${targetSourceArg}' for JSON event filtering and DB clearing.`);
             } else {
-                console.warn(`Warning: Invalid source argument '${args[1]}' provided with JSON file. It will be ignored for filtering. Valid sources: ${SOURCE_HOSTS.join(', ')}. If clearing by source from JSON, ensure the source name is valid.`);
+                console.warn(`Warning: Invalid source argument '${args[1]}' provided with JSON file. It will be ignored for filtering. Valid sources: ${SCRAPE_SOURCES.join(', ')}. If clearing by source from JSON, ensure the source name is valid.`);
             }
         }
     } else {
         const sourceArgLower = args[0].toLowerCase();
-        if (SOURCE_HOSTS.includes(sourceArgLower)) {
+        if (SCRAPE_SOURCES.includes(sourceArgLower)) {
             targetSourceArg = sourceArgLower;
             console.log(`Targeting single source for scraping: ${targetSourceArg}`);
         } else {
-            console.warn(`Invalid source argument: ${args[0]}. Valid sources are: ${SOURCE_HOSTS.join(', ')}. Scraping all sources.`);
+            console.warn(`Invalid source argument: ${args[0]}. Valid sources are: ${SCRAPE_SOURCES.join(', ')}. Scraping all sources.`);
         }
     }
 }
@@ -153,7 +153,7 @@ if (jsonFilePath) {
         // JSON file provided, and a specific targetSourceArg for that JSON's events
         console.log(`Clearing existing events from source '${targetSourceArg}' (specified with JSON input)...`);
         try {
-            const re = await db.delete(schema.events).where(eq(schema.events.host, targetSourceArg));
+            const re = await db.delete(schema.events).where(eq(schema.events.source, targetSourceArg));
             console.log(` -> ${re.rowCount} existing events for host '${targetSourceArg}' cleared.`);
         } catch (error) {
             console.error(`Error clearing existing events for source '${targetSourceArg}':`, error);
@@ -182,17 +182,17 @@ if (jsonFilePath) {
     // Original logic: No JSON file, but a specific targetSourceArg for scraping
     console.log(`Clearing existing events from source '${targetSourceArg}'...`);
     try {
-        const re = await db.delete(schema.events).where(eq(schema.events.host, targetSourceArg));
+        const re = await db.delete(schema.events).where(eq(schema.events.source, targetSourceArg));
         console.log(` -> ${re.rowCount} existing events for host '${targetSourceArg}' cleared `);
     } catch (error) {
         console.error(`Error clearing existing events for source '${targetSourceArg}':`, error);
         process.exit(1);
     }
 } else {
-    // Original logic: No JSON file, no targetSourceArg - clear all
-    console.log('Clearing ALL existing events from the database...');
+    // Original logic: No JSON file, no targetSourceArg - clear all scraped events
+    console.log('Clearing ALL scraped events from the database...');
     try {
-        await db.delete(schema.events);
+        await db.delete(schema.events).where(inArray(schema.events.source, SCRAPE_SOURCES));
         console.log(' -> Existing events cleared successfully.');
     } catch (error) {
         console.error('Error clearing existing events:', error);
