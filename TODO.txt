@@ -1,19 +1,15 @@
 images telegram: selber hosten. Halten nur 1std
+download images and serve
 
-events: 
+telegram: save sender userId, only them can update an event
 
 location settings:
   save to localstorage
 
 PWA installierbar
 
-deduplicate: wenn hostUrl schon einen hat zur selben zeit nimm den letzteren
+wenn 2 messages gleichzeitig verarbeitet werden funzt es nicht??
 
-
-
-reverse geocoding
-  adress cache
-download images and serve
 
 
 tribehaus

@@ -57,6 +57,7 @@ async function geocodeLocation(location: string, apiKey: string): Promise<{ lat:
         return null;
     }
     try {
+        console.log("calling google geocode api with", location)
         const response = await fetch(
             `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${apiKey}&language=de&region=DE`
         );

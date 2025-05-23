@@ -26,6 +26,14 @@ export * from 'drizzle-orm';
 export const s = schema
 
 export async function insertEvent(event: InsertEvent) {
+    // trim all strings 
+    type EventKey = keyof InsertEvent;
+    for (const key in event) {
+        if (Object.prototype.hasOwnProperty.call(event, key) && typeof event[key as EventKey] === 'string') {
+            (event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
+        }
+    }
+
     return db.insert(s.events)
         .values(event)
         .onConflictDoUpdate({
@@ -37,6 +45,7 @@ export async function insertEvent(event: InsertEvent) {
                 address: sql`excluded.address`,
                 price: sql`excluded.price`,
                 description: sql`excluded.description`,
+                summary: sql`excluded.summary`,
                 imageUrls: sql`excluded.image_urls`,
                 host: sql`excluded.host`,
                 hostLink: sql`excluded.host_link`,

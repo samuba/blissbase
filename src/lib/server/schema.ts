@@ -8,21 +8,20 @@ export const events = pgTable('events', {
     address: text().notNull().array(),
     price: text(),
     description: text(),
+    summary: text(),
     imageUrls: text().notNull().array(),
     host: text(),
     hostLink: text(),
-    sourceUrl: text().unique(),
+    sourceUrl: text(),
     contact: text(),
     latitude: real(),
     longitude: real(),
     tags: text().array(),
     source: text().notNull(),
     scrapedAt: timestamp().notNull().defaultNow(),
-}, (table) => {
-    return {
-        uniqueNameStartAtAddress: unique().on(table.name, table.startAt, table.address),
-    };
-});
+}, (t) => [
+    unique().on(t.name, t.startAt, t.address)
+]);
 
 export const geocodeCache = pgTable('geocode_cache', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),

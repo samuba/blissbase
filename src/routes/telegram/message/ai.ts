@@ -6,6 +6,7 @@ export async function aiExtractEventData(message: string): Promise<MsgAnalysisAn
 }
 
 export async function promptAi<T>(message: string, systemPrompt: string = "") {
+    // console.log("promptAi", { message, systemPrompt, })
     const response = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
         headers: {
@@ -13,7 +14,7 @@ export async function promptAi<T>(message: string, systemPrompt: string = "") {
             'Authorization': `Bearer ${OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-            "model": "o4-mini",
+            "model": "o4-mini-2025-04-16",
             "input": [
                 {
                     "role": "developer",
@@ -40,7 +41,7 @@ export async function promptAi<T>(message: string, systemPrompt: string = "") {
                 }
             },
             "reasoning": {
-                "effort": "medium"
+                "effort": "low"
             },
             "tools": [],
             "store": true
@@ -74,9 +75,9 @@ Extract the following information from the messages:
 
 "hasEventData": boolean. wether or not the message contains information about an event.
 
-"name": string. the name of the event. needs to be an exact copy from the message. if there is no name in the text create a short descriptive name with not much personality
+"name": string. the name of the event. needs to be an exact copy from the message without html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as its obvious that every event is an invitation. if there is no name in the text create a short descriptive name with not much personality.
 
-"description": string. A exact copy from the message. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the name of the event at the start of the description.
+"description": string. A exact copy from the message, including html tags. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the name of the event at the start of the description.
 
 "descriptionBrief": string. The same content as in "description" field but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it.
 
@@ -88,15 +89,15 @@ Extract the following information from the messages:
 
 "url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider urls for this that start with "https://t.me".
 
-"contact": string. If the text contains contact information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host.
+"contact": string. If the text contains contact or registration information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host or register for the event. Only add the main registration/contact method, not multiple.
 
 "contactAuthorForMore": boolean. Wether the message states to contact the sender/author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
 
-"price": string. The price or costs of the event for the guest. If the price information includes new lines do not extract the price.
+"price": string. The price or costs of the event for the guest. Without html tags. If the price information includes new lines or is longer than 100 characters do not extract the price.
 
-"venue": string. Name of the location/venue where the event is taking place.
+"venue": string. Name of the location/venue where the event is taking place. Without html tags.
 
-"address": string. The full address where the event is happening.
+"address": string. The full address where the event is happening. Without html tags.
 
 "city": string. Name of the city/town where the event is happening.
 
@@ -119,10 +120,10 @@ export type MsgAnalysisAnswer = {
     url: string;
     contact?: string;
     contactAuthorForMore: boolean;
-    price: string;
-    venue: string;
-    address: string;
-    city: string;
+    price?: string;
+    venue?: string;
+    address?: string;
+    city?: string;
     tags: string[];
     emojis: string;
 }

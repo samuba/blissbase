@@ -11,11 +11,12 @@
 	import Phone from '~icons/ph/phone';
 	import Envelope from '~icons/ph/envelope';
 	import PopOver from '$lib/components/PopOver.svelte';
+
 	let { data } = $props();
 	const { event } = $derived(data);
 
 	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | undefined = $derived.by(() => {
-		if (event.contact?.startsWith('https://t.me/')) {
+		if (event.contact?.startsWith('tg://')) {
 			return 'Telegram';
 		}
 		if (event.contact?.startsWith('https://wa.me/')) {
@@ -28,6 +29,30 @@
 			return 'Email';
 		}
 	});
+
+	function fixTelegramUnsupportedChars(text: string) {
+		return text
+			.replace(/'/g, '"')
+			.replace(/ä/g, 'ae')
+			.replace(/ö/g, 'oe')
+			.replace(/ü/g, 'ue')
+			.replace(/ß/g, 'ss')
+			.replace(/Ä/g, 'Ae')
+			.replace(/Ö/g, 'Oe')
+			.replace(/Ü/g, 'Ue')
+			.replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Remove emojis
+			.replace(/[\^\\|]/g, '') // remove special chars known to break in telegram links. These work fine: !@#$%&*()_+-=[]{};":,.<>/?
+			.trim();
+	}
+
+	const contactMessage = $derived(
+		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
+		encodeURIComponent(
+			fixTelegramUnsupportedChars(
+				`Hi, ich möchte am Event '${event.name}' (${event.startAt.toLocaleDateString('de-DE')}) teilnehmen.`
+			)
+		)
+	);
 </script>
 
 <div class="container mx-auto max-w-2xl sm:p-2">
@@ -91,18 +116,30 @@
 							<ArrowSquareOut class="size-5" />
 						</a>
 					{:else if event.contact}
-						<PopOver contentClass="bg-base-100 p-4">
+						<PopOver contentClass="bg-base-100 p-5 max-w-sm">
 							{#snippet trigger()}
 								<button class="btn btn-primary"> Anmelden </button>
 							{/snippet}
 							{#snippet content()}
 								<span class="word-wrap">
-									Der Veranstalter möchte Anmeldungen per {contactMethod} erhalten.
+									Der Veranstalter möchte Anmeldungen per <b> {contactMethod}</b> erhalten.
+									{#if contactMethod === 'Telegram'}
+										Eventuell musst du
+										<a
+											href="https://telegram.org"
+											target="_blank"
+											rel="noopener noreferrer"
+											class="underline"
+										>
+											Telegram Messenger
+										</a>
+										erst installieren.
+									{/if}
 								</span>
 								<div class="mt-3 flex justify-center">
 									{#if contactMethod === 'Telegram'}
 										<a
-											href={event.contact}
+											href={event.contact + `&text=${contactMessage}&parse_mode=HTML`}
 											target="_blank"
 											rel="noopener noreferrer"
 											class="btn btn-primary"
