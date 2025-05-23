@@ -8,6 +8,7 @@ export const events = pgTable('events', {
     address: text().notNull().array(),
     price: text(),
     description: text(),
+    descriptionOriginal: text(),
     summary: text(),
     imageUrls: text().notNull().array(),
     host: text(),

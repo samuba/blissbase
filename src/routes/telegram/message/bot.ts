@@ -38,7 +38,6 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             }
         }
         const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
-
         const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
         if (!aiAnswer.hasEventData) {
             await ctx.reply("Aus dieser Nachricht konnte ich keine Eventdaten extrahieren")
@@ -79,6 +78,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             longitude: coords?.lng,
             price: aiAnswer.price,
             description: aiAnswer.descriptionBrief,
+            descriptionOriginal: msgTextHtml,
             summary: aiAnswer.summary,
             host: telegramAuthor?.name,
             hostLink: telegramAuthor?.link,

@@ -45,6 +45,7 @@ export async function insertEvent(event: InsertEvent) {
                 address: sql`excluded.address`,
                 price: sql`excluded.price`,
                 description: sql`excluded.description`,
+                descriptionOriginal: sql`excluded.description_original`,
                 summary: sql`excluded.summary`,
                 imageUrls: sql`excluded.image_urls`,
                 host: sql`excluded.host`,

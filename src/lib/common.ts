@@ -65,10 +65,7 @@ export function formatAddress(address: string[]): string {
     const bundeslaender = [
         'Bayern',
         'Baden-Württemberg',
-        'Berlin',
         'Brandenburg',
-        'Bremen',
-        'Hamburg',
         'Hessen',
         'Mecklenburg-Vorpommern',
         'Niedersachsen',
@@ -81,10 +78,30 @@ export function formatAddress(address: string[]): string {
         'Thüringen'
     ];
 
+    const cityStates = [
+        'Berlin',
+        'Hamburg',
+        'Bremen',
+    ]
+
+    const seenCityStates = new Set<string>();
+
     const formattedAddress = address
         .filter(
-            (x) => !bundeslaender.includes(x.trim()) && !x.trim().match(/\d{5}$/) // no zip codes at end of string
+            (x) => !bundeslaender.includes(x.trim()) // no bundeslaender
+                && !x.trim().match(/\d{5}$/) // no zip codes at end of string
         )
+        .filter((x) => {
+            const trimmed = x.trim();
+            // If it's a city state, check if we've seen it before
+            if (cityStates.includes(trimmed)) {
+                if (seenCityStates.has(trimmed)) {
+                    return false; // Skip duplicate city state
+                }
+                seenCityStates.add(trimmed);
+            }
+            return true;
+        })
         .map((x) => {
             return x
                 .replace(/Deutschland/g, 'DE')
