@@ -93,7 +93,7 @@ export async function promptGeminiAi<T>(message: string, systemPrompt: string = 
     let body: GeminiResponse | undefined;
     try {
         body = await response.json() as GeminiResponse;
-        return JSON.parse(body.candidates?.[0]?.content?.parts?.[0]?.text || '{}') as T;
+        return JSON.parse(body.candidates?.[0]?.content?.parts?.[0]?.text || '{ "hasEventData": false }') as T;
     } catch (e) {
         console.error("Failed to parse Gemini response as JSON", e)
         console.log("Gemini response", body)
@@ -152,8 +152,7 @@ export async function promptOpenAi<T>(message: string, systemPrompt: string = ""
     const answer = data.output.find(o => o.type === "message" && o.status === 'completed')?.content?.[0]?.text;
 
     try {
-        const parsedContent = JSON.parse(answer || '{ "hasEventData": false }') as T;
-        return { ...data, answer: parsedContent };
+        return JSON.parse(answer || '{ "hasEventData": false }') as T;
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         throw new Error(`Failed to parse OpenAI response as JSON: ${errorMessage}`);

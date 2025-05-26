@@ -1,7 +1,14 @@
+BUGS
+  seijetzt hat keine text formatierungen
+
 images telegram: selber hosten. Halten nur 1std
 download images and serve
 
+infos aus bildern extrahieren
+
 telegram: save sender userId, only them can update an event
+
+feste kategorien wie bei hipsy
 
 location settings:
   save to localstorage
@@ -14,3 +21,7 @@ wenn 2 messages gleichzeitig verarbeitet werden funzt es nicht??
 
 tribehaus
   ganztägig korrekt erfassen https://tribehaus.org/event/lebensgeschenk
+
+
+
+

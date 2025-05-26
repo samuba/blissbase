@@ -37,23 +37,23 @@
 	// Effect to initialize component state from props
 	$effect(() => {
 		async function initializeLocationState() {
-			// First, check for existing geolocation permission if no initial location/distance is provided
-			if (!initialLocation && !initialDistance) {
-				try {
-					const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-					if (permissionStatus.state === 'granted') {
-						// If permission is granted, and no initial location is set, use current location.
-						// We also ensure `usingCurrentLocation` isn't already true from a 'coords:' initialLocation.
-						if (!usingCurrentLocation) {
-							handleUseCurrentLocationClick(); // This function now handles its own state updates.
-							return; // Exit early as location is being fetched.
-						}
-					}
-				} catch (error) {
-					console.warn('Could not query geolocation permission:', error);
-					// Proceed to manual/prop initialization if permission query fails
-				}
-			}
+			// // First, check for existing geolocation permission if no initial location/distance is provided
+			// if (!initialLocation && !initialDistance) {
+			// 	try {
+			// 		const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+			// 		if (permissionStatus.state === 'granted') {
+			// 			// If permission is granted, and no initial location is set, use current location.
+			// 			// We also ensure `usingCurrentLocation` isn't already true from a 'coords:' initialLocation.
+			// 			if (!usingCurrentLocation) {
+			// 				handleUseCurrentLocationClick(); // This function now handles its own state updates.
+			// 				return; // Exit early as location is being fetched.
+			// 			}
+			// 		}
+			// 	} catch (error) {
+			// 		console.warn('Could not query geolocation permission:', error);
+			// 		// Proceed to manual/prop initialization if permission query fails
+			// 	}
+			// }
 
 			// Existing logic for initializing from props
 			if (initialLocation?.startsWith('coords:')) {

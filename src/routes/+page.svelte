@@ -26,26 +26,19 @@
 	let searchInputElement = $state<HTMLInputElement | null>(null);
 
 	const sortOptions = $state([
-		{ value: 'time_asc', label: 'Sort: Startzeit' },
-		// { value: 'time_desc', label: 'Time (Latest First)' },
-		{ value: 'distance_asc', label: 'Sort: Distanz' }
-		// { value: 'distance_desc', label: 'Distance (Farthest First)' }
-	]);
-
-	const sortOptions2 = $state([
 		{ value: 'time_asc', label: 'Startzeit', icon: SortAscendingSvg },
 		// { value: 'time_desc', label: 'Time (Latest First)' },
 		{ value: 'distance_asc', label: 'Distanz', icon: SortAscendingSvg }
 		// { value: 'distance_desc', label: 'Distance (Farthest First)' }
 	]);
 
+	let selectedSortValue = $state(getSortValue(pagination.sortBy, pagination.sortOrder));
+
 	function getSortValue(sortBy?: string | null, sortOrder?: string | null) {
 		const sb = sortBy ?? 'time';
 		const so = sortOrder ?? 'asc';
 		return `${sb}_${so}`;
 	}
-
-	let selectedSortValue = $state(getSortValue(pagination.sortBy, pagination.sortOrder));
 
 	function buildAndGoToUrl(
 		pageReset: boolean,
@@ -230,7 +223,7 @@
 		<div class="">
 			<label for="sort-select" class="sr-only">Sortieren nach</label>
 			<Select
-				items={sortOptions2}
+				items={sortOptions}
 				type="single"
 				value={selectedSortValue}
 				onValueChange={handleSortChanged}

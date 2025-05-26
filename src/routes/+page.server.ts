@@ -165,7 +165,7 @@ export const load = (async ({ url }) => {
         }
     }
 
-    allConditions.push(eq(eventsTable.source, 'telegram'))
+    // allConditions.push(eq(eventsTable.source, 'telegram'))
 
     const finalCondition = allConditions.length > 0 ? and(...allConditions) : undefined;
 

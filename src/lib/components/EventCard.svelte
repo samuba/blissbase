@@ -19,16 +19,16 @@
 		>
 			{#if noImage}{:else}
 				<div
-					class="rounded-t-lg bg-cover bg-center"
+					class="h-full rounded-t-lg bg-cover bg-center"
 					style="background-image: url({event.imageUrls?.[0]})"
 				>
 					<figure
-						class="rounded-t-lg backdrop-blur-md backdrop-brightness-85 sm:rounded-l-lg sm:rounded-tr-none"
+						class="h-full rounded-t-lg backdrop-blur-md backdrop-brightness-85 sm:rounded-l-lg sm:rounded-tr-none"
 					>
 						<img
 							src={event.imageUrls?.[0]}
 							alt="illustration for event: {event.name}"
-							class="max-h-96 w-fit max-w-full object-cover"
+							class="h-full max-h-72 max-w-full object-cover"
 							onerror={() => (noImage = true)}
 						/>
 					</figure>
