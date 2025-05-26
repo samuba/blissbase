@@ -222,7 +222,7 @@ export class TribehausScraper implements WebsiteScraper {
 
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html);
-        const description = $('#description blockquote.readmore').text().trim();
+        const description = $('#description blockquote.readmore').html()?.trim();
         return description || undefined;
     }
 

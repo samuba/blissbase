@@ -184,7 +184,9 @@ export class AwaraScraper implements WebsiteScraper {
     }
     extractDescription(html: string) {
         const $ = cheerio.load(html);
-        return $('.wpem-single-event-body-content').text()?.trim();
+        const eventBody = $('.wpem-single-event-body-content')
+        eventBody.find('.wpem-single-event-ticket-information').remove();
+        return eventBody.html()?.trim();
     }
     extractImageUrls(html: string) {
         const $ = cheerio.load(html);

@@ -346,11 +346,6 @@ export class HeilnetzScraper implements WebsiteScraper {
             }
         });
 
-        if (!description) {
-            const htmlDesc = this.extractHtmlDescription($);
-            description = htmlDesc === null ? undefined : htmlDesc;
-        }
-
         if (description && typeof description === 'string') {
             description = description.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');
         }
@@ -519,33 +514,6 @@ export class HeilnetzScraper implements WebsiteScraper {
 
         console.warn("Could not determine last page number from pagination. Assuming only one page.");
         return 1; // Default to 1 if pagination or last page number isn't found
-    }
-
-    /**
-     * Extracts and cleans the event description HTML from the main content area.
-     * This is a fallback if LD+JSON description is not available or insufficient.
-     */
-    private extractHtmlDescription($: cheerio.CheerioAPI | cheerio.Root): string | null {
-        // Selector for the description container based on the new example page
-        const descriptionContainer = $('.mod_eventreader .col-12.col-lg-7').first();
-        if (!descriptionContainer.length) return null;
-
-        // The actual content seems to be within a div, then paragraphs or other elements
-        // We take the div that is a direct child of descriptionContainer, or descriptionContainer itself
-        const contentHolder = descriptionContainer.children('div').first().length ? descriptionContainer.children('div').first() : descriptionContainer;
-
-        let descriptionHtml = '';
-        // Iterate over direct children of the content holder
-        contentHolder.children().each((_i, el) => {
-            const $el = $(el);
-            // Avoid shariff buttons or other non-description elements if they appear
-            if ($el.hasClass('shariff')) {
-                return false; // Stop .each loop
-            }
-            descriptionHtml += $.html($el)?.trim() + '\n';
-        });
-
-        return descriptionHtml.trim() || null;
     }
 
     /**

@@ -257,22 +257,13 @@ export class SeijetztScraper implements WebsiteScraper {
 
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
-        let description: string | null = null;
-        const potentialDescSelectors = ['.prose', '.entry-content', 'article', '.event-description', '.fi-section-content', '.description', '#description', 'div[class*="description"]', 'div[class*="content"]'];
-        for (const selector of potentialDescSelectors) {
-            const element = $(selector).first();
-            if (element.length > 0 && element.closest('aside, .sidebar').length === 0) {
-                const descriptionText = element.text().trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
-                if (descriptionText && descriptionText.length > 50) { description = descriptionText; break; }
-            }
-        }
-        if (!description) {
-            $('p').each((_i, p) => {
-                const text = $(p).text().trim().replace(/\s+/g, ' ').replace(/\u00A0/g, ' ');
-                if (text.length > 100) { description = text; return false; }
-            });
-        }
-        return description ?? undefined;
+        let description: string | undefined;
+        $('.prose').each((_i, el) => {
+            // first ".prose" element is probably the description
+            description = $(el).html() ?? undefined;
+            return;
+        });
+        return description;
     }
 
     extractImageUrls(html: string): string[] | undefined {
