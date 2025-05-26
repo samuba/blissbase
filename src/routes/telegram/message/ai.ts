@@ -1,11 +1,107 @@
-import { OPENAI_API_KEY } from "$env/static/private";
+import { OPENAI_API_KEY, GEMINI_API_KEY } from "$env/static/private";
 
 export async function aiExtractEventData(message: string): Promise<MsgAnalysisAnswer> {
-    const { answer } = await promptAi<MsgAnalysisAnswer>(message, msgAnalysisSystemPrompt)
+    const answer = await promptGeminiAi<MsgAnalysisAnswer>(message, msgAnalysisSystemPrompt())
+    console.log("gemini answer", JSON.stringify(answer, null, 2))
     return answer;
 }
 
-export async function promptAi<T>(message: string, systemPrompt: string = "") {
+export async function promptGeminiAi<T>(message: string, systemPrompt: string = "") {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [
+                {
+                    role: "user",
+                    parts: [{
+                        text: systemPrompt + "\n\nThe message to extract information from is:\n\n" + message
+                    }]
+                }
+            ],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "object",
+                    properties: {
+                        hasEventData: {
+                            type: "boolean"
+                        },
+                        name: {
+                            type: "string"
+                        },
+                        description: {
+                            type: "string"
+                        },
+                        descriptionBrief: {
+                            type: "string"
+                        },
+                        summary: {
+                            type: "string"
+                        },
+                        startDate: {
+                            type: "string",
+                            format: "date-time"
+                        },
+                        endDate: {
+                            type: "string",
+                            format: "date-time"
+                        },
+                        url: {
+                            type: "string",
+                        },
+                        contact: {
+                            type: "string"
+                        },
+                        contactAuthorForMore: {
+                            type: "boolean"
+                        },
+                        price: {
+                            type: "string"
+                        },
+                        venue: {
+                            type: "string"
+                        },
+                        address: {
+                            type: "string"
+                        },
+                        city: {
+                            type: "string"
+                        },
+                        tags: {
+                            type: "array",
+                            items: {
+                                type: "string"
+                            }
+                        },
+                        emojis: {
+                            type: "string"
+                        }
+                    },
+                    required: ["hasEventData"]
+                }
+            }
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Gemini API call failed: ${response.status}, ${response.statusText}, ${await response.text()}`);
+    }
+
+    let body: GeminiResponse | undefined;
+    try {
+        body = await response.json() as GeminiResponse;
+        return JSON.parse(body.candidates?.[0]?.content?.parts?.[0]?.text || '{}') as T;
+    } catch (e) {
+        console.error("Failed to parse Gemini response as JSON", e)
+        console.log("Gemini response", body)
+        throw e;
+    }
+}
+
+export async function promptOpenAi<T>(message: string, systemPrompt: string = "") {
     // console.log("promptAi", { message, systemPrompt, })
     const response = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
@@ -41,7 +137,7 @@ export async function promptAi<T>(message: string, systemPrompt: string = "") {
                 }
             },
             "reasoning": {
-                "effort": "low"
+                "effort": "medium"
             },
             "tools": [],
             "store": true
@@ -59,31 +155,33 @@ export async function promptAi<T>(message: string, systemPrompt: string = "") {
         const parsedContent = JSON.parse(answer || '{ "hasEventData": false }') as T;
         return { ...data, answer: parsedContent };
     } catch (e) {
-        throw new Error('Failed to parse OpenAI response as JSON:' + e.message);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        throw new Error(`Failed to parse OpenAI response as JSON: ${errorMessage}`);
     }
 }
 
-export const msgAnalysisSystemPrompt = `
+export const msgAnalysisSystemPrompt = () => `
 Your purpose is to anaylze text messages and extract infos from them.
 Answer only in valid, raw JSON. Do not wrap it inside markdown or anything else.
 Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
 Never make up any information. Only use the information provided in the message!
-Do not remove html tags.
+When extracting dates and time, always assume german time unless stated otherwise, be sure to take correct daylight saving time into account.
+Today is  ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
 
-Extract the following information from the messages:
+Extract these information from the message:
 
 "hasEventData": boolean. wether or not the message contains information about an event.
 
 "name": string. the name of the event. needs to be an exact copy from the message without html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as its obvious that every event is an invitation. if there is no name in the text create a short descriptive name with not much personality.
 
-"description": string. A exact copy from the message, including html tags. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the name of the event at the start of the description.
+"description": string. A exact copy from the message, including html tags. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of the description.
 
-"descriptionBrief": string. The same content as in "description" field but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it.
+"descriptionBrief": string. The same content as in "description" field but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it. Only remove information that was extracted into other fields. If e.g. there are multiple contact methods, and you extract only one into the "contact" field, leave the other contact methods in the descriptionBrief.
 
 "summary": string. Summarise what the event is about in one descriptive sentence. Always use same language as the message. Never mention name of the event. Never mention date or location. Always sound friendly and keep it about this event.
 
-"startDate": string. The date and time of the event start, in ISO 8601 format.
+"startDate": string. The date and time of the event start, in ISO 8601 format. If you can only find date and not time assume start of the day.
 
 "endDate": string. The date and time of the event end, in ISO 8601 format. ONLY if specified in the message.
 
@@ -105,27 +203,89 @@ Extract the following information from the messages:
 
 "emojis": string. Up to 3 emojis that describe the event.
 
-
 `
 
 
 export type MsgAnalysisAnswer = {
     hasEventData: boolean;
+} & Partial<{
     name: string;
     description: string;
     descriptionBrief: string;
     summary: string;
     startDate: string;
-    endDate?: string;
+    endDate: string;
     url: string;
-    contact?: string;
+    contact: string;
     contactAuthorForMore: boolean;
-    price?: string;
-    venue?: string;
-    address?: string;
-    city?: string;
+    price: string;
+    venue: string;
+    address: string;
+    city: string;
     tags: string[];
     emojis: string;
+}>
+
+// used in google studio to generate a json schema for the answer
+export const MsgAnalysisAnswerOpenApiSchema = {
+    "type": "object",
+    "properties": {
+        "hasEventData": {
+            "type": "boolean"
+        },
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "descriptionBrief": {
+            "type": "string"
+        },
+        "summary": {
+            "type": "string"
+        },
+        "startDate": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "endDate": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "url": {
+            "type": "string",
+            "format": "uri"
+        },
+        "contact": {
+            "type": "string"
+        },
+        "contactAuthorForMore": {
+            "type": "boolean"
+        },
+        "price": {
+            "type": "string"
+        },
+        "venue": {
+            "type": "string"
+        },
+        "address": {
+            "type": "string"
+        },
+        "city": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "emojis": {
+            "type": "string"
+        }
+    },
+    "required": ["hasEventData"]
 }
 
 interface OpenAiResponse {
@@ -181,4 +341,34 @@ interface OpenAiResponse {
     }
     user: unknown
     metadata: unknown
+}
+
+interface GeminiResponse {
+    candidates: Array<{
+        content: {
+            parts: Array<{
+                text: string
+            }>
+            role: string
+        }
+        finishReason: string
+        index: number
+    }>
+    usageMetadata: {
+        promptTokenCount: number
+        candidatesTokenCount: number
+        totalTokenCount: number
+        cachedContentTokenCount: number
+        promptTokensDetails: Array<{
+            modality: string
+            tokenCount: number
+        }>
+        cacheTokensDetails: Array<{
+            modality: string
+            tokenCount: number
+        }>
+        thoughtsTokenCount: number
+    }
+    modelVersion: string
+    responseId: string
 }

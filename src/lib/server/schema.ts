@@ -20,6 +20,7 @@ export const events = pgTable('events', {
     tags: text().array(),
     source: text().notNull(),
     scrapedAt: timestamp().notNull().defaultNow(),
+    messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
 }, (t) => [
     unique().on(t.name, t.startAt, t.address)
 ]);

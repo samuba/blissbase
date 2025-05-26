@@ -15,6 +15,8 @@
 	let { data } = $props();
 	const { event } = $derived(data);
 
+	let showOriginal = $state(false);
+
 	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | undefined = $derived.by(() => {
 		if (event.contact?.startsWith('tg://')) {
 			return 'Telegram';
@@ -190,6 +192,17 @@
 					</p>
 				{/if}
 
+				{#if showOriginal}
+					<div class="flex w-full items-center gap-2">
+						<h2 class="font-medium">Original Message</h2>
+						<hr class="border-base-content flex-1" />
+					</div>
+
+					<p class="event-description prose">
+						{@html event.descriptionOriginal}
+					</p>
+				{/if}
+
 				{#if event.host}
 					<div class=" flex flex-wrap items-center gap-1.5 text-[16px]">
 						<div class="flex items-center gap-1.5">
@@ -217,11 +230,17 @@
 					</div>
 				{/if}
 
-				<div class="flex w-full justify-center">
+				<div class="flex w-full justify-center gap-6">
 					<a href="/" class="btn btn-sm">
 						<ArrowLeft class="mr-1 size-5" />
 						Zurück zur Übersicht
 					</a>
+
+					{#if event.descriptionOriginal}
+						<button class="btn btn-sm" onclick={() => (showOriginal = !showOriginal)}
+							>Original Nachricht zeigen</button
+						>
+					{/if}
 				</div>
 			</div>
 		</div>

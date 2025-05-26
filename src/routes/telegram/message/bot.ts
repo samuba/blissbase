@@ -40,15 +40,18 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
         const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
         const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
         if (!aiAnswer.hasEventData) {
-            await ctx.reply("Aus dieser Nachricht konnte ich keine Eventdaten extrahieren")
+            console.log("No event data found", msgText)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren")
             return
         }
         if (!aiAnswer.name) {
-            await ctx.reply("Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren")
+            console.log("No event name found", msgText)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren")
             return
         }
         if (!aiAnswer.startDate) {
-            await ctx.reply("Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren")
+            console.log("No event start date found", msgText)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren")
             return
         }
 
@@ -58,7 +61,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
 
         const coords = await geocodeAddressCached(addressArr, GOOGLE_MAPS_API_KEY || '')
         let contact = parseContact(aiAnswer.contact);
-        const telegramAuthor = getTelegramOriginalAuthor(ctx.message)
+        const telegramAuthor = getTelegramEventOriginalAuthor(ctx.message)
         if (aiAnswer.contactAuthorForMore) {
             contact = telegramAuthor?.link
             if (!contact) {
@@ -83,32 +86,33 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             host: telegramAuthor?.name,
             hostLink: telegramAuthor?.link,
             sourceUrl: aiAnswer.url,
+            messageSenderId: getTelegramSenderId(ctx.message),
             contact,
             source: "telegram",
         } satisfies InsertEvent
 
         console.log({ dbEntry })
 
-        await insertEvent(dbEntry)
+        const eventId = await insertEvent(dbEntry)
 
         if (isGroup) return; // dont answer in groups
 
-        await ctx.reply(JSON.stringify({
+        await reply(ctx, JSON.stringify({
             ...aiAnswer,
-            descriptionBrief: aiAnswer.descriptionBrief.slice(0, 50),
-            description: aiAnswer.description.slice(0, 50),
+            descriptionBrief: aiAnswer.descriptionBrief?.slice(0, 50),
+            description: aiAnswer.description?.slice(0, 50),
             imageUrl,
             coords,
             sourceUrl: aiAnswer.url,
             contact
         }, null, 2))
-        await ctx.reply("Der Event wurde erfolgreich erstellt")
+        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.de/" + eventId)
 
     } catch (error) {
         console.error(error)
         try {
             if (!isGroup) {
-                await ctx.reply("⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error)
+                await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error)
             }
         } catch { /* ignore */ }
     }
@@ -118,6 +122,14 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
 function parseContact(contact: string | undefined) {
     if (!contact?.trim()) return undefined;
 
+    if (contact.startsWith('https://t.me/')) {
+        //https://t.me/MagdalenaHSC",
+        return `tg://resolve?domain=${contact.slice(14)}`
+    }
+    if (contact.startsWith('https://t.me/')) {
+        //t.me/MagdalenaHSC",
+        return `tg://resolve?domain=${contact.slice(6)}`
+    }
     if (contact.startsWith('@')) {
         return `tg://resolve?domain=${contact.slice(1)}`
     }
@@ -145,7 +157,12 @@ function wasMessageForwarded(message: Context['message']): boolean {
     return 'forward_from' in message || 'forward_origin' in message;
 }
 
-function getTelegramOriginalAuthor(message: Context['message']) {
+function getTelegramSenderId(message: Context['message']): string | undefined {
+    if (!message) return undefined;
+    return message.from.id?.toString();
+}
+
+function getTelegramEventOriginalAuthor(message: Context['message']) {
     if (!message) return undefined;
 
     let username: string | undefined;
@@ -212,72 +229,146 @@ async function sendTypingPeriodically(ctx: Context, signal: AbortSignal) {
 }
 
 function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]) {
-    let result = text;
+    function getOpeningTag(entity: MessageEntity, text: string): string {
+        const content = text.slice(entity.offset, entity.offset + entity.length);
 
-    // Sort entities by offset in descending order to process them from end to start. This prevents offset issues when inserting HTML tags
-    entities.sort((a, b) => b.offset - a.offset);
-
-    for (const entity of entities) {
-        const { offset, length, type } = entity;
-        // Get the content before any HTML tags are inserted
-        const content = text.slice(offset, offset + length);
-
-        switch (type) {
+        switch (entity.type) {
             case "bold":
-                result = result.slice(0, offset) + `<b>${content}</b>` + result.slice(offset + length);
-                break;
+                return '<b>';
             case "italic":
-                result = result.slice(0, offset) + `<i>${content}</i>` + result.slice(offset + length);
-                break;
+                return '<i>';
             case "underline":
-                result = result.slice(0, offset) + `<u>${content}</u>` + result.slice(offset + length);
-                break;
+                return '<u>';
             case "strikethrough":
-                result = result.slice(0, offset) + `<s>${content}</s>` + result.slice(offset + length);
-                break;
+                return '<s>';
             case "code":
-                result = result.slice(0, offset) + `<code>${content}</code>` + result.slice(offset + length);
-                break;
+                return '<code>';
             case "pre":
-                result = result.slice(0, offset) + `<pre>${content}</pre>` + result.slice(offset + length);
-                break;
+                return '<pre>';
             case "text_link":
-                result = result.slice(0, offset) + `<a href="${entity.url}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="${entity.url}">`;
             case "text_mention":
-                result = result.slice(0, offset) + `<a href="tg://user?id=${entity.user?.id}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="tg://user?id=${entity.user?.id}">`;
             case "mention":
-                result = result.slice(0, offset) + `<a href="tg://user?id=${content.slice(1)}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="tg://user?id=${content.slice(1)}">`;
             case "hashtag":
-                result = result.slice(0, offset) + `<a href="tg://search?query=${encodeURIComponent(content)}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
             case "cashtag":
-                result = result.slice(0, offset) + `<a href="tg://search?query=${encodeURIComponent(content)}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
             case "bot_command":
-                result = result.slice(0, offset) + `<code>${content}</code>` + result.slice(offset + length);
-                break;
+                return '<code>';
             case "url":
-                result = result.slice(0, offset) + `<a href="${content}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="${content}">`;
             case "email":
-                result = result.slice(0, offset) + `<a href="mailto:${content}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="mailto:${content}">`;
             case "phone_number":
-                result = result.slice(0, offset) + `<a href="tel:${content}">${content}</a>` + result.slice(offset + length);
-                break;
+                return `<a href="tel:${content}">`;
             case "spoiler":
-                result = result.slice(0, offset) + `<span class="tg-spoiler">${content}</span>` + result.slice(offset + length);
-                break;
+                return '<span class="tg-spoiler">';
             case "blockquote":
-                result = result.slice(0, offset) + `<blockquote>${content}</blockquote>` + result.slice(offset + length);
-                break;
+                return '<blockquote>';
+            default:
+                return '';
         }
     }
 
-    result = result.replace(/\n/g, "<br>")
+    function getClosingTag(entity: MessageEntity): string {
+        switch (entity.type) {
+            case "bold":
+                return '</b>';
+            case "italic":
+                return '</i>';
+            case "underline":
+                return '</u>';
+            case "strikethrough":
+                return '</s>';
+            case "code":
+            case "bot_command":
+                return '</code>';
+            case "pre":
+                return '</pre>';
+            case "text_link":
+            case "text_mention":
+            case "mention":
+            case "hashtag":
+            case "cashtag":
+            case "url":
+            case "email":
+            case "phone_number":
+                return '</a>';
+            case "spoiler":
+                return '</span>';
+            case "blockquote":
+                return '</blockquote>';
+            default:
+                return '';
+        }
+    }
 
+    if (!entities.length) {
+        return text.replace(/\n/g, "<br>");
+    }
+
+    // Create a map of position -> formatting changes
+    const formatChanges = new Map<number, { starts: MessageEntity[], ends: MessageEntity[] }>();
+
+    for (const entity of entities) {
+        // Start of entity
+        if (!formatChanges.has(entity.offset)) {
+            formatChanges.set(entity.offset, { starts: [], ends: [] });
+        }
+        formatChanges.get(entity.offset)!.starts.push(entity);
+
+        // End of entity
+        const endPos = entity.offset + entity.length;
+        if (!formatChanges.has(endPos)) {
+            formatChanges.set(endPos, { starts: [], ends: [] });
+        }
+        formatChanges.get(endPos)!.ends.push(entity);
+    }
+
+    let result = '';
+    const activeEntities: MessageEntity[] = [];
+
+    for (let i = 0; i <= text.length; i++) {
+        // Handle formatting changes at this position
+        const changes = formatChanges.get(i);
+        if (changes) {
+            // If any entities end at this position, we need to handle overlaps properly
+            if (changes.ends.length > 0) {
+                // Close all active entities in reverse opening order (LIFO)
+                for (let j = activeEntities.length - 1; j >= 0; j--) {
+                    result += getClosingTag(activeEntities[j]);
+                }
+
+                // Remove entities that actually end at this position
+                const entitiesStillActive = activeEntities.filter(entity =>
+                    !changes.ends.includes(entity)
+                );
+
+                // Reopen entities that are still active (in original opening order)
+                for (const entity of entitiesStillActive) {
+                    result += getOpeningTag(entity, text);
+                }
+
+                // Update active entities list
+                activeEntities.length = 0;
+                activeEntities.push(...entitiesStillActive);
+            }
+
+            // Open new entities starting at this position
+            for (const entity of changes.starts) {
+                activeEntities.push(entity);
+                result += getOpeningTag(entity, text);
+            }
+        }
+
+        // Add the character if we're not at the end
+        if (i < text.length) {
+            result += text[i];
+        }
+    }
+
+    result = result.replace(/\n/g, "<br>");
     return result;
 }

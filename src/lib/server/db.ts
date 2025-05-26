@@ -34,7 +34,7 @@ export async function insertEvent(event: InsertEvent) {
         }
     }
 
-    return db.insert(s.events)
+    const result = await db.insert(s.events)
         .values(event)
         .onConflictDoUpdate({
             target: [schema.events.name, schema.events.startAt, schema.events.address],
@@ -57,7 +57,10 @@ export async function insertEvent(event: InsertEvent) {
                 source: sql`excluded.source`,
                 sourceUrl: sql`excluded.source_url`,
                 scrapedAt: sql`CURRENT_TIMESTAMP`,
+                messageSenderId: sql`excluded.message_sender_id`,
             }
         })
         .returning({ insertedId: schema.events.id });
+
+    return result?.[0]?.insertedId;
 }
