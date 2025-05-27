@@ -1,4 +1,4 @@
-import type { Attachment, Element } from "svelte/attachments";
+import type { Attachment } from "svelte/attachments";
 
 /**
  * Attaches a click handler to an element, optimized for touch devices.
@@ -21,6 +21,7 @@ export function onPointerClick(handler: (event: PointerEvent | MouseEvent) => vo
         if (!(element instanceof HTMLElement)) {
             throw new Error('Element must be an HTMLElement');
         }
+
         const MAX_CLICK_DURATION_MS = 300;
         const MAX_CLICK_MOVEMENT_PX = 10; // pixels
 
@@ -29,35 +30,37 @@ export function onPointerClick(handler: (event: PointerEvent | MouseEvent) => vo
         let startTime = 0;
         let pointerId: number | null = null;
         let initialPointerDownEvent: PointerEvent | null = null;
+        let isDragging = false;
 
-        const handlePointerDown = (event: PointerEvent) => {
-            if (!event.isPrimary || pointerId !== null) {
-                return; // Only process primary pointer and if not already tracking one
-            }
-
-            pointerId = event.pointerId;
-            initialPointerDownEvent = event; // Store the initial event
-            startX = event.clientX;
-            startY = event.clientY;
-            startTime = Date.now();
-
-            try {
-                element.setPointerCapture(pointerId);
-            } catch {
-                // console.warn('Failed to set pointer capture:');
-            }
-
-            element.addEventListener('pointermove', handlePointerMove);
-            element.addEventListener('pointerup', handlePointerUp);
-            element.addEventListener('pointercancel', handlePointerCancel);
-        };
-
+        // Pre-declare event handlers to avoid creating new functions on each interaction
         const handlePointerMove = (event: PointerEvent) => {
-            if (event.pointerId !== pointerId) {
+            if (event.pointerId !== pointerId || isDragging) {
                 return;
             }
-            // Logic to determine if it's a drag can be added here for early exit,
-            // but for simplicity, all checks are currently in handlePointerUp.
+
+            // Early exit optimization: if movement exceeds threshold, mark as dragging
+            const deltaX = Math.abs(event.clientX - startX);
+            const deltaY = Math.abs(event.clientY - startY);
+
+            if (deltaX > MAX_CLICK_MOVEMENT_PX || deltaY > MAX_CLICK_MOVEMENT_PX) {
+                isDragging = true;
+            }
+        };
+
+        const cleanupPointerCapture = () => {
+            if (pointerId !== null) {
+                try {
+                    if (element.hasPointerCapture(pointerId)) {
+                        element.releasePointerCapture(pointerId);
+                    }
+                } catch { /* Squelch */ }
+            }
+        };
+
+        const resetState = () => {
+            pointerId = null;
+            initialPointerDownEvent = null;
+            isDragging = false;
         };
 
         const handlePointerUp = (event: PointerEvent) => {
@@ -68,22 +71,16 @@ export function onPointerClick(handler: (event: PointerEvent | MouseEvent) => vo
             // Store the initial event before resetting state
             const downEvent = initialPointerDownEvent;
 
-            // Cleanup listeners and pointer capture
-            element.removeEventListener('pointermove', handlePointerMove);
-            element.removeEventListener('pointerup', handlePointerUp);
-            element.removeEventListener('pointercancel', handlePointerCancel);
-            if (pointerId !== null) {
-                try {
-                    if (element.hasPointerCapture(pointerId)) {
-                        element.releasePointerCapture(pointerId);
-                    }
-                } catch { /* Squelch */ }
+            // Cleanup
+            cleanupPointerCapture();
+            resetState();
+
+            // Skip if already determined to be dragging
+            if (isDragging) {
+                return;
             }
 
-            pointerId = null;
-            initialPointerDownEvent = null;
-
-            const endTime = Date.now();
+            const endTime = performance.now();
             const duration = endTime - startTime;
             const deltaX = Math.abs(event.clientX - startX);
             const deltaY = Math.abs(event.clientY - startY);
@@ -93,8 +90,8 @@ export function onPointerClick(handler: (event: PointerEvent | MouseEvent) => vo
                 deltaX < MAX_CLICK_MOVEMENT_PX &&
                 deltaY < MAX_CLICK_MOVEMENT_PX
             ) {
-                if (downEvent) { // Check if downEvent is not null
-                    handler(downEvent); // Execute handler with the initial pointerdown event
+                if (downEvent) {
+                    handler(downEvent);
                 }
             }
         };
@@ -104,24 +101,35 @@ export function onPointerClick(handler: (event: PointerEvent | MouseEvent) => vo
                 return;
             }
 
-            // Cleanup listeners and pointer capture
-            element.removeEventListener('pointermove', handlePointerMove);
-            element.removeEventListener('pointerup', handlePointerUp);
-            element.removeEventListener('pointercancel', handlePointerCancel);
-            if (pointerId !== null) {
-                try {
-                    if (element.hasPointerCapture(pointerId)) {
-                        element.releasePointerCapture(pointerId);
-                    }
-                } catch { /* Squelch */ }
+            cleanupPointerCapture();
+            resetState();
+        };
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!event.isPrimary || pointerId !== null) {
+                return; // Only process primary pointer and if not already tracking one
             }
 
-            pointerId = null;
-            initialPointerDownEvent = null;
+            pointerId = event.pointerId;
+            initialPointerDownEvent = event;
+            startX = event.clientX;
+            startY = event.clientY;
+            startTime = performance.now();
+            isDragging = false;
+
+            try {
+                element.setPointerCapture(pointerId);
+            } catch {
+                // console.warn('Failed to set pointer capture:');
+            }
         };
 
         if (isTouchDevice) {
+            // Add all listeners upfront for better performance
             element.addEventListener('pointerdown', handlePointerDown);
+            element.addEventListener('pointermove', handlePointerMove);
+            element.addEventListener('pointerup', handlePointerUp);
+            element.addEventListener('pointercancel', handlePointerCancel);
         } else {
             element.addEventListener('click', handler);
         }
@@ -129,18 +137,14 @@ export function onPointerClick(handler: (event: PointerEvent | MouseEvent) => vo
         return () => {
             if (isTouchDevice) {
                 element.removeEventListener('pointerdown', handlePointerDown);
-                // Ensure any dynamically added listeners are also removed if interaction was in progress
                 element.removeEventListener('pointermove', handlePointerMove);
                 element.removeEventListener('pointerup', handlePointerUp);
                 element.removeEventListener('pointercancel', handlePointerCancel);
-                if (pointerId !== null) { // If a pointer was active
-                    try {
-                        if (element.hasPointerCapture(pointerId)) {
-                            element.releasePointerCapture(pointerId);
-                        }
-                    } catch { /* Squelch */ }
-                    pointerId = null; // Reset state
-                    initialPointerDownEvent = null;
+
+                // Cleanup any active pointer capture
+                if (pointerId !== null) {
+                    cleanupPointerCapture();
+                    resetState();
                 }
             } else {
                 element.removeEventListener('click', handler);
