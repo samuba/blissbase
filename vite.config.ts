@@ -12,7 +12,6 @@ export default defineConfig({
 		SvelteKitPWA({
 			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'logo.svg'],
 			registerType: 'autoUpdate',
-			strategies: 'injectManifest',
 			injectRegister: false,
 			kit: {
 				includeVersionFile: true,
