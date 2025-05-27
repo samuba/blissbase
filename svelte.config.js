@@ -5,7 +5,8 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter({
-			runtime: process.env.VERCEL ? undefined : 'nodejs23.x'
+			// vercel does not support nodejs23.x
+			runtime: process.env.VERCEL ? 'nodejs22.x' : 'nodejs23.x'
 		})
 	}
 };
