@@ -41,5 +41,5 @@
 </script>
 
 {#if showInstallButton}
-	<button onclick={handleInstallClick} class="btn"> Install App </button>
+	<button onclick={handleInstallClick} class="btn"> App installieren </button>
 {/if}

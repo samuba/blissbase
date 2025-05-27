@@ -194,10 +194,7 @@
 	});
 </script>
 
-ph--map-pin
-
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
-	<InstallButton />
 	<div class="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center">
 		<DateRangePicker class="w-full md:w-fit" onChange={onDateChange} />
 		<LocationDistanceInput
@@ -230,6 +227,8 @@ ph--map-pin
 			/>
 		</div>
 	</div>
+
+	<InstallButton />
 
 	{#if navigating.to}
 		<div class="flex flex-col items-center justify-center gap-3">
