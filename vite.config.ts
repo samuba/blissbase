@@ -22,7 +22,7 @@ export default defineConfig({
 				name: 'Blissbase',
 				short_name: 'Blissbase',
 				description: 'Hippie Events in deiner Nähe',
-				theme_color: '#43ebd3',
+				theme_color: '#efeae7',
 				icons: [
 					{
 						src: 'pwa-192x192.png',
