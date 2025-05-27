@@ -27,3 +27,5 @@ vite.config.ts.timestamp-*
 .vscode/time_log.json
 
 events.json
+
+dev-dist

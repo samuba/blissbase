@@ -2,16 +2,19 @@ import tailwindcss from '@tailwindcss/vite';
 import Icons from 'unplugin-icons/vite'
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		sveltekit(),
 		Icons({ compiler: 'svelte', }),
-		VitePWA({
+		SvelteKitPWA({
 			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'logo.svg'],
-			registerType: 'autoUpdate',
+			registerType: 'prompt',
+			kit: {
+				includeVersionFile: true,
+			},
 			devOptions: {
 				enabled: true
 			},
