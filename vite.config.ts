@@ -10,6 +10,7 @@ export default defineConfig({
 		sveltekit(),
 		Icons({ compiler: 'svelte', }),
 		VitePWA({
+			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'logo.svg'],
 			registerType: 'autoUpdate',
 			devOptions: {
 				enabled: true

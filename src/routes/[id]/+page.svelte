@@ -7,6 +7,11 @@
 	const { event } = $derived(data);
 </script>
 
+<svelte:head>
+	<title>{event.name} | BlissBase</title>
+	<meta name="description" content={event.description?.slice(0, 150) ?? ''} />
+</svelte:head>
+
 <div class="container mx-auto max-w-3xl">
 	<div class="flex h-14 items-center pl-2">
 		<a href={routes.eventList()} class="btn btn-sm">
