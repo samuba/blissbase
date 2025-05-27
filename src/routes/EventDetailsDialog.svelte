@@ -5,6 +5,7 @@
 	import EventDetails from './EventDetails.svelte';
 	import { page } from '$app/state';
 	import { ArrowLeft } from 'phosphor-svelte';
+	import { onPointerClick } from '$lib/attachments';
 
 	let { event: eventParam }: { event: UiEvent | undefined } = $props();
 	let event = $state<UiEvent | undefined>(eventParam);
@@ -70,7 +71,7 @@
 			{/if}
 
 			<div class="flex w-full justify-center gap-6 pb-6">
-				<button onclick={() => window.history.back()} class="btn btn-sm">
+				<button {@attach onPointerClick(() => window.history.back())} class="btn btn-sm">
 					<ArrowLeft class="mr-1 size-5" />
 					Zurück zur Übersicht
 				</button>
