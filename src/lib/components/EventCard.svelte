@@ -10,8 +10,9 @@
 	let noImage = $state(event.imageUrls?.[0] === undefined);
 </script>
 
-<div
-	class="w-full cursor-pointer"
+<a
+	href={`/${event.id}`}
+	class="w-full"
 	{@attach onTap((e) => {
 		e.preventDefault();
 		pushState(routes.eventDetails(event.id), { selectedEventId: event.id });
@@ -77,4 +78,4 @@
 			{/if}
 		</div>
 	</div>
-</div>
+</a>
