@@ -5,7 +5,7 @@
 	import EventDetails from './EventDetails.svelte';
 	import { page } from '$app/state';
 	import { ArrowLeft } from 'phosphor-svelte';
-	import { onPointerClick } from '$lib/attachments';
+	import { onTap } from '$lib/attachments';
 
 	let { event: eventParam }: { event: UiEvent | undefined } = $props();
 	let event = $state<UiEvent | undefined>(eventParam);
@@ -61,9 +61,9 @@
 			style="scrollbar-width: thin;"
 		>
 			<div class="sticky top-2 right-2 z-20 ml-auto h-0 w-max">
-				<Dialog.Close class="btn btn-circle shadow-lg">
+				<button {@attach onTap(() => window.history.back())} class="btn btn-circle shadow-lg">
 					<X class="size-5"></X>
-				</Dialog.Close>
+				</button>
 			</div>
 
 			{#if event}
@@ -71,7 +71,7 @@
 			{/if}
 
 			<div class="flex w-full justify-center gap-6 pb-6">
-				<button {@attach onPointerClick(() => window.history.back())} class="btn btn-sm">
+				<button {@attach onTap(() => window.history.back())} class="btn btn-sm">
 					<ArrowLeft class="mr-1 size-5" />
 					Zurück zur Übersicht
 				</button>

@@ -4,7 +4,7 @@
 	import { formatAddress, formatTimeStr } from '$lib/common';
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';
-	import { onPointerClick } from '$lib/attachments';
+	import { onTap } from '$lib/attachments';
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
@@ -14,7 +14,7 @@
 <a
 	href={`/${event.id}`}
 	class="w-full"
-	{@attach onPointerClick((e) => {
+	{@attach onTap((e) => {
 		e.preventDefault();
 		pushState(routes.eventDetails(event.id), { selectedEventId: event.id });
 	})}

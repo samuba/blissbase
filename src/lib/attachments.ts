@@ -1,18 +1,17 @@
 import type { Attachment } from "svelte/attachments";
 
 /**
- * Attaches a click handler to an element, optimized for touch devices.
+ * Attaches a onClick on mouse devices and a pointerdown on touch devices to circumvent the 300ms delay onClick has on touch devices.
  * On touch devices, it distinguishes between taps and drags/scrolls by monitoring pointer events.
- * On non-touch devices, it uses a standard 'click' event.
  *
- * This function is a Svelte attachment factory. Use it like: `<div use:onPointerClick={handler}></div>`.
+ * This function is a Svelte attachment factory. Use it like: `<div {@attach onPointerClick={handler}}></div>`.
  *
  * @param handler - The function to call when a click/tap is detected.
  *                  Receives the PointerEvent (for touch, specifically the initial pointerdown event) or MouseEvent (for non-touch).
  * @returns A Svelte attachment function that, when applied to an element, attaches the event listeners
  *          and returns an object with a `destroy` method to clean them up.
  */
-export function onPointerClick(handler: (event: PointerEvent | MouseEvent) => void): Attachment {
+export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Attachment {
     // Determined once when the attachment factory is called.
     const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
