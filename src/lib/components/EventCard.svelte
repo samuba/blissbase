@@ -4,6 +4,7 @@
 	import { formatAddress, formatTimeStr } from '$lib/common';
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';
+	import { onPointerClick } from '$lib/attachments';
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
@@ -13,10 +14,10 @@
 <a
 	href={`/${event.id}`}
 	class="w-full"
-	onclick={(e) => {
+	{@attach onPointerClick((e) => {
 		e.preventDefault();
 		pushState(routes.eventDetails(event.id), { selectedEventId: event.id });
-	}}
+	})}
 >
 	<div
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg sm:flex-row {className}"
