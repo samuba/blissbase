@@ -1,10 +1,8 @@
 <script lang="ts">
 	import type { UiEvent } from './+page.server';
 	import { Dialog } from 'bits-ui';
-	import X from '~icons/ph/x';
 	import EventDetails from './EventDetails.svelte';
 	import { page } from '$app/state';
-	import { ArrowLeft } from 'phosphor-svelte';
 	import { onTap } from '$lib/attachments';
 
 	let { event: eventParam }: { event: UiEvent | undefined } = $props();
@@ -61,8 +59,12 @@
 			style="scrollbar-width: thin;"
 		>
 			<div class="sticky top-2 right-2 z-20 ml-auto h-0 w-max">
-				<button {@attach onTap(() => window.history.back())} class="btn btn-circle shadow-lg">
-					<X class="size-5"></X>
+				<button
+					{@attach onTap(() => window.history.back())}
+					class="btn btn-circle shadow-lg"
+					aria-label="Schließen"
+				>
+					<i class="icon-[ph--x] size-5"></i>
 				</button>
 			</div>
 
@@ -72,7 +74,7 @@
 
 			<div class="flex w-full justify-center gap-6 pb-6">
 				<button {@attach onTap(() => window.history.back())} class="btn btn-sm">
-					<ArrowLeft class="mr-1 size-5" />
+					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 					Zurück zur Übersicht
 				</button>
 			</div>

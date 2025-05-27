@@ -5,9 +5,6 @@
 
 <script lang="ts">
 	import { DateRangePicker } from 'bits-ui';
-	import Calendar from 'phosphor-svelte/lib/CalendarDots';
-	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
-	import CaretRight from 'phosphor-svelte/lib/CaretRight';
 	import { CalendarDate, endOfMonth } from '@internationalized/date';
 
 	type DateRangePickerProps = {
@@ -70,7 +67,7 @@
 				{/if}
 			{/each}
 
-			<Calendar class="size-6" />
+			<i class="icon-[ph--calendar-dots] size-6"></i>
 		</div>
 	</DateRangePicker.Trigger>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
@@ -78,11 +75,11 @@
 			{#snippet children({ months, weekdays })}
 				<DateRangePicker.Header class="flex items-center justify-between">
 					<DateRangePicker.PrevButton class="btn btn-ghost p-1.5 active:scale-[0.98]">
-						<CaretLeft class="size-6" />
+						<i class="icon-[ph--caret-left] size-6"></i>
 					</DateRangePicker.PrevButton>
 					<DateRangePicker.Heading class="text-base-content text-lg font-medium" />
 					<DateRangePicker.NextButton class="btn btn-ghost p-1.5 active:scale-[0.98]">
-						<CaretRight class="size-6" />
+						<i class="icon-[ph--caret-right] size-6"></i>
 					</DateRangePicker.NextButton>
 				</DateRangePicker.Header>
 				<div class="flex flex-col space-y-4 pt-4 sm:flex-row sm:space-y-0 sm:space-x-4">

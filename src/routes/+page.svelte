@@ -9,15 +9,10 @@
 	import { goto } from '$app/navigation';
 	import { routes } from '$lib/routes';
 	import { navigating, page } from '$app/state';
-	import SpinnerBall from 'phosphor-svelte/lib/SpinnerBall';
-	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
-	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
-	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 
 	import { debounce } from '$lib/common';
 	import { browser } from '$app/environment';
 	import Select from '$lib/components/Select.svelte';
-	import SortAscendingSvg from '~icons/ph/sort-ascending?raw';
 	import type { UiEvent } from './+page.server';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
@@ -29,9 +24,9 @@
 	let searchInputElement = $state<HTMLInputElement | null>(null);
 
 	const sortOptions = $state([
-		{ value: 'time_asc', label: 'Startzeit', icon: SortAscendingSvg },
+		{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
 		// { value: 'time_desc', label: 'Time (Latest First)' },
-		{ value: 'distance_asc', label: 'Distanz', icon: SortAscendingSvg }
+		{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' }
 		// { value: 'distance_desc', label: 'Distance (Farthest First)' }
 	]);
 
@@ -213,7 +208,7 @@
 	</div>
 	<div class="flex w-full items-center justify-center gap-4">
 		<label class="input w-fit">
-			<MagnifyingGlass class="size-5 text-gray-400" />
+			<i class="icon-[ph--magnifying-glass] size-5 text-gray-400"></i>
 			<input
 				bind:this={searchInputElement}
 				bind:value={searchTermInput}
@@ -236,7 +231,7 @@
 
 	{#if navigating.to}
 		<div class="flex flex-col items-center justify-center gap-3">
-			<SpinnerBall class="text-primary-content size-10 animate-spin" />
+			<i class="icon-[ph--spinner-gap] text-primary-content size-10 animate-spin"></i>
 			<p class="">Lade...</p>
 		</div>
 	{:else if events.length > 0}
@@ -268,9 +263,10 @@
 				onclick={(e) => {
 					if (pagination.page <= 1) e.preventDefault();
 				}}
+				aria-label="Vorherige Seite"
 			>
-				<button class="btn" disabled={pagination.page <= 1}>
-					<ArrowLeft class="size-5" />
+				<button class="btn" disabled={pagination.page <= 1} aria-label="Vorherige Seite">
+					<i class="icon-[ph--caret-left] size-5"></i>
 				</button>
 			</a>
 			<span class="text-sm text-gray-700">
@@ -293,9 +289,14 @@
 				onclick={(e) => {
 					if (pagination.page >= pagination.totalPages) e.preventDefault();
 				}}
+				aria-label="Nächste Seite"
 			>
-				<button class="btn" disabled={pagination.page >= pagination.totalPages}>
-					<ArrowRight class="size-5" />
+				<button
+					class="btn"
+					disabled={pagination.page >= pagination.totalPages}
+					aria-label="Nächste Seite"
+				>
+					<i class="icon-[ph--caret-right] size-5"></i>
 				</button>
 			</a>
 		</div>

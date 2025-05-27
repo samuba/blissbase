@@ -1,5 +1,4 @@
 <script lang="ts">
-	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import type { UiEvent } from '$lib/../routes/+page.server';
 	import { formatAddress, formatTimeStr } from '$lib/common';
 	import { pushState } from '$app/navigation';
@@ -55,7 +54,7 @@
 
 			{#if event.address?.length}
 				<div class="flex items-center gap-1 text-sm">
-					<MapPin class="mr-1.5 size-4 min-w-4" />
+					<i class="icon-[ph--map-pin] mr-1.5 size-4 min-w-4"></i>
 
 					<div class="leading-tight">
 						{#if event.distanceKm}

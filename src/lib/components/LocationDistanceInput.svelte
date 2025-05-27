@@ -1,9 +1,4 @@
 <script lang="ts">
-	import Crosshair from '~icons/ph/crosshair';
-	import SpinnerBall from '~icons/ph/spinner-ball';
-	import X from '~icons/ph/x';
-	import MapPin from '~icons/ph/map-pin';
-
 	export interface LocationChangeEvent {
 		location: string | null;
 		distance: string | null;
@@ -197,7 +192,7 @@
 <div class="form-control join max-w-xs">
 	{#if usingCurrentLocation && !isLoadingLocation}
 		<span class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0">
-			<MapPin class="-mr-0.5 size-4" />
+			<i class="icon-[ph--map-pin] -mr-0.5 size-4"></i>
 			{displayLocationText}
 		</span>
 	{:else}
@@ -230,11 +225,11 @@
 		disabled={isLoadingLocation || disabled}
 	>
 		{#if isLoadingLocation}
-			<SpinnerBall class="size-5 animate-spin" />
+			<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
 		{:else if usingCurrentLocation}
-			<X class="size-5" />
+			<i class="icon-[ph--x] size-5"></i>
 		{:else}
-			<Crosshair class="size-5" />
+			<i class="icon-[ph--crosshair] size-5"></i>
 		{/if}
 	</button>
 	<select

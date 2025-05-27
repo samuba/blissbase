@@ -23,6 +23,7 @@
 		"@eslint/compat": "^1.2.5",
 		"@eslint/js": "^9.18.0",
 		"@iconify/json": "^2.2.335",
+		"@iconify/tailwind4": "^1.0.6",
 		"@sveltejs/adapter-vercel": "^5.7.0",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -62,7 +63,6 @@
 		"@neondatabase/serverless": "^1.0.0",
 		"drizzle-orm": "^0.40.0",
 		"ky": "^1.8.1",
-		"phosphor-svelte": "^3.0.1",
 		"ws": "^8.18.1"
 	}
 }

@@ -1,15 +1,5 @@
 <script lang="ts">
 	import { formatAddress, formatTimeStr } from '$lib/common';
-	import CalendarDots from '~icons/ph/calendar-dots';
-	import MapPin from '~icons/ph/map-pin';
-	import Money from '~icons/ph/money';
-	import ArrowLeft from '~icons/ph/arrow-left';
-	import Person from '~icons/ph/user-circle';
-	import TelegramLogo from '~icons/ph/telegram-logo';
-	import WhatsAppLogo from '~icons/ph/whatsapp-logo';
-	import ArrowSquareOut from '~icons/ph/arrow-square-out';
-	import Phone from '~icons/ph/phone';
-	import Envelope from '~icons/ph/envelope';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import type { UiEvent } from '$lib/../routes/[id]/+page.server';
 
@@ -74,7 +64,7 @@
 
 		<div class=" flex flex-wrap justify-center gap-4">
 			<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
-				<CalendarDots class="mr-2 size-6" />
+				<i class="icon-[ph--calendar-dots] mr-2 size-6"></i>
 				<p class="text-md font-medium">
 					{formatTimeStr(event.startAt, event.endAt)}
 				</p>
@@ -82,14 +72,14 @@
 
 			{#if event.price}
 				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
-					<Money class="mr-2 size-6" />
+					<i class="icon-[ph--money] mr-2 size-6"></i>
 					<p class="font-medium">{event.price}</p>
 				</div>
 			{/if}
 
 			{#if event.address?.length}
 				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
-					<MapPin class="mr-1 size-6" />
+					<i class="icon-[ph--map-pin] mr-1 size-6"></i>
 					{#if event.address}
 						<p class="font-medium">{formatAddress(event.address)}</p>
 					{/if}
@@ -99,7 +89,7 @@
 			{#if event.sourceUrl}
 				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
 					Anmelden
-					<ArrowSquareOut class="size-5" />
+					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
 			{:else if event.contact}
 				<PopOver contentClass="bg-base-100 p-5 max-w-sm">
@@ -130,7 +120,7 @@
 									rel="noopener noreferrer"
 									class="btn btn-primary"
 								>
-									<TelegramLogo class="size-5" />
+									<i class="icon-[ph--telegram-logo] size-5"></i>
 									Nachricht senden
 								</a>
 							{:else if contactMethod === 'WhatsApp'}
@@ -140,7 +130,7 @@
 									rel="noopener noreferrer"
 									class="btn btn-primary"
 								>
-									<WhatsAppLogo class="size-5" />
+									<i class="icon-[ph--whatsapp-logo] size-5"></i>
 									Nachricht senden
 								</a>
 							{:else if contactMethod === 'Telefon'}
@@ -150,7 +140,7 @@
 									rel="noopener noreferrer"
 									class="btn btn-primary"
 								>
-									<Phone class="size-5" />
+									<i class="icon-[ph--phone] size-5"></i>
 									Anrufen
 								</a>
 							{:else if contactMethod === 'Email'}
@@ -160,7 +150,7 @@
 									rel="noopener noreferrer"
 									class="btn btn-primary"
 								>
-									<Envelope class="size-5" />
+									<i class="icon-[ph--envelope] size-5"></i>
 									Email senden
 								</a>
 							{/if}
@@ -190,7 +180,7 @@
 		{#if event.host}
 			<div class=" flex flex-wrap items-center gap-1.5 text-[16px]">
 				<div class="flex items-center gap-1.5">
-					<Person class="size-6" />
+					<i class="icon-[ph--user-circle] size-6"></i>
 					<h2 class="font-medium">Organisation:</h2>
 				</div>
 				{#if event.hostLink}
