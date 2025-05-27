@@ -15,7 +15,7 @@
 		</a>
 	</div>
 
-	<div class="bg-base-100 rounded-box overflow-hidden">
+	<div class="bg-base-100 sm:rounded-box overflow-hidden">
 		<EventDetails {event} />
 
 		<div class="flex w-full justify-center gap-6 pb-6">
