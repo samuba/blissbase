@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
 
 	let deferredPrompt: any;
 	let showInstallButton = false;
 
 	onMount(() => {
+		if (!browser) return;
+
 		window.addEventListener('beforeinstallprompt', (e) => {
 			// Prevent Chrome 67 and earlier from automatically showing the prompt
 			e.preventDefault();
@@ -25,6 +28,8 @@
 	});
 
 	onDestroy(() => {
+		if (!browser) return;
+
 		window.removeEventListener('beforeinstallprompt', (e) => {
 			deferredPrompt = e;
 		});
