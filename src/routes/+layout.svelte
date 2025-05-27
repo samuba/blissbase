@@ -7,25 +7,6 @@
 	let { children } = $props();
 
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
-	// onMount(async () => {
-	// 	if (pwaInfo) {
-	// 		const { registerSW } = await import('virtual:pwa-register');
-	// 		registerSW({
-	// 			immediate: true,
-	// 			onRegistered(r) {
-	// 				// uncomment following code if you want check for updates
-	// 				// r && setInterval(() => {
-	// 				//    console.log('Checking for sw update')
-	// 				//    r.update()
-	// 				// }, 20000 /* 20s for testing purposes */)
-	// 				console.log(`SW Registered: ${r}`);
-	// 			},
-	// 			onRegisterError(error) {
-	// 				console.log('SW registration error', error);
-	// 			}
-	// 		});
-	// 	}
-	// });
 </script>
 
 <svelte:head>
@@ -41,7 +22,3 @@
 </svelte:head>
 
 {@render children()}
-
-{#await import('$lib/ReloadPrompt.svelte') then { default: ReloadPrompt }}
-	<ReloadPrompt />
-{/await}

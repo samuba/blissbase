@@ -12,7 +12,8 @@
 		"moduleResolution": "bundler",
 		"types": [
 			"unplugin-icons/types/svelte",
-			"vite-plugin-pwa/info"
+			"vite-plugin-pwa/info",
+			"vite-plugin-pwa/assets"
 		]
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
