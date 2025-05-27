@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 
 	let deferredPrompt: any;
 	let showInstallButton = false;
@@ -21,6 +21,15 @@
 			deferredPrompt = null;
 			// Optionally, send analytics event to indicate successful install
 			console.log('PWA was installed');
+		});
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('beforeinstallprompt', (e) => {
+			deferredPrompt = e;
+		});
+		window.removeEventListener('appinstalled', () => {
+			deferredPrompt = null;
 		});
 	});
 

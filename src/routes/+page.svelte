@@ -205,7 +205,7 @@
 			onChange={handleLocationDistanceChange}
 		/>
 	</div>
-	<div class="flex w-full items-center justify-center gap-4">
+	<div class="flex w-full flex-wrap items-center justify-center gap-4">
 		<label class="input w-fit">
 			<i class="icon-[ph--magnifying-glass] size-5 text-gray-400"></i>
 			<input
@@ -226,9 +226,8 @@
 				onValueChange={handleSortChanged}
 			/>
 		</div>
+		<InstallButton />
 	</div>
-
-	<InstallButton />
 
 	{#if navigating.to}
 		<div class="flex flex-col items-center justify-center gap-3">

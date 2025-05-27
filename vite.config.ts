@@ -45,6 +45,6 @@ export default defineConfig({
 		})
 	],
 	server: {
-		allowedHosts: ['localdev.soulspots.app', 'localhost', '127.0.0.1']
+		allowedHosts: ['localdev.soulspots.app', 'localhost', '127.0.0.1', 'blissbase.app', 'blissbase.vercel.app']
 	}
 });
