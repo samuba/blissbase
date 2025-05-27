@@ -20,6 +20,7 @@
 	import SortAscendingSvg from '~icons/ph/sort-ascending?raw';
 	import type { UiEvent } from './+page.server';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
+	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
 
 	const { data } = $props();
 	const { events, pagination } = $derived(data); // pagination is reactive, reflects URL params
@@ -199,6 +200,7 @@
 </script>
 
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
+	<InstallButton />
 	<div class="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center">
 		<DateRangePicker class="w-full md:w-fit" onChange={onDateChange} />
 		<LocationDistanceInput

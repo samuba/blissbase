@@ -29,7 +29,7 @@
 	<Dialog.Portal>
 		<Dialog.Overlay
 			class={[
-				'fixed inset-0 z-50 bg-gray-700/90 transition-opacity',
+				'fixed inset-0 z-50 bg-stone-800/90 transition-opacity',
 				'data-[state=open]:animate-in',
 				'data-[state=open]:ease-out',
 				'data-[state=open]:fade-in',
