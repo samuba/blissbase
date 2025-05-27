@@ -1,17 +1,25 @@
 <script lang="ts">
 	import { Select, type WithoutChildren } from 'bits-ui';
 
+	type SelectItem = {
+		iconClass?: string;
+		value: string;
+		label: string;
+		disabled?: boolean;
+	};
+
 	type Props = WithoutChildren<Select.RootProps> & {
 		placeholder?: string;
-		items: { value: string; label: string; disabled?: boolean; iconClass?: string }[];
+		items: SelectItem[];
 		contentProps?: WithoutChildren<Select.ContentProps>;
-		// any other specific component props if needed
 	};
 
 	let { value = $bindable(), items, contentProps, placeholder, ...restProps }: Props = $props();
 
 	const selectedLabel = $derived(items.find((item) => item.value === value)?.label);
-	const selectedIcon = $derived(items.find((item) => item.value === value)?.iconClass);
+	const selectedIcon = $derived(
+		(items.find((item) => item.value === value) as SelectItem)?.iconClass
+	);
 </script>
 
 <Select.Root bind:value={value as never} {...restProps}>
