@@ -6,7 +6,9 @@ declare global {
 		// interface Locals {
 		// }
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState {
+			selectedEventId?: number;
+		}
 		interface Platform {
 			env: {
 				DB: D1Database;

@@ -20,4 +20,6 @@ export const load = (async ({ params }) => {
     }
 
     return { event };
-}) satisfies PageServerLoad; 
+}) satisfies PageServerLoad;
+
+export type UiEvent = Awaited<ReturnType<typeof load>>['event'];

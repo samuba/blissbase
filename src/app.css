@@ -12,3 +12,5 @@
 	--input-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);
 	--color-base-500: var(--input-color);
 }
+
+@import 'tw-animate-css';

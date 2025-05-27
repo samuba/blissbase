@@ -1,6 +1,3 @@
-BUGS
-  seijetzt hat keine text formatierungen
-
 images telegram: selber hosten. Halten nur 1std
 download images and serve
 

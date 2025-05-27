@@ -13,6 +13,8 @@ export interface SearchPageArgs {
 }
 
 export const routes = {
+    eventList: () => '/',
+    eventDetails: (id: number) => `/${id}`,
     searchPage: (args: SearchPageArgs = {}) => {
         const params = new URLSearchParams();
         const { page, limit, startDate, endDate, plzCity, distance, lat, lng, searchTerm, sortBy, sortOrder } = args;

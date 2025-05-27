@@ -172,7 +172,7 @@ Extract these information from the message:
 
 "hasEventData": boolean. wether or not the message contains information about an event.
 
-"name": string. the name of the event. needs to be an exact copy from the message without html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as its obvious that every event is an invitation. if there is no name in the text create a short descriptive name with not much personality.
+"name": string. the name of the event. needs to be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as its obvious that every event is an invitation. if there is no name in the text create a short descriptive name with not much personality.
 
 "description": string. A exact copy from the message, including html tags. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of the description.
 
@@ -190,11 +190,11 @@ Extract these information from the message:
 
 "contactAuthorForMore": boolean. Wether the message states to contact the sender/author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
 
-"price": string. The price or costs of the event for the guest. Without html tags. If the price information includes new lines or is longer than 100 characters do not extract the price.
+"price": string. The price or costs of the event for the guest. Do not include html tags. If the price information includes new lines or is longer than 100 characters do not extract the price.
 
-"venue": string. Name of the location/venue where the event is taking place. Without html tags.
+"venue": string. Name of the location/venue where the event is taking place. Do not include html tags.
 
-"address": string. The full address where the event is happening. Without html tags.
+"address": string. The full address where the event is happening. Do not include html tags.
 
 "city": string. Name of the city/town where the event is happening.
 

@@ -8,7 +8,7 @@
 	} from '$lib/components/LocationDistanceInput.svelte';
 	import { goto } from '$app/navigation';
 	import { routes } from '$lib/routes';
-	import { navigating } from '$app/state';
+	import { navigating, page } from '$app/state';
 	import SpinnerBall from 'phosphor-svelte/lib/SpinnerBall';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
 	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
@@ -18,6 +18,8 @@
 	import { browser } from '$app/environment';
 	import Select from '$lib/components/Select.svelte';
 	import SortAscendingSvg from '~icons/ph/sort-ascending?raw';
+	import type { UiEvent } from './+page.server';
+	import EventDetailsDialog from './EventDetailsDialog.svelte';
 
 	const { data } = $props();
 	const { events, pagination } = $derived(data); // pagination is reactive, reflects URL params
@@ -205,7 +207,6 @@
 				: pagination.plzCity}
 			initialDistance={pagination.distance}
 			onChange={handleLocationDistanceChange}
-			disabled={!!navigating.to}
 		/>
 	</div>
 	<div class="flex w-full items-center justify-center gap-4">
@@ -298,3 +299,8 @@
 		</div>
 	{/if}
 </div>
+
+<EventDetailsDialog
+	event={events.find((e) => e.id === page.state.selectedEventId) ??
+		(undefined as unknown as UiEvent)}
+/>
