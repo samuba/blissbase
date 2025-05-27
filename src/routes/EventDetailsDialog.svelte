@@ -28,7 +28,7 @@
 	<Dialog.Portal>
 		<Dialog.Overlay
 			class={[
-				'fixed inset-0 z-50 bg-gray-600/90 transition-opacity',
+				'fixed inset-0 z-50 bg-gray-700/90 transition-opacity',
 				'data-[state=open]:animate-in',
 				'data-[state=open]:ease-out',
 				'data-[state=open]:fade-in',
@@ -36,7 +36,7 @@
 				'data-[state=closed]:animate-out',
 				'data-[state=closed]:ease-in',
 				'data-[state=closed]:fade-out',
-				'data-[state=closed]:duration-200'
+				'data-[state=closed]:duration-150'
 			]}
 		/>
 
@@ -55,7 +55,7 @@
 				'data-[state=closed]:fade-out',
 				'data-[state=closed]:slide-out-to-top-4',
 				'data-[state=closed]:sm:zoom-out-95',
-				'data-[state=closed]:duration-200'
+				'data-[state=closed]:duration-150'
 			]}
 			style="scrollbar-width: thin;"
 		>
