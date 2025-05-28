@@ -191,9 +191,9 @@
 				items={[
 					{ value: 'relevance', label: 'Sortierung', disabled: true },
 					{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
-					{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' },
-					{ value: 'time_desc', label: 'Startzeit', iconClass: 'icon-[ph--sort-descending]' },
-					{ value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
+					{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' }
+					// { value: 'time_desc', label: 'Startzeit', iconClass: 'icon-[ph--sort-descending]' }
+					// { value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
 				]}
 				type="single"
 				value={selectedSortValue}
