@@ -2,7 +2,7 @@ import { fetchEvents } from "$lib/server/events";
 import type { PageServerLoad } from "./$types";
 
 
-export const load = (async ({ url }) => {
+export const load = (async ({ url, locals: { requestInfo } }) => {
     const pageStr = url.searchParams.get('page');
     const limitStr = url.searchParams.get('limit');
     const latStr = url.searchParams.get('lat');
@@ -13,7 +13,7 @@ export const load = (async ({ url }) => {
         limitParam: limitStr ? parseInt(limitStr, 10) : null,
         startDateParam: url.searchParams.get('startDate'),
         endDateParam: url.searchParams.get('endDate'),
-        plzCityParam: url.searchParams.get('plzCity'),
+        plzCityParam: url.searchParams.get('plzCity') ?? requestInfo.city,
         distanceParam: url.searchParams.get('distance'),
         latParam: latStr ? parseFloat(latStr) : null,
         lngParam: lngStr ? parseFloat(lngStr) : null,
