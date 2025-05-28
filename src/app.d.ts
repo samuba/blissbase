@@ -3,8 +3,19 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {
-		// }
+		interface Locals {
+			requestInfo: {
+				ip: string | null;
+				continent: string | null;
+				country: string | null;
+				region: string | null;
+				city: string | null;
+				latitude: number | null;
+				longitude: number | null;
+				timezone: string | null;
+				postalCode: string | null;
+			};
+		}
 		// interface PageData {}
 		interface PageState {
 			selectedEventId?: number;

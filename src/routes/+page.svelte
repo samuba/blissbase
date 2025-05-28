@@ -26,7 +26,7 @@
 	let searchInputElement = $state<HTMLInputElement | null>(null);
 	let isLoadingEvents = $state(false);
 
-	async function loadEvents(params: Parameters<typeof fetchEvents>[0] & { append?: boolean }) {
+	async function loadEvents(params: Parameters<typeof fetchEvents>[0], append?: boolean) {
 		try {
 			isLoadingEvents = true;
 
@@ -38,7 +38,7 @@
 				endAt: x.endAt ? new Date(x.endAt) : null
 			}));
 
-			if (params.append) events.push(...newEvents);
+			if (append) events.push(...newEvents);
 			else events = newEvents;
 
 			console.log(events.length);
@@ -49,20 +49,22 @@
 
 	async function loadMoreEvents() {
 		if (isLoadingEvents) return;
-		return loadEvents({
-			pageParam: (pagination.page ?? 1) + 1,
-			limitParam: pagination.limit,
-			startDateParam: pagination.startDate,
-			endDateParam: pagination.endDate,
-			plzCityParam: pagination.plzCity,
-			distanceParam: pagination.distance,
-			latParam: pagination.lat,
-			lngParam: pagination.lng,
-			searchTermParam: pagination.searchTerm,
-			sortByParam: pagination.sortBy,
-			sortOrderParam: pagination.sortOrder,
-			append: true
-		});
+		return loadEvents(
+			{
+				pageParam: (pagination.page ?? 1) + 1,
+				limitParam: pagination.limit,
+				startDateParam: pagination.startDate,
+				endDateParam: pagination.endDate,
+				plzCityParam: pagination.plzCity,
+				distanceParam: pagination.distance,
+				latParam: pagination.lat,
+				lngParam: pagination.lng,
+				searchTermParam: pagination.searchTerm,
+				sortByParam: pagination.sortBy,
+				sortOrderParam: pagination.sortOrder
+			},
+			true
+		);
 	}
 
 	let selectedSortValue = $state(getSortValue(pagination.sortBy, pagination.sortOrder));
