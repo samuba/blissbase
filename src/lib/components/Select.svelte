@@ -36,10 +36,12 @@
 						{value}
 						{label}
 						{disabled}
-						class={'hover:bg-base-200 flex cursor-default items-center gap-1 rounded-lg px-2 py-1'}
+						class={'hover:not-data-disabled:bg-base-200 flex cursor-default items-center gap-1 rounded-lg px-2 py-1 data-disabled:opacity-55'}
 					>
 						{#snippet children({ selected })}
-							<i class={[iconClass, 'size-5']}></i>
+							{#if iconClass}
+								<i class={[iconClass, 'size-5']}></i>
+							{/if}
 							<span class:font-semibold={selected}>
 								{label}
 							</span>

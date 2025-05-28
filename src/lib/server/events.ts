@@ -1,0 +1,224 @@
+import { db } from '$lib/server/db';
+
+import { events as eventsTable } from '$lib/server/schema';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } from 'drizzle-orm';
+import { today as getToday, getLocalTimeZone, parseDate } from '@internationalized/date';
+import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import { geocodeAddressCached } from '$lib/server/google';
+
+export async function fetchEvents(params: LoadEventsParams) {
+    const {
+        pageParam,
+        limitParam: limitParamInput,
+        startDateParam,
+        endDateParam,
+        plzCityParam,
+        distanceParam,
+        latParam,
+        lngParam,
+        searchTermParam,
+        sortByParam,
+        sortOrderParam
+    } = params;
+
+    let limitParam = limitParamInput;
+    if (limitParam === null || isNaN(limitParam) || limitParam <= 0) {
+        limitParam = 10;
+    }
+    limitParam = Math.min(limitParam ?? 10, 20);
+
+    const page = pageParam === null || isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+    const offset = (page - 1) * limitParam;
+    const timeZone = getLocalTimeZone();
+    const sixHoursAgo = new Date(new Date().getTime() - 6 * 60 * 60 * 1000);
+
+    let dateCondition;
+
+    if (startDateParam && endDateParam) {
+        try {
+            const startCalDate = parseDate(startDateParam);
+            const endCalDate = parseDate(endDateParam);
+            const startDate = startCalDate.toDate(timeZone);
+            const endDate = endCalDate.add({ days: 1 }).toDate(timeZone);
+
+            const startsInRange = and(
+                gte(eventsTable.startAt, startDate),
+                lte(eventsTable.startAt, endDate)
+            );
+            const endsInRange = and(
+                lt(eventsTable.startAt, startDate),
+                isNotNull(eventsTable.endAt),
+                gte(eventsTable.endAt, startDate),
+                lte(eventsTable.endAt, endDate),
+                gte(eventsTable.startAt, sixHoursAgo)
+            );
+            const spansRange = and(
+                lt(eventsTable.startAt, startDate),
+                isNotNull(eventsTable.endAt),
+                gt(eventsTable.endAt, endDate),
+                gte(eventsTable.startAt, sixHoursAgo)
+            );
+            dateCondition = or(startsInRange, endsInRange, spansRange);
+        } catch (error) {
+            console.error('Error parsing date parameters:', error);
+            const todayDate = getToday(timeZone);
+            const todayStart = todayDate.toDate(timeZone);
+            const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
+            const acceptableOngoingEvent = and(
+                lt(eventsTable.startAt, todayStart),
+                gte(eventsTable.startAt, sixHoursAgo),
+                isNotNull(eventsTable.endAt),
+                gte(eventsTable.endAt, todayStart),
+                lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
+            );
+            dateCondition = or(startsTodayOrLater, acceptableOngoingEvent);
+        }
+    } else {
+        const todayDate = getToday(timeZone);
+        const todayStart = todayDate.toDate(timeZone);
+        const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
+        const acceptableOngoingEvent = and(
+            lt(eventsTable.startAt, todayStart),
+            gte(eventsTable.startAt, sixHoursAgo),
+            isNotNull(eventsTable.endAt),
+            gte(eventsTable.endAt, todayStart),
+            lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
+        );
+        dateCondition = or(startsTodayOrLater, acceptableOngoingEvent);
+    }
+
+    let proximityCondition = undefined;
+    let geocodedCoords: { lat: number; lng: number } | null = null;
+
+    if (distanceParam) {
+        if (latParam && lngParam) {
+            const lat = latParam;
+            const lng = lngParam;
+            if (!isNaN(lat) && !isNaN(lng)) {
+                geocodedCoords = { lat, lng };
+            } else {
+                console.error('Invalid lat/lng parameters:', latParam, lngParam);
+            }
+        } else if (plzCityParam && plzCityParam.trim() !== '') {
+            geocodedCoords = await geocodeAddressCached([plzCityParam], GOOGLE_MAPS_API_KEY);
+        }
+
+        if (geocodedCoords) {
+            const distanceMeters = parseFloat(distanceParam) * 1000;
+            proximityCondition = sql`ST_DWithin(ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography, ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography, ${distanceMeters}) AND ${eventsTable.latitude} IS NOT NULL AND ${eventsTable.longitude} IS NOT NULL`;
+        }
+    }
+
+    let sortBy = sortByParam === 'distance' ? 'distance' : 'time';
+    const sortOrder = sortOrderParam === 'desc' ? 'desc' : 'asc';
+
+    if (sortBy === 'distance' && !geocodedCoords) {
+        sortBy = 'time';
+    }
+
+    let orderByClause;
+    if (sortBy === 'distance' && geocodedCoords) {
+        const distanceSortSql = sql`
+            CASE
+                WHEN ${eventsTable.longitude} IS NOT NULL AND ${eventsTable.latitude} IS NOT NULL THEN
+                    ST_Distance(
+                        ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography,
+                        ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
+                    )
+                ELSE NULL
+            END`;
+        if (sortOrder === 'asc') {
+            orderByClause = [sql`${distanceSortSql} ASC NULLS LAST`];
+        } else {
+            orderByClause = [sql`${distanceSortSql} DESC NULLS LAST`];
+        }
+    } else {
+        if (sortOrder === 'asc') {
+            orderByClause = [asc(eventsTable.startAt)];
+        } else {
+            orderByClause = [desc(eventsTable.startAt)];
+        }
+    }
+
+    const allConditions = [dateCondition, proximityCondition].filter(Boolean);
+
+    if (searchTermParam && searchTermParam.trim() !== '') {
+        const searchTermCondition = or(
+            ilike(eventsTable.name, `%${searchTermParam}%`),
+            sql<boolean>`EXISTS (SELECT 1 FROM unnest(${eventsTable.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${searchTermParam}%`})`,
+            ilike(eventsTable.description, `%${searchTermParam}%`)
+        );
+        if (searchTermCondition) {
+            allConditions.push(searchTermCondition);
+        }
+    }
+
+    const finalCondition = allConditions.length > 0 ? and(...allConditions) : undefined;
+
+    const eventsQuery = db.query.events.findMany({
+        where: finalCondition,
+        orderBy: orderByClause,
+        limit: limitParam,
+        offset: offset,
+        extras: {
+            distanceKm: geocodedCoords ? sql<number | null>`
+            CASE
+                WHEN ${eventsTable.longitude} IS NOT NULL AND ${eventsTable.latitude} IS NOT NULL THEN
+                    GREATEST(1, ROUND(ST_Distance(
+                        ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography,
+                        ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
+                    ) / 1000))
+                ELSE NULL
+            END
+        `.as('distance_km') : sql<null>`NULL`.as('distance_km')
+        }
+    });
+
+    const totalEventsQuery = db.select({ count: count() }).from(eventsTable).where(finalCondition);
+
+    const startTime = performance.now();
+    const [events, totalResult] = await Promise.all([eventsQuery, totalEventsQuery]);
+    const endTime = performance.now();
+    console.log(`Query execution time: ${endTime - startTime}ms`);
+
+    const totalEvents = totalResult[0].count;
+    const totalPages = Math.ceil(totalEvents / limitParam);
+
+    const usedLat = geocodedCoords ? geocodedCoords.lat : latParam;
+    const usedLng = geocodedCoords ? geocodedCoords.lng : lngParam;
+
+    return {
+        events,
+        pagination: {
+            totalEvents,
+            totalPages,
+            startDate: startDateParam,
+            endDate: endDateParam,
+            plzCity: plzCityParam,
+            distance: distanceParam,
+            lat: usedLat,
+            lng: usedLng,
+            page: pageParam,
+            limit: limitParam,
+            searchTerm: searchTermParam,
+            sortBy: sortBy,
+            sortOrder: sortOrder
+        }
+    };
+}
+
+type LoadEventsParams = {
+    pageParam: number | null;
+    limitParam: number | null;
+    startDateParam: string | null;
+    endDateParam: string | null;
+    plzCityParam: string | null;
+    distanceParam: string | null;
+    latParam: number | null;
+    lngParam: number | null;
+    searchTermParam: string | null;
+    sortByParam: string | null;
+    sortOrderParam: string | null;
+}
+
+export type UiEvent = Awaited<ReturnType<typeof fetchEvents>>['events'][number];

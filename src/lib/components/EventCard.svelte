@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { UiEvent } from '$lib/../routes/+page.server';
+	import type { UiEvent } from '$lib/server/events';
 	import { formatAddress, formatTimeStr } from '$lib/common';
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';

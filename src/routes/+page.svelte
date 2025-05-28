@@ -7,28 +7,63 @@
 		type LocationChangeEvent
 	} from '$lib/components/LocationDistanceInput.svelte';
 	import { goto } from '$app/navigation';
-	import { routes } from '$lib/routes';
 	import { navigating, page } from '$app/state';
 
 	import { debounce } from '$lib/common';
 	import { browser } from '$app/environment';
 	import Select from '$lib/components/Select.svelte';
-	import type { UiEvent } from './+page.server';
+	import type { UiEvent } from '$lib/server/events';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
+	import { intersect } from '$lib/attachments/intersection';
+	import { fetchEvents } from './page.telefunc';
 
 	const { data } = $props();
-	const { events, pagination } = $derived(data); // pagination is reactive, reflects URL params
+	let events = $state(data.events);
+	let pagination = $state(data.pagination);
 
 	let searchTermInput = $state(pagination.searchTerm ?? '');
 	let searchInputElement = $state<HTMLInputElement | null>(null);
+	let isLoadingEvents = $state(false);
 
-	const sortOptions = $state([
-		{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
-		// { value: 'time_desc', label: 'Time (Latest First)' },
-		{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' }
-		// { value: 'distance_desc', label: 'Distance (Farthest First)' }
-	]);
+	async function loadEvents(params: Parameters<typeof fetchEvents>[0] & { append?: boolean }) {
+		try {
+			isLoadingEvents = true;
+
+			const data = await fetchEvents(params);
+			pagination = data.pagination;
+			const newEvents = data.events.map((x) => ({
+				...x,
+				startAt: new Date(x.startAt),
+				endAt: x.endAt ? new Date(x.endAt) : null
+			}));
+
+			if (params.append) events.push(...newEvents);
+			else events = newEvents;
+
+			console.log(events.length);
+		} finally {
+			isLoadingEvents = false;
+		}
+	}
+
+	async function loadMoreEvents() {
+		if (isLoadingEvents) return;
+		return loadEvents({
+			pageParam: (pagination.page ?? 1) + 1,
+			limitParam: pagination.limit,
+			startDateParam: pagination.startDate,
+			endDateParam: pagination.endDate,
+			plzCityParam: pagination.plzCity,
+			distanceParam: pagination.distance,
+			latParam: pagination.lat,
+			lngParam: pagination.lng,
+			searchTermParam: pagination.searchTerm,
+			sortByParam: pagination.sortBy,
+			sortOrderParam: pagination.sortOrder,
+			append: true
+		});
+	}
 
 	let selectedSortValue = $state(getSortValue(pagination.sortBy, pagination.sortOrder));
 
@@ -38,139 +73,70 @@
 		return `${sb}_${so}`;
 	}
 
-	function buildAndGoToUrl(
-		pageReset: boolean,
-		startDateArg?: string | null,
-		endDateArg?: string | null,
-		plzCityArg?: string | null, // Renamed from locationArg for clarity
-		distanceArg?: string | null,
-		latitudeArg?: number | null,
-		longitudeArg?: number | null,
-		searchTermArg?: string | null,
-		sortByArg?: string | null,
-		sortOrderArg?: string | null
-	) {
-		const newParams = new URLSearchParams();
-
-		if (pageReset) {
-			newParams.set('page', '1');
-		} else {
-			newParams.set('page', pagination.page?.toString() ?? '1');
-		}
-		newParams.set('limit', pagination.limit?.toString() ?? '10');
-
-		const finalStartDate = startDateArg !== undefined ? startDateArg : pagination.startDate;
-		const finalEndDate = endDateArg !== undefined ? endDateArg : pagination.endDate;
-		const finalPlzCity = plzCityArg !== undefined ? plzCityArg : pagination.plzCity;
-		const finalDistance = distanceArg !== undefined ? distanceArg : pagination.distance;
-		const finalLatitude = latitudeArg !== undefined ? latitudeArg : pagination.lat;
-		const finalLongitude = longitudeArg !== undefined ? longitudeArg : pagination.lng;
-		const finalSearchTerm = searchTermArg !== undefined ? searchTermArg : pagination.searchTerm;
-		const finalSortBy = sortByArg !== undefined ? sortByArg : pagination.sortBy;
-		const finalSortOrder = sortOrderArg !== undefined ? sortOrderArg : pagination.sortOrder;
-
-		if (finalStartDate) newParams.set('startDate', finalStartDate);
-		if (finalEndDate) newParams.set('endDate', finalEndDate);
-
-		// Only set plzCity if lat/lng are not primary
-		if (finalLatitude !== null && finalLongitude !== null) {
-			newParams.set('lat', finalLatitude.toString());
-			newParams.set('lng', finalLongitude.toString());
-			// If lat/lng are present, plzCity is not used for primary search
-			// but can be kept if it was part of the original pagination data and not overridden.
-			if (finalPlzCity && plzCityArg === undefined) {
-				// Keep original plzCity if not explicitly cleared by new plzCityArg
-				newParams.set('plzCity', finalPlzCity);
-			}
-		} else if (finalPlzCity) {
-			newParams.set('plzCity', finalPlzCity);
-		}
-
-		if (finalDistance) newParams.set('distance', finalDistance);
-		if (finalSearchTerm && finalSearchTerm.trim() !== '')
-			newParams.set('searchTerm', finalSearchTerm);
-		if (finalSortBy) newParams.set('sortBy', finalSortBy);
-		if (finalSortOrder) newParams.set('sortOrder', finalSortOrder);
-
-		const currentSearchParams = new URLSearchParams(window.location.search);
-		const normalize = (p: URLSearchParams) => {
-			const obj: Record<string, string> = {};
-			for (const [key, value] of p) {
-				obj[key] = value;
-			}
-			return new URLSearchParams(
-				Object.entries(obj).sort(([a], [b]) => a.localeCompare(b))
-			).toString();
-		};
-
-		if (normalize(newParams) === normalize(currentSearchParams)) {
-			return; // No effective change in URL params, skipping goto
-		}
-
-		goto(`?${newParams.toString()}`, { keepFocus: true, invalidateAll: true });
-	}
-
 	const onDateChange: DateRangePickerOnChange = (value) => {
-		buildAndGoToUrl(
-			true,
-			value?.start?.toString() ?? null,
-			value?.end?.toString() ?? null,
-			pagination.plzCity,
-			pagination.distance,
-			pagination.lat,
-			pagination.lng,
-			searchTermInput,
-			pagination.sortBy,
-			pagination.sortOrder
-		);
+		loadEvents({
+			pageParam: 1,
+			limitParam: pagination.limit,
+			startDateParam: value?.start?.toString() ?? null,
+			endDateParam: value?.end?.toString() ?? null,
+			plzCityParam: pagination.plzCity,
+			distanceParam: pagination.distance,
+			latParam: pagination.lat,
+			lngParam: pagination.lng,
+			searchTermParam: pagination.searchTerm,
+			sortByParam: pagination.sortBy,
+			sortOrderParam: pagination.sortOrder
+		});
 	};
 
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
-		buildAndGoToUrl(
-			true, // pageReset
-			pagination.startDate,
-			pagination.endDate,
-			event.location,
-			event.distance,
-			event.latitude,
-			event.longitude,
-			searchTermInput,
-			pagination.sortBy,
-			pagination.sortOrder
-		);
+		loadEvents({
+			pageParam: 1,
+			limitParam: pagination.limit,
+			startDateParam: pagination.startDate,
+			endDateParam: pagination.endDate,
+			plzCityParam: event.location,
+			latParam: event.latitude ?? null,
+			lngParam: event.longitude ?? null,
+			distanceParam: event.distance,
+			searchTermParam: pagination.searchTerm,
+			sortByParam: pagination.sortBy,
+			sortOrderParam: pagination.sortOrder
+		});
 	}
 
 	const debouncedSearch = debounce(() => {
-		if (navigating.to) return; // Prevent search if already navigating
-		buildAndGoToUrl(
-			true, // pageReset
-			pagination.startDate,
-			pagination.endDate,
-			pagination.plzCity,
-			pagination.distance,
-			pagination.lat,
-			pagination.lng,
-			searchTermInput,
-			pagination.sortBy,
-			pagination.sortOrder
-		);
+		loadEvents({
+			pageParam: 1,
+			limitParam: pagination.limit,
+			startDateParam: pagination.startDate,
+			endDateParam: pagination.endDate,
+			plzCityParam: pagination.plzCity,
+			distanceParam: pagination.distance,
+			latParam: pagination.lat,
+			lngParam: pagination.lng,
+			searchTermParam: searchTermInput,
+			sortByParam: pagination.sortBy,
+			sortOrderParam: pagination.sortOrder
+		});
 	}, 400);
 
 	function handleSortChanged(value: string) {
 		const [sortBy, sortOrder] = value.split('_');
 
-		buildAndGoToUrl(
-			true, // pageReset
-			pagination.startDate,
-			pagination.endDate,
-			pagination.plzCity,
-			pagination.distance,
-			pagination.lat,
-			pagination.lng,
-			searchTermInput,
-			sortBy,
-			sortOrder
-		);
+		loadEvents({
+			pageParam: 1,
+			limitParam: pagination.limit,
+			startDateParam: pagination.startDate,
+			endDateParam: pagination.endDate,
+			plzCityParam: pagination.plzCity,
+			distanceParam: pagination.distance,
+			latParam: pagination.lat,
+			lngParam: pagination.lng,
+			searchTermParam: pagination.searchTerm,
+			sortByParam: sortBy,
+			sortOrderParam: sortOrder
+		});
 	}
 
 	$effect(() => {
@@ -220,7 +186,13 @@
 		<div class="">
 			<label for="sort-select" class="sr-only">Sortieren nach</label>
 			<Select
-				items={sortOptions}
+				items={[
+					{ value: 'relevance', label: 'Sortierung', disabled: true },
+					{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
+					{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' },
+					{ value: 'time_desc', label: 'Startzeit', iconClass: 'icon-[ph--sort-descending]' },
+					{ value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
+				]}
 				type="single"
 				value={selectedSortValue}
 				onValueChange={handleSortChanged}
@@ -229,77 +201,23 @@
 		<InstallButton />
 	</div>
 
-	{#if navigating.to}
-		<div class="flex flex-col items-center justify-center gap-3">
-			<i class="icon-[ph--spinner-gap] text-primary-content size-10 animate-spin"></i>
-			<p class="">Lade...</p>
-		</div>
-	{:else if events.length > 0}
+	{#if events.length > 0}
 		<div class="flex w-full flex-col items-center gap-6">
-			{#each events as event (event.id)}
+			{#each events as event, i (event.id)}
 				<EventCard {event} />
 			{/each}
+
+			<div {@attach intersect({ onIntersecting: loadMoreEvents })} class="-translate-y-72"></div>
+
+			{#if isLoadingEvents}
+				<div class="flex flex-col items-center justify-center gap-3">
+					<i class="icon-[ph--spinner-gap] text-primary-content size-10 animate-spin"></i>
+					<p class="">Lade...</p>
+				</div>
+			{/if}
 		</div>
 	{:else}
 		<p class="text-gray-500">Keine Events gefunden.</p>
-	{/if}
-
-	{#if pagination.totalPages > 1 && !navigating.to}
-		<div class=" flex items-center justify-center space-x-4">
-			<a
-				href={routes.searchPage({
-					page: pagination.page - 1,
-					limit: pagination.limit,
-					startDate: pagination.startDate,
-					endDate: pagination.endDate,
-					plzCity: pagination.plzCity,
-					distance: pagination.distance,
-					lat: pagination.lat,
-					lng: pagination.lng,
-					searchTerm: pagination.searchTerm,
-					sortBy: pagination.sortBy,
-					sortOrder: pagination.sortOrder
-				})}
-				onclick={(e) => {
-					if (pagination.page <= 1) e.preventDefault();
-				}}
-				aria-label="Vorherige Seite"
-			>
-				<button class="btn" disabled={pagination.page <= 1} aria-label="Vorherige Seite">
-					<i class="icon-[ph--caret-left] size-5"></i>
-				</button>
-			</a>
-			<span class="text-sm text-gray-700">
-				{pagination.page} von {pagination.totalPages}
-			</span>
-			<a
-				href={routes.searchPage({
-					page: pagination.page + 1,
-					limit: pagination.limit,
-					startDate: pagination.startDate,
-					endDate: pagination.endDate,
-					plzCity: pagination.plzCity,
-					distance: pagination.distance,
-					lat: pagination.lat,
-					lng: pagination.lng,
-					searchTerm: pagination.searchTerm,
-					sortBy: pagination.sortBy,
-					sortOrder: pagination.sortOrder
-				})}
-				onclick={(e) => {
-					if (pagination.page >= pagination.totalPages) e.preventDefault();
-				}}
-				aria-label="Nächste Seite"
-			>
-				<button
-					class="btn"
-					disabled={pagination.page >= pagination.totalPages}
-					aria-label="Nächste Seite"
-				>
-					<i class="icon-[ph--caret-right] size-5"></i>
-				</button>
-			</a>
-		</div>
 	{/if}
 </div>
 
