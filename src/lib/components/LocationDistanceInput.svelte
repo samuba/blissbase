@@ -234,10 +234,10 @@
 	</button>
 	<select
 		id="distance"
-		class="select select-bordered join-item w-auto"
+		class="select join-item disabled:!border-base-300 w-auto disabled:!border-2"
 		bind:value={selectedDistance}
 		onchange={handleFilterInputChange}
-		disabled={isLoadingLocation || disabled}
+		disabled={isLoadingLocation || disabled || (typedPlzCity === '' && !usingCurrentLocation)}
 	>
 		<option value="">Überall</option>
 		{#each distanceOptions as option}
