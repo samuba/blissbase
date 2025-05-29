@@ -65,7 +65,7 @@
 	<!-- Fullscreen Image Overlay -->
 	{#if showFullscreenImage && event.imageUrls?.length}
 		<div
-			class="bg-opacity-90 animate-in fade-in zoom-in fade-out zoom-out fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black"
+			class="bg-opacity-90 animate-in fade-in fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black"
 			onclick={() => (showFullscreenImage = false)}
 		>
 			<img src={event.imageUrls[0]} alt={event.name} class="max-h-full max-w-full object-contain" />
