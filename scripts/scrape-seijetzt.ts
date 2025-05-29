@@ -23,7 +23,8 @@ import * as cheerio from 'cheerio';
 import {
     REQUEST_DELAY_MS,
     WebsiteScraper, // Import WebsiteScraper
-    fetchWithTimeout
+    fetchWithTimeout,
+    superTrim
 } from "./common.ts";
 import { sleep } from "bun";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
@@ -189,70 +190,10 @@ export class SeijetztScraper implements WebsiteScraper {
 
     extractPrice(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
-        let priceContent: string | null = null;
-        const pricePatterns = [
-            () => {
-                const $dl = $('dl.fi-description-list, dl').first();
-                if ($dl.length > 0) {
-                    const priceDt = $dl.find('dt:contains("Preis"), dt:contains("Kosten"), dt:contains("Preise")').first();
-                    if (priceDt.length > 0) return priceDt.next('dd').html();
-                } return null;
-            },
-            () => {
-                const priceSection = $('.font-bold:contains("Preise")').closest('.col-span-2');
-                if (priceSection.length > 0) {
-                    const prices: string[] = [];
-                    priceSection.find('> div').each((_i, div) => {
-                        const priceText = $(div).text().trim();
-                        if (priceText && priceText.includes('€') && !priceText.includes('Preise')) prices.push(priceText);
-                    });
-                    return prices.length > 0 ? prices.join('\n') : null;
-                } return null;
-            },
-            () => {
-                const priceHeaders = $('h3:contains("Preise"), h4:contains("Preise"), strong:contains("Preise"), div.font-bold:contains("Preise")');
-                if (priceHeaders.length > 0) {
-                    const priceHeader = $(priceHeaders[0]);
-                    const prices: string[] = [];
-                    priceHeader.parent().find('div').each((_i, el) => {
-                        const text = $(el).text().trim();
-                        if (text.match(/\d+([.,]\d+)?\s*(€|EUR|Euro)/i) && !text.includes("Preise") && !text.includes("Google") && !text.includes("Karte")) prices.push(text);
-                    });
-                    if (prices.length > 0) return prices.join('\n');
-                    return priceHeader.parent().html();
-                } return null;
-            },
-            () => {
-                const euroRegex = /(\d+([.,]\d+)?\s*€|\d+([.,]\d+)?\s*Euro)/i;
-                const match = $('body').text().match(euroRegex);
-                return match ? match[0] : null;
-            }
-        ];
-
-        for (const finder of pricePatterns) { priceContent = finder(); if (priceContent) break; }
-
-        if (priceContent) {
-            if (typeof priceContent === 'string' && (priceContent.toLowerCase().includes("kostenlos") || priceContent.toLowerCase().includes("frei") || priceContent.toLowerCase().includes("gratis"))) {
-                return "Free";
-            } else if (typeof priceContent === 'string' && priceContent.match(/\d+([.,]\d+)?\s*(€|EUR|Euro)/i)) {
-                const $priceContainer = $('<div>').html(priceContent);
-                const prices: string[] = [];
-                $priceContainer.find('div').each((_i, el) => {
-                    const text = $(el).text().trim();
-                    if (text.match(/\d+([.,]\d+)?\s*(€|EUR|Euro)/i) && !text.includes("Google") && !text.includes("Karte") && !text.includes("Preise")) {
-                        prices.push(text.replace(/\(\(/g, '(').replace(/\)\)/g, ')'));
-                    }
-                });
-                if (prices.length === 0) {
-                    const text = $priceContainer.text().trim().replace(/\s+/g, ' ').replace(/\(\(/g, '(').replace(/\)\)/g, ')');
-                    if (text.match(/\d+([.,]\d+)?\s*(€|EUR|Euro)/i)) prices.push(text);
-                }
-                return prices.length > 0 ? prices.join("\n") : $priceContainer.text().trim().replace(/\s+/g, ' ').replace(/\(\(/g, '(').replace(/\)\)/g, ')');
-            } else if (typeof priceContent === 'string') {
-                return priceContent.trim().replace(/\s+/g, ' ').replace(/\(\(/g, '(').replace(/\)\)/g, ')');
-            }
-        }
-        return undefined;
+        const priceElement = $('div.font-bold:contains("Preis")').first().parent();
+        priceElement.find('svg').parent().remove();
+        priceElement.find('*').removeAttr('class').removeAttr('style');
+        return superTrim(priceElement.html());
     }
 
     extractDescription(html: string): string | undefined {
@@ -263,7 +204,7 @@ export class SeijetztScraper implements WebsiteScraper {
             description = $(el).html() ?? undefined;
             return;
         });
-        return description;
+        return description?.trim();
     }
 
     extractImageUrls(html: string): string[] | undefined {
@@ -380,12 +321,15 @@ export class SeijetztScraper implements WebsiteScraper {
 
         const coordinates = await geocodeAddressCached(this.extractAddress(html) || [], process.env.GOOGLE_MAPS_API_KEY || '');
 
+        const price = this.extractPrice(html) ?? null;
+
         return {
             name,
             startAt,
             endAt,
             address: this.extractAddress(html) || [],
-            price: this.extractPrice(html) ?? null,
+            price,
+            priceIsHtml: price?.startsWith('<div>') ?? false,
             description: this.extractDescription(html) ?? null,
             imageUrls: this.extractImageUrls(html) || [],
             host: this.extractHost(html) ?? null,

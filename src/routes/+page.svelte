@@ -32,8 +32,13 @@
 
 			const data = await fetchEvents(params);
 
-			if (append) events.push(...data.events);
-			else events = data.events;
+			if (append) {
+				// sometimes pagination can result in duplicate events => Filter out events that already exist
+				const existingEventIds = new Set(events.map((event) => event.id));
+				events.push(...data.events.filter((event) => !existingEventIds.has(event.id)));
+			} else {
+				events = data.events;
+			}
 			pagination = data.pagination;
 		} finally {
 			isLoadingEvents = false;

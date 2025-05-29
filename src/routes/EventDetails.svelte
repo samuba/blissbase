@@ -65,7 +65,7 @@
 	<!-- Fullscreen Image Overlay -->
 	{#if showFullscreenImage && event.imageUrls?.length}
 		<div
-			class="bg-opacity-90 animate-in fade-in fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black"
+			class=" animate-in fade-in fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black/95"
 			onclick={() => (showFullscreenImage = false)}
 		>
 			<img src={event.imageUrls[0]} alt={event.name} class="max-h-full max-w-full object-contain" />
@@ -89,7 +89,7 @@
 				</p>
 			</div>
 
-			{#if event.price}
+			{#if event.price && !event.priceIsHtml}
 				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
 					<i class="icon-[ph--money] mr-2 size-6"></i>
 					<p class="font-medium">{event.price}</p>
@@ -180,9 +180,15 @@
 		</div>
 
 		{#if event.description}
-			<p class="event-description prose">
+			<div class="event-description prose">
 				{@html event.description}
-			</p>
+			</div>
+		{/if}
+
+		{#if event.priceIsHtml}
+			<div class="prose -mt-4">
+				{@html event.price}
+			</div>
 		{/if}
 
 		{#if showOriginal}
@@ -197,11 +203,10 @@
 		{/if}
 
 		{#if event.host}
-			<div class=" flex flex-wrap items-center gap-1.5 text-[16px]">
-				<div class="flex items-center gap-1.5">
-					<i class="icon-[ph--user-circle] size-6"></i>
-					<h2 class="font-medium">Organisation:</h2>
-				</div>
+			<div
+				class=" bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
+			>
+				<i class="icon-[ph--user-circle] size-6"></i>
 				{#if event.hostLink}
 					<a href={event.hostLink} class="underline" target="_blank" rel="noopener noreferrer">
 						{event.host}
@@ -214,8 +219,8 @@
 
 		{#if event.tags && event.tags.length > 0}
 			<div>
-				<h2 class="mb-2 font-medium">Tags</h2>
-				<div class="flex flex-wrap gap-2">
+				<div class="flex flex-wrap items-center gap-2">
+					<h2 class="pr-1 text-lg">Tags</h2>
 					{#each event.tags as tag}
 						<span class="badge badge-ghost">{tag}</span>
 					{/each}

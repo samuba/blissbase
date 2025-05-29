@@ -1,4 +1,4 @@
-import { pgTable, text, integer, real, timestamp, unique } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, unique, boolean } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -7,6 +7,7 @@ export const events = pgTable('events', {
     endAt: timestamp(),
     address: text().notNull().array(),
     price: text(),
+    priceIsHtml: boolean().notNull().default(false),
     description: text(),
     descriptionOriginal: text(),
     summary: text(),
