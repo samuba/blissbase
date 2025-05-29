@@ -60,7 +60,7 @@
 		</div>
 	{/if}
 	<div class="card-body text-base-content/90 w-full space-y-4">
-		<h1 class="card-title block w-full text-center text-xl font-bold">{event.name}</h1>
+		<h1 class="card-title block w-full text-center text-2xl font-semibold">{event.name}</h1>
 
 		<div class=" flex flex-wrap justify-center gap-4">
 			<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">

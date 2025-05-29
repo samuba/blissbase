@@ -13,6 +13,7 @@
 <a
 	href={`/${event.id}`}
 	class="w-full"
+	data-sveltekit-preload-data="false"
 	{@attach onTap((e) => {
 		e.preventDefault();
 		pushState(routes.eventDetails(event.id), { selectedEventId: event.id });
