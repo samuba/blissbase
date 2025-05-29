@@ -181,10 +181,10 @@ export async function fetchEvents(params: LoadEventsParams) {
 }
 
 type LoadEventsParams = {
+    startDate: string | null; // 2022-01-01
+    endDate: string | null; // 2022-01-01
     page?: number | null;
     limit?: number | null;
-    startDate?: string | null; // 2022-01-01
-    endDate?: string | null; // 2022-01-01
     plzCity?: string | null;
     distance?: string | null;
     lat?: number | null;
@@ -192,6 +192,9 @@ type LoadEventsParams = {
     searchTerm?: string | null;
     sortBy?: string | null;
     sortOrder?: string | null;
+    // these are not used as params but are returned in the pagination object
+    totalEvents?: number | null;
+    totalPages?: number | null;
 }
 
 export type UiEvent = Awaited<ReturnType<typeof fetchEvents>>['events'][number];

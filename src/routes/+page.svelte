@@ -7,21 +7,20 @@
 		type LocationChangeEvent
 	} from '$lib/components/LocationDistanceInput.svelte';
 	import { page } from '$app/state';
-
 	import { debounce } from '$lib/common';
-	import { browser } from '$app/environment';
 	import Select from '$lib/components/Select.svelte';
 	import type { UiEvent } from '$lib/server/events';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
 	import { intersect } from '$lib/attachments/intersection';
 	import { fetchEvents } from './page.telefunc';
+	import { parseDate } from '@internationalized/date';
 
 	const { data } = $props();
 	let events = $state(data.events);
 	let pagination = $state(data.pagination);
 
-	let searchTermInput = $state(pagination.searchTerm ?? '');
+	let searchTerm = $state(data.pagination.searchTerm ?? '');
 	let searchInputElement = $state<HTMLInputElement | null>(null);
 	let isLoadingEvents = $state(false);
 
@@ -71,94 +70,54 @@
 
 	const onDateChange: DateRangePickerOnChange = (value) => {
 		loadEvents({
+			...pagination,
 			page: 1,
 			limit: pagination.limit,
 			startDate: value?.start?.toString() ?? null,
-			endDate: value?.end?.toString() ?? null,
-			plzCity: pagination.plzCity,
-			distance: pagination.distance,
-			lat: pagination.lat,
-			lng: pagination.lng,
-			searchTerm: pagination.searchTerm,
-			sortBy: pagination.sortBy,
-			sortOrder: pagination.sortOrder
+			endDate: value?.end?.toString() ?? null
 		});
 	};
 
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
 		loadEvents({
+			...pagination,
 			page: 1,
-			limit: pagination.limit,
-			startDate: pagination.startDate,
-			endDate: pagination.endDate,
 			plzCity: event.location,
 			lat: event.latitude ?? null,
 			lng: event.longitude ?? null,
-			distance: event.distance,
-			searchTerm: pagination.searchTerm,
-			sortBy: pagination.sortBy,
-			sortOrder: pagination.sortOrder
+			distance: event.distance
 		});
 	}
 
 	const debouncedSearch = debounce(() => {
 		loadEvents({
+			...pagination,
 			page: 1,
-			limit: pagination.limit,
-			startDate: pagination.startDate,
-			endDate: pagination.endDate,
-			plzCity: pagination.plzCity,
-			distance: pagination.distance,
-			lat: pagination.lat,
-			lng: pagination.lng,
-			searchTerm: searchTermInput,
-			sortBy: pagination.sortBy,
-			sortOrder: pagination.sortOrder
+			searchTerm: searchTerm
 		});
 	}, 400);
 
 	function handleSortChanged(value: string) {
 		const [sortBy, sortOrder] = value.split('_');
-
 		loadEvents({
+			...pagination,
 			page: 1,
-			limit: pagination.limit,
-			startDate: pagination.startDate,
-			endDate: pagination.endDate,
-			plzCity: pagination.plzCity,
-			distance: pagination.distance,
-			lat: pagination.lat,
-			lng: pagination.lng,
-			searchTerm: pagination.searchTerm,
 			sortBy: sortBy,
 			sortOrder: sortOrder
 		});
 	}
-
-	$effect(() => {
-		if (!browser) return; // Guard for SSR
-
-		const authoritativeSearchTerm = pagination.searchTerm ?? '';
-		// Only update local state from URL if the input is not focused
-		// and the values actually differ.
-		if (
-			document.activeElement !== searchInputElement &&
-			searchTermInput !== authoritativeSearchTerm
-		) {
-			searchTermInput = authoritativeSearchTerm;
-		}
-
-		// Sync selectedSortValue with pagination data from URL
-		const newSortValue = getSortValue(pagination.sortBy, pagination.sortOrder);
-		if (selectedSortValue !== newSortValue) {
-			selectedSortValue = newSortValue;
-		}
-	});
 </script>
 
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
 	<div class="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center">
-		<DateRangePicker class="w-full md:w-fit" onChange={onDateChange} />
+		<DateRangePicker
+			class="w-full md:w-fit"
+			onChange={onDateChange}
+			value={{
+				start: parseDate(pagination.startDate),
+				end: parseDate(pagination.endDate)
+			}}
+		/>
 		<LocationDistanceInput
 			initialLocation={pagination.lat && pagination.lng
 				? `coords:${pagination.lat},${pagination.lng}`
@@ -172,7 +131,7 @@
 			<i class="icon-[ph--magnifying-glass] size-5 text-gray-400"></i>
 			<input
 				bind:this={searchInputElement}
-				bind:value={searchTermInput}
+				bind:value={pagination.searchTerm}
 				oninput={debouncedSearch}
 				type="search"
 				class=""
