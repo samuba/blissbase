@@ -6,6 +6,7 @@
 	let { event }: { event: UiEvent } = $props();
 
 	let showOriginal = $state(false);
+	let showFullscreenImage = $state(false);
 
 	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | undefined = $derived.by(() => {
 		if (event.contact?.startsWith('tg://')) {
@@ -54,11 +55,29 @@
 				<img
 					src={event.imageUrls[0]}
 					alt={event.name}
-					class="max-h-96 w-fit max-w-full object-cover"
+					class="max-h-96 w-fit max-w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
+					onclick={() => (showFullscreenImage = true)}
 				/>
 			</figure>
 		</div>
 	{/if}
+
+	<!-- Fullscreen Image Overlay -->
+	{#if showFullscreenImage && event.imageUrls?.length}
+		<div
+			class="bg-opacity-90 animate-in fade-in zoom-in fade-out zoom-out fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black"
+			onclick={() => (showFullscreenImage = false)}
+		>
+			<img src={event.imageUrls[0]} alt={event.name} class="max-h-full max-w-full object-contain" />
+			<button
+				class="btn btn-circle absolute top-4 right-4 shadow-lg"
+				aria-label="Close fullscreen image"
+			>
+				<i class="icon-[ph--x] size-5"></i>
+			</button>
+		</div>
+	{/if}
+
 	<div class="card-body text-base-content/90 w-full space-y-4">
 		<h1 class="card-title block w-full text-center text-2xl font-semibold">{event.name}</h1>
 
