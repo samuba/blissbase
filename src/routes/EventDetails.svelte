@@ -205,7 +205,7 @@
 
 		{#if event.host}
 			<div
-				class=" bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
+				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 			>
 				<i class="icon-[ph--user-circle] size-6"></i>
 				{#if event.hostLink}
