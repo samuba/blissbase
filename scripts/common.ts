@@ -209,13 +209,6 @@ export function parseDateTimeRange(dateTimeStr: string): { startAt: string | nul
     return { startAt, endAt };
 }
 
-export function removeExccessiveLineBreaks(str: string | undefined | null) {
-    if (!str) return undefined;
-    // Remove excessive HTML line breaks while preserving single breaks
-    str = str.replace(/(?:<br\s*\/?>\s*){2,}|(?:<\/p>\s*){2,}|(?:<br\s*\/?>\s*<\/p>\s*){2,}/gi, '<br>');
-    return str.replace(/\n/g, ' ').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
-}
-
 export function superTrim(str: string | undefined | null) {
     if (!str) return undefined;
     return str.trim().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
