@@ -186,7 +186,7 @@
 		{/if}
 
 		{#if event.priceIsHtml}
-			<h2 class="font-medo mb-2 text-lg font-medium">Preise</h2>
+			<h2 class="font-medo mb-2 text-lg font-semibold">Preise</h2>
 			<div class="prose -mt-4 max-w-none">
 				{@html event.price}
 			</div>
@@ -220,7 +220,7 @@
 
 		{#if event.tags && event.tags.length > 0}
 			<div>
-				<h2 class="mb-2 text-lg font-medium">Tags</h2>
+				<h2 class="mb-2 text-lg font-semibold">Tags</h2>
 				<div class="flex flex-wrap items-center gap-2">
 					{#each event.tags as tag}
 						<span class="badge badge-ghost">{tag}</span>

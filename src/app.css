@@ -15,3 +15,15 @@
 }
 
 @import 'tw-animate-css';
+
+/* no prose text should be too bold */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.prose strong,
+.prose b {
+	@apply font-semibold;
+}
