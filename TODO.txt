@@ -1,5 +1,6 @@
-seijetzt price extraction
-BUG: immer wieder beim scrollen: each_key_duplicate. Keyed each block has duplicate key `20138` at indexes 36 and 40
+BUG: nach scrape funktionieren event urls nicht mehr (neue ids => slug)
+
+logo
 
 automatic app update
 

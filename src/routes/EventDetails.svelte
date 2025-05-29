@@ -78,7 +78,7 @@
 		</div>
 	{/if}
 
-	<div class="card-body text-base-content/90 w-full space-y-4">
+	<div class="card-body text-base-content/90 w-full space-y-4 md:px-10">
 		<h1 class="card-title block w-full text-center text-2xl font-semibold">{event.name}</h1>
 
 		<div class=" flex flex-wrap justify-center gap-4">
@@ -180,13 +180,14 @@
 		</div>
 
 		{#if event.description}
-			<div class="event-description prose">
+			<div class="event-description prose max-w-none">
 				{@html event.description}
 			</div>
 		{/if}
 
 		{#if event.priceIsHtml}
-			<div class="prose -mt-4">
+			<h2 class="font-medo mb-2 text-lg font-medium">Preise</h2>
+			<div class="prose -mt-4 max-w-none">
 				{@html event.price}
 			</div>
 		{/if}
@@ -219,8 +220,8 @@
 
 		{#if event.tags && event.tags.length > 0}
 			<div>
+				<h2 class="mb-2 text-lg font-medium">Tags</h2>
 				<div class="flex flex-wrap items-center gap-2">
-					<h2 class="pr-1 text-lg">Tags</h2>
 					{#each event.tags as tag}
 						<span class="badge badge-ghost">{tag}</span>
 					{/each}

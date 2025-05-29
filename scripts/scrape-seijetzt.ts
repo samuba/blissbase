@@ -193,17 +193,18 @@ export class SeijetztScraper implements WebsiteScraper {
         const priceElement = $('div.font-bold:contains("Preis")').first().parent();
         priceElement.find('svg').parent().remove();
         priceElement.find('*').removeAttr('class').removeAttr('style');
+
+        const divs = priceElement.find('div')
+        if (divs.length === 1) {
+            return superTrim(divs.first().html());
+        }
+
         return superTrim(priceElement.html());
     }
 
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
-        let description: string | undefined;
-        $('.prose').each((_i, el) => {
-            // first ".prose" element is probably the description
-            description = $(el).html() ?? undefined;
-            return;
-        });
+        const description = $('.prose').first().html();
         return description?.trim();
     }
 
