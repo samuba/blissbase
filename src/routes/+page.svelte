@@ -97,8 +97,7 @@
 	const debouncedSearch = debounce(() => {
 		loadEvents({
 			...pagination,
-			page: 1,
-			searchTerm: searchTerm
+			page: 1
 		});
 	}, 400);
 

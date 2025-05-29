@@ -1,3 +1,4 @@
+seijetzt price extraction
 BUG: immer wieder beim scrollen: each_key_duplicate. Keyed each block has duplicate key `20138` at indexes 36 and 40
 
 automatic app update
@@ -12,6 +13,8 @@ infos aus bildern extrahieren
 telegram: save sender userId, only them can update an event
 
 feste kategorien wie bei hipsy
+
+button: in kalendar eintragen
 
 location settings:
   save to localstorage
