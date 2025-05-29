@@ -49,9 +49,10 @@
 		<div class="card-body flex flex-col gap-2">
 			<h3 class="card-title leading-snug tracking-tight">{event.name}</h3>
 
-			<time class="text-sm" title={event.startAt?.toLocaleString()}>
+			<div class="flex items-center gap-1">
+				<!-- <i class="icon-[ph--clock] mr-1.5 size-4 min-w-4"></i> -->
 				{formatTimeStr(event.startAt, event.endAt)}
-			</time>
+			</div>
 
 			{#if event.address?.length}
 				<div class="flex items-center gap-1 text-sm">

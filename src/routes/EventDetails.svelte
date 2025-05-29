@@ -64,7 +64,7 @@
 
 		<div class=" flex flex-wrap justify-center gap-4">
 			<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
-				<i class="icon-[ph--calendar-dots] mr-2 size-6"></i>
+				<i class="icon-[ph--clock] mr-2 size-6"></i>
 				<p class="text-md font-medium">
 					{formatTimeStr(event.startAt, event.endAt)}
 				</p>
