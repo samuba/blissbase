@@ -24,6 +24,7 @@ import {
     REQUEST_DELAY_MS,
     WebsiteScraper, // Import WebsiteScraper
     fetchWithTimeout,
+    removeExccessiveLineBreaks,
     superTrim
 } from "./common.ts";
 import { sleep } from "bun";
@@ -205,7 +206,7 @@ export class SeijetztScraper implements WebsiteScraper {
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
         const description = $('.prose').first().html();
-        return description?.trim();
+        return removeExccessiveLineBreaks(description?.trim());
     }
 
     extractImageUrls(html: string): string[] | undefined {

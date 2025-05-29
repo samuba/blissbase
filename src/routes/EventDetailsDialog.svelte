@@ -58,7 +58,7 @@
 			]}
 			style="scrollbar-width: thin;"
 		>
-			<div class="sticky top-2 right-2 z-20 ml-auto h-0 w-max">
+			<div class="sticky top-4 right-4 z-20 ml-auto h-0 w-max">
 				<button
 					{@attach onTap(() => window.history.back())}
 					class="btn btn-circle shadow-lg"
