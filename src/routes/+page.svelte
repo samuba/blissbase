@@ -6,8 +6,7 @@
 	import LocationDistanceInput, {
 		type LocationChangeEvent
 	} from '$lib/components/LocationDistanceInput.svelte';
-	import { goto } from '$app/navigation';
-	import { navigating, page } from '$app/state';
+	import { page } from '$app/state';
 
 	import { debounce } from '$lib/common';
 	import { browser } from '$app/environment';
@@ -26,22 +25,17 @@
 	let searchInputElement = $state<HTMLInputElement | null>(null);
 	let isLoadingEvents = $state(false);
 
+	$inspect(pagination);
+
 	async function loadEvents(params: Parameters<typeof fetchEvents>[0], append?: boolean) {
 		try {
 			isLoadingEvents = true;
 
 			const data = await fetchEvents(params);
+
+			if (append) events.push(...data.events);
+			else events = data.events;
 			pagination = data.pagination;
-			const newEvents = data.events.map((x) => ({
-				...x,
-				startAt: new Date(x.startAt),
-				endAt: x.endAt ? new Date(x.endAt) : null
-			}));
-
-			if (append) events.push(...newEvents);
-			else events = newEvents;
-
-			console.log(events.length);
 		} finally {
 			isLoadingEvents = false;
 		}
@@ -51,17 +45,17 @@
 		if (isLoadingEvents) return;
 		return loadEvents(
 			{
-				pageParam: (pagination.page ?? 1) + 1,
-				limitParam: pagination.limit,
-				startDateParam: pagination.startDate,
-				endDateParam: pagination.endDate,
-				plzCityParam: pagination.plzCity,
-				distanceParam: pagination.distance,
-				latParam: pagination.lat,
-				lngParam: pagination.lng,
-				searchTermParam: pagination.searchTerm,
-				sortByParam: pagination.sortBy,
-				sortOrderParam: pagination.sortOrder
+				page: pagination.page + 1,
+				limit: pagination.limit,
+				startDate: pagination.startDate,
+				endDate: pagination.endDate,
+				plzCity: pagination.plzCity,
+				distance: pagination.distance,
+				lat: pagination.lat,
+				lng: pagination.lng,
+				searchTerm: pagination.searchTerm,
+				sortBy: pagination.sortBy,
+				sortOrder: pagination.sortOrder
 			},
 			true
 		);
@@ -77,49 +71,49 @@
 
 	const onDateChange: DateRangePickerOnChange = (value) => {
 		loadEvents({
-			pageParam: 1,
-			limitParam: pagination.limit,
-			startDateParam: value?.start?.toString() ?? null,
-			endDateParam: value?.end?.toString() ?? null,
-			plzCityParam: pagination.plzCity,
-			distanceParam: pagination.distance,
-			latParam: pagination.lat,
-			lngParam: pagination.lng,
-			searchTermParam: pagination.searchTerm,
-			sortByParam: pagination.sortBy,
-			sortOrderParam: pagination.sortOrder
+			page: 1,
+			limit: pagination.limit,
+			startDate: value?.start?.toString() ?? null,
+			endDate: value?.end?.toString() ?? null,
+			plzCity: pagination.plzCity,
+			distance: pagination.distance,
+			lat: pagination.lat,
+			lng: pagination.lng,
+			searchTerm: pagination.searchTerm,
+			sortBy: pagination.sortBy,
+			sortOrder: pagination.sortOrder
 		});
 	};
 
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
 		loadEvents({
-			pageParam: 1,
-			limitParam: pagination.limit,
-			startDateParam: pagination.startDate,
-			endDateParam: pagination.endDate,
-			plzCityParam: event.location,
-			latParam: event.latitude ?? null,
-			lngParam: event.longitude ?? null,
-			distanceParam: event.distance,
-			searchTermParam: pagination.searchTerm,
-			sortByParam: pagination.sortBy,
-			sortOrderParam: pagination.sortOrder
+			page: 1,
+			limit: pagination.limit,
+			startDate: pagination.startDate,
+			endDate: pagination.endDate,
+			plzCity: event.location,
+			lat: event.latitude ?? null,
+			lng: event.longitude ?? null,
+			distance: event.distance,
+			searchTerm: pagination.searchTerm,
+			sortBy: pagination.sortBy,
+			sortOrder: pagination.sortOrder
 		});
 	}
 
 	const debouncedSearch = debounce(() => {
 		loadEvents({
-			pageParam: 1,
-			limitParam: pagination.limit,
-			startDateParam: pagination.startDate,
-			endDateParam: pagination.endDate,
-			plzCityParam: pagination.plzCity,
-			distanceParam: pagination.distance,
-			latParam: pagination.lat,
-			lngParam: pagination.lng,
-			searchTermParam: searchTermInput,
-			sortByParam: pagination.sortBy,
-			sortOrderParam: pagination.sortOrder
+			page: 1,
+			limit: pagination.limit,
+			startDate: pagination.startDate,
+			endDate: pagination.endDate,
+			plzCity: pagination.plzCity,
+			distance: pagination.distance,
+			lat: pagination.lat,
+			lng: pagination.lng,
+			searchTerm: searchTermInput,
+			sortBy: pagination.sortBy,
+			sortOrder: pagination.sortOrder
 		});
 	}, 400);
 
@@ -127,17 +121,17 @@
 		const [sortBy, sortOrder] = value.split('_');
 
 		loadEvents({
-			pageParam: 1,
-			limitParam: pagination.limit,
-			startDateParam: pagination.startDate,
-			endDateParam: pagination.endDate,
-			plzCityParam: pagination.plzCity,
-			distanceParam: pagination.distance,
-			latParam: pagination.lat,
-			lngParam: pagination.lng,
-			searchTermParam: pagination.searchTerm,
-			sortByParam: sortBy,
-			sortOrderParam: sortOrder
+			page: 1,
+			limit: pagination.limit,
+			startDate: pagination.startDate,
+			endDate: pagination.endDate,
+			plzCity: pagination.plzCity,
+			distance: pagination.distance,
+			lat: pagination.lat,
+			lng: pagination.lng,
+			searchTerm: pagination.searchTerm,
+			sortBy: sortBy,
+			sortOrder: sortOrder
 		});
 	}
 

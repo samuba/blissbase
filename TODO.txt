@@ -1,5 +1,7 @@
 BUG: immer wieder beim scrollen: each_key_duplicate. Keyed each block has duplicate key `20138` at indexes 36 and 40
 
+automatic app update
+
 images telegram: selber hosten. Halten nur 1std
 download images and serve
 
