@@ -130,9 +130,9 @@
 			onChange={handleLocationDistanceChange}
 		/>
 	</div>
-	<div class="flex w-full flex-wrap items-center justify-center gap-4">
-		<label class="input w-38">
-			<i class="icon-[ph--magnifying-glass] text-base-700 size-5"></i>
+	<div class="flex w-full items-center justify-center gap-4">
+		<label class="input w-full">
+			<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
 			<input
 				bind:this={searchInputElement}
 				bind:value={pagination.searchTerm}
@@ -156,8 +156,8 @@
 				onValueChange={handleSortChanged}
 			/>
 		</div>
-		<InstallButton />
 	</div>
+	<InstallButton />
 
 	{#if events.length > 0}
 		<div class="flex w-full flex-col items-center gap-6">
