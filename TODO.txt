@@ -1,6 +1,10 @@
+logo
+background farbe auf ios passt nicht.
+
+such controls klein machen und nur bei bedarf vergrössern
+
 BUG: nach scrape funktionieren event urls nicht mehr (neue ids => slug)
 
-logo
 
 automatic app update
 

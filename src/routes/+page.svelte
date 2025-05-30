@@ -131,14 +131,13 @@
 		/>
 	</div>
 	<div class="flex w-full flex-wrap items-center justify-center gap-4">
-		<label class="input w-fit">
-			<i class="icon-[ph--magnifying-glass] size-5 text-gray-400"></i>
+		<label class="input w-38">
+			<i class="icon-[ph--magnifying-glass] text-base-700 size-5"></i>
 			<input
 				bind:this={searchInputElement}
 				bind:value={pagination.searchTerm}
 				oninput={debouncedSearch}
 				type="search"
-				class=""
 				placeholder="Suchbegriff"
 			/>
 		</label>
