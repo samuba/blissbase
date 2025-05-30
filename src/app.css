@@ -9,6 +9,8 @@
 }
 
 @theme {
+	/* primary color in hex: #43ebd3 */
+
 	/* from daisyUI internals, color for input borders */
 	--input-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);
 

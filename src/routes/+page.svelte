@@ -21,7 +21,6 @@
 	let events = $state(data.events);
 	let pagination = $state(data.pagination);
 
-	let searchTerm = $state(data.pagination.searchTerm ?? '');
 	let searchInputElement = $state<HTMLInputElement | null>(null);
 	let isLoadingEvents = $state(false);
 
@@ -119,7 +118,8 @@
 			<PopOver contentClass="card card-border shadow-lg bg-base-100 z-10">
 				{#snippet trigger()}
 					<button class="btn btn-circle bg-base-100">
-						<img src="/logo.svg" alt="Logo" class="size-16" />
+						<i class="icon-[ph--spiral] text-primary size-7.5"></i>
+						<!-- <img src="/logo.svg" alt="Logo" class="size-16" /> -->
 					</button>
 				{/snippet}
 				{#snippet content()}
