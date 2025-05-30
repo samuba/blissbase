@@ -229,55 +229,24 @@ export class SeijetztScraper implements WebsiteScraper {
 
     extractHost(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
-        const hostLinkElement = $('.flex.flex-row.gap-4.ml-2.z-30.relative.items-center.mb-4.justify-center a');
-        if (hostLinkElement.length > 0) {
-            const pageHostName = hostLinkElement.find('.text-md.lg\\:text-xl.font-bold').text().trim();
-            if (pageHostName) return pageHostName;
-        }
-        // Fallback logic from original description check (simplified)
-        const description = this.extractDescription(html);
-        if (description) {
-            const urlRegex = /https?:\/\/(?:www\.)?([^/\s]+\.[^/\s]+)(?:\/[^\s]*)?/g;
-            const matches = [...description.matchAll(urlRegex)];
-            if (matches.length > 0) {
-                for (const match of matches) {
-                    const url = match[0];
-                    if (['facebook.com', 'youtube.com', 'instagram.com', 'twitter.com', 'google.com', 'sei.jetzt'].some(skip => url.includes(skip))) continue;
-                    try {
-                        const urlObj = new URL(url);
-                        const domainParts = urlObj.hostname.replace(/^www\./, '').split('.');
-                        if (domainParts.length >= 2) {
-                            return domainParts[0].replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                        }
-                    } catch { /* ignore */ }
-                    break;
-                }
-            }
-        }
-        return undefined;
+
+        // find element with href starting with https://sei.jetzt/o/ that contains text
+        const hostLinkElement = $('a[href^="https://sei.jetzt/o/"]')
+            .filter((_i, el) => $(el).text().trim().length > 0)
+            .first();
+
+        return hostLinkElement?.text()?.trim();
     }
 
     extractHostLink(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
-        const hostLinkElement = $('.flex.flex-row.gap-4.ml-2.z-30.relative.items-center.mb-4.justify-center a');
-        if (hostLinkElement.length > 0) {
-            const pageHostUrl = hostLinkElement.attr('href');
-            if (pageHostUrl) return pageHostUrl;
-        }
-        // Fallback logic from original description check (simplified)
-        const description = this.extractDescription(html);
-        if (description) {
-            const urlRegex = /https?:\/\/(?:www\.)?([^/\s]+\.[^/\s]+)(?:\/[^\s]*)?/g;
-            const matches = [...description.matchAll(urlRegex)];
-            if (matches.length > 0) {
-                for (const match of matches) {
-                    const url = match[0];
-                    if (['facebook.com', 'youtube.com', 'instagram.com', 'twitter.com', 'google.com', 'sei.jetzt'].some(skip => url.includes(skip))) continue;
-                    return url; // Use the first good URL
-                }
-            }
-        }
-        return undefined;
+
+        // find element with href starting with https://sei.jetzt/o/ that contains text
+        const hostLinkElement = $('a[href^="https://sei.jetzt/o/"]')
+            .filter((_i, el) => $(el).text().trim().length > 0)
+            .first();
+
+        return hostLinkElement?.attr('href');
     }
 
     extractTags(html: string): string[] | undefined {
