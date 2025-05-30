@@ -15,6 +15,7 @@
 	import { intersect } from '$lib/attachments/intersection';
 	import { fetchEvents } from './page.telefunc';
 	import { parseDate } from '@internationalized/date';
+	import PopOver from '$lib/components/PopOver.svelte';
 
 	const { data } = $props();
 	let events = $state(data.events);
@@ -114,14 +115,38 @@
 
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
 	<div class="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center">
-		<DateRangePicker
-			class="w-full md:w-fit"
-			onChange={onDateChange}
-			value={{
-				start: parseDate(pagination.startDate),
-				end: parseDate(pagination.endDate)
-			}}
-		/>
+		<div class="flex items-center gap-6">
+			<PopOver contentClass="card card-border shadow-lg bg-base-100 z-10">
+				{#snippet trigger()}
+					<button class="btn btn-circle bg-base-100">
+						<img src="/logo.svg" alt="Logo" class="size-16" />
+					</button>
+				{/snippet}
+				{#snippet content()}
+					<div class="p-4 text-sm">
+						<p>Willkommen bei Blissbase</p>
+						<p>
+							Blissbase ist eine Plattform für Events, die dir helfen, die besten Events in deiner
+							Nähe zu finden.
+						</p>
+						<p></p>
+
+						<a href="">Woher kommen die Events?</a>
+						<a href="">Events eintragen</a>
+					</div>
+				{/snippet}
+			</PopOver>
+
+			<DateRangePicker
+				class="w-full md:w-fit"
+				onChange={onDateChange}
+				value={{
+					start: parseDate(pagination.startDate),
+					end: parseDate(pagination.endDate)
+				}}
+			/>
+		</div>
+
 		<LocationDistanceInput
 			initialLocation={pagination.lat && pagination.lng
 				? `coords:${pagination.lat},${pagination.lng}`
