@@ -59,7 +59,7 @@ export class TribehausScraper implements WebsiteScraper {
 
     extractName(html: string): string | undefined {
         const $ = cheerio.load(html);
-        const name = superTrim($('#EntryPage').text());
+        const name = superTrim($('h1').first().text());
         return name || undefined;
     }
 
