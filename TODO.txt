@@ -5,6 +5,7 @@ such controls klein machen und nur bei bedarf vergrössern
 
 BUG: nach scrape funktionieren event urls nicht mehr (neue ids => slug)
 
+on scrape error ->  telegram msg
 
 automatic app update
 

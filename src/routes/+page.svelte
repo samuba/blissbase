@@ -117,9 +117,8 @@
 		<div class="flex items-center gap-6">
 			<PopOver contentClass="card card-border shadow-lg bg-base-100 z-10">
 				{#snippet trigger()}
-					<button class="btn btn-circle bg-base-100">
-						<i class="icon-[ph--spiral] text-primary size-7.5"></i>
-						<!-- <img src="/logo.svg" alt="Logo" class="size-16" /> -->
+					<button class="btn btn-circle btn-ghost">
+						<img src="/favicon.png" alt="Logo" class="size-9" />
 					</button>
 				{/snippet}
 				{#snippet content()}
