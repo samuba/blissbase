@@ -5,7 +5,7 @@ import type { MessageEntity } from 'telegraf/types';
 import { aiExtractEventData } from './ai';
 import { sleep } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
-import { insertEvent } from '$lib/server/db';
+import { insertEvent } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 
 export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);

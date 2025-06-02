@@ -8,15 +8,15 @@
  * bun run scripts/scrape-germany.ts awara
  */
 
-import { eq, inArray } from 'drizzle-orm'; // Import eq from drizzle-orm directly
 import type { ScrapedEvent } from '../src/lib/types.ts';
 import * as schema from '../src/lib/server/schema.ts';
 import { AwaraScraper } from './scrape-awara.ts';
 import { TribehausScraper } from './scrape-tribehaus.ts';
 import { HeilnetzScraper } from './scrape-heilnetz.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
-import { db, insertEvent } from "../src/lib/server/db.ts";
+import { db } from "../src/lib/server/db.ts";
 import { slugify } from './common.ts';
+import { insertEvent } from '../src/lib/server/events.ts';
 
 const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
 
@@ -158,60 +158,6 @@ try {
     console.error("Please ensure the database schema is created. You might need to run 'npx drizzle-kit push:postgres'.");
     process.exit(1); // Stop if we can't confirm table existence
 }
-
-// --- Clear existing data (conditionally) ---
-if (jsonFilePath) {
-    if (targetSourceArg) {
-        // JSON file provided, and a specific targetSourceArg for that JSON's events
-        console.log(`Clearing existing events from source '${targetSourceArg}' (specified with JSON input)...`);
-        try {
-            const re = await db.delete(schema.events).where(eq(schema.events.source, targetSourceArg));
-            console.log(` -> ${re.rowCount} existing events for host '${targetSourceArg}' cleared.`);
-        } catch (error) {
-            console.error(`Error clearing existing events for source '${targetSourceArg}':`, error);
-            process.exit(1);
-        }
-    } else {
-        // JSON file provided, but no specific targetSourceArg; clear all hosts found in the JSON
-        const hostsInJson = [...new Set(allEvents.map(event => event.host).filter((host): host is string => typeof host === 'string'))];
-        if (hostsInJson.length > 0) {
-            console.log(`Clearing existing events for hosts found in JSON: ${hostsInJson.join(', ')}...`);
-            for (const host of hostsInJson) {
-                console.log(`Attempting to clear events for host '${host}'...`);
-                try {
-                    const re = await db.delete(schema.events).where(eq(schema.events.host, host));
-                    console.log(` -> ${re.rowCount} existing events for host '${host}' cleared.`);
-                } catch (error) {
-                    console.error(`Error clearing existing events for source '${host}':`, error);
-                    // Optionally, decide whether to exit or continue. For now, log and continue.
-                }
-            }
-        } else {
-            console.log("No valid hosts found in the JSON data to clear, or no events loaded/remained after filtering.");
-        }
-    }
-} else if (targetSourceArg) {
-    // Original logic: No JSON file, but a specific targetSourceArg for scraping
-    console.log(`Clearing existing events from source '${targetSourceArg}'...`);
-    try {
-        const re = await db.delete(schema.events).where(eq(schema.events.source, targetSourceArg));
-        console.log(` -> ${re.rowCount} existing events for host '${targetSourceArg}' cleared `);
-    } catch (error) {
-        console.error(`Error clearing existing events for source '${targetSourceArg}':`, error);
-        process.exit(1);
-    }
-} else {
-    // Original logic: No JSON file, no targetSourceArg - clear all scraped events
-    console.log('Clearing ALL scraped events from the database...');
-    try {
-        await db.delete(schema.events).where(inArray(schema.events.source, SCRAPE_SOURCES));
-        console.log(' -> Existing events cleared successfully.');
-    } catch (error) {
-        console.error('Error clearing existing events:', error);
-        process.exit(1);
-    }
-}
-// --- End Clear existing data ---
 
 console.log(`Inserting/Updating ${allEvents.length} events into the database...`);
 

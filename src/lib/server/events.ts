@@ -1,10 +1,10 @@
-import { db } from '$lib/server/db';
+import { db, s } from '$lib/server/db';
 
-import { events as eventsTable } from '$lib/server/schema';
 import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { geocodeAddressCached } from '$lib/server/google';
+import type { InsertEvent } from '$lib/types';
 
 export async function fetchEvents(params: LoadEventsParams) {
     const {
@@ -32,34 +32,34 @@ export async function fetchEvents(params: LoadEventsParams) {
         const endDate = endCalDate.add({ days: 1 }).toDate(timeZone);
 
         const startsInRange = and(
-            gte(eventsTable.startAt, startDate),
-            lte(eventsTable.startAt, endDate)
+            gte(s.events.startAt, startDate),
+            lte(s.events.startAt, endDate)
         );
         const endsInRange = and(
-            lt(eventsTable.startAt, startDate),
-            isNotNull(eventsTable.endAt),
-            gte(eventsTable.endAt, startDate),
-            lte(eventsTable.endAt, endDate),
-            gte(eventsTable.startAt, sixHoursAgo)
+            lt(s.events.startAt, startDate),
+            isNotNull(s.events.endAt),
+            gte(s.events.endAt, startDate),
+            lte(s.events.endAt, endDate),
+            gte(s.events.startAt, sixHoursAgo)
         );
         const spansRange = and(
-            lt(eventsTable.startAt, startDate),
-            isNotNull(eventsTable.endAt),
-            gt(eventsTable.endAt, endDate),
-            gte(eventsTable.startAt, sixHoursAgo)
+            lt(s.events.startAt, startDate),
+            isNotNull(s.events.endAt),
+            gt(s.events.endAt, endDate),
+            gte(s.events.startAt, sixHoursAgo)
         );
         dateCondition = or(startsInRange, endsInRange, spansRange);
     } catch (error) {
         console.error('Error parsing date eters:', error);
         const todayDate = getToday(timeZone);
         const todayStart = todayDate.toDate(timeZone);
-        const startsTodayOrLater = gte(eventsTable.startAt, todayStart);
+        const startsTodayOrLater = gte(s.events.startAt, todayStart);
         const acceptableOngoingEvent = and(
-            lt(eventsTable.startAt, todayStart),
-            gte(eventsTable.startAt, sixHoursAgo),
-            isNotNull(eventsTable.endAt),
-            gte(eventsTable.endAt, todayStart),
-            lt(eventsTable.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
+            lt(s.events.startAt, todayStart),
+            gte(s.events.startAt, sixHoursAgo),
+            isNotNull(s.events.endAt),
+            gte(s.events.endAt, todayStart),
+            lt(s.events.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
         );
         dateCondition = or(startsTodayOrLater, acceptableOngoingEvent);
     }
@@ -80,7 +80,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 
         if (geocodedCoords) {
             const distanceMeters = parseFloat(distance) * 1000;
-            proximityCondition = sql`ST_DWithin(ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography, ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography, ${distanceMeters}) AND ${eventsTable.latitude} IS NOT NULL AND ${eventsTable.longitude} IS NOT NULL`;
+            proximityCondition = sql`ST_DWithin(ST_SetSRID(ST_MakePoint(${s.events.longitude}, ${s.events.latitude}), 4326)::geography, ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography, ${distanceMeters}) AND ${s.events.latitude} IS NOT NULL AND ${s.events.longitude} IS NOT NULL`;
         }
     }
 
@@ -93,9 +93,9 @@ export async function fetchEvents(params: LoadEventsParams) {
     if (sortBy === 'distance' && geocodedCoords) {
         const distanceSortSql = sql`
             CASE
-                WHEN ${eventsTable.longitude} IS NOT NULL AND ${eventsTable.latitude} IS NOT NULL THEN
+                WHEN ${s.events.longitude} IS NOT NULL AND ${s.events.latitude} IS NOT NULL THEN
                     ST_Distance(
-                        ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography,
+                        ST_SetSRID(ST_MakePoint(${s.events.longitude}, ${s.events.latitude}), 4326)::geography,
                         ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
                     )
                 ELSE NULL
@@ -107,9 +107,9 @@ export async function fetchEvents(params: LoadEventsParams) {
         }
     } else {
         if (sortOrder === 'asc') {
-            orderByClause = [asc(eventsTable.startAt)];
+            orderByClause = [asc(s.events.startAt)];
         } else {
-            orderByClause = [desc(eventsTable.startAt)];
+            orderByClause = [desc(s.events.startAt)];
         }
     }
 
@@ -117,9 +117,9 @@ export async function fetchEvents(params: LoadEventsParams) {
 
     if (searchTerm && searchTerm.trim() !== '') {
         const searchTermCondition = or(
-            ilike(eventsTable.name, `%${searchTerm}%`),
-            sql<boolean>`EXISTS (SELECT 1 FROM unnest(${eventsTable.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${searchTerm}%`})`,
-            ilike(eventsTable.description, `%${searchTerm}%`)
+            ilike(s.events.name, `%${searchTerm}%`),
+            sql<boolean>`EXISTS (SELECT 1 FROM unnest(${s.events.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${searchTerm}%`})`,
+            ilike(s.events.description, `%${searchTerm}%`)
         );
         if (searchTermCondition) {
             allConditions.push(searchTermCondition);
@@ -136,9 +136,9 @@ export async function fetchEvents(params: LoadEventsParams) {
         extras: {
             distanceKm: geocodedCoords ? sql<number | null>`
             CASE
-                WHEN ${eventsTable.longitude} IS NOT NULL AND ${eventsTable.latitude} IS NOT NULL THEN
+                WHEN ${s.events.longitude} IS NOT NULL AND ${s.events.latitude} IS NOT NULL THEN
                     GREATEST(1, ROUND(ST_Distance(
-                        ST_SetSRID(ST_MakePoint(${eventsTable.longitude}, ${eventsTable.latitude}), 4326)::geography,
+                        ST_SetSRID(ST_MakePoint(${s.events.longitude}, ${s.events.latitude}), 4326)::geography,
                         ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
                     ) / 1000))
                 ELSE NULL
@@ -147,7 +147,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         }
     });
 
-    const totalEventsQuery = db.select({ count: count() }).from(eventsTable).where(finalCondition);
+    const totalEventsQuery = db.select({ count: count() }).from(s.events).where(finalCondition);
 
     const startTime = performance.now();
     const [events, totalResult] = await Promise.all([eventsQuery, totalEventsQuery]);
@@ -178,6 +178,48 @@ export async function fetchEvents(params: LoadEventsParams) {
             sortOrder
         } satisfies LoadEventsParams & { totalEvents: number, totalPages: number }
     };
+}
+
+
+export async function insertEvent(event: InsertEvent) {
+    // trim all strings 
+    type EventKey = keyof InsertEvent;
+    for (const key in event) {
+        if (Object.prototype.hasOwnProperty.call(event, key) && typeof event[key as EventKey] === 'string') {
+            (event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
+        }
+    }
+
+    const result = await db.insert(s.events)
+        .values(event)
+        .onConflictDoUpdate({
+            target: [s.events.name, s.events.startAt, s.events.address],
+            set: {
+                name: sql`excluded.name`,
+                startAt: sql`excluded.start_at`,
+                endAt: sql`excluded.end_at`,
+                address: sql`excluded.address`,
+                price: sql`excluded.price`,
+                description: sql`excluded.description`,
+                descriptionOriginal: sql`excluded.description_original`,
+                summary: sql`excluded.summary`,
+                imageUrls: sql`excluded.image_urls`,
+                host: sql`excluded.host`,
+                hostLink: sql`excluded.host_link`,
+                contact: sql`excluded.contact`,
+                latitude: sql`excluded.latitude`,
+                longitude: sql`excluded.longitude`,
+                tags: sql`excluded.tags`,
+                source: sql`excluded.source`,
+                sourceUrl: sql`excluded.source_url`,
+                scrapedAt: sql`CURRENT_TIMESTAMP`,
+                messageSenderId: sql`excluded.message_sender_id`,
+                slug: sql`excluded.slug`,
+            }
+        })
+        .returning({ insertedId: s.events.id });
+
+    return result?.[0]?.insertedId;
 }
 
 type LoadEventsParams = {
