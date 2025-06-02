@@ -16,6 +16,7 @@ import { TribehausScraper } from './scrape-tribehaus.ts';
 import { HeilnetzScraper } from './scrape-heilnetz.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db, insertEvent } from "../src/lib/server/db.ts";
+import { slugify } from './common.ts';
 
 const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
 
@@ -215,13 +216,16 @@ if (jsonFilePath) {
 console.log(`Inserting/Updating ${allEvents.length} events into the database...`);
 
 // Prepare data for insertion, mapping ScrapedEvent to the schema format
-const eventsToInsert = allEvents.map(event => ({
-    ...event,
-    // Convert date strings to Date objects if they're not already
-    startAt: typeof event.startAt === 'string' ? new Date(event.startAt) : event.startAt,
-    endAt: typeof event.endAt === 'string' ? new Date(event.endAt) : event.endAt,
-    // scrapedAt is handled by default value in schema
-}));
+const eventsToInsert = allEvents.map(event => {
+    const startAt = typeof event.startAt === 'string' ? new Date(event.startAt) : event.startAt;
+    const endAt = typeof event.endAt === 'string' ? new Date(event.endAt) : event.endAt;
+    return {
+        ...event,
+        startAt,
+        endAt,
+        slug: slugify(startAt.toISOString().split('T')[0], event.name),
+    }
+});
 
 await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 

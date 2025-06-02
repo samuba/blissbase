@@ -240,3 +240,19 @@ export interface WebsiteScraper {
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+
+export const slugify = (prefix: string, str: string) =>
+    prefix + "-" + str
+        .toString()
+        .toLowerCase()
+        // custom german handling
+        .replace('ä', 'ae')
+        .replace('ö', 'oe')
+        .replace('ü', 'ue')
+        .replace('ß', 'ss')
+        .normalize('NFD') // split an accented letter in the base letter and the acent
+        .replace(/[\u0300-\u036f]/g, '') // remove all previously split accents
+        .trim()
+        .replace(/[^a-z0-9 ]/g, '') // remove all chars not letters, numbers and spaces
+        .replace(/\s+/g, '-') // replace spaces
