@@ -117,9 +117,11 @@
 		<div class="flex items-center gap-6">
 			<PopOver contentClass="card card-border shadow-lg bg-base-100 z-10">
 				{#snippet trigger()}
-					<button class="btn btn-circle btn-ghost">
-						<img src="/favicon.png" alt="Logo" class="size-9" />
-					</button>
+					<img
+						src="/favicon.png"
+						alt="Menu"
+						class="size-9 cursor-pointer transition-transform duration-500 hover:-rotate-360"
+					/>
 				{/snippet}
 				{#snippet content()}
 					<div class="p-4 text-sm">

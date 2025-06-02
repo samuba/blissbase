@@ -1,4 +1,3 @@
-logo
 background farbe auf ios passt nicht.
 
 such controls klein machen und nur bei bedarf vergrössern
