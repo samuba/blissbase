@@ -2,9 +2,10 @@ import { db, s } from '$lib/server/db';
 
 import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
-import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { geocodeAddressCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
+
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 export async function fetchEvents(params: LoadEventsParams) {
     const {
