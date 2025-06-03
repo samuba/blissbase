@@ -165,11 +165,12 @@ console.log(`Inserting/Updating ${allEvents.length} events into the database...`
 const eventsToInsert = allEvents.map(event => {
     const startAt = typeof event.startAt === 'string' ? new Date(event.startAt) : event.startAt;
     const endAt = typeof event.endAt === 'string' ? new Date(event.endAt) : event.endAt;
+    const [day, time] = startAt.toISOString().split('T')
     return {
         ...event,
         startAt,
         endAt,
-        slug: slugify(startAt.toISOString().split('T')[0], event.name),
+        slug: slugify(`${day}-${time.slice(0, 5).replace(':', '')}`, event.name),
     }
 });
 
