@@ -148,7 +148,7 @@
 							<a href={routes.sources()} class="underline">Unsere Event Quellen</a>
 
 							<p>
-								<a href="mailto:info@blissbase.app" class="underline"> Schreib uns gerne </a> 🙂
+								<a href="mailto:hi@blissbase.app" class="underline"> Schreib uns gerne </a> 🙂
 							</p>
 						</div>
 					{/snippet}
