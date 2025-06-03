@@ -125,7 +125,7 @@
 					}}
 				>
 					{#snippet trigger()}
-						<img src="favicon.png" alt="Menu" class="size-10 min-w-10" />
+						<img src="/logo.svg" alt="Menu" class="size-10 min-w-10" />
 					{/snippet}
 					{#snippet content()}
 						<div class="flex flex-col gap-4 p-4 text-sm">
@@ -214,8 +214,8 @@
 			<div {@attach intersect({ onIntersecting: loadMoreEvents })} class="-translate-y-72"></div>
 
 			{#if isLoadingEvents}
-				<div class="flex flex-col items-center justify-center gap-3">
-					<i class="icon-[ph--spinner-gap] text-primary-content size-10 animate-spin"></i>
+				<div class="mb-3 flex flex-col items-center justify-center gap-2">
+					<img src="/logo.svg" alt="Blissbase" class="size-10 min-w-10 animate-spin" />
 					<p class="">Lade...</p>
 				</div>
 			{/if}
