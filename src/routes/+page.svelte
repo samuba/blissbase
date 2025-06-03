@@ -135,6 +135,8 @@
 								<br />
 								Dafür machen wir Events aus verschiedensten Quellen für so viele Menschen wie möglich
 								erreichbar.
+								<br />
+								In einer simplen und komfortablen App.
 							</p>
 							<p>
 								<span class="font-semibold"> Wie kann ich meinen Event hier eintragen? </span>
@@ -144,6 +146,10 @@
 							</p>
 
 							<a href={routes.sources()} class="underline">Unsere Event Quellen</a>
+
+							<p>
+								<a href="mailto:info@blissbase.app" class="underline"> Schreib uns gerne </a> 🙂
+							</p>
 						</div>
 					{/snippet}
 				</PopOver>
