@@ -16,6 +16,7 @@
 	import { fetchEvents } from './page.telefunc';
 	import { parseDate } from '@internationalized/date';
 	import PopOver from '$lib/components/PopOver.svelte';
+	import { routes } from '$lib/routes';
 
 	const { data } = $props();
 	let events = $state(data.events);
@@ -127,16 +128,22 @@
 						<img src="favicon.png" alt="Menu" class="size-10 min-w-10" />
 					{/snippet}
 					{#snippet content()}
-						<div class="p-4 text-sm">
-							<p>Willkommen bei Blissbase</p>
+						<div class="flex flex-col gap-4 p-4 text-sm">
+							<h3 class="text-lg font-bold">Willkommen bei Blissbase</h3>
 							<p>
-								Blissbase ist eine Plattform für Events, die dir helfen, die besten Events in deiner
-								Nähe zu finden.
+								Wir wollen die Conscious Communities Deutschlands zusammenbringen und vernetzen.
+								<br />
+								Dafür machen wir Events aus verschiedensten Quellen für so viele Menschen wie möglich
+								erreichbar.
 							</p>
-							<p></p>
+							<p>
+								<span class="font-semibold"> Wie kann ich meinen Event hier eintragen? </span>
+								<br />
+								Trage deinen Event einfach in eine unserer Quellen ein, dann wird er nach ein paar Stunden
+								automatisch automatisch bei uns eingetragen.
+							</p>
 
-							<a href="">Woher kommen die Events?</a>
-							<a href="">Events eintragen</a>
+							<a href={routes.sources()} class="underline">Unsere Event Quellen</a>
 						</div>
 					{/snippet}
 				</PopOver>

@@ -34,4 +34,5 @@ export const routes = {
         const queryString = params.toString();
         return `/${queryString ? '?' + queryString : ''}`;
     },
+    sources: () => '/sources',
 }
