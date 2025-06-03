@@ -45,3 +45,15 @@ export const geocodeCache = pgTable('geocode_cache', {
     longitude: real(),
     cachedAt: timestamp().notNull().defaultNow(),
 });
+
+
+
+/*** Cronjobs ***/
+// SELECT cron.schedule(
+//     'purge-megssage-to-bot',
+//     '*/5 * * * *',  -- every 5 minutes
+//     $$
+//         DELETE FROM message_to_bot
+//         WHERE created_at < NOW() - INTERVAL '30 days';
+//     $$
+// );

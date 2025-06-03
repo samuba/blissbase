@@ -109,7 +109,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             sourceUrl: aiAnswer.url,
             contact
         }, null, 2), msgId)
-        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.de/" + dbEvent.slug, msgId)
+        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.app/" + dbEvent.slug, msgId)
 
     } catch (error) {
         console.error(error)
