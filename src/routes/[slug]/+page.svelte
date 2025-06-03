@@ -21,21 +21,12 @@
 
 	<div class="bg-base-100 sm:rounded-box overflow-hidden">
 		<EventDetails {event} />
+	</div>
 
-		<div class="flex w-full justify-center gap-6 pb-6">
-			<a href={routes.eventList()} class="btn btn-sm">
-				<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
-				Alle Events
-			</a>
-		</div>
+	<div class="flex w-full justify-center gap-6 py-3">
+		<a href={routes.eventList()} class="btn btn-sm">
+			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
+			Alle Events
+		</a>
 	</div>
 </div>
-
-<style>
-	.container {
-		min-height: calc(100vh - 4rem); /* Assuming navbar height of 4rem */
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-	}
-</style>
