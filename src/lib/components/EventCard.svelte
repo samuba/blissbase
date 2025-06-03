@@ -11,12 +11,12 @@
 </script>
 
 <a
-	href={`/${event.id}`}
+	href={routes.eventDetails(event.slug)}
 	class="w-full"
 	data-sveltekit-preload-data="false"
 	{@attach onTap((e) => {
 		e.preventDefault();
-		pushState(routes.eventDetails(event.id), { selectedEventId: event.id });
+		pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
 	})}
 >
 	<div

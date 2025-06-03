@@ -4,8 +4,11 @@ import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } fr
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { geocodeAddressCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
+import { generateSlug } from '$lib/common';
 
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
+if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
+
 
 export async function fetchEvents(params: LoadEventsParams) {
     const {
@@ -189,6 +192,10 @@ export async function insertEvent(event: InsertEvent) {
         if (Object.prototype.hasOwnProperty.call(event, key) && typeof event[key as EventKey] === 'string') {
             (event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
         }
+    }
+
+    if (!event.slug) {
+        event.slug = generateSlug(event);
     }
 
     const result = await db.insert(s.events)

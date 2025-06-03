@@ -112,3 +112,25 @@ export function formatAddress(address: string[]): string {
 
     return formattedAddress.join(' · ');
 }
+
+const slugify = (str: string) =>
+    str
+        .toString()
+        .toLowerCase()
+        // custom german handling
+        .replace('ä', 'ae')
+        .replace('ö', 'oe')
+        .replace('ü', 'ue')
+        .replace('ß', 'ss')
+        .normalize('NFD') // split an accented letter in the base letter and the acent
+        .replace(/[\u0300-\u036f]/g, '') // remove all previously split accents
+        .trim()
+        .replace(/[^a-z0-9 ]/g, '') // remove all chars not letters, numbers and spaces
+        .replace(/\s+/g, '-') // replace spaces
+
+
+export function generateSlug({ name, startAt }: { name: string, startAt: Date }) {
+    const [day, time] = startAt.toISOString().split('T')
+    const hoursMinutes = time.slice(0, 5).replace(':', '')
+    return `${slugify(name)}-${day}-${hoursMinutes}`
+}
