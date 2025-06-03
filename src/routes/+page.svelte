@@ -115,29 +115,35 @@
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
 	<div class="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center">
 		<div class="flex items-center gap-6">
-			<PopOver contentClass="card card-border shadow-lg bg-base-100 z-10">
-				{#snippet trigger()}
-					<img
-						src="favicon.png"
-						alt="Menu"
-						class="size-9 min-w-9 cursor-pointer transition-transform duration-500 hover:-rotate-360"
-						style="--rotate-deg: 0deg"
-					/>
-				{/snippet}
-				{#snippet content()}
-					<div class="p-4 text-sm">
-						<p>Willkommen bei Blissbase</p>
-						<p>
-							Blissbase ist eine Plattform für Events, die dir helfen, die besten Events in deiner
-							Nähe zu finden.
-						</p>
-						<p></p>
+			<div class="flex flex-col items-center">
+				<PopOver
+					triggerClass="cursor-pointer transition-transform duration-500 data-[state=open]:-rotate-360"
+					contentClass="card card-border shadow-lg bg-base-100 z-10"
+					contentProps={{
+						customAnchor: '.custom-popover-anchor'
+					}}
+				>
+					{#snippet trigger()}
+						<img src="favicon.png" alt="Menu" class="size-10 min-w-10" />
+					{/snippet}
+					{#snippet content()}
+						<div class="p-4 text-sm">
+							<p>Willkommen bei Blissbase</p>
+							<p>
+								Blissbase ist eine Plattform für Events, die dir helfen, die besten Events in deiner
+								Nähe zu finden.
+							</p>
+							<p></p>
 
-						<a href="">Woher kommen die Events?</a>
-						<a href="">Events eintragen</a>
-					</div>
-				{/snippet}
-			</PopOver>
+							<a href="">Woher kommen die Events?</a>
+							<a href="">Events eintragen</a>
+						</div>
+					{/snippet}
+				</PopOver>
+				<div class="custom-popover-anchor h-0 w-0">
+					<!-- too prevent flickering of popover content when rotating the icon -->
+				</div>
+			</div>
 
 			<DateRangePicker
 				class="w-full md:w-fit"
