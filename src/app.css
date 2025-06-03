@@ -9,7 +9,11 @@
 }
 
 @theme {
-	/* colors in hex: primary: #43ebd3, bg-base-100: #faf7f5 */
+	/* colors in hex: 
+	primary: #43ebd3
+	bg-base-100: #faf7f5 
+	bg-base-200: #efeae7
+	*/
 
 	/* from daisyUI internals, color for input borders */
 	--input-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);

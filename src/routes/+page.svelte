@@ -129,7 +129,7 @@
 					{/snippet}
 					{#snippet content()}
 						<div class="flex flex-col gap-4 p-4 text-sm">
-							<h3 class="text-lg font-bold">Willkommen bei Blissbase</h3>
+							<p class="text-lg leading-tight font-bold">Willkommen bei Blissbase</p>
 							<p>
 								Wir wollen die Conscious Communities Deutschlands zusammenbringen und vernetzen.
 								<br />
