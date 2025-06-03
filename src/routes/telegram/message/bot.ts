@@ -7,14 +7,16 @@ import { sleep } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvent } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
+import { db, eq, s, sql } from '$lib/server/db';
 
 export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
 bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
     const isGroup =
         ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
+    const msgId = await recordMessage(ctx.message)
     try {
-        console.log("message received", ctx.message)
+        console.log("message received", ctx.message);
 
         let msgText = "";
         let msgEntities: MessageEntity[] = [];
@@ -41,17 +43,17 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
         const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
         if (!aiAnswer.hasEventData) {
             console.log("No event data found", msgText)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren")
+            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren", msgId)
             return
         }
         if (!aiAnswer.name) {
             console.log("No event name found", msgText)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren")
+            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren", msgId)
             return
         }
         if (!aiAnswer.startDate) {
             console.log("No event start date found", msgText)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren")
+            await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", msgId)
             return
         }
 
@@ -65,7 +67,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
         if (aiAnswer.contactAuthorForMore) {
             contact = telegramAuthor?.link
             if (!contact) {
-                await reply(ctx, "⚠️ In deiner Nachricht forderst du Teilnehmer auf sich bei dir per Telegram zu melden, allerdings hast du in deinem Profil keinen Telegram Username eingetragen.\n\nBitte lege erst einen Telegram Username fest damit dich Teilnehmer per Telegram Link erreichen können. Danach kannst du mir die Nachricht erneut senden.")
+                await reply(ctx, "⚠️ In deiner Nachricht forderst du Teilnehmer auf sich bei dir per Telegram zu melden, allerdings hast du in deinem Profil keinen Telegram Username eingetragen.\n\nBitte lege erst einen Telegram Username fest damit dich Teilnehmer per Telegram Link erreichen können. Danach kannst du mir die Nachricht erneut senden.", msgId)
                 return
             }
         }
@@ -89,11 +91,12 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             messageSenderId: getTelegramSenderId(ctx.message),
             contact,
             source: "telegram",
+            slug: "",
         } satisfies InsertEvent
 
         console.log({ dbEntry })
 
-        const eventId = await insertEvent(dbEntry)
+        const dbEvent = await insertEvent(dbEntry)
 
         if (isGroup) return; // dont answer in groups
 
@@ -105,14 +108,14 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             coords,
             sourceUrl: aiAnswer.url,
             contact
-        }, null, 2))
-        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.de/" + eventId)
+        }, null, 2), msgId)
+        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.de/" + dbEvent.slug, msgId)
 
     } catch (error) {
         console.error(error)
         try {
             if (!isGroup) {
-                await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error)
+                await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error, msgId)
             }
         } catch { /* ignore */ }
     }
@@ -145,11 +148,16 @@ function parseContact(contact: string | undefined) {
     return contact;
 }
 
-async function reply(ctx: Context, text: string) {
+async function reply(ctx: Context, text: string, msgId: string | undefined) {
     if (ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup") {
         return // do not reply in groups
     }
-    return ctx.reply(text)
+    await ctx.reply(text)
+    if (msgId) {
+        await db.update(s.botMessages)
+            .set({ answer: sql`COALESCE(answer || E'\n\n', '') || ${text}` })
+            .where(eq(s.botMessages.id, msgId))
+    }
 }
 
 function wasMessageForwarded(message: Context['message']): boolean {
@@ -225,6 +233,17 @@ async function sendTypingPeriodically(ctx: Context, signal: AbortSignal) {
     while (!signal.aborted) {
         await ctx.sendChatAction('typing');
         await sleep(5000); // 5 seconds
+    }
+}
+
+async function recordMessage(message: Context['message']) {
+    if (!message) return;
+
+    try {
+        const row = await db.insert(s.botMessages).values({ data: message }).returning()
+        return row![0].id
+    } catch (error) {
+        console.error("error recording telegram message", error)
     }
 }
 

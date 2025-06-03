@@ -1,4 +1,5 @@
-import { pgTable, text, integer, real, timestamp, unique, boolean } from 'drizzle-orm/pg-core';
+import { sql, type SQL } from 'drizzle-orm';
+import { pgTable, text, integer, real, timestamp, unique, boolean, jsonb, uuid } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -26,6 +27,16 @@ export const events = pgTable('events', {
 }, (t) => [
     unique().on(t.name, t.startAt, t.address)
 ]);
+
+
+export const botMessages = pgTable('message_to_bot', {
+    id: uuid().primaryKey().defaultRandom(),
+    data: jsonb().notNull(),
+    text: text().generatedAlwaysAs((): SQL => sql`(data->>'text')::text`),
+    answer: text(),
+    createdAt: timestamp().notNull().defaultNow(),
+});
+
 
 export const geocodeCache = pgTable('geocode_cache', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),

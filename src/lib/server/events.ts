@@ -225,9 +225,9 @@ export async function insertEvent(event: InsertEvent) {
                 slug: sql`excluded.slug`,
             }
         })
-        .returning({ insertedId: s.events.id });
+        .returning();
 
-    return result?.[0]?.insertedId;
+    return result?.[0];
 }
 
 type LoadEventsParams = {
