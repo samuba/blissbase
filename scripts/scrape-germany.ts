@@ -175,35 +175,29 @@ const eventsToInsert = allEvents.map(event => {
 
 await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
-try {
-    let successCount = 0;
+let successCount = 0;
 
-    // Insert events one by one instead of in bulk
-    for (const event of eventsToInsert) {
-        try {
-            event.tags = [...new Set(event.tags)] // Ensure tags are unique
+// Insert events one by one instead of in bulk
+for (const event of eventsToInsert) {
+    try {
+        event.tags = [...new Set(event.tags)] // Ensure tags are unique
 
-            await insertEvent(event);
+        await insertEvent(event);
 
-            successCount++;
+        successCount++;
 
-            // Log progress every 10 events
-            if (successCount % 10 === 0) {
-                console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);
-            }
-        } catch (error) {
-            console.error(`Error inserting event "${event.name}":`, error);
-            throw error;
+        // Log progress every 10 events
+        if (successCount % 10 === 0) {
+            console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);
         }
+    } catch (error) {
+        console.error(`Error inserting event "${event.name}":`, error);
+        throw error;
     }
-
-    console.log(` -> Successfully inserted/updated ${successCount} out of ${eventsToInsert.length} events.`);
-
-} catch (error) {
-    console.error('Error in event insertion process:', error);
-} finally {
-    console.log('Database connection closed.');
 }
+
+console.log(` -> Successfully inserted/updated ${successCount} out of ${eventsToInsert.length} events.`);
+
 
 console.log('--- Germany Event Scraper Finished ---');
 

@@ -118,9 +118,10 @@
 			<PopOver contentClass="card card-border shadow-lg bg-base-100 z-10">
 				{#snippet trigger()}
 					<img
-						src="/favicon.png"
+						src="favicon.png"
 						alt="Menu"
-						class="size-9 cursor-pointer transition-transform duration-500 hover:-rotate-360"
+						class="size-9 min-w-9 cursor-pointer transition-transform duration-500 hover:-rotate-360"
+						style="--rotate-deg: 0deg"
 					/>
 				{/snippet}
 				{#snippet content()}
