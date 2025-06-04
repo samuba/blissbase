@@ -137,7 +137,7 @@ export function generateSlug({ name, startAt }: { name: string, startAt: Date })
 
 export const cachedImageUrl = (url: string | undefined) => {
     if (!url) return url;
-    return `https://res.cloudinary.com/dy7jatmjz/image/fetch/f_auto,q_auto,c_limit,h_700,w_786/${url}`
+    return `https://res.cloudinary.com/dy7jatmjz/image/fetch/f_auto,q_auto,c_limit,h_768,w_768/${url}`
 }
 
 export function stripHtml(html: string | undefined) {
