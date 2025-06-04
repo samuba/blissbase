@@ -3,15 +3,15 @@
 	import EventDetails from '../EventDetails.svelte';
 
 	let { data } = $props();
-	const { event } = $derived(data);
+	const { event, descriptionTeaser } = $derived(data);
 </script>
 
 <svelte:head>
 	<title>{event.name} | BlissBase</title>
-	<meta name="description" content={event.description?.slice(0, 150) ?? ''} />
+	<meta name="description" content={descriptionTeaser} />
 
 	<meta property="og:title" content={event.name} />
-	<meta property="og:description" content={event.description?.slice(0, 150) ?? ''} />
+	<meta property="og:description" content={descriptionTeaser} />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content={`https://blissbase.app/${event.slug}`} />
 	{#if event.imageUrls?.[0]}
