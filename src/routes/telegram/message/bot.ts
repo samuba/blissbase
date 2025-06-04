@@ -3,7 +3,7 @@ import { Context, Telegraf } from 'telegraf';
 import { anyOf, message } from 'telegraf/filters';
 import type { MessageEntity } from 'telegraf/types';
 import { aiExtractEventData } from './ai';
-import { sleep } from '$lib/common';
+import { cachedImageUrl, sleep } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvent } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
@@ -55,6 +55,17 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             console.log("No event start date found", msgText)
             await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", msgId)
             return
+        }
+
+        if (imageUrl) {
+            // transfer image 
+            const startTime = performance.now();
+            const res = await fetch(cachedImageUrl(imageUrl)!, { method: 'HEAD' })
+            if (res.ok) {
+                imageUrl = cachedImageUrl(imageUrl)
+            }
+            const endTime = performance.now();
+            console.log(`image processing took: ${endTime - startTime}ms`);
         }
 
         let addressArr = aiAnswer.address ? [aiAnswer.address] : [];

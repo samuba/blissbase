@@ -1,8 +1,8 @@
 import { OPENAI_API_KEY, GEMINI_API_KEY } from "$env/static/private";
 
 export async function aiExtractEventData(message: string): Promise<MsgAnalysisAnswer> {
-    const answer = await promptGeminiAi<MsgAnalysisAnswer>(message, msgAnalysisSystemPrompt())
-    console.log("gemini answer", JSON.stringify(answer, null, 2))
+    const answer = await promptOpenAi<MsgAnalysisAnswer>(message, msgAnalysisSystemPrompt())
+    console.log("ai answer", JSON.stringify(answer, null, 2))
     return answer;
 }
 

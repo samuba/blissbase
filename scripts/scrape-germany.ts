@@ -16,6 +16,7 @@ import { HeilnetzScraper } from './scrape-heilnetz.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db } from "../src/lib/server/db.ts";
 import { insertEvent } from '../src/lib/server/events.ts';
+import { cachedImageUrl } from '../src/lib/common.ts';
 
 const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
 
@@ -164,8 +165,24 @@ console.log(`Inserting/Updating ${allEvents.length} events into the database...`
 const eventsToInsert = allEvents.map(event => {
     event.startAt = typeof event.startAt === 'string' ? new Date(event.startAt) : event.startAt;
     event.endAt = typeof event.endAt === 'string' ? new Date(event.endAt) : event.endAt;
+    event.imageUrls = event.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!)
     return event;
 });
+
+// Pre-warm image URLs by making HEAD requests to ensure they're cached
+console.log('Pre-warming image URLs...');
+const uniqueImageUrls = [...new Set(eventsToInsert.flatMap(e => e.imageUrls ?? []))];
+console.log(` -> Found ${uniqueImageUrls.length} unique image URLs to warm`);
+const batchSize = 15;
+for (let i = 0; i < uniqueImageUrls.length; i += batchSize) {
+    const batch = uniqueImageUrls.slice(i, i + batchSize);
+    await Promise.all(batch.map(url =>
+        fetch(url).catch(() => console.warn(` -> Failed to warm URL: ${url}`))
+    ));
+    console.log(` -> Warmed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uniqueImageUrls.length / batchSize)}`);
+}
+console.log(' -> Finished warming image URLs');
+
 
 await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
