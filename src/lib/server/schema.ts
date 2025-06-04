@@ -1,5 +1,5 @@
 import { sql, type SQL } from 'drizzle-orm';
-import { pgTable, text, integer, real, timestamp, unique, boolean, jsonb, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -24,9 +24,7 @@ export const events = pgTable('events', {
     scrapedAt: timestamp().notNull().defaultNow(),
     messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
     slug: text().notNull().unique(),
-}, (t) => [
-    unique().on(t.name, t.startAt, t.address)
-]);
+});
 
 
 export const botMessages = pgTable('message_to_bot', {

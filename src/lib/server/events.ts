@@ -201,7 +201,7 @@ export async function insertEvent(event: InsertEvent) {
     const result = await db.insert(s.events)
         .values(event)
         .onConflictDoUpdate({
-            target: [s.events.name, s.events.startAt, s.events.address],
+            target: s.events.slug,
             set: {
                 name: sql`excluded.name`,
                 startAt: sql`excluded.start_at`,

@@ -174,9 +174,9 @@ Extract these information from the message:
 
 "name": string. the name of the event. needs to be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as its obvious that every event is an invitation. if there is no name in the text create a short descriptive name with not much personality.
 
-"description": string. A exact copy from the message, including html tags. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of the description.
+"description": string. A exact copy from the message, including html tags, do not convert <br> tags to \n. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of the description.
 
-"descriptionBrief": string. The same content as in "description" field but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it. Only remove information that was extracted into other fields. If e.g. there are multiple contact methods, and you extract only one into the "contact" field, leave the other contact methods in the descriptionBrief.
+"descriptionBrief": string. The same content as in "description" field, including html tags, but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it. Only remove information that was extracted into other fields. If e.g. there are multiple contact methods, and you extract only one into the "contact" field, leave the other contact methods in the descriptionBrief.
 
 "summary": string. Summarise what the event is about in one descriptive sentence. Always use same language as the message. Never mention name of the event. Never mention date or location. Always sound friendly and keep it about this event.
 
