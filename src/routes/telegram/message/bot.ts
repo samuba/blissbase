@@ -334,9 +334,15 @@ function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]
                 return '';
         }
     }
+    function lineBreaksToBr(text: string) {
+        return text
+            .replaceAll("\n", "<br>")
+            .replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
+    }
+
 
     if (!entities.length) {
-        return text.replace(/\n/g, "<br>");
+        return lineBreaksToBr(text)
     }
 
     // Create a map of position -> formatting changes
@@ -399,6 +405,7 @@ function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]
         }
     }
 
-    result = result.replace(/\n/g, "<br>");
+    result = lineBreaksToBr(result)
+
     return result;
 }
