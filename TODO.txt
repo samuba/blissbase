@@ -8,10 +8,10 @@ on scrape error ->  telegram msg
 
 automatic app update
 
-images telegram: selber hosten. Halten nur 1std
-download images and serve
 
 calendar: this week, next week, this weekend, next 30 days
+
+NEUE WEBSITES UND CHANNELS: Yoga Studios besuchen und Nachfragen was die kennen.
 
 infos aus bildern extrahieren
 
