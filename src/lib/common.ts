@@ -134,3 +134,16 @@ export function generateSlug({ name, startAt }: { name: string, startAt: Date })
     const hoursMinutes = time.slice(0, 5).replace(':', '')
     return `${slugify(name)}-${day}-${hoursMinutes}`
 }
+
+export const cachedImageUrl = (url: string | undefined) => {
+    if (!url) return url;
+    return `https://res.cloudinary.com/dy7jatmjz/image/fetch/f_auto,q_auto,c_limit,h_700,w_786/${url}`
+}
+
+export function stripHtml(html: string | undefined) {
+    return html?.replace(/<[^>]*>?/g, '');
+}
+
+export const trimAllWhitespaces = (text: string | undefined) => {
+    return text?.replace(/\s+/g, ' ').trim();
+}
