@@ -166,6 +166,7 @@ const eventsToInsert = allEvents.map(event => {
     event.startAt = typeof event.startAt === 'string' ? new Date(event.startAt) : event.startAt;
     event.endAt = typeof event.endAt === 'string' ? new Date(event.endAt) : event.endAt;
     event.imageUrls = event.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!)
+    event.description = event.description?.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
     return event;
 });
 

@@ -1,5 +1,7 @@
 background farbe auf ios passt nicht.
 
+BUG: messages mit mehreren bildern haben keinen text??
+
 such controls klein machen und nur bei bedarf vergrössern
 
 BUG: nach scrape funktionieren event urls nicht mehr (neue ids => slug)
