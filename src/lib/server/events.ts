@@ -195,7 +195,11 @@ export async function insertEvent(event: InsertEvent) {
     }
 
     if (!event.slug) {
-        event.slug = generateSlug(event);
+        event.slug = generateSlug({
+            name: event.name,
+            startAt: event.startAt,
+            endAt: event.endAt ?? undefined,
+        });
     }
 
     const result = await db.insert(s.events)
@@ -223,6 +227,7 @@ export async function insertEvent(event: InsertEvent) {
                 scrapedAt: sql`CURRENT_TIMESTAMP`,
                 messageSenderId: sql`excluded.message_sender_id`,
                 slug: sql`excluded.slug`,
+                soldOut: sql`excluded.sold_out`,
             }
         })
         .returning();

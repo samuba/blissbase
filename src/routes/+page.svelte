@@ -66,6 +66,7 @@
 		);
 	}
 
+	// svelte-ignore state_referenced_locally
 	let selectedSortValue = $state(getSortValue(pagination.sortBy, pagination.sortOrder));
 
 	function getSortValue(sortBy?: string | null, sortOrder?: string | null) {

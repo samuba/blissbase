@@ -47,7 +47,13 @@
 		</div>
 
 		<div class="card-body flex flex-col gap-2">
-			<h3 class="card-title leading-snug tracking-tight">{event.name}</h3>
+			<h3 class="card-title leading-snug tracking-tight">
+				{event.name}
+
+				{#if event.soldOut}
+					<span class="badge badge-sm badge-ghost ml-1">Ausgebucht</span>
+				{/if}
+			</h3>
 
 			<div class="flex items-center gap-1">
 				<!-- <i class="icon-[ph--clock] mr-1.5 size-4 min-w-4"></i> -->

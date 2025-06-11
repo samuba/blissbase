@@ -24,6 +24,7 @@ export const events = pgTable('events', {
     scrapedAt: timestamp().notNull().defaultNow(),
     messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
     slug: text().notNull().unique(),
+    soldOut: boolean().notNull().default(false),
 });
 
 

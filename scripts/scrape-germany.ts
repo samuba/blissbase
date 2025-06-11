@@ -15,7 +15,7 @@
  * The '--clean' flag deletes all existing events from the target source(s) before insertion.
  */
 
-import type { ScrapedEvent } from '../src/lib/types.ts';
+import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import * as schema from '../src/lib/server/schema.ts';
 import { AwaraScraper } from './scrape-awara.ts';
 import { TribehausScraper } from './scrape-tribehaus.ts';
@@ -173,12 +173,13 @@ if (shouldClean) {
 }
 
 /**
- * Removes "sold out" suffixes from event names
+ * Removes "sold out" suffixes from event names and detects if event is sold out
  * Handles German and English terms: ausgebucht, ausverkauft, voll, sold out, etc.
  * Case insensitive and handles various separators (whitespace, -, |, etc.)
+ * @returns Object with cleaned name and soldOut boolean
  */
-function cleanEventName(name: string): string {
-    if (!name) return name;
+function cleanEventNameAndDetectSoldOut(name: string): { cleanedName: string; soldOut: boolean } {
+    if (!name) return { cleanedName: name, soldOut: false };
 
     // List of sold-out indicators in German and English
     const soldOutTerms = [
@@ -193,27 +194,37 @@ function cleanEventName(name: string): string {
 
     // Create regex pattern that matches any of the terms with various separators
     // Pattern explanation:
-    // [\s\-\|\(\)\[\]]+  = one or more whitespace, dash, pipe, parentheses, or brackets
+    // [\s\-\u2010-\u2015\|\(\)\[\]]+  = one or more whitespace, various dashes, pipe, parentheses, or brackets
     // (?:term1|term2|...)  = non-capturing group with sold-out terms
-    // [\s\-\|\(\)\[\]]*$  = optional separators at the end
+    // [\s\-\u2010-\u2015\|\(\)\[\]]*$  = optional separators at the end
+    // \u2010-\u2015 covers: hyphen, non-breaking hyphen, figure dash, en dash, em dash, horizontal bar
     const pattern = new RegExp(
-        `[\\s\\-\\|\\(\\)\\[\\]]+(?:${soldOutTerms.join('|')})[\\s\\-\\|\\(\\)\\[\\]]*$`,
+        `[\\s\\-\\u2010-\\u2015\\|\\(\\)\\[\\]]+(?:${soldOutTerms.join('|')})[\\s\\-\\u2010-\\u2015\\|\\(\\)\\[\\]]*$`,
         'gi'
     );
 
-    return name.replace(pattern, '').trim();
+    const cleanedName = name.replace(pattern, '').trim();
+    const soldOut = cleanedName !== name; // If the name changed, sold-out text was found
+
+    return { cleanedName, soldOut };
 }
 
 console.log(`Inserting/Updating ${allEvents.length} events into the database...`);
 
 // Prepare data for insertion, mapping ScrapedEvent to the schema format
-const eventsToInsert = allEvents.map(event => {
-    event.startAt = typeof event.startAt === 'string' ? new Date(event.startAt) : event.startAt;
-    event.endAt = typeof event.endAt === 'string' ? new Date(event.endAt) : event.endAt;
-    event.imageUrls = event.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!)
-    event.description = event.description?.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
-    event.name = cleanEventName(event.name); // Clean sold-out suffixes from event names
-    return event;
+const eventsToInsert = allEvents.map(x => {
+    const { cleanedName, soldOut } = cleanEventNameAndDetectSoldOut(x.name);
+    return {
+        ...x,
+        name: cleanedName,
+        soldOut,
+        slug: "", // will be generated later
+        startAt: typeof x.startAt === 'string' ? new Date(x.startAt) : x.startAt,
+        endAt: typeof x.endAt === 'string' ? new Date(x.endAt) : x.endAt,
+        imageUrls: x.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!),
+        description: x.description?.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
+
+    } satisfies InsertEvent;
 });
 
 // Pre-warm image URLs by making HEAD requests to ensure they're cached
