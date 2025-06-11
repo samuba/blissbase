@@ -5,8 +5,29 @@
 	let deferredPrompt: any;
 	let showInstallButton = false;
 
+	function isIos(): boolean {
+		if (!browser) return false;
+
+		const userAgent = window.navigator.userAgent.toLowerCase();
+		const platform = window.navigator.platform?.toLowerCase() ?? '';
+
+		// iOS detection via user agent and platform
+		const isIosDevice = /ipad|iphone|ipod/.test(userAgent) || /ipad|iphone|ipod/.test(platform);
+
+		// Modern iPad detection (reports as macOS)
+		const isModernIpad = /macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
+
+		// Standalone mode check for iOS Safari
+		const isStandalone = window.navigator.standalone === true;
+
+		return isIosDevice || isModernIpad || isStandalone;
+	}
+
 	onMount(() => {
 		if (!browser) return;
+
+		console.log('isIos', isIos());
+		console.log('navigator.standalone', window.navigator.standalone);
 
 		window.addEventListener('beforeinstallprompt', (e) => {
 			// Prevent Chrome 67 and earlier from automatically showing the prompt
