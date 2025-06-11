@@ -18,6 +18,7 @@ export const load = ({ url }) => {
             title,
             description,
             siteName: title,
+            logo: faviconUrl,
             images: [
                 {
                     url: faviconUrl,
