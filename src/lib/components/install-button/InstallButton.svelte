@@ -26,9 +26,6 @@
 	onMount(() => {
 		if (!browser) return;
 
-		console.log('isIos', isIos());
-		console.log('navigator.standalone', window.navigator.standalone);
-
 		window.addEventListener('beforeinstallprompt', (e) => {
 			// Prevent Chrome 67 and earlier from automatically showing the prompt
 			e.preventDefault();
@@ -77,8 +74,4 @@
 
 {#if showInstallButton}
 	<button onclick={handleInstallClick} class="btn"> App installieren </button>
-{/if}
-
-{#if browser}
-	{window.navigator.standalone}
 {/if}
