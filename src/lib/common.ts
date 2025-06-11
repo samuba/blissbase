@@ -131,10 +131,28 @@ const slugify = (str: string) =>
         .replace(/\s+/g, '-') // replace spaces
 
 
-export function generateSlug({ name, startAt }: { name: string, startAt: Date }) {
+export function generateSlug({ name, startAt, endAt }: { name: string, startAt: Date, endAt: Date | undefined }) {
     const [day, time] = startAt.toISOString().split('T')
     const hoursMinutes = time.slice(0, 5).replace(':', '')
-    return `${slugify(name)}-${day}-${hoursMinutes}`
+
+    // Only include hoursMinutes if endAt is undefined or endAt is more than 12 hours into the next day
+    let includeTime = false;
+
+    if (!endAt) {
+        // If endAt is undefined, include time
+        includeTime = true;
+    } else {
+        // Check if endAt is more than 12 hours into the next day
+        const startDay = new Date(startAt.getFullYear(), startAt.getMonth(), startAt.getDate());
+        const nextDay = new Date(startDay.getTime() + 24 * 60 * 60 * 1000);
+        const twelveHoursIntoNextDay = new Date(nextDay.getTime() + 12 * 60 * 60 * 1000);
+
+        if (endAt > twelveHoursIntoNextDay) {
+            includeTime = true;
+        }
+    }
+
+    return includeTime ? `${day}-${hoursMinutes}-${slugify(name)}` : `${day}-${slugify(name)}`
 }
 
 export const cachedImageUrl = (url: string | undefined) => {
