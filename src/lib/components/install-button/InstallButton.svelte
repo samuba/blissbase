@@ -78,3 +78,7 @@
 {#if showInstallButton}
 	<button onclick={handleInstallClick} class="btn"> App installieren </button>
 {/if}
+
+{#if browser}
+	{window.navigator.standalone}
+{/if}
