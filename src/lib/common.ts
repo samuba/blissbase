@@ -1,4 +1,3 @@
-import { page } from "$app/state";
 import type { MetaTagsProps } from "svelte-meta-tags";
 
 export function debounce(func: (...args: unknown[]) => void, wait: number) {
@@ -151,15 +150,16 @@ export const trimAllWhitespaces = (text: string | undefined) => {
     return text?.replace(/\s+/g, ' ').trim();
 }
 
-export function getPageMetaTags({ name, description, imageUrl }: { name: string, description?: string | null, imageUrl?: string | null }) {
+export function getPageMetaTags({ name, description, imageUrl, url }: { name: string, description?: string | null, imageUrl?: string | null, url: URL }) {
     const descriptionTeaser = trimAllWhitespaces(stripHtml(description?.slice(0, 140) ?? '')) + "…"
     return {
         title: `${name} | BlissBase`,
         description: descriptionTeaser,
+        canonical: url.href,
         openGraph: {
             title: name,
             description: descriptionTeaser,
-            url: page.url.href,
+            url: url.href,
             images: imageUrl ? [
                 {
                     url: imageUrl,
