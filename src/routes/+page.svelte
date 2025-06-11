@@ -129,7 +129,7 @@
 						<img src="/logo.svg" alt="Menu" class="size-10 min-w-10" />
 					{/snippet}
 					{#snippet content()}
-						<div class="flex flex-col gap-4 p-4 text-sm">
+						<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
 							<p class="text-lg leading-tight font-bold">Willkommen bei Blissbase</p>
 							<p>
 								Wir wollen die Conscious Communities Deutschlands zusammenbringen und vernetzen.
@@ -140,10 +140,10 @@
 								In einer simplen und komfortablen App.
 							</p>
 							<p>
-								<span class="font-semibold"> Wie kann ich meinen Event hier eintragen? </span>
+								<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
 								<br />
 								Trage deinen Event einfach in eine unserer Quellen ein, dann wird er nach ein paar Stunden
-								automatisch automatisch bei uns eingetragen.
+								automatisch zu uns übertragen.
 							</p>
 
 							<a href={routes.sources()} class="underline">Unsere Event Quellen</a>
