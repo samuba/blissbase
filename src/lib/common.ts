@@ -40,6 +40,7 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
     }
 
     let str = `${dateString}, ${start.toLocaleTimeString('de-DE', { timeStyle: 'short' })}`;
+    let shouldAddWeekday = false;
 
     if (end) {
         const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -54,12 +55,25 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
         if (endsOnSameDayOrBeforeNoonNextDay) {
             // Only show end time
             str += ` – ${end.toLocaleTimeString('de-DE', { timeStyle: 'short' })}`;
+            // Only add weekday if it's not today, tomorrow, or yesterday
+            shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
         } else {
             // Show start date – end date (no times)
             str = dateString; // Initialize str with only the date string, removing the start time
             str += ` – ${end.toLocaleDateString('de-DE', { dateStyle: 'medium' })}`;
+            shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
         }
+    } else {
+        // No end date - only add weekday if it's not today, tomorrow, or yesterday
+        shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
     }
+
+    // Add German weekday abbreviation for events that are not today, tomorrow, or yesterday
+    if (shouldAddWeekday) {
+        const weekday = start.toLocaleDateString('de-DE', { weekday: 'short' });
+        str = `${weekday}. ${str}`;
+    }
+
     return str;
 }
 
