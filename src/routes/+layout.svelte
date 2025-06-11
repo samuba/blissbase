@@ -1,13 +1,14 @@
 <script lang="ts">
 	import '../app.css';
-	import { updated } from '$app/state';
+	import { page, updated } from '$app/state';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { pwaAssetsHead } from 'virtual:pwa-assets/head';
 	import { beforeNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { MetaTags, deepMerge } from 'svelte-meta-tags';
 
-	let { children } = $props();
-
+	let { data, children } = $props();
+	let metaTags = $derived(deepMerge(data.baseMetaTags, page.data.pageMetaTags));
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
 	if (browser) {
@@ -21,8 +22,6 @@
 </script>
 
 <svelte:head>
-	<title>BlissBase</title>
-	<meta name="description" content="Hippie Events in deiner Nähe" />
 	{@html webManifestLink}
 	{#if pwaAssetsHead.themeColor}
 		<meta name="theme-color" content={pwaAssetsHead.themeColor.content} />
@@ -31,5 +30,7 @@
 		<link {...link} />
 	{/each}
 </svelte:head>
+
+<MetaTags {...metaTags} />
 
 {@render children()}

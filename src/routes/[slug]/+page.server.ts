@@ -3,8 +3,7 @@ import { events } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
-import { trimAllWhitespaces } from '$lib/common';
-import { stripHtml } from '$lib/common';
+import { getPageMetaTags } from '$lib/common';
 
 export const load = (async ({ params: { slug } }) => {
     const event = await db.query.events.findFirst({
@@ -15,9 +14,14 @@ export const load = (async ({ params: { slug } }) => {
         throw error(404, 'Event not found');
     }
 
-    const descriptionTeaser = trimAllWhitespaces(stripHtml(event.description?.slice(0, 140) ?? '')) + "…"
-
-    return { event, descriptionTeaser };
+    return {
+        event,
+        pageMetaTags: getPageMetaTags({
+            name: event.name,
+            description: event.description ?? '',
+            imageUrl: event.imageUrls?.[0] ?? ''
+        })
+    };
 }) satisfies PageServerLoad;
 
 export type UiEvent = Awaited<ReturnType<typeof load>>['event'];

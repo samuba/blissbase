@@ -1,3 +1,6 @@
+import { page } from "$app/state";
+import type { MetaTagsProps } from "svelte-meta-tags";
+
 export function debounce(func: (...args: unknown[]) => void, wait: number) {
     let timeout: NodeJS.Timeout;
     return function executedFunction(...args: unknown[]) {
@@ -146,4 +149,24 @@ export function stripHtml(html: string | undefined) {
 
 export const trimAllWhitespaces = (text: string | undefined) => {
     return text?.replace(/\s+/g, ' ').trim();
+}
+
+export function getPageMetaTags({ name, description, imageUrl }: { name: string, description: string, imageUrl: string }) {
+    const descriptionTeaser = trimAllWhitespaces(stripHtml(description?.slice(0, 140) ?? '')) + "…"
+    return {
+        title: `${name} | BlissBase`,
+        description: descriptionTeaser,
+        openGraph: {
+            title: name,
+            description: descriptionTeaser,
+            url: page.url.href,
+            images: imageUrl ? [
+                {
+                    url: imageUrl,
+                    alt: name,
+                    secureUrl: imageUrl,
+                }
+            ] : []
+        }
+    } satisfies MetaTagsProps
 }
