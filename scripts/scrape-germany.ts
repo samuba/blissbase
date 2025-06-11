@@ -1,11 +1,18 @@
 /**
- * Main script to orchestrate scraping from multiple sources (Awara, Tribehaus, Heilnetz)
+ * Main script to orchestrate scraping from multiple sources (Awara, Tribehaus, Heilnetz, SeiJetzt)
  * and store the results in a postgres database using Drizzle ORM.
  *
  * Requires Bun, for network requests and file system operations.
  * Usage: 
- * bun run scripts/scrape-germany.ts
- * bun run scripts/scrape-germany.ts awara
+ * bun run scripts/scrape-germany.ts [source] [--clean]
+ * 
+ * Examples:
+ * bun run scripts/scrape-germany.ts                    # Scrape all sources
+ * bun run scripts/scrape-germany.ts awara              # Scrape only awara
+ * bun run scripts/scrape-germany.ts --clean            # Clear all sources and scrape all
+ * bun run scripts/scrape-germany.ts awara --clean      # Clear awara and scrape awara
+ * 
+ * The '--clean' flag deletes all existing events from the target source(s) before insertion.
  */
 
 import type { ScrapedEvent } from '../src/lib/types.ts';
@@ -17,131 +24,110 @@ import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db } from "../src/lib/server/db.ts";
 import { insertEvent } from '../src/lib/server/events.ts';
 import { cachedImageUrl } from '../src/lib/common.ts';
+import { inArray } from 'drizzle-orm';
+import { parseArgs } from 'util';
 
 const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
 
 console.log('--- Starting Germany Event Scraper ---');
 
 // --- Process Arguments ---
-const args = process.argv.slice(2);
-let targetSourceArg: string | null = null;
-let jsonFilePath: string | null = null;
+const { values, positionals } = parseArgs({
+    args: process.argv.slice(2),
+    options: {
+        clean: {
+            type: 'boolean',
+            default: false,
+        },
+    },
+    allowPositionals: true,
+});
 
-if (args.length > 0) {
-    if (args[0].toLowerCase().endsWith('.json')) {
-        jsonFilePath = args[0];
-        console.log(`Attempting to load events from JSON file: ${jsonFilePath}`);
-        if (args.length > 1) {
-            const sourceArgLower = args[1].toLowerCase();
-            if (SCRAPE_SOURCES.includes(sourceArgLower)) {
-                targetSourceArg = sourceArgLower;
-                console.log(`Targeting source: '${targetSourceArg}' for JSON event filtering and DB clearing.`);
-            } else {
-                console.warn(`Warning: Invalid source argument '${args[1]}' provided with JSON file. It will be ignored for filtering. Valid sources: ${SCRAPE_SOURCES.join(', ')}. If clearing by source from JSON, ensure the source name is valid.`);
-            }
-        }
+const shouldClean = values.clean;
+let targetSourceArg: string | null = null;
+
+// Check if a source is specified as positional argument
+if (positionals.length > 0) {
+    const sourceArgLower = positionals[0].toLowerCase();
+    if (SCRAPE_SOURCES.includes(sourceArgLower)) {
+        targetSourceArg = sourceArgLower;
+        console.log(`Targeting single source for scraping: ${targetSourceArg}`);
     } else {
-        const sourceArgLower = args[0].toLowerCase();
-        if (SCRAPE_SOURCES.includes(sourceArgLower)) {
-            targetSourceArg = sourceArgLower;
-            console.log(`Targeting single source for scraping: ${targetSourceArg}`);
-        } else {
-            console.warn(`Invalid source argument: ${args[0]}. Valid sources are: ${SCRAPE_SOURCES.join(', ')}. Scraping all sources.`);
-        }
+        console.warn(`Invalid source argument: ${positionals[0]}. Valid sources are: ${SCRAPE_SOURCES.join(', ')}. Scraping all sources.`);
     }
 }
 
-if (!jsonFilePath && !targetSourceArg && args.length === 0) {
-    console.log('No source or JSON file specified, scraping all sources.');
-} else if (jsonFilePath && !targetSourceArg && args.length === 1) {
-    console.log(`Processing all events from ${jsonFilePath}. DB clearing will target hosts found in the JSON.`);
+if (!targetSourceArg) {
+    console.log('No specific source specified, scraping all sources.');
+}
+
+if (shouldClean) {
+    console.log('Clean flag detected - will delete existing events from target sources before insertion.');
 }
 
 let allEvents: ScrapedEvent[] = [];
 
-if (jsonFilePath) {
+// --- Run Scrapers ---
+if (!targetSourceArg || targetSourceArg === 'awara') {
+    console.log('Scraping Awara...');
+    let awaraEvents: ScrapedEvent[] = [];
     try {
-        const fileContent = await Bun.file(jsonFilePath).text();
-        const loadedEvents = JSON.parse(fileContent) as ScrapedEvent[];
-        console.log(`Successfully loaded ${loadedEvents.length} events from ${jsonFilePath}`);
-
-        if (targetSourceArg) {
-            const originalCount = loadedEvents.length;
-            allEvents = loadedEvents.filter(event => event.host === targetSourceArg);
-            console.log(`Filtered events to host '${targetSourceArg}', ${allEvents.length} of ${originalCount} events remain.`);
-            if (allEvents.length === 0 && originalCount > 0) {
-                console.warn(`Warning: No events matched the target source '${targetSourceArg}' from the JSON file.`);
-            }
-        } else {
-            allEvents = loadedEvents;
-        }
+        awaraEvents = await new AwaraScraper().scrapeWebsite();
     } catch (error) {
-        console.error(`Error reading or parsing JSON file ${jsonFilePath}:`, error);
-        process.exit(1);
+        console.error('Error scraping Awara:', error);
+        throw error;
     }
-} else {
-    // --- Run Scrapers ---
-    if (!targetSourceArg || targetSourceArg === 'awara') {
-        console.log('Scraping Awara...');
-        let awaraEvents: ScrapedEvent[] = [];
-        try {
-            awaraEvents = await new AwaraScraper().scrapeWebsite();
-        } catch (error) {
-            console.error('Error scraping Awara:', error);
-            throw error;
-        }
-        console.log(` -> Found ${awaraEvents.length} events.`);
-        if (awaraEvents.length === 0) throw new Error('No awara events found');
-        allEvents = allEvents.concat(awaraEvents);
+    console.log(` -> Found ${awaraEvents.length} events.`);
+    if (awaraEvents.length === 0) throw new Error('No awara events found');
+    allEvents = allEvents.concat(awaraEvents);
+}
+if (!targetSourceArg || targetSourceArg === 'tribehaus') {
+    console.log('Scraping Tribehaus...');
+    let tribehausEvents: ScrapedEvent[] = [];
+    try {
+        tribehausEvents = await new TribehausScraper().scrapeWebsite();
+    } catch (error) {
+        console.error('Error scraping Tribehaus:', error);
+        throw error;
     }
-    if (!targetSourceArg || targetSourceArg === 'tribehaus') {
-        console.log('Scraping Tribehaus...');
-        let tribehausEvents: ScrapedEvent[] = [];
-        try {
-            tribehausEvents = await new TribehausScraper().scrapeWebsite();
-        } catch (error) {
-            console.error('Error scraping Tribehaus:', error);
-            throw error;
-        }
-        console.log(` -> Found ${tribehausEvents.length} events.`);
-        if (tribehausEvents.length === 0) throw new Error('No tribehaus events found');
-        allEvents = allEvents.concat(tribehausEvents);
-    }
+    console.log(` -> Found ${tribehausEvents.length} events.`);
+    if (tribehausEvents.length === 0) throw new Error('No tribehaus events found');
+    allEvents = allEvents.concat(tribehausEvents);
+}
 
-    if (!targetSourceArg || targetSourceArg === 'heilnetz') {
-        console.log('Scraping Heilnetz...');
-        let heilnetzEvents: ScrapedEvent[] = [];
-        try {
-            heilnetzEvents = await new HeilnetzScraper().scrapeWebsite();
-        } catch (error) {
-            console.error('Error scraping Heilnetz:', error);
-            throw error;
-        }
-        console.log(` -> Found ${heilnetzEvents.length} events.`);
-        if (heilnetzEvents.length === 0) throw new Error('No heilnetz events found');
-        allEvents = allEvents.concat(heilnetzEvents);
+if (!targetSourceArg || targetSourceArg === 'heilnetz') {
+    console.log('Scraping Heilnetz...');
+    let heilnetzEvents: ScrapedEvent[] = [];
+    try {
+        heilnetzEvents = await new HeilnetzScraper().scrapeWebsite();
+    } catch (error) {
+        console.error('Error scraping Heilnetz:', error);
+        throw error;
     }
+    console.log(` -> Found ${heilnetzEvents.length} events.`);
+    if (heilnetzEvents.length === 0) throw new Error('No heilnetz events found');
+    allEvents = allEvents.concat(heilnetzEvents);
+}
 
-    if (!targetSourceArg || targetSourceArg === 'seijetzt') {
-        console.log('Scraping SeiJetzt...');
-        let seijetztEvents: ScrapedEvent[] = [];
-        try {
-            seijetztEvents = await new SeijetztScraper().scrapeWebsite();
-        } catch (error) {
-            console.error('Error scraping SeiJetzt:', error);
-            throw error;
-        }
-        console.log(` -> Found ${seijetztEvents.length} events.`);
-        if (seijetztEvents.length === 0) throw new Error('No seijetzt events found');
-        allEvents = allEvents.concat(seijetztEvents);
+if (!targetSourceArg || targetSourceArg === 'seijetzt') {
+    console.log('Scraping SeiJetzt...');
+    let seijetztEvents: ScrapedEvent[] = [];
+    try {
+        seijetztEvents = await new SeijetztScraper().scrapeWebsite();
+    } catch (error) {
+        console.error('Error scraping SeiJetzt:', error);
+        throw error;
     }
+    console.log(` -> Found ${seijetztEvents.length} events.`);
+    if (seijetztEvents.length === 0) throw new Error('No seijetzt events found');
+    allEvents = allEvents.concat(seijetztEvents);
+}
 
-    console.log(`--- Total events ${jsonFilePath ? 'loaded from JSON' : 'scraped this run'}: ${allEvents.length} ---`);
+console.log(`--- Total events scraped this run: ${allEvents.length} ---`);
 
-    if (allEvents.length === 0) {
-        console.log(`No events to process${jsonFilePath ? ' after filtering (if any)' : ''}. Exiting.`);
-        process.exit(0);
-    }
+if (allEvents.length === 0) {
+    console.log('No events to process. Exiting.');
+    process.exit(0);
 }
 
 // --- Connect to Database and Insert Data ---
@@ -159,6 +145,65 @@ try {
     process.exit(1); // Stop if we can't confirm table existence
 }
 
+// --- Clear existing events if requested ---
+if (shouldClean) {
+    console.log('Clearing existing events from target sources...');
+
+    let sourcesToClear: string[] = [];
+
+    if (targetSourceArg) {
+        // Clear only the target source
+        sourcesToClear = [targetSourceArg];
+    } else {
+        // Clear all scrape sources
+        sourcesToClear = SCRAPE_SOURCES;
+    }
+
+    console.log(` -> Deleting events from sources: ${sourcesToClear.join(', ')}`);
+
+    try {
+        await db.delete(schema.events)
+            .where(inArray(schema.events.source, sourcesToClear));
+
+        console.log(` -> Successfully cleared existing events from ${sourcesToClear.length} source(s)`);
+    } catch (error) {
+        console.error('Error clearing existing events:', error);
+        throw error;
+    }
+}
+
+/**
+ * Removes "sold out" suffixes from event names
+ * Handles German and English terms: ausgebucht, ausverkauft, voll, sold out, etc.
+ * Case insensitive and handles various separators (whitespace, -, |, etc.)
+ */
+function cleanEventName(name: string): string {
+    if (!name) return name;
+
+    // List of sold-out indicators in German and English
+    const soldOutTerms = [
+        'ausgebucht',
+        'ausverkauft',
+        'voll',
+        'sold out',
+        'vollbesetzt',
+        'komplett ausgebucht',
+        'restlos ausverkauft'
+    ];
+
+    // Create regex pattern that matches any of the terms with various separators
+    // Pattern explanation:
+    // [\s\-\|\(\)\[\]]+  = one or more whitespace, dash, pipe, parentheses, or brackets
+    // (?:term1|term2|...)  = non-capturing group with sold-out terms
+    // [\s\-\|\(\)\[\]]*$  = optional separators at the end
+    const pattern = new RegExp(
+        `[\\s\\-\\|\\(\\)\\[\\]]+(?:${soldOutTerms.join('|')})[\\s\\-\\|\\(\\)\\[\\]]*$`,
+        'gi'
+    );
+
+    return name.replace(pattern, '').trim();
+}
+
 console.log(`Inserting/Updating ${allEvents.length} events into the database...`);
 
 // Prepare data for insertion, mapping ScrapedEvent to the schema format
@@ -167,6 +212,7 @@ const eventsToInsert = allEvents.map(event => {
     event.endAt = typeof event.endAt === 'string' ? new Date(event.endAt) : event.endAt;
     event.imageUrls = event.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!)
     event.description = event.description?.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
+    event.name = cleanEventName(event.name); // Clean sold-out suffixes from event names
     return event;
 });
 
