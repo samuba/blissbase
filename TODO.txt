@@ -4,12 +4,13 @@ BUG: messages mit mehreren bildern haben keinen text??
 
 such controls klein machen und nur bei bedarf vergrössern
 
-BUG: nach scrape funktionieren event urls nicht mehr (neue ids => slug)
+BUG: use device location knopf erkennen boomer nicht
+
+BUG: doppelte events nach scraping -> uhrzeit wird falsch berechnet
 
 on scrape error ->  telegram msg
 
 automatic app update
-
 
 calendar: this week, next week, this weekend, next 30 days
 
@@ -20,6 +21,8 @@ infos aus bildern extrahieren
 telegram: save sender userId, only them can update an event
 
 feste kategorien wie bei hipsy
+
+button: share event
 
 button: in kalendar eintragen
 
