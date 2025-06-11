@@ -151,7 +151,7 @@ export const trimAllWhitespaces = (text: string | undefined) => {
     return text?.replace(/\s+/g, ' ').trim();
 }
 
-export function getPageMetaTags({ name, description, imageUrl }: { name: string, description: string, imageUrl: string }) {
+export function getPageMetaTags({ name, description, imageUrl }: { name: string, description?: string | null, imageUrl?: string | null }) {
     const descriptionTeaser = trimAllWhitespaces(stripHtml(description?.slice(0, 140) ?? '')) + "…"
     return {
         title: `${name} | BlissBase`,

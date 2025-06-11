@@ -18,8 +18,8 @@ export const load = (async ({ params: { slug } }) => {
         event,
         pageMetaTags: getPageMetaTags({
             name: event.name,
-            description: event.description ?? '',
-            imageUrl: event.imageUrls?.[0] ?? ''
+            description: event.description,
+            imageUrl: event.imageUrls?.[0]
         })
     };
 }) satisfies PageServerLoad;
