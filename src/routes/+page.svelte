@@ -23,13 +23,13 @@
 	let pagination = $state(data.pagination);
 
 	let searchInputElement = $state<HTMLInputElement | null>(null);
-	let isLoadingEvents = $state(false);
+	let loadingState = $state('not-loading' as 'not-loading' | 'loading' | 'loading-more');
 
 	$inspect(pagination);
 
 	async function loadEvents(params: Parameters<typeof fetchEvents>[0], append?: boolean) {
 		try {
-			isLoadingEvents = true;
+			loadingState = append ? 'loading-more' : 'loading';
 
 			const data = await fetchEvents(params);
 
@@ -42,12 +42,12 @@
 			}
 			pagination = data.pagination;
 		} finally {
-			isLoadingEvents = false;
+			loadingState = 'not-loading';
 		}
 	}
 
 	async function loadMoreEvents() {
-		if (isLoadingEvents) return;
+		if (loadingState) return;
 		return loadEvents(
 			{
 				page: pagination.page + 1,
@@ -206,25 +206,31 @@
 	</div>
 	<InstallButton />
 
-	{#if events.length > 0}
-		<div class="flex w-full flex-col items-center gap-6">
+	{#if loadingState === 'loading'}
+		{@render loading()}
+	{:else if events.length > 0}
+		<div class="fade-in flex w-full flex-col items-center gap-6">
 			{#each events as event, i (event.id)}
 				<EventCard {event} />
 			{/each}
 
 			<div {@attach intersect({ onIntersecting: loadMoreEvents })} class="-translate-y-72"></div>
 
-			{#if isLoadingEvents}
-				<div class="mb-3 flex flex-col items-center justify-center gap-2">
-					<img src="/logo.svg" alt="Blissbase" class="size-10 min-w-10 animate-spin" />
-					<p class="">Lade...</p>
-				</div>
+			{#if loadingState === 'loading-more'}
+				{@render loading()}
 			{/if}
 		</div>
 	{:else}
 		<p class="text-gray-500">Keine Events gefunden.</p>
 	{/if}
 </div>
+
+{#snippet loading()}
+	<div class="mb-3 flex flex-col items-center justify-center gap-2">
+		<img src="/logo.svg" alt="Blissbase" class="size-10 min-w-10 animate-spin" />
+		<p class="">Lade...</p>
+	</div>
+{/snippet}
 
 <EventDetailsDialog
 	event={events.find((e) => e.id === page.state.selectedEventId) ??
