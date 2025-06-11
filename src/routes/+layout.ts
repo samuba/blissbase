@@ -18,7 +18,6 @@ export const load = ({ url }) => {
             title,
             description,
             siteName: title,
-            logo: faviconUrl,
             images: [
                 {
                     url: faviconUrl,
@@ -29,7 +28,10 @@ export const load = ({ url }) => {
                     type: 'image/png'
                 }
             ]
-        }
+        },
+        additionalMetaTags: [
+            { property: 'og:logo', content: faviconUrl }
+        ]
     }) satisfies MetaTagsProps;
 
     return {
