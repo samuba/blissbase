@@ -3,24 +3,32 @@
 	import { onMount, onDestroy } from 'svelte';
 
 	let deferredPrompt: any;
-	let showInstallButton = false;
 
-	function isIos(): boolean {
-		if (!browser) return false;
+	let showInstallButton = $state(false);
+
+	const mode = $derived(browser ? detectIosDevice() : 'not-ios');
+
+	function detectIosDevice() {
+		if (!browser) return 'unknown';
 
 		const userAgent = window.navigator.userAgent.toLowerCase();
 		const platform = window.navigator.platform?.toLowerCase() ?? '';
 
 		// iOS detection via user agent and platform
-		const isIosDevice = /ipad|iphone|ipod/.test(userAgent) || /ipad|iphone|ipod/.test(platform);
+		const isSmallIosDevice = /iphone|ipod/i.test(userAgent) || /iphone|ipod/i.test(platform);
 
-		// Modern iPad detection (reports as macOS)
-		const isModernIpad = /macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
+		const isIpad =
+			/ipad/i.test(userAgent) ||
+			// Modern iPad detection (reports as macOS)
+			(/macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1);
 
-		// Standalone mode check for iOS Safari
-		const isStandalone = window.navigator.standalone === true;
+		if (isSmallIosDevice) {
+			return 'smallIosDevice';
+		} else if (isIpad) {
+			return 'ipad';
+		}
 
-		return isIosDevice || isModernIpad || isStandalone;
+		return 'not-ios';
 	}
 
 	onMount(() => {
