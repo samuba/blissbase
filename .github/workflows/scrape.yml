@@ -5,6 +5,12 @@ on:
     # Runs at 00:00 and 12:00 UTC every day
     - cron: '0 0,12 * * *'
   workflow_dispatch: # Allows manual triggering
+    inputs:
+      params:
+        description: 'parameters to pass to the script'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   scrape:
@@ -29,4 +35,4 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           # Add other environment variables your script needs here, e.g., DB connection strings
           # DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: bun run scripts/scrape-germany.ts
+        run: bun run scripts/scrape-germany.ts ${{ github.event.inputs.params }}
