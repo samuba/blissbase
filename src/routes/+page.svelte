@@ -47,7 +47,8 @@
 	}
 
 	async function loadMoreEvents() {
-		if (loadingState) return;
+		console.log('loadMoreEvents', loadingState);
+		if (loadingState !== 'not-loading') return;
 		return loadEvents(
 			{
 				page: pagination.page + 1,
@@ -76,6 +77,7 @@
 	}
 
 	const onDateChange: DateRangePickerOnChange = (value) => {
+		console.log('date changed', value);
 		loadEvents({
 			...pagination,
 			page: 1,
