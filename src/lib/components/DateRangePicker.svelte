@@ -1,23 +1,29 @@
 <script lang="ts" module>
-	import { type DateRangePickerRootPropsWithoutHTML } from 'bits-ui';
+	import { type DateRangePickerRootPropsWithoutHTML, type DateRange } from 'bits-ui';
 	export type DateRangePickerOnChange = DateRangePickerRootPropsWithoutHTML['onValueChange'];
 </script>
 
 <script lang="ts">
 	import { DateRangePicker } from 'bits-ui';
-	import { CalendarDate, endOfMonth } from '@internationalized/date';
-
-	type DateRangePickerProps = {
-		value?: { start: CalendarDate; end: CalendarDate };
-		class?: string;
-		onChange: DateRangePickerOnChange;
-	};
+	import {
+		CalendarDate,
+		endOfMonth,
+		startOfWeek,
+		endOfWeek,
+		type DateValue
+	} from '@internationalized/date';
 
 	const today = new CalendarDate(
 		new Date().getFullYear(),
 		new Date().getMonth() + 1,
 		new Date().getDate()
 	);
+
+	type DateRangePickerProps = {
+		value?: { start: CalendarDate; end: CalendarDate };
+		class?: string;
+		onChange: DateRangePickerOnChange;
+	};
 
 	let {
 		value = $bindable({
@@ -27,6 +33,55 @@
 		class: className,
 		onChange
 	}: DateRangePickerProps = $props();
+
+	let isOpen = $state(false);
+	let previousStart = $state(value?.start as DateValue);
+	let previousEnd = $state(value?.end as DateValue);
+
+	function internalOnChange(newValue: DateRange) {
+		// only trigger if the value has actuallychanged
+		if (!newValue.start || !newValue.end) return;
+		if (
+			previousStart.toString() === newValue.start.toString() &&
+			previousEnd.toString() === newValue.end.toString()
+		) {
+			return;
+		}
+
+		previousStart = newValue.start;
+		previousEnd = newValue.end;
+		onChange?.(newValue);
+	}
+
+	function setDateRange(start: CalendarDate, end: CalendarDate) {
+		value = { start, end };
+		internalOnChange({ start, end });
+		isOpen = false;
+	}
+
+	function getThisWeek() {
+		const start = startOfWeek(today, 'de-DE');
+		const end = endOfWeek(today, 'de-DE');
+		setDateRange(start, end);
+	}
+
+	function getThisWeekend() {
+		const start = startOfWeek(today, 'de-DE').add({ days: 5 }); // Friday
+		const end = endOfWeek(today, 'de-DE'); // Sunday
+		setDateRange(start, end);
+	}
+
+	function getNextWeek() {
+		const start = startOfWeek(today, 'de-DE').add({ days: 7 });
+		const end = endOfWeek(today, 'de-DE').add({ days: 7 });
+		setDateRange(start, end);
+	}
+
+	function getThisMonth() {
+		const start = new CalendarDate(today.year, today.month, 1);
+		const end = endOfMonth(today);
+		setDateRange(start, end);
+	}
 </script>
 
 <DateRangePicker.Root
@@ -34,8 +89,9 @@
 	fixedWeeks={true}
 	class="flex w-fit flex-col gap-1.5"
 	bind:value
+	bind:open={isOpen}
 	locale="de-DE"
-	onValueChange={onChange}
+	onValueChange={internalOnChange}
 >
 	<DateRangePicker.Trigger class="w-fit">
 		<div
@@ -73,6 +129,13 @@
 	<DateRangePicker.Content sideOffset={6} class="z-50">
 		<DateRangePicker.Calendar class="card card-border rounded-15px bg-base-100 p-4 shadow-xl">
 			{#snippet children({ months, weekdays })}
+				<div class="grid grid-cols-2 gap-2 pb-2">
+					<button class="btn btn-sm px-0" onclick={getThisWeek}> Diese Woche </button>
+					<button class="btn btn-sm px-0" onclick={getThisWeekend}> Dieses Wochenende </button>
+					<button class="btn btn-sm px-0" onclick={getNextWeek}> Nächste Woche </button>
+					<button class="btn btn-sm px-0" onclick={getThisMonth}> Diesen Monat </button>
+				</div>
+
 				<DateRangePicker.Header class="flex items-center justify-between">
 					<DateRangePicker.PrevButton class="btn btn-ghost p-1.5 active:scale-[0.98]">
 						<i class="icon-[ph--caret-left] size-6"></i>
@@ -82,6 +145,7 @@
 						<i class="icon-[ph--caret-right] size-6"></i>
 					</DateRangePicker.NextButton>
 				</DateRangePicker.Header>
+
 				<div class="flex flex-col space-y-4 pt-4 sm:flex-row sm:space-y-0 sm:space-x-4">
 					{#each months as month}
 						<DateRangePicker.Grid class="w-full border-collapse space-y-1 select-none">

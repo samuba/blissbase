@@ -77,13 +77,12 @@
 	}
 
 	const onDateChange: DateRangePickerOnChange = (value) => {
-		console.log('date changed', value);
 		loadEvents({
 			...pagination,
 			page: 1,
 			limit: pagination.limit,
-			startDate: value?.start?.toString() ?? null,
-			endDate: value?.end?.toString() ?? null
+			startDate: value.start?.toString() ?? null,
+			endDate: value.end?.toString() ?? null
 		});
 	};
 
