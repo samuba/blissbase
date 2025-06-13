@@ -4,6 +4,7 @@
 	import EventDetails from './EventDetails.svelte';
 	import { page } from '$app/state';
 	import { onTap } from '$lib/attachments';
+	import { eventsStore } from '$lib/eventsStore.svelte';
 
 	let { event: eventParam }: { event: UiEvent | undefined } = $props();
 	let event = $state<UiEvent | undefined>(eventParam);
@@ -69,7 +70,13 @@
 			</div>
 
 			{#if event}
-				<EventDetails {event} />
+				<EventDetails
+					{event}
+					onShowEventForTag={(tag) => {
+						eventsStore.handleTagClick(tag);
+						window.history.back();
+					}}
+				/>
 			{/if}
 
 			<div class="flex w-full justify-center gap-6 pb-6">

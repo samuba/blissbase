@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { routes } from '$lib/routes';
 	import EventDetails from '../EventDetails.svelte';
 
@@ -15,7 +17,13 @@
 	</div>
 
 	<div class="bg-base-100 sm:rounded-box overflow-hidden">
-		<EventDetails {event} />
+		<EventDetails
+			{event}
+			onShowEventForTag={(tag) => {
+				eventsStore.handleTagClick(tag);
+				goto(routes.eventList());
+			}}
+		/>
 	</div>
 
 	<div class="flex w-full justify-center gap-6 py-3">

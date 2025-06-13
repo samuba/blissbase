@@ -4,6 +4,7 @@
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';
 	import { onTap } from '$lib/attachments';
+	import { eventsStore } from '$lib/eventsStore.svelte';
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
@@ -17,7 +18,7 @@
 	{@attach onTap((e) => {
 		e.preventDefault();
 		pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
-	})}
+	}, 'button')}
 >
 	<div
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg sm:flex-row {className}"
@@ -80,7 +81,17 @@
 			{#if event.tags && event.tags.length}
 				<div class="mt-1 flex flex-wrap gap-1 text-xs">
 					{#each event.tags as tag}
-						<span class="badge badge-sm badge-ghost">{tag}</span>
+						<button
+							class="badge badge-sm badge-ghost cursor-pointer"
+							title="Filter nach Tag"
+							onclick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								eventsStore.handleTagClick(tag);
+							}}
+						>
+							{tag}
+						</button>
 					{/each}
 				</div>
 			{/if}

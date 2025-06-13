@@ -1,118 +1,39 @@
 <script lang="ts">
-	import DateRangePicker, {
-		type DateRangePickerOnChange
-	} from '$lib/components/DateRangePicker.svelte';
+	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
-	import LocationDistanceInput, {
-		type LocationChangeEvent
-	} from '$lib/components/LocationDistanceInput.svelte';
+	import LocationDistanceInput from '$lib/components/LocationDistanceInput.svelte';
 	import { page } from '$app/state';
-	import { debounce } from '$lib/common';
 	import Select from '$lib/components/Select.svelte';
-	import type { UiEvent } from '$lib/server/events';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
 	import { intersect } from '$lib/attachments/intersection';
-	import { fetchEvents } from './page.telefunc';
 	import { parseDate } from '@internationalized/date';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import { routes } from '$lib/routes';
+	import { debounce } from '$lib/common';
+	import { eventsStore } from '$lib/eventsStore.svelte';
 
 	const { data } = $props();
-	let events = $state(data.events);
-	let pagination = $state(data.pagination);
+
+	if (eventsStore.events.length === 0) {
+		// do not initialize from server when already populated (navigated from an event page)
+		eventsStore.initialize({
+			events: data.events,
+			pagination: data.pagination
+		});
+	}
 
 	let searchInputElement = $state<HTMLInputElement | null>(null);
-	let loadingState = $state('not-loading' as 'not-loading' | 'loading' | 'loading-more');
 
-	$inspect(pagination);
-
-	async function loadEvents(params: Parameters<typeof fetchEvents>[0], append?: boolean) {
-		try {
-			loadingState = append ? 'loading-more' : 'loading';
-
-			const data = await fetchEvents(params);
-
-			if (append) {
-				// sometimes pagination can result in duplicate events => Filter out events that already exist
-				const existingEventIds = new Set(events.map((event) => event.id));
-				events.push(...data.events.filter((event) => !existingEventIds.has(event.id)));
-			} else {
-				events = data.events;
-			}
-			pagination = data.pagination;
-		} finally {
-			loadingState = 'not-loading';
-		}
-	}
-
-	async function loadMoreEvents() {
-		console.log('loadMoreEvents', loadingState);
-		if (loadingState !== 'not-loading') return;
-		return loadEvents(
-			{
-				page: pagination.page + 1,
-				limit: pagination.limit,
-				startDate: pagination.startDate,
-				endDate: pagination.endDate,
-				plzCity: pagination.plzCity,
-				distance: pagination.distance,
-				lat: pagination.lat,
-				lng: pagination.lng,
-				searchTerm: pagination.searchTerm,
-				sortBy: pagination.sortBy,
-				sortOrder: pagination.sortOrder
-			},
-			true
-		);
-	}
-
-	// svelte-ignore state_referenced_locally
-	let selectedSortValue = $state(getSortValue(pagination.sortBy, pagination.sortOrder));
-
-	function getSortValue(sortBy?: string | null, sortOrder?: string | null) {
-		const sb = sortBy ?? 'time';
-		const so = sortOrder ?? 'asc';
-		return `${sb}_${so}`;
-	}
-
-	const onDateChange: DateRangePickerOnChange = (value) => {
-		loadEvents({
-			...pagination,
-			page: 1,
-			limit: pagination.limit,
-			startDate: value.start?.toString() ?? null,
-			endDate: value.end?.toString() ?? null
-		});
-	};
-
-	function handleLocationDistanceChange(event: LocationChangeEvent) {
-		loadEvents({
-			...pagination,
-			page: 1,
-			plzCity: event.location,
-			lat: event.latitude ?? null,
-			lng: event.longitude ?? null,
-			distance: event.distance
-		});
-	}
-
+	// Debounced search function
 	const debouncedSearch = debounce(() => {
-		loadEvents({
-			...pagination,
+		eventsStore.loadEvents({
+			...eventsStore.pagination,
 			page: 1
 		});
 	}, 400);
 
-	function handleSortChanged(value: string) {
-		const [sortBy, sortOrder] = value.split('_');
-		loadEvents({
-			...pagination,
-			page: 1,
-			sortBy: sortBy,
-			sortOrder: sortOrder
-		});
-	}
+	$inspect(eventsStore.pagination);
 </script>
 
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 p-4 sm:w-2xl">
@@ -162,20 +83,20 @@
 
 			<DateRangePicker
 				class="w-full md:w-fit"
-				onChange={onDateChange}
+				onChange={eventsStore.onDateChange}
 				value={{
-					start: parseDate(pagination.startDate),
-					end: parseDate(pagination.endDate)
+					start: parseDate(eventsStore.pagination.startDate!),
+					end: parseDate(eventsStore.pagination.endDate!)
 				}}
 			/>
 		</div>
 
 		<LocationDistanceInput
-			initialLocation={pagination.lat && pagination.lng
-				? `coords:${pagination.lat},${pagination.lng}`
-				: pagination.plzCity}
-			initialDistance={pagination.distance}
-			onChange={handleLocationDistanceChange}
+			initialLocation={eventsStore.pagination.lat && eventsStore.pagination.lng
+				? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
+				: eventsStore.pagination.plzCity}
+			initialDistance={eventsStore.pagination.distance}
+			onChange={eventsStore.handleLocationDistanceChange}
 		/>
 	</div>
 	<div class="flex w-full items-center justify-center gap-4">
@@ -183,8 +104,11 @@
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
 			<input
 				bind:this={searchInputElement}
-				bind:value={pagination.searchTerm}
-				oninput={debouncedSearch}
+				value={eventsStore.pagination.searchTerm || ''}
+				oninput={(e) => {
+					eventsStore.updateSearchTerm(e.currentTarget.value);
+					debouncedSearch();
+				}}
 				type="search"
 				placeholder="Suchbegriff"
 			/>
@@ -200,24 +124,27 @@
 					// { value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
 				]}
 				type="single"
-				value={selectedSortValue}
-				onValueChange={handleSortChanged}
+				value={eventsStore.selectedSortValue}
+				onValueChange={eventsStore.handleSortChanged}
 			/>
 		</div>
 	</div>
 	<InstallButton />
 
-	{#if loadingState === 'loading'}
+	{#if eventsStore.isLoading}
 		{@render loading()}
-	{:else if events.length > 0}
+	{:else if eventsStore.hasEvents}
 		<div class="fade-in flex w-full flex-col items-center gap-6">
-			{#each events as event, i (event.id)}
+			{#each eventsStore.events as event, i (event.id)}
 				<EventCard {event} />
 			{/each}
 
-			<div {@attach intersect({ onIntersecting: loadMoreEvents })} class="-translate-y-72"></div>
+			<div
+				{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
+				class="-translate-y-72"
+			></div>
 
-			{#if loadingState === 'loading-more'}
+			{#if eventsStore.isLoadingMore}
 				{@render loading()}
 			{/if}
 		</div>
@@ -233,7 +160,4 @@
 	</div>
 {/snippet}
 
-<EventDetailsDialog
-	event={events.find((e) => e.id === page.state.selectedEventId) ??
-		(undefined as unknown as UiEvent)}
-/>
+<EventDetailsDialog event={eventsStore.getEventById(page.state.selectedEventId ?? null)} />

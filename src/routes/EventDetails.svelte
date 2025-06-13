@@ -3,7 +3,8 @@
 	import PopOver from '$lib/components/PopOver.svelte';
 	import type { UiEvent } from '$lib/../routes/[id]/+page.server';
 
-	let { event }: { event: UiEvent } = $props();
+	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
+		$props();
 
 	let showOriginal = $state(false);
 	let showFullscreenImage = $state(false);
@@ -229,7 +230,14 @@
 				<h2 class="mb-2 text-lg font-semibold">Tags</h2>
 				<div class="flex flex-wrap items-center gap-2">
 					{#each event.tags as tag}
-						<span class="badge badge-ghost">{tag}</span>
+						<button
+							class="badge badge-ghost cursor-pointer"
+							type="button"
+							onclick={() => onShowEventForTag(tag)}
+							title="Filter nach Tag"
+						>
+							{tag}
+						</button>
 					{/each}
 				</div>
 			</div>

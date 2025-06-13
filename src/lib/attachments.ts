@@ -8,10 +8,14 @@ import type { Attachment } from "svelte/attachments";
  *
  * @param handler - The function to call when a click/tap is detected.
  *                  Receives the PointerEvent (for touch, specifically the initial pointerdown event) or MouseEvent (for non-touch).
+ * @param excludeSelector - Optional CSS selector for child elements that should not trigger the handler when clicked.
  * @returns A Svelte attachment function that, when applied to an element, attaches the event listeners
  *          and returns an object with a `destroy` method to clean them up.
  */
-export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Attachment {
+export function onTap(
+    handler: (event: PointerEvent | MouseEvent) => void,
+    excludeSelector?: string
+): Attachment {
     // Determined once when the attachment factory is called.
     const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
@@ -20,6 +24,23 @@ export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Atta
         if (!(element instanceof HTMLElement)) {
             throw new Error('Element must be an HTMLElement');
         }
+
+        /**
+         * Checks if the event target matches the excluded selector
+         */
+        const shouldExclude = (event: PointerEvent | MouseEvent): boolean => {
+            if (!excludeSelector || !event.target) {
+                return false;
+            }
+
+            const target = event.target as Element;
+
+            // Check if the target or any of its ancestors (up to the element) matches the excluded selector
+            const excludedElement = target.closest(excludeSelector);
+
+            // Only exclude if the excluded element is within our element boundaries
+            return excludedElement !== null && element.contains(excludedElement);
+        };
 
         const MAX_CLICK_DURATION_MS = 300;
         const MAX_CLICK_MOVEMENT_PX = 10; // pixels
@@ -79,6 +100,11 @@ export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Atta
                 return;
             }
 
+            // Check if we should exclude this event
+            if (shouldExclude(event)) {
+                return;
+            }
+
             const endTime = performance.now();
             const duration = endTime - startTime;
             const deltaX = Math.abs(event.clientX - startX);
@@ -109,6 +135,11 @@ export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Atta
                 return; // Only process primary pointer and if not already tracking one
             }
 
+            // Check if we should exclude this event early
+            if (shouldExclude(event)) {
+                return;
+            }
+
             pointerId = event.pointerId;
             initialPointerDownEvent = event;
             startX = event.clientX;
@@ -123,6 +154,15 @@ export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Atta
             }
         };
 
+        const handleClick = (event: MouseEvent) => {
+            // Check if we should exclude this event
+            if (shouldExclude(event)) {
+                return;
+            }
+
+            handler(event);
+        };
+
         if (isTouchDevice) {
             // Add all listeners upfront for better performance
             element.addEventListener('pointerdown', handlePointerDown);
@@ -130,7 +170,7 @@ export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Atta
             element.addEventListener('pointerup', handlePointerUp);
             element.addEventListener('pointercancel', handlePointerCancel);
         } else {
-            element.addEventListener('click', handler);
+            element.addEventListener('click', handleClick);
         }
 
         return () => {
@@ -146,7 +186,7 @@ export function onTap(handler: (event: PointerEvent | MouseEvent) => void): Atta
                     resetState();
                 }
             } else {
-                element.removeEventListener('click', handler);
+                element.removeEventListener('click', handleClick);
             }
         };
     };
