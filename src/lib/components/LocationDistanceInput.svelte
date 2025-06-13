@@ -25,6 +25,7 @@
 	let typedPlzCity = $state('');
 	let selectedDistance = $state('');
 	let usingCurrentLocation = $state(false);
+	let plzCityInput = $state<HTMLInputElement | null>(null);
 	let coordsForFilter = $state<string | null>(null);
 	let isLoadingLocation = $state(false);
 	let displayLocationText = $state('');
@@ -189,49 +190,57 @@
 	}
 </script>
 
-<div class="form-control join w-full p-0">
-	{#if usingCurrentLocation && !isLoadingLocation}
-		<span class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0">
-			<i class="icon-[ph--map-pin] -mr-0.5 size-4"></i>
-			{displayLocationText}
-		</span>
-	{:else}
-		<input
-			type="text"
-			id="plzCityInput"
-			placeholder="PLZ oder Stadt"
-			class="input input-bordered join-item w-full border-r-0"
-			bind:value={typedPlzCity}
-			disabled={isLoadingLocation || disabled}
-			oninput={() => {
-				if (usingCurrentLocation) {
-					usingCurrentLocation = false;
-					coordsForFilter = null;
-					displayLocationText = '';
-				}
-			}}
-			onchange={handleFilterInputChange}
-		/>
-	{/if}
-	<button
-		class={[
-			'btn btn-ghost bg-base-100 join-item border-base-500 border-r-0 border-l p-2.5',
-			usingCurrentLocation && 'bg-base-200 hover:bg-base-300'
-		]}
-		title="Aktuellen Standort verwenden"
-		onclick={usingCurrentLocation && !isLoadingLocation
-			? handleResetLocationClick
-			: handleUseCurrentLocationClick}
-		disabled={isLoadingLocation || disabled}
-	>
-		{#if isLoadingLocation}
-			<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
-		{:else if usingCurrentLocation}
-			<i class="icon-[ph--x] size-5"></i>
+<div class="form-control join flex w-full items-center p-0">
+	<div class="relative flex-1">
+		{#if usingCurrentLocation && !isLoadingLocation}
+			<span
+				class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0"
+			>
+				<i class="icon-[ph--map-pin] -mr-0.5 size-4"></i>
+				{displayLocationText}
+			</span>
 		{:else}
-			<i class="icon-[ph--crosshair] size-5"></i>
+			<input
+				bind:this={plzCityInput}
+				type="text"
+				id="plzCityInput"
+				placeholder="PLZ / Stadt"
+				class="input input-bordered join-item peer w-full border-r-0"
+				bind:value={typedPlzCity}
+				disabled={isLoadingLocation || disabled}
+				oninput={() => {
+					if (usingCurrentLocation) {
+						usingCurrentLocation = false;
+						coordsForFilter = null;
+						displayLocationText = '';
+					}
+				}}
+				onchange={handleFilterInputChange}
+			/>
 		{/if}
-	</button>
+		<div class="absolute top-1/2 right-1 -translate-y-1/2">
+			<button
+				class={[
+					'btn btn-xs flex h-full w-full items-center justify-center rounded py-0.5 peer-focus:hidden',
+					usingCurrentLocation && 'hover:bg-base-300'
+				]}
+				title="Aktuellen Standort verwenden"
+				onclick={usingCurrentLocation && !isLoadingLocation
+					? handleResetLocationClick
+					: handleUseCurrentLocationClick}
+				disabled={isLoadingLocation || disabled}
+			>
+				{#if isLoadingLocation}
+					<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
+				{:else if usingCurrentLocation}
+					<i class="icon-[ph--x] size-5"></i>
+				{:else}
+					<i class="icon-[ph--crosshair] size-5"></i>
+					<span class="text-xs"> Standort</span>
+				{/if}
+			</button>
+		</div>
+	</div>
 	<select
 		id="distance"
 		class="select join-item disabled:!border-base-300 w-auto disabled:!border-2"
