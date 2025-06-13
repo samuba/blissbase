@@ -235,7 +235,7 @@ export async function insertEvent(event: InsertEvent) {
     return result?.[0];
 }
 
-type LoadEventsParams = {
+type LoadEventsParams = Partial<{
     startDate: string | null; // 2022-01-01
     endDate: string | null; // 2022-01-01
     page?: number | null;
@@ -250,6 +250,6 @@ type LoadEventsParams = {
     // these are not used as params but are returned in the pagination object
     totalEvents?: number | null;
     totalPages?: number | null;
-}
+}>
 
 export type UiEvent = Awaited<ReturnType<typeof fetchEvents>>['events'][number];
