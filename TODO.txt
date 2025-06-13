@@ -4,15 +4,11 @@ BUG: messages mit mehreren bildern haben keinen text??
 
 such controls klein machen und nur bei bedarf vergrössern
 
-BUG: use device location knopf erkennen boomer nicht
-
-BUG: doppelte events nach scraping -> uhrzeit wird falsch berechnet
-
 on scrape error ->  telegram msg
 
 automatic app update
 
-NEUE WEBSITES UND CHANNELS: Yoga Studios besuchen und Nachfragen was die kennen.
+
 
 infos aus bildern extrahieren
 
@@ -27,7 +23,7 @@ button: in kalendar eintragen
 location settings:
   save to localstorage
 
-PWA installierbar
+PWA installierbar auf ios
 
 wenn 2 messages gleichzeitig verarbeitet werden funzt es nicht??
 
@@ -39,5 +35,8 @@ tribehaus
   ganztägig korrekt erfassen https://tribehaus.org/event/lebensgeschenk
 
 
+##########
+
+NEUE WEBSITES UND CHANNELS: Yoga Studios besuchen und Nachfragen was die kennen.
 
 

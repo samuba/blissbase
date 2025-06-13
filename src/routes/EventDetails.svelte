@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { formatAddress, formatTimeStr } from '$lib/common';
 	import PopOver from '$lib/components/PopOver.svelte';
-	import type { UiEvent } from '$lib/../routes/[id]/+page.server';
+	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
+	import type { UiEvent } from '$lib/server/events';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -89,11 +90,22 @@
 		</h1>
 
 		<div class=" flex flex-wrap justify-center gap-4">
-			<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
-				<i class="icon-[ph--clock] mr-2 size-6"></i>
-				<p class="text-md font-medium">
-					{formatTimeStr(event.startAt, event.endAt)}
-				</p>
+			<div class="flex items-center">
+				<div class="bg-base-200 flex items-center justify-center rounded-l-full py-1.5 pr-2 pl-4">
+					<i class="icon-[ph--clock] mr-2 size-6"></i>
+					<p class="text-md font-medium">
+						{formatTimeStr(event.startAt, event.endAt)}
+					</p>
+				</div>
+				<AddToCalendarButton
+					event={{
+						title: event.name,
+						description: event.description ?? undefined,
+						start: event.startAt.toISOString(),
+						end: event.endAt?.toISOString(),
+						location: event.address?.join(', ')
+					}}
+				/>
 			</div>
 
 			{#if event.price && !event.priceIsHtml}
