@@ -51,6 +51,8 @@ export class EventsStore {
             this.events = initialData.events;
             this.pagination = initialData.pagination;
         }
+        // Bind the loadMoreEvents method to maintain this context when it is used as a callback
+        this.loadMoreEvents = this.loadMoreEvents.bind(this);
     }
 
     // Initialize with server data
