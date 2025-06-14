@@ -5,8 +5,8 @@ import type { events } from "./server/schema";
  */
 export interface ScrapedEvent {
     name: string;
-    startAt: Date;
-    endAt: Date | null | undefined;
+    startAt: string; // ISO string with timezone offset
+    endAt: string | null | undefined; // ISO string with timezone offset
     address: string[]; // Array of address lines
     price: string | null | undefined; // From priceRange or specific price element, can be null | undefined
     priceIsHtml: boolean; // Whether the price is HTML or not

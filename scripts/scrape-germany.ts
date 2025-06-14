@@ -219,8 +219,8 @@ const eventsToInsert = allEvents.map(x => {
         name: cleanedName,
         soldOut,
         slug: "", // will be generated later
-        startAt: typeof x.startAt === 'string' ? new Date(x.startAt) : x.startAt,
-        endAt: typeof x.endAt === 'string' ? new Date(x.endAt) : x.endAt,
+        startAt: new Date(x.startAt),
+        endAt: x.endAt ? new Date(x.endAt) : undefined,
         imageUrls: x.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!),
         description: x.description?.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
 

@@ -93,9 +93,9 @@ export function makeAbsoluteUrl(url: string | undefined, baseUrl: string): strin
  * Attempts to parse German date/time strings into Date objects.
  * Handles formats like: DD.MM.YYYY, DD.MM.YYYY HH:mm
  * @param dateStr German format date string
- * @returns Date object or null if parsing fails
+ * @returns ISO string with timezone offset or null if parsing fails
  */
-export function parseGermanDate(dateStr: string | undefined | null): Date | undefined {
+export function parseGermanDate(dateStr: string | undefined | null): string | undefined {
     if (!dateStr) return undefined;
     dateStr = dateStr.trim();
 
@@ -115,7 +115,7 @@ export function parseGermanDate(dateStr: string | undefined | null): Date | unde
         if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 &&
             parsedYear > 1900 && parsedHour >= 0 && parsedHour < 24 && parsedMinute >= 0 && parsedMinute < 60) {
             // Format to ISO string YYYY-MM-DDTHH:mm:ss
-            return new Date(parsedYear, parsedMonth - 1, parsedDay, parsedHour, parsedMinute, 0);
+            return germanDateToIsoStr(parsedYear, parsedMonth - 1, parsedDay, parsedHour, parsedMinute);
         }
     }
 
@@ -128,7 +128,7 @@ export function parseGermanDate(dateStr: string | undefined | null): Date | unde
 
         if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
             // Format to ISO string YYYY-MM-DD
-            return new Date(parsedYear, parsedMonth - 1, parsedDay);
+            return germanDateToIsoStr(parsedYear, parsedMonth - 1, parsedDay);
         }
     }
 
@@ -214,6 +214,29 @@ export function superTrim(str: string | undefined | null) {
     return str.trim().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
 }
 
+export function germanDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
+    // Format it properly with German timezone. sv-SE is swedish but formats close to iso: yyyy-mm-dd hh:mm:ss
+    const formatter = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Europe/Berlin',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'longOffset'
+    });
+
+    const parts = formatter.formatToParts(new Date(year, month, day, hour, minute));
+    const yearStr = parts.find(x => x.type === 'year')?.value;
+    const monthStr = parts.find(x => x.type === 'month')?.value;
+    const dayStr = parts.find(x => x.type === 'day')?.value;
+    const hourStr = parts.find(x => x.type === 'hour')?.value;
+    const minuteStr = parts.find(x => x.type === 'minute')?.value;
+    const offset = parts.find(x => x.type === 'timeZoneName')?.value?.match(/[+-]\d{2}:\d{2}/)?.[0];
+
+    return `${yearStr}-${monthStr}-${dayStr}T${hourStr}:${minuteStr}:00${offset}`
+}
 
 export interface WebsiteScraper {
     // scrapes the entire website and returns a list of events
@@ -226,8 +249,8 @@ export interface WebsiteScraper {
     // methods for extracting data from a single event page
     extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined>;
     extractName(html: string): string | undefined;
-    extractStartAt(html: string): Date | undefined;
-    extractEndAt(html: string): Date | undefined;
+    extractStartAt(html: string): string | undefined;
+    extractEndAt(html: string): string | undefined;
     extractAddress(html: string): string[] | undefined;
     extractPrice(html: string): string | undefined;
     extractDescription(html: string): string | undefined;

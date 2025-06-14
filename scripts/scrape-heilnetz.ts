@@ -235,7 +235,7 @@ export class HeilnetzScraper implements WebsiteScraper {
         return name;
     }
 
-    extractStartAt(html: string): Date | undefined {
+    extractStartAt(html: string) {
         const $ = cheerio.load(html);
 
         let startDate: string | undefined;
@@ -258,7 +258,7 @@ export class HeilnetzScraper implements WebsiteScraper {
 
         if (startDate) {
             try {
-                return new Date(startDate);
+                return startDate;
             } catch (_) {
                 void _;
                 console.error(`Error parsing start date from LD+JSON: ${startDate}`);
@@ -268,7 +268,7 @@ export class HeilnetzScraper implements WebsiteScraper {
         return undefined;
     }
 
-    extractEndAt(html: string): Date | undefined {
+    extractEndAt(html: string) {
         const $ = cheerio.load(html);
 
         let endDate: string | undefined;
@@ -291,7 +291,7 @@ export class HeilnetzScraper implements WebsiteScraper {
 
         if (endDate) {
             try {
-                return new Date(endDate);
+                return endDate;
             } catch (_) {
                 void _;
                 console.error(`Error parsing end date from LD+JSON: ${endDate}`);

@@ -24,6 +24,7 @@ import {
     REQUEST_DELAY_MS,
     WebsiteScraper, // Import WebsiteScraper
     fetchWithTimeout,
+    germanDateToIsoStr,
     superTrim
 } from "./common.ts";
 import { sleep } from "bun";
@@ -101,7 +102,7 @@ export class SeijetztScraper implements WebsiteScraper {
         return undefined;
     }
 
-    extractStartAt(html: string): Date | undefined {
+    extractStartAt(html: string) {
         const $ = cheerio.load(html);
 
         const dateElement = $('[x-data*="date"]')?.[0];
@@ -110,7 +111,7 @@ export class SeijetztScraper implements WebsiteScraper {
         return this._extractDateFromXDataElement($, dateElement);
     }
 
-    extractEndAt(html: string): Date | undefined {
+    extractEndAt(html: string) {
         const $ = cheerio.load(html);
 
         const dateElement = $('[x-data*="date"]')?.[1];
@@ -134,7 +135,8 @@ export class SeijetztScraper implements WebsiteScraper {
         const day = parseInt(dateParams[2]);
         const hour = parseInt(dateParams[3]);
         const minute = parseInt(dateParams[4]);
-        return new Date(year, month, day, hour, minute);
+
+        return germanDateToIsoStr(year, month, day, hour, minute);
     }
 
     extractAddress(html: string): string[] | undefined {
