@@ -70,7 +70,7 @@
 	{/snippet}
 
 	{#snippet content()}
-		<div class="z-20 flex flex-col gap-2">
+		<div class="z-50 flex flex-col gap-2">
 			{#each calendarProviders as provider}
 				<a
 					href={provider.getUrl(event)}
