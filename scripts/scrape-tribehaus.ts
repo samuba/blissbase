@@ -348,6 +348,7 @@ export class TribehausScraper implements WebsiteScraper {
             endAt: this.extractEndAt(html),
             address: this.extractAddress(html) || [],
             price: this.extractPrice(html),
+            priceIsHtml: false,
             description: this.extractDescription(html) || '',
             imageUrls: this.extractImageUrls(html) || [],
             host: this.extractHost(html),

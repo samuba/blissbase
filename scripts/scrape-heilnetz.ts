@@ -190,6 +190,7 @@ export class HeilnetzScraper implements WebsiteScraper {
                 endAt: this.extractEndAt(html),
                 address,
                 price: this.extractPrice(html),
+                priceIsHtml: false,
                 description: this.extractDescription(html) || '',
                 imageUrls: this.extractImageUrls(html) || [],
                 host: this.extractHost(html),

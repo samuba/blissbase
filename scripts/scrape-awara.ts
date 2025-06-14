@@ -134,6 +134,7 @@ export class AwaraScraper implements WebsiteScraper {
             startAt: startAt,
             endAt: this.extractEndAt(html),
             price: this.extractPrice(html),
+            priceIsHtml: false,
             imageUrls: this.extractImageUrls(html),
             hostLink: this.extractHostLink(html),
             tags: this.extractTags(html),
