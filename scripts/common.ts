@@ -215,27 +215,26 @@ export function superTrim(str: string | undefined | null) {
 }
 
 export function germanDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
-    // Format it properly with German timezone. sv-SE is swedish but formats close to iso: yyyy-mm-dd hh:mm:ss
-    const formatter = new Intl.DateTimeFormat('sv-SE', {
+    // The key insight: we want to interpret the input as Berlin local time
+    // and return an ISO string with the correct Berlin timezone offset
+
+    // Create an ISO string treating the input as Berlin local time
+    const isoStringLocal = `${year.toString().padStart(4, '0')}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
+
+    // Create a Date object from this string, but we need to be careful about timezone interpretation
+    // We'll create a date that represents "noon on this date" to check the timezone offset
+    const referenceDate = new Date(year, month, day, 12, 0, 0);
+
+    // Get the Berlin timezone offset for this date (handles DST automatically)
+    const berlinFormatter = new Intl.DateTimeFormat('en', {
         timeZone: 'Europe/Berlin',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
         timeZoneName: 'longOffset'
     });
 
-    const parts = formatter.formatToParts(new Date(year, month, day, hour, minute));
-    const yearStr = parts.find(x => x.type === 'year')?.value;
-    const monthStr = parts.find(x => x.type === 'month')?.value;
-    const dayStr = parts.find(x => x.type === 'day')?.value;
-    const hourStr = parts.find(x => x.type === 'hour')?.value;
-    const minuteStr = parts.find(x => x.type === 'minute')?.value;
-    const offset = parts.find(x => x.type === 'timeZoneName')?.value?.match(/[+-]\d{2}:\d{2}/)?.[0];
+    const offsetPart = berlinFormatter.formatToParts(referenceDate).find(part => part.type === 'timeZoneName');
+    const offset = offsetPart?.value?.match(/[+-]\d{2}:\d{2}/)?.[0] || '+01:00';
 
-    return `${yearStr}-${monthStr}-${dayStr}T${hourStr}:${minuteStr}:00${offset}`
+    return `${isoStringLocal}${offset}`;
 }
 
 export interface WebsiteScraper {
