@@ -161,7 +161,7 @@ export async function promptOpenAi<T>(message: string, systemPrompt: string = ""
 
 export const msgAnalysisSystemPrompt = () => `
 Your purpose is to anaylze text messages and extract infos about an event from them. 
-Ignore messages that are not event announcements by setting hasEventData to false. (.e.g "...we have one spot left for the next event...")
+Ignore messages that are not event announcements by setting hasEventData to false. (Be strict about this. E.g. this is not an event announcement: "..Wir haben noch einen Platz frei für den nächsten Tantra event..")
 Answer only in valid, raw JSON. Do not wrap it inside markdown or anything else.
 Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
