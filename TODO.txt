@@ -2,7 +2,7 @@ tags für alle events
 
 BUG: messages mit mehreren bildern haben keinen text??
 
-such controls klein machen und nur bei bedarf vergrössern
+such controls sticky und klein machen und nur bei bedarf vergrössern/popover
 
 on scrape error ->  telegram msg
 
@@ -21,8 +21,6 @@ feste kategorien wie bei hipsy
 
 button: share event
 
-button: in kalendar eintragen
-
 location settings:
   save to localstorage
 
@@ -31,7 +29,6 @@ PWA installierbar auf ios
 wenn 2 messages gleichzeitig verarbeitet werden funzt es nicht??
 
 bits-ui v2.6: daterangepicker kaputt 
-
 
 
 tribehaus

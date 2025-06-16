@@ -12,12 +12,12 @@ import { db, eq, s, sql } from '$lib/server/db';
 export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
 bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
+    console.log("message received", ctx.message);
+
     const isGroup =
         ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
     const msgId = await recordMessage(ctx.message)
     try {
-        console.log("message received", ctx.message);
-
         let msgText = "";
         let msgEntities: MessageEntity[] = [];
         let imageUrl: string | undefined;
