@@ -67,61 +67,80 @@ if (shouldClean) {
 
 let allEvents: ScrapedEvent[] = [];
 
-// --- Run Scrapers ---
+// --- Run Scrapers in Parallel ---
+const scrapePromises: Promise<ScrapedEvent[]>[] = [];
+
 if (!targetSourceArg || targetSourceArg === 'awara') {
-    console.log('Scraping Awara...');
-    let awaraEvents: ScrapedEvent[] = [];
-    try {
-        awaraEvents = await new AwaraScraper().scrapeWebsite();
-    } catch (error) {
-        console.error('Error scraping Awara:', error);
-        throw error;
-    }
-    console.log(` -> Found ${awaraEvents.length} events.`);
-    if (awaraEvents.length === 0) throw new Error('No awara events found');
-    allEvents = allEvents.concat(awaraEvents);
+    scrapePromises.push(
+        (async () => {
+            console.log('Scraping Awara...');
+            try {
+                const awaraEvents = await new AwaraScraper().scrapeWebsite();
+                console.log(` -> Found ${awaraEvents.length} events.`);
+                if (awaraEvents.length === 0) throw new Error('No awara events found');
+                return awaraEvents;
+            } catch (error) {
+                console.error('Error scraping Awara:', error);
+                throw error;
+            }
+        })()
+    );
 }
+
 if (!targetSourceArg || targetSourceArg === 'tribehaus') {
-    console.log('Scraping Tribehaus...');
-    let tribehausEvents: ScrapedEvent[] = [];
-    try {
-        tribehausEvents = await new TribehausScraper().scrapeWebsite();
-    } catch (error) {
-        console.error('Error scraping Tribehaus:', error);
-        throw error;
-    }
-    console.log(` -> Found ${tribehausEvents.length} events.`);
-    if (tribehausEvents.length === 0) throw new Error('No tribehaus events found');
-    allEvents = allEvents.concat(tribehausEvents);
+    scrapePromises.push(
+        (async () => {
+            console.log('Scraping Tribehaus...');
+            try {
+                const tribehausEvents = await new TribehausScraper().scrapeWebsite();
+                console.log(` -> Found ${tribehausEvents.length} events.`);
+                if (tribehausEvents.length === 0) throw new Error('No tribehaus events found');
+                return tribehausEvents;
+            } catch (error) {
+                console.error('Error scraping Tribehaus:', error);
+                throw error;
+            }
+        })()
+    );
 }
 
 if (!targetSourceArg || targetSourceArg === 'heilnetz') {
-    console.log('Scraping Heilnetz...');
-    let heilnetzEvents: ScrapedEvent[] = [];
-    try {
-        heilnetzEvents = await new HeilnetzScraper().scrapeWebsite();
-    } catch (error) {
-        console.error('Error scraping Heilnetz:', error);
-        throw error;
-    }
-    console.log(` -> Found ${heilnetzEvents.length} events.`);
-    if (heilnetzEvents.length === 0) throw new Error('No heilnetz events found');
-    allEvents = allEvents.concat(heilnetzEvents);
+    scrapePromises.push(
+        (async () => {
+            console.log('Scraping Heilnetz...');
+            try {
+                const heilnetzEvents = await new HeilnetzScraper().scrapeWebsite();
+                console.log(` -> Found ${heilnetzEvents.length} events.`);
+                if (heilnetzEvents.length === 0) throw new Error('No heilnetz events found');
+                return heilnetzEvents;
+            } catch (error) {
+                console.error('Error scraping Heilnetz:', error);
+                throw error;
+            }
+        })()
+    );
 }
 
 if (!targetSourceArg || targetSourceArg === 'seijetzt') {
-    console.log('Scraping SeiJetzt...');
-    let seijetztEvents: ScrapedEvent[] = [];
-    try {
-        seijetztEvents = await new SeijetztScraper().scrapeWebsite();
-    } catch (error) {
-        console.error('Error scraping SeiJetzt:', error);
-        throw error;
-    }
-    console.log(` -> Found ${seijetztEvents.length} events.`);
-    if (seijetztEvents.length === 0) throw new Error('No seijetzt events found');
-    allEvents = allEvents.concat(seijetztEvents);
+    scrapePromises.push(
+        (async () => {
+            console.log('Scraping SeiJetzt...');
+            try {
+                const seijetztEvents = await new SeijetztScraper().scrapeWebsite();
+                console.log(` -> Found ${seijetztEvents.length} events.`);
+                if (seijetztEvents.length === 0) throw new Error('No seijetzt events found');
+                return seijetztEvents;
+            } catch (error) {
+                console.error('Error scraping SeiJetzt:', error);
+                throw error;
+            }
+        })()
+    );
 }
+
+// Wait for all scrapers to complete
+const results = await Promise.all(scrapePromises);
+allEvents = results.flat();
 
 console.log(`--- Total events scraped this run: ${allEvents.length} ---`);
 
