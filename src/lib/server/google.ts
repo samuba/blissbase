@@ -21,7 +21,7 @@ export async function geocodeAddressCached(addressLines: string[], apiKey: strin
             .limit(1);
 
         if (cachedResult.length > 0) {
-            console.error(`Found cached geocoding result for "${addressString}"`);
+            console.log(`Found cached geocoding result for "${addressString}"`);
             return {
                 lat: Number(cachedResult[0].latitude),
                 lng: Number(cachedResult[0].longitude)
@@ -39,7 +39,7 @@ export async function geocodeAddressCached(addressLines: string[], apiKey: strin
                 longitude: coordinates?.lng ?? null,
                 cachedAt: new Date()
             });
-            console.error(`Cached geocoding result for "${addressString}"`);
+            console.log(`Cached geocoding result for "${addressString}"`);
         } catch (cacheError) {
             console.error(`Error caching geocoding result: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
         }
