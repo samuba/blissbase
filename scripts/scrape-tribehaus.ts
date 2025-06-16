@@ -63,112 +63,48 @@ export class TribehausScraper implements WebsiteScraper {
         return name || undefined;
     }
 
-    extractStartAt(html: string): Date | undefined {
+    extractStartAt(html: string) {
         const $ = cheerio.load(html);
         const dateElement = $('.ep3001112').first();
         const timeElement = $('.ep3001113 span').first();
+        if (!dateElement.length) throw new Error('No date element found');
 
-        if (dateElement.length) {
-            const dateStr = dateElement.text().trim();
-            const timeStr = timeElement.length ? timeElement.text().trim() : null;
+        const dateStr = dateElement.text().trim();
+        const timeStr = timeElement.length ? timeElement.text().trim() : undefined;
 
-            // Check for range format "11.05.2025 bis 14.12.2025"
-            const dateRangeMatch = dateStr.match(/(\d{2}\.\d{2}\.\d{4})\s*bis\s*(\d{2}\.\d{2}\.\d{4})/);
-            if (dateRangeMatch) {
-                // Use the start date of the range
-                const startIso = parseGermanDateTime(dateRangeMatch[1], timeStr);
-                return startIso ? new Date(startIso) : undefined;
-            }
-
-            const isoStr = parseGermanDateTime(dateStr, timeStr);
-            if (isoStr) {
-                try {
-                    return new Date(isoStr);
-                } catch { /* ignore */ }
-            }
+        // Check for range format "11.05.2025 bis 14.12.2025"
+        const dateRangeMatch = dateStr.match(/(\d{2}\.\d{2}\.\d{4})\s*bis\s*(\d{2}\.\d{2}\.\d{4})/);
+        if (dateRangeMatch) {
+            // Use the start date of the range
+            return parseGermanDateTime(dateRangeMatch[1], timeStr);
         }
 
-        // Fallback to JSON-LD
-        const jsonLdScript = $('script[type="application/ld+json"]').html();
-        if (jsonLdScript) {
-            try {
-                const jsonData = JSON.parse(jsonLdScript);
-                if (jsonData.startDate) {
-                    // parseGermanDateTime expects DD.MM.YYYY, JSON-LD might be YYYY-MM-DD
-                    const startDateJson = jsonData.startDate.includes('T') ? jsonData.startDate.split('T')[0] : jsonData.startDate;
-                    const parts = startDateJson.split('-');
-                    if (parts.length === 3) {
-                        const formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`; // DD.MM.YYYY
-                        const timePart = jsonData.startDate.includes('T') ? jsonData.startDate.split('T')[1].substring(0, 5) : null;
-                        const isoStr = parseGermanDateTime(formattedDate, timePart);
-                        if (isoStr) return new Date(isoStr);
-                    } else { // Try parsing directly if not YYYY-MM-DD
-                        const isoStr = parseGermanDateTime(jsonData.startDate, null);
-                        if (isoStr) return new Date(isoStr);
-                    }
-                }
-            } catch (error) {
-                void error;
-            }
-        }
-        return undefined;
+        return parseGermanDateTime(dateStr, timeStr);
     }
 
-    extractEndAt(html: string): Date | undefined {
+    extractEndAt(html: string) {
         const $ = cheerio.load(html);
         const dateElement = $('.ep3001112').first();
         const timeElement = $('.ep3001113 span').first();
+        if (!dateElement.length) throw new Error('No date element found');
 
-        if (dateElement.length) {
-            const dateStr = dateElement.text().trim();
-            const timeStr = timeElement.length ? timeElement.text().trim() : null;
+        const dateStr = dateElement.text().trim();
+        const timeStr = timeElement.length ? timeElement.text().trim() : undefined;
 
-            const dateRangeMatch = dateStr.match(/(\d{2}\.\d{2}\.\d{4})\s*bis\s*(\d{2}\.\d{2}\.\d{4})/);
-            if (dateRangeMatch) {
-                // Use end date of range, assume end of day if time range isn't separate
-                const endIso = parseGermanDateTime(dateRangeMatch[2], null);
-                return endIso ? new Date(endIso) : undefined;
-            }
-
-            // Check for end time in range format "13:00 - 17:00" on the *same* day
-            const timeRangeMatch = timeStr?.match(/\d{2}:\d{2}\s*-\s*(\d{2}:\d{2})/);
-            if (timeRangeMatch) {
-                const [day, month, year] = dateStr.split('.');
-                if (day && month && year) {
-                    const isoDatePart = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                    const endAtIso = `${isoDatePart}T${timeRangeMatch[1]}:00Z`; // Z for UTC
-                    try {
-                        // Check if it's a valid date string before creating Date object
-                        if (!isNaN(new Date(endAtIso).valueOf())) {
-                            return new Date(endAtIso);
-                        }
-                    } catch (error) { void error; }
-                }
-            }
+        // Check for range format "11.05.2025 bis 14.12.2025"
+        const dateRangeMatch = dateStr.match(/(\d{2}\.\d{2}\.\d{4})\s*bis\s*(\d{2}\.\d{2}\.\d{4})/);
+        if (dateRangeMatch) {
+            // Use the end date of the range
+            return parseGermanDateTime(dateRangeMatch[2], timeStr);
         }
-        // Fallback to JSON-LD
-        const jsonLdScript = $('script[type="application/ld+json"]').html();
-        if (jsonLdScript) {
-            try {
-                const jsonData = JSON.parse(jsonLdScript);
-                if (jsonData.endDate) {
-                    const endDateJson = jsonData.endDate.includes('T') ? jsonData.endDate.split('T')[0] : jsonData.endDate;
-                    const parts = endDateJson.split('-');
-                    if (parts.length === 3) {
-                        const formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-                        const timePart = jsonData.endDate.includes('T') ? jsonData.endDate.split('T')[1].substring(0, 5) : null;
-                        const isoStr = parseGermanDateTime(formattedDate, timePart);
-                        if (isoStr) return new Date(isoStr);
-                    } else {
-                        const isoStr = parseGermanDateTime(jsonData.endDate, null);
-                        if (isoStr) return new Date(isoStr);
-                    }
-                }
-            } catch (error) {
-                void error;
-            }
+
+        // Check for end time in range format "13:00 - 17:00" on the *same* day
+        const timeRangeMatch = timeStr?.match(/\d{2}:\d{2}\s*-\s*(\d{2}:\d{2})/);
+        if (timeRangeMatch) {
+            return parseGermanDateTime(dateStr, timeRangeMatch[1]);
         }
-        return undefined;
+
+        return parseGermanDateTime(dateStr, timeStr);
     }
 
     extractAddress(html: string): string[] | undefined {

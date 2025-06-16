@@ -142,71 +142,40 @@ export function parseGermanDate(dateStr: string | undefined | null): string | un
  * @param timeStr Optional time string (HH:mm)
  * @returns ISO date string or null if parsing fails
  */
-export function parseGermanDateTime(dateStr: string, timeStr: string | null): string | null {
+export function parseGermanDateTime(dateStr: string, timeStr?: string) {
     if (!dateStr || !/\d{2}\.\d{2}\.\d{4}/.test(dateStr)) {
-        return null; // Invalid date format
+        return undefined; // Invalid date format
     }
 
     const [day, month, year] = dateStr.split('.');
-    let isoStr = `${year}-${month}-${day}`;
+    const parsedDay = parseInt(day);
+    const parsedMonth = parseInt(month) - 1; // Convert to 0-indexed month for germanDateToIsoStr
+    const parsedYear = parseInt(year);
+
+    let parsedHour = 0;
+    let parsedMinute = 0;
 
     if (timeStr) {
         const timeMatch = timeStr.match(/(\d{2}):(\d{2})/);
         if (timeMatch) {
-            isoStr += `T${timeMatch[1]}:${timeMatch[2]}:00`;
-        } else {
-            isoStr += `T00:00:00`;
+            parsedHour = parseInt(timeMatch[1]);
+            parsedMinute = parseInt(timeMatch[2]);
         }
-    } else {
-        isoStr += `T00:00:00`;
     }
 
     // Basic validation
+    if (parsedMonth < 0 || parsedMonth > 11 || parsedDay < 1 || parsedDay > 31 ||
+        parsedYear < 1900 || parsedHour < 0 || parsedHour > 23 || parsedMinute < 0 || parsedMinute > 59) {
+        console.error(`Invalid date/time values: ${dateStr} ${timeStr}`);
+        return undefined;
+    }
+
     try {
-        new Date(isoStr).toISOString();
-        return isoStr;
-    } catch {
-        console.error(`Invalid date generated: ${isoStr} from ${dateStr} ${timeStr}`);
-        return null;
+        return germanDateToIsoStr(parsedYear, parsedMonth, parsedDay, parsedHour, parsedMinute);
+    } catch (error) {
+        console.error(`Error generating ISO string from ${dateStr} ${timeStr}:`, error);
+        return undefined;
     }
-}
-
-/**
- * Parses date/time range from a string with start and end
- * @param dateTimeStr String containing date range like "DD.MM.YYYY [HH:mm] - DD.MM.YYYY [HH:mm]"
- * @returns Object with startAt and endAt strings in ISO format
- */
-export function parseDateTimeRange(dateTimeStr: string): { startAt: string | null, endAt: string | null } {
-    const parts = dateTimeStr.split(' - ').map(part => part.trim());
-    let startAt: string | null = null;
-    let endAt: string | null = null;
-
-    if (parts.length === 0 || !parts[0]) {
-        return { startAt: null, endAt: null };
-    }
-
-    const parsedStart = parseGermanDate(parts[0]);
-    startAt = parsedStart !== undefined ? parsedStart : null;
-
-    if (parts.length === 2 && parts[1]) {
-        // Handle cases like "15:00 - 19:00" where end date is implicit (assume same day as start)
-        if (startAt && startAt.includes('T') && parts[1].match(/^\d{1,2}:\d{2}$/)) { // Check if startAt has time and part[1] is only time
-            const startDatePart = startAt.split('T')[0]; // Get YYYY-MM-DD part
-            const [year, month, day] = startDatePart.split('-'); // Correct order YYYY-MM-DD
-
-            // Reconstruct DD.MM.YYYY HH:mm format for parsing
-            // Ensure month and day are two digits for consistency if needed, though parseGermanDate handles 1 or 2 digits
-            const endDateStr = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year} ${parts[1]}`;
-            const parsedEnd = parseGermanDate(endDateStr);
-            endAt = parsedEnd !== undefined ? parsedEnd : null;
-        } else {
-            // Handle standard end date/datetime
-            const parsedEnd = parseGermanDate(parts[1]);
-            endAt = parsedEnd !== undefined ? parsedEnd : null;
-        }
-    }
-
-    return { startAt, endAt };
 }
 
 export function superTrim(str: string | undefined | null) {
@@ -214,6 +183,16 @@ export function superTrim(str: string | undefined | null) {
     return str.trim().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
 }
 
+/**
+ * Converts German date/time components to an ISO string with Berlin timezone offset.
+ * Automatically handles daylight saving time (DST) transitions.
+ * @param year The year (e.g., 2024)
+ * @param month The month (0-indexed, 0 = January, 11 = December)
+ * @param day The day of the month (1-31)
+ * @param hour The hour (0-23), defaults to 0
+ * @param minute The minute (0-59), defaults to 0
+ * @returns ISO string with Berlin timezone offset (e.g., "2024-01-15T14:30:00+01:00" or "2024-07-15T14:30:00+02:00")
+ */
 export function germanDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
     // The key insight: we want to interpret the input as Berlin local time
     // and return an ISO string with the correct Berlin timezone offset
