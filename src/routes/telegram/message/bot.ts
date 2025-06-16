@@ -56,6 +56,11 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", msgId)
             return
         }
+        if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
+            console.log("No event location found", msgText)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", msgId)
+            return
+        }
 
         if (imageUrl) {
             // transfer image 
