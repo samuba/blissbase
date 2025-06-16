@@ -33,6 +33,7 @@
 		"@types/cheerio": "^0.22.35",
 		"@types/node": "^22",
 		"@types/ws": "^8.18.1",
+		"@vercel/functions": "^2.2.0",
 		"@vite-pwa/sveltekit": "^1.0.0",
 		"bits-ui": "^1.8.0",
 		"calendar-link": "^2.10.0",
