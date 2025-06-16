@@ -59,8 +59,8 @@ export function setupAutoRefresh(config: AutoRefreshConfig = {}) {
     const currentTime = () => Date.now();
 
     // Check if we should refresh on app startup
-    const checkForAutoRefresh = () => {
-        if (!updated.current) {
+    const checkForAutoRefresh = async () => {
+        if (!await updated.check()) {
             console.log('No update on server, skipping auto-refresh');
             return;
         }
