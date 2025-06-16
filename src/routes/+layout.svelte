@@ -6,6 +6,8 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { MetaTags, deepMerge } from 'svelte-meta-tags';
+	import { onMount } from 'svelte';
+	import { setupAutoRefresh } from '$lib/auto-refresh';
 
 	let { data, children } = $props();
 	let metaTags = $derived(deepMerge(data.baseMetaTags, page.data.pageMetaTags));
@@ -19,6 +21,11 @@
 			}
 		});
 	}
+
+	onMount(() => {
+		const cleanup = setupAutoRefresh();
+		return cleanup;
+	});
 </script>
 
 <svelte:head>

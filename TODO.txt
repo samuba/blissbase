@@ -6,7 +6,9 @@ such controls klein machen und nur bei bedarf vergrössern
 
 on scrape error ->  telegram msg
 
-automatic app update
+SEO
+  ld+json anbieten
+
 
 bug: tribehause -> https://tribehaus.org/event/yael-deckelbaum-voice-ceremony-2-tage-experience ganztägig wird nicht richtig erfasst
 
