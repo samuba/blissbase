@@ -43,7 +43,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
         const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
         if (!aiAnswer.hasEventData) {
             console.log("No event data found", msgText)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren", msgId)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", msgId)
             return
         }
         if (!aiAnswer.name) {
