@@ -18,7 +18,11 @@ export const load = (async ({ params: { slug }, url }) => {
         event,
         pageMetaTags: getPageMetaTags({
             name: event.name,
-            description: event.description,
+            description: event.startAt.toLocaleDateString('de-DE', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+            }) + " - " + event.description,
             imageUrl: event.imageUrls?.[0],
             url
         })
