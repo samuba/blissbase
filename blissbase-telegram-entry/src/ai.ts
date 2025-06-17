@@ -5,11 +5,10 @@ import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
 
 
-export async function aiExtractEventData(message: string, systemPrompt: string = ""): Promise<MsgAnalysisAnswer> {
-
+export async function aiExtractEventData(message: string): Promise<MsgAnalysisAnswer> {
     const { text } = await generateText({
         model: openai('o4-mini-2025-04-16'),
-        system: systemPrompt,
+        system: msgAnalysisSystemPrompt(),
         prompt: message,
     });
 
@@ -18,7 +17,7 @@ export async function aiExtractEventData(message: string, systemPrompt: string =
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         const msg = `Failed to parse OpenAI response as JSON: ${errorMessage}`
-        console.error(msg)
+        console.error("AI answer: ", text)
         throw new Error(msg);
     }
 }

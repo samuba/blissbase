@@ -43,9 +43,11 @@ export async function handleMessage(ctx: Context, payloadJson: any) {
         const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
         const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
 
+        await reply(ctx, JSON.stringify(aiAnswer), undefined)
+
         // TODO call vercel function
 
-        await fetch("https://blissbase.app/telegram/message", {
+        fetch("https://blissbase.app/telegram/message", {
             method: "POST",
             body: JSON.stringify({
                 aiAnswer,

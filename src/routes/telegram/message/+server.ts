@@ -3,6 +3,7 @@ import { bot } from './bot';
 import { waitUntil } from '@vercel/functions';
 
 export const POST: RequestHandler = async ({ request }) => {
+    console.log("post request");
     try {
         const data = await request.json();
         console.log("http payload", data);
