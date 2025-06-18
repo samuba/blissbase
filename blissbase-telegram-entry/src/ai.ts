@@ -1,9 +1,5 @@
-// import { OPENAI_API_KEY, GEMINI_API_KEY } from "$env/static/private";
-
-
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
-
 
 export async function aiExtractEventData(message: string): Promise<MsgAnalysisAnswer> {
     const { text } = await generateText({
@@ -67,7 +63,6 @@ Extract these information from the message:
 "emojis": string. Up to 3 emojis that describe the event.
 
 `
-
 
 export type MsgAnalysisAnswer = {
     hasEventData: boolean;
