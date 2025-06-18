@@ -11,13 +11,23 @@ export async function handleMessage(ctx: Context, payloadJson: any) {
     try {
         let msgText = "";
         let msgEntities: MessageEntity[] = [];
-
         if ('text' in ctx.message) {
             msgText = ctx.message.text;
             msgEntities = ctx.message.entities ?? [];
         } else if ('caption' in ctx.message && ctx.message.caption) {
             msgText = ctx.message.caption;
             msgEntities = ctx.message.caption_entities ?? [];
+        }
+
+        let imageUrl: string | undefined;
+        if ('photo' in ctx.message) {
+            const images = ctx.message.photo;
+            if (images && images.length > 0) {
+                // Typically, the last photo in the array is the largest
+                const largestPhoto = images[images.length - 2];
+                const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
+                imageUrl = fileLink.href;
+            }
         }
 
         const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
@@ -27,9 +37,10 @@ export async function handleMessage(ctx: Context, payloadJson: any) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                aiAnswer,
-                msgTextHtml,
                 telegramPayload: payloadJson,
+                msgTextHtml,
+                imageUrl,
+                aiAnswer,
             })
         })
 

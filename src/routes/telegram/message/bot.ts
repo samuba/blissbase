@@ -2,7 +2,7 @@ import { TELEGRAM_BOT_TOKEN, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { Context, Telegraf } from 'telegraf';
 import { anyOf, message } from 'telegraf/filters';
 import type { MessageEntity } from 'telegraf/types';
-import { aiExtractEventData, type MsgAnalysisAnswer } from './ai';
+import { type MsgAnalysisAnswer } from './ai';
 import { cachedImageUrl, sleep } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvent } from '$lib/server/events';
@@ -13,7 +13,7 @@ export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
 export const messageFilters = anyOf(message('text'), message('forward_origin'))
 
-export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml }: { aiAnswer: MsgAnalysisAnswer, msgTextHtml: string }) {
+export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl }: { aiAnswer: MsgAnalysisAnswer, msgTextHtml: string, imageUrl: string | undefined | null }) {
     if (!ctx.message) return
 
     const isAdmin = ctx.from?.id === 218154725;
@@ -21,29 +21,29 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml }: { a
         ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
 
     if (isAdmin) {
-        await reply(ctx, JSON.stringify({ aiAnswer, isAdmin, isGroup, msgTextHtml }, null, 2), undefined)
+        await reply(ctx, JSON.stringify({ msgTextHtml, isAdmin, isGroup, aiAnswer }, null, 2), undefined)
     }
     console.log({ isGroup, aiAnswer, isAdmin })
 
     const msgId = await recordMessage(ctx.message)
     try {
         if (!aiAnswer.hasEventData) {
-            console.log("No event data found", msgText)
+            console.log("No event data found", msgTextHtml)
             await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", msgId)
             return
         }
         if (!aiAnswer.name) {
-            console.log("No event name found", msgText)
+            console.log("No event name found", msgTextHtml)
             await reply(ctx, "Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren", msgId)
             return
         }
         if (!aiAnswer.startDate) {
-            console.log("No event start date found", msgText)
+            console.log("No event start date found", msgTextHtml)
             await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", msgId)
             return
         }
         if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
-            console.log("No event location found", msgText)
+            console.log("No event location found", msgTextHtml)
             await reply(ctx, "Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", msgId)
             return
         }

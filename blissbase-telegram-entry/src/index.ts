@@ -8,14 +8,14 @@ export default {
 		console.log("in worker")
 		const bot = new Telegraf(env.TELEGRAM_BOT_TOKEN);
 
-		const msg = await request.json() as { telegramPayload: Update, aiAnswer: MsgAnalysisAnswer }
-		console.log("http payload", msg);
+		const data = await request.json() as Update
+		console.log("http payload", data);
 
 		bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
-			await handleMessage(ctx, { aiAnswer: msg.aiAnswer })
+			await handleMessage(ctx, data)
 		})
 
-		ctx.waitUntil(bot.handleUpdate(msg.telegramPayload))
+		ctx.waitUntil(bot.handleUpdate(data))
 		return new Response('OK');
 	},
 } satisfies ExportedHandler<Env>;
