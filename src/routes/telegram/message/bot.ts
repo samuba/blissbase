@@ -23,7 +23,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
     try {
         if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
-            await reply(ctx, `Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. :-)`, msgId)
+            await reply(ctx, `Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. 😉`, msgId)
             return
         }
         if (!aiAnswer.hasEventData) {
