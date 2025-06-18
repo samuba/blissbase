@@ -2,7 +2,7 @@ import { TELEGRAM_BOT_TOKEN, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { Context, Telegraf } from 'telegraf';
 import { anyOf, message } from 'telegraf/filters';
 import type { MessageEntity } from 'telegraf/types';
-import { type MsgAnalysisAnswer } from './ai';
+import type { MsgAnalysisAnswer } from '$lib/../../blissbase-telegram-entry/src/ai';
 import { cachedImageUrl, sleep } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvent } from '$lib/server/events';
