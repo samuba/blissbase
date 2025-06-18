@@ -1,8 +1,8 @@
 import { TELEGRAM_BOT_TOKEN, GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { Context, Telegraf } from 'telegraf';
+import { Context, Telegraf, Composer } from 'telegraf';
 import { anyOf, message } from 'telegraf/filters';
 import type { MessageEntity } from 'telegraf/types';
-import { aiExtractEventData } from './ai';
+import { aiExtractEventData, type MsgAnalysisAnswer } from './ai';
 import { cachedImageUrl, sleep } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvent } from '$lib/server/events';
@@ -11,11 +11,19 @@ import { db, eq, s, sql } from '$lib/server/db';
 
 export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
+export const messageFilters = anyOf(message('text'), message('forward_origin'))
+
+export async function handleMessage(ctx: Context, { aiAnswer }: { aiAnswer: MsgAnalysisAnswer }) {
     console.log("message received", ctx.message);
+
 
     const isGroup =
         ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
+
+
+    console.log({ isGroup, aiAnswer })
+
+    return
     const msgId = await recordMessage(ctx.message)
     try {
         let msgText = "";
@@ -135,7 +143,7 @@ bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
             }
         } catch { /* ignore */ }
     }
-})
+}
 
 
 function parseContact(contact: string | undefined) {

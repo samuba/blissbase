@@ -1,14 +1,19 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { bot } from './bot';
+import { bot, handleMessage, messageFilters } from './bot';
 import { waitUntil } from '@vercel/functions';
+import type { Update } from 'telegraf/types';
+import type { MsgAnalysisAnswer } from './ai';
 
 export const POST: RequestHandler = async ({ request }) => {
-    console.log("post request");
     try {
-        const data = await request.json();
-        console.log("http payload", data);
+        const data = await request.json() as { telegramPayload: Update, aiAnswer: MsgAnalysisAnswer };
+        console.log("telegram message from cloudflare", data);
 
-        waitUntil(bot.handleUpdate(data))
+        bot.on(messageFilters, async (ctx) => {
+            return await handleMessage(ctx, { aiAnswer: data.aiAnswer })
+        })
+
+        waitUntil(bot.handleUpdate(data.telegramPayload))
     } catch (error) {
         console.error(error);
     }

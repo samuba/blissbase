@@ -1,12 +1,6 @@
 import { Context } from 'telegraf';
 import type { MessageEntity } from 'telegraf/types';
 import { aiExtractEventData } from './ai';
-// import { cachedImageUrl, sleep } from '$lib/common';
-// import { geocodeAddressCached } from '$lib/server/google';
-// import { insertEvent } from '$lib/server/events';
-// import type { InsertEvent } from '$lib/types';
-// import { db, eq, s, sql } from '$lib/server/db';
-
 
 export async function handleMessage(ctx: Context, payloadJson: any) {
     console.log("message received", ctx.message);
@@ -45,15 +39,24 @@ export async function handleMessage(ctx: Context, payloadJson: any) {
 
         await reply(ctx, JSON.stringify(aiAnswer), undefined)
 
-        // TODO call vercel function
 
-        await fetch("https://www.blissbase.app/telegram/tut", {
-            method: "GET",
-            // body: JSON.stringify({
-            //     aiAnswer,
-            //     payloadJson,
-            // })
+        const res = await fetch("https://www.blissbase.app/telegram/message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                aiAnswer,
+                telegramPayload: payloadJson,
+            })
         })
+
+        if (!res.ok) {
+            console.error("Failed to call vercel function", {
+                status: res.status,
+                statusText: res.statusText,
+                body: await res.text(),
+            })
+            return
+        }
 
         return;
 
