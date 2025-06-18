@@ -1,19 +1,18 @@
 import { TELEGRAM_BOT_TOKEN, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { Context, Telegraf } from 'telegraf';
 import { anyOf, message } from 'telegraf/filters';
-import type { MessageEntity } from 'telegraf/types';
-import type { MsgAnalysisAnswer } from '$lib/../../blissbase-telegram-entry/src/ai';
-import { cachedImageUrl, sleep } from '$lib/common';
+import { cachedImageUrl } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvent } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
+import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
 
 export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
 export const messageFilters = anyOf(message('text'), message('forward_origin'))
 
-export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl }: { aiAnswer: MsgAnalysisAnswer, msgTextHtml: string, imageUrl: string | undefined | null }) {
+export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl }: TelegramCloudflareBody) {
     if (!ctx.message) return
 
     const isAdmin = ctx.from?.id === 218154725;
@@ -218,26 +217,6 @@ function getTelegramEventOriginalAuthor(message: Context['message']) {
     };
 }
 
-async function wrapInTyping<T>(ctx: Context, fn: () => Promise<T>, enabled: boolean) {
-    if (!enabled) return fn();
-
-    const typingControl = new AbortController();
-    const typingPromise = sendTypingPeriodically(ctx, typingControl.signal);
-    try {
-        return await fn();
-    } finally {
-        typingControl.abort();
-        await typingPromise.catch(() => { }); // Wait for the typing interval to stop
-    }
-}
-
-async function sendTypingPeriodically(ctx: Context, signal: AbortSignal) {
-    while (!signal.aborted) {
-        await ctx.sendChatAction('typing');
-        await sleep(5000); // 5 seconds
-    }
-}
-
 async function recordMessage(message: Context['message']) {
     if (!message) return;
 
@@ -247,156 +226,4 @@ async function recordMessage(message: Context['message']) {
     } catch (error) {
         console.error("error recording telegram message", error)
     }
-}
-
-function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]) {
-    function getOpeningTag(entity: MessageEntity, text: string): string {
-        const content = text.slice(entity.offset, entity.offset + entity.length);
-
-        switch (entity.type) {
-            case "bold":
-                return '<b>';
-            case "italic":
-                return '<i>';
-            case "underline":
-                return '<u>';
-            case "strikethrough":
-                return '<s>';
-            case "code":
-                return '<code>';
-            case "pre":
-                return '<pre>';
-            case "text_link":
-                return `<a href="${entity.url}">`;
-            case "text_mention":
-                return `<a href="tg://user?id=${entity.user?.id}">`;
-            case "mention":
-                return `<a href="tg://user?id=${content.slice(1)}">`;
-            case "hashtag":
-                return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
-            case "cashtag":
-                return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
-            case "bot_command":
-                return '<code>';
-            case "url":
-                return `<a href="${content}">`;
-            case "email":
-                return `<a href="mailto:${content}">`;
-            case "phone_number":
-                return `<a href="tel:${content}">`;
-            case "spoiler":
-                return '<span class="tg-spoiler">';
-            case "blockquote":
-                return '<blockquote>';
-            default:
-                return '';
-        }
-    }
-
-    function getClosingTag(entity: MessageEntity): string {
-        switch (entity.type) {
-            case "bold":
-                return '</b>';
-            case "italic":
-                return '</i>';
-            case "underline":
-                return '</u>';
-            case "strikethrough":
-                return '</s>';
-            case "code":
-            case "bot_command":
-                return '</code>';
-            case "pre":
-                return '</pre>';
-            case "text_link":
-            case "text_mention":
-            case "mention":
-            case "hashtag":
-            case "cashtag":
-            case "url":
-            case "email":
-            case "phone_number":
-                return '</a>';
-            case "spoiler":
-                return '</span>';
-            case "blockquote":
-                return '</blockquote>';
-            default:
-                return '';
-        }
-    }
-    function lineBreaksToBr(text: string) {
-        return text
-            .replaceAll("\n", "<br>")
-            .replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
-    }
-
-
-    if (!entities.length) {
-        return lineBreaksToBr(text)
-    }
-
-    // Create a map of position -> formatting changes
-    const formatChanges = new Map<number, { starts: MessageEntity[], ends: MessageEntity[] }>();
-
-    for (const entity of entities) {
-        // Start of entity
-        if (!formatChanges.has(entity.offset)) {
-            formatChanges.set(entity.offset, { starts: [], ends: [] });
-        }
-        formatChanges.get(entity.offset)!.starts.push(entity);
-
-        // End of entity
-        const endPos = entity.offset + entity.length;
-        if (!formatChanges.has(endPos)) {
-            formatChanges.set(endPos, { starts: [], ends: [] });
-        }
-        formatChanges.get(endPos)!.ends.push(entity);
-    }
-
-    let result = '';
-    const activeEntities: MessageEntity[] = [];
-
-    for (let i = 0; i <= text.length; i++) {
-        // Handle formatting changes at this position
-        const changes = formatChanges.get(i);
-        if (changes) {
-            // If any entities end at this position, we need to handle overlaps properly
-            if (changes.ends.length > 0) {
-                // Close all active entities in reverse opening order (LIFO)
-                for (let j = activeEntities.length - 1; j >= 0; j--) {
-                    result += getClosingTag(activeEntities[j]);
-                }
-
-                // Remove entities that actually end at this position
-                const entitiesStillActive = activeEntities.filter(entity =>
-                    !changes.ends.includes(entity)
-                );
-
-                // Reopen entities that are still active (in original opening order)
-                for (const entity of entitiesStillActive) {
-                    result += getOpeningTag(entity, text);
-                }
-
-                // Update active entities list
-                activeEntities.length = 0;
-                activeEntities.push(...entitiesStillActive);
-            }
-
-            // Open new entities starting at this position
-            for (const entity of changes.starts) {
-                activeEntities.push(entity);
-                result += getOpeningTag(entity, text);
-            }
-        }
-
-        // Add the character if we're not at the end
-        if (i < text.length) {
-            result += text[i];
-        }
-    }
-
-    result = lineBreaksToBr(result)
-
-    return result;
 }

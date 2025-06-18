@@ -1,16 +1,15 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { bot, handleMessage, messageFilters } from './bot';
 import { waitUntil } from '@vercel/functions';
-import type { Update } from 'telegraf/types';
-import type { MsgAnalysisAnswer } from '$lib/../../blissbase-telegram-entry/src/ai';
+import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
-        const data = await request.json() as { telegramPayload: Update, aiAnswer: MsgAnalysisAnswer, msgTextHtml: string };
+        const data = await request.json() as TelegramCloudflareBody;
         console.log("telegram message from cloudflare", data);
 
         bot.on(messageFilters, async (ctx) => {
-            return await handleMessage(ctx, { aiAnswer: data.aiAnswer, msgTextHtml: data.msgTextHtml })
+            return await handleMessage(ctx, data)
         })
 
         waitUntil(bot.handleUpdate(data.telegramPayload))

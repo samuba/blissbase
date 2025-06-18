@@ -1,7 +1,7 @@
 import { Telegraf, type Context } from "telegraf";
 import { anyOf, message } from "telegraf/filters";
 import type { Update, MessageEntity } from "telegraf/types";
-import { aiExtractEventData } from './ai';
+import { aiExtractEventData, MsgAnalysisAnswer } from './ai';
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
@@ -20,7 +20,7 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 
-export async function handleMessage(ctx: Context, payloadJson: unknown) {
+export async function handleMessage(ctx: Context, payloadJson: Update) {
 	console.log("message received", ctx.message);
 	if (!ctx.message) return;
 
@@ -48,7 +48,7 @@ export async function handleMessage(ctx: Context, payloadJson: unknown) {
 			}
 		}
 
-		await reply(ctx, "Ich extrahiere gerade die Eventdaten aus deiner Nachricht...")
+		await reply(ctx, "Ich extrahiere die Eventdaten aus deiner Nachricht...")
 
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
 		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
@@ -61,7 +61,7 @@ export async function handleMessage(ctx: Context, payloadJson: unknown) {
 				msgTextHtml,
 				imageUrl,
 				aiAnswer,
-			})
+			} satisfies TelegramCloudflareBody)
 		})
 
 		if (!res.ok) {
@@ -258,4 +258,11 @@ function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]
 			.replaceAll("\n", "<br>")
 			.replace(/<br>(\s*<br>){2,}/g, '<br><br>');
 	}
+}
+
+export type TelegramCloudflareBody = {
+	telegramPayload: Update,
+	msgTextHtml: string,
+	imageUrl: string | undefined | null,
+	aiAnswer: MsgAnalysisAnswer,
 }
