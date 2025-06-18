@@ -2,7 +2,7 @@ import { Context } from 'telegraf';
 import type { MessageEntity } from 'telegraf/types';
 import { aiExtractEventData } from './ai';
 
-export async function handleMessage(ctx: Context, payloadJson: any) {
+export async function handleMessage(ctx: Context, payloadJson: unknown) {
     console.log("message received", ctx.message);
     if (!ctx.message) return;
 
@@ -33,6 +33,8 @@ export async function handleMessage(ctx: Context, payloadJson: any) {
         const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
         const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
 
+        console.log("aiAnswer", aiAnswer)
+
         const res = await fetch("https://www.blissbase.app/telegram/message", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -55,7 +57,7 @@ export async function handleMessage(ctx: Context, payloadJson: any) {
         console.error(error)
         try {
             if (!isGroup) {
-                await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error, msgId)
+                await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error)
             }
         } catch { /* ignore */ }
     }
@@ -90,153 +92,152 @@ async function sendTypingPeriodically(ctx: Context, signal: AbortSignal) {
 
 
 function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]) {
-    function getOpeningTag(entity: MessageEntity, text: string): string {
-        const content = text.slice(entity.offset, entity.offset + entity.length);
-
-        switch (entity.type) {
-            case "bold":
-                return '<b>';
-            case "italic":
-                return '<i>';
-            case "underline":
-                return '<u>';
-            case "strikethrough":
-                return '<s>';
-            case "code":
-                return '<code>';
-            case "pre":
-                return '<pre>';
-            case "text_link":
-                return `<a href="${entity.url}">`;
-            case "text_mention":
-                return `<a href="tg://user?id=${entity.user?.id}">`;
-            case "mention":
-                return `<a href="tg://user?id=${content.slice(1)}">`;
-            case "hashtag":
-                return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
-            case "cashtag":
-                return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
-            case "bot_command":
-                return '<code>';
-            case "url":
-                return `<a href="${content}">`;
-            case "email":
-                return `<a href="mailto:${content}">`;
-            case "phone_number":
-                return `<a href="tel:${content}">`;
-            case "spoiler":
-                return '<span class="tg-spoiler">';
-            case "blockquote":
-                return '<blockquote>';
-            default:
-                return '';
-        }
-    }
-
-    function getClosingTag(entity: MessageEntity): string {
-        switch (entity.type) {
-            case "bold":
-                return '</b>';
-            case "italic":
-                return '</i>';
-            case "underline":
-                return '</u>';
-            case "strikethrough":
-                return '</s>';
-            case "code":
-            case "bot_command":
-                return '</code>';
-            case "pre":
-                return '</pre>';
-            case "text_link":
-            case "text_mention":
-            case "mention":
-            case "hashtag":
-            case "cashtag":
-            case "url":
-            case "email":
-            case "phone_number":
-                return '</a>';
-            case "spoiler":
-                return '</span>';
-            case "blockquote":
-                return '</blockquote>';
-            default:
-                return '';
-        }
-    }
-    function lineBreaksToBr(text: string) {
-        return text
-            .replaceAll("\n", "<br>")
-            .replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
-    }
-
-
+    // Early return for no entities
     if (!entities.length) {
-        return lineBreaksToBr(text)
+        return lineBreaksToBr(text);
     }
 
-    // Create a map of position -> formatting changes
-    const formatChanges = new Map<number, { starts: MessageEntity[], ends: MessageEntity[] }>();
+    // Pre-calculate opening and closing tags for all entities to avoid repeated function calls
+    const entityTags = new WeakMap<MessageEntity, { opening: string, closing: string }>();
 
     for (const entity of entities) {
-        // Start of entity
-        if (!formatChanges.has(entity.offset)) {
-            formatChanges.set(entity.offset, { starts: [], ends: [] });
-        }
-        formatChanges.get(entity.offset)!.starts.push(entity);
+        const content = text.slice(entity.offset, entity.offset + entity.length);
+        entityTags.set(entity, {
+            opening: getOpeningTag(entity, content),
+            closing: getClosingTag(entity.type)
+        });
+    }
 
-        // End of entity
+    // Pre-group entities by their start and end positions for faster lookup
+    const entitiesByStartPos = new Map<number, MessageEntity[]>();
+    const entitiesByEndPos = new Map<number, MessageEntity[]>();
+    const changePositions = new Set<number>();
+
+    for (const entity of entities) {
+        const startPos = entity.offset;
         const endPos = entity.offset + entity.length;
-        if (!formatChanges.has(endPos)) {
-            formatChanges.set(endPos, { starts: [], ends: [] });
+
+        // Group starting entities
+        if (!entitiesByStartPos.has(startPos)) {
+            entitiesByStartPos.set(startPos, []);
         }
-        formatChanges.get(endPos)!.ends.push(entity);
+        entitiesByStartPos.get(startPos)!.push(entity);
+
+        // Group ending entities
+        if (!entitiesByEndPos.has(endPos)) {
+            entitiesByEndPos.set(endPos, []);
+        }
+        entitiesByEndPos.get(endPos)!.push(entity);
+
+        changePositions.add(startPos);
+        changePositions.add(endPos);
     }
 
-    let result = '';
+    const sortedPositions = Array.from(changePositions).sort((a, b) => a - b);
+
+    // Build result using array for better performance than string concatenation
+    const resultParts: string[] = [];
     const activeEntities: MessageEntity[] = [];
+    let lastPos = 0;
 
-    for (let i = 0; i <= text.length; i++) {
-        // Handle formatting changes at this position
-        const changes = formatChanges.get(i);
-        if (changes) {
-            // If any entities end at this position, we need to handle overlaps properly
-            if (changes.ends.length > 0) {
-                // Close all active entities in reverse opening order (LIFO)
-                for (let j = activeEntities.length - 1; j >= 0; j--) {
-                    result += getClosingTag(activeEntities[j]);
-                }
+    // Process only positions where formatting actually changes
+    for (const pos of sortedPositions) {
+        // Add text segment before this position
+        if (pos > lastPos) {
+            resultParts.push(text.slice(lastPos, pos));
+        }
 
-                // Remove entities that actually end at this position
-                const entitiesStillActive = activeEntities.filter(entity =>
-                    !changes.ends.includes(entity)
-                );
+        // Get entities that start or end at this position (pre-calculated)
+        const startingEntities = entitiesByStartPos.get(pos) || [];
+        const endingEntities = entitiesByEndPos.get(pos) || [];
 
-                // Reopen entities that are still active (in original opening order)
-                for (const entity of entitiesStillActive) {
-                    result += getOpeningTag(entity, text);
-                }
-
-                // Update active entities list
-                activeEntities.length = 0;
-                activeEntities.push(...entitiesStillActive);
+        // Handle ending entities first (close tags in reverse order)
+        if (endingEntities.length > 0) {
+            // Close all active entities in reverse order (LIFO)
+            for (let i = activeEntities.length - 1; i >= 0; i--) {
+                resultParts.push(entityTags.get(activeEntities[i])!.closing);
             }
 
-            // Open new entities starting at this position
-            for (const entity of changes.starts) {
-                activeEntities.push(entity);
-                result += getOpeningTag(entity, text);
+            // Remove ending entities from active list efficiently
+            for (const endingEntity of endingEntities) {
+                const index = activeEntities.indexOf(endingEntity);
+                if (index !== -1) {
+                    activeEntities.splice(index, 1);
+                }
+            }
+
+            // Reopen remaining active entities in original order
+            for (const entity of activeEntities) {
+                resultParts.push(entityTags.get(entity)!.opening);
             }
         }
 
-        // Add the character if we're not at the end
-        if (i < text.length) {
-            result += text[i];
+        // Handle starting entities (open new tags)
+        for (const entity of startingEntities) {
+            activeEntities.push(entity);
+            resultParts.push(entityTags.get(entity)!.opening);
+        }
+
+        lastPos = pos;
+    }
+
+    // Add remaining text after the last formatting change
+    if (lastPos < text.length) {
+        resultParts.push(text.slice(lastPos));
+    }
+
+    // Join all parts and apply line break formatting
+    return lineBreaksToBr(resultParts.join(''));
+
+    function getOpeningTag(entity: MessageEntity, content: string): string {
+        switch (entity.type) {
+            case "bold": return '<b>';
+            case "italic": return '<i>';
+            case "underline": return '<u>';
+            case "strikethrough": return '<s>';
+            case "code": return '<code>';
+            case "pre": return '<pre>';
+            case "text_link": return `<a href="${entity.url}">`;
+            case "text_mention": return `<a href="tg://user?id=${entity.user?.id}">`;
+            case "mention": return `<a href="tg://user?id=${content.slice(1)}">`;
+            case "hashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
+            case "cashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
+            case "bot_command": return '<code>';
+            case "url": return `<a href="${content}">`;
+            case "email": return `<a href="mailto:${content}">`;
+            case "phone_number": return `<a href="tel:${content}">`;
+            case "spoiler": return '<span class="tg-spoiler">';
+            case "blockquote": return '<blockquote>';
+            default: return '';
         }
     }
 
-    result = lineBreaksToBr(result)
+    function getClosingTag(entityType: string): string {
+        switch (entityType) {
+            case "bold": return '</b>';
+            case "italic": return '</i>';
+            case "underline": return '</u>';
+            case "strikethrough": return '</s>';
+            case "code":
+            case "bot_command": return '</code>';
+            case "pre": return '</pre>';
+            case "text_link":
+            case "text_mention":
+            case "mention":
+            case "hashtag":
+            case "cashtag":
+            case "url":
+            case "email":
+            case "phone_number": return '</a>';
+            case "spoiler": return '</span>';
+            case "blockquote": return '</blockquote>';
+            default: return '';
+        }
+    }
 
-    return result;
+    function lineBreaksToBr(text: string): string {
+        return text
+            .replaceAll("\n", "<br>")
+            .replace(/<br>(\s*<br>){2,}/g, '<br><br>');
+    }
 }
