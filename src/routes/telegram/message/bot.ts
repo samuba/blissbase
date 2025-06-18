@@ -21,7 +21,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
     const msgId = await recordMessage(ctx.message)
     try {
-        if (!aiAnswer.existingSource) {
+        if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
             await reply(ctx, `Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. :-)`, msgId)
             return
