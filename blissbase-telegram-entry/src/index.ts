@@ -5,7 +5,9 @@ import { aiExtractEventData, MsgAnalysisAnswer } from './ai';
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		const bot = new Telegraf(env.TELEGRAM_BOT_TOKEN);
+		const bot = new Telegraf(env.TELEGRAM_BOT_TOKEN, {
+			handlerTimeout: 1000 * 60 * 5, // 5 minutes
+		});
 
 		const data = await request.json() as Update
 
@@ -52,6 +54,13 @@ export async function handleMessage(ctx: Context, payloadJson: Update) {
 
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
 		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
+
+		// console.log("calling vercel with", {
+		// 	telegramPayload: payloadJson,
+		// 	msgTextHtml,
+		// 	imageUrl,
+		// 	aiAnswer,
+		// })
 
 		const res = await fetch("https://www.blissbase.app/telegram/message", {
 			method: "POST",

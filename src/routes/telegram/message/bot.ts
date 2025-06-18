@@ -8,7 +8,7 @@ import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
 
-export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
+
 
 export const messageFilters = anyOf(message('text'), message('forward_origin'))
 
