@@ -1,5 +1,5 @@
-import { TELEGRAM_BOT_TOKEN, GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { Context, Telegraf } from 'telegraf';
+import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import type { Context } from 'telegraf';
 import { anyOf, message } from 'telegraf/filters';
 import { cachedImageUrl } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
@@ -7,8 +7,6 @@ import { insertEvent } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
-
-
 
 export const messageFilters = anyOf(message('text'), message('forward_origin'))
 
@@ -19,9 +17,6 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
     const isGroup =
         ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
 
-    if (isAdmin) {
-        await reply(ctx, JSON.stringify({ msgTextHtml, isAdmin, isGroup, aiAnswer }, null, 2), undefined)
-    }
     console.log({ isGroup, aiAnswer, isAdmin })
 
     const msgId = await recordMessage(ctx.message)
@@ -72,7 +67,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                 return
             }
         }
-        console.log({ contact })
+
         const dbEntry = {
             name: aiAnswer.name,
             imageUrls: imageUrl ? [imageUrl] : [],
@@ -99,19 +94,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         const dbEvent = await insertEvent(dbEntry)
 
-        if (isGroup) return; // dont answer in groups
-
-        await reply(ctx, JSON.stringify({
-            ...aiAnswer,
-            descriptionBrief: aiAnswer.descriptionBrief?.slice(0, 50),
-            description: aiAnswer.description?.slice(0, 50),
-            imageUrl,
-            coords,
-            sourceUrl: aiAnswer.url,
-            contact
-        }, null, 2), msgId)
         await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.app/" + dbEvent.slug, msgId)
-
     } catch (error) {
         console.error(error)
         try {
