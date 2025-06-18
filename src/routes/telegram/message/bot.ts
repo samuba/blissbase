@@ -141,7 +141,10 @@ async function reply(ctx: Context, text: string, msgId: string | undefined) {
     if (ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup") {
         return // do not reply in groups
     }
-    await ctx.reply(text)
+    const replyOptions = ctx.message?.message_id
+        ? { reply_parameters: { message_id: ctx.message.message_id } }
+        : undefined;
+    await ctx.reply(text, replyOptions)
     if (msgId) {
         await db.update(s.botMessages)
             .set({ answer: sql`COALESCE(answer || E'\n\n', '') || ${text}` })
