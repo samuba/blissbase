@@ -1,7 +1,6 @@
-import { Telegraf, Context } from "telegraf";
+import { Telegraf, type Context } from "telegraf";
 import { anyOf, message } from "telegraf/filters";
-import { Update } from "telegraf/types";
-import type { MessageEntity } from 'telegraf/types';
+import type { Update, MessageEntity } from "telegraf/types";
 import { aiExtractEventData } from './ai';
 
 export default {
@@ -49,10 +48,10 @@ export async function handleMessage(ctx: Context, payloadJson: unknown) {
 			}
 		}
 
+		await reply(ctx, "Ich extrahiere gerade die Eventdaten aus deiner Nachricht...")
+
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
 		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
-
-		console.log("aiAnswer", aiAnswer)
 
 		const res = await fetch("https://www.blissbase.app/telegram/message", {
 			method: "POST",
