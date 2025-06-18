@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request }) => {
         bot.on(messageFilters, async (ctx) => {
             return await handleMessage(ctx, data)
         })
-        bot.handleUpdate(data.telegramPayload)
+        await bot.handleUpdate(data.telegramPayload)
     } catch (error) {
         console.error(error);
     }
