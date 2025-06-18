@@ -25,12 +25,27 @@ Answer only in valid, raw JSON. Do not wrap it inside markdown or anything else.
 Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
 Never make up any information. Only use the information provided in the message!
+If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. awara.events, sei.jetzt.) and do not include anything else.
+
+# existing sources:
+https://sei.jetzt/
+https://www.sei.jetzt/
+https://awara.events/
+https://www.awara.events/
+https://heilnetz.de/
+https://www.heilnetz.de/
+https://tribehaus.org/
+https://www.tribehaus.org/
+
+
 When extracting dates and time, always assume german time unless stated otherwise, be sure to take correct daylight saving time into account.
 Today is  ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
 
 Extract these information from the message:
 
 "hasEventData": boolean. wether or not the message contains information about an event.
+
+"existingSource": string. 
 
 "name": string. the name of the event. needs to be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as its obvious that every event is an invitation. if there is no name in the text create a short descriptive name with not much personality.
 
@@ -67,6 +82,7 @@ Extract these information from the message:
 export type MsgAnalysisAnswer = {
     hasEventData: boolean;
 } & Partial<{
+    existingSource: string;
     name: string;
     description: string;
     descriptionBrief: string;
@@ -83,65 +99,3 @@ export type MsgAnalysisAnswer = {
     tags: string[];
     emojis: string;
 }>
-
-// used in google studio to generate a json schema for the answer
-export const MsgAnalysisAnswerOpenApiSchema = {
-    "type": "object",
-    "properties": {
-        "hasEventData": {
-            "type": "boolean"
-        },
-        "name": {
-            "type": "string"
-        },
-        "description": {
-            "type": "string"
-        },
-        "descriptionBrief": {
-            "type": "string"
-        },
-        "summary": {
-            "type": "string"
-        },
-        "startDate": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "endDate": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "url": {
-            "type": "string",
-            "format": "uri"
-        },
-        "contact": {
-            "type": "string"
-        },
-        "contactAuthorForMore": {
-            "type": "boolean"
-        },
-        "price": {
-            "type": "string"
-        },
-        "venue": {
-            "type": "string"
-        },
-        "address": {
-            "type": "string"
-        },
-        "city": {
-            "type": "string"
-        },
-        "tags": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "emojis": {
-            "type": "string"
-        }
-    },
-    "required": ["hasEventData"]
-}
