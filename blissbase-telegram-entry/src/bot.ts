@@ -47,7 +47,7 @@ export async function handleMessage(ctx: Context, payloadJson: any) {
 
         // TODO call vercel function
 
-        fetch("https://blissbase.app/telegram/message", {
+        await fetch("https://www.blissbase.app/telegram/message", {
             method: "POST",
             body: JSON.stringify({
                 aiAnswer,
