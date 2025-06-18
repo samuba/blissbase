@@ -1,5 +1,5 @@
 import { TELEGRAM_BOT_TOKEN, GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { Context, Telegraf, Composer } from 'telegraf';
+import { Context, Telegraf } from 'telegraf';
 import { anyOf, message } from 'telegraf/filters';
 import type { MessageEntity } from 'telegraf/types';
 import { aiExtractEventData, type MsgAnalysisAnswer } from './ai';
@@ -14,16 +14,14 @@ export const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 export const messageFilters = anyOf(message('text'), message('forward_origin'))
 
 export async function handleMessage(ctx: Context, { aiAnswer }: { aiAnswer: MsgAnalysisAnswer }) {
+    if (!ctx.message) return
     console.log("message received", ctx.message);
 
-
+    const isAdmin = ctx.from?.id === 218154725;
     const isGroup =
         ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
+    console.log({ isGroup, aiAnswer, isAdmin })
 
-
-    console.log({ isGroup, aiAnswer })
-
-    return
     const msgId = await recordMessage(ctx.message)
     try {
         let msgText = "";
