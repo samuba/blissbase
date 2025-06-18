@@ -27,29 +27,6 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml }: { a
 
     const msgId = await recordMessage(ctx.message)
     try {
-        let msgText = "";
-        let msgEntities: MessageEntity[] = [];
-        let imageUrl: string | undefined;
-
-        if ('text' in ctx.message) {
-            msgText = ctx.message.text;
-            msgEntities = ctx.message.entities ?? [];
-        } else if ('caption' in ctx.message && ctx.message.caption) {
-            msgText = ctx.message.caption;
-            msgEntities = ctx.message.caption_entities ?? [];
-        }
-
-        if ('photo' in ctx.message) {
-            const images = ctx.message.photo;
-            if (images && images.length > 0) {
-                // Typically, the last photo in the array is the largest
-                const largestPhoto = images[images.length - 2];
-                const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
-                imageUrl = fileLink.href;
-            }
-        }
-        const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
-        const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
         if (!aiAnswer.hasEventData) {
             console.log("No event data found", msgText)
             await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", msgId)
