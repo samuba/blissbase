@@ -20,6 +20,10 @@ export async function handleMessage(ctx: Context, { aiAnswer }: { aiAnswer: MsgA
     const isAdmin = ctx.from?.id === 218154725;
     const isGroup =
         ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
+
+    if (isAdmin) {
+        await reply(ctx, JSON.stringify({ aiAnswer, isAdmin, isGroup }, null, 2), undefined)
+    }
     console.log({ isGroup, aiAnswer, isAdmin })
 
     const msgId = await recordMessage(ctx.message)
