@@ -6,11 +6,11 @@ import type { MsgAnalysisAnswer } from './ai';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
-        const data = await request.json() as { telegramPayload: Update, aiAnswer: MsgAnalysisAnswer };
+        const data = await request.json() as { telegramPayload: Update, aiAnswer: MsgAnalysisAnswer, msgTextHtml: string };
         console.log("telegram message from cloudflare", data);
 
         bot.on(messageFilters, async (ctx) => {
-            return await handleMessage(ctx, { aiAnswer: data.aiAnswer })
+            return await handleMessage(ctx, { aiAnswer: data.aiAnswer, msgTextHtml: data.msgTextHtml })
         })
 
         waitUntil(bot.handleUpdate(data.telegramPayload))
