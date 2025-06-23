@@ -8,6 +8,7 @@
 	import { routes } from '$lib/routes';
 	import { debounce } from '$lib/common';
 	import { eventsStore } from '$lib/eventsStore.svelte';
+	import { DefaultViewBuilderCore } from 'drizzle-orm/gel-core';
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let isSticky = $state(false);
@@ -87,7 +88,7 @@
 	class="z-20 w-full transition-all duration-300 ease-in-out"
 	class:sticky={isSticky}
 	class:top-0={isSticky}
-	class:bg-base-100={isSticky}
+	class:bg-base-200={isSticky}
 	class:shadow-lg={isSticky}
 	class:py-2={isSticky}
 	class:px-4={isSticky}
@@ -102,7 +103,7 @@
 			<div class="relative">
 				<PopOver triggerClass="btn btn-circle" contentClass="card shadow-lg bg-base-200 ">
 					{#snippet trigger()}
-						<i class="icon-[ph--calendar] size-5"></i>
+						<i class="icon-[ph--calendar-dots] size-5"></i>
 					{/snippet}
 					{#snippet content()}
 						<div class="p-4">
@@ -146,25 +147,26 @@
 
 			<!-- Search Button -->
 			<div class="relative">
-				<PopOver triggerClass="btn btn-circle" contentClass="card shadow-lg bg-base-200">
+				<PopOver
+					triggerClass="btn btn-circle"
+					contentClass="card shadow-lg bg-base-200 min-w-72 p-4"
+				>
 					{#snippet trigger()}
 						<i class="icon-[ph--magnifying-glass] size-5"></i>
 					{/snippet}
 					{#snippet content()}
-						<div class="min-w-80 p-4">
-							<label class="input w-full">
-								<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
-								<input
-									value={eventsStore.pagination.searchTerm || ''}
-									oninput={(e) => {
-										eventsStore.updateSearchTerm(e.currentTarget.value);
-										debouncedSearch();
-									}}
-									type="search"
-									placeholder="Suchbegriff"
-								/>
-							</label>
-						</div>
+						<label class="input w-full">
+							<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
+							<input
+								value={eventsStore.pagination.searchTerm || ''}
+								oninput={(e) => {
+									eventsStore.updateSearchTerm(e.currentTarget.value);
+									debouncedSearch();
+								}}
+								type="search"
+								placeholder="Suchbegriff"
+							/>
+						</label>
 					{/snippet}
 				</PopOver>
 				{#if hasSearchFilter}
@@ -197,7 +199,7 @@
 			{#if hasAnyFilter}
 				<button
 					onclick={clearAllFilters}
-					class="btn btn-circle bg-error text-error-content border-error hover:bg-error-focus"
+					class="btn btn-circle btn-secondary"
 					title="Alle Filter zurücksetzen"
 					aria-label="Alle Filter zurücksetzen"
 				>
@@ -207,59 +209,61 @@
 		</div>
 	{:else}
 		<!-- Expanded Header -->
-		<div class="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center">
-			<div class="flex items-center gap-6">
-				{@render logoMenu()}
+		<div class="flex flex-col gap-4 px-4">
+			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
+				<div class="flex w-full items-center justify-center gap-4">
+					{@render logoMenu()}
 
-				<DateRangePicker
-					class="w-full md:w-fit"
-					onChange={eventsStore.onDateChange}
-					value={{
-						start: parseDate(eventsStore.pagination.startDate!),
-						end: parseDate(eventsStore.pagination.endDate!)
-					}}
+					<DateRangePicker
+						class="w-full md:w-fit"
+						onChange={eventsStore.onDateChange}
+						value={{
+							start: parseDate(eventsStore.pagination.startDate!),
+							end: parseDate(eventsStore.pagination.endDate!)
+						}}
+					/>
+				</div>
+
+				<LocationDistanceInput
+					initialLocation={eventsStore.pagination.lat && eventsStore.pagination.lng
+						? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
+						: eventsStore.pagination.plzCity}
+					initialDistance={eventsStore.pagination.distance}
+					onChange={eventsStore.handleLocationDistanceChange}
 				/>
 			</div>
-
-			<LocationDistanceInput
-				initialLocation={eventsStore.pagination.lat && eventsStore.pagination.lng
-					? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
-					: eventsStore.pagination.plzCity}
-				initialDistance={eventsStore.pagination.distance}
-				onChange={eventsStore.handleLocationDistanceChange}
-			/>
-		</div>
-		<div class="mt-6 flex w-full items-center justify-center gap-4">
-			<label class="input w-full">
-				<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
-				<input
-					value={eventsStore.pagination.searchTerm || ''}
-					oninput={(e) => {
-						eventsStore.updateSearchTerm(e.currentTarget.value);
-						debouncedSearch();
-					}}
-					type="search"
-					placeholder="Suchbegriff"
-				/>
-			</label>
-			<div class="">
-				<label for="sort-select" class="sr-only">Sortieren nach</label>
-				<Select
-					items={[
-						{ value: 'relevance', label: 'Sortierung', disabled: true },
-						{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
-						{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' }
-						// { value: 'time_desc', label: 'Startzeit', iconClass: 'icon-[ph--sort-descending]' }
-						// { value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
-					]}
-					type="single"
-					value={eventsStore.selectedSortValue}
-					onValueChange={eventsStore.handleSortChanged}
-					showAsButton={false}
-				/>
+			<div class="flex w-full items-center justify-center gap-4">
+				<label class="input w-full">
+					<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
+					<input
+						value={eventsStore.pagination.searchTerm || ''}
+						oninput={(e) => {
+							eventsStore.updateSearchTerm(e.currentTarget.value);
+							debouncedSearch();
+						}}
+						type="search"
+						placeholder="Suchbegriff"
+					/>
+				</label>
+				<div class="">
+					<label for="sort-select" class="sr-only">Sortieren nach</label>
+					<Select
+						items={[
+							{ value: 'relevance', label: 'Sortierung', disabled: true },
+							{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
+							{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' }
+							// { value: 'time_desc', label: 'Startzeit', iconClass: 'icon-[ph--sort-descending]' }
+							// { value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
+						]}
+						type="single"
+						value={eventsStore.selectedSortValue}
+						onValueChange={eventsStore.handleSortChanged}
+						showAsButton={false}
+					/>
+				</div>
 			</div>
+			<InstallButton />
 		</div>
-		<InstallButton />
 	{/if}
 </header>
 

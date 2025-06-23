@@ -10,9 +10,6 @@ SEO
   ld+json anbieten
 
 
-bug: tribehause -> https://tribehaus.org/event/yael-deckelbaum-voice-ceremony-2-tage-experience ganztägig wird nicht richtig erfasst
-
-
 infos aus bildern extrahieren
 
 telegram: save sender userId, only them can update an event
@@ -36,6 +33,11 @@ tribehaus
 
 
 ##########
+
+orga
+  mit you me unity reden
+  mit josef über api für sei jetzt reden
+  mit tribehause und co reden
 
 NEUE WEBSITES UND CHANNELS: Yoga Studios besuchen und Nachfragen was die kennen.
 
