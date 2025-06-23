@@ -12,9 +12,17 @@
 		placeholder?: string;
 		items: SelectItem[];
 		contentProps?: WithoutChildren<Select.ContentProps>;
+		showAsButton?: boolean;
 	};
 
-	let { value = $bindable(), items, contentProps, placeholder, ...restProps }: Props = $props();
+	let {
+		value = $bindable(),
+		items,
+		contentProps,
+		placeholder,
+		showAsButton = false,
+		...restProps
+	}: Props = $props();
 
 	const selectedLabel = $derived(items.find((item) => item.value === value)?.label);
 	const selectedIcon = $derived(
@@ -23,12 +31,17 @@
 </script>
 
 <Select.Root bind:value={value as never} {...restProps}>
-	<Select.Trigger class="select">
+	<Select.Trigger class={[showAsButton ? 'btn btn-circle' : 'select']}>
 		<i class={[selectedIcon, 'size-5']}></i>
-		{selectedLabel ? selectedLabel : placeholder}
+		{#if !showAsButton}
+			{selectedLabel ? selectedLabel : placeholder}
+		{/if}
 	</Select.Trigger>
 	<Select.Portal>
-		<Select.Content {...contentProps} class="bg-base-100 rounded-lg p-1 shadow-lg">
+		<Select.Content
+			{...contentProps}
+			class={['bg-base-100 rounded-lg p-1 shadow-lg', contentProps?.class]}
+		>
 			<Select.ScrollUpButton>up</Select.ScrollUpButton>
 			<Select.Viewport class="flex flex-col ">
 				{#each items as { value, label, disabled, iconClass } (value)}
