@@ -179,6 +179,7 @@
 						onValueChange={eventsStore.handleSortChanged}
 						contentProps={{ class: 'z-10' }}
 						showAsButton
+						disabled={!hasLocationFilter}
 					/>
 				</div>
 				{#if hasSortFilter}
@@ -186,17 +187,7 @@
 				{/if}
 			</div>
 
-			<!-- Clear Button -->
-			{#if hasAnyFilter}
-				<button
-					onclick={clearAllFilters}
-					class="btn btn-circle btn-secondary"
-					title="Alle Filter zurücksetzen"
-					aria-label="Alle Filter zurücksetzen"
-				>
-					<i class="icon-[ph--x] size-5"></i>
-				</button>
-			{/if}
+			{@render clearButton()}
 		</div>
 	{:else}
 		<!-- Expanded Header -->
@@ -250,19 +241,11 @@
 						value={eventsStore.selectedSortValue}
 						onValueChange={eventsStore.handleSortChanged}
 						showAsButton={false}
+						disabled={!hasLocationFilter}
 					/>
 				</div>
-				<!-- Clear Button -->
-				{#if hasAnyFilter}
-					<button
-						onclick={clearAllFilters}
-						class="btn btn-circle btn-secondary"
-						title="Alle Filter zurücksetzen"
-						aria-label="Alle Filter zurücksetzen"
-					>
-						<i class="icon-[ph--x] size-5"></i>
-					</button>
-				{/if}
+
+				{@render clearButton()}
 			</div>
 			<InstallButton />
 		</div>
@@ -308,6 +291,19 @@
 			<!-- too prevent flickering of popover content when rotating the icon -->
 		</div>
 	</div>
+{/snippet}
+
+{#snippet clearButton()}
+	{#if hasAnyFilter}
+		<button
+			onclick={clearAllFilters}
+			class="btn btn-circle btn-ghost"
+			title="Alle Filter zurücksetzen"
+			aria-label="Alle Filter zurücksetzen"
+		>
+			<i class="icon-[ph--x] size-5"></i>
+		</button>
+	{/if}
 {/snippet}
 
 {#snippet filteredIndicator()}
