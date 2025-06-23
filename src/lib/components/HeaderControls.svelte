@@ -133,7 +133,15 @@
 
 			<!-- Location Button -->
 			<div class="relative">
-				<PopOver triggerClass="btn btn-circle" contentClass="card shadow-lg bg-base-200">
+				<PopOver
+					triggerClass="btn btn-circle"
+					contentClass="card shadow-lg bg-base-200"
+					contentProps={{
+						onOpenAutoFocus: (e) => {
+							e.preventDefault(); // not giving focus cuz it would hide the "Standort" btn
+						}
+					}}
+				>
 					{#snippet trigger()}
 						<i class="icon-[ph--map-pin] size-5"></i>
 					{/snippet}
