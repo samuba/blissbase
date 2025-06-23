@@ -8,7 +8,6 @@
 	import { routes } from '$lib/routes';
 	import { debounce } from '$lib/common';
 	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { DefaultViewBuilderCore } from 'drizzle-orm/gel-core';
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let isSticky = $state(false);
@@ -292,15 +291,13 @@
 					<p>
 						<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
 						<br />
-						Trage deinen Event einfach in eine unserer Quellen ein, dann wird er nach ein paar Stunden
-						automatisch zu uns übertragen.
+						Trage deinen Event in eine unserer Quellen ein - er erscheint dann automatisch bei uns.
 					</p>
 
-					<a href={routes.sources()} class="underline">Unsere Event Quellen</a>
+					<a href={routes.sources()} class="btn-sm btn w-fit">Unsere Event Quellen</a>
 
-					<p>
-						<a href="mailto:hi@blissbase.app" class="underline"> Schreib uns gerne </a> 🙂
-					</p>
+					<p>Fehler gefunden / Feedback da lassen / Kooperation:</p>
+					<a href="mailto:hi@blissbase.app" class="btn-sm btn w-fit"> Schreib uns 🙂 </a>
 				</div>
 			{/snippet}
 		</PopOver>

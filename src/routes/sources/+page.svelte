@@ -12,11 +12,11 @@
 			<h1 class="text-base-content text-2xl font-bold">Blissbase</h1>
 		</a>
 
-		<div class="card bg-base-100 w-full max-w-2xl">
+		<div class="card bg-base-100 sm:rounded-box w-full max-w-2xl rounded-none">
 			<div class="card-body gap-8">
 				<div>
 					<h1 class="text-2xl font-bold">Event Quellen</h1>
-					<p>Aus diesen Quellen beziehen wir regelmäßig Events für euch.</p>
+					<p>Aus diesen Quellen beziehen wir mehrmals täglich Events für euch.</p>
 				</div>
 
 				<div>
@@ -31,12 +31,7 @@
 
 				<div>
 					<h2 class="text-lg font-bold">Telegram</h2>
-					<div class="flex flex-col gap-2 text-lg underline">
-						<a href="https://t.me/awara_events" target="_blank">awara_events</a>
-						<a href="https://t.me/heilnetz" target="_blank">heilnetz</a>
-						<a href="https://t.me/tribehaus" target="_blank">tribehaus</a>
-						<a href="https://t.me/sei_jetzt" target="_blank">sei_jetzt</a>
-					</div>
+					<div class="flex flex-col gap-2 text-lg">Kendralah-Experience</div>
 				</div>
 			</div>
 		</div>
