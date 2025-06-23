@@ -85,8 +85,14 @@
 
 <header
 	bind:this={headerElement}
-	class={['z-10 w-full', isSticky && 'bg-base-200 sticky top-0 py-2.5 shadow-lg']}
+	class={['relative z-10 w-full', isSticky && 'bg-base-200 sticky top-0 py-2.5']}
 >
+	{#if isSticky}
+		<div
+			class="pointer-events-none absolute right-0 left-0 z-20 h-6 sm:right-4 sm:left-4"
+			style="top: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, transparent 100%);"
+		></div>
+	{/if}
 	{#if isSticky}
 		<!-- Collapsed Sticky Header -->
 		<div class="flex w-full items-center justify-center gap-3">
