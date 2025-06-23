@@ -18,9 +18,9 @@
 		{@render trigger()}
 	</Popover.Trigger>
 	<Popover.Content {...contentProps} class={['card card-border shadow-lg', contentClass]}>
+		{@render content()}
 		<Popover.Close />
 		<Popover.Arrow />
-		{@render content()}
 	</Popover.Content>
 </Popover.Root>
 

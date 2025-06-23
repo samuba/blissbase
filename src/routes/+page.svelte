@@ -34,7 +34,7 @@
 				<div
 					{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
 					class="-translate-y-72"
-				></div>
+				/>
 
 				{#if eventsStore.isLoadingMore}
 					{@render loading()}

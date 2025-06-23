@@ -79,6 +79,8 @@
 			sortOrder: 'asc'
 		});
 	};
+
+	let isDatePickerOpen = $state(false);
 </script>
 
 <header
@@ -92,7 +94,16 @@
 
 			<!-- Date Button -->
 			<div class="relative">
-				<PopOver triggerClass="btn btn-circle" contentClass="card shadow-lg bg-base-200 ">
+				<PopOver
+					triggerClass="btn btn-circle"
+					contentClass="card shadow-lg bg-base-200"
+					contentProps={{
+						onOpenAutoFocus: (e) => {
+							e.preventDefault();
+							isDatePickerOpen = true;
+						}
+					}}
+				>
 					{#snippet trigger()}
 						<i class="icon-[ph--calendar-dots] size-5"></i>
 					{/snippet}
@@ -100,6 +111,7 @@
 						<div class="p-4">
 							<DateRangePicker
 								onChange={eventsStore.onDateChange}
+								bind:open={isDatePickerOpen}
 								value={{
 									start: parseDate(eventsStore.pagination.startDate!),
 									end: parseDate(eventsStore.pagination.endDate!)

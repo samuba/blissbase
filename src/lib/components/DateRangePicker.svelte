@@ -23,6 +23,7 @@
 		value?: { start: CalendarDate; end: CalendarDate };
 		class?: string;
 		onChange: DateRangePickerOnChange;
+		open?: boolean;
 	};
 
 	let {
@@ -31,10 +32,11 @@
 			end: endOfMonth(today.add({ months: 6 }))
 		}),
 		class: className,
-		onChange
+		onChange,
+		open = $bindable(false)
 	}: DateRangePickerProps = $props();
 
-	let isOpen = $state(false);
+	let isOpen = $derived(open);
 	let previousStart = $state(value?.start as DateValue);
 	let previousEnd = $state(value?.end as DateValue);
 
@@ -56,7 +58,7 @@
 	function setDateRange(start: CalendarDate, end: CalendarDate) {
 		value = { start, end };
 		internalOnChange({ start, end });
-		isOpen = false;
+		open = false;
 	}
 
 	function getThisWeek() {
@@ -89,7 +91,7 @@
 	fixedWeeks={true}
 	class="flex w-fit flex-col gap-1.5"
 	bind:value
-	bind:open={isOpen}
+	bind:open
 	locale="de-DE"
 	onValueChange={internalOnChange}
 >
