@@ -81,17 +81,9 @@
 	};
 </script>
 
-<!-- Sticky Header -->
 <header
 	bind:this={headerElement}
-	class="z-20 w-full transition-all duration-300 ease-in-out"
-	class:sticky={isSticky}
-	class:top-0={isSticky}
-	class:bg-base-200={isSticky}
-	class:shadow-lg={isSticky}
-	class:py-2={isSticky}
-	class:px-4={isSticky}
-	class:-mx-4={isSticky}
+	class={['z-10 w-full', isSticky && 'bg-base-200 sticky top-0 py-2.5 shadow-lg']}
 >
 	{#if isSticky}
 		<!-- Collapsed Sticky Header -->
@@ -185,7 +177,7 @@
 						type="single"
 						value={eventsStore.selectedSortValue}
 						onValueChange={eventsStore.handleSortChanged}
-						contentProps={{ class: 'z-20' }}
+						contentProps={{ class: 'z-10' }}
 						showAsButton
 					/>
 				</div>
@@ -260,6 +252,17 @@
 						showAsButton={false}
 					/>
 				</div>
+				<!-- Clear Button -->
+				{#if hasAnyFilter}
+					<button
+						onclick={clearAllFilters}
+						class="btn btn-circle btn-secondary"
+						title="Alle Filter zurücksetzen"
+						aria-label="Alle Filter zurücksetzen"
+					>
+						<i class="icon-[ph--x] size-5"></i>
+					</button>
+				{/if}
 			</div>
 			<InstallButton />
 		</div>
