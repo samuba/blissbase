@@ -1,5 +1,5 @@
 import { Telegraf, type Context } from "telegraf";
-import { anyOf, message } from "telegraf/filters";
+import { anyOf, message, channelPost } from "telegraf/filters";
 import type { Update, MessageEntity } from "telegraf/types";
 import { aiExtractEventData, MsgAnalysisAnswer } from './ai';
 
@@ -11,7 +11,9 @@ export default {
 
 		const data = await request.json() as Update
 
-		bot.on(anyOf(message('text'), message('forward_origin')), async (ctx) => {
+		console.log("data", data)
+
+		bot.on(anyOf(message('text'), message('forward_origin'), channelPost()), async (ctx) => {
 			await handleMessage(ctx, data)
 		})
 

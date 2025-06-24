@@ -1,14 +1,12 @@
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import type { Context } from 'telegraf';
-import { anyOf, message } from 'telegraf/filters';
+import { } from 'telegraf/filters';
 import { cachedImageUrl } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvent } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
-
-export const messageFilters = anyOf(message('text'), message('forward_origin'))
 
 export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl }: TelegramCloudflareBody) {
     if (!ctx.message) return
