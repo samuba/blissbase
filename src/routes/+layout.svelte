@@ -30,9 +30,7 @@
 
 <svelte:head>
 	{@html webManifestLink}
-	{#if pwaAssetsHead.themeColor}
-		<meta name="theme-color" content={pwaAssetsHead.themeColor.content} />
-	{/if}
+	<meta name="theme-color" content={pwaAssetsHead?.themeColor?.content ?? '#efeae7'} />
 	{#each pwaAssetsHead.links as link}
 		<link {...link} />
 	{/each}
