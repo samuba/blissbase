@@ -62,13 +62,15 @@
 	}
 
 	function getThisWeek() {
-		const start = startOfWeek(today, 'de-DE');
+		const calculatedStart = startOfWeek(today, 'de-DE');
+		const start = calculatedStart.compare(today) < 0 ? today : calculatedStart;
 		const end = endOfWeek(today, 'de-DE');
 		setDateRange(start, end);
 	}
 
 	function getThisWeekend() {
-		const start = startOfWeek(today, 'de-DE').add({ days: 5 }); // Friday
+		const calculatedStart = startOfWeek(today, 'de-DE').add({ days: 5 }); // Friday
+		const start = calculatedStart.compare(today) < 0 ? today : calculatedStart;
 		const end = endOfWeek(today, 'de-DE'); // Sunday
 		setDateRange(start, end);
 	}
@@ -79,9 +81,9 @@
 		setDateRange(start, end);
 	}
 
-	function getThisMonth() {
-		const start = new CalendarDate(today.year, today.month, 1);
-		const end = endOfMonth(today);
+	function getNext30Days() {
+		const start = today;
+		const end = today.add({ days: 29 }); // 30 days total (including today)
 		setDateRange(start, end);
 	}
 </script>
@@ -135,7 +137,7 @@
 					<button class="btn btn-sm px-0" onclick={getThisWeek}> Diese Woche </button>
 					<button class="btn btn-sm px-0" onclick={getThisWeekend}> Dieses Wochenende </button>
 					<button class="btn btn-sm px-0" onclick={getNextWeek}> Nächste Woche </button>
-					<button class="btn btn-sm px-0" onclick={getThisMonth}> Diesen Monat </button>
+					<button class="btn btn-sm px-0" onclick={getNext30Days}> Nächste 30 Tage </button>
 				</div>
 
 				<DateRangePicker.Header class="flex items-center justify-between">
