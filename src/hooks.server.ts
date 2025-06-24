@@ -1,6 +1,10 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { telefuncConfig } from 'telefunc';
+import type { HandleServerError } from '@sveltejs/kit';
+import { PostHog } from 'posthog-node';
+
+
 
 telefuncConfig.disableNamingConvention = true;
 telefuncConfig.shield = { dev: true };
@@ -27,3 +31,15 @@ const extractVercelHeader: Handle = async ({ event, resolve }) => {
 }
 
 export const handle: Handle = sequence(extractVercelHeader)
+
+const client = new PostHog(
+    'phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ',
+    { host: 'https://eu.i.posthog.com' }
+)
+
+export const handleError: HandleServerError = async ({ error, status }) => {
+    if (status !== 404) {
+        client.captureException(error);
+        await client.shutdown();
+    }
+};
