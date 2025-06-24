@@ -102,7 +102,7 @@
 			<div class="relative">
 				<PopOver
 					triggerClass="btn btn-circle"
-					contentClass="card shadow-lg bg-base-200"
+					contentClass="card shadow-lg bg-base-200 z-20"
 					contentProps={{
 						onOpenAutoFocus: (e) => {
 							e.preventDefault();
@@ -135,7 +135,7 @@
 			<div class="relative">
 				<PopOver
 					triggerClass="btn btn-circle"
-					contentClass="card shadow-lg bg-base-200"
+					contentClass="card shadow-lg bg-base-200 z-20"
 					contentProps={{
 						onOpenAutoFocus: (e) => {
 							e.preventDefault(); // not giving focus cuz it would hide the "Standort" btn
@@ -166,7 +166,7 @@
 			<div class="relative">
 				<PopOver
 					triggerClass="btn btn-circle"
-					contentClass="card shadow-lg bg-base-200 min-w-72 p-4"
+					contentClass="card shadow-lg bg-base-200 min-w-72 p-4 z-20"
 				>
 					{#snippet trigger()}
 						<i class="icon-[ph--magnifying-glass] size-5"></i>
@@ -282,7 +282,7 @@
 	<div class="flex flex-col items-center">
 		<PopOver
 			triggerClass="cursor-pointer transition-transform duration-500 data-[state=open]:-rotate-360"
-			contentClass="card card-border shadow-lg bg-base-100 z-10"
+			contentClass="card card-border shadow-lg bg-base-100 z-20"
 			contentProps={{
 				customAnchor: '.custom-popover-anchor'
 			}}
