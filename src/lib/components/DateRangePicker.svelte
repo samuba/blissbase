@@ -69,7 +69,7 @@
 	}
 
 	function getThisWeekend() {
-		const calculatedStart = startOfWeek(today, 'de-DE').add({ days: 5 }); // Friday
+		const calculatedStart = startOfWeek(today, 'de-DE').add({ days: 4 }); // Friday
 		const start = calculatedStart.compare(today) < 0 ? today : calculatedStart;
 		const end = endOfWeek(today, 'de-DE'); // Sunday
 		setDateRange(start, end);
