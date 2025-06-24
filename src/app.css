@@ -36,3 +36,31 @@ h6,
 .prose b {
 	@apply font-semibold;
 }
+
+/* Android status bar border fix */
+body {
+	background-color: #efeae7;
+}
+
+/* Ensure viewport covers the full screen including status bar area */
+@supports (padding: max(0px)) {
+	body {
+		padding-top: env(safe-area-inset-top);
+		padding-bottom: env(safe-area-inset-bottom);
+		padding-left: env(safe-area-inset-left);
+		padding-right: env(safe-area-inset-right);
+	}
+}
+
+/* Android-specific status bar styling */
+@media screen and (max-width: 768px) {
+	html {
+		background-color: #efeae7;
+	}
+
+	body {
+		background-color: #efeae7;
+		min-height: 100vh;
+		min-height: 100dvh;
+	}
+}
