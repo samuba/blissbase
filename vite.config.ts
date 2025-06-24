@@ -27,6 +27,7 @@ export default defineConfig({
 				description: 'Hippie Events in deiner Nähe',
 				theme_color: '#efeae7',
 				background_color: '#efeae7',
+				display_override: ['window-controls-overlay'],
 				icons: [
 					{
 						src: 'pwa-192x192.png',
