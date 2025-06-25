@@ -20,6 +20,7 @@ import * as schema from '../src/lib/server/schema.ts';
 import { AwaraScraper } from './scrape-awara.ts';
 import { TribehausScraper } from './scrape-tribehaus.ts';
 import { HeilnetzScraper } from './scrape-heilnetz.ts';
+import { HeilnetzOwlScraper } from './scrape-heilnetzowl.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db } from "../src/lib/server/db.ts";
 import { insertEvent } from '../src/lib/server/events.ts';
@@ -27,7 +28,7 @@ import { cachedImageUrl } from '../src/lib/common.ts';
 import { inArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 
-const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'seijetzt'];
+const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'heilnetzowl', 'seijetzt'];
 
 console.log('--- Starting Germany Event Scraper ---');
 
@@ -75,10 +76,10 @@ if (!targetSourceArg || targetSourceArg === 'awara') {
         (async () => {
             console.log('Scraping Awara...');
             try {
-                const awaraEvents = await new AwaraScraper().scrapeWebsite();
-                console.log(` -> Found ${awaraEvents.length} events.`);
-                if (awaraEvents.length === 0) throw new Error('No awara events found');
-                return awaraEvents;
+                const events = await new AwaraScraper().scrapeWebsite();
+                console.log(` -> Found ${events.length} events.`);
+                if (events.length === 0) throw new Error('No awara events found');
+                return events;
             } catch (error) {
                 console.error('Error scraping Awara:', error);
                 throw error;
@@ -92,10 +93,10 @@ if (!targetSourceArg || targetSourceArg === 'tribehaus') {
         (async () => {
             console.log('Scraping Tribehaus...');
             try {
-                const tribehausEvents = await new TribehausScraper().scrapeWebsite();
-                console.log(` -> Found ${tribehausEvents.length} events.`);
-                if (tribehausEvents.length === 0) throw new Error('No tribehaus events found');
-                return tribehausEvents;
+                const events = await new TribehausScraper().scrapeWebsite();
+                console.log(` -> Found ${events.length} events.`);
+                if (events.length === 0) throw new Error('No tribehaus events found');
+                return events;
             } catch (error) {
                 console.error('Error scraping Tribehaus:', error);
                 throw error;
@@ -109,12 +110,29 @@ if (!targetSourceArg || targetSourceArg === 'heilnetz') {
         (async () => {
             console.log('Scraping Heilnetz...');
             try {
-                const heilnetzEvents = await new HeilnetzScraper().scrapeWebsite();
-                console.log(` -> Found ${heilnetzEvents.length} events.`);
-                if (heilnetzEvents.length === 0) throw new Error('No heilnetz events found');
-                return heilnetzEvents;
+                const events = await new HeilnetzScraper().scrapeWebsite();
+                console.log(` -> Found ${events.length} events.`);
+                if (events.length === 0) throw new Error('No heilnetz events found');
+                return events;
             } catch (error) {
                 console.error('Error scraping Heilnetz:', error);
+                throw error;
+            }
+        })()
+    );
+}
+
+if (!targetSourceArg || targetSourceArg === 'heilnetzowl') {
+    scrapePromises.push(
+        (async () => {
+            console.log('Scraping HeilnetzOwl...');
+            try {
+                const events = await new HeilnetzOwlScraper().scrapeWebsite();
+                console.log(` -> Found ${events.length} events.`);
+                if (events.length === 0) throw new Error('No heilnetzowl events found');
+                return events;
+            } catch (error) {
+                console.error('Error scraping HeilnetzOwl:', error);
                 throw error;
             }
         })()
@@ -126,10 +144,10 @@ if (!targetSourceArg || targetSourceArg === 'seijetzt') {
         (async () => {
             console.log('Scraping SeiJetzt...');
             try {
-                const seijetztEvents = await new SeijetztScraper().scrapeWebsite();
-                console.log(` -> Found ${seijetztEvents.length} events.`);
-                if (seijetztEvents.length === 0) throw new Error('No seijetzt events found');
-                return seijetztEvents;
+                const events = await new SeijetztScraper().scrapeWebsite();
+                console.log(` -> Found ${events.length} events.`);
+                if (events.length === 0) throw new Error('No seijetzt events found');
+                return events;
             } catch (error) {
                 console.error('Error scraping SeiJetzt:', error);
                 throw error;

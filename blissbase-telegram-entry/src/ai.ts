@@ -51,7 +51,7 @@ Extract these information from the message:
 
 "description": string. A exact copy from the message, including html tags, do not convert <br> tags to \n. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of the description.
 
-"descriptionBrief": string. The same content as in "description" field, including html tags, but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it. Only remove information that was extracted into other fields. If e.g. there are multiple contact methods, and you extract only one into the "contact" field, leave the other contact methods in the descriptionBrief.
+"descriptionBrief": string. The same content as in "description" field, including html tags, but without the information that were extracted in other fields. E.g. if start date is extracted, do not include it. ONLY remove information that was extracted into other fields! If you only partially extract information into other fields, leave the information entirely in the descriptionBrief. e.g. do not remove the venue description if you only take the venue address!
 
 "summary": string. Summarise what the event is about in one descriptive sentence. Always use same language as the message. Never mention name of the event. Never mention date or location. Always sound friendly and keep it about this event.
 
