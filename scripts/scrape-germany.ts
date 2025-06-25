@@ -276,7 +276,13 @@ for (let i = 0; i < uniqueImageUrls.length; i += batchSize) {
             .then(res => res.ok ? res.text() : Promise.reject(res.headers.get('x-cld-error')))
             .catch((e) => {
                 console.warn(` -> Failed to warm URL. Reverting to original URL: ${url}`, e)
-                eventsToInsert.find(e => e.imageUrls?.includes(url))!.imageUrls = [url.split('https:')[2]]
+                const ev = eventsToInsert.find(ev => ev.imageUrls?.includes(url))
+                if (!ev) {
+                    console.error(` -> Failed to find event with image URL: ${url}`)
+                    return
+                }
+                ev.imageUrls = [url.replace(cachedImageUrl(url)!, ''), ...(ev.imageUrls?.slice(1) ?? [])]
+                return ev
             })
     ));
     console.log(` -> Warmed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uniqueImageUrls.length / batchSize)}`);
