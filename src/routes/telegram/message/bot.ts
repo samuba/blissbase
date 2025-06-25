@@ -9,7 +9,7 @@ import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
 
 export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl, fromGroup }: TelegramCloudflareBody) {
-    if (!ctx.message) return
+    if (!msgTextHtml.trim()) return
 
     const isAdmin = ctx.from?.id === 218154725;
 
