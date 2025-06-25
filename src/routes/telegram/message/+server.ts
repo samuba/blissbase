@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { handleMessage } from './bot';
-import { type TelegramCloudflareBody, msgFilters } from '$lib/../../blissbase-telegram-entry/src/index';
+import { type TelegramCloudflareBody, msgFilters } from '$lib/telegramCommon';
 import { TELEGRAM_BOT_TOKEN } from '$env/static/private';
 import { Telegraf } from 'telegraf';
 

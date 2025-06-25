@@ -1,7 +1,7 @@
 import { Telegraf, type Context } from "telegraf";
-import { anyOf, message, channelPost } from "telegraf/filters";
 import type { Update, MessageEntity } from "telegraf/types";
-import { aiExtractEventData, MsgAnalysisAnswer } from './ai';
+import { aiExtractEventData } from './ai';
+import { msgFilters, type TelegramCloudflareBody } from '../../src/lib/telegramCommon';
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
@@ -276,20 +276,3 @@ function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]
 	}
 }
 
-export const msgFilters = anyOf(
-	message('text'),
-	message('forward_origin'),
-	message('chat_shared'),
-	message('forum_topic_created'),
-	message('caption'),
-	message('caption_entities'),
-	channelPost()
-)
-
-export type TelegramCloudflareBody = {
-	telegramPayload: Update,
-	msgTextHtml: string,
-	imageUrl: string | undefined | null,
-	aiAnswer: MsgAnalysisAnswer,
-	fromGroup: boolean,
-}
