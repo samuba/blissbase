@@ -48,29 +48,35 @@
 			)
 		)
 	);
+
+	let imageLoadError = $state(false);
+	const imageUrl = $derived(
+		imageLoadError ? (event.imageUrls?.[0]?.split('https:')[2] ?? '') : (event.imageUrls?.[0] ?? '')
+	);
 </script>
 
 {#if event}
-	{#if event.imageUrls && event.imageUrls.length > 0}
-		<div class="bg-cover bg-center" style="background-image: url({event.imageUrls[0]})">
+	{#if imageUrl}
+		<div class="bg-cover bg-center" style="background-image: url({imageUrl})">
 			<figure class="flex justify-center shadow-sm backdrop-blur-md backdrop-brightness-85">
 				<img
-					src={event.imageUrls[0]}
+					src={imageUrl}
 					alt={event.name}
 					class="max-h-96 w-fit max-w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
 					onclick={() => (showFullscreenImage = true)}
+					onerror={() => (imageLoadError = true)}
 				/>
 			</figure>
 		</div>
 	{/if}
 
 	<!-- Fullscreen Image Overlay -->
-	{#if showFullscreenImage && event.imageUrls?.length}
+	{#if showFullscreenImage && imageUrl}
 		<div
 			class=" animate-in fade-in fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black/95"
 			onclick={() => (showFullscreenImage = false)}
 		>
-			<img src={event.imageUrls[0]} alt={event.name} class="max-h-full max-w-full object-contain" />
+			<img src={imageUrl} alt={event.name} class="max-h-full max-w-full object-contain" />
 			<button
 				class="btn btn-circle absolute top-4 right-4 shadow-lg"
 				aria-label="Close fullscreen image"

@@ -79,7 +79,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             latitude: coords?.lat,
             longitude: coords?.lng,
             price: aiAnswer.price,
-            description: aiAnswer.descriptionBrief,
+            description: aiAnswer.description,
             descriptionOriginal: msgTextHtml,
             summary: aiAnswer.summary,
             host: telegramAuthor?.name,
