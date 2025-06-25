@@ -13,15 +13,7 @@ export default {
 
 		console.log("data", data)
 
-		bot.on(anyOf(
-			message('text'),
-			message('forward_origin'),
-			message('chat_shared'),
-			message('forum_topic_created'),
-			message('caption'),
-			message('caption_entities'),
-			channelPost()
-		), async (ctx) => {
+		bot.on(msgFilters, async (ctx) => {
 			await handleMessage(ctx, data)
 		})
 
@@ -32,7 +24,7 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 
-export async function handleMessage(ctx: Context, payloadJson: Update) {
+async function handleMessage(ctx: Context, payloadJson: Update) {
 	if (!ctx.message && !ctx.text) return;
 	const fromGroup = isGroup(ctx)
 
@@ -283,6 +275,16 @@ function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]
 			.replace(/<br>(\s*<br>){2,}/g, '<br><br>');
 	}
 }
+
+export const msgFilters = anyOf(
+	message('text'),
+	message('forward_origin'),
+	message('chat_shared'),
+	message('forum_topic_created'),
+	message('caption'),
+	message('caption_entities'),
+	channelPost()
+)
 
 export type TelegramCloudflareBody = {
 	telegramPayload: Update,

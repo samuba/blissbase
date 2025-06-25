@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { handleMessage } from './bot';
-import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
+import { type TelegramCloudflareBody, msgFilters } from '$lib/../../blissbase-telegram-entry/src/index';
 import { TELEGRAM_BOT_TOKEN } from '$env/static/private';
 import { Telegraf } from 'telegraf';
 
@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
         const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-        bot.on('message', async (ctx) => {
+        bot.on(msgFilters, async (ctx) => {
             return await handleMessage(ctx, data)
         });
 
