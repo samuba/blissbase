@@ -13,7 +13,15 @@ export default {
 
 		console.log("data", data)
 
-		bot.on(anyOf(message('text'), message('forward_origin'), channelPost()), async (ctx) => {
+		bot.on(anyOf(
+			message('text'),
+			message('forward_origin'),
+			message('chat_shared'),
+			message('forum_topic_created'),
+			message('caption'),
+			message('caption_entities'),
+			channelPost()
+		), async (ctx) => {
 			await handleMessage(ctx, data)
 		})
 
@@ -25,24 +33,22 @@ export default {
 
 
 export async function handleMessage(ctx: Context, payloadJson: Update) {
-	console.log("message received", ctx.message);
-	if (!ctx.message) return;
+	if (!ctx.message && !ctx.text) return;
+	const fromGroup = isGroup(ctx)
 
-	const isGroup =
-		ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
 	try {
-		let msgText = "";
+		let msgText = ctx.text ?? ctx.channelPost?.text ?? '';
 		let msgEntities: MessageEntity[] = [];
-		if ('text' in ctx.message) {
+		if (ctx.message && 'text' in ctx.message) {
 			msgText = ctx.message.text;
 			msgEntities = ctx.message.entities ?? [];
-		} else if ('caption' in ctx.message && ctx.message.caption) {
+		} else if (ctx.message && 'caption' in ctx.message && ctx.message.caption) {
 			msgText = ctx.message.caption;
 			msgEntities = ctx.message.caption_entities ?? [];
 		}
 
 		let imageUrl: string | undefined;
-		if ('photo' in ctx.message) {
+		if (ctx.message && 'photo' in ctx.message) {
 			const images = ctx.message.photo;
 			if (images && images.length > 0) {
 				// Typically, the last photo in the array is the largest
@@ -55,7 +61,7 @@ export async function handleMessage(ctx: Context, payloadJson: Update) {
 		await reply(ctx, "Ich extrahiere die Eventdaten aus deiner Nachricht...")
 
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
-		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !isGroup)
+		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !fromGroup)
 
 		// console.log("calling vercel with", {
 		// 	telegramPayload: payloadJson,
@@ -72,6 +78,7 @@ export async function handleMessage(ctx: Context, payloadJson: Update) {
 				msgTextHtml,
 				imageUrl,
 				aiAnswer,
+				fromGroup,
 			} satisfies TelegramCloudflareBody)
 		})
 
@@ -85,15 +92,21 @@ export async function handleMessage(ctx: Context, payloadJson: Update) {
 	} catch (error) {
 		console.error(error)
 		try {
-			if (!isGroup) {
-				await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error)
-			}
+			await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error)
 		} catch { /* ignore */ }
 	}
 }
 
+function isGroup(ctx: Context) {
+	return ctx.message?.chat.type === "group" ||
+		ctx.message?.chat.type === "supergroup" ||
+		ctx.channelPost?.sender_chat?.type === 'channel' ||
+		ctx.channelPost?.sender_chat?.type === 'group' ||
+		ctx.channelPost?.sender_chat?.type === 'supergroup';
+}
+
 async function reply(ctx: Context, text: string) {
-	if (ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup") {
+	if (isGroup(ctx)) {
 		return // do not reply in groups
 	}
 	await ctx.reply(text)
@@ -276,4 +289,5 @@ export type TelegramCloudflareBody = {
 	msgTextHtml: string,
 	imageUrl: string | undefined | null,
 	aiAnswer: MsgAnalysisAnswer,
+	fromGroup: boolean,
 }

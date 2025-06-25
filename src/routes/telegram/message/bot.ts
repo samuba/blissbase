@@ -8,40 +8,38 @@ import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
 
-export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl }: TelegramCloudflareBody) {
+export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl, fromGroup }: TelegramCloudflareBody) {
     if (!ctx.message) return
 
     const isAdmin = ctx.from?.id === 218154725;
-    const isGroup =
-        ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup"
 
-    console.log({ isGroup, aiAnswer, isAdmin })
+    console.log({ fromGroup, aiAnswer, isAdmin })
 
     const msgId = await recordMessage(ctx.message)
     try {
         if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
-            await reply(ctx, `Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. 😉`, msgId)
+            await reply(ctx, `Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. 😉`, fromGroup, msgId)
             return
         }
         if (!aiAnswer.hasEventData) {
             console.log("No event data found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", msgId)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", fromGroup, msgId)
             return
         }
         if (!aiAnswer.name) {
             console.log("No event name found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren", msgId)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren", fromGroup, msgId)
             return
         }
         if (!aiAnswer.startDate) {
             console.log("No event start date found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", msgId)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", fromGroup, msgId)
             return
         }
         if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
             console.log("No event location found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", msgId)
+            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
             return
         }
 
@@ -66,7 +64,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         if (aiAnswer.contactAuthorForMore) {
             contact = telegramAuthor?.link
             if (!contact) {
-                await reply(ctx, "⚠️ In deiner Nachricht forderst du Teilnehmer auf sich bei dir per Telegram zu melden, allerdings hast du in deinem Profil keinen Telegram Username eingetragen.\n\nBitte lege erst einen Telegram Username fest damit dich Teilnehmer per Telegram Link erreichen können. Danach kannst du mir die Nachricht erneut senden.", msgId)
+                await reply(ctx, "⚠️ In deiner Nachricht forderst du Teilnehmer auf sich bei dir per Telegram zu melden, allerdings hast du in deinem Profil keinen Telegram Username eingetragen.\n\nBitte lege erst einen Telegram Username fest damit dich Teilnehmer per Telegram Link erreichen können. Danach kannst du mir die Nachricht erneut senden.", fromGroup, msgId)
                 return
             }
         }
@@ -97,13 +95,11 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         const dbEvent = await insertEvent(dbEntry)
 
-        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.app/" + dbEvent.slug, msgId)
+        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.app/" + dbEvent.slug, fromGroup, msgId)
     } catch (error) {
         console.error(error)
         try {
-            if (!isGroup) {
-                await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error, msgId)
-            }
+            await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error, fromGroup, msgId)
         } catch { /* ignore */ }
     }
 }
@@ -135,10 +131,9 @@ function parseContact(contact: string | undefined) {
     return contact;
 }
 
-async function reply(ctx: Context, text: string, msgId: string | undefined) {
-    if (ctx.message?.chat.type === "group" || ctx.message?.chat.type === "supergroup") {
-        return // do not reply in groups
-    }
+async function reply(ctx: Context, text: string, fromGroup: boolean, msgId: string | undefined) {
+    if (fromGroup) return // do not reply in groups
+
     const replyOptions = ctx.message?.message_id
         ? { reply_parameters: { message_id: ctx.message.message_id } }
         : undefined;
