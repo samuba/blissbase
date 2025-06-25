@@ -2,12 +2,33 @@ tags für alle events
 
 BUG: messages mit mehreren bildern haben keinen text??
 
-such controls sticky und klein machen und nur bei bedarf vergrössern/popover
+heilnetz multi events werden nicht erfasst
 
-on scrape error ->  telegram msg
+heilnetz extras aus liste sind teilweise sehr wichtig
+
+heilnetz: Download Infos
+
 
 SEO
   ld+json anbieten
+
+vitalitybase
+  festival  25
+
+https://www.sein.de/brandenburg/
+
+https://www.ganzheitlich-gesund-brandenburg.de/veranstaltungen/index.php
+
+https://www.heilnetz-owl.de/
+
+https://www.spine.app/
+
+https://www.tamanga.at/seminare
+
+create.party anbinden
+
+on scrape error ->  telegram msg
+
 
 
 infos aus bildern extrahieren
@@ -38,6 +59,7 @@ orga
   mit you me unity reden
   mit josef über api für sei jetzt reden
   mit tribehause und co reden
+  bielefeld startup szene von cathleen angucken
 
 NEUE WEBSITES UND CHANNELS: Yoga Studios besuchen und Nachfragen was die kennen.
 
