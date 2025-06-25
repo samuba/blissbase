@@ -15,7 +15,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
     console.log({ fromGroup, aiAnswer, isAdmin })
 
-    const msgId = await recordMessage(ctx.message)
+    const msgId = await recordMessage(ctx)
     try {
         if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
@@ -201,11 +201,11 @@ function getTelegramEventOriginalAuthor(message: Context['message']) {
     };
 }
 
-async function recordMessage(message: Context['message']) {
-    if (!message) return;
+async function recordMessage(ctx: Context) {
+    if (!ctx.message && !ctx.channelPost) return;
 
     try {
-        const row = await db.insert(s.botMessages).values({ data: message }).returning()
+        const row = await db.insert(s.botMessages).values({ data: ctx.message ?? ctx.channelPost }).returning()
         return row![0].id
     } catch (error) {
         console.error("error recording telegram message", error)
