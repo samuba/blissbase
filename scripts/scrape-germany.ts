@@ -272,7 +272,12 @@ const batchSize = 15;
 for (let i = 0; i < uniqueImageUrls.length; i += batchSize) {
     const batch = uniqueImageUrls.slice(i, i + batchSize);
     await Promise.all(batch.map(url =>
-        fetch(url).catch(() => console.warn(` -> Failed to warm URL: ${url}`))
+        fetch(url)
+            .then(res => res.ok ? res.text() : Promise.reject(res.headers.get('x-cld-error')))
+            .catch((e) => {
+                console.warn(` -> Failed to warm URL. Reverting to original URL: ${url}`, e)
+                eventsToInsert.find(e => e.imageUrls?.includes(url))!.imageUrls = [url.split('https:')[2]]
+            })
     ));
     console.log(` -> Warmed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uniqueImageUrls.length / batchSize)}`);
 }
