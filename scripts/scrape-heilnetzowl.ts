@@ -62,7 +62,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         totalPages = this.getLastPageNumber($firstPage);
         console.error(`Found ${totalPages} total listing pages.`);
 
-        const eventDetailUrlSet: string[] = [];
+        const eventDetailUrlSet = new Set<string>();
 
         // Process page 1 for event URLs
         console.error("Extracting event URLs from page 1...");
@@ -71,7 +71,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             if (link) {
                 const absoluteUrl = makeAbsoluteUrl(link, BASE_URL);
                 if (absoluteUrl) {
-                    eventDetailUrlSet.push(absoluteUrl);
+                    eventDetailUrlSet.add(absoluteUrl);
                 }
             }
         });
@@ -82,7 +82,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             if (link) {
                 const absoluteUrl = makeAbsoluteUrl(link, BASE_URL);
                 if (absoluteUrl) {
-                    eventDetailUrlSet.push(absoluteUrl);
+                    eventDetailUrlSet.add(absoluteUrl);
                 }
             }
         });
@@ -135,7 +135,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             const settledPromises = await Promise.allSettled(pagePromises);
             settledPromises.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
-                    result.value.forEach(url => eventDetailUrlSet.push(url));
+                    result.value.forEach(url => eventDetailUrlSet.add(url));
                 } else {
                     console.error(`Failed to process page ${index + 2}: ${result.reason}`);
                 }
