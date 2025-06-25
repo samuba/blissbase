@@ -25,7 +25,8 @@ import {
     fetchWithTimeout,
     makeAbsoluteUrl as makeAbsoluteUrlCommon,
     WebsiteScraper,
-    REQUEST_DELAY_MS
+    REQUEST_DELAY_MS,
+    superTrim
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
@@ -60,7 +61,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         totalPages = this.getLastPageNumber($firstPage);
         console.error(`Found ${totalPages} total listing pages.`);
 
-        const eventDetailUrlSet = new Set<string>();
+        const eventDetailUrlSet: string[] = [];
 
         // Process page 1 for event URLs
         console.error("Extracting event URLs from page 1...");
@@ -69,7 +70,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             if (link) {
                 const absoluteUrl = makeAbsoluteUrl(link, BASE_URL);
                 if (absoluteUrl) {
-                    eventDetailUrlSet.add(absoluteUrl);
+                    eventDetailUrlSet.push(absoluteUrl);
                 }
             }
         });
@@ -80,7 +81,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             if (link) {
                 const absoluteUrl = makeAbsoluteUrl(link, BASE_URL);
                 if (absoluteUrl) {
-                    eventDetailUrlSet.add(absoluteUrl);
+                    eventDetailUrlSet.push(absoluteUrl);
                 }
             }
         });
@@ -133,7 +134,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             const settledPromises = await Promise.allSettled(pagePromises);
             settledPromises.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
-                    result.value.forEach(url => eventDetailUrlSet.add(url));
+                    result.value.forEach(url => eventDetailUrlSet.push(url));
                 } else {
                     console.error(`Failed to process page ${index + 2}: ${result.reason}`);
                 }
@@ -141,7 +142,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         }
 
         const eventDetailUrls = Array.from(eventDetailUrlSet);
-        console.error(`Found ${eventDetailUrls.length} unique event detail URLs to process.`);
+        console.error(`Found ${eventDetailUrls.length} event detail URLs to process.`);
 
         // Now, fetch and process each event detail page sequentially
         for (const detailUrl of eventDetailUrls) {
@@ -160,6 +161,8 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
                 if (event) {
                     console.log(event);
                     allEvents.push(event);
+                } else {
+                    console.error(`Skipping event detail page ${detailUrl} due to missing event data.`);
                 }
             } catch (error) {
                 console.error(`Failed to process event detail page ${detailUrl}:`, error);
@@ -371,6 +374,25 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
 
         if (description && typeof description === 'string') {
             description = description.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');
+        }
+
+        const $table = $('main section table').first();
+
+        // add extras info
+        const extrasInfo = this.getTableCellValueByLabel($, $table, 'Extras', true);
+        if (extrasInfo) description += `<p>${extrasInfo.replaceAll('\n', '')}</p>`;
+
+        // add kontakt info        
+        const organizerInfoHtml = this.getTableCellValueByLabel($, $table, 'Anbieter*in:', true);
+        let organizerInfoText = superTrim(this.getTableCellValueByLabel($, $table, 'Anbieter*in:', false));
+        const email = organizerInfoHtml?.match(/<a href="mailto:([^"]+)"/)?.[1] ?? '';
+        organizerInfoText = organizerInfoText?.replaceAll(email.trim(), "")
+        organizerInfoText = organizerInfoText?.replaceAll((this.extractHost(html) ?? '').trim(), "")
+        if (email || organizerInfoText) {
+            description += `<p><strong>Kontakt:</strong><br>`
+            if (email) description += `<a href="mailto:${email}">${email}</a><br>`
+            if (organizerInfoText) description += organizerInfoText
+            description += `</p>`
         }
 
         return description;

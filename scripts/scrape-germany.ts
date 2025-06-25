@@ -306,4 +306,5 @@ console.log(` -> Successfully inserted/updated ${successCount} out of ${eventsTo
 
 
 console.log('--- Germany Event Scraper Finished ---');
+process.exit(0);
 

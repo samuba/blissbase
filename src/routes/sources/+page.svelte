@@ -26,6 +26,7 @@
 						<a href="https://tribehaus.org" target="_blank">tribehaus.org</a>
 						<a href="https://awara.events" target="_blank">awara.events</a>
 						<a href="https://heilnetz.de" target="_blank">heilnetz.de</a>
+						<a href="https://heilnetz-owl.de" target="_blank">heilnetz-owl.de</a>
 					</div>
 				</div>
 
