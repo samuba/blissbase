@@ -25,7 +25,8 @@ import {
     superTrim,
     parseGermanDate,
     fetchWithTimeout,
-    REQUEST_DELAY_MS
+    REQUEST_DELAY_MS,
+    cleanProseHtml
 } from './common.ts';
 import { geocodeAddressCached } from '../src/lib/server/google.ts';
 export class AwaraScraper implements WebsiteScraper {
@@ -187,7 +188,7 @@ export class AwaraScraper implements WebsiteScraper {
         const $ = cheerio.load(html);
         const eventBody = $('.wpem-single-event-body-content')
         eventBody.find('.wpem-single-event-ticket-information').remove();
-        return eventBody.html()?.trim();
+        return cleanProseHtml(eventBody.html()?.trim());
     }
     extractImageUrls(html: string) {
         const $ = cheerio.load(html);

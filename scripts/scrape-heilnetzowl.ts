@@ -26,7 +26,8 @@ import {
     makeAbsoluteUrl as makeAbsoluteUrlCommon,
     WebsiteScraper,
     REQUEST_DELAY_MS,
-    superTrim
+    superTrim,
+    cleanProseHtml
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
@@ -395,7 +396,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             description += `</p>`
         }
 
-        return description;
+        return cleanProseHtml(description);
     }
 
     extractImageUrls(html: string): string[] | undefined {

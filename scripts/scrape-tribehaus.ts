@@ -16,7 +16,8 @@ import {
     REQUEST_DELAY_MS,
     WebsiteScraper,
     makeAbsoluteUrl as commonMakeAbsoluteUrl,
-    superTrim
+    superTrim,
+    cleanProseHtml
 } from "./common.ts";
 
 const BASE_URL = 'https://tribehaus.org';
@@ -159,7 +160,7 @@ export class TribehausScraper implements WebsiteScraper {
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html);
         const description = $('#description blockquote.readmore').html()?.trim();
-        return description || undefined;
+        return cleanProseHtml(description);
     }
 
     extractImageUrls(html: string): string[] | undefined {

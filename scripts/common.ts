@@ -1,5 +1,5 @@
 import { ScrapedEvent } from "../src/lib/types.ts";
-
+import * as cheerio from 'cheerio';
 
 /**
  * Common timeout for fetch requests in milliseconds
@@ -181,6 +181,19 @@ export function parseGermanDateTime(dateStr: string, timeStr?: string) {
 export function superTrim(str: string | undefined | null) {
     if (!str) return undefined;
     return str.trim().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+}
+
+/**
+ * Removes all style and class attributes from HTML
+ */
+export function cleanProseHtml(html: string | undefined) {
+    if (!html) return html;
+
+    const $ = cheerio.load(html);
+    // Remove styling attributes from all elements
+    $('*').removeAttr('style class align');
+
+    return $.html().replace("<html><head></head><body>", "").replace("</body></html>", "");
 }
 
 /**

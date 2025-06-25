@@ -351,7 +351,7 @@ export class HeilnetzScraper implements WebsiteScraper {
             description = description.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');
         }
 
-        return description;
+        return cleanProseHtml(description);
     }
 
     extractImageUrls(html: string): string[] | undefined {

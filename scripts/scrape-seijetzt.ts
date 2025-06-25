@@ -22,7 +22,7 @@ import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 import {
     REQUEST_DELAY_MS,
-    WebsiteScraper, // Import WebsiteScraper
+    WebsiteScraper, cleanProseHtml, // Import WebsiteScraper
     fetchWithTimeout,
     germanDateToIsoStr,
     superTrim
@@ -207,7 +207,7 @@ export class SeijetztScraper implements WebsiteScraper {
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
         const description = $('.prose').first().html();
-        return description?.trim();
+        return cleanProseHtml(description ?? '');
     }
 
     extractImageUrls(html: string): string[] | undefined {
