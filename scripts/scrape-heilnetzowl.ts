@@ -392,7 +392,14 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         if (email || organizerInfoText) {
             description += `<p><strong>Kontakt:</strong><br>`
             if (email) description += `<a href="mailto:${email}">${email}</a><br>`
-            if (organizerInfoText) description += organizerInfoText
+            if (organizerInfoText) {
+                if (!/[a-zA-Z]/.test(organizerInfoText)) {
+                    // its a phone number!
+                    description += `<a href="tel:${organizerInfoText}">${organizerInfoText}</a>`
+                } else {
+                    description += organizerInfoText
+                }
+            }
             description += `</p>`
         }
 
