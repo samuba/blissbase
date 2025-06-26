@@ -1,9 +1,9 @@
 import type { MetaTagsProps } from 'svelte-meta-tags';
 import posthog from 'posthog-js'
-import { browser } from '$app/environment';
+import { browser, dev } from '$app/environment';
 
 export const load = ({ url }) => {
-    if (browser) {
+    if (browser && !dev) {
         posthog.init(
             'phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ',
             {

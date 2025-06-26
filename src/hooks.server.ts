@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { telefuncConfig } from 'telefunc';
 import type { HandleServerError } from '@sveltejs/kit';
 import { PostHog } from 'posthog-node';
+import { dev } from '$app/environment';
 
 
 
@@ -38,7 +39,7 @@ const client = new PostHog(
 )
 
 export const handleError: HandleServerError = async ({ error, status }) => {
-    if (status !== 404) {
+    if (!dev && status !== 404) {
         client.captureException(error);
         await client.shutdown();
     }
