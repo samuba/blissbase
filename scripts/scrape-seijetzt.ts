@@ -213,18 +213,14 @@ export class SeijetztScraper implements WebsiteScraper {
     extractImageUrls(html: string): string[] | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
         const imageUrlsSet = new Set<string>();
-        const $firstEmblaCont = $('.embla__container').first();
-        if ($firstEmblaCont.length > 0) {
-            $firstEmblaCont.find('.embla__slide__img img').each((_i, img) => {
-                const $img = $(img);
-                const src = $img.attr('src') || $img.attr('data-src') || $img.attr('data-lazy-src');
-                if (src && !src.startsWith('data:') && !src.includes('placeholder') && src.length < 1200) {
-                    try {
-                        imageUrlsSet.add(new URL(src, this.baseUrl).toString());
-                    } catch { /* ignore */ }
-                }
-            });
-        }
+        $('.embla__container .rounded-xl > img').each((_i, img) => {
+            const src = $(img).attr('src') || $(img).attr('data-src') || $(img).attr('data-lazy-src');
+            if (src && !src.startsWith('data:') && !src.includes('placeholder') && src.length < 1200) {
+                try {
+                    imageUrlsSet.add(new URL(src, this.baseUrl).toString());
+                } catch { /* ignore */ }
+            }
+        });
 
         return imageUrlsSet.size > 0 ? Array.from(imageUrlsSet) : undefined;
     }
