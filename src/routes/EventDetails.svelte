@@ -128,7 +128,10 @@
 			{/if}
 
 			{#if event.source === 'heilnetz' || event.source === 'heilnetzowl'}
-				<!-- no good readon to show for heilnetz -->
+				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
+					Quelle
+					<i class="icon-[ph--arrow-square-out] size-5"></i>
+				</a>
 			{:else if event.sourceUrl}
 				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
 					Anmelden

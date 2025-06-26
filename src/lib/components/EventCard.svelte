@@ -8,7 +8,7 @@
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
-	let imageUrl = $derived(event.imageUrls?.[0] ?? '');
+	let imageUrl = $state(event.imageUrls?.[0] ?? '');
 </script>
 
 <a
