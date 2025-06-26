@@ -44,6 +44,7 @@ interface EventUrlWithDate {
     date: string;
     title: string;
     host: string;
+    downloadLink?: string;
 }
 
 export class HeilnetzOwlScraper implements WebsiteScraper {
@@ -124,7 +125,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
                     continue; // Skip to next event URL
                 }
 
-                const event = await this.extractEventData(eventHtml, eventInfo.url, eventInfo.date);
+                const event = await this.extractEventData(eventHtml, eventInfo.url, eventInfo.date, eventInfo.downloadLink);
                 if (event) {
                     console.log(event);
                     allEvents.push(event);
@@ -180,11 +181,22 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             const absoluteUrl = makeAbsoluteUrl(permalink, BASE_URL);
             if (!absoluteUrl) return;
 
+            // Extract download link if available
+            const $downloadLink = $item.find('a[href*="files/anbieterinnen"][target="_blank"]');
+            let downloadLink: string | undefined;
+            if ($downloadLink.length > 0) {
+                const downloadHref = $downloadLink.attr('href');
+                if (downloadHref) {
+                    downloadLink = makeAbsoluteUrl(downloadHref, BASE_URL);
+                }
+            }
+
             eventUrlsWithDates.push({
                 url: absoluteUrl,
                 date: dateTime,
                 title,
-                host
+                host,
+                downloadLink: downloadLink
             });
         });
     }
@@ -209,7 +221,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         return allEvents;
     }
 
-    async extractEventData(html: string, url: string, eventDate?: string): Promise<ScrapedEvent | undefined> {
+    async extractEventData(html: string, url: string, eventDate?: string, downloadLink?: string): Promise<ScrapedEvent | undefined> {
         try {
             const name = this.extractName(html);
             let startAt = this.extractStartAt(html);
@@ -255,7 +267,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
                 address,
                 price: this.extractPrice(html),
                 priceIsHtml: false,
-                description: this.extractDescription(html) || '',
+                description: this.extractDescription(html, downloadLink) || '',
                 imageUrls: this.extractImageUrls(html) || [],
                 host: this.extractHost(html),
                 hostLink: this.extractHostLink(html),
@@ -389,7 +401,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         return undefined;
     }
 
-    extractDescription(html: string): string | undefined {
+    extractDescription(html: string, downloadLink?: string): string | undefined {
         const $ = cheerio.load(html);
 
         // First try LD+JSON
@@ -439,6 +451,11 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
                 }
             }
             description += `</p>`
+        }
+
+        // Add download link if available
+        if (downloadLink) {
+            description += `<p><a href="${downloadLink}" target="_blank">Mehr Infos</a></p>`;
         }
 
         return cleanProseHtml(description);

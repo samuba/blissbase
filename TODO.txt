@@ -2,11 +2,9 @@ tags für alle events
 
 BUG: messages mit mehreren bildern haben keinen text??
 
-heilnetz multi events werden nicht erfasst
-
 heilnetz extras aus liste sind teilweise sehr wichtig
 
-heilnetz: Download Infos
+heilnetz und co: dont show "Anmelden"
 
 
 SEO
@@ -14,6 +12,8 @@ SEO
 
 vitalitybase
   festival  25
+
+falsche bilder!!! sei.jetzt events ohne bilder nehmen die falschen  http://localhost:5173/2025-06-26-yoga-im-sentmaringer-park-fuer-anfaenger
 
 https://www.sein.de/brandenburg/
 
@@ -24,6 +24,8 @@ https://www.heilnetz-owl.de/
 https://www.spine.app/
 
 https://www.tamanga.at/seminare
+
+https://mystikum.at/
 
 create.party anbinden
 
