@@ -82,7 +82,7 @@
 				<div class="mt-1 flex flex-wrap gap-1 text-xs">
 					{#each event.tags as tag}
 						<button
-							class="badge badge-sm badge-ghost cursor-pointer"
+							class="badge badge-sm badge-ghost cursor-pointer hover:underline"
 							title="Filter nach Tag"
 							onclick={(e) => {
 								e.preventDefault();
