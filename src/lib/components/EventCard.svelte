@@ -8,12 +8,7 @@
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
-	let noImage = $state(event.imageUrls?.[0] === undefined);
-
-	let imageLoadError = $state(false);
-	const imageUrl = $derived(
-		imageLoadError ? (event.imageUrls?.[0]?.split('https:')[2] ?? '') : (event.imageUrls?.[0] ?? '')
-	);
+	let imageUrl = $derived(event.imageUrls?.[0] ?? '');
 </script>
 
 <a
@@ -33,7 +28,7 @@
 				'from-base-200/50 to-base-300 relative min-w-32 rounded-t-lg bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-l-lg sm:rounded-tr-none'
 			]}
 		>
-			{#if noImage}{:else}
+			{#if imageUrl}
 				<div
 					class="h-full rounded-t-lg bg-cover bg-center"
 					style="background-image: url({imageUrl})"
@@ -45,7 +40,7 @@
 							src={imageUrl}
 							alt="illustration for event: {event.name}"
 							class="h-full max-h-72 max-w-full object-cover"
-							onerror={() => (imageLoadError = true)}
+							onerror={() => (imageUrl = '')}
 						/>
 					</figure>
 				</div>

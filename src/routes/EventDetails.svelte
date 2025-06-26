@@ -49,10 +49,7 @@
 		)
 	);
 
-	let imageLoadError = $state(false);
-	const imageUrl = $derived(
-		imageLoadError ? (event.imageUrls?.[0]?.split('https:')[2] ?? '') : (event.imageUrls?.[0] ?? '')
-	);
+	let imageUrl = $derived(event.imageUrls?.[0] ?? '');
 </script>
 
 {#if event}
@@ -64,7 +61,7 @@
 					alt={event.name}
 					class="max-h-96 w-fit max-w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
 					onclick={() => (showFullscreenImage = true)}
-					onerror={() => (imageLoadError = true)}
+					onerror={() => (imageUrl = '')}
 				/>
 			</figure>
 		</div>
