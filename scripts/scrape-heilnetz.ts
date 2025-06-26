@@ -7,6 +7,7 @@
  * - Fetches each event's detail page.
  * - Extracts event data as JSON according to the ScrapedEvent interface.
  * - Prioritizes data from LD+JSON script tags if available.
+ * - Handles recurring events by extracting each occurrence with its specific date.
  *
  * When a local HTML file path is provided:
  * - Parses only that single HTML file.
@@ -23,21 +24,20 @@ import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 import {
     fetchWithTimeout,
-    makeAbsoluteUrl as makeAbsoluteUrlCommon,
+    makeAbsoluteUrl,
     WebsiteScraper,
     REQUEST_DELAY_MS,
-    cleanProseHtml
+    cleanProseHtml,
+    germanDateToIsoStr
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
 const BASE_URL = 'https://www.heilnetz.de';
 
-/**
- * Wrapper around the common makeAbsoluteUrl function to maintain
- * compatibility with existing code.
- */
-function makeAbsoluteUrl(url: string | undefined, baseUrl: string): string | undefined {
-    return makeAbsoluteUrlCommon(url, baseUrl);
+interface EventOccurrence {
+    url: string;
+    date: string;
+    time?: string;
 }
 
 export class HeilnetzScraper implements WebsiteScraper {
@@ -61,22 +61,14 @@ export class HeilnetzScraper implements WebsiteScraper {
         totalPages = this.getLastPageNumber($firstPage);
         console.error(`Found ${totalPages} total listing pages.`);
 
-        const eventDetailUrlSet = new Set<string>();
+        const eventOccurrences: EventOccurrence[] = [];
 
-        // Process page 1 for event URLs
-        console.error("Extracting event URLs from page 1...");
-        $firstPage('a[href^="/termin/"]').each((_i, el) => {
-            const link = $firstPage(el).attr('href');
-            if (link) {
-                const absoluteUrl = makeAbsoluteUrl(link, BASE_URL);
-                if (absoluteUrl) {
-                    eventDetailUrlSet.add(absoluteUrl);
-                }
-            }
-        });
+        // Process page 1 for event occurrences
+        console.error("Extracting event occurrences from page 1...");
+        this.extractEventOccurrencesFromPage($firstPage, eventOccurrences);
 
-        // Loop through remaining listing pages (2 to totalPages) to gather all event URLs in parallel
-        const pagePromises: Promise<string[]>[] = [];
+        // Loop through remaining listing pages (2 to totalPages) to gather all event occurrences in parallel
+        const pagePromises: Promise<EventOccurrence[]>[] = [];
         if (totalPages > 1) {
             for (let i = 2; i <= totalPages; i++) {
                 const pageUrl = `${startUrl}?page_e2=${i}`;
@@ -86,18 +78,10 @@ export class HeilnetzScraper implements WebsiteScraper {
                         try {
                             const currentPageHtml = await fetchWithTimeout(pageUrl);
                             const $currentPage = cheerio.load(currentPageHtml);
-                            const urlsOnPage: string[] = [];
-                            console.error(`Extracting event URLs from page ${i}...`);
-                            $currentPage('a[href^="/termin/"]').each((_idx, el) => {
-                                const link = $currentPage(el).attr('href');
-                                if (link) {
-                                    const absoluteUrl = makeAbsoluteUrl(link, BASE_URL);
-                                    if (absoluteUrl) {
-                                        urlsOnPage.push(absoluteUrl);
-                                    }
-                                }
-                            });
-                            return urlsOnPage;
+                            const occurrencesOnPage: EventOccurrence[] = [];
+                            console.error(`Extracting event occurrences from page ${i}...`);
+                            this.extractEventOccurrencesFromPage($currentPage, occurrencesOnPage);
+                            return occurrencesOnPage;
                         } catch (error) {
                             const message = error instanceof Error ? error.message : String(error);
                             console.error(`Error processing listing page ${i} (${pageUrl}): ${message}. Skipping this page.`);
@@ -112,36 +96,35 @@ export class HeilnetzScraper implements WebsiteScraper {
             const settledPromises = await Promise.allSettled(pagePromises);
             settledPromises.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
-                    result.value.forEach(url => eventDetailUrlSet.add(url));
+                    eventOccurrences.push(...result.value);
                 } else {
                     console.error(`Failed to process page ${index + 2}: ${result.reason}`);
                 }
             });
         }
 
-        const eventDetailUrls = Array.from(eventDetailUrlSet);
-        console.error(`Found ${eventDetailUrls.length} unique event detail URLs to process.`);
+        console.error(`Found ${eventOccurrences.length} event occurrences to process.`);
 
         // Now, fetch and process each event detail page sequentially
-        for (const detailUrl of eventDetailUrls) {
-            console.error(`Fetching and processing event detail page: ${detailUrl}...`);
+        for (const occurrence of eventOccurrences) {
+            console.error(`Fetching and processing event detail page: ${occurrence.url}...`);
             try {
                 let eventHtml: string;
                 try {
-                    eventHtml = await fetchWithTimeout(detailUrl);
+                    eventHtml = await fetchWithTimeout(occurrence.url);
                 } catch (error) {
                     void error; // Mark as intentionally unused
-                    console.error(`Skipping event detail page ${detailUrl} due to fetch error.`);
+                    console.error(`Skipping event detail page ${occurrence.url} due to fetch error.`);
                     continue; // Skip to next event URL
                 }
 
-                const event = await this.extractEventData(eventHtml, detailUrl);
+                const event = await this.extractEventData(eventHtml, occurrence.url, occurrence.date, occurrence.time);
                 if (event) {
                     console.log(event);
                     allEvents.push(event);
                 }
             } catch (error) {
-                console.error(`Failed to process event detail page ${detailUrl}:`, error);
+                console.error(`Failed to process event detail page ${occurrence.url}:`, error);
                 // Continue to next event, don't break the loop
             }
 
@@ -151,6 +134,54 @@ export class HeilnetzScraper implements WebsiteScraper {
 
         console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
         return allEvents;
+    }
+
+    /**
+     * Extracts event occurrences from a listing page, including their dates and times.
+     * @param $ Cheerio instance loaded with the HTML of a listing page
+     * @param occurrences Array to populate with event occurrences
+     */
+    private extractEventOccurrencesFromPage($: cheerio.CheerioAPI, occurrences: EventOccurrence[]): void {
+        // Find all accordion items (each represents an event occurrence)
+        $('.accordion-item').each((_i, accordionItem) => {
+            const $item = $(accordionItem);
+
+            // Extract the date from the datetime attribute
+            const $timeElement = $item.find('time[datetime]');
+            if ($timeElement.length === 0) return;
+
+            const datetime = $timeElement.attr('datetime');
+            if (!datetime) return;
+
+            // Parse the datetime to get the date
+            const dateMatch = datetime.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (!dateMatch) return;
+
+            const isoDate = dateMatch[1];
+            const [year, month, day] = isoDate.split('-').map(Number);
+            const dateString = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
+
+            // Extract time from the clock icon text
+            const timeText = $item.find('.bi-clock').parent().text().trim();
+            const timeMatch = timeText.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+            const time = timeMatch ? timeMatch[1] : undefined;
+
+            // Extract the event URL from the permalink
+            const $permalink = $item.find('a[href^="/termin/"]').last();
+            if ($permalink.length === 0) return;
+
+            const link = $permalink.attr('href');
+            if (!link) return;
+
+            const absoluteUrl = makeAbsoluteUrl(link, BASE_URL);
+            if (!absoluteUrl) return;
+
+            occurrences.push({
+                url: absoluteUrl,
+                date: dateString,
+                time: time
+            });
+        });
     }
 
     async scrapeHtmlFiles(filePaths: string[]): Promise<ScrapedEvent[]> {
@@ -173,10 +204,10 @@ export class HeilnetzScraper implements WebsiteScraper {
         return allEvents;
     }
 
-    async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
+    async extractEventData(html: string, url: string, eventDate?: string, eventTime?: string): Promise<ScrapedEvent | undefined> {
         try {
             const name = this.extractName(html);
-            const startAt = this.extractStartAt(html);
+            const startAt = this.extractStartAt(html, eventDate, eventTime);
             if (!name || !startAt) {
                 console.error(`Skipping event from ${url} due to missing name or start date.`);
                 return undefined;
@@ -236,9 +267,26 @@ export class HeilnetzScraper implements WebsiteScraper {
         return name;
     }
 
-    extractStartAt(html: string) {
+    extractStartAt(html: string, eventDate?: string, eventTime?: string) {
         const $ = cheerio.load(html);
 
+        // If we have a specific event date from the listing page, use it
+        if (eventDate) {
+            // Extract time from the detail page if not provided
+            if (!eventTime) {
+                eventTime = this.extractTimeFromDetailPage($);
+            }
+
+            const [day, month, year] = eventDate.split('.').map(Number);
+            if (eventTime) {
+                const [hour, minute] = eventTime.split(':').map(Number);
+                return germanDateToIsoStr(year, month - 1, day, hour, minute);
+            } else {
+                return germanDateToIsoStr(year, month - 1, day);
+            }
+        }
+
+        // Fallback to LD+JSON if no specific date provided
         let startDate: string | undefined;
         $('script[type="application/ld+json"]').each((_i, el) => {
             try {
@@ -266,6 +314,24 @@ export class HeilnetzScraper implements WebsiteScraper {
             }
         }
 
+        return undefined;
+    }
+
+    /**
+     * Extracts the time from the "Uhrzeit:" field in the event detail page.
+     * @param $ Cheerio instance loaded with the event detail page HTML
+     * @returns Time string in HH:MM format or undefined if not found
+     */
+    private extractTimeFromDetailPage($: cheerio.CheerioAPI): string | undefined {
+        const $table = $('.mod_eventreader .border.rounded-2.p-2 table').first();
+        if ($table.length) {
+            const timeText = this.getTableCellValueByLabel($, $table, 'Uhrzeit:');
+            if (timeText) {
+                // Extract the start time from formats like "11:00 - 14:00 Uhr" or "18:30 - 19:30"
+                const timeMatch = timeText.match(/(\d{1,2}:\d{2})/);
+                return timeMatch ? timeMatch[1] : undefined;
+            }
+        }
         return undefined;
     }
 

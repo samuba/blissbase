@@ -29,7 +29,8 @@ import {
     WebsiteScraper,
     REQUEST_DELAY_MS,
     superTrim,
-    cleanProseHtml
+    cleanProseHtml,
+    germanDateToIsoStr
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
@@ -43,26 +44,6 @@ interface EventUrlWithDate {
     date: string;
     title: string;
     host: string;
-}
-
-/**
- * Gets the timezone offset for German time (Europe/Berlin) for a given date
- * Handles both CET (UTC+1) and CEST (UTC+2) automatically
- */
-function getGermanTimezoneOffset(date: Date): string {
-    // Create a date in German timezone to get the offset
-    const germanDate = new Date(date.toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
-    const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
-
-    // Calculate the offset in minutes
-    const offsetMinutes = (germanDate.getTime() - utcDate.getTime()) / (1000 * 60);
-
-    // Convert to HH:MM format
-    const hours = Math.floor(Math.abs(offsetMinutes) / 60);
-    const minutes = Math.abs(offsetMinutes) % 60;
-    const sign = offsetMinutes >= 0 ? '+' : '-';
-
-    return `${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
 export class HeilnetzOwlScraper implements WebsiteScraper {
@@ -232,7 +213,6 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         try {
             const name = this.extractName(html);
             let startAt = this.extractStartAt(html);
-
             // For recurring events, combine the date from the listing page with the time from the detail page
             if (eventDate) {
                 const time = this.extractTime(html);
@@ -247,16 +227,16 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
                     // Parse the date and time components
                     const [year, month, day] = dateOnly.split('-').map(Number);
                     const [hour, minute] = time.split(':').map(Number);
-
-                    // Create a date object and get the German timezone offset
-                    const dateObj = new Date(year, month - 1, day, hour, minute);
-                    const timezoneOffset = getGermanTimezoneOffset(dateObj);
-
-                    // Create ISO string with proper timezone offset
-                    startAt = `${dateOnly}T${time}:00${timezoneOffset}`;
+                    // Create ISO string with proper timezone offset (month is 0-indexed in germanDateToIsoStr)
+                    startAt = germanDateToIsoStr(year, month - 1, day, hour, minute);
                 } else {
-                    // Fallback to just the date if no time found
-                    startAt = eventDate;
+                    // Fallback to just the date if no time found - use germanDateToIsoStr with 0-indexed month
+                    let dateOnly = eventDate;
+                    if (eventDate.includes('T')) {
+                        dateOnly = eventDate.split('T')[0];
+                    }
+                    const [year, month, day] = dateOnly.split('-').map(Number);
+                    startAt = germanDateToIsoStr(year, month - 1, day);
                 }
             }
 
