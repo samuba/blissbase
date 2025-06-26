@@ -8,7 +8,12 @@
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
-	let imageUrl = $state(event.imageUrls?.[0] ?? '');
+	let imageLoadError = $state(false);
+	const imageUrl = $derived(
+		imageLoadError
+			? (event.imageUrls?.[0]?.split('https:')?.[2] ?? '')
+			: (event.imageUrls?.[0] ?? '')
+	);
 </script>
 
 <a
@@ -40,7 +45,7 @@
 							src={imageUrl}
 							alt="illustration for event: {event.name}"
 							class="h-full max-h-72 max-w-full object-cover"
-							onerror={() => (imageUrl = '')}
+							onerror={() => (imageLoadError = true)}
 						/>
 					</figure>
 				</div>
