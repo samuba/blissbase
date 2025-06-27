@@ -28,7 +28,7 @@
 	const transformStyle = $derived(`transform: rotate(${rotationAngle}deg) scale(${1.5});`);
 </script>
 
-<div class={`overflow-hidden ${className}`}>
+<div class={`overflow-hidden saturate-80 ${className}`}>
 	<img
 		src={'/event-placeholder.png'}
 		alt="placeholder logo"
