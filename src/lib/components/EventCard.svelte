@@ -53,7 +53,7 @@
 			{:else}
 				<RandomPlaceholderImg
 					seed={event.slug}
-					class="h-full max-h-52 sm:max-h-none sm:scale-170"
+					class="h-full max-h-52 rounded-t-lg sm:max-h-none  sm:scale-170 sm:rounded-l-lg sm:rounded-tr-none"
 				/>
 			{/if}
 		</div>
