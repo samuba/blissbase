@@ -5,6 +5,7 @@
 	import { routes } from '$lib/routes';
 	import { onTap } from '$lib/attachments';
 	import { eventsStore } from '$lib/eventsStore.svelte';
+	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
@@ -49,6 +50,11 @@
 						/>
 					</figure>
 				</div>
+			{:else}
+				<RandomPlaceholderImg
+					seed={event.slug}
+					class="h-full max-h-52 sm:max-h-none sm:scale-170"
+				/>
 			{/if}
 		</div>
 

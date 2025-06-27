@@ -3,6 +3,7 @@
 	import PopOver from '$lib/components/PopOver.svelte';
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
+	import RandomPlaceholderImg from '$lib/components/RandomPlaceholderImg.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -70,6 +71,8 @@
 				/>
 			</figure>
 		</div>
+	{:else}
+		<RandomPlaceholderImg seed={event.slug} class="h-full max-h-70 " />
 	{/if}
 
 	<!-- Fullscreen Image Overlay -->
