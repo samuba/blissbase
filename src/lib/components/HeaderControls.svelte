@@ -289,7 +289,7 @@
 					<img
 						src="/logo.svg"
 						alt="Menu"
-						class="size-10 min-w-10 transition-transform duration-500 group-data-[state=open]:-rotate-360"
+						class="size-10 min-w-10 transition-transform duration-500 ease-in-out group-data-[state=open]:-rotate-360"
 					/>
 				</div>
 			{/snippet}
