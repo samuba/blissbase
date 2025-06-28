@@ -278,14 +278,20 @@
 {#snippet logoMenu()}
 	<div class="flex flex-col items-center">
 		<PopOver
-			triggerClass="cursor-pointer transition-transform duration-500 data-[state=open]:-rotate-360"
+			triggerClass="cursor-pointer group"
 			contentClass="card card-border shadow-lg bg-base-100 z-20"
 			contentProps={{
 				customAnchor: '.custom-popover-anchor'
 			}}
 		>
 			{#snippet trigger()}
-				<img src="/logo.svg" alt="Menu" class="size-10 min-w-10" />
+				<div class="drop-shadow-sm">
+					<img
+						src="/logo.svg"
+						alt="Menu"
+						class="size-10 min-w-10 transition-transform duration-500 group-data-[state=open]:-rotate-360"
+					/>
+				</div>
 			{/snippet}
 			{#snippet content()}
 				<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
