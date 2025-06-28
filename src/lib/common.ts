@@ -76,7 +76,7 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
 
     // 00:00 just means we dont have a proper start time
     if (str.endsWith(", 00:00")) str = str.replace(", 00:00", "");
-    str = str.replace("00:00 – 00:00", "")
+    str = str.replace(", 00:00 – 00:00", "")
 
     return str;
 }
