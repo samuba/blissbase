@@ -1,5 +1,5 @@
 import type { UiEvent } from '$lib/server/events';
-import { fetchEvents } from '../routes/page.telefunc';
+import { fetchEventsWithCookiePersistence } from '../routes/page.telefunc';
 import type { DateRangePickerOnChange } from '$lib/components/DateRangePicker.svelte';
 import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.svelte';
 
@@ -62,11 +62,11 @@ export class EventsStore {
     }
 
     // Core loading function
-    async loadEvents(params: Parameters<typeof fetchEvents>[0], append?: boolean) {
+    async loadEvents(params: Parameters<typeof fetchEventsWithCookiePersistence>[0], append?: boolean) {
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
 
-            const data = await fetchEvents(params);
+            const data = await fetchEventsWithCookiePersistence(params);
 
             if (append) {
                 // Filter out duplicate events that may result from pagination

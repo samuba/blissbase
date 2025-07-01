@@ -7,8 +7,8 @@ const GET: RequestHandler = async (event) => {
         method: event.request.method,
         body: await event.request.text(),
         context: {
-            // We pass the `context` object here, see https://telefunc.com/getContext
-            someContext: 'hello',
+            // Pass cookies context for server-side cookie handling
+            cookies: event.cookies,
         },
     })
     return new Response(response.body, {

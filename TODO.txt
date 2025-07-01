@@ -4,22 +4,21 @@ BUG: messages mit mehreren bildern haben keinen text??
 
 heilnetz extras aus liste sind teilweise sehr wichtig
 
-heilnetz und co: dont show "Anmelden"
-
-
 SEO
   ld+json anbieten
 
 vitalitybase
   festival  25
 
+
+
+falsche bilder2!! wenn hydriert wird kommen die durcheinander??
+
 falsche bilder!!! sei.jetzt events ohne bilder nehmen die falschen  http://localhost:5173/2025-06-26-yoga-im-sentmaringer-park-fuer-anfaenger
 
 https://www.sein.de/brandenburg/
 
 https://www.ganzheitlich-gesund-brandenburg.de/veranstaltungen/index.php
-
-https://www.heilnetz-owl.de/
 
 https://www.spine.app/
 
