@@ -1,0 +1,6 @@
+---
+description: 
+globs: **/*.ts
+alwaysApply: false
+---
+When changing a drizzle schema always use "push" with drizzle kit instead of migrations.
