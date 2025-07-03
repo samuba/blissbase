@@ -243,7 +243,7 @@ export async function insertEvent(events: InsertEvent | InsertEvent[]) {
         .values(processedEvents)
         .onConflictDoUpdate({
             target: s.events.slug,
-            set: buildConflictUpdateColumns(s.events, ['slug'])
+            set: buildConflictUpdateColumns(s.events, ['slug', 'createdAt'])
         })
         .returning();
 
