@@ -1,4 +1,4 @@
-import { db, s } from '$lib/server/db';
+import { buildConflictUpdateColumns, db, s } from '$lib/server/db';
 
 import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc, SQL } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
@@ -243,29 +243,7 @@ export async function insertEvent(events: InsertEvent | InsertEvent[]) {
         .values(processedEvents)
         .onConflictDoUpdate({
             target: s.events.slug,
-            set: {
-                name: sql`excluded.name`,
-                startAt: sql`excluded.start_at`,
-                endAt: sql`excluded.end_at`,
-                address: sql`excluded.address`,
-                price: sql`excluded.price`,
-                description: sql`excluded.description`,
-                descriptionOriginal: sql`excluded.description_original`,
-                summary: sql`excluded.summary`,
-                imageUrls: sql`excluded.image_urls`,
-                host: sql`excluded.host`,
-                hostLink: sql`excluded.host_link`,
-                contact: sql`excluded.contact`,
-                latitude: sql`excluded.latitude`,
-                longitude: sql`excluded.longitude`,
-                tags: sql`excluded.tags`,
-                source: sql`excluded.source`,
-                sourceUrl: sql`excluded.source_url`,
-                scrapedAt: sql`CURRENT_TIMESTAMP`,
-                messageSenderId: sql`excluded.message_sender_id`,
-                slug: sql`excluded.slug`,
-                soldOut: sql`excluded.sold_out`,
-            }
+            set: buildConflictUpdateColumns(s.events, ['slug'])
         })
         .returning();
 
