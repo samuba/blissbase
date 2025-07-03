@@ -261,7 +261,8 @@ const eventsToInsert = allEvents.map(x => {
         endAt: x.endAt ? new Date(x.endAt) : undefined,
         imageUrls: x.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!),
         description: cleanProseHtml(x.description),
-        listed: shouldBeListed({ name: cleanedName })
+        listed: shouldBeListed({ name: cleanedName }),
+        tags: [...new Set(x.tags)] // ensure tags are unique
     } satisfies InsertEvent;
 });
 
@@ -305,22 +306,16 @@ console.log(' -> Finished warming image URLs');
 await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
 let successCount = 0;
+for (let i = 0; i < eventsToInsert.length; i += batchSize) {
+    const batch = eventsToInsert.slice(i, i + batchSize);
 
-// Insert events one by one instead of in bulk
-for (const event of eventsToInsert) {
     try {
-        event.tags = [...new Set(event.tags)] // Ensure tags are unique
+        await insertEvent(batch);
+        successCount += batch.length;
 
-        await insertEvent(event);
-
-        successCount++;
-
-        // Log progress every 10 events
-        if (successCount % 10 === 0) {
-            console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);
-        }
+        console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);
     } catch (error) {
-        console.error(`Error inserting event "${event.name}":`, error);
+        console.error(`Error inserting batch starting at index ${i}:`, error);
         throw error;
     }
 }

@@ -218,25 +218,29 @@ export async function fetchEvents(params: LoadEventsParams) {
 }
 
 
-export async function insertEvent(event: InsertEvent) {
-    // trim all strings 
-    type EventKey = keyof InsertEvent;
-    for (const key in event) {
-        if (Object.prototype.hasOwnProperty.call(event, key) && typeof event[key as EventKey] === 'string') {
-            (event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
-        }
-    }
+export async function insertEvent(events: InsertEvent | InsertEvent[]) {
+    const eventsArray = Array.isArray(events) ? events : [events];
 
-    if (!event.slug) {
+    const processedEvents = eventsArray.map(event => {
+        // trim all strings 
+        type EventKey = keyof InsertEvent;
+        for (const key in event) {
+            if (Object.prototype.hasOwnProperty.call(event, key) && typeof event[key as EventKey] === 'string') {
+                (event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
+            }
+        }
+
         event.slug = generateSlug({
             name: event.name,
             startAt: event.startAt,
             endAt: event.endAt ?? undefined,
         });
-    }
+
+        return event;
+    });
 
     const result = await db.insert(s.events)
-        .values(event)
+        .values(processedEvents)
         .onConflictDoUpdate({
             target: s.events.slug,
             set: {
@@ -265,7 +269,7 @@ export async function insertEvent(event: InsertEvent) {
         })
         .returning();
 
-    return result?.[0];
+    return Array.isArray(events) ? result : result?.[0];
 }
 
 type LoadEventsParams = Partial<{
