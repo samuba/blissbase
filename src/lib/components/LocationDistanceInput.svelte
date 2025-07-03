@@ -10,16 +10,18 @@
 	export interface LocationDistanceInputProps {
 		initialLocation?: string | null;
 		initialDistance?: string | null;
+		resolvedCityName?: string | null;
 		onChange?: (event: LocationChangeEvent) => void;
 		disabled?: boolean;
 	}
 
-	// Component props
-	let props: LocationDistanceInputProps = $props();
-	let initialLocation = props.initialLocation ?? null;
-	let initialDistance = props.initialDistance ?? null;
-	let onChange = props.onChange;
-	let disabled = props.disabled ?? false;
+	let {
+		initialLocation,
+		initialDistance,
+		resolvedCityName,
+		onChange,
+		disabled
+	}: LocationDistanceInputProps = $props();
 
 	// Internal state
 	let typedPlzCity = $state('');
@@ -200,7 +202,7 @@
 				class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0"
 			>
 				<i class="icon-[ph--map-pin] -mr-0.5 size-4"></i>
-				{displayLocationText}
+				{resolvedCityName || displayLocationText}
 			</span>
 		{:else}
 			<input

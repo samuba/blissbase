@@ -1,5 +1,5 @@
 import { sql, type SQL } from 'drizzle-orm';
-import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -44,6 +44,16 @@ export const geocodeCache = pgTable('geocode_cache', {
     longitude: real(),
     cachedAt: timestamp().notNull().defaultNow(),
 });
+
+export const reverseGeocodeCache = pgTable('reverse_geocode_cache', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    latitude: real().notNull(),
+    longitude: real().notNull(),
+    cityName: text(),
+    cachedAt: timestamp().notNull().defaultNow(),
+}, (t) => [
+    uniqueIndex().on(t.latitude, t.longitude)
+]);
 
 
 

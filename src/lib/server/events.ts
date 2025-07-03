@@ -2,7 +2,7 @@ import { db, s } from '$lib/server/db';
 
 import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
-import { geocodeAddressCached } from '$lib/server/google';
+import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
 import { generateSlug } from '$lib/common';
 
@@ -164,6 +164,13 @@ export async function fetchEvents(params: LoadEventsParams) {
     const usedLat = geocodedCoords ? geocodedCoords.lat : lat;
     const usedLng = geocodedCoords ? geocodedCoords.lng : lng;
 
+    // Resolve city name from coordinates if using current location
+    let resolvedCityName: string | null = null;
+    if (lat && lng && !plzCity) {
+        // Only resolve city name when using coordinates directly (not when plzCity was provided)
+        resolvedCityName = await reverseGeocodeCityCached(lat, lng, GOOGLE_MAPS_API_KEY);
+    }
+
     return {
         events,
         pagination: {
@@ -173,7 +180,7 @@ export async function fetchEvents(params: LoadEventsParams) {
             lng: usedLng,
             totalEvents,
             totalPages,
-            plzCity,
+            plzCity: resolvedCityName || plzCity,
             distance,
             page,
             limit,

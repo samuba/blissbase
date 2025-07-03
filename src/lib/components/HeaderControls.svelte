@@ -149,6 +149,9 @@
 									? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
 									: eventsStore.pagination.plzCity}
 								initialDistance={eventsStore.pagination.distance}
+								resolvedCityName={eventsStore.pagination.lat && eventsStore.pagination.lng
+									? eventsStore.pagination.plzCity
+									: null}
 								onChange={eventsStore.handleLocationDistanceChange}
 							/>
 						</div>
@@ -234,6 +237,9 @@
 						? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
 						: eventsStore.pagination.plzCity}
 					initialDistance={eventsStore.pagination.distance}
+					resolvedCityName={eventsStore.pagination.lat && eventsStore.pagination.lng
+						? eventsStore.pagination.plzCity
+						: null}
 					onChange={eventsStore.handleLocationDistanceChange}
 				/>
 			</div>
