@@ -95,7 +95,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         const dbEvent = await insertEvent(dbEntry)
 
-        await reply(ctx, "Der Event wurde erfolgreich in BlissBase eingetragen.\nDu findest ihn hier: https://blissbase.app/" + dbEvent.slug, fromGroup, msgId)
+        await reply(ctx, "✅ Der Event wurde in BlissBase eingetragen:\n\nhttps://blissbase.app/" + dbEvent.slug, fromGroup, msgId)
     } catch (error) {
         console.error(error)
         try {
