@@ -186,7 +186,7 @@ export function superTrim(str: string | undefined | null) {
 /**
  * Removes all style and class attributes from HTML
  */
-export function cleanProseHtml(html: string | undefined) {
+export function cleanProseHtml(html: string | undefined | null) {
     if (!html) return html;
 
     const $ = cheerio.load(html);

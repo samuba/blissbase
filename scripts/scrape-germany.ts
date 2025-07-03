@@ -260,10 +260,22 @@ const eventsToInsert = allEvents.map(x => {
         startAt: new Date(x.startAt),
         endAt: x.endAt ? new Date(x.endAt) : undefined,
         imageUrls: x.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!),
-        description: cleanProseHtml(x.description ?
-
+        description: cleanProseHtml(x.description),
+        listed: shouldBeListed({ name: cleanedName })
     } satisfies InsertEvent;
 });
+
+function shouldBeListed({ name }: { name: string }): boolean {
+    // yoga classes are too boring to list
+    const nameBlacklist = [
+        'hatha yoga',
+        'hatha-yoga',
+        'yin yoga',
+        'yin-yoga',
+        'yoga im ',
+    ];
+    return nameBlacklist.every(x => !name.toLowerCase().includes(x));
+}
 
 // Pre-warm image URLs by making HEAD requests to ensure they're cached
 console.log('Pre-warming image URLs...');

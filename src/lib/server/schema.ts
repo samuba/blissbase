@@ -25,6 +25,7 @@ export const events = pgTable('events', {
     messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
     slug: text().notNull().unique(),
     soldOut: boolean().notNull().default(false),
+    listed: boolean().notNull().default(true),
 });
 
 

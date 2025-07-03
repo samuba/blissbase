@@ -143,7 +143,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         }
     }
 
-    const allConditions = [dateCondition, proximityCondition].filter(Boolean);
+    const allConditions = [dateCondition, proximityCondition, and(s.events.listed)];
 
     if (searchTerm && searchTerm.trim() !== '') {
         const searchTermCondition = or(
@@ -156,7 +156,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         }
     }
 
-    const finalCondition = allConditions.length > 0 ? and(...allConditions) : undefined;
+    const finalCondition = and(...allConditions.filter(Boolean));
 
     const eventsQuery = db.query.events.findMany({
         where: finalCondition,
