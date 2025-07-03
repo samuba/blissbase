@@ -5,13 +5,16 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "npm run test:run && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
+		"test": "vitest",
+		"test:run": "vitest run",
+		"test:watch": "vitest --watch",
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
@@ -61,7 +64,8 @@
 		"typescript-eslint": "^8.20.0",
 		"unplugin-icons": "^22.1.0",
 		"vite": "^6.2.5",
-		"vite-plugin-pwa": "^1.0.0"
+		"vite-plugin-pwa": "^1.0.0",
+		"vitest": "^3.2.4"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.8.0",

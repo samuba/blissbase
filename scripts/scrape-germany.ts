@@ -27,6 +27,7 @@ import { insertEvent } from '../src/lib/server/events.ts';
 import { cachedImageUrl } from '../src/lib/common.ts';
 import { inArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
+import { cleanProseHtml } from './common.ts';
 
 const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'heilnetzowl', 'seijetzt'];
 
@@ -259,7 +260,7 @@ const eventsToInsert = allEvents.map(x => {
         startAt: new Date(x.startAt),
         endAt: x.endAt ? new Date(x.endAt) : undefined,
         imageUrls: x.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!),
-        description: x.description?.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
+        description: cleanProseHtml(x.description ?
 
     } satisfies InsertEvent;
 });

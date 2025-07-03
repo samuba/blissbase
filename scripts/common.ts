@@ -193,11 +193,48 @@ export function cleanProseHtml(html: string | undefined) {
     // Remove styling attributes from all elements
     $('*').removeAttr('style class align');
 
-    let str = $.html().replace("<html><head></head><body>", "").replace("</body></html>", "");
+    let str = extractBodyContent($.html());
     str = str.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');
     str = str.replaceAll('<p><br></p>', '');
     str = str.replaceAll('<p>&nbsp;</p>', '');
+    str = str.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
+    str = linkify(str);
     return str;
+}
+
+// Helper function to extract body content from cheerio's full HTML output
+function extractBodyContent(html: string): string {
+    return html.replace('<html><head></head><body>', '').replace('</body></html>', '');
+}
+
+/**
+ * Finds all links which are not already wrapped in <a> tags and wraps them in <a> tags
+ */
+export function linkify(html: string): string {
+    const $ = cheerio.load(html);
+
+    // Find text nodes that contain URLs but are not already inside <a> tags
+    $('*').contents().filter(function () {
+        return this.nodeType === 3; // Text node
+    }).each(function () {
+        const text = $(this).text();
+        const parent = $(this).parent();
+
+        // Skip if already inside an <a> tag
+        if (parent.is('a') || parent.closest('a').length > 0) {
+            return;
+        }
+
+        // Regular expression to match URLs
+        const urlRegex = /(https?:\/\/[^\s<>"]+)/gi;
+
+        if (urlRegex.test(text)) {
+            const newHtml = text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+            $(this).replaceWith(newHtml);
+        }
+    });
+
+    return extractBodyContent($.html());
 }
 
 /**

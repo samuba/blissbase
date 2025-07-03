@@ -433,6 +433,11 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         const extrasInfo = this.getTableCellValueByLabel($, $table, 'Extras', true);
         if (extrasInfo) description += `<p>${extrasInfo.replaceAll('\n', '')}</p>`;
 
+        // Add download link if available
+        if (downloadLink) {
+            description += `<p><a href="${downloadLink}" target="_blank">Mehr Infos</a></p>`;
+        }
+
         // add kontakt info        
         const organizerInfoHtml = this.getTableCellValueByLabel($, $table, 'Anbieter*in:', true);
         let organizerInfoText = superTrim(this.getTableCellValueByLabel($, $table, 'Anbieter*in:', false));
@@ -451,11 +456,6 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
                 }
             }
             description += `</p>`
-        }
-
-        // Add download link if available
-        if (downloadLink) {
-            description += `<p><a href="${downloadLink}" target="_blank">Mehr Infos</a></p>`;
         }
 
         return cleanProseHtml(description);
