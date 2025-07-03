@@ -34,11 +34,10 @@ export const buildConflictUpdateColumns = <
 ) => {
     const allColumns = getTableColumns(table);
     const allColumnKeys = Object.keys(allColumns) as Q[];
-
     return allColumnKeys
         .filter(column => !columnsToNotUpdate.includes(column))
         .reduce((acc, column) => {
-            const colName = allColumns[column].name;
+            const colName = allColumns[column].name.replace(/[A-Z]/g, (x) => `_${x.toLowerCase()}`); // https://github.com/drizzle-team/drizzle-orm/issues/1728
             acc[column] = sql.raw(`excluded.${colName}`);
             return acc;
         }, {} as Record<Q, SQL>);
