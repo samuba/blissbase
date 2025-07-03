@@ -193,7 +193,7 @@ export function cleanProseHtml(html: string | undefined | null) {
     // Remove styling attributes from all elements
     $('*').removeAttr('style class align');
 
-    let str = extractBodyContent($.html());
+    let str = getHtmlBody($);
     str = str.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');
     str = str.replaceAll('<p><br></p>', '');
     str = str.replaceAll('<p>&nbsp;</p>', '');
@@ -203,8 +203,8 @@ export function cleanProseHtml(html: string | undefined | null) {
 }
 
 // Helper function to extract body content from cheerio's full HTML output
-function extractBodyContent(html: string): string {
-    return html.replace('<html><head></head><body>', '').replace('</body></html>', '');
+function getHtmlBody($: cheerio.Root): string {
+    return $.html().replace('<html><head></head><body>', '').replace('</body></html>', '');
 }
 
 /**
@@ -234,7 +234,7 @@ export function linkify(html: string): string {
         }
     });
 
-    return extractBodyContent($.html());
+    return getHtmlBody($);
 }
 
 /**
