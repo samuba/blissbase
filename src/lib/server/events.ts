@@ -1,6 +1,6 @@
 import { db, s } from '$lib/server/db';
 
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc, SQL } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
@@ -10,6 +10,41 @@ const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
 
 
+/**
+ * Fetches events based on various filtering criteria.
+ * 
+ * Returns events that match ALL of the following conditions:
+ * 
+ * 1. **Date Range**: Events that fall within the specified date range (default: today to 60 days from today)
+ *    - Events that start within the range
+ *    - Events that end within the range (must have started within last 6 hours for current/future ranges)
+ *    - Events that span the entire range (must have started within last 6 hours for current/future ranges)
+ *    - Never returns events that started more than 6 hours ago (except for historical date ranges)
+ *    - Historical ranges (both startDate and endDate in the past) return all events without time restrictions
+ * 
+ * 2. **Location Filter** (if distance parameter provided):
+ *    - Events within the specified distance (in km) from the given coordinates or geocoded address
+ *    - Only events with valid latitude/longitude coordinates are included
+ * 
+ * 3. **Search Term** (if provided):
+ *    - Events where the search term matches the event name, description, or any tag
+ *    - Case-insensitive partial matching
+ * 
+ * 4. **Pagination**: Limited to specified page size (max 20 events per page)
+ * 
+ * 5. **Sorting**: By time (startAt) or distance from specified location
+ * 
+ * Events are excluded if they started more than 6 hours ago and don't meet the ongoing event criteria.
+ * 
+ * @example
+ * // Get events in Berlin within 10km, starting next week
+ * const events = await fetchEvents({
+ *   plzCity: 'Berlin',
+ *   distance: '10',
+ *   startDate: '2024-01-15',
+ *   endDate: '2024-01-22'
+ * });
+ */
 export async function fetchEvents(params: LoadEventsParams) {
     const {
         plzCity,
@@ -28,47 +63,38 @@ export async function fetchEvents(params: LoadEventsParams) {
     const sortOrder = params.sortOrder === 'desc' ? 'desc' : 'asc';
     const offset = (page - 1) * limit;
 
-    const sixHoursAgo = new Date(new Date().getTime() - 6 * 60 * 60 * 1000);
+    const now = new Date();
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+    const startDate = startCalDate.toDate(timeZone);
+    const endDate = endCalDate.add({ days: 1 }).toDate(timeZone);
 
-    let dateCondition;
-    try {
-        const startDate = startCalDate.toDate(timeZone);
-        const endDate = endCalDate.add({ days: 1 }).toDate(timeZone);
+    // Check if the entire date range is in the past
+    const isHistoricalRange = endDate <= now;
 
-        const startsInRange = and(
-            gte(s.events.startAt, startDate),
-            lte(s.events.startAt, endDate)
-        );
-        const endsInRange = and(
-            lt(s.events.startAt, startDate),
-            isNotNull(s.events.endAt),
-            gte(s.events.endAt, startDate),
-            lte(s.events.endAt, endDate),
-            gte(s.events.startAt, sixHoursAgo)
-        );
-        const spansRange = and(
-            lt(s.events.startAt, startDate),
-            isNotNull(s.events.endAt),
-            gt(s.events.endAt, endDate),
-            gte(s.events.startAt, sixHoursAgo)
-        );
-        dateCondition = or(startsInRange, endsInRange, spansRange);
-    } catch (error) {
-        console.error('Error parsing date eters:', error);
-        const todayDate = getToday(timeZone);
-        const todayStart = todayDate.toDate(timeZone);
-        const startsTodayOrLater = gte(s.events.startAt, todayStart);
-        const acceptableOngoingEvent = and(
-            lt(s.events.startAt, todayStart),
-            gte(s.events.startAt, sixHoursAgo),
-            isNotNull(s.events.endAt),
-            gte(s.events.endAt, todayStart),
-            lt(s.events.endAt, todayDate.add({ days: 20 }).toDate(timeZone))
-        );
-        dateCondition = or(startsTodayOrLater, acceptableOngoingEvent);
-    }
+    const startsInRange = and(
+        gte(s.events.startAt, startDate),
+        lte(s.events.startAt, endDate),
+        isHistoricalRange ? undefined : or(
+            gte(s.events.startAt, sql`NOW()`),   // Future events (haven't started yet)
+            gte(s.events.startAt, sixHoursAgo)   // Recent events (started within last 6 hours)
+        )
+    );
+    const endsInRange = and(
+        isNotNull(s.events.endAt),
+        gte(s.events.endAt, startDate),
+        lte(s.events.endAt, endDate),
+        isHistoricalRange ? undefined : gte(s.events.startAt, sixHoursAgo)
+    );
+    const spansRange = and(
+        isNotNull(s.events.endAt),
+        lt(s.events.startAt, startDate),
+        gt(s.events.endAt, endDate),
+        isHistoricalRange ? undefined : gte(s.events.startAt, sixHoursAgo)
+    );
+    const dateCondition = or(startsInRange, endsInRange, spansRange);
 
-    let proximityCondition = undefined;
+
+    let proximityCondition: SQL<boolean> | undefined = undefined;
     let geocodedCoords: { lat: number; lng: number } | null = null;
 
     if (distance) {
@@ -76,7 +102,7 @@ export async function fetchEvents(params: LoadEventsParams) {
             if (!isNaN(lat) && !isNaN(lng)) {
                 geocodedCoords = { lat, lng };
             } else {
-                console.error('Invalid lat/lng eters:', lat, lng);
+                console.error('Invalid lat/lng parameters:', lat, lng);
             }
         } else if (plzCity && plzCity.trim() !== '') {
             geocodedCoords = await geocodeAddressCached([plzCity], GOOGLE_MAPS_API_KEY);
