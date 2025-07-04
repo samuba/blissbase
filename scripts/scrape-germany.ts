@@ -274,6 +274,7 @@ function shouldBeListed({ name }: { name: string }): boolean {
         'yin yoga',
         'yin-yoga',
         'yoga im ',
+        'yoga für ',
     ];
     return nameBlacklist.every(x => !name.toLowerCase().includes(x));
 }
