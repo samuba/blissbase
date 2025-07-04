@@ -215,7 +215,7 @@ export function superTrim(str: string | undefined | null) {
 /**
  * Removes all style and class attributes from HTML
  */
-export function cleanProseHtml(html: string | undefined | null) {
+export function cleanProseHtml<T extends string | undefined | null>(html: T): T {
     if (!html) return html;
 
     const $ = cheerio.load(html);
@@ -228,7 +228,7 @@ export function cleanProseHtml(html: string | undefined | null) {
     str = str.replaceAll('<p>&nbsp;</p>', '');
     str = str.replace(/<br>(\s*<br>){2,}/g, '<br><br>') // Limit consecutive <br> tags to maximum 2, regardless of whitespace between them
     str = linkify(str);
-    return str;
+    return str.trim() as T;
 }
 
 // Helper function to extract body content from cheerio's full HTML output
