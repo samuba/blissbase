@@ -24,7 +24,7 @@
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 import {
-    fetchWithTimeout,
+    customFetch,
     makeAbsoluteUrl,
     WebsiteScraper,
     REQUEST_DELAY_MS,
@@ -56,7 +56,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
         console.error(`Fetching initial listing page: ${startUrl}...`);
         let firstPageHtml: string;
         try {
-            firstPageHtml = await fetchWithTimeout(startUrl);
+            firstPageHtml = await customFetch(startUrl);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             console.error(`Failed to fetch initial page ${startUrl}:`, message);
@@ -83,7 +83,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
                     (async () => {
                         console.error(`Fetching listing page ${i}: ${pageUrl}...`);
                         try {
-                            const currentPageHtml = await fetchWithTimeout(pageUrl);
+                            const currentPageHtml = await customFetch(pageUrl);
                             const $currentPage = cheerio.load(currentPageHtml);
                             const urlsOnPage: EventUrlWithDate[] = [];
                             console.error(`Extracting event URLs from page ${i}...`);
@@ -118,7 +118,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
             try {
                 let eventHtml: string;
                 try {
-                    eventHtml = await fetchWithTimeout(eventInfo.url);
+                    eventHtml = await customFetch(eventInfo.url);
                 } catch (error) {
                     void error; // Mark as intentionally unused
                     console.error(`Skipping event detail page ${eventInfo.url} due to fetch error.`);

@@ -11,7 +11,7 @@
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
 import {
-    fetchWithTimeout,
+    customFetch,
     parseGermanDateTime,
     REQUEST_DELAY_MS,
     WebsiteScraper,
@@ -308,7 +308,7 @@ export class TribehausScraper implements WebsiteScraper {
         console.error("--- Starting Phase 1: Collecting Permalinks ---");
         while (currentListUrl) {
             try {
-                const listHtml = await fetchWithTimeout(currentListUrl);
+                const listHtml = await customFetch(currentListUrl);
                 const { permalinks, nextPageUrl } = this.parseEventList(listHtml);
 
                 if (permalinks.length === 0 && pageCount > 1) {
@@ -337,7 +337,7 @@ export class TribehausScraper implements WebsiteScraper {
             detailCount++;
             console.error(`Fetching detail ${detailCount}/${allPermalinks.length}: ${permalink}...`);
             try {
-                const eventHtml = await fetchWithTimeout(permalink);
+                const eventHtml = await customFetch(permalink);
                 const eventDetail = await this.extractEventData(eventHtml, permalink);
                 console.error(eventDetail);
                 if (eventDetail) {

@@ -23,7 +23,7 @@ import * as cheerio from 'cheerio';
 import {
     REQUEST_DELAY_MS,
     WebsiteScraper, cleanProseHtml, // Import WebsiteScraper
-    fetchWithTimeout,
+    customFetch,
     germanDateToIsoStr,
     superTrim
 } from "./common.ts";
@@ -207,7 +207,7 @@ export class SeijetztScraper implements WebsiteScraper {
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
         const description = $('.prose').first().html();
-        return cleanProseHtml(description ?? '');
+        return description ?? undefined;
     }
 
     extractImageUrls(html: string): string[] | undefined {
@@ -322,7 +322,7 @@ export class SeijetztScraper implements WebsiteScraper {
             console.error(`\n--- Fetching Page ${currentPage}: ${pageUrl} ---`);
 
             await sleep(this.requestDelayMs);
-            const pageHtml = await fetchWithTimeout(pageUrl);
+            const pageHtml = await customFetch(pageUrl);
             if (!pageHtml) {
                 console.error(`Failed to fetch page ${currentPage}. Stopping.`);
                 keepFetching = false;
@@ -341,7 +341,7 @@ export class SeijetztScraper implements WebsiteScraper {
                 for (const eventUrl of eventUrls) {
                     try {
                         await sleep(this.requestDelayMs);
-                        const html = await fetchWithTimeout(eventUrl);
+                        const html = await customFetch(eventUrl);
 
                         if (!html) {
                             console.error(`Failed to fetch details for: ${eventUrl}. Skipping event.`);

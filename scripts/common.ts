@@ -12,56 +12,85 @@ export const FETCH_TIMEOUT_MS = 10000;
 export const REQUEST_DELAY_MS = 500;
 
 /**
- * Fetches a URL with a timeout and proper error handling.
+ * Fetches a URL with a timeout, retry logic, and proper error handling.
  * @param url The URL to fetch
  * @param options Additional fetch options
- * @returns The response text or null if an error occurred
+ * @returns The response text
+ * @throws Error if all retry attempts fail or for non-retryable errors
  */
-export async function fetchWithTimeout(
+export async function customFetch(
     url: string,
     options: RequestInit = {}
 ): Promise<string> {
-    try {
-        console.error(`Fetching: ${url}`);
+    const maxRetries = 5;
+    let lastError: Error | undefined;
 
-        // Create a timeout signal
-        const timeoutSignal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            if (attempt > 0) {
+                const backoffDelay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Cap at 10 seconds
+                console.warn(`Retry attempt ${attempt}/${maxRetries} for ${url} after ${backoffDelay}ms delay`);
+                await Bun.sleep(backoffDelay);
+            } else {
+                console.log(`Fetching: ${url}`);
+            }
 
-        // Combine with any existing signal if provided in options
-        const signal = options.signal
-            ? AbortSignal.any([options.signal, timeoutSignal])
-            : timeoutSignal;
+            // Create a timeout signal
+            const timeoutSignal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
 
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                'User-Agent': 'BlissBase',
-                ...(options.headers || {})
-            },
-            signal
-        });
+            // Combine with any existing signal if provided in options
+            const signal = options.signal
+                ? AbortSignal.any([options.signal, timeoutSignal])
+                : timeoutSignal;
 
-        // Optional delay after fetch starts (can be adjusted by caller)
-        if (!signal.aborted) {
-            // Only sleep if not already aborted
-            await Bun.sleep(100);
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'User-Agent': 'BlissBase',
+                    ...(options.headers || {})
+                },
+                signal
+            });
+
+            // Optional delay after fetch starts (can be adjusted by caller)
+            if (!signal.aborted) {
+                // Only sleep if not already aborted
+                await Bun.sleep(100);
+            }
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
+                console.error(`Error body: ${errorBody}`);
+
+                // Check if error is retryable (5xx server errors or specific network errors)
+                if (response.status >= 500 && response.status < 600 && attempt < maxRetries) {
+                    lastError = new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
+                    continue; // Retry on server errors
+                }
+
+                throw new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.text();
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                console.error(`Timeout fetching ${url}: Request took longer than ${FETCH_TIMEOUT_MS}ms`);
+            } else {
+                console.error(`Network error fetching ${url}:`, error);
+            }
+
+            // Don't retry on timeout errors or if we've reached max retries
+            if ((error instanceof DOMException && error.name === 'AbortError') || attempt === maxRetries) {
+                throw error;
+            }
         }
-
-        if (!response.ok) {
-            console.error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
-            console.error(`Error body: ${await response.text()}`);
-            throw new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
-        }
-
-        return await response.text();
-    } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-            console.error(`Timeout fetching ${url}: Request took longer than ${FETCH_TIMEOUT_MS}ms`);
-        } else {
-            console.error(`Network error fetching ${url}:`, error);
-        }
-        throw error;
     }
+
+    // This should never be reached, but just in case
+    throw lastError || new Error(`Failed to fetch ${url} after ${maxRetries + 1} attempts`);
 }
 
 /**

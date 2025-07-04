@@ -24,7 +24,7 @@ import {
     WebsiteScraper,
     superTrim,
     parseGermanDate,
-    fetchWithTimeout,
+    customFetch,
     REQUEST_DELAY_MS,
     cleanProseHtml
 } from './common.ts';
@@ -85,7 +85,7 @@ export class AwaraScraper implements WebsiteScraper {
             console.error(`Processing ${eventUrls.length} events from page ${currentPage}...`);
             for (const eventUrl of eventUrls) {
                 try {
-                    const html = await fetchWithTimeout(eventUrl);
+                    const html = await customFetch(eventUrl);
                     if (!html) continue;
                     const event = await this.extractEventData(html, eventUrl);
                     if (!event) continue;
@@ -228,7 +228,7 @@ async function fetchListingPageData(page: number): Promise<Record<string, unknow
     // Simplified form_data, check if more fields are strictly required by the server
     formData.append('form_data', 'search_keywords=&search_location=&search_within_radius%5B%5D=10&search_distance_units%5B%5D=km&google_map_lat=&google_map_lng=&search_datetimes%5B%5D=&search_orderby%5B%5D=');
 
-    return fetchWithTimeout(LISTINGS_URL, {
+    return customFetch(LISTINGS_URL, {
         method: 'POST',
         headers: {
             'Accept': '*/*',
