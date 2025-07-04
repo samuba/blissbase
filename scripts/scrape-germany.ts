@@ -306,6 +306,29 @@ console.log(' -> Finished warming image URLs');
 
 await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
+// log all events where slug is not unique in the array
+const slugCounts = new Map<string, number>();
+eventsToInsert.forEach(event => {
+    const count = slugCounts.get(event.slug) || 0;
+    slugCounts.set(event.slug, count + 1);
+});
+const duplicateSlugs = Array.from(slugCounts.entries())
+    .filter(([_, count]) => count > 1)
+    .map(([slug, count]) => ({ slug, count }));
+if (duplicateSlugs.length > 0) {
+    console.warn(`Found ${duplicateSlugs.length} duplicate slugs:`);
+    duplicateSlugs.forEach(({ slug, count }) => {
+        console.warn(` -> "${slug}" appears ${count} times`);
+        const duplicateEvents = eventsToInsert.filter(e => e.slug === slug);
+        duplicateEvents.forEach((event, index) => {
+            console.warn(`    ${index + 1}. ${event.name} (${event.startAt.toISOString()})`);
+        });
+    });
+} else {
+    console.log('All event slugs are unique');
+}
+
+
 let successCount = 0;
 for (let i = 0; i < eventsToInsert.length; i += batchSize) {
     const batch = eventsToInsert.slice(i, i + batchSize);
