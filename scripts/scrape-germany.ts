@@ -333,6 +333,8 @@ let successCount = 0;
 for (let i = 0; i < eventsToInsert.length; i += batchSize) {
     const batch = eventsToInsert.slice(i, i + batchSize);
 
+    console.log("batch", batch)
+
     try {
         await insertEvent(batch);
         successCount += batch.length;
