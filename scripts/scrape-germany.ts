@@ -24,7 +24,7 @@ import { HeilnetzOwlScraper } from './scrape-heilnetzowl.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
 import { db } from "../src/lib/server/db.ts";
 import { insertEvent } from '../src/lib/server/events.ts';
-import { cachedImageUrl } from '../src/lib/common.ts';
+import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
 import { inArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
@@ -256,7 +256,7 @@ const eventsToInsert = allEvents.map(x => {
         ...x,
         name: cleanedName,
         soldOut,
-        slug: "", // will be generated later
+        slug: generateSlug({ name: cleanedName, startAt: new Date(x.startAt), endAt: x.endAt ? new Date(x.endAt) : undefined }),
         startAt: new Date(x.startAt),
         endAt: x.endAt ? new Date(x.endAt) : undefined,
         imageUrls: x.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!),
