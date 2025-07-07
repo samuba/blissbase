@@ -30,6 +30,7 @@
 						<a href="https://www.ganzheitlich-gesund-brandenburg.de" target="_blank">
 							ganzheitlich-gesund-brandenburg.de
 						</a>
+						<a href="https://kuschelraum.de" target="_blank">kuschelraum.de</a>
 					</div>
 				</div>
 
