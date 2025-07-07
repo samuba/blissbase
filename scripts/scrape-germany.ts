@@ -322,6 +322,7 @@ if (duplicateSlugs.length > 0) {
         const duplicateEvents = eventsToInsert.filter(e => e.slug === slug);
         duplicateEvents.forEach((event, index) => {
             console.warn(`    ${index + 1}. ${event.name} (${event.startAt.toISOString()})`);
+            console.warn(event)
         });
     });
 } else {
