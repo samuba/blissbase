@@ -317,7 +317,7 @@
 
 					<a href={routes.sources()} class="btn-sm btn w-fit">Unsere Event Quellen</a>
 
-					<p>Fehler gefunden / Feedback da lassen / Kooperation:</p>
+					<p>Fehler gefunden / Feedback geben / Kooperation:</p>
 					<a href="mailto:hi@blissbase.app" class="btn-sm btn w-fit"> Schreib uns 🙂 </a>
 				</div>
 			{/snippet}
