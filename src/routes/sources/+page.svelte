@@ -27,6 +27,9 @@
 						<a href="https://awara.events" target="_blank">awara.events</a>
 						<a href="https://heilnetz.de" target="_blank">heilnetz.de</a>
 						<a href="https://heilnetz-owl.de" target="_blank">heilnetz-owl.de</a>
+						<a href="https://www.ganzheitlich-gesund-brandenburg.de" target="_blank">
+							ganzheitlich-gesund-brandenburg.de
+						</a>
 					</div>
 				</div>
 
