@@ -7,14 +7,8 @@ heilnetz extras aus liste sind teilweise sehr wichtig
 SEO
   ld+json anbieten
 
-vitalitybase
-  festival  25
-
-
 
 falsche bilder2!! wenn hydriert wird kommen die durcheinander??
-
-falsche bilder!!! sei.jetzt events ohne bilder nehmen die falschen  http://localhost:5173/2025-06-26-yoga-im-sentmaringer-park-fuer-anfaenger
 
 https://www.sein.de/brandenburg/
 
@@ -26,7 +20,18 @@ https://www.tamanga.at/seminare
 
 https://mystikum.at/
 
+vitalitybase.at
+  festival  25
+
 create.party anbinden
+
+https://cuddlers.net/de/veranstaltungen/
+
+https://kuschelraum.de/kuschelpartys/kuschelevents-kalender/
+
+Kuschelpartys:
+https://www.facebook.com/groups/568801223891417
+
 
 on scrape error ->  telegram msg
 

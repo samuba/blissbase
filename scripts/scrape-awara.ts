@@ -21,7 +21,7 @@
 import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
 import * as cheerio from 'cheerio';
 import {
-    WebsiteScraper,
+    WebsiteScraperInterface,
     superTrim,
     parseGermanDate,
     customFetch,
@@ -29,7 +29,7 @@ import {
     cleanProseHtml
 } from './common.ts';
 import { geocodeAddressCached } from '../src/lib/server/google.ts';
-export class AwaraScraper implements WebsiteScraper {
+export class WebsiteScraper implements WebsiteScraperInterface {
 
     async scrapeWebsite(): Promise<ScrapedEvent[]> {
         console.error("--- Starting Awara Event Scraper ---");
@@ -215,7 +215,7 @@ export class AwaraScraper implements WebsiteScraper {
         const $ = cheerio.load(html);
         return superTrim($('.wpem-event-organizer-name a').attr('href'));
     }
-    extractTags(html: string) {
+    extractTags(_html: string) {
         return [];
     }
 }
@@ -286,7 +286,7 @@ async function extractEventUrls(html: string): Promise<string[]> {
 // Execute the main function only when run directly
 if (import.meta.main) {
     try {
-        const scraper = new AwaraScraper()
+        const scraper = new WebsiteScraper()
         if (process.argv.length > 2) {
             console.log(await scraper.scrapeHtmlFiles(process.argv.slice(2)))
         } else {

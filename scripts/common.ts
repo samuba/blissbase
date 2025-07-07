@@ -311,7 +311,7 @@ export function germanDateToIsoStr(year: number, month: number, day: number, hou
     return `${isoStringLocal}${offset}`;
 }
 
-export interface WebsiteScraper {
+export interface WebsiteScraperInterface {
     // scrapes the entire website and returns a list of events
     scrapeWebsite(): Promise<ScrapedEvent[]>;
 

@@ -22,7 +22,7 @@ import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 import {
     REQUEST_DELAY_MS,
-    WebsiteScraper,
+    WebsiteScraperInterface,
     cleanProseHtml,
     customFetch,
     germanDateToIsoStr
@@ -33,7 +33,7 @@ import { geocodeAddressCached } from "../src/lib/server/google.ts";
 const BASE_URL = "https://www.ganzheitlich-gesund-brandenburg.de";
 const START_PATH = "/veranstaltungen/index.php";
 
-export class GGBrandenburgScraper implements WebsiteScraper {
+export class WebsiteScraper implements WebsiteScraperInterface {
     private readonly baseUrl: string;
     private readonly startPath: string;
     private readonly requestDelayMs: number;
@@ -462,7 +462,7 @@ export class GGBrandenburgScraper implements WebsiteScraper {
 }
 
 if (import.meta.main) {
-    const scraper = new GGBrandenburgScraper();
+    const scraper = new WebsiteScraper();
     if (process.argv.length > 2) {
         console.log(JSON.stringify(await scraper.scrapeHtmlFiles(process.argv.slice(2)), null, 2));
     } else {

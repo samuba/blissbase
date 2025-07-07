@@ -26,7 +26,7 @@ import * as cheerio from 'cheerio';
 import {
     customFetch,
     makeAbsoluteUrl,
-    WebsiteScraper,
+    WebsiteScraperInterface,
     REQUEST_DELAY_MS,
     superTrim,
     cleanProseHtml,
@@ -47,7 +47,7 @@ interface EventUrlWithDate {
     downloadLink?: string;
 }
 
-export class HeilnetzOwlScraper implements WebsiteScraper {
+export class WebsiteScraper implements WebsiteScraperInterface {
     async scrapeWebsite(): Promise<ScrapedEvent[]> {
         const startUrl = 'https://www.heilnetz-owl.de/kurse-seminare';
         const allEvents: ScrapedEvent[] = [];
@@ -706,7 +706,7 @@ export class HeilnetzOwlScraper implements WebsiteScraper {
 // Execute the main function only when run directly
 if (import.meta.main) {
     try {
-        const scraper = new HeilnetzOwlScraper();
+        const scraper = new WebsiteScraper();
         if (process.argv.length > 2) {
             console.log(await scraper.scrapeHtmlFiles(process.argv.slice(2)))
         } else {

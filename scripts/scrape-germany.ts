@@ -17,12 +17,6 @@
 
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import * as schema from '../src/lib/server/schema.ts';
-import { AwaraScraper } from './scrape-awara.ts';
-import { TribehausScraper } from './scrape-tribehaus.ts';
-import { HeilnetzScraper } from './scrape-heilnetz.ts';
-import { HeilnetzOwlScraper } from './scrape-heilnetzowl.ts';
-import { SeijetztScraper } from './scrape-seijetzt.ts';
-import { GGBrandenburgScraper } from './scrape-ggbrandenburg.ts';
 import { db } from "../src/lib/server/db.ts";
 import { insertEvent } from '../src/lib/server/events.ts';
 import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
@@ -31,6 +25,52 @@ import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
 
 const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'heilnetzowl', 'seijetzt', 'ggbrandenburg'];
+
+// Mapping of source names to their scraper modules and class names
+const SCRAPER_CONFIG = {
+    awara: { module: './scrape-awara.ts' },
+    tribehaus: { module: './scrape-tribehaus.ts' },
+    heilnetz: { module: './scrape-heilnetz.ts' },
+    heilnetzowl: { module: './scrape-heilnetzowl.ts' },
+    seijetzt: { module: './scrape-seijetzt.ts' },
+    ggbrandenburg: { module: './scrape-ggbrandenburg.ts' }
+} as const;
+
+/**
+ * Dynamically scrapes a single source using its corresponding scraper
+ * @param source - The source name to scrape
+ * @returns Promise resolving to scraped events
+ */
+async function scrapeSource(source: string): Promise<ScrapedEvent[]> {
+    console.log(`Scraping ${source}...`);
+
+    try {
+        const config = SCRAPER_CONFIG[source as keyof typeof SCRAPER_CONFIG];
+        if (!config) {
+            throw new Error(`Unknown source: ${source}`);
+        }
+
+        // Dynamic import of the scraper module
+        const scraperModule = await import(config.module);
+        const ScraperClass = scraperModule.WebsiteScraper;
+
+        if (!ScraperClass) {
+            throw new Error(`WebsiteScraper class not found in ${config.module}`);
+        }
+
+        const events = await new ScraperClass().scrapeWebsite();
+        console.log(` -> Found ${events.length} events.`);
+
+        if (events.length === 0) {
+            throw new Error(`No ${source} events found`);
+        }
+
+        return events;
+    } catch (error) {
+        console.error(`Error scraping ${source}:`, error);
+        throw error;
+    }
+}
 
 async function main() {
     console.log('--- Starting Germany Event Scraper ---');
@@ -69,116 +109,15 @@ async function main() {
         console.log('Clean flag detected - will delete existing events from target sources before insertion.');
     }
 
-    let allEvents: ScrapedEvent[] = [];
+    // --- Determine sources to scrape ---
+    const sourcesToScrape = targetSourceArg ? [targetSourceArg] : SCRAPE_SOURCES;
 
     // --- Run Scrapers in Parallel ---
-    const scrapePromises: Promise<ScrapedEvent[]>[] = [];
-
-    if (!targetSourceArg || targetSourceArg === 'awara') {
-        scrapePromises.push(
-            (async () => {
-                console.log('Scraping Awara...');
-                try {
-                    const events = await new AwaraScraper().scrapeWebsite();
-                    console.log(` -> Found ${events.length} events.`);
-                    if (events.length === 0) throw new Error('No awara events found');
-                    return events;
-                } catch (error) {
-                    console.error('Error scraping Awara:', error);
-                    throw error;
-                }
-            })()
-        );
-    }
-
-    if (!targetSourceArg || targetSourceArg === 'tribehaus') {
-        scrapePromises.push(
-            (async () => {
-                console.log('Scraping Tribehaus...');
-                try {
-                    const events = await new TribehausScraper().scrapeWebsite();
-                    console.log(` -> Found ${events.length} events.`);
-                    if (events.length === 0) throw new Error('No tribehaus events found');
-                    return events;
-                } catch (error) {
-                    console.error('Error scraping Tribehaus:', error);
-                    throw error;
-                }
-            })()
-        );
-    }
-
-    if (!targetSourceArg || targetSourceArg === 'heilnetz') {
-        scrapePromises.push(
-            (async () => {
-                console.log('Scraping Heilnetz...');
-                try {
-                    const events = await new HeilnetzScraper().scrapeWebsite();
-                    console.log(` -> Found ${events.length} events.`);
-                    if (events.length === 0) throw new Error('No heilnetz events found');
-                    return events;
-                } catch (error) {
-                    console.error('Error scraping Heilnetz:', error);
-                    throw error;
-                }
-            })()
-        );
-    }
-
-    if (!targetSourceArg || targetSourceArg === 'heilnetzowl') {
-        scrapePromises.push(
-            (async () => {
-                console.log('Scraping HeilnetzOwl...');
-                try {
-                    const events = await new HeilnetzOwlScraper().scrapeWebsite();
-                    console.log(` -> Found ${events.length} events.`);
-                    if (events.length === 0) throw new Error('No heilnetzowl events found');
-                    return events;
-                } catch (error) {
-                    console.error('Error scraping HeilnetzOwl:', error);
-                    throw error;
-                }
-            })()
-        );
-    }
-
-    if (!targetSourceArg || targetSourceArg === 'seijetzt') {
-        scrapePromises.push(
-            (async () => {
-                console.log('Scraping SeiJetzt...');
-                try {
-                    const events = await new SeijetztScraper().scrapeWebsite();
-                    console.log(` -> Found ${events.length} events.`);
-                    if (events.length === 0) throw new Error('No seijetzt events found');
-                    return events;
-                } catch (error) {
-                    console.error('Error scraping SeiJetzt:', error);
-                    throw error;
-                }
-            })()
-        );
-    }
-
-    if (!targetSourceArg || targetSourceArg === 'ggbrandenburg') {
-        scrapePromises.push(
-            (async () => {
-                console.log('Scraping GGBrandenburg...');
-                try {
-                    const events = await new GGBrandenburgScraper().scrapeWebsite();
-                    console.log(` -> Found ${events.length} events.`);
-                    if (events.length === 0) throw new Error('No ggbrandenburg events found');
-                    return events;
-                } catch (error) {
-                    console.error('Error scraping ggbrandenburg:', error);
-                    throw error;
-                }
-            })()
-        );
-    }
+    const scrapePromises = sourcesToScrape.map(source => scrapeSource(source));
 
     // Wait for all scrapers to complete
     const results = await Promise.all(scrapePromises);
-    allEvents = results.flat();
+    const allEvents = results.flat();
 
     console.log(`--- Total events scraped this run: ${allEvents.length} ---`);
 
@@ -352,7 +291,7 @@ async function main() {
             slugCounts.set(event.slug, count + 1);
         });
         const duplicateSlugs = Array.from(slugCounts.entries())
-            .filter(([slug, count]) => count > 1)
+            .filter(([, count]) => count > 1)
             .map(([slug, count]) => ({ slug, count }));
 
         if (duplicateSlugs.length > 0) {

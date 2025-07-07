@@ -14,7 +14,7 @@ import {
     customFetch,
     parseGermanDateTime,
     REQUEST_DELAY_MS,
-    WebsiteScraper,
+    WebsiteScraperInterface,
     makeAbsoluteUrl as commonMakeAbsoluteUrl,
     superTrim,
     cleanProseHtml
@@ -28,7 +28,7 @@ function makeAbsoluteUrl(url: string | undefined): string | undefined {
     return commonMakeAbsoluteUrl(url, BASE_URL);
 }
 
-export class TribehausScraper implements WebsiteScraper {
+export class WebsiteScraper implements WebsiteScraperInterface {
     // Parses a listing page to get event permalinks and the next page URL
     private parseEventList(html: string): { permalinks: string[], nextPageUrl: string | null } {
         const $ = cheerio.load(html);
@@ -377,7 +377,7 @@ export class TribehausScraper implements WebsiteScraper {
 // Main execution
 if (import.meta.main) {
     try {
-        const scraper = new TribehausScraper();
+        const scraper = new WebsiteScraper();
         if (process.argv.length > 2) {
             console.log(await scraper.scrapeHtmlFiles(process.argv.slice(2)))
         } else {

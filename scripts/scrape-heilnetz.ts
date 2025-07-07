@@ -25,7 +25,7 @@ import * as cheerio from 'cheerio';
 import {
     customFetch,
     makeAbsoluteUrl,
-    WebsiteScraper,
+    WebsiteScraperInterface,
     REQUEST_DELAY_MS,
     cleanProseHtml,
     germanDateToIsoStr
@@ -41,7 +41,7 @@ interface EventOccurrence {
     downloadLink?: string;
 }
 
-export class HeilnetzScraper implements WebsiteScraper {
+export class WebsiteScraper implements WebsiteScraperInterface {
     async scrapeWebsite(): Promise<ScrapedEvent[]> {
         const startUrl = 'https://www.heilnetz.de/aktuelle-termine.html';
         const allEvents: ScrapedEvent[] = [];
@@ -565,7 +565,7 @@ export class HeilnetzScraper implements WebsiteScraper {
         return undefined;
     }
 
-    extractTags(html: string): string[] | undefined {
+    extractTags(_html: string): string[] | undefined {
         return [];
     }
 
@@ -674,7 +674,7 @@ export class HeilnetzScraper implements WebsiteScraper {
 // Execute the main function only when run directly
 if (import.meta.main) {
     try {
-        const scraper = new HeilnetzScraper();
+        const scraper = new WebsiteScraper();
         if (process.argv.length > 2) {
             console.log(await scraper.scrapeHtmlFiles(process.argv.slice(2)))
         } else {

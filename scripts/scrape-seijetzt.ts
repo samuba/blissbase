@@ -22,7 +22,7 @@ import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 import {
     REQUEST_DELAY_MS,
-    WebsiteScraper, cleanProseHtml, // Import WebsiteScraper
+    WebsiteScraperInterface,
     customFetch,
     germanDateToIsoStr,
     superTrim
@@ -33,7 +33,7 @@ import { geocodeAddressCached } from "../src/lib/server/google.ts";
 const BASE_URL = "https://sei.jetzt";
 const START_PATH = "/"; // Main page seems to list events
 
-export class SeijetztScraper implements WebsiteScraper {
+export class WebsiteScraper implements WebsiteScraperInterface {
     private readonly baseUrl: string;
     private readonly startPath: string;
     private readonly requestDelayMs: number;
@@ -400,7 +400,7 @@ export class SeijetztScraper implements WebsiteScraper {
 }
 
 if (import.meta.main) {
-    const scraper = new SeijetztScraper();
+    const scraper = new WebsiteScraper();
     if (process.argv.length > 2) {
         console.log(await scraper.scrapeHtmlFiles(process.argv.slice(2)))
     } else {
