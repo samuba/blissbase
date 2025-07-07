@@ -32,6 +32,7 @@ https://kuschelraum.de/kuschelpartys/kuschelevents-kalender/
 Kuschelpartys:
 https://www.facebook.com/groups/568801223891417
 
+http://www.alle-kuschelpartys.de/
 
 on scrape error ->  telegram msg
 
