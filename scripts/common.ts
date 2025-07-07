@@ -222,6 +222,14 @@ export function cleanProseHtml<T extends string | undefined | null>(html: T): T 
     // Remove styling attributes from all elements
     $('*').removeAttr('style class align id dir');
 
+    // remvove all p tags that only contain whitespace or &nbsp;
+    $('p').each(function () {
+        const text = $(this).text();
+        if (text.trim() === '' || text === '&nbsp;' || text === '&nbsp;&nbsp;') {
+            $(this).remove();
+        }
+    });
+
     let str = getHtmlBody($);
     str = str.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');
     str = str.replaceAll('<p><br></p>', '');
