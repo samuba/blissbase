@@ -225,7 +225,7 @@ export function cleanProseHtml<T extends string | undefined | null>(html: T): T 
     // remvove all p tags that only contain whitespace or &nbsp;
     $('p').each(function () {
         const text = $(this).text();
-        if (text.trim() === '' || text === '&nbsp;' || text === '&nbsp;&nbsp;') {
+        if (text.replaceAll('&nbsp;', '').trim() === '') {
             $(this).remove();
         }
     });
