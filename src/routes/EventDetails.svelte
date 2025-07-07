@@ -27,7 +27,7 @@
 	});
 
 	let showQuelleInsteadOfAnmelden = $state(
-		['heilnetz', 'heilnetzowl', 'ggbrandenburg'].includes(event.source)
+		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source)
 	);
 
 	function fixTelegramUnsupportedChars(text: string) {

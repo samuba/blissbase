@@ -24,15 +24,14 @@ import { inArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
 
-
-// Mapping of source names to their scraper modules and class names
 const SCRAPER_CONFIG = {
     awara: { module: './scrape-awara.ts' },
     tribehaus: { module: './scrape-tribehaus.ts' },
     heilnetz: { module: './scrape-heilnetz.ts' },
     heilnetzowl: { module: './scrape-heilnetzowl.ts' },
     seijetzt: { module: './scrape-seijetzt.ts' },
-    ggbrandenburg: { module: './scrape-ggbrandenburg.ts' }
+    ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
+    kuschelraum: { module: './scrape-kuschelraum.ts' }
 } as const;
 
 const SCRAPE_SOURCES = Object.keys(SCRAPER_CONFIG) as (keyof typeof SCRAPER_CONFIG)[];
