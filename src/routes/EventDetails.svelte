@@ -26,6 +26,10 @@
 		}
 	});
 
+	let showQuelleInsteadOfAnmelden = $state(
+		['heilnetz', 'heilnetzowl', 'ggbrandenburg'].includes(event.source)
+	);
+
 	function fixTelegramUnsupportedChars(text: string) {
 		return text
 			.replace(/'/g, '"')
@@ -135,7 +139,7 @@
 				</div>
 			{/if}
 
-			{#if event.source === 'heilnetz' || event.source === 'heilnetzowl'}
+			{#if showQuelleInsteadOfAnmelden}
 				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
 					Quelle
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
