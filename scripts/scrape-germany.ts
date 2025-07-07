@@ -1,5 +1,5 @@
 /**
- * Main script to orchestrate scraping from multiple sources (Awara, Tribehaus, Heilnetz, SeiJetzt)
+ * Main script to orchestrate scraping from multiple sources (Awara, Tribehaus, Heilnetz, SeiJetzt, ...)
  * and store the results in a postgres database using Drizzle ORM.
  *
  * Requires Bun, for network requests and file system operations.
@@ -24,7 +24,6 @@ import { inArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
 
-const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'heilnetzowl', 'seijetzt', 'ggbrandenburg'];
 
 // Mapping of source names to their scraper modules and class names
 const SCRAPER_CONFIG = {
@@ -35,6 +34,8 @@ const SCRAPER_CONFIG = {
     seijetzt: { module: './scrape-seijetzt.ts' },
     ggbrandenburg: { module: './scrape-ggbrandenburg.ts' }
 } as const;
+
+const SCRAPE_SOURCES = Object.keys(SCRAPER_CONFIG) as (keyof typeof SCRAPER_CONFIG)[];
 
 /**
  * Dynamically scrapes a single source using its corresponding scraper
@@ -50,16 +51,12 @@ async function scrapeSource(source: string): Promise<ScrapedEvent[]> {
             throw new Error(`Unknown source: ${source}`);
         }
 
-        // Dynamic import of the scraper module
-        const scraperModule = await import(config.module);
-        const ScraperClass = scraperModule.WebsiteScraper;
-
+        const ScraperClass = (await import(config.module)).WebsiteScraper;
         if (!ScraperClass) {
             throw new Error(`WebsiteScraper class not found in ${config.module}`);
         }
-
         const events = await new ScraperClass().scrapeWebsite();
-        console.log(` -> Found ${events.length} events.`);
+        console.log(` -> Found ${events.length} events in ${source}`);
 
         if (events.length === 0) {
             throw new Error(`No ${source} events found`);
