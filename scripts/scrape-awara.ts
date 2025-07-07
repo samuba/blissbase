@@ -194,8 +194,19 @@ export class AwaraScraper implements WebsiteScraper {
         const $ = cheerio.load(html);
         const imageUrls: string[] = $('.wpem-event-single-image img').map((index, element) => $(element).attr('src')).get();
         if (!imageUrls) return [];
+
+        // handle this placeholder image as its used often and ugly
+        if (imageUrls[0]?.includes('wp-event-manager/assets/images/wpem-placeholder.jpg')) {
+            if (imageUrls.length > 1) {
+                return imageUrls.slice(1);
+            } else {
+                return [];
+            }
+        };
         return imageUrls;
     }
+
+
     extractHost(html: string) {
         const $ = cheerio.load(html);
         return superTrim($('.wpem-event-organizer-name a').text());
