@@ -247,10 +247,84 @@ function cleanEventNameAndDetectSoldOut(name: string): { cleanedName: string; so
     return { cleanedName, soldOut };
 }
 
+async function preWarmImageUrls(events: typeof eventsToInsert) {
+    // Pre-warm image URLs by making HEAD requests to ensure they're cached
+    console.log('Pre-warming image URLs...');
+    const uniqueImageUrls = [...new Set(events.flatMap(e => e.imageUrls ?? []))];
+    console.log(` -> Found ${uniqueImageUrls.length} unique image URLs to warm`);
+    const batchSize = 15;
+    for (let i = 0; i < uniqueImageUrls.length; i += batchSize) {
+        const batch = uniqueImageUrls.slice(i, i + batchSize);
+        await Promise.all(batch.map(url =>
+            fetch(url)
+                .then(res => res.ok ? res.text() : Promise.reject(res.headers.get('x-cld-error')))
+                .catch((e) => {
+                    console.warn(`-> Failed to warm URL. Reverting to original URL: ${url}`, e)
+                    const ev = events.find(ev => ev.imageUrls?.includes(url))
+                    if (!ev) {
+                        console.error(`-> Failed to find event with image URL: ${url}`)
+                        return
+                    }
+                    ev.imageUrls = [url.replace(cachedImageUrl(url)!, ''), ...(ev.imageUrls?.slice(1) ?? [])]
+                })
+        ));
+        console.log(` -> Warmed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uniqueImageUrls.length / batchSize)}`);
+    }
+    console.log(' -> Finished warming image URLs');
+}
+
+function deduplicateEvents(events: typeof eventsToInsert) {
+    // log all events where slug is not unique in the array and deduplicate
+    const slugCounts = new Map<string, number>();
+    events.forEach(event => {
+        const count = slugCounts.get(event.slug) || 0;
+        slugCounts.set(event.slug, count + 1);
+    });
+    const duplicateSlugs = Array.from(slugCounts.entries())
+        .filter(([slug, count]) => count > 1)
+        .map(([slug, count]) => ({ slug, count }));
+
+    if (duplicateSlugs.length > 0) {
+        console.warn(`Found ${duplicateSlugs.length} duplicate slugs:`);
+        duplicateSlugs.forEach(({ slug, count }) => {
+            console.warn(` -> "${slug}" appears ${count} times`);
+            const duplicateEvents = events.filter(e => e.slug === slug);
+            duplicateEvents.forEach((event, index) => {
+                console.warn(`    ${index + 1}. ${event.name} (${event.startAt.toISOString()})`);
+                console.warn(event)
+            });
+        });
+
+        // Deduplicate by keeping only the last occurrence of each slug
+        const uniqueEvents = new Map<string, typeof eventsToInsert[number]>();
+        events.forEach(event => {
+            uniqueEvents.set(event.slug, event);
+        });
+        console.warn(`Deduplicated events. Reduced from ${slugCounts.size} to ${events.length} events`);
+        return Array.from(uniqueEvents.values());
+    } else {
+        console.log('All event slugs are unique');
+        return events;
+    }
+}
+
+function shouldBeListed({ name }: { name: string }): boolean {
+    // yoga classes are too boring to list
+    const nameBlacklist = [
+        'hatha yoga',
+        'hatha-yoga',
+        'yin yoga',
+        'yin-yoga',
+        'yoga im ',
+        'yoga für ',
+    ];
+    return nameBlacklist.every(x => !name.toLowerCase().includes(x));
+}
+
 console.log(`Inserting/Updating ${allEvents.length} events into the database...`);
 
 // Prepare data for insertion, mapping ScrapedEvent to the schema format
-const eventsToInsert = allEvents.map(x => {
+let eventsToInsert = allEvents.map(x => {
     const { cleanedName, soldOut } = cleanEventNameAndDetectSoldOut(x.name);
     return {
         ...x,
@@ -266,71 +340,14 @@ const eventsToInsert = allEvents.map(x => {
     } satisfies InsertEvent;
 });
 
-function shouldBeListed({ name }: { name: string }): boolean {
-    // yoga classes are too boring to list
-    const nameBlacklist = [
-        'hatha yoga',
-        'hatha-yoga',
-        'yin yoga',
-        'yin-yoga',
-        'yoga im ',
-        'yoga für ',
-    ];
-    return nameBlacklist.every(x => !name.toLowerCase().includes(x));
-}
-
-// Pre-warm image URLs by making HEAD requests to ensure they're cached
-console.log('Pre-warming image URLs...');
-const uniqueImageUrls = [...new Set(eventsToInsert.flatMap(e => e.imageUrls ?? []))];
-console.log(` -> Found ${uniqueImageUrls.length} unique image URLs to warm`);
-const batchSize = 15;
-for (let i = 0; i < uniqueImageUrls.length; i += batchSize) {
-    const batch = uniqueImageUrls.slice(i, i + batchSize);
-    await Promise.all(batch.map(url =>
-        fetch(url)
-            .then(res => res.ok ? res.text() : Promise.reject(res.headers.get('x-cld-error')))
-            .catch((e) => {
-                console.warn(`-> Failed to warm URL. Reverting to original URL: ${url}`, e)
-                const ev = eventsToInsert.find(ev => ev.imageUrls?.includes(url))
-                if (!ev) {
-                    console.error(`-> Failed to find event with image URL: ${url}`)
-                    return
-                }
-                ev.imageUrls = [url.replace(cachedImageUrl(url)!, ''), ...(ev.imageUrls?.slice(1) ?? [])]
-            })
-    ));
-    console.log(` -> Warmed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uniqueImageUrls.length / batchSize)}`);
-}
-console.log(' -> Finished warming image URLs');
-
+eventsToInsert = deduplicateEvents(eventsToInsert);
 
 await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
-// log all events where slug is not unique in the array
-const slugCounts = new Map<string, number>();
-eventsToInsert.forEach(event => {
-    const count = slugCounts.get(event.slug) || 0;
-    slugCounts.set(event.slug, count + 1);
-});
-const duplicateSlugs = Array.from(slugCounts.entries())
-    .filter(([_, count]) => count > 1)
-    .map(([slug, count]) => ({ slug, count }));
-if (duplicateSlugs.length > 0) {
-    console.warn(`Found ${duplicateSlugs.length} duplicate slugs:`);
-    duplicateSlugs.forEach(({ slug, count }) => {
-        console.warn(` -> "${slug}" appears ${count} times`);
-        const duplicateEvents = eventsToInsert.filter(e => e.slug === slug);
-        duplicateEvents.forEach((event, index) => {
-            console.warn(`    ${index + 1}. ${event.name} (${event.startAt.toISOString()})`);
-            console.warn(event)
-        });
-    });
-} else {
-    console.log('All event slugs are unique');
-}
-
+await preWarmImageUrls(eventsToInsert);
 
 let successCount = 0;
+const batchSize = 15;
 for (let i = 0; i < eventsToInsert.length; i += batchSize) {
     const batch = eventsToInsert.slice(i, i + batchSize);
 
