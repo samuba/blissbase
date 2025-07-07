@@ -220,7 +220,7 @@ export function cleanProseHtml<T extends string | undefined | null>(html: T): T 
 
     const $ = cheerio.load(html);
     // Remove styling attributes from all elements
-    $('*').removeAttr('style class align');
+    $('*').removeAttr('style class align id dir');
 
     let str = getHtmlBody($);
     str = str.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');

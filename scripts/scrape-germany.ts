@@ -22,6 +22,7 @@ import { TribehausScraper } from './scrape-tribehaus.ts';
 import { HeilnetzScraper } from './scrape-heilnetz.ts';
 import { HeilnetzOwlScraper } from './scrape-heilnetzowl.ts';
 import { SeijetztScraper } from './scrape-seijetzt.ts';
+import { GGBrandenburgScraper } from './scrape-ggbrandenburg.ts';
 import { db } from "../src/lib/server/db.ts";
 import { insertEvent } from '../src/lib/server/events.ts';
 import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
@@ -29,7 +30,7 @@ import { inArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
 
-const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'heilnetzowl', 'seijetzt'];
+const SCRAPE_SOURCES = ['awara', 'tribehaus', 'heilnetz', 'heilnetzowl', 'seijetzt', 'ggbrandenburg'];
 
 async function main() {
     console.log('--- Starting Germany Event Scraper ---');
@@ -152,6 +153,23 @@ async function main() {
                     return events;
                 } catch (error) {
                     console.error('Error scraping SeiJetzt:', error);
+                    throw error;
+                }
+            })()
+        );
+    }
+
+    if (!targetSourceArg || targetSourceArg === 'ggbrandenburg') {
+        scrapePromises.push(
+            (async () => {
+                console.log('Scraping GGBrandenburg...');
+                try {
+                    const events = await new GGBrandenburgScraper().scrapeWebsite();
+                    console.log(` -> Found ${events.length} events.`);
+                    if (events.length === 0) throw new Error('No ggbrandenburg events found');
+                    return events;
+                } catch (error) {
+                    console.error('Error scraping ggbrandenburg:', error);
                     throw error;
                 }
             })()
