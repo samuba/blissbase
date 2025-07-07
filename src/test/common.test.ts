@@ -1,4 +1,4 @@
-import { generateSlug } from '$lib/common';
+import { generateSlug } from '../lib/common';
 import { describe, it, expect } from 'vitest';
 
 describe('generateSlug', () => {
