@@ -233,7 +233,7 @@ export function cleanProseHtml<T extends string | undefined | null>(html: T): T 
     let str = getHtmlBody($);
 
     const selfMadeLineSeperators = /[—|\-|=|–|‒|⸻|⸺|―|⁓|~|#]{3,}/gm
-    str = str.replace(selfMadeLineSeperators, '<hr class="border-primary my-4">');
+    str = str.replace(selfMadeLineSeperators, '<hr class="border-primary">');
 
     str = str.replace(/\n<p>\n<p>/g, '\n<p>').replace(/<p>\n<p>/g, '<p>');
     str = str.replaceAll('<p><br></p>', '');
