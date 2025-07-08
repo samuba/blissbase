@@ -116,6 +116,8 @@ export function onTap(
                 deltaY < MAX_CLICK_MOVEMENT_PX
             ) {
                 if (downEvent) {
+                    // Prevent event propagation to avoid triggering other handlers
+                    downEvent.stopPropagation();
                     handler(downEvent);
                 }
             }
@@ -160,6 +162,8 @@ export function onTap(
                 return;
             }
 
+            // Prevent event propagation to avoid triggering other handlers
+            event.stopPropagation();
             handler(event);
         };
 
