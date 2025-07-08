@@ -26,6 +26,44 @@ export function onTap(
         }
 
         /**
+         * Checks if the element is behind a dialog by finding the highest dialog in the DOM
+         * and checking if our element is outside of it
+         */
+        const isElementBehindDialog = (): boolean => {
+            // Find the highest dialog in the DOM (closest to body)
+            const dialogSelectors = [
+                '[role="dialog"]',
+                '[aria-modal="true"]',
+                '.modal',
+                '.dialog',
+                '[data-state="open"]'
+            ];
+
+            let highestDialog: Element | null = null;
+
+            for (const selector of dialogSelectors) {
+                const dialogs = document.querySelectorAll(selector);
+                for (const dialog of dialogs) {
+                    if (!highestDialog || dialog.compareDocumentPosition(highestDialog) & Node.DOCUMENT_POSITION_PRECEDING) {
+                        highestDialog = dialog;
+                    }
+                }
+            }
+
+            if (!highestDialog) {
+                return false; // No dialog open
+            }
+
+            // Check if our element is inside the dialog
+            if (highestDialog.contains(element)) {
+                return false; // Element is inside dialog, allow interaction
+            }
+
+            // Check if our element is behind the dialog in the DOM
+            return !(element.compareDocumentPosition(highestDialog) & Node.DOCUMENT_POSITION_FOLLOWING);
+        };
+
+        /**
          * Checks if the event target matches the excluded selector
          */
         const shouldExclude = (event: PointerEvent | MouseEvent): boolean => {
@@ -58,9 +96,6 @@ export function onTap(
                 return;
             }
 
-            // Use stopImmediatePropagation to prevent other listeners from being called
-            event.stopImmediatePropagation();
-
             // Early exit optimization: if movement exceeds threshold, mark as dragging
             const deltaX = Math.abs(event.clientX - startX);
             const deltaY = Math.abs(event.clientY - startY);
@@ -91,9 +126,6 @@ export function onTap(
                 return;
             }
 
-            // Use stopImmediatePropagation to prevent other listeners from being called
-            event.stopImmediatePropagation();
-
             // Store the initial event before resetting state
             const downEvent = initialPointerDownEvent;
 
@@ -111,6 +143,11 @@ export function onTap(
                 return;
             }
 
+            // Check if element is behind a dialog - if so, don't trigger the handler
+            if (isElementBehindDialog()) {
+                return;
+            }
+
             const endTime = performance.now();
             const duration = endTime - startTime;
             const deltaX = Math.abs(event.clientX - startX);
@@ -122,9 +159,6 @@ export function onTap(
                 deltaY < MAX_CLICK_MOVEMENT_PX
             ) {
                 if (downEvent) {
-                    // Prevent event propagation and default behavior to avoid triggering other handlers
-                    downEvent.preventDefault();
-                    downEvent.stopPropagation();
                     handler(downEvent);
                 }
             }
@@ -134,9 +168,6 @@ export function onTap(
             if (event.pointerId !== pointerId) {
                 return;
             }
-
-            // Use stopImmediatePropagation to prevent other listeners from being called
-            event.stopImmediatePropagation();
 
             cleanupPointerCapture();
             resetState();
@@ -152,8 +183,10 @@ export function onTap(
                 return;
             }
 
-            // Use stopImmediatePropagation to prevent other listeners from being called
-            event.stopImmediatePropagation();
+            // Check if element is behind a dialog - if so, don't start tracking this pointer
+            if (isElementBehindDialog()) {
+                return;
+            }
 
             pointerId = event.pointerId;
             initialPointerDownEvent = event;
@@ -175,28 +208,30 @@ export function onTap(
                 return;
             }
 
-            // Prevent event propagation and default behavior to avoid triggering other handlers
-            event.preventDefault();
-            event.stopPropagation();
+            // Check if element is behind a dialog - if so, don't trigger the handler
+            if (isElementBehindDialog()) {
+                return;
+            }
+
             handler(event);
         };
 
         if (isTouchDevice) {
-            // Add all listeners upfront for better performance with capture to ensure they run first
-            element.addEventListener('pointerdown', handlePointerDown, { capture: true });
-            element.addEventListener('pointermove', handlePointerMove, { capture: true });
-            element.addEventListener('pointerup', handlePointerUp, { capture: true });
-            element.addEventListener('pointercancel', handlePointerCancel, { capture: true });
+            // Add all listeners upfront for better performance
+            element.addEventListener('pointerdown', handlePointerDown);
+            element.addEventListener('pointermove', handlePointerMove);
+            element.addEventListener('pointerup', handlePointerUp);
+            element.addEventListener('pointercancel', handlePointerCancel);
         } else {
-            element.addEventListener('click', handleClick, { capture: true });
+            element.addEventListener('click', handleClick);
         }
 
         return () => {
             if (isTouchDevice) {
-                element.removeEventListener('pointerdown', handlePointerDown, { capture: true });
-                element.removeEventListener('pointermove', handlePointerMove, { capture: true });
-                element.removeEventListener('pointerup', handlePointerUp, { capture: true });
-                element.removeEventListener('pointercancel', handlePointerCancel, { capture: true });
+                element.removeEventListener('pointerdown', handlePointerDown);
+                element.removeEventListener('pointermove', handlePointerMove);
+                element.removeEventListener('pointerup', handlePointerUp);
+                element.removeEventListener('pointercancel', handlePointerCancel);
 
                 // Cleanup any active pointer capture
                 if (pointerId !== null) {
@@ -204,7 +239,7 @@ export function onTap(
                     resetState();
                 }
             } else {
-                element.removeEventListener('click', handleClick, { capture: true });
+                element.removeEventListener('click', handleClick);
             }
         };
     };
