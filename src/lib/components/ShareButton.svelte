@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { Popover } from 'bits-ui';
+	import { onTap } from '$lib/attachments';
 
 	const { title, text, url }: { title?: string; text?: string; url?: string } = $props();
 
@@ -14,6 +15,10 @@
 
 	let showCopiedNotice = $state(false);
 	let customAnchor = $state<HTMLButtonElement>();
+
+	const isTouchDevice = $derived(
+		typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+	);
 
 	async function share() {
 		if (!navigator.share) {
@@ -31,22 +36,24 @@
 	}
 </script>
 
-<button class="btn" bind:this={customAnchor}>
-	<!-- Desktop -->
-	<div onclick={copyToClipboard} class="hidden items-center gap-1.5 pointer-fine:flex">
+<button
+	{@attach onTap(() => {
+		if (isTouchDevice) {
+			share();
+		} else {
+			copyToClipboard();
+		}
+	})}
+	bind:this={customAnchor}
+	class="btn flex items-center gap-1.5"
+>
+	{#if isTouchDevice && !!navigator.share}
+		<i class={['size-5', isAppleDevice ? 'icon-[lucide--share]' : 'icon-[ph--share-network]']}></i>
+		Teilen
+	{:else}
 		<i class="icon-[ph--clipboard] size-5"></i>
 		Link kopieren
-	</div>
-
-	<!-- Mobile -->
-	<div onclick={share} class="hidden items-center gap-1.5 pointer-coarse:flex">
-		{#if isAppleDevice}
-			<i class="icon-[lucide--share] size-5"></i>
-		{:else}
-			<i class="icon-[ph--share-network] size-5"></i>
-		{/if}
-		Teilen
-	</div>
+	{/if}
 </button>
 
 <Popover.Root bind:open={showCopiedNotice}>
