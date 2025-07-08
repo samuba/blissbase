@@ -38,7 +38,7 @@
 	</div>
 
 	<!-- Mobile -->
-	<div onclick={share} class="hidden pointer-coarse:block">
+	<div onclick={share} class="hidden items-center gap-1.5 pointer-coarse:flex">
 		{#if isAppleDevice}
 			<i class="icon-[lucide--share] size-5"></i>
 		{:else}
