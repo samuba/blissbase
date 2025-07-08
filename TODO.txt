@@ -2,6 +2,8 @@ button: share event
 
 tags für alle events
 
+Kanäle richtig unterstützen!
+
 BUG: messages mit mehreren bildern haben keinen text??
 
 heilnetz extras aus liste sind teilweise sehr wichtig
