@@ -17,10 +17,11 @@
 
 	async function share() {
 		if (!navigator.share) {
-			await navigator.share({ url, title, text });
-		} else {
 			await copyToClipboard();
+			return;
 		}
+
+		await navigator.share({ url, title, text });
 	}
 
 	async function copyToClipboard() {
