@@ -4,6 +4,7 @@
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
 	import RandomPlaceholderImg from '$lib/components/RandomPlaceholderImg.svelte';
+	import ShareButton from '$lib/components/ShareButton.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -216,6 +217,8 @@
 					{/snippet}
 				</PopOver>
 			{/if}
+
+			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 		</div>
 
 		{#if event.description}
