@@ -3,7 +3,6 @@
 	import { Dialog } from 'bits-ui';
 	import EventDetails from './EventDetails.svelte';
 	import { page } from '$app/state';
-	import { onTap } from '$lib/attachments';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 
 	let { event: eventParam }: { event: UiEvent | undefined } = $props();
@@ -61,7 +60,7 @@
 		>
 			<div class="sticky top-4 right-4 z-20 ml-auto h-0 w-max">
 				<button
-					{@attach onTap(() => window.history.back())}
+					onclick={() => window.history.back()}
 					class="btn btn-circle shadow-lg"
 					aria-label="Schließen"
 				>
@@ -80,7 +79,7 @@
 			{/if}
 
 			<div class="flex w-full justify-center gap-6 pb-6">
-				<button {@attach onTap(() => window.history.back())} class="btn btn-sm">
+				<button onclick={() => window.history.back()} class="btn btn-sm">
 					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 					Zurück zur Übersicht
 				</button>

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { Popover } from 'bits-ui';
-	import { onTap } from '$lib/attachments';
 
 	const { title, text, url }: { title?: string; text?: string; url?: string } = $props();
 
@@ -37,13 +36,13 @@
 </script>
 
 <button
-	{@attach onTap(() => {
+	onclick={() => {
 		if (isTouchDevice) {
 			share();
 		} else {
 			copyToClipboard();
 		}
-	})}
+	}}
 	bind:this={customAnchor}
 	class="btn flex items-center gap-1.5"
 >
