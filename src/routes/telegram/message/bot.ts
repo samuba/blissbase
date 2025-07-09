@@ -3,10 +3,10 @@ import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
 import { cachedImageUrl } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
-import { insertEvent } from '$lib/server/events';
+import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
-import type { TelegramCloudflareBody } from '$lib/../../blissbase-telegram-entry/src/index';
+import type { TelegramCloudflareBody } from '$lib/telegramCommon';
 
 export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl, fromGroup }: TelegramCloudflareBody) {
     if (!msgTextHtml.trim()) return
@@ -93,7 +93,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         console.log({ dbEntry })
 
-        const dbEvent = await insertEvent(dbEntry)
+        const dbEvent = (await insertEvents([dbEntry]))[0]
 
         await reply(ctx, "✅ Der Event wurde in BlissBase eingetragen:\n\nhttps://blissbase.app/" + dbEvent.slug, fromGroup, msgId)
     } catch (error) {

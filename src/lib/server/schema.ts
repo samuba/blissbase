@@ -33,7 +33,7 @@ export const events = pgTable('events', {
 export const botMessages = pgTable('message_to_bot', {
     id: uuid().primaryKey().defaultRandom(),
     data: jsonb().notNull(),
-    text: text().generatedAlwaysAs((): SQL => sql`(data->>'text')::text`),
+    text: text().generatedAlwaysAs((): SQL => sql`COALESCE((data->>'text')::text, (data->>'caption')::text)`),
     answer: text(),
     createdAt: timestamp().notNull().defaultNow(),
 });

@@ -1,18 +1,19 @@
-button: share event
+telegram
+  Kanäle richtig unterstützen!
+  gruppen für städte haben manchmal keinen ort -> default ort für bestimmte gruppen "Bielefeld" 
+  BUG: messages mit mehreren bildern haben keinen text??
 
 tags für alle events
 
-Kanäle richtig unterstützen!
-
-BUG: messages mit mehreren bildern haben keinen text??
 
 heilnetz extras aus liste sind teilweise sehr wichtig
 
 SEO
   ld+json anbieten
+  "Tantra in Bielefeld und Umgebung"
+  "Events in Bielefeld"
 
-
-falsche bilder2!! wenn hydriert wird kommen die durcheinander??
+BUG falsche bilder2!! wenn hydriert wird kommen die durcheinander??
 
 https://kuschelpartys.de
 

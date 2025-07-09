@@ -20,7 +20,8 @@
 		"db:studio": "drizzle-kit studio",
 		"db:pull": "drizzle-kit pull",
 		"scrape": "bun run scripts/scrape-germany.ts",
-		"scrapeImport": "bun run scripts/import-events.ts"
+		"scrapeImport": "bun run scripts/import-events.ts",
+		"deploy:cf": "npx wrangler deploy --cwd blissbase-telegram-entry"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

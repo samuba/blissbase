@@ -1,5 +1,5 @@
 import { Telegraf, type Context } from "telegraf";
-import type { Update, MessageEntity } from "telegraf/types";
+import type { Update, MessageEntity, PhotoSize } from "telegraf/types";
 import { aiExtractEventData } from './ai';
 import { msgFilters, type TelegramCloudflareBody } from '../../src/lib/telegramCommon';
 
@@ -41,13 +41,9 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 
 		let imageUrl: string | undefined;
 		if (ctx.message && 'photo' in ctx.message) {
-			const images = ctx.message.photo;
-			if (images && images.length > 0) {
-				// Typically, the last photo in the array is the largest
-				const largestPhoto = images[images.length - 2];
-				const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
-				imageUrl = fileLink.href;
-			}
+			imageUrl = await getImageUrl(ctx.message.photo, ctx)
+		} else if (ctx.channelPost && 'photo' in ctx.channelPost) {
+			imageUrl = await getImageUrl(ctx.channelPost.photo, ctx)
 		}
 
 		await reply(ctx, "Ich extrahiere die Eventdaten aus deiner Nachricht...")
@@ -88,6 +84,16 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 		} catch { /* ignore */ }
 	}
 }
+
+async function getImageUrl(photos: PhotoSize[], ctx: Context) {
+	if (!photos || photos.length === 0) return;
+
+	// Typically, the last photo in the array is the largest
+	const largestPhoto = photos[photos.length - 2];
+	const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
+	return fileLink.href;
+}
+
 
 function isGroup(ctx: Context) {
 	return ctx.message?.chat.type === "group" ||

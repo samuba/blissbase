@@ -18,7 +18,7 @@
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import * as schema from '../src/lib/server/schema.ts';
 import { db } from "../src/lib/server/db.ts";
-import { insertEvent } from '../src/lib/server/events.ts';
+import { insertEvents } from '../src/lib/server/events.ts';
 import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
 import { inArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
@@ -197,7 +197,7 @@ async function main() {
         console.log("batch", batch)
 
         try {
-            await insertEvent(batch);
+            await insertEvents(batch);
             successCount += batch.length;
 
             console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);

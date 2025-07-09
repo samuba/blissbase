@@ -218,10 +218,8 @@ export async function fetchEvents(params: LoadEventsParams) {
 }
 
 
-export async function insertEvent(events: InsertEvent | InsertEvent[]) {
-    const eventsArray = Array.isArray(events) ? events : [events];
-
-    const processedEvents = eventsArray.map(event => {
+export async function insertEvents(events: InsertEvent[]) {
+    const processedEvents = events.map(event => {
         // trim all strings 
         type EventKey = keyof InsertEvent;
         for (const key in event) {
@@ -247,7 +245,7 @@ export async function insertEvent(events: InsertEvent | InsertEvent[]) {
         })
         .returning();
 
-    return Array.isArray(events) ? result : result?.[0];
+    return result;
 }
 
 type LoadEventsParams = Partial<{
