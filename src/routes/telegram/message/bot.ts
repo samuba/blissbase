@@ -132,15 +132,17 @@ function parseContact(contact: string | undefined) {
 }
 
 async function reply(ctx: Context, text: string, fromGroup: boolean, msgId: string | undefined) {
-    if (fromGroup) return // do not reply in groups
+    if (!fromGroup) { // never reply in groups
+        const replyOptions = ctx.message?.message_id
+            ? { reply_parameters: { message_id: ctx.message.message_id } }
+            : undefined;
+        await ctx.reply(text, replyOptions)
+    }
 
-    const replyOptions = ctx.message?.message_id
-        ? { reply_parameters: { message_id: ctx.message.message_id } }
-        : undefined;
-    await ctx.reply(text, replyOptions)
     if (msgId) {
+        const msg = fromGroup ? `hidden: ${text}` : text;
         await db.update(s.botMessages)
-            .set({ answer: sql`COALESCE(answer || E'\n\n', '') || ${text}` })
+            .set({ answer: sql`COALESCE(answer || E'\n\n', '') || ${msg}` })
             .where(eq(s.botMessages.id, msgId))
     }
 }
