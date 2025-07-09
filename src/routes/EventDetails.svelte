@@ -13,7 +13,7 @@
 	let showFullscreenImage = $state(false);
 
 	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | undefined = $derived.by(() => {
-		if (event.contact?.startsWith('tg://')) {
+		if (event.contact?.startsWith('tg://') || event.contact?.startsWith('https://t.me/')) {
 			return 'Telegram';
 		}
 		if (event.contact?.startsWith('https://wa.me/')) {
@@ -176,7 +176,10 @@
 						<div class="mt-3 flex justify-center">
 							{#if contactMethod === 'Telegram'}
 								<a
-									href={event.contact + `&text=${contactMessage}&parse_mode=HTML`}
+									href={event.contact?.startsWith('https://t.me/')
+										? event.contact.replace('https://t.me/', 'tg://resolve?domain=') +
+											`&text=${contactMessage}&parse_mode=HTML`
+										: event.contact + `&text=${contactMessage}&parse_mode=HTML`}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="btn btn-primary"

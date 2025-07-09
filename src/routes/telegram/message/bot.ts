@@ -204,7 +204,7 @@ function getTelegramEventOriginalAuthor(message: Context['message']) {
     return {
         name,
         id: message?.from.id,
-        link: username ? `https://t.me/${username}` : undefined
+        link: username ? `tg://resolve?domain=${username}` : undefined
     };
 }
 

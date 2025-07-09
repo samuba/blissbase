@@ -89,7 +89,7 @@ async function getImageUrl(photos: PhotoSize[], ctx: Context) {
 	if (!photos || photos.length === 0) return;
 
 	// Typically, the last photo in the array is the largest
-	const largestPhoto = photos[photos.length - 2];
+	const largestPhoto = photos[photos.length - 1];
 	const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
 	return fileLink.href;
 }
