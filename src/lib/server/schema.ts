@@ -1,5 +1,5 @@
 import { sql, type SQL } from 'drizzle-orm';
-import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, bigint } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -33,6 +33,7 @@ export const events = pgTable('events', {
 export const botMessages = pgTable('message_to_bot', {
     id: uuid().primaryKey().defaultRandom(),
     data: jsonb().notNull(),
+    origin: text().generatedAlwaysAs((): SQL => sql`COALESCE((data->'chat'->>'title')::text, (data->'chat'->>'username')::text)`),
     text: text().generatedAlwaysAs((): SQL => sql`COALESCE((data->>'text')::text, (data->>'caption')::text)`),
     answer: text(),
     createdAt: timestamp().notNull().defaultNow(),
@@ -56,6 +57,13 @@ export const reverseGeocodeCache = pgTable('reverse_geocode_cache', {
 }, (t) => [
     uniqueIndex().on(t.latitude, t.longitude)
 ]);
+
+export const telegramChatConfig = pgTable('telegram_chat_config', {
+    chatId: bigint({ mode: 'bigint' }).primaryKey(),
+    chatName: text(), // telegram group or channel name
+    defaultAddress: text().array(),
+    createdAt: timestamp().notNull().defaultNow(),
+});
 
 
 

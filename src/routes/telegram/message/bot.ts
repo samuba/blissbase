@@ -38,9 +38,14 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             return
         }
         if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
-            console.log("No event location found", msgTextHtml)
-            await reply(ctx, "🙅🏻‍♂️📍 Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
-            return
+            const chatConfig = await db.query.telegramChatConfig.findFirst({ where: eq(s.telegramChatConfig.chatId, BigInt(ctx.chat?.id ?? 0)) })
+            if (chatConfig?.defaultAddress) {
+                aiAnswer.address = chatConfig.defaultAddress.join(',')
+            } else {
+                console.log("No event location found", msgTextHtml)
+                await reply(ctx, "🙅🏻‍♂️📍 Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
+                return
+            }
         }
 
         if (imageUrl) {
@@ -54,7 +59,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             console.log(`image processing took: ${endTime - startTime}ms`);
         }
 
-        let addressArr = aiAnswer.address ? [aiAnswer.address] : [];
+        let addressArr = aiAnswer.address ? aiAnswer.address.split(',') : [];
         if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
         if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
 
