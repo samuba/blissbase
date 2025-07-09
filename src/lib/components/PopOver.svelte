@@ -17,7 +17,22 @@
 	<Popover.Trigger class={triggerClass}>
 		{@render trigger()}
 	</Popover.Trigger>
-	<Popover.Content {...contentProps} class={['card card-border shadow-lg', contentClass]}>
+	<Popover.Content
+		{...contentProps}
+		class={[
+			'card card-border z-10 shadow-lg',
+			'data-[state=open]:animate-in',
+			'data-[state=open]:ease-out',
+			'data-[state=open]:fade-in',
+			'data-[state=open]:duration-200',
+			'data-[state=closed]:animate-out',
+			'data-[state=closed]:ease-in',
+			'data-[state=closed]:fade-out',
+			'data-[state=closed]:duration-150',
+			contentClass,
+			contentProps?.class
+		]}
+	>
 		{@render content()}
 		<Popover.Close />
 		<Popover.Arrow />

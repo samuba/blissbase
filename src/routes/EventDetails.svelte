@@ -140,6 +140,8 @@
 				</div>
 			{/if}
 
+			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
+
 			{#if showQuelleInsteadOfAnmelden}
 				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
 					Quelle
@@ -217,8 +219,6 @@
 					{/snippet}
 				</PopOver>
 			{/if}
-
-			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 		</div>
 
 		{#if event.description}
