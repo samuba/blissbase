@@ -19,27 +19,27 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
     try {
         if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
-            await reply(ctx, `Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. 😉`, fromGroup, msgId)
+            await reply(ctx, `👯 Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. 😉`, fromGroup, msgId)
             return
         }
         if (!aiAnswer.hasEventData) {
             console.log("No event data found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", fromGroup, msgId)
+            await reply(ctx, "🙅🏻‍♂️🎫 Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", fromGroup, msgId)
             return
         }
         if (!aiAnswer.name) {
             console.log("No event name found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Titel für den Event extrahieren", fromGroup, msgId)
+            await reply(ctx, "🙅🏻‍♂️🪧 Aus dieser Nachricht konnte ich keinen eindeutigen Titel für den Event extrahieren", fromGroup, msgId)
             return
         }
         if (!aiAnswer.startDate) {
             console.log("No event start date found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", fromGroup, msgId)
+            await reply(ctx, "🙅🏻‍♂️📅 Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", fromGroup, msgId)
             return
         }
         if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
             console.log("No event location found", msgTextHtml)
-            await reply(ctx, "Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
+            await reply(ctx, "🙅🏻‍♂️📍 Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
             return
         }
 
