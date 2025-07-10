@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereal Text Canvas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #6a5acd;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #8b7db8;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .input-container {
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            max-width: 400px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            border: 2px solid #d8bfd8;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #5d4e75;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"]:focus {
+            border-color: #9370db;
+            box-shadow: 0 4px 20px rgba(147, 112, 219, 0.3);
+        }
+
+        input[type="text"]::placeholder {
+            color: #b19cd9;
+        }
+
+        .canvas-container {
+            margin-top: 30px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            background: white;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .info {
+            margin-top: 20px;
+            color: #8b7db8;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>✨ Ethereal Canvas ✨</h1>
+        <p class="subtitle">Transform your words into flowing spiritual art</p>
+
+        <div class="input-container">
+            <input type="text" id="textInput" placeholder="Enter your text to manifest beauty..." maxlength="100">
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas" width="768" height="280"></canvas>
+        </div>
+
+        <div class="info">
+            <p>Each text creates a unique, hash-based mandala of flowing energy.<br>
+                Let your words bloom into sacred geometry and ethereal beauty.</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const textInput = document.getElementById('textInput');
+
+        // Spiritual/hippie-inspired color palette - pastel to slightly vibrant
+        const allColors = [
+            // Crystal and chakra colors
+            '#E6B3D3', '#B3D9E6', '#D9E6B3', '#E6D9B3', '#E6B3B3', '#B3B3E6', '#B3E6D9',
+            // Nature-inspired pastels
+            '#C8E6C9', '#FFCDD2', '#C5CAE9', '#D1C4E9', '#FFECB3', '#FFCCBC', '#F8BBD9',
+            // Sunset and sky colors
+            '#FFB3BA', '#B3D4FF', '#FFD4B3', '#D4B3FF', '#B3FFD4', '#FFB3D4', '#D4FFB3',
+            // Earth and healing tones
+            '#E8F5E8', '#F5E8E8', '#E8E8F5', '#F5F5E8', '#E8F5F5', '#F5E8F5', '#F5F5F5',
+            // Soft gemstone colors
+            '#D4A5A5', '#A5D4A5', '#A5A5D4', '#D4D4A5', '#A5D4D4', '#D4A5D4', '#D4D4D4',
+            // Spiritual light colors
+            '#E6CCB3', '#B3E6CC', '#CCB3E6', '#E6B3CC', '#B3CCE6', '#CCE6B3', '#E6CCE6',
+            // More vibrant spiritual colors
+            '#FF9AA2', '#A8E6CF', '#DCEDC8', '#FFDAC1', '#FFB7B2', '#BDE0FE', '#A0C4FF',
+            // Vibrant crystal colors
+            '#FF8BA7', '#8BD3DD', '#B8E0D2', '#FFB6C1', '#87CEEB', '#DDA0DD', '#98FB98',
+            // Bright chakra colors
+            '#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#87CEEB',
+            // Vibrant nature tones
+            '#FFA07A', '#98FB98', '#87CEEB', '#DDA0DD', '#F0E68C', '#FFB6C1', '#ADD8E6'
+        ];
+
+        // Select 6 colors based on hash
+        function getColorPalette(hash) {
+            const palette = [];
+            for (let i = 0; i < 5; i++) {
+                const colorIndex = (hash + i * 7) % allColors.length;
+                palette.push(allColors[colorIndex]);
+            }
+            return palette;
+        }
+
+        // Simple hash function
+        function hashString(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return Math.abs(hash);
+        }
+
+        // Generate random but deterministic values from hash
+        function seededRandom(seed) {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        // Check if two circles overlap significantly
+        function circlesOverlap(x1, y1, r1, x2, y2, r2) {
+            const distance = Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
+            const minDistance = (r1 + r2) * 1.2; // Require 20% more space between shapes
+            return distance < minDistance;
+        }
+
+        // Find a non-overlapping position for a shape
+        function findNonOverlappingPosition(centerX, centerY, size, hash, existingShapes, maxAttempts = 80) {
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                // Generate position with more controlled randomness
+                const angle = seededRandom(hash + attempt * 7) * Math.PI * 2;
+                const distance = 100 + seededRandom(hash + attempt * 11) * 150; // Reduced range
+                const x = centerX + Math.cos(angle) * distance;
+                const y = centerY + Math.sin(angle) * distance;
+
+                // Ensure shape stays within canvas bounds
+                const margin = size * 1.0; // Increased margin
+                if (x < margin || x > canvas.width - margin ||
+                    y < margin || y > canvas.height - margin) {
+                    continue;
+                }
+
+                // Check overlap with existing shapes
+                let overlaps = false;
+                for (const shape of existingShapes) {
+                    if (circlesOverlap(x, y, size, shape.x, shape.y, shape.size)) {
+                        overlaps = true;
+                        break;
+                    }
+                }
+
+                if (!overlaps) {
+                    return { x, y };
+                }
+            }
+
+            // If no non-overlapping position found, return a position with reduced size
+            const angle = seededRandom(hash + maxAttempts * 7) * Math.PI * 2;
+            const distance = 120 + seededRandom(hash + maxAttempts * 11) * 100;
+            return {
+                x: centerX + Math.cos(angle) * distance,
+                y: centerY + Math.sin(angle) * distance
+            };
+        }
+
+        // Draw oil painting-like organic shapes
+        function drawFlowingShape(x, y, size, hash, offset, palette) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            const points = 16 + (hash % 10); // More points for organic curves
+            const colorIndex = (hash + offset) % palette.length;
+
+            // Determine if this shape should fade out (50% chance)
+            const shouldFade = (hash + offset) % 2 === 0;
+
+            if (shouldFade) {
+                // Create oil painting-like fade effect
+                const fadeSize = size * 2.0; // Larger size for painterly fade
+
+                // Create multiple layers for oil painting effect
+                const layers = 6;
+                for (let layer = 0; layer < layers; layer++) {
+                    const layerSize = fadeSize * (1 + layer * 0.08);
+                    const opacity = Math.max(0, 0.9 - layer * 0.15);
+
+                    if (opacity <= 0) break;
+
+                    // Create painterly gradient
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, layerSize);
+                    gradient.addColorStop(0, palette[colorIndex] + Math.floor(opacity * 255).toString(16).padStart(2, '0'));
+                    gradient.addColorStop(0.4, palette[colorIndex] + Math.floor(opacity * 0.8 * 255).toString(16).padStart(2, '0'));
+                    gradient.addColorStop(0.7, palette[colorIndex] + Math.floor(opacity * 0.4 * 255).toString(16).padStart(2, '0'));
+                    gradient.addColorStop(1, palette[colorIndex] + '00');
+
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+
+                    // Generate organic curve points with painterly variation
+                    const curvePoints = [];
+                    for (let i = 0; i <= points; i++) {
+                        const angle = (i / points) * Math.PI * 2 + (seededRandom(hash + offset * 3 + layer) * 0.8);
+                        const randomOffset = seededRandom(hash + i + offset + layer * 7) * 0.8 + 0.2; // More dramatic variation
+                        const radius = layerSize * randomOffset;
+                        const x = Math.cos(angle) * radius;
+                        const y = Math.sin(angle) * radius;
+                        curvePoints.push({ x, y, angle });
+                    }
+
+                    // Draw organic curve using cubic bezier curves
+                    ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+
+                    for (let i = 1; i < curvePoints.length; i++) {
+                        const current = curvePoints[i];
+                        const prev = curvePoints[i - 1];
+                        const next = curvePoints[(i + 1) % curvePoints.length];
+
+                        // Calculate organic control points with brushstroke-like variation
+                        const tension = 0.4 + seededRandom(hash + i + layer) * 0.2; // Variable tension
+                        const brushVariation = seededRandom(hash + i * 13 + layer) * 0.3 - 0.15;
+
+                        const cp1x = prev.x + (current.x - prev.x) * tension + brushVariation * layerSize * 0.15;
+                        const cp1y = prev.y + (current.y - prev.y) * tension + brushVariation * layerSize * 0.15;
+                        const cp2x = current.x - (next.x - current.x) * tension + brushVariation * layerSize * 0.15;
+                        const cp2y = current.y - (next.y - current.y) * tension + brushVariation * layerSize * 0.15;
+
+                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, current.x, current.y);
+                    }
+
+                    // Close the path organically
+                    const last = curvePoints[curvePoints.length - 1];
+                    const first = curvePoints[0];
+                    const second = curvePoints[1];
+
+                    const brushVariation = seededRandom(hash + offset * 17 + layer) * 0.3 - 0.15;
+                    const cp1x = last.x + (first.x - last.x) * 0.4 + brushVariation * layerSize * 0.15;
+                    const cp1y = last.y + (first.y - last.y) * 0.4 + brushVariation * layerSize * 0.15;
+                    const cp2x = first.x - (second.x - first.x) * 0.4 + brushVariation * layerSize * 0.15;
+                    const cp2y = first.y - (second.y - first.y) * 0.4 + brushVariation * layerSize * 0.15;
+
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, first.x, first.y);
+
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            } else {
+                // Solid oil painting-like shapes
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+                gradient.addColorStop(0, palette[colorIndex] + 'D0'); // More opaque center
+                gradient.addColorStop(0.3, palette[colorIndex] + 'B0');
+                gradient.addColorStop(0.6, palette[colorIndex] + '80');
+                gradient.addColorStop(1, palette[colorIndex] + '40');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+
+                // Generate organic curve points
+                const curvePoints = [];
+                for (let i = 0; i <= points; i++) {
+                    const angle = (i / points) * Math.PI * 2 + (seededRandom(hash + offset * 3) * 0.8);
+                    const randomOffset = seededRandom(hash + i + offset) * 0.8 + 0.2; // More dramatic variation
+                    const radius = size * randomOffset;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    curvePoints.push({ x, y, angle });
+                }
+
+                // Draw organic curve using cubic bezier curves
+                ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
+
+                for (let i = 1; i < curvePoints.length; i++) {
+                    const current = curvePoints[i];
+                    const prev = curvePoints[i - 1];
+                    const next = curvePoints[(i + 1) % curvePoints.length];
+
+                    // Calculate organic control points with brushstroke-like variation
+                    const tension = 0.4 + seededRandom(hash + i) * 0.2; // Variable tension
+                    const brushVariation = seededRandom(hash + i * 13) * 0.3 - 0.15;
+
+                    const cp1x = prev.x + (current.x - prev.x) * tension + brushVariation * size * 0.15;
+                    const cp1y = prev.y + (current.y - prev.y) * tension + brushVariation * size * 0.15;
+                    const cp2x = current.x - (next.x - current.x) * tension + brushVariation * size * 0.15;
+                    const cp2y = current.y - (next.y - current.y) * tension + brushVariation * size * 0.15;
+
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, current.x, current.y);
+                }
+
+                // Close the path organically
+                const last = curvePoints[curvePoints.length - 1];
+                const first = curvePoints[0];
+                const second = curvePoints[1];
+
+                const brushVariation = seededRandom(hash + offset * 17) * 0.3 - 0.15;
+                const cp1x = last.x + (first.x - last.x) * 0.4 + brushVariation * size * 0.15;
+                const cp1y = last.y + (first.y - last.y) * 0.4 + brushVariation * size * 0.15;
+                const cp2x = first.x - (second.x - first.x) * 0.4 + brushVariation * size * 0.15;
+                const cp2y = first.y - (second.y - first.y) * 0.4 + brushVariation * size * 0.15;
+
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, first.x, first.y);
+
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // Draw floating particles (fewer dots)
+        function drawParticles(hash, palette) {
+            const particleCount = 8 + (hash % 8);
+
+            for (let i = 0; i < particleCount; i++) {
+                const x = seededRandom(hash + i * 13) * canvas.width;
+                const y = seededRandom(hash + i * 17) * canvas.height;
+                const size = seededRandom(hash + i * 19) * 12 + 4;
+                const colorIndex = (hash + i * 7) % palette.length;
+                const opacity = seededRandom(hash + i * 29) * 0.5 + 0.3;
+
+                ctx.save();
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = palette[colorIndex];
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Add noise texture
+        function addNoise(hash) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const pixelIndex = i / 4;
+                const x = pixelIndex % canvas.width;
+                const y = Math.floor(pixelIndex / canvas.width);
+
+                // Use 2D coordinates for better noise distribution
+                const noiseValue = (seededRandom(hash + x * 0.1 + y * 0.1 + pixelIndex * 0.0001) - 0.5) * 12;
+
+                data[i] = Math.max(0, Math.min(255, data[i] + noiseValue));     // Red
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noiseValue)); // Green
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noiseValue)); // Blue
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // Draw sacred geometry patterns
+        function drawSacredGeometry(centerX, centerY, hash, palette) {
+            const layers = 3 + (hash % 3);
+
+            for (let layer = 0; layer < layers; layer++) {
+                const radius = (layer + 1) * 60 + (hash % 40);
+                const segments = 6 + (hash % 6);
+                const colorIndex = (hash + layer * 3) % palette.length;
+
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.strokeStyle = palette[colorIndex];
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+                for (let i = 0; i <= segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // Main drawing function
+        function generateArt(text) {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Create different background gradients based on hash
+            const hash = hashString(text);
+            const bgGradients = [
+                // Very light purple to blue
+                () => {
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#f8f5ff');
+                    gradient.addColorStop(0.5, '#f0f8ff');
+                    gradient.addColorStop(1, '#f8f5ff');
+                    return gradient;
+                },
+                // Very light warm tones
+                () => {
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#fffaf0');
+                    gradient.addColorStop(0.5, '#fff5f0');
+                    gradient.addColorStop(1, '#fff0f5');
+                    return gradient;
+                },
+                // Very light mint to pink
+                () => {
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#f0fffa');
+                    gradient.addColorStop(0.5, '#fff0f5');
+                    gradient.addColorStop(1, '#f0f0ff');
+                    return gradient;
+                },
+                // Very light sage
+                () => {
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#f8fff8');
+                    gradient.addColorStop(0.5, '#f0fff0');
+                    gradient.addColorStop(1, '#f8fff8');
+                    return gradient;
+                },
+                // Very light lavender
+                () => {
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#faf8ff');
+                    gradient.addColorStop(0.5, '#fff8ff');
+                    gradient.addColorStop(1, '#f8f8ff');
+                    return gradient;
+                }
+            ];
+
+            const bgGradient = bgGradients[hash % bgGradients.length]();
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!text) return;
+
+            const palette = getColorPalette(hash);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // Draw sacred geometry background
+            drawSacredGeometry(centerX, centerY, hash, palette);
+
+            // Track existing shapes to avoid overlap
+            const existingShapes = [];
+
+            // Draw main flowing shapes with collision detection
+            const shapeCount = 4 + (hash % 4); // Reduced to 4-8 shapes
+            for (let i = 0; i < shapeCount; i++) {
+                const size = 50 + seededRandom(hash + i * 23) * 60; // Smaller size range
+                const position = findNonOverlappingPosition(centerX, centerY, size, hash + i * 7, existingShapes);
+
+                drawFlowingShape(position.x, position.y, size, hash, i * 7, palette);
+                existingShapes.push({ x: position.x, y: position.y, size: size });
+            }
+
+            // Draw additional random shapes with collision detection
+            const extraShapes = 2 + (hash % 3); // Reduced to 2-5 shapes
+            for (let i = 0; i < extraShapes; i++) {
+                const size = 35 + seededRandom(hash + i * 41) * 45; // Smaller size range
+                const position = findNonOverlappingPosition(centerX, centerY, size, hash + i * 31 + 1000, existingShapes);
+
+                drawFlowingShape(position.x, position.y, size, hash, i * 13 + 200, palette);
+                existingShapes.push({ x: position.x, y: position.y, size: size });
+            }
+
+            // Draw center mandala (always centered, no collision check needed)
+            drawFlowingShape(centerX, centerY, 100 + (hash % 50), hash, 100, palette);
+
+            // Draw floating particles
+            drawParticles(hash, palette);
+
+            // Add noise texture for organic feel
+            addNoise(hash);
+
+            // Add subtle glow effect
+            ctx.save();
+            ctx.globalCompositeOperation = 'soft-light';
+            ctx.globalAlpha = 0.2;
+            const glowGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 300);
+            glowGradient.addColorStop(0, '#ffffff');
+            glowGradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = glowGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+
+        // Event listeners
+        textInput.addEventListener('input', (e) => {
+            generateArt(e.target.value);
+        });
+
+        // Initialize with default
+        generateArt('');
+    </script>
+</body>
+
+</html>

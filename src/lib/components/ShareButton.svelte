@@ -25,7 +25,15 @@
 			return;
 		}
 
-		await navigator.share({ url, title, text });
+		try {
+			await navigator.share({ url, title, text });
+		} catch (e) {
+			if (e instanceof Error && e.toString().includes('AbortError')) {
+				return; // share was aborted. no big deal.
+			}
+			console.error('Error sharing', e);
+			await copyToClipboard();
+		}
 	}
 
 	async function copyToClipboard() {
