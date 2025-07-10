@@ -23,7 +23,11 @@
 	--color-base-700: color-mix(in oklab, var(--color-base-content) 40%, #0000);
 }
 
-@import 'tw-animate-css';
+/* disabled selects look ugly */
+.select,
+select {
+	@apply disabled:!border-base-300 disabled:!border-2;
+}
 
 /* no prose text should be too bold */
 h1,
@@ -36,3 +40,5 @@ h6,
 .prose b {
 	@apply font-semibold;
 }
+
+@import 'tw-animate-css';
