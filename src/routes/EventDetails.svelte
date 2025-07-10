@@ -12,17 +12,37 @@
 	let showOriginal = $state(false);
 	let showFullscreenImage = $state(false);
 
+	let contactUrl = $derived.by(() => {
+		let contact = event.contact;
+		if (contact && /^\+?\d[\d\s\-\(\)]+\d$/.test(contact)) {
+			contact = `tel:${contact.replace(/\s/g, '')}`;
+		}
+
+		if (contact?.startsWith('https://t.me/')) {
+			contact = contact.replace('https://t.me/', 'tg://resolve?domain=');
+		}
+		if (contact?.startsWith('tg://')) {
+			contact += `&text=${contactMessage}&parse_mode=HTML`;
+		}
+
+		return contact;
+	});
+
 	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | undefined = $derived.by(() => {
-		if (event.contact?.startsWith('tg://') || event.contact?.startsWith('https://t.me/')) {
+		if (
+			contactUrl?.startsWith('tg://') ||
+			contactUrl?.startsWith('t.me/') ||
+			contactUrl?.startsWith('https://t.me/')
+		) {
 			return 'Telegram';
 		}
-		if (event.contact?.startsWith('https://wa.me/')) {
+		if (contactUrl?.startsWith('https://wa.me/')) {
 			return 'WhatsApp';
 		}
-		if (event.contact?.startsWith('tel:')) {
+		if (contactUrl?.startsWith('tel:')) {
 			return 'Telefon';
 		}
-		if (event.contact?.startsWith('mailto:')) {
+		if (contactUrl?.startsWith('mailto:')) {
 			return 'Email';
 		}
 	});
@@ -176,10 +196,7 @@
 						<div class="mt-3 flex justify-center">
 							{#if contactMethod === 'Telegram'}
 								<a
-									href={event.contact?.startsWith('https://t.me/')
-										? event.contact.replace('https://t.me/', 'tg://resolve?domain=') +
-											`&text=${contactMessage}&parse_mode=HTML`
-										: event.contact + `&text=${contactMessage}&parse_mode=HTML`}
+									href={contactUrl}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="btn btn-primary"
@@ -189,7 +206,7 @@
 								</a>
 							{:else if contactMethod === 'WhatsApp'}
 								<a
-									href={event.contact}
+									href={contactUrl}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="btn btn-primary"
@@ -199,7 +216,7 @@
 								</a>
 							{:else if contactMethod === 'Telefon'}
 								<a
-									href={event.contact}
+									href={contactUrl}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="btn btn-primary"
@@ -209,7 +226,7 @@
 								</a>
 							{:else if contactMethod === 'Email'}
 								<a
-									href={event.contact}
+									href={contactUrl}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="btn btn-primary"
