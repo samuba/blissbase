@@ -119,7 +119,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         sortBy = 'time';
     }
 
-    let orderByClause;
+    let orderByClause; // also sorting by event.id cuz if events have same startAt, svelte hydration can mix them up and we have mismatched images
     if (sortBy === 'distance' && geocodedCoords) {
         const distanceSortSql = sql`
             CASE
@@ -131,15 +131,15 @@ export async function fetchEvents(params: LoadEventsParams) {
                 ELSE NULL
             END`;
         if (sortOrder === 'asc') {
-            orderByClause = [sql`${distanceSortSql} ASC NULLS LAST`];
+            orderByClause = [sql`${distanceSortSql} ASC NULLS LAST`, asc(s.events.id)];
         } else {
-            orderByClause = [sql`${distanceSortSql} DESC NULLS LAST`];
+            orderByClause = [sql`${distanceSortSql} DESC NULLS LAST`, asc(s.events.id)];
         }
     } else {
         if (sortOrder === 'asc') {
-            orderByClause = [asc(s.events.startAt)];
+            orderByClause = [asc(s.events.startAt), asc(s.events.id)];
         } else {
-            orderByClause = [desc(s.events.startAt)];
+            orderByClause = [desc(s.events.startAt), asc(s.events.id)];
         }
     }
 
