@@ -99,7 +99,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         console.log({ dbEntry })
 
         const dbEvent = (await insertEvents([dbEntry]))[0]
-
+        await ctx.react('⚡', false) // marker that the event was transferred
         await reply(ctx, "✅ Der Event wurde in BlissBase eingetragen:\n\nhttps://blissbase.app/" + dbEvent.slug, fromGroup, msgId)
     } catch (error) {
         console.error(error)
