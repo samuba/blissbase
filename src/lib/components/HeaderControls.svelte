@@ -317,10 +317,14 @@
 
 					<a href={routes.sources()} class="btn-sm btn w-fit">Unsere Event Quellen</a>
 
-					<p>Fehler gefunden / Feedback geben / Kooperation:</p>
-					<a href="mailto:hi@blissbase.app" class="btn-sm btn w-fit">
-						Schreib uns 🙂 an hi@blissbase.app
-					</a>
+					<div>
+						<span> Fehler gefunden / Feedback geben / Kooperation / Grüße: </span>
+						<div class="mt-1 flex items-center gap-1">
+							<a href="mailto:hi@blissbase.app" class="link w-fit font-semibold">
+								hi@blissbase.app
+							</a>
+						</div>
+					</div>
 				</div>
 			{/snippet}
 		</PopOver>
