@@ -20,8 +20,8 @@
 				</div>
 
 				<div>
-					<h2 class="text-lg font-bold">Websites</h2>
-					<div class="flex flex-col gap-2 text-lg underline">
+					<h2 class="mb-1 text-lg font-bold">Websites</h2>
+					<div class="flex flex-col gap-1.5 text-lg underline">
 						<a href="https://sei.jetzt" target="_blank">sei.jetzt</a>
 						<a href="https://tribehaus.org" target="_blank">tribehaus.org</a>
 						<a href="https://awara.events" target="_blank">awara.events</a>
@@ -35,8 +35,12 @@
 				</div>
 
 				<div>
-					<h2 class="text-lg font-bold">Telegram</h2>
-					<div class="flex flex-col gap-2 text-lg">Kendralah-Experience</div>
+					<h2 class="mb-1 text-lg font-bold">Telegram</h2>
+					<div class="flex flex-col gap-1.5 text-lg">
+						Kendralah-Experience
+
+						<a href="tg://resolve?domain=@youmeunity" target="_blank" class="link">YouMeUnity</a>
+					</div>
 				</div>
 			</div>
 		</div>
