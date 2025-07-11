@@ -231,7 +231,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             return {
                 name,
                 startAt,
-                endAt: this.extractEndAt(html),
+                endAt: this.extractEndAt(html, eventDate),
                 address,
                 price: this.extractPrice(html),
                 priceIsHtml: false,
@@ -298,34 +298,6 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             }
         }
 
-        // Fallback to LD+JSON if no specific date provided
-        let startDate: string | undefined;
-        $('script[type="application/ld+json"]').each((_i, el) => {
-            try {
-                const jsonData = JSON.parse($(el).html() || '');
-                const eventsArray = Array.isArray(jsonData) ? jsonData : (jsonData['@graph'] && Array.isArray(jsonData['@graph'])) ? jsonData['@graph'] : [jsonData];
-
-                for (const item of eventsArray) {
-                    if (item['@type'] === 'Event' && item.startDate) {
-                        startDate = item.startDate;
-                        return false;
-                    }
-                }
-            } catch (_) {
-                void _;
-                // Silently continue on JSON parse error
-            }
-        });
-
-        if (startDate) {
-            try {
-                return startDate;
-            } catch (_) {
-                void _;
-                console.error(`Error parsing start date from LD+JSON: ${startDate}`);
-            }
-        }
-
         return undefined;
     }
 
@@ -347,34 +319,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         return undefined;
     }
 
-    extractEndAt(html: string) {
+    extractEndAt(html: string, eventDate?: string) {
         const $ = cheerio.load(html);
 
-        let endDate: string | undefined;
-        $('script[type="application/ld+json"]').each((_i, el) => {
-            try {
-                const jsonData = JSON.parse($(el).html() || '');
-                const eventsArray = Array.isArray(jsonData) ? jsonData : (jsonData['@graph'] && Array.isArray(jsonData['@graph'])) ? jsonData['@graph'] : [jsonData];
+        const timeText = $('td:contains("Uhrzeit")').next().text().trim();
+        const timeMatch = timeText.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+        const endTime = timeMatch ? timeMatch[2] : undefined;
+        const endHour = endTime ? parseInt(endTime.split(':')[0], 10) : undefined;
+        const endMinute = endTime ? parseInt(endTime.split(':')[1], 10) : undefined;
 
-                for (const item of eventsArray) {
-                    if (item['@type'] === 'Event' && item.endDate) {
-                        endDate = item.endDate;
-                        return false;
-                    }
-                }
-            } catch (_) {
-                void _;
-                // Silently continue on JSON parse error
-            }
-        });
-
-        if (endDate) {
-            try {
-                return endDate;
-            } catch (_) {
-                void _;
-                console.error(`Error parsing end date from LD+JSON: ${endDate}`);
-            }
+        if (endTime && eventDate) {
+            const [day, month, year] = eventDate.split('.').map(Number);
+            return germanDateToIsoStr(year, month - 1, day, endHour, endMinute);
         }
 
         return undefined;
