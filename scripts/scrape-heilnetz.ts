@@ -396,72 +396,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         return cleanProseHtml(description);
     }
 
-    extractImageUrls(html: string): string[] | undefined {
+    extractImageUrls(html: string): string[] {
         const $ = cheerio.load(html);
-        const imageUrls: string[] = [];
+        const imgUrls: string[] = [];
 
-        $('script[type="application/ld+json"]').each((_i, el) => {
-            try {
-                const jsonData = JSON.parse($(el).html() || '');
-                const eventsArray = Array.isArray(jsonData) ? jsonData : (jsonData['@graph'] && Array.isArray(jsonData['@graph'])) ? jsonData['@graph'] : [jsonData];
+        const imageUrl = $('.mod_eventreader .image_container img').first().attr('src');
+        if (imageUrl) imgUrls.push(imageUrl);
 
-                for (const item of eventsArray) {
-                    if (item['@type'] === 'ImageObject' && item.contentUrl) {
-                        const imageUrl = makeAbsoluteUrl(item.contentUrl, BASE_URL);
-                        if (imageUrl) {
-                            imageUrls.push(imageUrl);
-                        }
-                    }
-
-                    if (item['@type'] === 'Event') {
-                        if (item.image) {
-                            if (typeof item.image === 'string') {
-                                const imageUrl = makeAbsoluteUrl(item.image, BASE_URL);
-                                if (imageUrl) {
-                                    imageUrls.push(imageUrl);
-                                }
-                            } else if (item.image.url) {
-                                const imageUrl = makeAbsoluteUrl(item.image.url, BASE_URL);
-                                if (imageUrl) {
-                                    imageUrls.push(imageUrl);
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (_) {
-                void _;
-                // Silently handle JSON parsing errors
-            }
-        });
-
-        // Look for images in the HTML content
-        if (imageUrls.length === 0) {
-            $('.mod_eventreader .col-12.col-lg-7 img').each((_i, el) => {
-                const src = $(el).attr('src');
-                if (src) {
-                    const imageUrl = makeAbsoluteUrl(src, BASE_URL);
-                    if (imageUrl && !imageUrls.includes(imageUrl)) {
-                        imageUrls.push(imageUrl);
-                    }
-                }
-            });
-
-            // If still no images, try a broader search
-            if (imageUrls.length === 0) {
-                $('.mod_eventreader img').each((_i, el) => {
-                    const src = $(el).attr('src');
-                    if (src) {
-                        const imageUrl = makeAbsoluteUrl(src, BASE_URL);
-                        if (imageUrl) {
-                            imageUrls.push(imageUrl);
-                        }
-                    }
-                });
-            }
-        }
-
-        return imageUrls;
+        return imgUrls;
     }
 
     extractHost(html: string): string | undefined {

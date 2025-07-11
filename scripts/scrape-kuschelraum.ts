@@ -332,11 +332,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const $ = cheerio.load(html);
         const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
         const [startTime] = timeText.split("-").map(time => time.trim());
+        const [hours, minutes] = startTime.split(':').map(Number);
 
-        // Try to get date from LD+JSON first
         const ldEvent = extractLDJsonEvent(html);
         const startDate = new Date(ldEvent.startDate);
-        const [hours, minutes] = startTime.split(':').map(Number);
         return germanDateToIsoStr(
             startDate.getFullYear(),
             startDate.getMonth(),
@@ -350,11 +349,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const $ = cheerio.load(html);
         const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
         const [, endTime] = timeText.split("-").map(time => time.trim());
+        const [hours, minutes] = endTime.split(':').map(Number);
 
-        // Try to get date from LD+JSON first
         const ldEvent = extractLDJsonEvent(html);
         const endDate = new Date(ldEvent.endDate);
-        const [hours, minutes] = endTime.split(':').map(Number);
         return germanDateToIsoStr(
             endDate.getFullYear(),
             endDate.getMonth(),

@@ -461,65 +461,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         return cleanProseHtml(description);
     }
 
-    extractImageUrls(html: string): string[] | undefined {
+    extractImageUrls(html: string): string[] {
         const $ = cheerio.load(html);
-        const imageUrls: string[] = [];
+        const imgUrls: string[] = [];
 
-        $('script[type="application/ld+json"]').each((_i, el) => {
-            try {
-                const jsonData = JSON.parse($(el).html() || '');
-                const eventsArray = Array.isArray(jsonData) ? jsonData : (jsonData['@graph'] && Array.isArray(jsonData['@graph'])) ? jsonData['@graph'] : [jsonData];
+        const imageUrl = $('.mod_eventreader .image_container img').first().attr('src');
+        if (imageUrl) imgUrls.push(imageUrl);
 
-                // First pass: collect all ImageObjects with their @id
-                const imageObjects = new Map<string, string>();
-                for (const item of eventsArray) {
-                    if (item['@type'] === 'ImageObject' && item['@id'] && item.contentUrl) {
-                        const imageId = item['@id'];
-                        const imageUrl = makeAbsoluteUrl(item.contentUrl, BASE_URL);
-                        if (imageUrl) {
-                            imageObjects.set(imageId, imageUrl);
-                        }
-                    }
-                }
-
-                // Second pass: find Event objects and extract their images
-                for (const item of eventsArray) {
-                    if (item['@type'] === 'Event') {
-                        if (item.image) {
-                            if (typeof item.image === 'string') {
-                                const imageUrl = makeAbsoluteUrl(item.image, BASE_URL);
-                                if (imageUrl) {
-                                    imageUrls.push(imageUrl);
-                                }
-                            } else if (item.image.url) {
-                                const imageUrl = makeAbsoluteUrl(item.image.url, BASE_URL);
-                                if (imageUrl) {
-                                    imageUrls.push(imageUrl);
-                                }
-                            } else if (item.image['@id']) {
-                                // Handle case where image is referenced by @id
-                                const imageId = item.image['@id'];
-                                const imageUrl = imageObjects.get(imageId);
-                                if (imageUrl) {
-                                    imageUrls.push(imageUrl);
-                                }
-                            } else if (item.image.contentUrl) {
-                                // Handle case where image object has contentUrl directly
-                                const imageUrl = makeAbsoluteUrl(item.image.contentUrl, BASE_URL);
-                                if (imageUrl) {
-                                    imageUrls.push(imageUrl);
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (_) {
-                void _;
-                // Silently handle JSON parsing errors
-            }
-        });
-
-        return imageUrls;
+        return imgUrls;
     }
 
     extractHost(html: string): string | undefined {
