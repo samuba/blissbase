@@ -15,7 +15,7 @@ if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
  * 
  * Returns events that match ALL of the following conditions:
  * 
- * 1. **Date Range**: Events that fall within the specified date range (default: today to 60 days from today)
+ * 1. **Date Range**: Events that fall within the specified date range 
  *    - Events that start within the range
  *    - Events that end within the range (must have started within last 6 hours for current/future ranges)
  *    - Events that span the entire range (must have started within last 6 hours for current/future ranges)
@@ -56,7 +56,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     const timeZone = 'Europe/Berlin';
     const today = getToday(timeZone);
     const startCalDate = params.startDate ? parseDate(params.startDate) : new CalendarDate(today.year, today.month, today.day);
-    const endCalDate = params.endDate ? parseDate(params.endDate) : startCalDate.add({ days: 60 });
+    const endCalDate = params.endDate ? parseDate(params.endDate) : startCalDate.add({ years: 3 });
     const limit = Math.min(params.limit ?? 10, 20);
     const page = Math.max(params.page ?? 1, 1);
     let sortBy = params.sortBy === 'distance' ? 'distance' : 'time';
