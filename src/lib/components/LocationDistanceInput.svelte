@@ -248,7 +248,7 @@
 	</div>
 	<select
 		id="distance"
-		class="select join-item disabled:!border-base-300 w-auto disabled:!border-2"
+		class="select join-item w-auto"
 		bind:value={selectedDistance}
 		onchange={handleFilterInputChange}
 		disabled={isLoadingLocation || disabled || (typedPlzCity === '' && !usingCurrentLocation)}
