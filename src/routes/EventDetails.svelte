@@ -47,7 +47,7 @@
 		}
 	});
 
-	let showQuelleInsteadOfAnmelden = $state(
+	let showQuelleInsteadOfAnmelden = $derived(
 		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source)
 	);
 
