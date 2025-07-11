@@ -1,3 +1,21 @@
+Feedback joy
+  Suchfeld für Ort benutzt
+  Nur 2 Monate??
+  Wie installier ich das??
+    "Zum Home-Bildschirm hinzufügen" 
+    Appstore
+    "App installieren" für iOS wichtig
+  Telegram Kanäle verlinken
+
+Der event hat kein anmelde button, sollte original author verlinken
+https://www.blissbase.app/2025-07-12-1630-liebe-tanzen-special-mit-glitzer-und-tattoos
+
+BUG: Bild öffnen -> runter scrollen
+
+Bot: react emoji on event transfer
+
+STARTZeit hässlich
+
 telegram
   Kanäle richtig unterstützen!
   gruppen für städte haben manchmal keinen ort -> default ort für bestimmte gruppen "Bielefeld" 
@@ -5,15 +23,17 @@ telegram
 
 tags für alle events
 
+online events ausblenden (standardmäßig?)
 
 heilnetz extras aus liste sind teilweise sehr wichtig
+
+Events bearbeiten/löschen über telegram
+  nur original Author kann das
 
 SEO
   ld+json anbieten
   "Tantra in Bielefeld und Umgebung"
   "Events in Bielefeld"
-
-BUG falsche bilder2!! wenn hydriert wird kommen die durcheinander??
 
 https://kuschelpartys.de
 
