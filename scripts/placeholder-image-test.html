@@ -213,146 +213,148 @@
             };
         }
 
-        // Draw oil painting-like organic shapes
+        // Draw liquid-like oil drip shapes
         function drawFlowingShape(x, y, size, hash, offset, palette) {
             ctx.save();
             ctx.translate(x, y);
 
-            const points = 16 + (hash % 10); // More points for organic curves
             const colorIndex = (hash + offset) % palette.length;
 
             // Determine if this shape should fade out (50% chance)
             const shouldFade = (hash + offset) % 2 === 0;
+            const shapeSize = shouldFade ? size * 1.8 : size;
 
+            // Create liquid-like gradient
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, shapeSize);
             if (shouldFade) {
-                // Create oil painting-like fade effect
-                const fadeSize = size * 2.0; // Larger size for painterly fade
-
-                // Create multiple layers for oil painting effect
-                const layers = 6;
-                for (let layer = 0; layer < layers; layer++) {
-                    const layerSize = fadeSize * (1 + layer * 0.08);
-                    const opacity = Math.max(0, 0.9 - layer * 0.15);
-
-                    if (opacity <= 0) break;
-
-                    // Create painterly gradient
-                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, layerSize);
-                    gradient.addColorStop(0, palette[colorIndex] + Math.floor(opacity * 255).toString(16).padStart(2, '0'));
-                    gradient.addColorStop(0.4, palette[colorIndex] + Math.floor(opacity * 0.8 * 255).toString(16).padStart(2, '0'));
-                    gradient.addColorStop(0.7, palette[colorIndex] + Math.floor(opacity * 0.4 * 255).toString(16).padStart(2, '0'));
-                    gradient.addColorStop(1, palette[colorIndex] + '00');
-
-                    ctx.fillStyle = gradient;
-                    ctx.beginPath();
-
-                    // Generate organic curve points with painterly variation
-                    const curvePoints = [];
-                    for (let i = 0; i <= points; i++) {
-                        const angle = (i / points) * Math.PI * 2 + (seededRandom(hash + offset * 3 + layer) * 0.8);
-                        const randomOffset = seededRandom(hash + i + offset + layer * 7) * 0.8 + 0.2; // More dramatic variation
-                        const radius = layerSize * randomOffset;
-                        const x = Math.cos(angle) * radius;
-                        const y = Math.sin(angle) * radius;
-                        curvePoints.push({ x, y, angle });
-                    }
-
-                    // Draw organic curve using cubic bezier curves
-                    ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
-
-                    for (let i = 1; i < curvePoints.length; i++) {
-                        const current = curvePoints[i];
-                        const prev = curvePoints[i - 1];
-                        const next = curvePoints[(i + 1) % curvePoints.length];
-
-                        // Calculate organic control points with brushstroke-like variation
-                        const tension = 0.4 + seededRandom(hash + i + layer) * 0.2; // Variable tension
-                        const brushVariation = seededRandom(hash + i * 13 + layer) * 0.3 - 0.15;
-
-                        const cp1x = prev.x + (current.x - prev.x) * tension + brushVariation * layerSize * 0.15;
-                        const cp1y = prev.y + (current.y - prev.y) * tension + brushVariation * layerSize * 0.15;
-                        const cp2x = current.x - (next.x - current.x) * tension + brushVariation * layerSize * 0.15;
-                        const cp2y = current.y - (next.y - current.y) * tension + brushVariation * layerSize * 0.15;
-
-                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, current.x, current.y);
-                    }
-
-                    // Close the path organically
-                    const last = curvePoints[curvePoints.length - 1];
-                    const first = curvePoints[0];
-                    const second = curvePoints[1];
-
-                    const brushVariation = seededRandom(hash + offset * 17 + layer) * 0.3 - 0.15;
-                    const cp1x = last.x + (first.x - last.x) * 0.4 + brushVariation * layerSize * 0.15;
-                    const cp1y = last.y + (first.y - last.y) * 0.4 + brushVariation * layerSize * 0.15;
-                    const cp2x = first.x - (second.x - first.x) * 0.4 + brushVariation * layerSize * 0.15;
-                    const cp2y = first.y - (second.y - first.y) * 0.4 + brushVariation * layerSize * 0.15;
-
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, first.x, first.y);
-
-                    ctx.closePath();
-                    ctx.fill();
-                }
+                gradient.addColorStop(0, palette[colorIndex] + 'CC');
+                gradient.addColorStop(0.3, palette[colorIndex] + '99');
+                gradient.addColorStop(0.6, palette[colorIndex] + '44');
+                gradient.addColorStop(1, palette[colorIndex] + '00');
             } else {
-                // Solid oil painting-like shapes
-                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-                gradient.addColorStop(0, palette[colorIndex] + 'D0'); // More opaque center
-                gradient.addColorStop(0.3, palette[colorIndex] + 'B0');
-                gradient.addColorStop(0.6, palette[colorIndex] + '80');
-                gradient.addColorStop(1, palette[colorIndex] + '40');
-
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-
-                // Generate organic curve points
-                const curvePoints = [];
-                for (let i = 0; i <= points; i++) {
-                    const angle = (i / points) * Math.PI * 2 + (seededRandom(hash + offset * 3) * 0.8);
-                    const randomOffset = seededRandom(hash + i + offset) * 0.8 + 0.2; // More dramatic variation
-                    const radius = size * randomOffset;
-                    const x = Math.cos(angle) * radius;
-                    const y = Math.sin(angle) * radius;
-                    curvePoints.push({ x, y, angle });
-                }
-
-                // Draw organic curve using cubic bezier curves
-                ctx.moveTo(curvePoints[0].x, curvePoints[0].y);
-
-                for (let i = 1; i < curvePoints.length; i++) {
-                    const current = curvePoints[i];
-                    const prev = curvePoints[i - 1];
-                    const next = curvePoints[(i + 1) % curvePoints.length];
-
-                    // Calculate organic control points with brushstroke-like variation
-                    const tension = 0.4 + seededRandom(hash + i) * 0.2; // Variable tension
-                    const brushVariation = seededRandom(hash + i * 13) * 0.3 - 0.15;
-
-                    const cp1x = prev.x + (current.x - prev.x) * tension + brushVariation * size * 0.15;
-                    const cp1y = prev.y + (current.y - prev.y) * tension + brushVariation * size * 0.15;
-                    const cp2x = current.x - (next.x - current.x) * tension + brushVariation * size * 0.15;
-                    const cp2y = current.y - (next.y - current.y) * tension + brushVariation * size * 0.15;
-
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, current.x, current.y);
-                }
-
-                // Close the path organically
-                const last = curvePoints[curvePoints.length - 1];
-                const first = curvePoints[0];
-                const second = curvePoints[1];
-
-                const brushVariation = seededRandom(hash + offset * 17) * 0.3 - 0.15;
-                const cp1x = last.x + (first.x - last.x) * 0.4 + brushVariation * size * 0.15;
-                const cp1y = last.y + (first.y - last.y) * 0.4 + brushVariation * size * 0.15;
-                const cp2x = first.x - (second.x - first.x) * 0.4 + brushVariation * size * 0.15;
-                const cp2y = first.y - (second.y - first.y) * 0.4 + brushVariation * size * 0.15;
-
-                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, first.x, first.y);
-
-                ctx.closePath();
-                ctx.fill();
+                gradient.addColorStop(0, palette[colorIndex] + 'E0'); // More opaque center
+                gradient.addColorStop(0.4, palette[colorIndex] + 'B0');
+                gradient.addColorStop(0.7, palette[colorIndex] + '70');
+                gradient.addColorStop(1, palette[colorIndex] + '30');
             }
 
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+
+            // Create liquid drip shape
+            const dripType = (hash + offset) % 3; // 3 different drip styles
+
+            if (dripType === 0) {
+                // Teardrop shape
+                drawTeardrop(ctx, shapeSize, hash, offset);
+            } else if (dripType === 1) {
+                // Blob shape with flowing curves
+                drawBlob(ctx, shapeSize, hash, offset);
+            } else {
+                // Organic drip with tail
+                drawOrganicDrip(ctx, shapeSize, hash, offset);
+            }
+
+            ctx.closePath();
+            ctx.fill();
             ctx.restore();
+        }
+
+        // Draw teardrop shape
+        function drawTeardrop(ctx, size, hash, offset) {
+            const points = 12;
+            const dropLength = size * 1.5;
+            const dropWidth = size * 0.8;
+
+            ctx.moveTo(0, -dropLength * 0.3); // Top point
+
+            // Draw the rounded top
+            for (let i = 0; i <= points / 2; i++) {
+                const angle = (i / (points / 2)) * Math.PI;
+                const radius = dropWidth * 0.5;
+                const x = Math.cos(angle) * radius;
+                const y = -dropLength * 0.3 + Math.sin(angle) * radius;
+                ctx.lineTo(x, y);
+            }
+
+            // Draw the flowing sides
+            for (let i = 0; i <= points; i++) {
+                const t = i / points;
+                const curve = Math.sin(t * Math.PI) * 0.3 + 0.7;
+                const x = dropWidth * 0.5 * curve * (1 + seededRandom(hash + i + offset) * 0.2);
+                const y = -dropLength * 0.3 + t * dropLength * 1.3;
+                ctx.lineTo(x, y);
+            }
+
+            // Draw the bottom point
+            ctx.lineTo(0, dropLength * 0.7);
+
+            // Draw the other side
+            for (let i = points; i >= 0; i--) {
+                const t = i / points;
+                const curve = Math.sin(t * Math.PI) * 0.3 + 0.7;
+                const x = -dropWidth * 0.5 * curve * (1 + seededRandom(hash + i + offset) * 0.2);
+                const y = -dropLength * 0.3 + t * dropLength * 1.3;
+                ctx.lineTo(x, y);
+            }
+        }
+
+        // Draw blob shape with flowing curves
+        function drawBlob(ctx, size, hash, offset) {
+            const points = 16;
+            const baseRadius = size * 0.8;
+
+            ctx.moveTo(baseRadius, 0);
+
+            for (let i = 0; i <= points; i++) {
+                const angle = (i / points) * Math.PI * 2;
+                const variation = seededRandom(hash + i + offset) * 0.4 + 0.8;
+                const radius = baseRadius * variation;
+
+                // Add flowing curves
+                const flowAngle = angle + Math.sin(angle * 3) * 0.2;
+                const x = Math.cos(flowAngle) * radius;
+                const y = Math.sin(flowAngle) * radius;
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+        }
+
+        // Draw organic drip with tail
+        function drawOrganicDrip(ctx, size, hash, offset) {
+            const points = 20;
+            const mainRadius = size * 0.9;
+            const tailLength = size * 0.6;
+
+            // Start with main blob
+            ctx.moveTo(mainRadius, 0);
+
+            // Draw main body
+            for (let i = 0; i <= points / 2; i++) {
+                const angle = (i / (points / 2)) * Math.PI * 2;
+                const variation = seededRandom(hash + i + offset) * 0.3 + 0.85;
+                const radius = mainRadius * variation;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                ctx.lineTo(x, y);
+            }
+
+            // Draw flowing tail
+            for (let i = 0; i <= points / 2; i++) {
+                const t = i / (points / 2);
+                const tailWidth = mainRadius * 0.3 * (1 - t * 0.8);
+                const tailX = seededRandom(hash + i + offset * 2) * tailWidth * 0.3;
+                const tailY = mainRadius * 0.5 + t * tailLength;
+                ctx.lineTo(tailX, tailY);
+            }
+
+            // Close the shape
+            ctx.lineTo(-mainRadius * 0.3, mainRadius * 0.5 + tailLength);
+            ctx.lineTo(-mainRadius, 0);
         }
 
         // Draw floating particles (fewer dots)
