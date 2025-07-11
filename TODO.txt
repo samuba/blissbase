@@ -1,6 +1,5 @@
 Feedback joy
   Suchfeld für Ort benutzt
-  Nur 2 Monate??
   Wie installier ich das??
     "Zum Home-Bildschirm hinzufügen" 
     Appstore
@@ -14,11 +13,8 @@ BUG: Bild öffnen -> runter scrollen
 
 Bot: react emoji on event transfer
 
-STARTZeit hässlich
-
 telegram
-  Kanäle richtig unterstützen!
-  gruppen für städte haben manchmal keinen ort -> default ort für bestimmte gruppen "Bielefeld" 
+  
   BUG: messages mit mehreren bildern haben keinen text??
 
 tags für alle events

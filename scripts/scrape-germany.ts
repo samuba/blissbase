@@ -20,7 +20,7 @@ import * as schema from '../src/lib/server/schema.ts';
 import { db } from "../src/lib/server/db.ts";
 import { insertEvents } from '../src/lib/server/events.ts';
 import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
-import { inArray } from 'drizzle-orm';
+import { and, gte, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
 
@@ -182,6 +182,16 @@ async function main() {
             tags: [...new Set(x.tags)] // ensure tags are unique
         } satisfies InsertEvent;
     });
+
+    // delete all events that are not in sources and are in the future
+    const deletedEvents = await db.select({ slug: schema.events.slug })
+        .from(schema.events)
+        .where(and(
+            inArray(schema.events.source, sourcesToScrape),
+            notInArray(schema.events.slug, eventsToInsert.map(e => e.slug)),
+            gte(schema.events.startAt, new Date())
+        ))
+    console.log("Deleted events:", deletedEvents.map(e => e.slug));
 
     eventsToInsert = deduplicateEvents(eventsToInsert);
 
