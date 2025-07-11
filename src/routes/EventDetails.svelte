@@ -25,6 +25,10 @@
 			contact += `&text=${contactMessage}&parse_mode=HTML`;
 		}
 
+		if (contact?.startsWith('mailto:')) {
+			contact += `?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString('de-DE')})`)}&body=${contactMessage}`;
+		}
+
 		return contact;
 	});
 
@@ -70,7 +74,7 @@
 		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
 		encodeURIComponent(
 			fixTelegramUnsupportedChars(
-				`Hi, ich möchte am Event '${event.name}' (${event.startAt.toLocaleDateString('de-DE')}) teilnehmen.`
+				`Hi, ich möchte am Event '${event.name}' am ${event.startAt.toLocaleDateString('de-DE')} teilnehmen.`
 			)
 		)
 	);
@@ -229,10 +233,10 @@
 									href={contactUrl}
 									target="_blank"
 									rel="noopener noreferrer"
-									class="btn btn-primary"
+									class="link flex w-fit items-center gap-2 text-lg"
 								>
-									<i class="icon-[ph--envelope] size-5"></i>
-									Email senden
+									<i class="icon-[ph--envelope] size-6"></i>
+									{contactUrl?.replace('mailto:', '').split('?')[0]}
 								</a>
 							{/if}
 						</div>
