@@ -224,33 +224,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     async extractEventData(html: string, url: string, eventDate?: string, downloadLink?: string): Promise<ScrapedEvent | undefined> {
         try {
             const name = this.extractName(html);
-            let startAt = this.extractStartAt(html);
-            // For recurring events, combine the date from the listing page with the time from the detail page
+            // Convert eventDate from ISO format to DD.MM.YYYY format for consistency
+            let formattedEventDate: string | undefined;
             if (eventDate) {
-                const time = this.extractTime(html);
-                if (time) {
-                    // Combine date from listing page with time from detail page using proper timezone
-                    // eventDate format: "2025-07-01" or "2025-07-01T16:45:00+02:00"
-                    let dateOnly = eventDate;
-                    if (eventDate.includes('T')) {
-                        dateOnly = eventDate.split('T')[0];
-                    }
-
-                    // Parse the date and time components
-                    const [year, month, day] = dateOnly.split('-').map(Number);
-                    const [hour, minute] = time.split(':').map(Number);
-                    // Create ISO string with proper timezone offset (month is 0-indexed in germanDateToIsoStr)
-                    startAt = germanDateToIsoStr(year, month - 1, day, hour, minute);
-                } else {
-                    // Fallback to just the date if no time found - use germanDateToIsoStr with 0-indexed month
-                    let dateOnly = eventDate;
-                    if (eventDate.includes('T')) {
-                        dateOnly = eventDate.split('T')[0];
-                    }
-                    const [year, month, day] = dateOnly.split('-').map(Number);
-                    startAt = germanDateToIsoStr(year, month - 1, day);
+                let dateOnly = eventDate;
+                if (eventDate.includes('T')) {
+                    dateOnly = eventDate.split('T')[0];
                 }
+                const [year, month, day] = dateOnly.split('-').map(Number);
+                formattedEventDate = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
             }
+
+            const startAt = this.extractStartAt(html, formattedEventDate);
 
             if (!name || !startAt) {
                 console.error(`Skipping event from ${url} due to missing name or start date.`);
@@ -263,7 +248,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             return {
                 name,
                 startAt,
-                endAt: this.extractEndAt(html),
+                endAt: this.extractEndAt(html, formattedEventDate),
                 address,
                 price: this.extractPrice(html),
                 priceIsHtml: false,
@@ -311,67 +296,58 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         return name;
     }
 
-    extractStartAt(html: string) {
+    extractStartAt(html: string, eventDate?: string, eventTime?: string) {
         const $ = cheerio.load(html);
 
-        let startDate: string | undefined;
-        $('script[type="application/ld+json"]').each((_i, el) => {
-            try {
-                const jsonData = JSON.parse($(el).html() || '');
-                const eventsArray = Array.isArray(jsonData) ? jsonData : (jsonData['@graph'] && Array.isArray(jsonData['@graph'])) ? jsonData['@graph'] : [jsonData];
-
-                for (const item of eventsArray) {
-                    if (item['@type'] === 'Event' && item.startDate) {
-                        startDate = item.startDate;
-                        return false;
-                    }
-                }
-            } catch (_) {
-                void _;
-                // Silently continue on JSON parse error
+        // If we have a specific event date from the listing page, use it
+        if (eventDate) {
+            // Extract time from the detail page if not provided
+            if (!eventTime) {
+                eventTime = this.extractTimeFromDetailPage($);
             }
-        });
 
-        if (startDate) {
-            try {
-                return startDate;
-            } catch (_) {
-                void _;
-                console.error(`Error parsing start date from LD+JSON: ${startDate}`);
+            const [day, month, year] = eventDate.split('.').map(Number);
+            if (eventTime) {
+                const [hour, minute] = eventTime.split(':').map(Number);
+                return germanDateToIsoStr(year, month - 1, day, hour, minute);
+            } else {
+                return germanDateToIsoStr(year, month - 1, day);
             }
         }
 
         return undefined;
     }
 
-    extractEndAt(html: string) {
+    /**
+     * Extracts the time from the "Uhrzeit:" field in the event detail page.
+     * @param $ Cheerio instance loaded with the event detail page HTML
+     * @returns Time string in HH:MM format or undefined if not found
+     */
+    private extractTimeFromDetailPage($: cheerio.CheerioAPI | cheerio.Root): string | undefined {
+        const $table = $('main section table').first();
+        if ($table.length) {
+            const timeText = this.getTableCellValueByLabel($, $table, 'Uhrzeit:');
+            if (timeText) {
+                // Extract the start time from formats like "16:45 - 18:00 Uhr" or "19:00 - 20:30"
+                const timeMatch = timeText.match(/(\d{1,2}:\d{2})/);
+                return timeMatch ? timeMatch[1] : undefined;
+            }
+        }
+        return undefined;
+    }
+
+    extractEndAt(html: string, eventDate?: string) {
         const $ = cheerio.load(html);
 
-        let endDate: string | undefined;
-        $('script[type="application/ld+json"]').each((_i, el) => {
-            try {
-                const jsonData = JSON.parse($(el).html() || '');
-                const eventsArray = Array.isArray(jsonData) ? jsonData : (jsonData['@graph'] && Array.isArray(jsonData['@graph'])) ? jsonData['@graph'] : [jsonData];
+        const timeText = $('td:contains("Uhrzeit")').next().text().trim();
+        const timeMatch = timeText.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+        const endTime = timeMatch ? timeMatch[2] : undefined;
+        const endHour = endTime ? parseInt(endTime.split(':')[0], 10) : undefined;
+        const endMinute = endTime ? parseInt(endTime.split(':')[1], 10) : undefined;
 
-                for (const item of eventsArray) {
-                    if (item['@type'] === 'Event' && item.endDate) {
-                        endDate = item.endDate;
-                        return false;
-                    }
-                }
-            } catch (_) {
-                void _;
-                // Silently continue on JSON parse error
-            }
-        });
-
-        if (endDate) {
-            try {
-                return endDate;
-            } catch (_) {
-                void _;
-                console.error(`Error parsing end date from LD+JSON: ${endDate}`);
-            }
+        if (endTime && eventDate) {
+            const [day, month, year] = eventDate.split('.').map(Number);
+            return germanDateToIsoStr(year, month - 1, day, endHour, endMinute);
         }
 
         return undefined;
@@ -639,23 +615,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         return allLines.length > 1 ? allLines.slice(1) : allLines;
     }
 
-    extractTime(html: string): string | undefined {
-        const $ = cheerio.load(html);
-        const $table = $('main section table').first();
 
-        if ($table.length) {
-            const timeValue = this.getTableCellValueByLabel($, $table, 'Uhrzeit:');
-            if (timeValue) {
-                // Extract the start time from formats like "16:45 - 18:00 Uhr" or "19:00 - 20:30"
-                const timeMatch = timeValue.match(/(\d{1,2}:\d{2})/);
-                if (timeMatch) {
-                    return timeMatch[1];
-                }
-            }
-        }
-
-        return undefined;
-    }
 }
 
 // Execute the main function only when run directly
