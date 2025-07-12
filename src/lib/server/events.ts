@@ -1,6 +1,6 @@
 import { buildConflictUpdateColumns, db, s } from '$lib/server/db';
 
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, ilike, desc, SQL } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, isNull, lte, gt, sql, ilike, desc, SQL } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
@@ -76,20 +76,32 @@ export async function fetchEvents(params: LoadEventsParams) {
         lte(s.events.startAt, endDate),
         isHistoricalRange ? undefined : or(
             gte(s.events.startAt, sql`NOW()`),   // Future events (haven't started yet)
-            gte(s.events.startAt, sixHoursAgo)   // Recent events (started within last 6 hours)
+            and(
+                gte(s.events.startAt, sixHoursAgo),   // Recent events (started within last 6 hours)
+                or(
+                    isNull(s.events.endAt),  // Events without end time
+                    gte(s.events.endAt, sql`NOW()`)  // Events that haven't ended yet
+                )
+            )
         )
     );
     const endsInRange = and(
         isNotNull(s.events.endAt),
         gte(s.events.endAt, startDate),
         lte(s.events.endAt, endDate),
-        isHistoricalRange ? undefined : gte(s.events.startAt, sixHoursAgo)
+        isHistoricalRange ? undefined : and(
+            gte(s.events.startAt, sixHoursAgo),
+            gte(s.events.endAt, sql`NOW()`)  // Event hasn't ended yet
+        )
     );
     const spansRange = and(
         isNotNull(s.events.endAt),
         lt(s.events.startAt, startDate),
         gt(s.events.endAt, endDate),
-        isHistoricalRange ? undefined : gte(s.events.startAt, sixHoursAgo)
+        isHistoricalRange ? undefined : and(
+            gte(s.events.startAt, sixHoursAgo),
+            gte(s.events.endAt, sql`NOW()`)  // Event hasn't ended yet
+        )
     );
     const dateCondition = or(startsInRange, endsInRange, spansRange);
 
@@ -196,6 +208,10 @@ export async function fetchEvents(params: LoadEventsParams) {
         // Only resolve city name when using coordinates directly (not when plzCity was provided)
         resolvedCityName = await reverseGeocodeCityCached(lat, lng, GOOGLE_MAPS_API_KEY);
     }
+
+    // console.log(events.map(e => {
+    //     return [e.name, e.imageUrls?.[0]]
+    // }));
 
     return {
         events,
