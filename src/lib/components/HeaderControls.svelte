@@ -41,17 +41,11 @@
 	);
 
 	const clearAllFilters = () => {
-		const today = new Date();
-		const defaultStartDate = today.toISOString().split('T')[0];
-		const defaultEndDate = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000)
-			.toISOString()
-			.split('T')[0];
-
 		eventsStore.loadEvents({
 			page: 1,
 			limit: 10,
-			startDate: defaultStartDate,
-			endDate: defaultEndDate,
+			startDate: null,
+			endDate: null,
 			plzCity: null,
 			distance: null,
 			lat: null,
