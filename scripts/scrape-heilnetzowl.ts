@@ -466,7 +466,13 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const imgUrls: string[] = [];
 
         const imageUrl = $('.mod_eventreader .image_container img').first().attr('src');
-        if (imageUrl) imgUrls.push(imageUrl);
+        if (imageUrl) {
+            if (imageUrl.startsWith('https:')) {
+                imgUrls.push(imageUrl)
+            } else {
+                imgUrls.push(makeAbsoluteUrl(imageUrl, BASE_URL)!)
+            }
+        };
 
         return imgUrls;
     }
