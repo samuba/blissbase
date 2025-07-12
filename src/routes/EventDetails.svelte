@@ -101,7 +101,7 @@
 			</figure>
 		</div>
 	{:else}
-		<RandomPlaceholderImg seed={event.slug} class="h-full max-h-70 " />
+		<RandomPlaceholderImg seed={event.name} class="h-full max-h-70 " />
 	{/if}
 
 	<!-- Fullscreen Image Overlay -->
