@@ -29,7 +29,7 @@
 	let {
 		value = $bindable({
 			start: today,
-			end: endOfMonth(today.add({ months: 6 }))
+			end: endOfMonth(today.add({ years: 3 }))
 		}),
 		class: className,
 		onChange,
