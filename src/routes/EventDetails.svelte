@@ -5,12 +5,12 @@
 	import type { UiEvent } from '$lib/server/events';
 	import RandomPlaceholderImg from '$lib/components/RandomPlaceholderImg.svelte';
 	import ShareButton from '$lib/components/ShareButton.svelte';
+	import ImageDialog from '$lib/components/ImageDialog.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
 
 	let showOriginal = $state(false);
-	let showFullscreenImage = $state(false);
 
 	let contactUrl = $derived.by(() => {
 		let contact = event.contact;
@@ -89,35 +89,20 @@
 
 {#if event}
 	{#if imageUrl}
-		<div class="bg-cover bg-center" style="background-image: url({imageUrl})">
-			<figure class="flex justify-center shadow-sm backdrop-blur-md backdrop-brightness-85">
-				<img
-					src={imageUrl}
-					alt={event.name}
-					class="max-h-96 w-fit max-w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
-					onclick={() => (showFullscreenImage = true)}
-					onerror={() => (imageLoadError = true)}
-				/>
-			</figure>
-		</div>
+		<ImageDialog {imageUrl} alt={event.name} triggerProps={{ class: 'w-full' }}>
+			<div class="bg-cover bg-center" style="background-image: url({imageUrl})">
+				<figure class="flex justify-center shadow-sm backdrop-blur-md backdrop-brightness-85">
+					<img
+						src={imageUrl}
+						alt={event.name}
+						class="max-h-96 w-fit max-w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
+						onerror={() => (imageLoadError = true)}
+					/>
+				</figure>
+			</div>
+		</ImageDialog>
 	{:else}
 		<RandomPlaceholderImg seed={event.name} class="h-full max-h-70 " />
-	{/if}
-
-	<!-- Fullscreen Image Overlay -->
-	{#if showFullscreenImage && imageUrl}
-		<div
-			class=" animate-in fade-in fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black/95"
-			onclick={() => (showFullscreenImage = false)}
-		>
-			<img src={imageUrl} alt={event.name} class="max-h-full max-w-full object-contain" />
-			<button
-				class="btn btn-circle absolute top-4 right-4 shadow-lg"
-				aria-label="Close fullscreen image"
-			>
-				<i class="icon-[ph--x] size-5"></i>
-			</button>
-		</div>
 	{/if}
 
 	<div class="card-body text-base-content/90 w-full space-y-4 md:px-10">
