@@ -209,7 +209,7 @@
 				bind:this={plzCityInput}
 				type="text"
 				id="plzCityInput"
-				placeholder="PLZ / Stadt"
+				placeholder="Stadt / PLZ"
 				class="input input-bordered join-item peer w-full border-r-0"
 				bind:value={typedPlzCity}
 				disabled={isLoadingLocation || disabled}
