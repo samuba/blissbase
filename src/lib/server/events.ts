@@ -213,8 +213,8 @@ export async function fetchEvents(params: LoadEventsParams) {
     return {
         events,
         pagination: {
-            startDate: startCalDate.toString(),
-            endDate: endCalDate.toString(),
+            startDate: params.startDate ? startCalDate.toString() : undefined,
+            endDate: params.endDate ? endCalDate.toString() : undefined,
             lat: usedLat,
             lng: usedLng,
             totalEvents,

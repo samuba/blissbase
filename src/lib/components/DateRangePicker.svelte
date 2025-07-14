@@ -5,13 +5,7 @@
 
 <script lang="ts">
 	import { DateRangePicker } from 'bits-ui';
-	import {
-		CalendarDate,
-		endOfMonth,
-		startOfWeek,
-		endOfWeek,
-		type DateValue
-	} from '@internationalized/date';
+	import { CalendarDate, startOfWeek, endOfWeek, type DateValue } from '@internationalized/date';
 
 	const today = new CalendarDate(
 		new Date().getFullYear(),
@@ -20,42 +14,37 @@
 	);
 
 	type DateRangePickerProps = {
-		value?: { start: CalendarDate; end: CalendarDate };
+		value: { start: CalendarDate | undefined; end: CalendarDate | undefined };
 		class?: string;
 		onChange: DateRangePickerOnChange;
 		open?: boolean;
 	};
 
 	let {
-		value = $bindable({
-			start: today,
-			end: endOfMonth(today.add({ years: 3 }))
-		}),
+		value = $bindable({ start: undefined, end: undefined }),
 		class: className,
 		onChange,
 		open = $bindable(false)
 	}: DateRangePickerProps = $props();
 
-	let isOpen = $derived(open);
-	let previousStart = $state(value?.start as DateValue);
-	let previousEnd = $state(value?.end as DateValue);
+	let previousStart = $state(value?.start);
+	let previousEnd = $state(value?.end);
 
 	function internalOnChange(newValue: DateRange) {
 		// only trigger if the value has actuallychanged
-		if (!newValue.start || !newValue.end) return;
 		if (
-			previousStart.toString() === newValue.start.toString() &&
-			previousEnd.toString() === newValue.end.toString()
+			previousStart?.toString() === newValue.start?.toString() &&
+			previousEnd?.toString() === newValue.end?.toString()
 		) {
 			return;
 		}
 
-		previousStart = newValue.start;
-		previousEnd = newValue.end;
+		previousStart = newValue.start as CalendarDate | undefined;
+		previousEnd = newValue.end as CalendarDate | undefined;
 		onChange?.(newValue);
 	}
 
-	function setDateRange(start: CalendarDate, end: CalendarDate) {
+	function setDateRange(start: CalendarDate | undefined, end: CalendarDate | undefined) {
 		value = { start, end };
 		internalOnChange({ start, end });
 		open = false;
@@ -86,48 +75,56 @@
 		const end = today.add({ days: 29 }); // 30 days total (including today)
 		setDateRange(start, end);
 	}
+
+	function getAllFutureEvents() {
+		setDateRange(undefined, undefined);
+	}
 </script>
 
 <DateRangePicker.Root
 	weekdayFormat="short"
 	fixedWeeks={true}
-	class="flex w-fit flex-col gap-1.5"
+	class="flex flex-grow flex-col gap-1.5"
 	bind:value
 	bind:open
 	locale="de-DE"
 	onValueChange={internalOnChange}
 >
-	<DateRangePicker.Trigger class="w-fit">
+	<DateRangePicker.Trigger class="">
 		<div
-			class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus px-3.5 select-none {className}"
+			class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus !w-full flex-grow cursor-pointer justify-center px-3.5 select-none {className}"
 		>
-			{#each ['start', 'end'] as const as type}
-				<DateRangePicker.Input {type}>
-					{#snippet children({ segments })}
-						{#each segments as { part, value }}
-							<div class="inline-block select-none">
-								{#if part === 'literal'}
-									<DateRangePicker.Segment {part} class="text-base-content/70 ">
-										{value}
-									</DateRangePicker.Segment>
-								{:else}
-									<DateRangePicker.Segment
-										{part}
-										class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] focus-visible:ring-0! focus-visible:ring-offset-0!"
-									>
-										{value}
-									</DateRangePicker.Segment>
-								{/if}
-							</div>
-						{/each}
-					{/snippet}
-				</DateRangePicker.Input>
-				{#if type === 'start'}
-					<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
-				{/if}
-			{/each}
-
 			<i class="icon-[ph--calendar-dots] size-6"></i>
+
+			{#if !value?.start && !value?.end}
+				Kommende Events
+			{:else}
+				{#each ['start', 'end'] as const as type}
+					<DateRangePicker.Input {type}>
+						{#snippet children({ segments })}
+							{#each segments as { part, value }}
+								<div class="inline-block select-none">
+									{#if part === 'literal'}
+										<DateRangePicker.Segment {part} class="text-base-content/70 ">
+											{value}
+										</DateRangePicker.Segment>
+									{:else}
+										<DateRangePicker.Segment
+											{part}
+											class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] focus-visible:ring-0! focus-visible:ring-offset-0!"
+										>
+											{value}
+										</DateRangePicker.Segment>
+									{/if}
+								</div>
+							{/each}
+						{/snippet}
+					</DateRangePicker.Input>
+					{#if type === 'start'}
+						<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
+					{/if}
+				{/each}
+			{/if}
 		</div>
 	</DateRangePicker.Trigger>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
@@ -138,6 +135,9 @@
 					<button class="btn btn-sm px-0" onclick={getThisWeekend}> Dieses Wochenende </button>
 					<button class="btn btn-sm px-0" onclick={getNextWeek}> Nächste Woche </button>
 					<button class="btn btn-sm px-0" onclick={getNext30Days}> Nächste 30 Tage </button>
+					<button class="btn btn-sm col-span-2 px-0" onclick={getAllFutureEvents}>
+						Alle kommende Events
+					</button>
 				</div>
 
 				<DateRangePicker.Header class="flex items-center justify-between">

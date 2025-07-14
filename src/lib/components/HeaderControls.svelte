@@ -110,8 +110,12 @@
 								onChange={eventsStore.onDateChange}
 								bind:open={isDatePickerOpen}
 								value={{
-									start: parseDate(eventsStore.pagination.startDate!),
-									end: parseDate(eventsStore.pagination.endDate!)
+									start: eventsStore.pagination.startDate
+										? parseDate(eventsStore.pagination.startDate)
+										: undefined,
+									end: eventsStore.pagination.endDate
+										? parseDate(eventsStore.pagination.endDate)
+										: undefined
 								}}
 							/>
 						</div>
@@ -213,15 +217,19 @@
 		<!-- Expanded Header -->
 		<div class="flex flex-col gap-4 px-4">
 			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
-				<div class="flex w-full items-center justify-center gap-4">
+				<div class="flex w-full items-center justify-end gap-4">
 					{@render logoMenu()}
 
 					<DateRangePicker
 						class="w-full md:w-fit"
 						onChange={eventsStore.onDateChange}
 						value={{
-							start: parseDate(eventsStore.pagination.startDate!),
-							end: parseDate(eventsStore.pagination.endDate!)
+							start: eventsStore.pagination.startDate
+								? parseDate(eventsStore.pagination.startDate)
+								: undefined,
+							end: eventsStore.pagination.endDate
+								? parseDate(eventsStore.pagination.endDate)
+								: undefined
 						}}
 					/>
 				</div>
@@ -285,7 +293,7 @@
 			}}
 		>
 			{#snippet trigger()}
-				<div class="drop-shadow-sm">
+				<div class=" drop-shadow-sm">
 					<img
 						src="/logo.svg"
 						alt="Menu"
