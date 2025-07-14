@@ -31,22 +31,6 @@
 		hasDateFilter || hasLocationFilter || hasSearchFilter || hasSortFilter
 	);
 
-	const clearAllFilters = () => {
-		eventsStore.loadEvents({
-			page: 1,
-			limit: 10,
-			startDate: null,
-			endDate: null,
-			plzCity: null,
-			distance: null,
-			lat: null,
-			lng: null,
-			searchTerm: null,
-			sortBy: 'time',
-			sortOrder: 'asc'
-		});
-	};
-
 	const debouncedSearch = debounce(() => {
 		eventsStore.loadEvents({
 			...eventsStore.pagination,
@@ -337,7 +321,7 @@
 {#snippet clearButton()}
 	{#if hasAnyFilter}
 		<button
-			onclick={clearAllFilters}
+			onclick={() => eventsStore.resetFilters()}
 			class="btn btn-circle btn-ghost"
 			title="Alle Filter zurücksetzen"
 			aria-label="Alle Filter zurücksetzen"

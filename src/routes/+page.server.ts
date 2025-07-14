@@ -9,7 +9,7 @@ export const load = (async ({ cookies }) => {
     // Merge saved filters with default parameters
     const defaultParams = {
         page: 1,
-        limit: 10
+        limit: 7
     };
 
     const params = savedFilters ? { ...defaultParams, ...savedFilters } : defaultParams;

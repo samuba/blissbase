@@ -22,14 +22,18 @@ type PaginationState = {
     totalPages?: number | null;
 };
 
-export class EventsStore {
-    events = $state<UiEvent[]>([]);
-    pagination = $state<PaginationState>({
+function initialPagination() {
+    return {
         startDate: null,
         endDate: null,
         page: 1,
-        limit: 10
-    });
+        limit: 7
+    };
+}
+
+export class EventsStore {
+    events = $state<UiEvent[]>([]);
+    pagination = $state<PaginationState>(initialPagination());
     loadingState = $state<LoadingState>('not-loading');
 
 
@@ -168,16 +172,8 @@ export class EventsStore {
         return this.events.find((event) => event.id === id);
     }
 
-    // Reset store to initial state
-    reset() {
-        this.events = [];
-        this.pagination = {
-            startDate: null,
-            endDate: null,
-            page: 1,
-            limit: 10
-        };
-        this.loadingState = 'not-loading';
+    resetFilters() {
+        return this.loadEvents(initialPagination());
     }
 
     // Refresh current page

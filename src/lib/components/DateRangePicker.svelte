@@ -10,7 +10,7 @@
 
 <script lang="ts">
 	import { DateRangePicker } from 'bits-ui';
-	import { CalendarDate, startOfWeek, endOfWeek, type DateValue } from '@internationalized/date';
+	import { CalendarDate, startOfWeek, endOfWeek } from '@internationalized/date';
 
 	const today = new CalendarDate(
 		new Date().getFullYear(),
