@@ -87,7 +87,7 @@
 	{#if isSticky}
 		<!-- Collapsed Sticky Header -->
 		<div class="flex w-full items-center justify-center gap-3">
-			{@render logoMenu()}
+			{@render logoMenu('size-10 min-w-10', 'drop-shadow-sm')}
 
 			<!-- Date Button -->
 			<div class="relative">
@@ -218,7 +218,9 @@
 		<div class="flex flex-col gap-4 px-4">
 			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
 				<div class="flex w-full items-center gap-4 md:w-auto">
-					{@render logoMenu()}
+					<div class="-my-4 flex-shrink-0">
+						{@render logoMenu('size-9.5 min-w-9.5', 'btn-lg btn btn-circle bg-base-100  ')}
+					</div>
 
 					<div class="flex-1 md:flex-none">
 						<DateRangePicker
@@ -288,7 +290,7 @@
 	{/if}
 </header>
 
-{#snippet logoMenu()}
+{#snippet logoMenu(logoClass: string, btnClass: string)}
 	<div class="flex flex-col items-center">
 		<PopOver
 			triggerClass="cursor-pointer group"
@@ -298,11 +300,11 @@
 			}}
 		>
 			{#snippet trigger()}
-				<div class=" drop-shadow-sm">
+				<div class={btnClass}>
 					<img
 						src="/logo.svg"
 						alt="Menu"
-						class="size-10 min-w-10 transition-transform duration-500 ease-in-out group-data-[state=open]:-rotate-360"
+						class="transition-transform duration-500 ease-in-out group-data-[state=open]:-rotate-360 {logoClass}"
 					/>
 				</div>
 			{/snippet}

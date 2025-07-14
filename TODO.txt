@@ -6,9 +6,6 @@ Feedback joy
     "App installieren" für iOS wichtig
   Telegram Kanäle verlinken
 
-datum in cookie ist veraltet irgendwann. 
-  Standard sollte leer sein -> "Alle kommenden Events"
-  + Button für "Alle kommenden Events"
 
 Der event hat kein anmelde button, sollte original author verlinken
 https://www.blissbase.app/2025-07-12-1630-liebe-tanzen-special-mit-glitzer-und-tattoos
@@ -16,7 +13,6 @@ https://www.blissbase.app/2025-07-12-1630-liebe-tanzen-special-mit-glitzer-und-t
 Bot: react emoji on event transfer
 
 telegram
-  
   BUG: messages mit mehreren bildern haben keinen text??
 
 tags für alle events
