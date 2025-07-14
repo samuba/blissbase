@@ -1,5 +1,10 @@
 <script lang="ts" module>
-	import { type DateRangePickerRootPropsWithoutHTML, type DateRange } from 'bits-ui';
+	import {
+		type DateRangePickerRootPropsWithoutHTML,
+		type DateRange,
+		type DateRangePickerTriggerProps,
+		type DateRangePickerRootProps
+	} from 'bits-ui';
 	export type DateRangePickerOnChange = DateRangePickerRootPropsWithoutHTML['onValueChange'];
 </script>
 
@@ -15,14 +20,16 @@
 
 	type DateRangePickerProps = {
 		value: { start: CalendarDate | undefined; end: CalendarDate | undefined };
-		class?: string;
+		triggerProps?: DateRangePickerTriggerProps;
+		rootProps?: DateRangePickerRootProps;
 		onChange: DateRangePickerOnChange;
 		open?: boolean;
 	};
 
 	let {
 		value = $bindable({ start: undefined, end: undefined }),
-		class: className,
+		triggerProps,
+		rootProps,
 		onChange,
 		open = $bindable(false)
 	}: DateRangePickerProps = $props();
@@ -84,48 +91,46 @@
 <DateRangePicker.Root
 	weekdayFormat="short"
 	fixedWeeks={true}
-	class="flex flex-grow flex-col gap-1.5"
+	class="flex flex-grow flex-col gap-1.5 {rootProps?.class}"
 	bind:value
 	bind:open
 	locale="de-DE"
 	onValueChange={internalOnChange}
 >
-	<DateRangePicker.Trigger class="">
-		<div
-			class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus !w-full flex-grow cursor-pointer justify-center px-3.5 select-none {className}"
-		>
-			<i class="icon-[ph--calendar-dots] size-6"></i>
+	<DateRangePicker.Trigger
+		class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus !w-full flex-grow cursor-pointer justify-center pr-4 select-none {triggerProps?.class}"
+	>
+		<i class="icon-[ph--calendar-dots] size-6"></i>
 
-			{#if !value?.start && !value?.end}
-				Kommende Events
-			{:else}
-				{#each ['start', 'end'] as const as type}
-					<DateRangePicker.Input {type}>
-						{#snippet children({ segments })}
-							{#each segments as { part, value }}
-								<div class="inline-block select-none">
-									{#if part === 'literal'}
-										<DateRangePicker.Segment {part} class="text-base-content/70 ">
-											{value}
-										</DateRangePicker.Segment>
-									{:else}
-										<DateRangePicker.Segment
-											{part}
-											class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] focus-visible:ring-0! focus-visible:ring-offset-0!"
-										>
-											{value}
-										</DateRangePicker.Segment>
-									{/if}
-								</div>
-							{/each}
-						{/snippet}
-					</DateRangePicker.Input>
-					{#if type === 'start'}
-						<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
-					{/if}
-				{/each}
-			{/if}
-		</div>
+		{#if !value?.start && !value?.end}
+			Kommende Events
+		{:else}
+			{#each ['start', 'end'] as const as type}
+				<DateRangePicker.Input {type}>
+					{#snippet children({ segments })}
+						{#each segments as { part, value }}
+							<div class="inline-block select-none">
+								{#if part === 'literal'}
+									<DateRangePicker.Segment {part} class="text-base-content/70 ">
+										{value}
+									</DateRangePicker.Segment>
+								{:else}
+									<DateRangePicker.Segment
+										{part}
+										class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] focus-visible:ring-0! focus-visible:ring-offset-0!"
+									>
+										{value}
+									</DateRangePicker.Segment>
+								{/if}
+							</div>
+						{/each}
+					{/snippet}
+				</DateRangePicker.Input>
+				{#if type === 'start'}
+					<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
+				{/if}
+			{/each}
+		{/if}
 	</DateRangePicker.Trigger>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
 		<DateRangePicker.Calendar class="card card-border rounded-15px bg-base-100 p-4 shadow-xl">

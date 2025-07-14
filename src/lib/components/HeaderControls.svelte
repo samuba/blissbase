@@ -217,33 +217,38 @@
 		<!-- Expanded Header -->
 		<div class="flex flex-col gap-4 px-4">
 			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
-				<div class="flex w-full items-center justify-end gap-4">
+				<div class="flex w-full items-center gap-4 md:w-auto">
 					{@render logoMenu()}
 
-					<DateRangePicker
-						class="w-full md:w-fit"
-						onChange={eventsStore.onDateChange}
-						value={{
-							start: eventsStore.pagination.startDate
-								? parseDate(eventsStore.pagination.startDate)
-								: undefined,
-							end: eventsStore.pagination.endDate
-								? parseDate(eventsStore.pagination.endDate)
-								: undefined
-						}}
-					/>
+					<div class="flex-1 md:flex-none">
+						<DateRangePicker
+							triggerProps={{ class: 'w-full flex-grow' }}
+							rootProps={{ class: 'w-full flex-grow' }}
+							onChange={eventsStore.onDateChange}
+							value={{
+								start: eventsStore.pagination.startDate
+									? parseDate(eventsStore.pagination.startDate)
+									: undefined,
+								end: eventsStore.pagination.endDate
+									? parseDate(eventsStore.pagination.endDate)
+									: undefined
+							}}
+						/>
+					</div>
 				</div>
 
-				<LocationDistanceInput
-					initialLocation={eventsStore.pagination.lat && eventsStore.pagination.lng
-						? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
-						: eventsStore.pagination.plzCity}
-					initialDistance={eventsStore.pagination.distance}
-					resolvedCityName={eventsStore.pagination.lat && eventsStore.pagination.lng
-						? eventsStore.pagination.plzCity
-						: null}
-					onChange={eventsStore.handleLocationDistanceChange}
-				/>
+				<div class="w-full flex-1 md:w-auto">
+					<LocationDistanceInput
+						initialLocation={eventsStore.pagination.lat && eventsStore.pagination.lng
+							? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
+							: eventsStore.pagination.plzCity}
+						initialDistance={eventsStore.pagination.distance}
+						resolvedCityName={eventsStore.pagination.lat && eventsStore.pagination.lng
+							? eventsStore.pagination.plzCity
+							: null}
+						onChange={eventsStore.handleLocationDistanceChange}
+					/>
+				</div>
 			</div>
 			<div class="flex w-full items-center justify-center gap-4">
 				<label class="input w-full">
