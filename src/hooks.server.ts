@@ -39,7 +39,10 @@ const client = new PostHog(
 )
 
 export const handleError: HandleServerError = async ({ error, status }) => {
-    if (!dev && status !== 404) {
+    if (status === 404) return; // ignore 404 errors
+    console.error(error);
+
+    if (!dev) {
         client.captureException(error);
         await client.shutdown();
     }
