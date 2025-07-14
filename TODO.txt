@@ -6,6 +6,13 @@ Feedback joy
     "App installieren" für iOS wichtig
   Telegram Kanäle verlinken
 
+Bilder sind abgefuckt wenn man filtert nach heidelberg -> zeigt bilder von ohne filter an
+
+datum in cookie ist veraltet irgendwann. 
+  Standard sollte leer sein -> "Alle kommenden Events"
+  + Button für "Alle kommenden Events"
+
+
 Der event hat kein anmelde button, sollte original author verlinken
 https://www.blissbase.app/2025-07-12-1630-liebe-tanzen-special-mit-glitzer-und-tattoos
 

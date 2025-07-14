@@ -57,7 +57,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     const today = getToday(timeZone);
     const startCalDate = params.startDate ? parseDate(params.startDate) : new CalendarDate(today.year, today.month, today.day);
     const endCalDate = params.endDate ? parseDate(params.endDate) : startCalDate.add({ years: 3 });
-    const limit = Math.min(params.limit ?? 10, 20);
+    const limit = Math.min(params.limit ?? 10, 10);
     const page = Math.max(params.page ?? 1, 1);
     let sortBy = params.sortBy === 'distance' ? 'distance' : 'time';
     const sortOrder = params.sortOrder === 'desc' ? 'desc' : 'asc';
@@ -209,9 +209,6 @@ export async function fetchEvents(params: LoadEventsParams) {
         resolvedCityName = await reverseGeocodeCityCached(lat, lng, GOOGLE_MAPS_API_KEY);
     }
 
-    // console.log(events.map(e => {
-    //     return [e.name, e.imageUrls?.[0]]
-    // }));
 
     return {
         events,
