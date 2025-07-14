@@ -15,18 +15,9 @@
 
 	let isDatePickerOpen = $state(false);
 
-	// Check if inputs are in non-default state
-	const hasDateFilter = $derived.by(() => {
-		const today = new Date();
-		const defaultStartDate = today.toISOString().split('T')[0];
-		const defaultEndDate = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000)
-			.toISOString()
-			.split('T')[0];
-		return (
-			eventsStore.pagination.startDate !== defaultStartDate ||
-			eventsStore.pagination.endDate !== defaultEndDate
-		);
-	});
+	const hasDateFilter = $derived(
+		eventsStore.pagination.startDate || eventsStore.pagination.endDate
+	);
 	const hasLocationFilter = $derived(
 		Boolean(
 			eventsStore.pagination.plzCity || (eventsStore.pagination.lat && eventsStore.pagination.lng)
