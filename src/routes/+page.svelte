@@ -5,11 +5,14 @@
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import HeaderControls from '$lib/components/HeaderControls.svelte';
+	import { browser } from '$app/environment';
 
 	const { data } = $props();
 
-	if (eventsStore.events.length === 0) {
-		// do not initialize from server when already populated (navigated from an event page)
+	// Always initialize from server data during SSR to prevent state pollution
+	// On client, only initialize if store is empty (preserves navigation state)
+	if (!browser || eventsStore.events.length === 0) {
+		console.log('Initializing events store from server data');
 		eventsStore.initialize({
 			events: data.events,
 			pagination: data.pagination

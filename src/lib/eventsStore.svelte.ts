@@ -2,6 +2,7 @@ import type { UiEvent } from '$lib/server/events';
 import { fetchEventsWithCookiePersistence } from '../routes/page.telefunc';
 import type { DateRangePickerOnChange } from '$lib/components/DateRangePicker.svelte';
 import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.svelte';
+import { browser } from '$app/environment';
 
 type LoadingState = 'not-loading' | 'loading' | 'loading-more';
 
@@ -188,4 +189,20 @@ export class EventsStore {
     }
 }
 
-export const eventsStore = new EventsStore();
+// Create a new store instance for each server request, or use singleton on client
+function createEventsStore(): EventsStore {
+    if (browser) {
+        // Client-side: use singleton to maintain state across navigation
+        return globalThis.__eventsStore ?? (globalThis.__eventsStore = new EventsStore());
+    } else {
+        // Server-side: always create fresh instance to avoid state pollution
+        return new EventsStore();
+    }
+}
+
+export const eventsStore = createEventsStore();
+
+// Type augmentation for the global store
+declare global {
+    var __eventsStore: EventsStore | undefined;
+}
