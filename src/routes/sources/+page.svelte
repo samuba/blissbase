@@ -47,6 +47,9 @@
 						Kendralah-Experience
 
 						<a href="tg://resolve?domain=@youmeunity" target="_blank" class="link">YouMeUnity</a>
+						<a href="https://t.me/+fwGUbapUkrBhYTdi" target="_blank" class="link">
+							Bewegungsnetz Bielefeld und Umgebung
+						</a>
 					</div>
 				</div>
 			</div>

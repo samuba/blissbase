@@ -287,11 +287,9 @@
 				<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
 					<p class="text-lg leading-tight font-bold">Willkommen bei Blissbase</p>
 					<p>
-						Wir wollen die Conscious Communities Deutschlands zusammenbringen und vernetzen.
-						<br />
-						Dafür machen wir Events aus verschiedensten Quellen für so viele Menschen wie möglich erreichbar.
-						<br />
-						In einer simplen und komfortablen App.
+						Wir wollen die achtsamen Communities Deutschlands zusammenbringen und vernetzen. Dafür
+						machen wir Events aus verschiedensten Quellen für so viele Menschen wie möglich
+						erreichbar — In einer simplen und komfortablen App.
 					</p>
 					<p>
 						<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
