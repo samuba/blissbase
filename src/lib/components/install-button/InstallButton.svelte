@@ -133,6 +133,7 @@
 				autoplay
 				loop
 				muted
+				controlsList="nofullscreen"
 				class="mx-auto max-h-[900px] flex-1 rounded-[3rem] object-contain"
 				style="height: {innerHeight - ((explanationDiv?.offsetHeight ?? 0) + 30)}px"
 			/>
