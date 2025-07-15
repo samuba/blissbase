@@ -136,6 +136,7 @@
 {#if showInstallButton}
 	<button onclick={onInstallClick} class="btn"> App installieren </button>
 {/if}
+{getPWADisplayMode()}
 
 <Dialog.Root bind:open={showIosInstallHowto}>
 	<Dialog.Portal>
