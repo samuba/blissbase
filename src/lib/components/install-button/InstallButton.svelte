@@ -116,7 +116,7 @@
 <svelte:window bind:innerHeight />
 
 {#if showInstallButton}
-	<button onclick={onInstallClick} class="btn"> App installieren {mode} </button>
+	<button onclick={onInstallClick} class="btn"> App installieren </button>
 {/if}
 
 <Dialog.Root bind:open={showIosInstallHowto}>
