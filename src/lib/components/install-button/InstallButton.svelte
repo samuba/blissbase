@@ -53,6 +53,12 @@
 	onMount(() => {
 		if (!browser) return;
 
+		// Check if we're already in standalone mode (PWA already installed)
+		if (getPWADisplayMode() === 'standalone') {
+			showInstallButton = false;
+			return;
+		}
+
 		window.addEventListener('beforeinstallprompt', (e) => {
 			// Prevent Chrome 67 and earlier from automatically showing the prompt
 			e.preventDefault();
@@ -71,9 +77,12 @@
 			console.log('PWA was installed');
 		});
 
-		if (getPWADisplayMode() !== 'standalone') {
+		// For iOS devices, show the button immediately to trigger the how-to dialog
+		if (mode === 'smallIosDevice' || mode === 'ipad') {
 			showInstallButton = true;
 		}
+		// For non-iOS devices, wait for the beforeinstallprompt event
+		// The button will be shown when that event fires
 	});
 
 	onDestroy(() => {
@@ -99,17 +108,26 @@
 	// does NOT work on iOS!
 	async function installPwa() {
 		if (!deferredPrompt) {
+			console.log('Install prompt not available');
+			// Hide the button if the prompt is not available
+			showInstallButton = false;
 			return;
 		}
-		// Show the prompt
-		deferredPrompt.prompt();
-		// Wait for the user to respond to the prompt
-		const { outcome } = await deferredPrompt.userChoice;
-		// Optionally, send analytics event with outcome of user choice
-		console.log(`User response to the install prompt: ${outcome}`);
-		// We've used the prompt, and can't use it again, throw it away
-		deferredPrompt = null;
-		showInstallButton = false;
+
+		try {
+			// Show the prompt
+			deferredPrompt.prompt();
+			// Wait for the user to respond to the prompt
+			const { outcome } = await deferredPrompt.userChoice;
+			// Optionally, send analytics event with outcome of user choice
+			console.log(`User response to the install prompt: ${outcome}`);
+		} catch (error) {
+			console.error('Error showing install prompt:', error);
+		} finally {
+			// We've used the prompt, and can't use it again, throw it away
+			deferredPrompt = null;
+			showInstallButton = false;
+		}
 	}
 </script>
 
