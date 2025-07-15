@@ -134,9 +134,10 @@
 <svelte:window bind:innerHeight />
 
 {#if showInstallButton}
-	<button onclick={onInstallClick} class="btn"> App installieren </button>
+	<button onclick={onInstallClick} class="btn">
+		App installieren <i class="icon--ph-app-store"></i>
+	</button>
 {/if}
-{getPWADisplayMode()}
 
 <Dialog.Root bind:open={showIosInstallHowto}>
 	<Dialog.Portal>
