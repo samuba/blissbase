@@ -101,16 +101,20 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             slug: generateSlug({ name, startAt, endAt: endAt ?? undefined }),
         } satisfies InsertEvent
 
+        let skippedDescription = false;
+        let skippedImage = false;
         const existingEvent = await db.query.events.findFirst({ where: eq(s.events.slug, eventRow.slug) });
         if (existingEvent) {
             // only override description if its longer than the existing one
             if ((existingEvent.description?.length ?? 0) > (eventRow.description?.length ?? 0)) {
                 console.log("existing description is longer than new one, not updating description for ", eventRow.slug)
                 eventRow.description = existingEvent.description ?? undefined
+                skippedDescription = true;
             }
             // if no image was provided, use the existing one
             if (eventRow.imageUrls.length === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
                 eventRow.imageUrls = existingEvent.imageUrls ?? []
+                skippedImage = true;
             }
         }
 
@@ -119,7 +123,9 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         const dbEvent = (await insertEvents([eventRow]))[0]
         await ctx.react('⚡', false) // marker that the event was transferred
         if (existingEvent) {
-            await reply(ctx, `✅ Der Event wurde aktualisiert:\n\n${routes.eventDetails(dbEvent.slug, true)}`, fromGroup, msgId)
+            await reply(ctx, `✅ Der Event wurde aktualisiert:\n\n${routes.eventDetails(dbEvent.slug, true)}
+\n${skippedDescription ? "ℹ️ Die Beschreibung wurde nicht aktualisiert da sie kürzer als die bestehende ist." : ""}
+${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende Bild beibehalten." : ""}`.trim(), fromGroup, msgId)
         } else {
             await reply(ctx, `✅ Der Event wurde in BlissBase eingetragen:\n\n${routes.eventDetails(dbEvent.slug, true)}`, fromGroup, msgId)
         }
