@@ -12,6 +12,15 @@
 
 	let showOriginal = $state(false);
 
+	const contactMessage = $derived(
+		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
+		encodeURIComponent(
+			fixTelegramUnsupportedChars(
+				`Hi, ich möchte am Event '${event.name}' am ${event.startAt.toLocaleDateString('de-DE')} teilnehmen.`
+			)
+		)
+	);
+
 	let contactUrl = $derived.by(() => {
 		let contact = event.contact;
 		if (contact && /^\+?\d[\d\s\-\(\)]+\d$/.test(contact)) {
@@ -69,15 +78,6 @@
 			.replace(/[\^\\|]/g, '') // remove special chars known to break in telegram links. These work fine: !@#$%&*()_+-=[]{};":,.<>/?
 			.trim();
 	}
-
-	const contactMessage = $derived(
-		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
-		encodeURIComponent(
-			fixTelegramUnsupportedChars(
-				`Hi, ich möchte am Event '${event.name}' am ${event.startAt.toLocaleDateString('de-DE')} teilnehmen.`
-			)
-		)
-	);
 
 	let imageLoadError = $state(false);
 	const imageUrl = $derived(
