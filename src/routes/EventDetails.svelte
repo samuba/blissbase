@@ -22,7 +22,7 @@
 	);
 
 	let contactUrl = $derived.by(() => {
-		let contact = event.contact;
+		let contact = event.contact ?? event.hostLink;
 		if (contact && /^\+?\d[\d\s\-\(\)]+\d$/.test(contact)) {
 			contact = `tel:${contact.replace(/\s/g, '')}`;
 		}
@@ -161,7 +161,7 @@
 					Anmelden
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
-			{:else if event.contact}
+			{:else if contactUrl}
 				<PopOver contentClass="bg-base-100 p-5 max-w-sm z-30">
 					{#snippet trigger()}
 						<button class="btn btn-primary"> Anmelden </button>
