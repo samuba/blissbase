@@ -13,7 +13,14 @@ export const msgFilters = anyOf(
     message('forum_topic_created'),
     message('caption'),
     message('caption_entities'),
-    channelPost()
+    message('photo'),
+    channelPost('text'),
+    channelPost('forward_origin'),
+    channelPost('chat_shared'),
+    channelPost('forum_topic_created'),
+    channelPost('caption'),
+    channelPost('caption_entities'),
+    channelPost('photo'),
 )
 
 export type TelegramCloudflareBody = {
