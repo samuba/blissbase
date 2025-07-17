@@ -294,7 +294,7 @@
 					<p>
 						<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
 						<br />
-						Trage deinen Event in eine unserer Quellen ein - er erscheint dann automatisch bei uns.
+						Trage deinen Event in eine unserer Quellen ein — er erscheint dann automatisch bei uns.
 					</p>
 
 					<a href={routes.sources()} class="btn-sm btn w-fit">Unsere Event Quellen</a>

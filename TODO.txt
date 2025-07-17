@@ -16,6 +16,8 @@ tags für alle events
 
 online events ausblenden (standardmäßig?)
 
+mehr bilder anzeigen wenn mehr übermittelt wurden
+
 heilnetz extras aus liste sind teilweise sehr wichtig
 
 Events bearbeiten/löschen über telegram
