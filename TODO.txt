@@ -9,8 +9,6 @@ Feedback joy
 Der event hat kein anmelde button, sollte original author verlinken
 https://www.blissbase.app/2025-07-12-1630-liebe-tanzen-special-mit-glitzer-und-tattoos
 
-Bot: react emoji on event transfer
-
 telegram
   BUG: messages mit mehreren bildern haben keinen text??
 
