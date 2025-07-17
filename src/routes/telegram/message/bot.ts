@@ -106,7 +106,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             // only override description if its longer than the existing one
             if ((existingEvent.description?.length ?? 0) > (eventRow.description?.length ?? 0)) {
                 console.log("existing description is longer than new one, not updating description for ", eventRow.slug)
-                eventRow.description = undefined
+                eventRow.description = existingEvent.description ?? undefined
             }
             // if no image was provided, use the existing one
             if (eventRow.imageUrls.length === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
