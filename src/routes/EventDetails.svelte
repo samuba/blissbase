@@ -41,24 +41,28 @@
 		return contact;
 	});
 
-	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | undefined = $derived.by(() => {
-		if (
-			contactUrl?.startsWith('tg://') ||
-			contactUrl?.startsWith('t.me/') ||
-			contactUrl?.startsWith('https://t.me/')
-		) {
-			return 'Telegram';
-		}
-		if (contactUrl?.startsWith('https://wa.me/')) {
-			return 'WhatsApp';
-		}
-		if (contactUrl?.startsWith('tel:')) {
-			return 'Telefon';
-		}
-		if (contactUrl?.startsWith('mailto:')) {
-			return 'Email';
-		}
-	});
+	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | 'Website' | undefined =
+		$derived.by(() => {
+			if (
+				contactUrl?.startsWith('tg://') ||
+				contactUrl?.startsWith('t.me/') ||
+				contactUrl?.startsWith('https://t.me/')
+			) {
+				return 'Telegram';
+			}
+			if (contactUrl?.startsWith('https://wa.me/')) {
+				return 'WhatsApp';
+			}
+			if (contactUrl?.startsWith('tel:')) {
+				return 'Telefon';
+			}
+			if (contactUrl?.startsWith('mailto:')) {
+				return 'Email';
+			}
+			if (contactUrl?.startsWith('http')) {
+				return 'Website';
+			}
+		});
 
 	let showQuelleInsteadOfAnmelden = $derived(
 		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source)
@@ -158,6 +162,11 @@
 				</a>
 			{:else if event.sourceUrl}
 				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
+					Anmelden
+					<i class="icon-[ph--arrow-square-out] size-5"></i>
+				</a>
+			{:else if contactUrl && contactMethod === 'Website'}
+				<a href={contactUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
 					Anmelden
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
