@@ -74,7 +74,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
         }
 
-        const dbEntry = {
+        const eventRow = {
             name: aiAnswer.name,
             imageUrls: imageUrl ? [imageUrl] : [],
             startAt: new Date(aiAnswer.startDate),
@@ -96,9 +96,18 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             slug: "",
         } satisfies InsertEvent
 
-        console.log({ dbEntry })
+        const existingEvent = await db.query.events.findFirst({ where: eq(s.events.slug, eventRow.slug) });
+        if (existingEvent) {
+            // only override description if its longer than the existing one
+            if ((existingEvent.description?.length ?? 0) > (eventRow.description?.length ?? 0)) {
+                console.log("existing description is longer than new one, not updating description for ", eventRow.slug)
+                eventRow.description = undefined
+            }
+        }
 
-        const dbEvent = (await insertEvents([dbEntry]))[0]
+        console.log({ eventRow })
+
+        const dbEvent = (await insertEvents([eventRow]))[0]
         await ctx.react('⚡', false) // marker that the event was transferred
         await reply(ctx, "✅ Der Event wurde in BlissBase eingetragen:\n\nhttps://blissbase.app/" + dbEvent.slug, fromGroup, msgId)
     } catch (error) {
@@ -108,6 +117,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         } catch { /* ignore */ }
     }
 }
+
 
 
 function parseContact(contact: string | undefined) {
