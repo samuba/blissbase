@@ -1,7 +1,7 @@
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
-import { cachedImageUrl } from '$lib/common';
+import { cachedImageUrl, generateSlug } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
@@ -75,11 +75,15 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
         }
 
+
+        const startAt = new Date(aiAnswer.startDate)
+        const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
+        const name = aiAnswer.name.trim()
         const eventRow = {
-            name: aiAnswer.name,
+            name,
             imageUrls: imageUrl ? [imageUrl] : [],
-            startAt: new Date(aiAnswer.startDate),
-            endAt: aiAnswer.endDate ? new Date(aiAnswer.endDate) : null,
+            startAt,
+            endAt,
             address: addressArr,
             tags: aiAnswer.tags,
             latitude: coords?.lat,
@@ -94,7 +98,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             messageSenderId: getTelegramSenderId(ctx.message),
             contact,
             source: "telegram",
-            slug: "",
+            slug: generateSlug({ name, startAt, endAt: endAt ?? undefined }),
         } satisfies InsertEvent
 
         const existingEvent = await db.query.events.findFirst({ where: eq(s.events.slug, eventRow.slug) });
