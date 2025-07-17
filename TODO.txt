@@ -4,7 +4,6 @@ Feedback joy
     "Zum Home-Bildschirm hinzufügen" 
     Appstore
     "App installieren" für iOS wichtig
-  Telegram Kanäle verlinken
 
 
 Der event hat kein anmelde button, sollte original author verlinken
@@ -60,8 +59,6 @@ infos aus bildern extrahieren
 telegram: save sender userId, only them can update an event
 
 feste kategorien wie bei hipsy
-
-PWA installierbar auf ios
 
 wenn 2 messages gleichzeitig verarbeitet werden funzt es nicht??
 

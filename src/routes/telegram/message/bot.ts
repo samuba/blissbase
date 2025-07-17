@@ -7,6 +7,7 @@ import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/telegramCommon';
+import { routes } from '$lib/routes';
 
 export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl, fromGroup }: TelegramCloudflareBody) {
     if (!msgTextHtml.trim()) return
@@ -109,7 +110,11 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         const dbEvent = (await insertEvents([eventRow]))[0]
         await ctx.react('⚡', false) // marker that the event was transferred
-        await reply(ctx, "✅ Der Event wurde in BlissBase eingetragen:\n\nhttps://blissbase.app/" + dbEvent.slug, fromGroup, msgId)
+        if (existingEvent) {
+            await reply(ctx, `✅ Der Event wurde aktualisiert:\n\n${routes.eventDetails(dbEvent.slug, true)}`, fromGroup, msgId)
+        } else {
+            await reply(ctx, `✅ Der Event wurde in BlissBase eingetragen:\n\n${routes.eventDetails(dbEvent.slug, true)}`, fromGroup, msgId)
+        }
     } catch (error) {
         console.error(error)
         try {

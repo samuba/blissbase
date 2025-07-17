@@ -1,3 +1,5 @@
+export const BASE_URL = "https://blissbase.app" as const
+
 export interface SearchPageArgs {
     searchTerm?: string | null;
 }
@@ -17,6 +19,9 @@ export const routes = {
 
         return "/"
     },
-    eventDetails: (slug: string) => `/${slug}`,
+    eventDetails: (slug: string, absolute: boolean = false) => {
+        const base = absolute ? `${BASE_URL}/` : "";
+        return `${base}${slug}`
+    },
     sources: () => '/sources',
 }
