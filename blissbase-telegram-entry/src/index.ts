@@ -46,7 +46,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			imageUrl = await getImageUrl(ctx.channelPost.photo, ctx)
 		}
 
-		await reply(ctx, "Ich extrahiere die Eventdaten aus deiner Nachricht...")
+		await reply(ctx, "⏳ Ich extrahiere die Eventdaten aus deiner Nachricht...")
 
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
 		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !fromGroup)
