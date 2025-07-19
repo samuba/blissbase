@@ -6,8 +6,9 @@
 	import InstallButton from './install-button/InstallButton.svelte';
 	import { parseDate } from '@internationalized/date';
 	import { routes } from '$lib/routes';
-	import { debounce } from '$lib/common';
+	import { debounce, sleep } from '$lib/common';
 	import { eventsStore } from '$lib/eventsStore.svelte';
+	import { onMount } from 'svelte';
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
@@ -37,6 +38,13 @@
 			page: 1
 		});
 	}, 400);
+
+	let logoButton = $state<HTMLDivElement | null>(null);
+
+	onMount(async () => {
+		await sleep(1200);
+		logoButton?.classList.remove('rotate-360');
+	});
 </script>
 
 <svelte:window bind:scrollY />
@@ -279,7 +287,8 @@
 					<img
 						src="/logo.svg"
 						alt="Menu"
-						class="transition-transform duration-500 ease-in-out group-data-[state=open]:-rotate-360 {logoClass}"
+						bind:this={logoButton}
+						class="rotate-360 transition-transform duration-500 ease-in-out group-data-[state=open]:-rotate-360 {logoClass}"
 					/>
 				</div>
 			{/snippet}
@@ -287,14 +296,21 @@
 				<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
 					<p class="text-lg leading-tight font-bold">Willkommen bei Blissbase</p>
 					<p>
-						Wir wollen die achtsamen Communities Deutschlands zusammenbringen und vernetzen. Dafür
-						machen wir Events aus verschiedensten Quellen für so viele Menschen wie möglich
-						erreichbar — In einer simplen und komfortablen App.
+						Wir bringen die achtsamen Communities Deutschlands zusammen. Dafür sammeln wir Events
+						aus verschiedenen Quellen und machen sie für alle in einer komfortablen App zugänglich.
 					</p>
 					<p>
 						<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
 						<br />
-						Trage deinen Event in eine unserer Quellen ein — er erscheint dann automatisch bei uns.
+						Sende deinen Event einfach an unseren
+						<a
+							href="https://t.me/blissbase_bot"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="link font-semibold">Telegram-Bot</a
+						>. Ort, Datum und Bild muss alles in einer Nachricht sein.
+						<br />
+						Oder trage deinen Event in eine unserer Quellen ein:
 					</p>
 
 					<a href={routes.sources()} class="btn-sm btn w-fit">Unsere Event Quellen</a>
