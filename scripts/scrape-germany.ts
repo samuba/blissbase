@@ -188,7 +188,7 @@ async function main() {
             notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
             gte(s.events.startAt, new Date())
         )).returning();
-    console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.source]));
+    console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
 
     eventsToInsert = deduplicateEvents(eventsToInsert);
 
@@ -312,8 +312,9 @@ async function main() {
             events.forEach(event => {
                 uniqueEvents.set(event.slug, event);
             });
-            console.warn(`Deduplicated events. Reduced from ${slugCounts.size} to ${events.length} events`);
-            return Array.from(uniqueEvents.values());
+            const deduplicatedEvents = Array.from(uniqueEvents.values());
+            console.warn(`Deduplicated events. Reduced from ${events.length} to ${deduplicatedEvents.length} events`);
+            return deduplicatedEvents;
         } else {
             console.log('All event slugs are unique');
             return events;
