@@ -16,8 +16,7 @@
  */
 
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
-import * as schema from '../src/lib/server/schema.ts';
-import { db } from "../src/lib/server/db.ts";
+import { db, s } from "../src/lib/server/db.ts";
 import { insertEvents } from '../src/lib/server/events.ts';
 import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
 import { and, gte, inArray, notInArray } from 'drizzle-orm';
@@ -88,7 +87,7 @@ async function main() {
 
     // Check if a source is specified as positional argument
     if (positionals.length > 0) {
-        const sourceArgLower = positionals[0].toLowerCase();
+        const sourceArgLower = positionals[0].toLowerCase() as keyof typeof SCRAPER_CONFIG;
         if (SCRAPE_SOURCES.includes(sourceArgLower)) {
             targetSourceArg = sourceArgLower;
             console.log(`Targeting single source for scraping: ${targetSourceArg}`);
@@ -129,7 +128,7 @@ async function main() {
     console.log('Ensuring database table exists...');
     try {
         // This is a simple check; ideally, use drizzle-kit push/generate
-        await db.select({ id: schema.events.id }).from(schema.events).limit(1);
+        await db.select({ id: s.events.id }).from(s.events).limit(1);
         console.log("Table 'events' seems to exist.");
     } catch (e) {
         console.error("Failed to check table existence or table doesn't exist.", e);
@@ -154,8 +153,7 @@ async function main() {
         console.log(` -> Deleting events from sources: ${sourcesToClear.join(', ')}`);
 
         try {
-            await db.delete(schema.events)
-                .where(inArray(schema.events.source, sourcesToClear));
+            await db.delete(s.events).where(inArray(s.events.source, sourcesToClear));
 
             console.log(` -> Successfully cleared existing events from ${sourcesToClear.length} source(s)`);
         } catch (error) {
@@ -184,18 +182,17 @@ async function main() {
     });
 
     // delete all events that are not in sources and are in the future
-    const deletedEvents = await db.select({ slug: schema.events.slug })
-        .from(schema.events)
+    const deletedEvents = await db.delete(s.events)
         .where(and(
-            inArray(schema.events.source, sourcesToScrape),
-            notInArray(schema.events.slug, eventsToInsert.map(e => e.slug)),
-            gte(schema.events.startAt, new Date())
-        ))
-    console.log("Deleted events:", deletedEvents.map(e => e.slug));
+            inArray(s.events.source, sourcesToScrape),
+            notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
+            gte(s.events.startAt, new Date())
+        )).returning();
+    console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.source]));
 
     eventsToInsert = deduplicateEvents(eventsToInsert);
 
-    await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
+    // await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
     await preWarmImageUrls(eventsToInsert);
 
@@ -306,8 +303,7 @@ async function main() {
                 console.warn(` -> "${slug}" appears ${count} times`);
                 const duplicateEvents = events.filter(e => e.slug === slug);
                 duplicateEvents.forEach((event, index) => {
-                    console.warn(`    ${index + 1}. ${event.name} (${event.startAt.toISOString()})`);
-                    console.warn(event)
+                    console.warn(`    ${index + 1}. ${event.sourceUrl}`);
                 });
             });
 
