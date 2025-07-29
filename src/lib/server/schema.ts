@@ -65,7 +65,17 @@ export const telegramChatConfig = pgTable('telegram_chat_config', {
     createdAt: timestamp().notNull().defaultNow(),
 });
 
+export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
+    chatId: bigint({ mode: 'bigint' }).primaryKey(),
+    name: text(), // telegram group or channel name
+    lastMessageId: bigint({ mode: 'bigint' }),
+    lastMessageTime: timestamp(),
+    defaultAddress: text().array(),
+    createdAt: timestamp().notNull().defaultNow(),
+    messagesConsumed: integer().notNull().default(0),
+});
 
+export type TelegramScrapingTarget = typeof telegramScrapingTargets.$inferSelect;
 
 /*** Cronjobs ***/
 // SELECT cron.schedule(

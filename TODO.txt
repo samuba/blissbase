@@ -5,10 +5,6 @@ Feedback joy
     Appstore
     "App installieren" für iOS wichtig
 
-Anleitungs wie ein Beitrag über Telegram aussehen sollte
- name, datum, bild im selben post
-
-
 telegram
   BUG: messages mit mehreren bildern haben keinen text??
 

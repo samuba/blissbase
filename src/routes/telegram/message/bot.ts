@@ -1,7 +1,7 @@
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
-import { cachedImageUrl, generateSlug } from '$lib/common';
+import { cachedImageUrl, generateSlug, parseTelegramContact } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
@@ -65,7 +65,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
 
         const coords = await geocodeAddressCached(addressArr, GOOGLE_MAPS_API_KEY || '')
-        let contact = parseContact(aiAnswer.contact);
+        let contact = parseTelegramContact(aiAnswer.contact);
         const telegramAuthor = getTelegramEventOriginalAuthor(ctx.message)
         if (aiAnswer.contactAuthorForMore) {
             contact = telegramAuthor?.link
@@ -135,34 +135,6 @@ ${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende
             await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error, fromGroup, msgId)
         } catch { /* ignore */ }
     }
-}
-
-
-
-function parseContact(contact: string | undefined) {
-    if (!contact?.trim()) return undefined;
-
-    if (contact.startsWith('https://t.me/')) {
-        //https://t.me/MagdalenaHSC",
-        return `tg://resolve?domain=${contact.slice(14)}`
-    }
-    if (contact.startsWith('https://t.me/')) {
-        //t.me/MagdalenaHSC",
-        return `tg://resolve?domain=${contact.slice(6)}`
-    }
-    if (contact.startsWith('@')) {
-        return `tg://resolve?domain=${contact.slice(1)}`
-    }
-    if (contact.startsWith('+')) {
-        return `tel:${contact}`
-    }
-    if (contact.startsWith('http')) {
-        return contact
-    }
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
-        return `mailto:${contact}`
-    }
-    return contact;
 }
 
 async function reply(ctx: Context, text: string, fromGroup: boolean, msgId: string | undefined) {
