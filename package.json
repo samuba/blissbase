@@ -36,6 +36,7 @@
 		"@types/bun": "^1.2.10",
 		"@types/cheerio": "^0.22.35",
 		"@types/node": "^22",
+		"@types/sharp": "^0.32.0",
 		"@types/ws": "^8.18.1",
 		"@vercel/functions": "^2.2.0",
 		"@vite-pwa/sveltekit": "^1.0.0",
@@ -76,6 +77,7 @@
 		"drizzle-orm": "^0.40.0",
 		"ky": "^1.8.1",
 		"posthog-js": "^1.255.1",
+		"sharp": "^0.34.3",
 		"ws": "^8.18.1"
 	}
 }

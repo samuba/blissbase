@@ -2,6 +2,7 @@ import { Api, TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import readline from "readline";
 import 'dotenv/config'
+import sharp from 'sharp';
 import { db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
 import { generateSlug, parseTelegramContact } from "../src/lib/common";
@@ -342,30 +343,44 @@ async function getTelegramEventOriginalAuthor(message: Api.Message, client: Tele
     };
 }
 
+async function uploadToCloudinary(buffer: Buffer, publicId: string) {
+    const formData = new FormData();
+    formData.append("file", new Blob([buffer]));
+    formData.append("api_key", cloudinaryApiKey!);
+    formData.append("upload_preset", "blissbase");
+    formData.append("resource_type", "image");
+    formData.append("public_id", publicId);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, {
+        method: "POST",
+        body: formData
+    });
+    if (!res.ok) {
+        throw new Error(`Failed to upload to Cloudinary: ${res.statusText} ${await res.text()}`);
+    }
+    return await res.json() as { secure_url: string };
+}
+
 async function extractPhotoFromMessage(message: Api.Message, client: TelegramClient, slug: string) {
     if (message.media?.className !== 'MessageMediaPhoto') return undefined;
 
     try {
         console.log("extracting photo from message", message.id)
         // const photo = message.media.photo as tl.Api.Photo;
-        const filePath = (await client.downloadMedia(message, {
-            outputFile: `./${message.photo?.id}`,
+        const imageBuffer = await client.downloadMedia(message, {
             // thumb: photo?.sizes[photo.sizes.length - 1], // use second biggest photo
-        })) as string;
-        if (!filePath) return undefined;
-
-        console.log("Uploading file to Cloudinary:", { filePath, publicId: `${slug}-${message.photo?.id}` });
-        const formData = new FormData();
-        formData.append("file", await Bun.file(filePath));
-        formData.append("api_key", cloudinaryApiKey!);
-        formData.append("upload_preset", "blissbase");
-        formData.append("resource_type", "image");
-        formData.append("public_id", `${slug}-${message.photo?.id}`);
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, {
-            method: "POST",
-            body: formData
         });
-        const result = await res.json();
+
+        // resize image
+        const resizedBuffer = await sharp(imageBuffer)
+            .resize(900, 900, {
+                fit: 'inside',
+                withoutEnlargement: true
+            })
+            .jpeg({ quality: 90 })
+            .toBuffer();
+
+        console.log("Uploading resized file to Cloudinary:", { publicId: `${slug}-${message.photo?.id}` });
+        const result = await uploadToCloudinary(resizedBuffer, `${slug}-${message.photo?.id}`);
 
         // const result = await cloudinary.uploader.upload(filePath, {
         //     resource_type: "image",
@@ -375,7 +390,6 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         // });
 
         console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
-        await Bun.file(filePath).delete();
         return result.secure_url;
     } catch (error) {
         console.error("Error extracting photo from message", message.id, ":", error);
