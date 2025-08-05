@@ -14,6 +14,9 @@ const config = {
 		}),
 		version: {
 			pollInterval: 60_000 * 1
+		},
+		experimental: {
+			remoteFunctions: true
 		}
 	},
 	compilerOptions: {

@@ -3,13 +3,11 @@ import Icons from 'unplugin-icons/vite'
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
-import { telefunc } from 'telefunc/vite'
 
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		sveltekit(),
-		telefunc(),
 		Icons({ compiler: 'svelte', }),
 		SvelteKitPWA({
 			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'logo.svg'],
