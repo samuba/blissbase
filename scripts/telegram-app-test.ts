@@ -1,4 +1,4 @@
-import { Api, TelegramClient, tl } from "telegram";
+import { Api, TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import readline from "readline";
 import 'dotenv/config'
@@ -6,24 +6,37 @@ import { db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
 import { generateSlug, parseTelegramContact } from "../src/lib/common";
 import { geocodeAddressCached } from "../src/lib/server/google";
-import { insertEvents } from '../src/lib/server/events';
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
-import { v2 as cloudinary } from 'cloudinary';
-import fs from "fs";
-
-
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
 const stringSession = new StringSession(process.env.TELEGRAM_APP_SESSION!);
+const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY;
+const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
 
-cloudinary.config({
-    secure: true,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-});
+// const formData = new FormData();
+// formData.append("file", await Bun.file("./5195253348629089834"));
+// formData.append("api_key", cloudinaryApiKey!);
+// formData.append("upload_preset", "blissbase");
+// formData.append("resource_type", "image");
+// formData.append("public_id", `testestst`);
+// const result = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, {
+//     method: "POST",
+//     body: formData
+// });
+// const resultJson = await result.json();
+// console.log("result", resultJson);
+
+// // testing upload with real data
+// const result = await cloudinary.uploader.upload("/Users/Samuel/code/blissbase/5195253348629089837", {
+//     resource_type: "image",
+//     public_id: `2025-08-13-2200-lab-of-dreams-5906-5195253348629089837`,
+//     overwrite: false,
+//     folder: "telegram-scraped-events",
+// });
+// console.log(result);
+// process.exit(0);
 
 function resolveTelegramFormattingToHtml(text: string, entities: Api.TypeMessageEntity[] | undefined): string {
     // Type definitions for converted entities
@@ -341,21 +354,137 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         })) as string;
         if (!filePath) return undefined;
 
-        const result = await cloudinary.uploader.upload(filePath, {
-            resource_type: "image",
-            public_id: `${slug}-${message.photo?.id}`,
-            access_mode: "public",
+        console.log("Uploading file to Cloudinary:", { filePath, publicId: `${slug}-${message.photo?.id}` });
+        const formData = new FormData();
+        formData.append("file", await Bun.file(filePath));
+        formData.append("api_key", cloudinaryApiKey!);
+        formData.append("upload_preset", "blissbase");
+        formData.append("resource_type", "image");
+        formData.append("public_id", `${slug}-${message.photo?.id}`);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, {
+            method: "POST",
+            body: formData
         });
-        console.log("extracted photo into cloudinary", result.secure_url)
-        await Bun.file(filePath).delete()
+        const result = await res.json();
+
+        // const result = await cloudinary.uploader.upload(filePath, {
+        //     resource_type: "image",
+        //     public_id: `${slug}-${message.photo?.id}`,
+        //     overwrite: false,
+        //     upload_preset: "blissbase"
+        // });
+
+        console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
+        await Bun.file(filePath).delete();
         return result.secure_url;
     } catch (error) {
-        console.error("Error extracting photo from message", error)
+        console.error("Error extracting photo from message", message.id, ":", error);
+
+        // Provide more specific error information
+        if (error instanceof Error) {
+            console.error("Error details:", {
+                message: error.message,
+                name: error.name,
+                // @ts-expect-error - cloudinary error might have http_code
+                http_code: error.http_code
+            });
+        }
+
         return undefined;
     }
 }
 
-async function extractEventDataFromMessage(message: Api.Message, chatId: bigint, client: TelegramClient) {
+async function extractAdjacentImages(
+    currentMessage: Api.Message,
+    allMessages: Api.Message[],
+    client: TelegramClient,
+    slug: string
+): Promise<string[]> {
+    const imageUrls: string[] = [];
+    const currentAuthorId = getTelegramOriginalAuthorId(currentMessage);
+    if (!currentAuthorId) return imageUrls;
+
+    const currentMessageTime = currentMessage.date;
+    const timeWindowSeconds = 300; // 5 minutes before/after
+
+    console.log(`Looking for adjacent images from user ${currentAuthorId} around message ${currentMessage.id}`);
+
+    // Sort messages by timestamp to check for text messages in between
+    const sortedMessages = [...allMessages].sort((a, b) => a.date - b.date);
+    const currentMessageIndex = sortedMessages.findIndex(msg => msg.id === currentMessage.id);
+
+    if (currentMessageIndex === -1) {
+        console.log("Could not find current message in sorted list");
+        return imageUrls;
+    }
+
+    for (const message of allMessages) {
+        const messageAuthorId = getTelegramOriginalAuthorId(message);
+        if (messageAuthorId !== currentAuthorId) continue;
+
+        const timeDiff = Math.abs(message.date - currentMessageTime);
+        if (timeDiff > timeWindowSeconds) continue;
+
+        if (message.media?.className === 'MessageMediaPhoto') {
+            // Check if there are text messages between current message and this image
+            const messageIndex = sortedMessages.findIndex(msg => msg.id === message.id);
+            if (messageIndex === -1) continue;
+
+            const hasTextInBetween = hasTextMessagesBetween(
+                sortedMessages,
+                currentMessageIndex,
+                messageIndex,
+                currentAuthorId
+            );
+
+            if (hasTextInBetween) {
+                console.log(`Skipping image from message ${message.id}: text message found between event and image`);
+                continue;
+            }
+
+            try {
+                const imageUrl = await extractPhotoFromMessage(message, client, slug);
+                if (imageUrl) {
+                    imageUrls.push(imageUrl);
+                    console.log(`Found adjacent image from same user: ${imageUrl} (message ${message.id}, time diff: ${timeDiff}s)`);
+                }
+            } catch (error) {
+                console.error(`Error extracting adjacent photo from message ${message.id}:`, error);
+            }
+        }
+    }
+
+    return imageUrls;
+}
+
+function hasTextMessagesBetween(
+    sortedMessages: Api.Message[],
+    eventIndex: number,
+    imageIndex: number,
+    authorId: string
+): boolean {
+    const startIndex = Math.min(eventIndex, imageIndex);
+    const endIndex = Math.max(eventIndex, imageIndex);
+
+    // Check messages between event and image (exclusive of both endpoints)
+    for (let i = startIndex + 1; i < endIndex; i++) {
+        const message = sortedMessages[i];
+        const messageAuthorId = getTelegramOriginalAuthorId(message);
+
+        // Only consider messages from the same author
+        if (messageAuthorId !== authorId) continue;
+
+        // Check if this message contains meaningful text
+        if (message.message && message.message.trim().length > 30) {
+            console.log(`Found text message between event and image: "${message.message.substring(0, 50)}..."`);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+async function extractEventDataFromMessage(message: Api.Message, chatId: bigint, client: TelegramClient, allMessages: Api.Message[]) {
     const msgHtml = resolveTelegramFormattingToHtml(message.message, message.entities);
     console.log("extracting event data from message", message.id)
     const aiAnswer = await aiExtractEventData(msgHtml);
@@ -405,9 +534,7 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: bigint,
     const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
     const name = aiAnswer.name.trim()
     const slug = generateSlug({ name, startAt, endAt: endAt ?? undefined })
-    let imageUrls: string[] = []
-    const imageUrl = await extractPhotoFromMessage(message, client, slug);
-    if (imageUrl) imageUrls = [imageUrl];
+    const imageUrls = await extractAdjacentImages(message, allMessages, client, slug);
 
     const eventRow = {
         name,
@@ -438,9 +565,13 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: bigint,
             console.log("existing description is longer than new one, not updating description for ", slug)
             eventRow.description = existingEvent.description ?? undefined
         }
-        // if no image was provided, use the existing one
+        // Merge images: keep existing images and add new ones that aren't duplicates
         if (eventRow.imageUrls.length === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
             eventRow.imageUrls = existingEvent.imageUrls ?? []
+        } else if ((existingEvent.imageUrls?.length ?? 0) > 0) {
+            const existingUrls = new Set(existingEvent.imageUrls ?? []);
+            const newUrls = eventRow.imageUrls.filter(url => !existingUrls.has(url));
+            eventRow.imageUrls = [...(existingEvent.imageUrls ?? []), ...newUrls];
         }
     }
 
@@ -455,16 +586,18 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: bigint,
 
     // Messages are returned in reverse chronological order (newest first) We want to process them in chronological order (oldest first)
     const sortedMessages = [...messages].reverse();
+    const allMessages = [...messages]; // Keep original list for adjacent message lookup
+
     for (const message of sortedMessages) {
         console.log(`msg#${message.id}: ${message.className} ${message.classType} ${message.media?.className}`);
         const msg = message.message;
         if (msg && msg.length > 30) {
-            const event = await extractEventDataFromMessage(message, chatId, client);
+            const event = await extractEventDataFromMessage(message, chatId, client, allMessages);
             if (event) events.push(event);
         }
 
         if (message.media?.className === 'MessageMediaPhoto') {
-            // TODO: donwload photo and upload to cloudinary
+            // Note: Individual photos are now handled by extractAdjacentImages
             console.log(message.media.photo?.className + " from " + getTelegramOriginalAuthorId(message));
         }
     }
@@ -515,8 +648,7 @@ await client.start({
     phoneCode: async () => await askQuestion("Please enter the code you received: "),
     onError: (err) => console.log(err),
 });
-
-console.log("You should now be connected.");
+console.log("Connected to Telegram servers");
 
 try {
     // Get all scraping targets from database
@@ -536,7 +668,7 @@ try {
 
             // Get messages newer than the last processed message
             const messages = await client.getMessages(entity, {
-                limit: 1,
+                limit: 10,
                 ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
             });
 
