@@ -18,29 +18,6 @@ const cloudinaryCreds = {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME!
 }
 
-// const formData = new FormData();
-// formData.append("file", await Bun.file("./5195253348629089834"));
-// formData.append("api_key", cloudinaryApiKey!);
-// formData.append("upload_preset", "blissbase");
-// formData.append("resource_type", "image");
-// formData.append("public_id", `testestst`);
-// const result = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, {
-//     method: "POST",
-//     body: formData
-// });
-// const resultJson = await result.json();
-// console.log("result", resultJson);
-
-// // testing upload with real data
-// const result = await cloudinary.uploader.upload("/Users/Samuel/code/blissbase/5195253348629089837", {
-//     resource_type: "image",
-//     public_id: `2025-08-13-2200-lab-of-dreams-5906-5195253348629089837`,
-//     overwrite: false,
-//     folder: "telegram-scraped-events",
-// });
-// console.log(result);
-// process.exit(0);
-
 function resolveTelegramFormattingToHtml(text: string, entities: Api.TypeMessageEntity[] | undefined): string {
     // Type definitions for converted entities
     type ConvertedEntity = {
@@ -213,7 +190,7 @@ function resolveTelegramFormattingToHtml(text: string, entities: Api.TypeMessage
             case "strikethrough": return '<s>';
             case "code": return '<code>';
             case "pre": return '<pre>';
-            case "text_link": return `<a href="${entity.url}">`;
+            case "text_link": return `<a href="${entity.url?.startsWith("http") ? entity.url : "https://" + entity.url}">`;
             case "text_mention": return `<a href="tg://user?id=${entity.user?.id}">`;
             case "mention": return `<a href="tg://user?id=${content.slice(1)}">`;
             case "hashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}">`;
@@ -356,7 +333,6 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         });
 
         const resizedBuffer = await resizeCoverImage(imageBuffer!)
-
         console.log("Uploading resized file to Cloudinary:", { publicId: `${slug}-${message.photo?.id}` });
         const result = await uploadToCloudinary(resizedBuffer, `${slug}-${message.photo?.id}`, cloudinaryCreds);
 
@@ -666,13 +642,13 @@ try {
                 console.log(`Messages consumed: ${messages.length} (Total: ${totalMessagesConsumed})`);
                 console.log(`New Last message ID: ${newestMessage.id} (${newestMessage.time})`);
 
-                // await db.update(s.telegramScrapingTargets)
-                //     .set({
-                //         name: entityName,
-                //         lastMessageId: newestMessageId,
-                //         messagesConsumed: totalMessagesConsumed,
-                //     })
-                //     .where(eq(s.telegramScrapingTargets.chatId, target.chatId));
+                await db.update(s.telegramScrapingTargets)
+                    .set({
+                        name: entityName,
+                        // lastMessageId: newestMessage.id,
+                        messagesConsumed: totalMessagesConsumed,
+                    })
+                    .where(eq(s.telegramScrapingTargets.chatId, target.chatId));
             } else {
                 console.log(`No new messages for target ${target.chatId}`);
             }

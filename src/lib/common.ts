@@ -182,7 +182,7 @@ export const cachedImageUrl = (url: string | undefined) => {
 
 export async function uploadToCloudinary(buffer: Buffer, publicId: string, cloudinaryCreds: { apiKey: string, cloudName: string }) {
     const formData = new FormData();
-    formData.append("file", new Blob([buffer]));
+    formData.append("file", new Blob([buffer]), `${publicId}.jpg`);
     formData.append("api_key", cloudinaryCreds.apiKey!);
     formData.append("upload_preset", "blissbase");
     formData.append("resource_type", "image");
@@ -192,7 +192,7 @@ export async function uploadToCloudinary(buffer: Buffer, publicId: string, cloud
         body: formData
     });
     if (!res.ok) {
-        throw new Error(`Failed to upload to Cloudinary: ${res.statusText} ${await res.text()}`);
+        throw new Error(`Failed to upload to Cloudinary: ${res.statusText} ${await res.text()} bufferlength: ${buffer.length}`);
     }
     return await res.json() as { secure_url: string };
 }

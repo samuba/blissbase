@@ -49,7 +49,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 		await reply(ctx, "⏳ Ich extrahiere die Eventdaten aus deiner Nachricht...")
 
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
-		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml), !fromGroup)
+		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml, image?.url), !fromGroup)
 
 		// console.log("calling vercel with", {
 		// 	telegramPayload: payloadJson,
@@ -240,7 +240,7 @@ function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]
 			case "strikethrough": return '<s>';
 			case "code": return '<code>';
 			case "pre": return '<pre>';
-			case "text_link": return `<a href="${entity.url}">`;
+			case "text_link": return `<a href="${entity.url.startsWith("http") ? entity.url : "https://" + entity.url}">`;
 			case "text_mention": return `<a href="tg://user?id=${entity.user?.id}">`;
 			case "mention": return `<a href="tg://user?id=${content.slice(1)}">`;
 			case "hashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}">`;

@@ -1,11 +1,26 @@
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
 
-export async function aiExtractEventData(message: string): Promise<MsgAnalysisAnswer> {
+export async function aiExtractEventData(message: string, imageUrl?: string): Promise<MsgAnalysisAnswer> {
     const { text } = await generateText({
         model: openai('o4-mini-2025-04-16'),
         system: msgAnalysisSystemPrompt(),
-        prompt: message,
+        messages: [
+            {
+                role: "user",
+                content: [
+                    {
+                        type: "text",
+                        text: message,
+                    },
+                    ...(imageUrl ? [{
+                        type: "image" as const,
+                        image: imageUrl,
+                    }] : []),
+                ],
+            },
+
+        ],
     });
 
     try {
@@ -26,6 +41,7 @@ Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
 Never make up any information. Only use the information provided in the message!
 If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. awara.events, sei.jetzt.) and do not include anything else.
+If there was an image attached, consider all text on the image as part of the message.
 
 # existing sources:
 https://sei.jetzt/
