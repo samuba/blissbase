@@ -358,7 +358,7 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         const resizedBuffer = await resizeCoverImage(imageBuffer!)
 
         console.log("Uploading resized file to Cloudinary:", { publicId: `${slug}-${message.photo?.id}` });
-        const result = await uploadToCloudinary(resizedBuffer, `${slug}-${message.photo?.id}`, cloudinaryCreds);
+        const result = await uploadToCloudinary(new Blob([resizedBuffer]), `${slug}-${message.photo?.id}`, cloudinaryCreds);
 
         console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
         return result.secure_url;

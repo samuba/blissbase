@@ -180,9 +180,9 @@ export const cachedImageUrl = (url: string | undefined) => {
     return `https://res.cloudinary.com/dy7jatmjz/image/fetch/f_auto,q_auto,c_limit,h_${maxImageSize},w_${maxImageSize}/${url}`
 }
 
-export async function uploadToCloudinary(buffer: Buffer, publicId: string, cloudinaryCreds: { apiKey: string, cloudName: string }) {
+export async function uploadToCloudinary(blob: Blob, publicId: string, cloudinaryCreds: { apiKey: string, cloudName: string }) {
     const formData = new FormData();
-    formData.append("file", new Blob([buffer]));
+    formData.append("file", blob);
     formData.append("api_key", cloudinaryCreds.apiKey!);
     formData.append("upload_preset", "blissbase");
     formData.append("resource_type", "image");
