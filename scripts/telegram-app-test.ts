@@ -5,7 +5,7 @@ import 'dotenv/config'
 import sharp from 'sharp';
 import { db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
-import { generateSlug, parseTelegramContact } from "../src/lib/common";
+import { generateSlug, parseTelegramContact, resizeCoverImage, uploadToCloudinary } from "../src/lib/common";
 import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
@@ -13,8 +13,10 @@ import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
 const stringSession = new StringSession(process.env.TELEGRAM_APP_SESSION!);
-const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY;
-const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const cloudinaryCreds = {
+    apiKey: process.env.CLOUDINARY_API_KEY!,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME!
+}
 
 // const formData = new FormData();
 // formData.append("file", await Bun.file("./5195253348629089834"));
@@ -343,23 +345,6 @@ async function getTelegramEventOriginalAuthor(message: Api.Message, client: Tele
     };
 }
 
-async function uploadToCloudinary(buffer: Buffer, publicId: string) {
-    const formData = new FormData();
-    formData.append("file", new Blob([buffer]));
-    formData.append("api_key", cloudinaryApiKey!);
-    formData.append("upload_preset", "blissbase");
-    formData.append("resource_type", "image");
-    formData.append("public_id", publicId);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, {
-        method: "POST",
-        body: formData
-    });
-    if (!res.ok) {
-        throw new Error(`Failed to upload to Cloudinary: ${res.statusText} ${await res.text()}`);
-    }
-    return await res.json() as { secure_url: string };
-}
-
 async function extractPhotoFromMessage(message: Api.Message, client: TelegramClient, slug: string) {
     if (message.media?.className !== 'MessageMediaPhoto') return undefined;
 
@@ -370,24 +355,10 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
             // thumb: photo?.sizes[photo.sizes.length - 1], // use second biggest photo
         });
 
-        // resize image
-        const resizedBuffer = await sharp(imageBuffer)
-            .resize(900, 900, {
-                fit: 'inside',
-                withoutEnlargement: true
-            })
-            .jpeg({ quality: 90 })
-            .toBuffer();
+        const resizedBuffer = await resizeCoverImage(imageBuffer!)
 
         console.log("Uploading resized file to Cloudinary:", { publicId: `${slug}-${message.photo?.id}` });
-        const result = await uploadToCloudinary(resizedBuffer, `${slug}-${message.photo?.id}`);
-
-        // const result = await cloudinary.uploader.upload(filePath, {
-        //     resource_type: "image",
-        //     public_id: `${slug}-${message.photo?.id}`,
-        //     overwrite: false,
-        //     upload_preset: "blissbase"
-        // });
+        const result = await uploadToCloudinary(resizedBuffer, `${slug}-${message.photo?.id}`, cloudinaryCreds);
 
         console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
         return result.secure_url;
