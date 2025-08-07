@@ -1,5 +1,5 @@
 import type { UiEvent } from '$lib/server/events';
-import { fetchEventsWithCookiePersistence } from '../routes/page.remote';
+import { fetchEventsWithCookiePersistence, nothing } from '../routes/page.remote';
 import type { DateRangePickerOnChange } from '$lib/components/DateRangePicker.svelte';
 import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.svelte';
 import { browser } from '$app/environment';
@@ -71,7 +71,7 @@ export class EventsStore {
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
 
-            const data = await fetchEventsWithCookiePersistence(params);
+            const data = await fetchEventsWithCookiePersistence(params).updates(nothing());
 
             if (append) {
                 // Filter out duplicate events that may result from pagination

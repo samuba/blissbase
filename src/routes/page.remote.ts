@@ -1,9 +1,9 @@
 import { fetchEvents, loadEventsParamsSchema } from "$lib/server/events";
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
-import { getRequestEvent, query } from '$app/server';
+import { getRequestEvent, command, query } from '$app/server';
 
-
-export const fetchEventsWithCookiePersistence = query(loadEventsParamsSchema, async (params) => {
+// using `command` instead of `query` cuz query does not allow setting cookies
+export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, async (params) => {
     const { cookies } = getRequestEvent();
 
     if (!cookies) {
@@ -49,3 +49,7 @@ export const fetchEventsWithCookiePersistence = query(loadEventsParamsSchema, as
 
     return result;
 });
+
+export const nothing = query(async () => {
+    // no-op to be used with `command.updates(nothing)` to force svelte to not reload queries
+})
