@@ -1,17 +1,8 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { telefuncConfig } from 'telefunc';
 import type { HandleServerError } from '@sveltejs/kit';
 import { PostHog } from 'posthog-node';
 import { dev } from '$app/environment';
-
-
-
-telefuncConfig.disableNamingConvention = true;
-telefuncConfig.shield = { dev: true };
-telefuncConfig.log = {
-    shieldErrors: { dev: true, prod: true }
-}
 
 const extractVercelHeader: Handle = async ({ event, resolve }) => {
     const latitude = event.request.headers.get('x-vercel-ip-latitude')

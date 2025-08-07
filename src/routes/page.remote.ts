@@ -1,11 +1,10 @@
-import { fetchEvents } from "$lib/server/events";
+import { fetchEvents, loadEventsParamsSchema } from "$lib/server/events";
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
-import { getContext } from "telefunc";
-import type { Cookies } from '@sveltejs/kit';
+import { getRequestEvent, query } from '$app/server';
 
-export async function fetchEventsWithCookiePersistence(params: Parameters<typeof fetchEvents>[0]) {
-    const context = getContext<{ cookies: Cookies }>();
-    const cookies = context?.cookies;
+
+export const fetchEventsWithCookiePersistence = query(loadEventsParamsSchema, async (params) => {
+    const { cookies } = getRequestEvent();
 
     if (!cookies) {
         // Fallback to regular fetchEvents if no cookies context
@@ -49,7 +48,4 @@ export async function fetchEventsWithCookiePersistence(params: Parameters<typeof
     }
 
     return result;
-}
-
-// Keep the original export for backward compatibility
-export { fetchEvents };
+});

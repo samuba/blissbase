@@ -5,6 +5,7 @@ import { today as getToday, parseDate, CalendarDate } from '@internationalized/d
 import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
 import { generateSlug } from '$lib/common';
+import * as v from 'valibot';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
@@ -261,21 +262,23 @@ export async function insertEvents(events: InsertEvent[]) {
     return result;
 }
 
-type LoadEventsParams = Partial<{
-    startDate: string | null; // 2022-01-01
-    endDate: string | null; // 2022-01-01
-    page?: number | null;
-    limit?: number | null;
-    plzCity?: string | null;
-    distance?: string | null;
-    lat?: number | null;
-    lng?: number | null;
-    searchTerm?: string | null;
-    sortBy?: string | null;
-    sortOrder?: string | null;
+export const loadEventsParamsSchema = v.partial(v.object({
+    startDate: v.nullable(v.string()), // 2022-01-01
+    endDate: v.nullable(v.string()), // 2022-01-01
+    page: v.nullable(v.number()),
+    limit: v.nullable(v.number()),
+    plzCity: v.nullable(v.string()),
+    distance: v.nullable(v.string()),
+    lat: v.nullable(v.number()),
+    lng: v.nullable(v.number()),
+    searchTerm: v.nullable(v.string()),
+    sortBy: v.nullable(v.string()),
+    sortOrder: v.nullable(v.string()),
     // these are not used as params but are returned in the pagination object
-    totalEvents?: number | null;
-    totalPages?: number | null;
-}>
+    totalEvents: v.nullable(v.number()),
+    totalPages: v.nullable(v.number()),
+}));
+
+type LoadEventsParams = v.InferInput<typeof loadEventsParamsSchema>;
 
 export type UiEvent = Awaited<ReturnType<typeof fetchEvents>>['events'][number];
