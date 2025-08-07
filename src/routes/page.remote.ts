@@ -52,4 +52,5 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
 
 export const nothing = query(async () => {
     // no-op to be used with `command.updates(nothing)` to force svelte to not reload queries
+    // can be removed when this is implemented: https://github.com/sveltejs/kit/issues/14079
 })
