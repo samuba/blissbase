@@ -27,7 +27,7 @@ function initialPagination() {
         startDate: null,
         endDate: null,
         page: 1,
-        limit: 7
+        limit: 8
     };
 }
 
