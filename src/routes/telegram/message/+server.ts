@@ -6,7 +6,7 @@ import { Telegraf } from 'telegraf';
 import type { Config } from '@sveltejs/adapter-vercel';
 
 export const config: Config = {
-    split: true
+    split: true // this route can get very chunky cuz of sharp dependency
 }
 
 export const POST: RequestHandler = async ({ request }) => {

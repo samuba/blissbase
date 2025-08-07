@@ -71,7 +71,7 @@ export class EventsStore {
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
 
-            const data = await fetchEventsWithCookiePersistence(params).updates(nothing());
+            const data = await fetchEventsWithCookiePersistence(params);
 
             if (append) {
                 // Filter out duplicate events that may result from pagination

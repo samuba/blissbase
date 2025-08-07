@@ -47,6 +47,8 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         saveFiltersToCookie(cookies, filterData);
     }
 
+    nothing().refresh()
+
     return result;
 });
 
