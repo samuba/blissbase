@@ -1,13 +1,14 @@
 import { CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
-import { generateSlug, parseTelegramContact, resizeCoverImage, uploadToCloudinary } from '$lib/common';
+import { generateSlug, parseTelegramContact, uploadToCloudinary } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/telegramCommon';
 import { routes } from '$lib/routes';
+import { resizeCoverImage } from '$lib/imageProcessing';
 
 const cloudinaryCreds = {
     apiKey: CLOUDINARY_API_KEY,

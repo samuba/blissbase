@@ -2,13 +2,13 @@ import { Api, TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import readline from "readline";
 import 'dotenv/config'
-import sharp from 'sharp';
 import { db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
-import { generateSlug, parseTelegramContact, resizeCoverImage, uploadToCloudinary } from "../src/lib/common";
+import { generateSlug, parseTelegramContact, uploadToCloudinary } from "../src/lib/common";
 import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
+import { resizeCoverImage } from '../src/lib/imageProcessing';
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;

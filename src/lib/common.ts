@@ -1,4 +1,3 @@
-import sharp from "sharp";
 import type { MetaTagsProps } from "svelte-meta-tags";
 
 export function debounce(func: (...args: unknown[]) => void, wait: number) {
@@ -196,16 +195,6 @@ export async function uploadToCloudinary(buffer: Buffer, publicId: string, cloud
         throw new Error(`Failed to upload to Cloudinary: ${res.statusText} ${await res.text()}`);
     }
     return await res.json() as { secure_url: string };
-}
-
-export async function resizeCoverImage(input: sharp.SharpInput | Array<sharp.SharpInput>) {
-    return await sharp(input)
-        .resize(maxImageSize, maxImageSize, {
-            fit: 'inside',
-            withoutEnlargement: true
-        })
-        .jpeg({ quality: 95 })
-        .toBuffer();
 }
 
 export function stripHtml(html: string | undefined) {
