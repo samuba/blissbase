@@ -1,7 +1,7 @@
-import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import { CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
-import { cachedImageUrl, generateSlug, parseTelegramContact } from '$lib/common';
+import { generateSlug, parseTelegramContact, resizeCoverImage, uploadToCloudinary } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
@@ -9,7 +9,12 @@ import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/telegramCommon';
 import { routes } from '$lib/routes';
 
-export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, imageUrl, fromGroup }: TelegramCloudflareBody) {
+const cloudinaryCreds = {
+    apiKey: CLOUDINARY_API_KEY,
+    cloudName: CLOUDINARY_CLOUD_NAME
+}
+
+export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image, fromGroup }: TelegramCloudflareBody) {
     if (!msgTextHtml.trim()) return
 
     const isAdmin = ctx.from?.id === 218154725;
@@ -49,17 +54,6 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
         }
 
-        if (imageUrl) {
-            // transfer image 
-            const startTime = performance.now();
-            const res = await fetch(cachedImageUrl(imageUrl)!, { method: 'HEAD' })
-            if (res.ok) {
-                imageUrl = cachedImageUrl(imageUrl)
-            }
-            const endTime = performance.now();
-            console.log(`image processing took: ${endTime - startTime}ms`);
-        }
-
         let addressArr = aiAnswer.address ? aiAnswer.address.split(',') : [];
         if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
         if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
@@ -79,6 +73,25 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         const startAt = new Date(aiAnswer.startDate)
         const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
         const name = aiAnswer.name.trim()
+        const slug = generateSlug({ name: aiAnswer.name, startAt, endAt: endAt ?? undefined })
+
+        let imageUrl: string | undefined;
+        if (image) {
+            try {
+                const startTime = performance.now();
+                const res = await fetch(image.url)
+                if (!res.ok) {
+                    throw new Error("could not download image " + imageUrl + " " + res.statusText + " " + await res.text())
+                }
+                const resizedBuffer = await resizeCoverImage(await res.bytes())
+                const uploadedImage = await uploadToCloudinary(resizedBuffer, `${slug}-${image.id}`, cloudinaryCreds)
+                imageUrl = uploadedImage.secure_url
+                console.log(`image processing took: ${performance.now() - startTime}ms`);
+            } catch (error) {
+                console.error("error processing image", error)
+            }
+        }
+
         const eventRow = {
             name,
             imageUrls: imageUrl ? [imageUrl] : [],
@@ -98,7 +111,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             messageSenderId: getTelegramSenderId(ctx.message),
             contact,
             source: "telegram",
-            slug: generateSlug({ name, startAt, endAt: endAt ?? undefined }),
+            slug,
         } satisfies InsertEvent
 
         let skippedDescription = false;

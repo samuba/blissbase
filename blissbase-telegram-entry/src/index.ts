@@ -39,11 +39,11 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			msgEntities = ctx.message.caption_entities ?? [];
 		}
 
-		let imageUrl: string | undefined;
+		let image: { url: string, id: string } | undefined;
 		if (ctx.message && 'photo' in ctx.message) {
-			imageUrl = await getImageUrl(ctx.message.photo, ctx)
+			image = await getImage(ctx.message.photo, ctx)
 		} else if (ctx.channelPost && 'photo' in ctx.channelPost) {
-			imageUrl = await getImageUrl(ctx.channelPost.photo, ctx)
+			image = await getImage(ctx.channelPost.photo, ctx)
 		}
 
 		await reply(ctx, "⏳ Ich extrahiere die Eventdaten aus deiner Nachricht...")
@@ -64,7 +64,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			body: JSON.stringify({
 				telegramPayload: payloadJson,
 				msgTextHtml,
-				imageUrl,
+				image,
 				aiAnswer,
 				fromGroup,
 			} satisfies TelegramCloudflareBody)
@@ -85,13 +85,16 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 	}
 }
 
-async function getImageUrl(photos: PhotoSize[], ctx: Context) {
+async function getImage(photos: PhotoSize[], ctx: Context) {
 	if (!photos || photos.length === 0) return;
 
 	// Typically, the last photo in the array is the largest
 	const largestPhoto = photos[photos.length - 1];
 	const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
-	return fileLink.href;
+	return {
+		url: fileLink.href,
+		id: largestPhoto.file_unique_id,
+	}
 }
 
 

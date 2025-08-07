@@ -26,7 +26,7 @@ export const msgFilters = anyOf(
 export type TelegramCloudflareBody = {
     telegramPayload: Update,
     msgTextHtml: string,
-    imageUrl: string | undefined | null,
+    image: { url: string, id: string } | undefined | null,
     aiAnswer: MsgAnalysisAnswer,
     fromGroup: boolean,
 }
