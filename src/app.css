@@ -42,3 +42,13 @@ h6,
 }
 
 @import 'tw-animate-css';
+
+img {
+	/* Prevent haptic touch (long press to expand the image) and prevent the user from dragging out images on WebKit derived browsers (Chrome & Safari). */
+	-webkit-touch-callout: none;
+	-webkit-user-drag: none;
+}
+
+body {
+	touch-action: manipulation; /* Enable panning and pinch zoom gestures, but disable additional non-standard gestures such as double-tap to zoom. Disabling double-tap to zoom removes the need for browsers to delay the generation of click events when the user taps the screen. */
+}
