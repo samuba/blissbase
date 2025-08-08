@@ -1,7 +1,7 @@
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
 
-export async function aiExtractEventData(message: string, imageUrl?: string): Promise<MsgAnalysisAnswer> {
+export async function aiExtractEventData(message: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
     const { text } = await generateText({
         model: openai('o4-mini-2025-04-16'),
         system: msgAnalysisSystemPrompt(),
@@ -13,10 +13,10 @@ export async function aiExtractEventData(message: string, imageUrl?: string): Pr
                         type: "text",
                         text: message,
                     },
-                    ...(imageUrl ? [{
+                    ...imageUrls.filter(x => !!x).map(url => ({
                         type: "image" as const,
-                        image: imageUrl,
-                    }] : []),
+                        image: new URL(url!),
+                    })),
                 ],
             },
 
@@ -34,14 +34,14 @@ export async function aiExtractEventData(message: string, imageUrl?: string): Pr
 }
 
 export const msgAnalysisSystemPrompt = () => `
-Your purpose is to anaylze text messages and extract infos about an event from them. 
+Your purpose is to analyze text messages and images to extract information about events from them. 
 Ignore messages that are not event announcements by setting hasEventData to false. (Be strict about this. E.g. this is not an event announcement: "..Wir haben noch einen Platz frei für den nächsten Tantra event..")
 Answer only in valid, properly escaped, raw JSON. Do not wrap it inside markdown or anything else.
 Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
-Never make up any information. Only use the information provided in the message!
+Never make up any information. Only use the information provided in the message or image!
 If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. awara.events, sei.jetzt.) and do not include anything else.
-If there was an image attached, consider all text on the image as part of the message.
+If there was an image attached, consider all text on the image as part of the message. For image-only messages (flyers), extract all visible text and treat it as the message content.
 
 # existing sources:
 https://sei.jetzt/
