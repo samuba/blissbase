@@ -3,6 +3,7 @@ import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment va
 import { allTags } from '../../src/lib/tags';
 
 export async function aiExtractEventData(message: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
+    console.log(`AI extracting event data with ${imageUrls.length} images...`)
     const { text } = await generateText({
         model: openai('gpt-5-mini'),
         system: msgAnalysisSystemPrompt(),

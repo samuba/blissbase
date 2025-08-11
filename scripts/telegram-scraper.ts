@@ -255,6 +255,15 @@ function getTelegramOriginalAuthorId(message: Api.Message) {
         } else if (message.fromId.className === 'PeerChannel') {
             return message.fromId.channelId.toString();
         }
+    } else if (message.peerId) {
+        // Fallback for channel posts where fromId is typically undefined.
+        if (message.peerId.className === 'PeerUser') {
+            return message.peerId.userId.toString();
+        } else if (message.peerId.className === 'PeerChat') {
+            return message.peerId.chatId.toString();
+        } else if (message.peerId.className === 'PeerChannel') {
+            return message.peerId.channelId.toString();
+        }
     }
 }
 
@@ -264,6 +273,15 @@ async function getTelegramEventOriginalAuthor(message: Api.Message, client: Tele
     let username: string | undefined;
     let firstName: string | undefined;
     let lastName: string | undefined;
+    let channelTitle: string | undefined;
+
+    function hasFirstNameField(x: unknown): x is { firstName?: string; lastName?: string; username?: string } {
+        return typeof x === 'object' && x !== null && 'firstName' in (x as Record<string, unknown>);
+    }
+
+    function hasTitleField(x: unknown): x is { title?: string; username?: string } {
+        return typeof x === 'object' && x !== null && 'title' in (x as Record<string, unknown>);
+    }
 
     // Check if message is forwarded
     if (message.fwdFrom) {
@@ -292,13 +310,32 @@ async function getTelegramEventOriginalAuthor(message: Api.Message, client: Tele
             try {
                 // Fetch user details from the from ID
                 const user = await client.getEntity(message.fromId);
-                if (user && 'firstName' in user) {
+                if (hasFirstNameField(user)) {
                     firstName = user.firstName;
                     lastName = user.lastName;
+                    username = user.username;
+                } else if (hasTitleField(user)) {
+                    // Channel/Chat entity
+                    channelTitle = user.title;
                     username = user.username;
                 }
             } catch (error) {
                 console.log('Could not fetch user details:', error);
+            }
+        } else if (message.peerId) {
+            // Channel posts: fromId is undefined, use peerId
+            try {
+                const entity = await client.getEntity(message.peerId);
+                if (hasFirstNameField(entity)) {
+                    firstName = entity.firstName;
+                    lastName = entity.lastName;
+                    username = entity.username;
+                } else if (hasTitleField(entity)) {
+                    channelTitle = entity.title;
+                    username = entity.username;
+                }
+            } catch (error) {
+                console.log('Could not fetch peer (channel) details:', error);
             }
         }
     }
@@ -312,19 +349,31 @@ async function getTelegramEventOriginalAuthor(message: Api.Message, client: Tele
         name = `${firstName} (@${username})`;
     } else if (firstName) {
         name = firstName;
+    } else if (channelTitle) {
+        name = channelTitle;
     } else if (username) {
         name = username;
     }
 
     return {
         name,
-        id: message.fromId,
+        id: message.fromId ?? message.peerId,
         link: username ? `tg://resolve?domain=${username}` : undefined
     };
 }
 
+function isImageMedia(message: Api.Message): boolean {
+    if (!message.media) return false;
+    if (message.media.className === 'MessageMediaPhoto') return true;
+    if (message.media.className === 'MessageMediaDocument') {
+        const doc = (message.media as Api.MessageMediaDocument).document as unknown as { mimeType?: string } | undefined;
+        return !!doc?.mimeType && doc.mimeType.startsWith('image/');
+    }
+    return false;
+}
+
 async function extractPhotoFromMessage(message: Api.Message, client: TelegramClient, slug: string) {
-    if (message.media?.className !== 'MessageMediaPhoto') return undefined;
+    if (!isImageMedia(message)) return undefined;
 
     try {
         console.log("extracting photo from message", message.id)
@@ -334,8 +383,9 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         });
 
         const resizedBuffer = await resizeCoverImage(imageBuffer!)
-        console.log("Uploading resized file to Cloudinary:", { publicId: `${slug}-${message.photo?.id}` });
-        const result = await uploadToCloudinary(resizedBuffer, `${slug}-${message.photo?.id}`, cloudinaryCreds);
+        const publicId = `${slug}-${message.id}`
+        console.log("Uploading resized file to Cloudinary:", publicId);
+        const result = await uploadToCloudinary(resizedBuffer, publicId, cloudinaryCreds);
 
         console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
         return result.secure_url;
@@ -360,7 +410,7 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
 
 // Returns a resized image buffer for a Telegram photo message
 async function getResizedImageBufferFromMessage(message: Api.Message, client: TelegramClient): Promise<Buffer | undefined> {
-    if (message.media?.className !== 'MessageMediaPhoto') return undefined;
+    if (!isImageMedia(message)) return undefined;
 
     const imageBuffer = await client.downloadMedia(message, {});
     if (!imageBuffer) return undefined;
@@ -406,7 +456,7 @@ async function collectAdjacentImageDataUrls(
         const timeDiff = Math.abs(message.date - currentMessageTime);
         if (timeDiff > timeWindowSeconds) continue;
 
-        if (message.media?.className === 'MessageMediaPhoto') {
+        if (isImageMedia(message)) {
             const messageIndex = sortedMessages.findIndex(msg => msg.id === message.id);
             if (messageIndex === -1) continue;
 
@@ -461,7 +511,7 @@ async function extractAdjacentImagesWithIds(
         const timeDiff = Math.abs(message.date - currentMessageTime);
         if (timeDiff > timeWindowSeconds) continue;
 
-        if (message.media?.className === 'MessageMediaPhoto') {
+        if (isImageMedia(message)) {
             // Check if there are text messages between current message and this image
             const messageIndex = sortedMessages.findIndex(msg => msg.id === message.id);
             if (messageIndex === -1) continue;
@@ -613,7 +663,7 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
         return undefined;
     }
     if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
-        const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.chatId, chatId) })
+        const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.roomId, chatId) })
         if (chatConfig?.defaultAddress?.length) {
             aiAnswer.address = chatConfig.defaultAddress.join(',')
         } else {
@@ -642,9 +692,14 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
     const name = aiAnswer.name.trim()
     const slug = generateSlug({ name, startAt, endAt: endAt ?? undefined })
 
+    // Upload the current image now that we have a slug
+    const mainImageUrl = await extractPhotoFromMessage(message, client, slug);
     // Get additional images from the same user around the same time
     const { imageUrls: additionalImageUrls, messageIds: adjacentImageMessageIds } = await extractAdjacentImagesWithIds(message, allMessages, client, slug);
-    const allImageUrls = [...additionalImageUrls]; // Only uploaded URLs
+    const allImageUrls = Array.from(new Set([
+        ...(mainImageUrl ? [mainImageUrl] : []),
+        ...additionalImageUrls
+    ]));
 
     const eventRow = {
         name,
@@ -725,7 +780,7 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
         return undefined;
     }
     if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
-        const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.chatId, chatId) })
+        const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.roomId, chatId) })
         if (chatConfig?.defaultAddress?.length) {
             aiAnswer.address = chatConfig.defaultAddress.join(',')
         } else {
@@ -834,7 +889,7 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
             }
         }
         // Handle image-only messages that might contain event flyers
-        else if (message.media?.className === 'MessageMediaPhoto' && (!msg || msg.length <= 30)) {
+        else if (isImageMedia(message) && (!msg || msg.length <= 30)) {
             console.log(`Processing image-only message ${message.id} for potential event data`);
             const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages);
             if (result) {
@@ -845,12 +900,12 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
             }
         }
         // Log other photo messages that are part of text messages
-        else if (message.media?.className === 'MessageMediaPhoto') {
-            console.log(message.media.photo?.className + " from " + getTelegramOriginalAuthorId(message));
+        else if (isImageMedia(message)) {
+            console.log(`${message.media?.className} from ${getTelegramOriginalAuthorId(message)}`);
         }
     }
 
-    events.forEach(x => x.telegramChatId = chatId)
+    events.forEach(x => x.telegramRoomId = chatId)
 
     console.log("inserting into db:", events)
     // await insertEvents(events);
@@ -910,21 +965,21 @@ try {
     // Process each target
     for (const target of scrapingTargets) {
         try {
-            console.log(`\nProcessing target: ${target.chatId}`);
-            const entity = await client.getEntity(target.chatId);
+            console.log(`\nProcessing target: ${target.roomId}`);
+            const entity = await client.getEntity(target.roomId);
             const entityName = getEntityName(entity);
             console.log(`Target name: ${entityName}`);
 
             // Get messages newer than the last processed message
             const messages = await client.getMessages(entity, {
-                limit: 8,
+                limit: 10,
                 ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
             });
 
             console.log(`Found ${messages.length} new messages`);
 
             if (messages.length > 0) {
-                const newestMessage = await processMessages(messages, target.chatId, client);
+                const newestMessage = await processMessages(messages, target.roomId, client);
                 const totalMessagesConsumed = target.messagesConsumed + messages.length;
 
                 console.log(`Messages consumed: ${messages.length} (Total: ${totalMessagesConsumed})`);
@@ -936,12 +991,12 @@ try {
                         // lastMessageId: newestMessage.id,
                         messagesConsumed: totalMessagesConsumed,
                     })
-                    .where(eq(s.telegramScrapingTargets.chatId, target.chatId));
+                    .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             } else {
-                console.log(`No new messages for target ${target.chatId}`);
+                console.log(`No new messages for target ${target.roomId}`);
             }
         } catch (error) {
-            console.error(`❌ Error processing target ${target.chatId}:`, error);
+            console.error(`❌ Error processing target ${target.roomId}:`, error);
         }
     }
 
