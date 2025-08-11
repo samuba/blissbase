@@ -22,6 +22,7 @@ import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
 import { and, gte, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
+import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
 
 const SCRAPER_CONFIG = {
     awara: { module: './scrape-awara.ts' },
@@ -181,7 +182,7 @@ async function main() {
         } satisfies InsertEvent;
     });
 
-    // delete all events that are not in sources and are in the future
+    // delete all events that are not in sources and are in the future. So that would be events that were deleted by the organizer
     const deletedEvents = await db.delete(s.events)
         .where(and(
             inArray(s.events.source, sourcesToScrape),
@@ -189,6 +190,16 @@ async function main() {
             gte(s.events.startAt, new Date())
         )).returning();
     console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
+
+
+    // remove events that span more than 2 months. These are usually spammy events with people posting their courses, no real "events"
+    eventsToInsert = eventsToInsert.filter(e => {
+        if (!e.endAt) return true;
+        const startAt = toCalendarDate(fromDate(e.startAt, getLocalTimeZone()));
+        const endAt = toCalendarDate(fromDate(e.endAt, getLocalTimeZone()));
+        const diffDays = endAt.compare(startAt);
+        return diffDays <= 60;
+    });
 
     eventsToInsert = deduplicateEvents(eventsToInsert);
 
