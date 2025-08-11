@@ -4,11 +4,12 @@ import readline from "readline";
 import 'dotenv/config'
 import { db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
-import { generateSlug, parseTelegramContact, uploadToCloudinary } from "../src/lib/common";
+import { generateSlug, parseTelegramContact, sleep, uploadToCloudinary } from "../src/lib/common";
 import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
+
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
@@ -355,15 +356,89 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
     }
 }
 
-async function extractAdjacentImages(
+
+
+// Returns a resized image buffer for a Telegram photo message
+async function getResizedImageBufferFromMessage(message: Api.Message, client: TelegramClient): Promise<Buffer | undefined> {
+    if (message.media?.className !== 'MessageMediaPhoto') return undefined;
+
+    const imageBuffer = await client.downloadMedia(message, {});
+    if (!imageBuffer) return undefined;
+    const resizedBuffer = await resizeCoverImage(imageBuffer);
+    return resizedBuffer;
+}
+
+// Returns a data URL for AI analysis without uploading to Cloudinary
+async function getImageDataUrlFromMessage(message: Api.Message, client: TelegramClient): Promise<string | undefined> {
+    try {
+        const resized = await getResizedImageBufferFromMessage(message, client);
+        if (!resized) return undefined;
+        const base64 = Buffer.from(resized).toString('base64');
+        return `data:image/jpeg;base64,${base64}`;
+    } catch (err) {
+        console.error("Failed to create data URL from message", message.id, err);
+        return undefined;
+    }
+}
+
+// Collect adjacent images as data URLs (no upload). Mirrors time/author filtering logic
+async function collectAdjacentImageDataUrls(
+    currentMessage: Api.Message,
+    allMessages: Api.Message[],
+    client: TelegramClient,
+): Promise<{ imageDataUrls: string[]; messageIds: number[] }> {
+    const imageDataUrls: string[] = [];
+    const messageIds: number[] = [];
+    const currentAuthorId = getTelegramOriginalAuthorId(currentMessage);
+    if (!currentAuthorId) return { imageDataUrls, messageIds };
+
+    const currentMessageTime = currentMessage.date;
+    const timeWindowSeconds = 300;
+
+    const sortedMessages = [...allMessages].sort((a, b) => a.date - b.date);
+    const currentMessageIndex = sortedMessages.findIndex(msg => msg.id === currentMessage.id);
+    if (currentMessageIndex === -1) return { imageDataUrls, messageIds };
+
+    for (const message of allMessages) {
+        const messageAuthorId = getTelegramOriginalAuthorId(message);
+        if (messageAuthorId !== currentAuthorId) continue;
+
+        const timeDiff = Math.abs(message.date - currentMessageTime);
+        if (timeDiff > timeWindowSeconds) continue;
+
+        if (message.media?.className === 'MessageMediaPhoto') {
+            const messageIndex = sortedMessages.findIndex(msg => msg.id === message.id);
+            if (messageIndex === -1) continue;
+
+            const hasTextInBetween = hasTextMessagesBetween(
+                sortedMessages,
+                currentMessageIndex,
+                messageIndex,
+                currentAuthorId
+            );
+            if (hasTextInBetween) continue;
+
+            const dataUrl = await getImageDataUrlFromMessage(message, client);
+            if (dataUrl) {
+                imageDataUrls.push(dataUrl);
+                messageIds.push(message.id);
+            }
+        }
+    }
+
+    return { imageDataUrls, messageIds };
+}
+
+async function extractAdjacentImagesWithIds(
     currentMessage: Api.Message,
     allMessages: Api.Message[],
     client: TelegramClient,
     slug: string
-): Promise<string[]> {
+): Promise<{ imageUrls: string[]; messageIds: number[] }> {
     const imageUrls: string[] = [];
+    const messageIds: number[] = [];
     const currentAuthorId = getTelegramOriginalAuthorId(currentMessage);
-    if (!currentAuthorId) return imageUrls;
+    if (!currentAuthorId) return { imageUrls, messageIds };
 
     const currentMessageTime = currentMessage.date;
     const timeWindowSeconds = 300; // 5 minutes before/after
@@ -376,7 +451,7 @@ async function extractAdjacentImages(
 
     if (currentMessageIndex === -1) {
         console.log("Could not find current message in sorted list");
-        return imageUrls;
+        return { imageUrls, messageIds };
     }
 
     for (const message of allMessages) {
@@ -407,6 +482,7 @@ async function extractAdjacentImages(
                 const imageUrl = await extractPhotoFromMessage(message, client, slug);
                 if (imageUrl) {
                     imageUrls.push(imageUrl);
+                    messageIds.push(message.id);
                     console.log(`Found adjacent image from same user: ${imageUrl} (message ${message.id}, time diff: ${timeDiff}s)`);
                 }
             } catch (error) {
@@ -415,7 +491,58 @@ async function extractAdjacentImages(
         }
     }
 
-    return imageUrls;
+    return { imageUrls, messageIds };
+}
+
+/**
+ * Extracts adjacent text messages that might contain additional event details
+ */
+async function extractAdjacentTextMessages(
+    currentMessage: Api.Message,
+    allMessages: Api.Message[]
+): Promise<{ textMessages: string[]; messageIds: number[] }> {
+    const textMessages: string[] = [];
+    const messageIds: number[] = [];
+    const currentAuthorId = getTelegramOriginalAuthorId(currentMessage);
+    if (!currentAuthorId) return { textMessages, messageIds };
+
+    const currentMessageTime = currentMessage.date;
+    const timeWindowSeconds = 300; // 5 minutes before/after
+
+    console.log(`Looking for adjacent text messages from user ${currentAuthorId} around message ${currentMessage.id}`);
+
+    // Sort messages by timestamp
+    const sortedMessages = [...allMessages].sort((a, b) => a.date - b.date);
+    const currentMessageIndex = sortedMessages.findIndex(msg => msg.id === currentMessage.id);
+
+    if (currentMessageIndex === -1) {
+        console.log("Could not find current message in sorted list");
+        return { textMessages, messageIds };
+    }
+
+    for (const message of allMessages) {
+        const messageAuthorId = getTelegramOriginalAuthorId(message);
+        if (messageAuthorId !== currentAuthorId) continue;
+
+        const timeDiff = Math.abs(message.date - currentMessageTime);
+        if (timeDiff > timeWindowSeconds) continue;
+
+        // Skip the current message itself
+        if (message.id === currentMessage.id) continue;
+
+        // Look for text messages (no media or short captions)
+        if (!message.media || (message.message && message.message.length > 10)) {
+            const messageText = message.message || '';
+            if (messageText.trim().length > 0) {
+                const messageHtml = resolveTelegramFormattingToHtml(messageText, message.entities);
+                textMessages.push(messageHtml);
+                messageIds.push(message.id);
+                console.log(`Found adjacent text message: "${messageText.substring(0, 50)}..." (message ${message.id}, time diff: ${timeDiff}s)`);
+            }
+        }
+    }
+
+    return { textMessages, messageIds };
 }
 
 function hasTextMessagesBetween(
@@ -445,10 +572,141 @@ function hasTextMessagesBetween(
     return false;
 }
 
-async function extractEventDataFromMessage(message: Api.Message, chatId: bigint, client: TelegramClient, allMessages: Api.Message[]) {
+
+
+async function extractEventDataFromImageMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[]): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
+    if (message.media?.className !== 'MessageMediaPhoto') return undefined;
+
+    console.log("Processing image-only message for event data:", message.id);
+
+    // Extract the image from the message as a data URL for AI (no upload yet)
+    const imageDataUrl = await getImageDataUrlFromMessage(message, client);
+    if (!imageDataUrl) {
+        console.log("Could not extract image from message:", message.id);
+        return undefined;
+    }
+
+    // Get adjacent text messages that might contain additional event details
+    const { textMessages: adjacentTextMessages, messageIds: adjacentTextMessageIds } = await extractAdjacentTextMessages(message, allMessages);
+
+    // Combine adjacent text messages if any exist
+    const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join('\n\n') : '';
+
+    // Process the image and adjacent text with the AI function
+    await sleep(1000)
+    const aiAnswer = await aiExtractEventData(combinedText, [imageDataUrl]);
+
+    if (aiAnswer.existingSource) {
+        console.log("Event from existing source (image):", message.id);
+        return undefined;
+    }
+    if (!aiAnswer.hasEventData) {
+        console.log("No event data found in image:", message.id);
+        return undefined;
+    }
+    if (!aiAnswer.name) {
+        console.log("No event name found in image:", message.id);
+        return undefined;
+    }
+    if (!aiAnswer.startDate) {
+        console.log("No event start date found in image:", message.id);
+        return undefined;
+    }
+    if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
+        const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.chatId, chatId) })
+        if (chatConfig?.defaultAddress?.length) {
+            aiAnswer.address = chatConfig.defaultAddress.join(',')
+        } else {
+            console.log("No event location found in image:", message.id);
+            return undefined;
+        }
+    }
+
+    let addressArr = aiAnswer.address ? aiAnswer.address.split(',') : [];
+    if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
+    if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
+
+    const coords = await geocodeAddressCached(addressArr, process.env.GOOGLE_MAPS_API_KEY || '')
+    let contact = parseTelegramContact(aiAnswer.contact);
+    const telegramAuthor = await getTelegramEventOriginalAuthor(message, client);
+    if (aiAnswer.contactAuthorForMore) {
+        contact = telegramAuthor?.link
+        if (!contact) {
+            console.log("User wants contact via telegram but has no telegram user name specified (image):", message.id);
+            return undefined;
+        }
+    }
+
+    const startAt = new Date(aiAnswer.startDate)
+    const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
+    const name = aiAnswer.name.trim()
+    const slug = generateSlug({ name, startAt, endAt: endAt ?? undefined })
+
+    // Get additional images from the same user around the same time
+    const { imageUrls: additionalImageUrls, messageIds: adjacentImageMessageIds } = await extractAdjacentImagesWithIds(message, allMessages, client, slug);
+    const allImageUrls = [...additionalImageUrls]; // Only uploaded URLs
+
+    const eventRow = {
+        name,
+        imageUrls: allImageUrls,
+        startAt,
+        endAt,
+        address: addressArr,
+        tags: aiAnswer.tags,
+        latitude: coords?.lat,
+        longitude: coords?.lng,
+        price: aiAnswer.price,
+        description: aiAnswer.description,
+        descriptionOriginal: combinedText || aiAnswer.description || '',
+        summary: aiAnswer.summary,
+        host: telegramAuthor?.name,
+        hostLink: telegramAuthor?.link,
+        sourceUrl: aiAnswer.url,
+        messageSenderId: getTelegramOriginalAuthorId(message),
+        contact,
+        source: "telegram",
+        slug,
+    } satisfies InsertEvent
+
+    const existingEvent = await db.query.events.findFirst({ where: eq(s.events.slug, slug) });
+    if (existingEvent) {
+        // only override description if its longer than the existing one
+        if ((existingEvent.description?.length ?? 0) > (eventRow.description?.length ?? 0)) {
+            console.log("existing description is longer than new one, not updating description for ", slug)
+            eventRow.description = existingEvent.description ?? undefined
+        }
+        // Merge images: keep existing images and add new ones that aren't duplicates
+        if (eventRow.imageUrls.length === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
+            eventRow.imageUrls = existingEvent.imageUrls ?? []
+        } else if ((existingEvent.imageUrls?.length ?? 0) > 0) {
+            const existingUrls = new Set(existingEvent.imageUrls ?? []);
+            const newUrls = eventRow.imageUrls.filter(url => !existingUrls.has(url));
+            eventRow.imageUrls = [...(existingEvent.imageUrls ?? []), ...newUrls];
+        }
+    }
+
+    // Combine all adjacent message IDs (text and images)
+    const allAdjacentMessageIds = [...adjacentTextMessageIds, ...adjacentImageMessageIds];
+
+    return { event: eventRow, adjacentMessageIds: allAdjacentMessageIds };
+}
+
+async function extractEventDataFromMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[]): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
     const msgHtml = resolveTelegramFormattingToHtml(message.message, message.entities);
     console.log("extracting event data from message", message.id)
-    const aiAnswer = await aiExtractEventData(msgHtml);
+
+    // Get adjacent text messages that might contain additional event details
+    const { textMessages: adjacentTextMessages, messageIds: adjacentTextMessageIds } = await extractAdjacentTextMessages(message, allMessages);
+
+    // Collect adjacent images as data URLs for AI (no upload yet)
+    const { imageDataUrls: adjacentImageUrls } = await collectAdjacentImageDataUrls(message, allMessages, client);
+
+    // Combine main message with adjacent text messages
+    const combinedText = [msgHtml, ...adjacentTextMessages].join('\n\n');
+
+    // Pass combined text and images to AI for comprehensive analysis
+    await sleep(1000)
+    const aiAnswer = await aiExtractEventData(combinedText, adjacentImageUrls);
 
     if (aiAnswer.existingSource) {
         console.log("event from existing source: ", msgHtml)
@@ -495,7 +753,9 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: bigint,
     const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
     const name = aiAnswer.name.trim()
     const slug = generateSlug({ name, startAt, endAt: endAt ?? undefined })
-    const imageUrls = await extractAdjacentImages(message, allMessages, client, slug);
+
+    // Extract and upload images once with the proper slug for storage
+    const { imageUrls, messageIds: adjacentImageMessageIds } = await extractAdjacentImagesWithIds(message, allMessages, client, slug);
 
     const eventRow = {
         name,
@@ -508,7 +768,7 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: bigint,
         longitude: coords?.lng,
         price: aiAnswer.price,
         description: aiAnswer.description,
-        descriptionOriginal: msgHtml,
+        descriptionOriginal: combinedText, // Use combined text instead of just main message
         summary: aiAnswer.summary,
         host: telegramAuthor?.name,
         hostLink: telegramAuthor?.link,
@@ -536,33 +796,61 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: bigint,
         }
     }
 
-    return eventRow;
+    // Combine all adjacent message IDs (text and images)
+    const allAdjacentMessageIds = [...adjacentTextMessageIds, ...adjacentImageMessageIds];
+
+    return { event: eventRow, adjacentMessageIds: allAdjacentMessageIds };
 }
 
 /**
  * Processes messages and returns the newest message ID
  */
-async function processMessages(messages: TotalList<Api.Message>, chatId: bigint, client: TelegramClient) {
+async function processMessages(messages: TotalList<Api.Message>, chatId: string, client: TelegramClient) {
     const events: InsertEvent[] = [];
+    const processedMessageIds = new Set<number>(); // Track processed messages to avoid duplicates
 
     // Messages are returned in reverse chronological order (newest first) We want to process them in chronological order (oldest first)
     const sortedMessages = [...messages].reverse();
     const allMessages = [...messages]; // Keep original list for adjacent message lookup
 
     for (const message of sortedMessages) {
-        console.log(`msg#${message.id}: ${message.className} ${message.classType} ${message.media?.className}`);
-        const msg = message.message;
-        if (msg && msg.length > 30) {
-            const event = await extractEventDataFromMessage(message, chatId, client, allMessages);
-            if (event) events.push(event);
+        // Skip if this message has already been processed as part of another event
+        if (processedMessageIds.has(message.id)) {
+            console.log(`Skipping already processed message ${message.id}`);
+            continue;
         }
 
-        if (message.media?.className === 'MessageMediaPhoto') {
-            // Note: Individual photos are now handled by extractAdjacentImages
+        console.log(`msg#${message.id}: ${message.className} ${message.classType} ${message.media?.className}`);
+        const msg = message.message;
+
+        // Handle text messages with event data
+        if (msg && msg.length > 30) {
+            const result = await extractEventDataFromMessage(message, chatId, client, allMessages);
+            if (result) {
+                events.push(result.event);
+                // Mark this message and its adjacent images as processed
+                processedMessageIds.add(message.id);
+                result.adjacentMessageIds.forEach(id => processedMessageIds.add(id));
+            }
+        }
+        // Handle image-only messages that might contain event flyers
+        else if (message.media?.className === 'MessageMediaPhoto' && (!msg || msg.length <= 30)) {
+            console.log(`Processing image-only message ${message.id} for potential event data`);
+            const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages);
+            if (result) {
+                events.push(result.event);
+                // Mark this message and its adjacent images as processed
+                processedMessageIds.add(message.id);
+                result.adjacentMessageIds.forEach(id => processedMessageIds.add(id));
+            }
+        }
+        // Log other photo messages that are part of text messages
+        else if (message.media?.className === 'MessageMediaPhoto') {
             console.log(message.media.photo?.className + " from " + getTelegramOriginalAuthorId(message));
         }
     }
 
+    events.forEach(x => x.telegramChatId = chatId)
 
     console.log("inserting into db:", events)
     // await insertEvents(events);
@@ -623,13 +911,13 @@ try {
     for (const target of scrapingTargets) {
         try {
             console.log(`\nProcessing target: ${target.chatId}`);
-            const entity = await client.getEntity(Number(target.chatId));
+            const entity = await client.getEntity(target.chatId);
             const entityName = getEntityName(entity);
             console.log(`Target name: ${entityName}`);
 
             // Get messages newer than the last processed message
             const messages = await client.getMessages(entity, {
-                limit: 10,
+                limit: 8,
                 ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
             });
 

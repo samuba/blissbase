@@ -1,9 +1,10 @@
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
+import { allTags } from '../../src/lib/tags';
 
 export async function aiExtractEventData(message: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
     const { text } = await generateText({
-        model: openai('o4-mini-2025-04-16'),
+        model: openai('gpt-5-mini'),
         system: msgAnalysisSystemPrompt(),
         messages: [
             {
@@ -89,9 +90,9 @@ Extract these information from the message:
 
 "city": string. Name of the city/town where the event is happening.
 
-"tags": string[]. Tags that describe the event.
-
 "emojis": string. Up to 3 emojis that describe the event.
+
+"tags": string[]. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map(x => x.en).join(", ")}.
 
 `
 

@@ -16,8 +16,8 @@
 		"wrangler": "^4.20.0"
 	},
 	"dependencies": {
-		"@ai-sdk/openai": "^2.0.4",
-		"ai": "^5.0.7",
+		"@ai-sdk/openai": "^2.0.9",
+		"ai": "^5.0.9",
 		"telegraf": "^4.16.3"
 	}
 }

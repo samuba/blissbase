@@ -27,6 +27,7 @@ export const events = pgTable('events', {
     slug: text().notNull().unique(),
     soldOut: boolean().notNull().default(false),
     listed: boolean().notNull().default(true),
+    telegramChatId: text(),
 });
 
 
@@ -66,7 +67,7 @@ export const telegramChatConfig = pgTable('telegram_chat_config', {
 });
 
 export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
-    chatId: bigint({ mode: 'bigint' }).primaryKey(),
+    chatId: text().primaryKey(),
     name: text(), // telegram group or channel name
     lastMessageId: bigint({ mode: 'bigint' }),
     lastMessageTime: timestamp(),
