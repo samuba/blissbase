@@ -9,6 +9,7 @@ import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
+import { insertEvents } from "../src/lib/server/events";
 
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
@@ -905,10 +906,10 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
         }
     }
 
-    events.forEach(x => x.telegramRoomId = chatId)
+    events.forEach(x => x.telegramRoomIds = Array.from(new Set([chatId, ...(x.telegramRoomIds ?? [])])))
 
     console.log("inserting into db:", events)
-    // await insertEvents(events);
+    await insertEvents(events);
 
     // return newest message id and time
     return {
@@ -972,7 +973,7 @@ try {
 
             // Get messages newer than the last processed message
             const messages = await client.getMessages(entity, {
-                limit: 10,
+                limit: 50,
                 ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
             });
 
@@ -988,7 +989,7 @@ try {
                 await db.update(s.telegramScrapingTargets)
                     .set({
                         name: entityName,
-                        // lastMessageId: newestMessage.id,
+                        lastMessageId: newestMessage.id,
                         messagesConsumed: totalMessagesConsumed,
                     })
                     .where(eq(s.telegramScrapingTargets.roomId, target.roomId));

@@ -27,7 +27,7 @@ export const events = pgTable('events', {
     slug: text().notNull().unique(),
     soldOut: boolean().notNull().default(false),
     listed: boolean().notNull().default(true),
-    telegramRoomId: text(),
+    telegramRoomIds: text().array(),
 });
 
 

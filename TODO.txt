@@ -1,13 +1,5 @@
-telegram bot token leaked in image URL!!!!
-  fixen
-  neues token
-
 Feedback joy
   Suchfeld für Ort benutzt
-  Wie installier ich das??
-    "Zum Home-Bildschirm hinzufügen" 
-    Appstore
-    "App installieren" für iOS wichtig
 
 telegram
   BUG: messages mit mehreren bildern haben keinen text??
