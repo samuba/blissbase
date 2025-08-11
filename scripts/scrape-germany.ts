@@ -197,7 +197,7 @@ async function main() {
         .where(and(
             inArray(s.events.source, sourcesToScrape),
             notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
-            gte(s.events.startAt, new Date())
+            // gte(s.events.startAt, new Date())
         )).returning();
     console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
 
