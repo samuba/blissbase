@@ -284,7 +284,7 @@
 				<div class="flex flex-wrap items-center gap-2">
 					{#each event.tags as tag}
 						<button
-							class="badge badge-ghost cursor-pointer"
+							class="badge badge-ghost cursor-pointer hover:underline"
 							type="button"
 							onclick={() => onShowEventForTag(tag)}
 							title="Filter nach Tag"
