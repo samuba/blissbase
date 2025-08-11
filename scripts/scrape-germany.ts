@@ -182,16 +182,6 @@ async function main() {
         } satisfies InsertEvent;
     });
 
-    // delete all events that are not in sources and are in the future. So that would be events that were deleted by the organizer
-    const deletedEvents = await db.delete(s.events)
-        .where(and(
-            inArray(s.events.source, sourcesToScrape),
-            notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
-            gte(s.events.startAt, new Date())
-        )).returning();
-    console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
-
-
     // remove events that span more than 2 months. These are usually spammy events with people posting their courses, no real "events"
     eventsToInsert = eventsToInsert.filter(e => {
         if (!e.endAt) return true;
@@ -200,8 +190,16 @@ async function main() {
         const diffDays = endAt.compare(startAt);
         return diffDays <= 60;
     });
-
     eventsToInsert = deduplicateEvents(eventsToInsert);
+
+    // delete all events that are not in sources and are in the future. So that would be events that were deleted by the organizer
+    const deletedEvents = await db.delete(s.events)
+        .where(and(
+            inArray(s.events.source, sourcesToScrape),
+            notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
+            gte(s.events.startAt, new Date())
+        )).returning();
+    console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
 
     // await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
