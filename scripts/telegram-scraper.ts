@@ -731,14 +731,11 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
             console.log("existing description is longer than new one, not updating description for ", slug)
             eventRow.description = existingEvent.description ?? undefined
         }
-        // Merge images: keep existing images and add new ones that aren't duplicates
-        if (eventRow.imageUrls.length === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
-            eventRow.imageUrls = existingEvent.imageUrls ?? []
-        } else if ((existingEvent.imageUrls?.length ?? 0) > 0) {
-            const existingUrls = new Set(existingEvent.imageUrls ?? []);
-            const newUrls = eventRow.imageUrls.filter(url => !existingUrls.has(url));
-            eventRow.imageUrls = [...(existingEvent.imageUrls ?? []), ...newUrls];
-        }
+        // merge images
+        eventRow.imageUrls = Array.from(new Set([
+            ...(existingEvent.imageUrls ?? []),
+            ...eventRow.imageUrls
+        ]));
     }
 
     // Combine all adjacent message IDs (text and images)
@@ -842,14 +839,11 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
             console.log("existing description is longer than new one, not updating description for ", slug)
             eventRow.description = existingEvent.description ?? undefined
         }
-        // Merge images: keep existing images and add new ones that aren't duplicates
-        if (eventRow.imageUrls.length === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
-            eventRow.imageUrls = existingEvent.imageUrls ?? []
-        } else if ((existingEvent.imageUrls?.length ?? 0) > 0) {
-            const existingUrls = new Set(existingEvent.imageUrls ?? []);
-            const newUrls = eventRow.imageUrls.filter(url => !existingUrls.has(url));
-            eventRow.imageUrls = [...(existingEvent.imageUrls ?? []), ...newUrls];
-        }
+        // merge images
+        eventRow.imageUrls = Array.from(new Set([
+            ...(existingEvent.imageUrls ?? []),
+            ...eventRow.imageUrls
+        ]));
     }
 
     // Combine all adjacent message IDs (text and images)
@@ -882,12 +876,19 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 ...(event.tags ?? [])
             ]));
 
+            // Merge telegramRoomIds
+            const telegramRoomIds = Array.from(new Set([
+                ...(existing.telegramRoomIds ?? []),
+                ...(event.telegramRoomIds ?? [])
+            ]));
+
             // Update the existing event with merged data
             uniqueEvents.set(event.slug, {
                 ...existing,
                 description,
                 imageUrls,
-                tags
+                tags,
+                telegramRoomIds
             });
         } else {
             uniqueEvents.set(event.slug, event);
