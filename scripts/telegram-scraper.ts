@@ -989,8 +989,10 @@ try {
                 await db.update(s.telegramScrapingTargets)
                     .set({
                         name: entityName,
-                        lastMessageId: newestMessage.id,
                         messagesConsumed: totalMessagesConsumed,
+                        lastMessageId: newestMessage.id,
+                        lastMessageTime: newestMessage.time,
+                        lastError: null,
                     })
                     .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             } else {
@@ -998,6 +1000,9 @@ try {
             }
         } catch (error) {
             console.error(`❌ Error processing target ${target.roomId}:`, error);
+            await db.update(s.telegramScrapingTargets)
+                .set({ lastError: error.message })
+                .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
         }
     }
 
