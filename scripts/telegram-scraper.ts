@@ -858,11 +858,50 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
     return { event: eventRow, adjacentMessageIds: allAdjacentMessageIds };
 }
 
+function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
+    const uniqueEvents = new Map<string, InsertEvent>();
+
+    events.forEach(event => {
+        const existing = uniqueEvents.get(event.slug);
+
+        if (existing) {
+            // Take the longest description
+            const description = (event.description?.length ?? 0) > (existing.description?.length ?? 0)
+                ? event.description
+                : existing.description;
+
+            // Merge imageUrls
+            const imageUrls = Array.from(new Set([
+                ...(existing.imageUrls ?? []),
+                ...(event.imageUrls ?? [])
+            ]));
+
+            // Merge tags
+            const tags = Array.from(new Set([
+                ...(existing.tags ?? []),
+                ...(event.tags ?? [])
+            ]));
+
+            // Update the existing event with merged data
+            uniqueEvents.set(event.slug, {
+                ...existing,
+                description,
+                imageUrls,
+                tags
+            });
+        } else {
+            uniqueEvents.set(event.slug, event);
+        }
+    });
+
+    return Array.from(uniqueEvents.values());
+}
+
 /**
  * Processes messages and returns the newest message ID
  */
 async function processMessages(messages: TotalList<Api.Message>, chatId: string, client: TelegramClient) {
-    const events: InsertEvent[] = [];
+    let events: InsertEvent[] = [];
     const processedMessageIds = new Set<number>(); // Track processed messages to avoid duplicates
 
     // Messages are returned in reverse chronological order (newest first) We want to process them in chronological order (oldest first)
@@ -906,9 +945,11 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
         }
     }
 
+    events = mergeDuplicateEvents(events);
     events.forEach(x => x.telegramRoomIds = Array.from(new Set([chatId, ...(x.telegramRoomIds ?? [])])))
 
     console.log("inserting into db:", events)
+    console.log("inserting these slugs:", events.map(e => e.slug))
     await insertEvents(events);
 
     // return newest message id and time
