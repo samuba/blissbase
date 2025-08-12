@@ -333,4 +333,6 @@ export const allTags: TagTranslation[] = [
     ...lecturesAndPerformances
 ]
 
+export const allTagsMap = new Map(allTags.map(tag => [tag.en, tag]));
+
 type TagTranslation = { en: string; de: string; nl: string };

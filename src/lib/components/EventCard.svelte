@@ -3,7 +3,6 @@
 	import { formatAddress, formatTimeStr } from '$lib/common';
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';
-	import { eventsStore } from '$lib/eventsStore.svelte';
 	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
@@ -88,11 +87,11 @@
 				</div>
 			{/if}
 
-			{#if event.tags && event.tags.length}
+			{#if (event.tags?.length ?? 0) > 0}
 				<div class="mt-1 flex flex-wrap gap-1 text-xs">
-					{#each event.tags as tag}
+					{#each event.tags! as tag}
 						<button class="badge badge-sm badge-ghost">
-							{tag}
+							{tag?.de ?? tag}
 						</button>
 					{/each}
 				</div>

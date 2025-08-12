@@ -6,6 +6,7 @@ import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/goog
 import type { InsertEvent } from '$lib/types';
 import { generateSlug } from '$lib/common';
 import * as v from 'valibot';
+import { allTagsMap } from '$lib/tags';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
@@ -210,9 +211,13 @@ export async function fetchEvents(params: LoadEventsParams) {
         resolvedCityName = await reverseGeocodeCityCached(lat, lng, GOOGLE_MAPS_API_KEY);
     }
 
+    const eventsWithEnrichedTags = events.map(event => ({
+        ...event,
+        tags: event.tags?.map(x => allTagsMap.get(x) ?? x)
+    }));
 
     return {
-        events,
+        events: eventsWithEnrichedTags,
         pagination: {
             startDate: params.startDate ? startCalDate.toString() : undefined,
             endDate: params.endDate ? endCalDate.toString() : undefined,
