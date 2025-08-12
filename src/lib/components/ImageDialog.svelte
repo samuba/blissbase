@@ -3,14 +3,109 @@
 	import type { Snippet } from 'svelte';
 
 	let {
-		imageUrl,
+		imageUrls = [],
 		alt,
 		children,
 		triggerProps
-	}: { imageUrl: string; alt: string; children: Snippet; triggerProps?: DialogTriggerProps } =
-		$props();
+	}: {
+		imageUrls?: string[];
+		alt: string;
+		children: Snippet;
+		triggerProps?: DialogTriggerProps;
+	} = $props();
 
 	let open = $state(false);
+	let currentIndex = $state(0);
+	let touchStartX: number | null = null;
+	let touchStartY: number | null = null;
+
+	function goToPrevious() {
+		if (imageUrls.length <= 1) return;
+		currentIndex = currentIndex > 0 ? currentIndex - 1 : imageUrls.length - 1;
+	}
+
+	function goToNext() {
+		if (imageUrls.length <= 1) return;
+		currentIndex = currentIndex < imageUrls.length - 1 ? currentIndex + 1 : 0;
+	}
+
+	/**
+	 * Handle touch start for swipe gestures
+	 */
+	function handleTouchStart(event: TouchEvent) {
+		touchStartX = event.touches[0].clientX;
+		touchStartY = event.touches[0].clientY;
+	}
+
+	/**
+	 * Handle touch end for swipe gestures
+	 */
+	function handleTouchEnd(event: TouchEvent) {
+		if (touchStartX === null || touchStartY === null) return;
+
+		const touchEndX = event.changedTouches[0].clientX;
+		const touchEndY = event.changedTouches[0].clientY;
+
+		const diffX = touchStartX - touchEndX;
+		const diffY = touchStartY - touchEndY;
+
+		// Only process horizontal swipes
+		if (Math.abs(diffX) > Math.abs(diffY)) {
+			const minSwipeDistance = 50; // minimum distance for a swipe
+
+			if (Math.abs(diffX) > minSwipeDistance) {
+				if (diffX > 0) {
+					// Swipe left - go to next image
+					goToNext();
+				} else {
+					// Swipe right - go to previous image
+					goToPrevious();
+				}
+			}
+		}
+
+		// Reset touch coordinates
+		touchStartX = null;
+		touchStartY = null;
+	}
+
+	/**
+	 * Handle keyboard navigation
+	 */
+	function handleKeydown(event: KeyboardEvent) {
+		if (!open) return;
+
+		switch (event.key) {
+			case 'ArrowLeft':
+				event.preventDefault();
+				goToPrevious();
+				break;
+			case 'ArrowRight':
+				event.preventDefault();
+				goToNext();
+				break;
+			case 'Escape':
+				event.preventDefault();
+				open = false;
+				break;
+		}
+	}
+
+	// Reset index when dialog opens or ensure it's within bounds
+	$effect(() => {
+		if (open) {
+			currentIndex = 0;
+		}
+	});
+
+	// Ensure currentIndex stays within bounds when imageUrls changes
+	$effect(() => {
+		if (currentIndex >= imageUrls.length && imageUrls.length > 0) {
+			currentIndex = imageUrls.length - 1;
+		} else if (imageUrls.length === 0) {
+			currentIndex = 0;
+		}
+	});
 </script>
 
 <Dialog.Root bind:open>
@@ -22,8 +117,45 @@
 		<Dialog.Content
 			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
 			onclick={() => (open = false)}
+			onkeydown={handleKeydown}
+			tabindex={-1}
 		>
-			<img src={imageUrl} {alt} class="max-h-full max-w-full object-contain" />
+			<div
+				class="relative max-h-full max-w-full"
+				onclick={(e) => e.stopPropagation()}
+				ontouchstart={handleTouchStart}
+				ontouchend={handleTouchEnd}
+			>
+				{#if imageUrls.length > 0}
+					<img
+						src={imageUrls[currentIndex]}
+						{alt}
+						class="max-h-full max-w-full object-contain select-none"
+						draggable="false"
+					/>
+				{/if}
+
+				{#if imageUrls.length > 1}
+					<button
+						onclick={goToPrevious}
+						class="absolute top-1/2 flex w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-r-full border-none bg-black/30 py-3 pr-3 shadow-lg transition-colors duration-150 hover:bg-black/70 focus:outline-none"
+						type="button"
+						aria-label="Previous image"
+					>
+						<i class="icon-[ph--caret-left] size-6 text-white"></i>
+					</button>
+
+					<button
+						onclick={goToNext}
+						class="absolute top-1/2 right-0 flex w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-l-full border-none bg-black/30 py-3 pl-3 shadow-lg transition-colors duration-150 hover:bg-black/70 focus:outline-none"
+						type="button"
+						aria-label="Next image"
+					>
+						<i class="icon-[ph--caret-right] size-6 text-white"></i>
+					</button>
+				{/if}
+			</div>
+
 			<Dialog.Close class="btn btn-circle absolute top-4 right-4 shadow-lg">
 				<i class="icon-[ph--x] size-5"></i>
 				<span class="sr-only">Close</span>

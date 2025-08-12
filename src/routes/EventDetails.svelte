@@ -12,6 +12,8 @@
 
 	let showOriginal = $state(false);
 
+	let selectedImageIndex = $state(0);
+
 	const contactMessage = $derived(
 		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
 		encodeURIComponent(
@@ -84,16 +86,24 @@
 	}
 
 	let imageLoadError = $state(false);
-	const imageUrl = $derived(
-		imageLoadError
-			? (event.imageUrls?.[0]?.split('https:')?.[2] ?? '')
-			: (event.imageUrls?.[0] ?? '')
-	);
+	const imageUrl = $derived.by(() => {
+		const rawUrl = event.imageUrls?.[selectedImageIndex] ?? '';
+		return imageLoadError ? (rawUrl?.split('https:')?.[2] ?? '') : rawUrl;
+	});
+
+	function selectImage(index: number) {
+		selectedImageIndex = index;
+		imageLoadError = false;
+	}
 </script>
 
 {#if event}
 	{#if imageUrl}
-		<ImageDialog {imageUrl} alt={event.name} triggerProps={{ class: 'w-full' }}>
+		<ImageDialog
+			imageUrls={event.imageUrls ?? []}
+			alt={event.name}
+			triggerProps={{ class: 'w-full' }}
+		>
 			<div class="bg-cover bg-center" style="background-image: url({imageUrl})">
 				<figure class="flex justify-center shadow-sm backdrop-blur-md backdrop-brightness-85">
 					<img
@@ -105,6 +115,28 @@
 				</figure>
 			</div>
 		</ImageDialog>
+
+		{#if (event.imageUrls?.length ?? 0) > 1}
+			<div class="mt-0.5 flex flex-wrap items-center justify-center gap-2">
+				{#each event.imageUrls! as thumbUrl, i}
+					<button
+						type="button"
+						class={[
+							'border-base-300 focus:ring-primary cursor-pointer rounded-md transition-all focus:ring-2 focus:outline-none',
+							i === selectedImageIndex ? 'ring-primary ring-2' : ''
+						]}
+						title={`Bild ${i + 1}`}
+						onclick={() => selectImage(i)}
+					>
+						<img
+							src={thumbUrl}
+							alt={`thumbnail ${i + 1}`}
+							class="size-18 rounded-md object-cover"
+						/>
+					</button>
+				{/each}
+			</div>
+		{/if}
 	{:else}
 		<RandomPlaceholderImg seed={event.name} class="h-full max-h-70 " />
 	{/if}
