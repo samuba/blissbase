@@ -6,16 +6,17 @@
 		imageUrls = [],
 		alt,
 		children,
-		triggerProps
+		triggerProps,
+		currentIndex = $bindable()
 	}: {
 		imageUrls?: string[];
 		alt: string;
 		children: Snippet;
 		triggerProps?: DialogTriggerProps;
+		currentIndex: number;
 	} = $props();
 
 	let open = $state(false);
-	let currentIndex = $state(0);
 	let touchStartX: number | null = null;
 	let touchStartY: number | null = null;
 
@@ -91,13 +92,6 @@
 		}
 	}
 
-	// Reset index when dialog opens or ensure it's within bounds
-	$effect(() => {
-		if (open) {
-			currentIndex = 0;
-		}
-	});
-
 	// Ensure currentIndex stays within bounds when imageUrls changes
 	$effect(() => {
 		if (currentIndex >= imageUrls.length && imageUrls.length > 0) {
@@ -126,6 +120,7 @@
 				ontouchstart={handleTouchStart}
 				ontouchend={handleTouchEnd}
 			>
+				{currentIndex}
 				{#if imageUrls.length > 0}
 					<img
 						src={imageUrls[currentIndex]}

@@ -104,6 +104,7 @@
 			imageUrls={event.imageUrls ?? []}
 			alt={event.name}
 			triggerProps={{ class: 'w-full' }}
+			bind:currentIndex={selectedImageIndex}
 		>
 			<div class="bg-cover bg-center" style="background-image: url({imageUrl})">
 				<figure class="flex justify-center shadow-sm backdrop-blur-md backdrop-brightness-85">
