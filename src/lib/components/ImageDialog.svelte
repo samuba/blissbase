@@ -112,14 +112,11 @@
 			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
 			onclick={() => (open = false)}
 			onkeydown={handleKeydown}
+			ontouchstart={handleTouchStart}
+			ontouchend={handleTouchEnd}
 			tabindex={-1}
 		>
-			<div
-				class="relative max-h-full max-w-full"
-				onclick={(e) => e.stopPropagation()}
-				ontouchstart={handleTouchStart}
-				ontouchend={handleTouchEnd}
-			>
+			<div class="relative max-h-full max-w-full" onclick={(e) => e.stopPropagation()}>
 				{currentIndex}
 				{#if imageUrls.length > 0}
 					<img
