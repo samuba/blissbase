@@ -6,6 +6,7 @@
 	import RandomPlaceholderImg from '$lib/components/RandomPlaceholderImg.svelte';
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import ImageDialog from '$lib/components/ImageDialog.svelte';
+	import EventAdminSection from '$lib/components/EventAdminSection.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -335,6 +336,8 @@
 				>
 			</div>
 		{/if}
+
+		<EventAdminSection {event} />
 	</div>
 {:else}
 	<div class="py-10 text-center">
