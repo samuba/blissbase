@@ -957,9 +957,13 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
     events = mergeDuplicateEvents(events);
     events.forEach(x => x.telegramRoomIds = Array.from(new Set([chatId, ...(x.telegramRoomIds ?? [])])))
 
-    console.log("inserting into db:", events)
-    console.log("inserting these slugs:", events.map(e => e.slug))
-    await insertEvents(events);
+    if (events.length > 0) {
+        console.log("inserting into db:", events)
+        console.log("inserting these slugs:", events.map(e => e.slug))
+        await insertEvents(events);
+    } else {
+        console.log("no events to insert")
+    }
 
     // return newest message id and time
     return {
@@ -993,7 +997,6 @@ const getEntityName = (entity: unknown): string => {
     return 'Unknown';
 };
 
-console.log("Loading interactive example...");
 const client = new TelegramClient(stringSession, apiId, apiHash, {
     connectionRetries: 5,
 });
@@ -1005,6 +1008,29 @@ await client.start({
     onError: (err) => console.log(err),
 });
 console.log("Connected to Telegram servers");
+
+// const result = await client.invoke(
+//     new Api.messages.Search({
+//         // peer: "username",
+//         q: "Spirituelle Treffen und Events in Dortmund und Umgebung",
+//         // filter: new Api.InputMessagesFilterPhotos({}),
+//         // minDate: 43,
+//         // maxDate: 43,
+//         // offsetId: 43,
+//         // addOffset: 0,
+//         // limit: 100,
+//         // maxId: 0,
+//         // minId: 0,
+//         // hash: BigInt("-4156887774564"),
+//         // fromId: "username",
+//         // topMsgId: 43,
+//     })
+// );
+
+
+// // console.log(result);
+
+// process.exit(0);
 
 try {
     // Get all scraping targets from database
