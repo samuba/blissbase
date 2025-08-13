@@ -955,8 +955,9 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
 
     // return newest message id and time
     return {
-        id: BigInt(messages[0].id),
-        time: new Date(messages[0].date * 1000),
+        latestMsgId: BigInt(messages[0].id),
+        latestMsgTime: new Date(messages[0].date * 1000),
+        scrapedEventsCount: events.length,
     }
 }
 
@@ -1022,19 +1023,20 @@ try {
             console.log(`Found ${messages.length} new messages`);
 
             if (messages.length > 0) {
-                const newestMessage = await processMessages(messages, target.roomId, client);
+                const { latestMsgId, latestMsgTime, scrapedEventsCount } = await processMessages(messages, target.roomId, client);
                 const totalMessagesConsumed = target.messagesConsumed + messages.length;
 
                 console.log(`Messages consumed: ${messages.length} (Total: ${totalMessagesConsumed})`);
-                console.log(`New Last message ID: ${newestMessage.id} (${newestMessage.time})`);
+                console.log(`New Last message ID: ${latestMsgId} (${latestMsgTime})`);
 
                 await db.update(s.telegramScrapingTargets)
                     .set({
                         name: entityName,
                         messagesConsumed: totalMessagesConsumed,
-                        lastMessageId: newestMessage.id,
-                        lastMessageTime: newestMessage.time,
+                        lastMessageId: latestMsgId,
+                        lastMessageTime: latestMsgTime,
                         lastError: null,
+                        scrapedEvents: target.scrapedEvents + scrapedEventsCount,
                     })
                     .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             } else {
