@@ -663,6 +663,11 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
         console.log("No event start date found in image:", message.id);
         return undefined;
     }
+    const startAt = new Date(aiAnswer.startDate);
+    if (startAt.getTime() < Date.now()) {
+        console.log("Event start date is in the past, skipping:", message.id, startAt.toISOString());
+        return undefined;
+    }
     if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
         const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.roomId, chatId) })
         if (chatConfig?.defaultAddress?.length) {
@@ -688,7 +693,6 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
         }
     }
 
-    const startAt = new Date(aiAnswer.startDate)
     const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
     const name = aiAnswer.name.trim()
     const slug = generateSlug({ name, startAt, endAt: endAt ?? undefined })
@@ -777,6 +781,11 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
         console.log("No event start date found in message: ", msgHtml)
         return undefined;
     }
+    const startAt = new Date(aiAnswer.startDate);
+    if (startAt.getTime() < Date.now()) {
+        console.log("Event start date is in the past, skipping:", message.id, startAt.toISOString())
+        return undefined;
+    }
     if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
         const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.roomId, chatId) })
         if (chatConfig?.defaultAddress?.length) {
@@ -802,7 +811,6 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
         }
     }
 
-    const startAt = new Date(aiAnswer.startDate)
     const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
     const name = aiAnswer.name.trim()
     const slug = generateSlug({ name, startAt, endAt: endAt ?? undefined })
