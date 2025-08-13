@@ -320,10 +320,10 @@
 						<button
 							class="badge badge-ghost cursor-pointer hover:underline"
 							type="button"
-							onclick={() => onShowEventForTag(tag)}
+							onclick={() => onShowEventForTag(tag?.en ?? tag)}
 							title="Filter nach Tag"
 						>
-							{tag}
+							{tag?.de ?? tag}
 						</button>
 					{/each}
 				</div>
