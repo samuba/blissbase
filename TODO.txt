@@ -1,3 +1,9 @@
+duplicates managen
+  - before insert, check if description is longer, take imageUrls with longest length 
+telegram mega gruppen supporten
+telegram invite only gruppen supporten
+
+
 Feedback joy
   Suchfeld für Ort benutzt
 

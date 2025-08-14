@@ -19,6 +19,7 @@ const cloudinaryCreds = {
     apiKey: process.env.CLOUDINARY_API_KEY!,
     cloudName: process.env.CLOUDINARY_CLOUD_NAME!
 }
+const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
 
 function resolveTelegramFormattingToHtml(text: string, entities: Api.TypeMessageEntity[] | undefined): string {
     // Type definitions for converted entities
@@ -682,7 +683,7 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
     if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
     if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
 
-    const coords = await geocodeAddressCached(addressArr, process.env.GOOGLE_MAPS_API_KEY || '')
+    const coords = await geocodeAddressCached(addressArr, googleMapsApiKey || '')
     let contact = parseTelegramContact(aiAnswer.contact);
     const telegramAuthor = await getTelegramEventOriginalAuthor(message, client);
     if (aiAnswer.contactAuthorForMore) {
@@ -800,7 +801,7 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
     if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
     if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
 
-    const coords = await geocodeAddressCached(addressArr, process.env.GOOGLE_MAPS_API_KEY || '')
+    const coords = await geocodeAddressCached(addressArr, googleMapsApiKey)
     let contact = parseTelegramContact(aiAnswer.contact);
     const telegramAuthor = await getTelegramEventOriginalAuthor(message, client);
     if (aiAnswer.contactAuthorForMore) {
