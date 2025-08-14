@@ -24,10 +24,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-        # If you don't have a bun.lockb or package.json for dependencies,
-        # and your script has no external Bun dependencies other than what's built-in
-        # or vendored, you might be able to skip this step.
-        # However, it's good practice if your scrapers or common.ts might add some.
+
+      - name: Install cloudflare worker dependencies
+        run: bun install --cwd blissbase-telegram-entry
 
       - name: scrape
         env:
