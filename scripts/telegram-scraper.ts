@@ -1072,6 +1072,7 @@ try {
                         lastMessageTime: latestMsgTime,
                         lastError: null,
                         scrapedEvents: target.scrapedEvents + scrapedEventsCount,
+                        lastRunFinishedAt: new Date(),
                     })
                     .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             } else {
