@@ -1077,6 +1077,12 @@ try {
                     .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             } else {
                 console.log(`No new messages for target ${target.roomId}`);
+                await db.update(s.telegramScrapingTargets)
+                    .set({
+                        name: entityName,
+                        lastRunFinishedAt: new Date()
+                    })
+                    .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             }
         } catch (error) {
             console.error(`❌ Error processing target ${target.roomId}:`, error);
