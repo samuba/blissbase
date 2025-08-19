@@ -179,10 +179,15 @@
 			{/if}
 
 			{#if event.address?.length}
-				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
+				<div class="btn">
 					<i class="icon-[ph--map-pin] mr-1 size-6"></i>
 					{#if event.address}
-						<p class="font-medium">{formatAddress(event.address)}</p>
+						<a
+							href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="font-medium">{formatAddress(event.address)}</a
+						>
 					{/if}
 				</div>
 			{/if}
