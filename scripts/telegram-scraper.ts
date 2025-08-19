@@ -961,9 +961,7 @@ console.log("Connected to Telegram servers");
 
 try {
     // Get all scraping targets from database
-    const scrapingTargets = await db.query.telegramScrapingTargets.findMany({
-        where: eq(s.telegramScrapingTargets.name, "Healing Arts Dresden"),
-    });
+    const scrapingTargets = await db.query.telegramScrapingTargets.findMany();
     if (scrapingTargets.length === 0) {
         console.log("No scraping targets found in database");
         process.exit(0);
