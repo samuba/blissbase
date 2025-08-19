@@ -896,6 +896,15 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
     }
 }
 
+async function getChatIdByName(client: TelegramClient, name: string) {
+    const dialogs = await client.getDialogs({});
+    for (const dialog of dialogs) {
+        if (dialog.name === name) {
+            return dialog.id?.toString();
+        }
+    }
+}
+
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
 /**
@@ -936,29 +945,6 @@ if (!sessionAuthKeyString) {
 
 console.log("Connected to Telegram servers");
 
-// const result = await client.invoke(
-//     new Api.messages.Search({
-//         // peer: "username",
-//         q: "Spirituelle Treffen und Events in Dortmund und Umgebung",
-//         // filter: new Api.InputMessagesFilterPhotos({}),
-//         // minDate: 43,
-//         // maxDate: 43,
-//         // offsetId: 43,
-//         // addOffset: 0,
-//         // limit: 100,
-//         // maxId: 0,
-//         // minId: 0,
-//         // hash: BigInt("-4156887774564"),
-//         // fromId: "username",
-//         // topMsgId: 43,
-//     })
-// );
-
-
-// // console.log(result);
-
-// process.exit(0);
-
 try {
     // Get all scraping targets from database
     const scrapingTargets = await db.query.telegramScrapingTargets.findMany();
@@ -971,6 +957,19 @@ try {
     for (const target of scrapingTargets) {
         try {
             console.log(`\nProcessing target: ${target.roomId}`);
+
+            // resolve roomId from name 
+            if (target.roomId.includes("resolveName:")) {
+                const chatName = target.roomId.split(":")[1].trim()
+                const chatId = await getChatIdByName(client, chatName);
+                if (!chatId) {
+                    console.error(`No chat found for name "${chatName}"`);
+                    continue;
+                }
+                target.roomId = chatId;
+                console.log(`resolved "${chatName}" to ${chatId}`)
+            }
+
             const entity = await client.getEntity(target.roomId);
             const entityName = getEntityName(entity);
             console.log(`Target name: ${entityName}`);
@@ -980,7 +979,6 @@ try {
                 limit: 50,
                 ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
             });
-
             console.log(`Found ${messages.length} new messages`);
 
             if (messages.length > 0) {
