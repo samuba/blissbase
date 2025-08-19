@@ -50,6 +50,13 @@
 						<a href="https://t.me/+fwGUbapUkrBhYTdi" target="_blank" class="link">
 							Bewegungsnetz Bielefeld und Umgebung
 						</a>
+
+						{#each data.scrapingTargets as target}
+							{@const roomUrl = target.roomId.startsWith('-100')
+								? `https://t.me/c/${target.roomId.replace('-100', '')}/${target.lastMessageId ?? 1}`
+								: `tg://resolve?domain=${target.roomId}`}
+							<a href={roomUrl} target="_blank" class="link">{target.name}</a>
+						{/each}
 					</div>
 				</div>
 			</div>
