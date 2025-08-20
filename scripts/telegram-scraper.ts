@@ -953,8 +953,8 @@ try {
         process.exit(0);
     }
 
-    // Process each target
     for (const target of scrapingTargets) {
+        let resolvedRoomId = target.roomId;
         try {
             console.log(`\nProcessing target: ${target.roomId}`);
 
@@ -966,11 +966,11 @@ try {
                     console.error(`No chat found for name "${chatName}"`);
                     continue;
                 }
-                target.roomId = chatId;
+                resolvedRoomId = chatId;
                 console.log(`resolved "${chatName}" to ${chatId}`)
             }
 
-            const entity = await client.getEntity(target.roomId);
+            const entity = await client.getEntity(resolvedRoomId);
             const entityName = getEntityName(entity);
             console.log(`Target name: ${entityName}`);
 
@@ -982,7 +982,7 @@ try {
             console.log(`Found ${messages.length} new messages`);
 
             if (messages.length > 0) {
-                const { latestMsgId, latestMsgTime, scrapedEventsCount } = await processMessages(messages, target.roomId, client);
+                const { latestMsgId, latestMsgTime, scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client);
                 const totalMessagesConsumed = target.messagesConsumed + messages.length;
 
                 console.log(`Messages consumed: ${messages.length} (Total: ${totalMessagesConsumed})`);
@@ -990,6 +990,7 @@ try {
 
                 await db.update(s.telegramScrapingTargets)
                     .set({
+                        roomId: resolvedRoomId,
                         name: entityName,
                         messagesConsumed: totalMessagesConsumed,
                         lastMessageId: latestMsgId,
