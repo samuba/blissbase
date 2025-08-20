@@ -11,6 +11,7 @@ import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
 import type { MsgAnalysisAnswer } from "../blissbase-telegram-entry/src/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
 import { insertEvents } from "../src/lib/server/events";
+import type { Entity } from "telegram/define";
 
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
@@ -929,6 +930,10 @@ const getEntityName = (entity: unknown): string => {
     return 'Unknown';
 };
 
+function isForum(entity: Entity) {
+    return entity.className === 'Channel' && entity.forum;
+}
+
 const client = new TelegramClient(sessionAuthKey, apiId, apiHash, {
     connectionRetries: 5,
 });
@@ -974,11 +979,30 @@ try {
             const entityName = getEntityName(entity);
             console.log(`Target name: ${entityName}`);
 
-            // Get messages newer than the last processed message
-            const messages = await client.getMessages(entity, {
-                limit: 50,
-                ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
-            });
+            if (isForum(entity) && target.topicIds.length === 0) {
+                throw new Error(`FATAL->EXIT: ${target.roomId} (${entityName}) is a forum but no topicIds are set`);
+            }
+            if (!isForum(entity) && target.topicIds.length > 0) {
+                throw new Error(`FATAL->EXIT: ${target.roomId} (${entityName}) is not a forum but topicIds are set`);
+            }
+
+            let messages: Api.Message[] = [];
+            const limit = 50;
+            if (target.topicIds.length > 0) {
+                for (const topicId of target.topicIds) {
+                    console.log(`Getting messages for topic ${topicId}`);
+                    messages = messages.concat(await client.getMessages(entity, {
+                        replyTo: Number(topicId),
+                        limit,
+                        ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
+                    }));
+                }
+            } else {
+                messages = await client.getMessages(entity, {
+                    limit,
+                    ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
+                });
+            }
             console.log(`Found ${messages.length} new messages`);
 
             if (messages.length > 0) {
@@ -1010,6 +1034,9 @@ try {
                     .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             }
         } catch (error) {
+            if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
+                throw error;
+            }
             console.error(`❌ Error processing target ${target.roomId}:`, error);
             await db.update(s.telegramScrapingTargets)
                 .set({ lastError: error.message })
@@ -1020,6 +1047,7 @@ try {
     console.log(`\n✅ Completed processing ${scrapingTargets.length} targets`);
 } catch (error) {
     console.error("Error processing scraping targets:", error);
+    throw error;
 }
 
 rl.close(); // Close the readline interface

@@ -77,6 +77,7 @@ export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
     lastError: text(),
     scrapedEvents: integer().notNull().default(0),
     lastRunFinishedAt: timestamp(),
+    topicIds: bigint({ mode: 'bigint' }).array().notNull().default([]),
 });
 
 export type TelegramScrapingTarget = typeof telegramScrapingTargets.$inferSelect;
