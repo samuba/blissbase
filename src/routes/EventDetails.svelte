@@ -152,7 +152,7 @@
 			{/if}
 		</h1>
 
-		<div class=" flex flex-wrap justify-center gap-4">
+		<div class="flex w-full flex-wrap justify-center gap-4">
 			<div class="flex items-center">
 				<div class="bg-base-200 flex items-center justify-center rounded-l-full py-1.5 pr-2 pl-4">
 					<i class="icon-[ph--clock] mr-2 size-6"></i>
@@ -179,17 +179,15 @@
 			{/if}
 
 			{#if event.address?.length}
-				<div class="btn">
-					<i class="icon-[ph--map-pin] mr-1 size-6"></i>
-					{#if event.address}
-						<a
-							href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="font-medium">{formatAddress(event.address)}</a
-						>
-					{/if}
-				</div>
+				<a
+					href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="btn h-fit max-w-full min-w-0 py-1.5 leading-tight font-medium break-words"
+				>
+					<i class="icon-[ph--map-pin] mr-1 size-6 flex-shrink-0"></i>
+					<span class="block min-w-0 break-words">{formatAddress(event.address)}</span>
+				</a>
 			{/if}
 
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
