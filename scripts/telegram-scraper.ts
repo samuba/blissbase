@@ -891,8 +891,6 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
 
     // return newest message id and time
     return {
-        latestMsgId: BigInt(messages[0].id),
-        latestMsgTime: new Date(messages[0].date * 1000),
         scrapedEventsCount: events.length,
     }
 }
@@ -1006,7 +1004,10 @@ try {
             console.log(`Found ${messages.length} new messages`);
 
             if (messages.length > 0) {
-                const { latestMsgId, latestMsgTime, scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client);
+                const { scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client);
+                messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
+                const latestMsgId = BigInt(messages[0].id);
+                const latestMsgTime = new Date(messages[0].date * 1000);
                 const totalMessagesConsumed = target.messagesConsumed + messages.length;
 
                 console.log(`Messages consumed: ${messages.length} (Total: ${totalMessagesConsumed})`);
@@ -1029,7 +1030,8 @@ try {
                 await db.update(s.telegramScrapingTargets)
                     .set({
                         name: entityName,
-                        lastRunFinishedAt: new Date()
+                        lastRunFinishedAt: new Date(),
+                        lastError: null,
                     })
                     .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
             }
