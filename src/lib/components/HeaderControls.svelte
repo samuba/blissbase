@@ -300,8 +300,26 @@
 						Events aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar,
 						komfortabel, alles an einem Ort.
 						<br />
-						Ich hoffe dir gefällt meine Arbeit — LG Samuel
+						Ich hoffe dir gefällt meine Arbeit.
 					</p>
+					<div class="-mt-2 flex items-center gap-3">
+						<img src="/me.jpg" alt="Samuel" class="size-12 min-w-12 rounded-full" />
+						<div class="flex flex-col">
+							<span>Peace, Love & Light 🌻</span>
+							<i class="text-sm">Samuel</i>
+						</div>
+					</div>
+
+					<p>
+						PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich
+						entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <a
+							href="mailto:hi@blissbase.app"
+							class="link w-fit font-semibold"
+						>
+							hi@blissbase.app
+						</a>
+					</p>
+
 					<p>
 						<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
 						<br />
@@ -317,15 +335,6 @@
 					</p>
 
 					<a href={routes.sources()} class="btn-sm btn w-fit">Event Quellen</a>
-
-					<div>
-						<span> Fehler gefunden / Feedback geben / Kooperation / Grüße: </span>
-						<div class="mt-1 flex items-center gap-1">
-							<a href="mailto:hi@blissbase.app" class="link w-fit font-semibold">
-								hi@blissbase.app
-							</a>
-						</div>
-					</div>
 				</div>
 			{/snippet}
 		</PopOver>
