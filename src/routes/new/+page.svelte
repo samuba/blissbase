@@ -31,7 +31,10 @@
 
 					<div class="card bg-info/15">
 						<div class="card-body">
-							<h3 class="card-title">Telegram-Bot</h3>
+							<h3 class="card-title flex gap-2.5">
+								<i class="icon-[ph--telegram-logo] size-7"></i>
+								Telegram-Bot
+							</h3>
 
 							<div>
 								Sende deinen Event an meinen Telegram-Bot.
@@ -46,6 +49,7 @@
 									rel="noopener noreferrer"
 									class="btn btn-info"
 									>Event an Telegram-Bot senden
+									<i class="icon-[ph--arrow-right] size-5"></i>
 								</a>
 							</div>
 						</div>
@@ -53,13 +57,18 @@
 
 					<div class="card bg-accent/25">
 						<div class="card-body">
-							<h3 class="card-title">Event Quellen</h3>
+							<h3 class="card-title flex gap-2.5">
+								<i class="icon-[ph--book-open] size-7"></i>
+								Event Quellen
+							</h3>
 							Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus
 							diesen Quellen. In etwa einem halben Tag solltest du dein Event hier sehen können dauert
 							es etwa einen halben
 
 							<div class="card-actions">
-								<a href={routes.sources()} class="btn btn-accent">Event Quellen anzeigen</a>
+								<a href={routes.sources()} class="btn btn-accent"
+									>Event Quellen anzeigen <i class="icon-[ph--arrow-right] size-5"></i></a
+								>
 							</div>
 						</div>
 					</div>
