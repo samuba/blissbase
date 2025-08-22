@@ -55,7 +55,7 @@
 						</div>
 					</div>
 
-					<div class="card bg-accent/25">
+					<div class="card bg-accent/30">
 						<div class="card-body">
 							<h3 class="card-title flex gap-2.5">
 								<i class="icon-[ph--book-open] size-7"></i>
