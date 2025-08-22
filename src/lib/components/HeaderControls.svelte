@@ -294,8 +294,8 @@
 			{/snippet}
 			{#snippet content()}
 				<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
-					<p class="text-lg leading-tight font-bold">Willkommen bei Blissbase</p>
-					<p>
+					<h1 class="text-lg leading-tight font-bold">Willkommen bei Blissbase</h1>
+					<p class="-mt-2">
 						Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich
 						Events aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar,
 						komfortabel, alles an einem Ort.
