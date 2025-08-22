@@ -20,13 +20,6 @@
 	let touchStartX: number | null = null;
 	let touchStartY: number | null = null;
 
-	// Reactive viewport content that changes based on dialog state
-	let viewportContent = $derived(
-		open
-			? `width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes`
-			: `width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no`
-	);
-
 	function goToPrevious() {
 		if (imageUrls.length <= 1) return;
 		currentIndex = currentIndex > 0 ? currentIndex - 1 : imageUrls.length - 1;
