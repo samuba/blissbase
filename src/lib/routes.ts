@@ -24,4 +24,5 @@ export const routes = {
         return `${base}${slug}`
     },
     sources: () => '/sources',
+    newEvent: () => '/new'
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { routes } from '$lib/routes';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -13,7 +14,7 @@
 				<h1 class="text-base-content text-2xl font-bold">Blissbase</h1>
 			</a>
 
-			<a href="/" class="btn-sm btn">
+			<a href={routes.newEvent()} class="btn-sm btn">
 				<i class="icon-[ph--arrow-left] size-5"></i>
 				Zurück
 			</a>
@@ -63,7 +64,7 @@
 		</div>
 
 		<div class="flex justify-center p-4">
-			<a href="/" class="btn-sm btn">
+			<a href={routes.newEvent()} class="btn-sm btn">
 				<i class="icon-[ph--arrow-left] size-5"></i>
 				Zurück
 			</a>

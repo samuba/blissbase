@@ -330,21 +330,10 @@
 						</a>
 					</p>
 
-					<p>
-						<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
-						<br />
-						Sende deinen Event einfach an meinen
-						<a
-							href="https://t.me/blissbase_bot"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="link font-semibold">Telegram-Bot</a
-						>. Ort, Datum und Bild muss alles in einer Nachricht sein.
-						<br />
-						Oder trage deinen Event in eine der Quellen ein:
-					</p>
-
-					<a href={routes.sources()} class="btn-sm btn w-fit">Event Quellen</a>
+					<a href={routes.newEvent()} class="btn btn-primary w-fit">
+						<i class="icon-[ph--plus] size-5"></i>
+						Neuen Event erstellen
+					</a>
 				</div>
 			{/snippet}
 		</PopOver>
