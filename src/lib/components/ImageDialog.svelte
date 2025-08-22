@@ -113,7 +113,6 @@
 			viewport?.setAttribute('content', newContent ?? '');
 		} else if (!viewport?.getAttribute('content')?.includes('maximum-scale=1')) {
 			const prevContent = viewport?.getAttribute('content');
-			console.log(`${prevContent}, maximum-scale=1, user-scalable=no`);
 			viewport?.setAttribute('content', `${prevContent}, maximum-scale=1, user-scalable=no`);
 		}
 	});

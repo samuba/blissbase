@@ -1,9 +1,6 @@
 editierfunktion mit admin link
 event erstellen auf website
 mehr gruppen eintragen
-bilder lassen sich nicht zoomen - meta tag in svelte setzen?
-menü button eindeutig machen
-
 
 psychedelic/hippie it-guy landing page
 
