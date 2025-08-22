@@ -1,6 +1,17 @@
+david kuschel antworten
+editierfunktion mit admin link
+event erstellen auf website
+mehr gruppen eintragen
+
+
+psychedelic/hippie it-guy landing page
+
+search input is funky. löscht buchstaben
+
 duplicates managen
   - before insert, check if description is longer, take imageUrls with longest length 
 telegram mega gruppen supporten
+announcements mit mehreren events supporten
 
 Feedback joy
   Suchfeld für Ort benutzt

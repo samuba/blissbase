@@ -296,13 +296,15 @@
 				<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
 					<p class="text-lg leading-tight font-bold">Willkommen bei Blissbase</p>
 					<p>
-						Wir bringen die achtsamen Communities Deutschlands zusammen. Dafür sammeln wir Events
-						aus verschiedenen Quellen und machen sie für alle in einer komfortablen App zugänglich.
+						Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich
+						Events aus verschiedenen Quellen und machen sie in einer komfortablen App zugänglich.
+						<br />
+						Ich hoffe dir gefällt meine Arbeit — LG Samuel
 					</p>
 					<p>
 						<span class="font-semibold"> Wie kann ich meinen Event eintragen? </span>
 						<br />
-						Sende deinen Event einfach an unseren
+						Sende deinen Event einfach an meinen
 						<a
 							href="https://t.me/blissbase_bot"
 							target="_blank"
@@ -310,10 +312,10 @@
 							class="link font-semibold">Telegram-Bot</a
 						>. Ort, Datum und Bild muss alles in einer Nachricht sein.
 						<br />
-						Oder trage deinen Event in eine unserer Quellen ein:
+						Oder trage deinen Event in eine der Quellen ein:
 					</p>
 
-					<a href={routes.sources()} class="btn-sm btn w-fit">Unsere Event Quellen</a>
+					<a href={routes.sources()} class="btn-sm btn w-fit">Event Quellen</a>
 
 					<div>
 						<span> Fehler gefunden / Feedback geben / Kooperation / Grüße: </span>
