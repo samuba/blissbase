@@ -47,7 +47,7 @@
 									href="https://t.me/blissbase_bot"
 									target="_blank"
 									rel="noopener noreferrer"
-									class="btn btn-info bg-info/80 hover:bg-info"
+									class="btn btn-info bg-info/70 hover:bg-info"
 									>Event an Telegram-Bot senden
 									<i class="icon-[ph--arrow-right] size-5"></i>
 								</a>
