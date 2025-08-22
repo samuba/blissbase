@@ -297,7 +297,8 @@
 					<p class="text-lg leading-tight font-bold">Willkommen bei Blissbase</p>
 					<p>
 						Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich
-						Events aus verschiedenen Quellen und machen sie in einer komfortablen App zugänglich.
+						Events aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar,
+						Komfortabel, alles an einem Ort.
 						<br />
 						Ich hoffe dir gefällt meine Arbeit — LG Samuel
 					</p>
