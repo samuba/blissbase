@@ -44,19 +44,19 @@
 				<div>
 					<h2 class="mb-1 text-lg font-bold">Telegram</h2>
 					<div class="flex flex-col gap-1.5 text-lg">
-						Kendralah-Experience
-
-						<a href="tg://resolve?domain=@youmeunity" target="_blank" class="link">YouMeUnity</a>
 						<a href="https://t.me/+fwGUbapUkrBhYTdi" target="_blank" class="link">
 							Bewegungsnetz Bielefeld und Umgebung
 						</a>
+						<a href="tg://resolve?domain=@youmeunity" target="_blank" class="link">YouMeUnity</a>
+						<a href="tg://c/2424846023" target="_blank" class="link">Kendralah-Experience</a>
+						und noch {data.scrapingTargets.length} weitere Gruppen und Kanäle.
 
-						{#each data.scrapingTargets as target}
+						<!-- {#each data.scrapingTargets as target}
 							{@const roomUrl = target.roomId.startsWith('-100')
 								? `https://t.me/c/${target.roomId.replace('-100', '')}/${target.lastMessageId ?? 1}`
 								: `tg://resolve?domain=${target.roomId}`}
 							<a href={roomUrl} target="_blank" class="link">{target.name}</a>
-						{/each}
+						{/each} -->
 					</div>
 				</div>
 			</div>
