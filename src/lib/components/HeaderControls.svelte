@@ -70,7 +70,7 @@
 	{#if isSticky}
 		<!-- Collapsed Sticky Header -->
 		<div class="flex w-full items-center justify-center gap-3">
-			{@render logoMenu('size-5', 'btn-circle btn')}
+			{@render logoMenu('size-6', ' btn')}
 
 			<!-- Date Button -->
 			<div class="relative">
@@ -200,9 +200,9 @@
 		<!-- Expanded Header -->
 		<div class="flex flex-col gap-4 px-4">
 			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
-				<div class="flex w-full items-center gap-4 md:w-auto">
-					<div class="-my-4 flex-shrink-0">
-						{@render logoMenu('size-6 min-w-6', ' btn btn-circle bg-base-100  ')}
+				<div class="flex w-full flex-wrap items-center gap-4 md:w-auto">
+					<div class="flex-shrink-0">
+						{@render logoMenu('size-6 min-w-6', ' btn bg-base-100  ')}
 					</div>
 
 					<div class="flex-1 md:flex-none">
@@ -276,7 +276,7 @@
 {#snippet logoMenu(logoClass: string, btnClass: string)}
 	<div class="flex flex-col items-center">
 		<PopOver
-			triggerClass="cursor-pointer group {btnClass}"
+			triggerClass="cursor-pointer group  {btnClass}"
 			contentClass="card card-border shadow-lg bg-base-100 z-20"
 			contentProps={{
 				customAnchor: '.custom-popover-anchor'
@@ -284,12 +284,19 @@
 		>
 			{#snippet trigger()}
 				<div class="relative flex items-center justify-center">
-					<i
+					<!-- <i
 						class="icon-[ph--list] text-black transition-all duration-300 ease-out group-data-[state=open]:rotate-90 group-data-[state=open]:opacity-0 {logoClass}"
-					></i>
+					></i>-->
 					<i
-						class="icon-[ph--x] absolute inset-0 -rotate-90 text-black opacity-0 transition-all duration-300 ease-out group-data-[state=open]:rotate-0 group-data-[state=open]:opacity-100 {logoClass}"
+						class="icon-[ph--x] inset-50% absolute -rotate-90 text-black opacity-0 transition-all duration-300 ease-out group-data-[state=open]:rotate-0 group-data-[state=open]:opacity-100 {logoClass}"
 					></i>
+					<div
+						class="group-data- flex items-center justify-center text-sm font-medium transition-all duration-300 ease-out group-data-[state=open]:opacity-0"
+					>
+						<img src="/logo.svg" alt="Menü" class="mr-2 size-5 {logoClass}" />
+						Menu
+					</div>
+					<!-- <div class="flex items-center justify-center !text-sm font-medium">Menü</div> -->
 				</div>
 			{/snippet}
 			{#snippet content()}
