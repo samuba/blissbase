@@ -70,7 +70,7 @@
 	{#if isSticky}
 		<!-- Collapsed Sticky Header -->
 		<div class="flex w-full items-center justify-center gap-3">
-			{@render logoMenu('size-10 min-w-10', 'drop-shadow-sm')}
+			{@render logoMenu('size-5', 'btn-circle btn')}
 
 			<!-- Date Button -->
 			<div class="relative">
@@ -202,7 +202,7 @@
 			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
 				<div class="flex w-full items-center gap-4 md:w-auto">
 					<div class="-my-4 flex-shrink-0">
-						{@render logoMenu('size-9.5 min-w-9.5', 'btn-lg btn btn-circle bg-base-100  ')}
+						{@render logoMenu('size-6 min-w-6', ' btn btn-circle bg-base-100  ')}
 					</div>
 
 					<div class="flex-1 md:flex-none">
@@ -276,25 +276,28 @@
 {#snippet logoMenu(logoClass: string, btnClass: string)}
 	<div class="flex flex-col items-center">
 		<PopOver
-			triggerClass="cursor-pointer group"
+			triggerClass="cursor-pointer group {btnClass}"
 			contentClass="card card-border shadow-lg bg-base-100 z-20"
 			contentProps={{
 				customAnchor: '.custom-popover-anchor'
 			}}
 		>
 			{#snippet trigger()}
-				<div class={btnClass}>
-					<img
-						src="/logo.svg"
-						alt="Menu"
-						bind:this={logoButton}
-						class="rotate-360 transition-transform duration-500 ease-in-out group-data-[state=open]:-rotate-360 {logoClass}"
-					/>
+				<div class="relative flex items-center justify-center">
+					<i
+						class="icon-[ph--list] text-black transition-all duration-300 ease-out group-data-[state=open]:rotate-90 group-data-[state=open]:opacity-0 {logoClass}"
+					></i>
+					<i
+						class="icon-[ph--x] absolute inset-0 -rotate-90 text-black opacity-0 transition-all duration-300 ease-out group-data-[state=open]:rotate-0 group-data-[state=open]:opacity-100 {logoClass}"
+					></i>
 				</div>
 			{/snippet}
 			{#snippet content()}
 				<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
-					<h1 class="text-lg leading-tight font-bold">Willkommen bei Blissbase</h1>
+					<h1 class="text-lg leading-tight font-bold">
+						<img src="logo.svg" alt="Blissbase" class="mr-1 inline-block size-8 min-w-8" />
+						Willkommen bei Blissbase
+					</h1>
 					<p class="-mt-2">
 						Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich
 						Events aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar,
