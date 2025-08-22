@@ -20,6 +20,13 @@
 	let touchStartX: number | null = null;
 	let touchStartY: number | null = null;
 
+	// Reactive viewport content that changes based on dialog state
+	let viewportContent = $derived(
+		open
+			? `width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes`
+			: `width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no`
+	);
+
 	function goToPrevious() {
 		if (imageUrls.length <= 1) return;
 		currentIndex = currentIndex > 0 ? currentIndex - 1 : imageUrls.length - 1;
@@ -98,6 +105,23 @@
 			currentIndex = imageUrls.length - 1;
 		} else if (imageUrls.length === 0) {
 			currentIndex = 0;
+		}
+	});
+
+	// allow zooming when image is visible
+	$effect(() => {
+		const viewport = document.querySelector('meta[name="viewport"]');
+		if (open) {
+			const prevContent = viewport?.getAttribute('content');
+			const newContent = prevContent
+				?.replace(', maximum-scale=1,', '')
+				.replace('user-scalable=no', '')
+				.trim();
+			viewport?.setAttribute('content', newContent ?? '');
+		} else if (!viewport?.getAttribute('content')?.includes('maximum-scale=1')) {
+			const prevContent = viewport?.getAttribute('content');
+			console.log(`${prevContent}, maximum-scale=1, user-scalable=no`);
+			viewport?.setAttribute('content', `${prevContent}, maximum-scale=1, user-scalable=no`);
 		}
 	});
 </script>
