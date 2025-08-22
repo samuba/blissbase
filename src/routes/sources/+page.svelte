@@ -24,7 +24,10 @@
 			<div class="card-body gap-8">
 				<div>
 					<h1 class="text-2xl font-bold">Event Quellen</h1>
-					<p>Aus diesen Quellen beziehe ich mehrmals täglich Events für euch.</p>
+					<p>
+						Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <br />Trage deinen
+						Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint.
+					</p>
 				</div>
 
 				<div>
