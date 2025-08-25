@@ -62,8 +62,7 @@
 								Event Quellen
 							</h3>
 							Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus
-							diesen Quellen. In etwa einem halben Tag solltest du dein Event hier sehen können dauert
-							es etwa einen halben
+							diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen.
 
 							<div class="card-actions">
 								<a href={routes.sources()} class="btn btn-accent"
