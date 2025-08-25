@@ -1,6 +1,20 @@
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 
+
+export const WEBSITE_SCRAPER_CONFIG = {
+    awara: { module: './scrape-awara.ts' },
+    tribehaus: { module: './scrape-tribehaus.ts' },
+    heilnetz: { module: './scrape-heilnetz.ts' },
+    heilnetzowl: { module: './scrape-heilnetzowl.ts' },
+    seijetzt: { module: './scrape-seijetzt.ts' },
+    ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
+    kuschelraum: { module: './scrape-kuschelraum.ts' }
+} as const;
+export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
+export type WebsiteScrapeSource = (typeof WEBSITE_SCRAPE_SOURCES)[number];
+
+
 /**
  * Common timeout for fetch requests in milliseconds
  */

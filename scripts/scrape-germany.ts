@@ -23,18 +23,8 @@ import { and, gte, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
+import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES } from './common.ts';
 
-const SCRAPER_CONFIG = {
-    awara: { module: './scrape-awara.ts' },
-    tribehaus: { module: './scrape-tribehaus.ts' },
-    heilnetz: { module: './scrape-heilnetz.ts' },
-    heilnetzowl: { module: './scrape-heilnetzowl.ts' },
-    seijetzt: { module: './scrape-seijetzt.ts' },
-    ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
-    kuschelraum: { module: './scrape-kuschelraum.ts' }
-} as const;
-
-const SCRAPE_SOURCES = Object.keys(SCRAPER_CONFIG) as (keyof typeof SCRAPER_CONFIG)[];
 
 /**
  * Dynamically scrapes a single source using its corresponding scraper
@@ -45,7 +35,7 @@ async function scrapeSource(source: string): Promise<ScrapedEvent[]> {
     console.log(`Scraping ${source}...`);
 
     try {
-        const config = SCRAPER_CONFIG[source as keyof typeof SCRAPER_CONFIG];
+        const config = WEBSITE_SCRAPER_CONFIG[source as keyof typeof WEBSITE_SCRAPER_CONFIG];
         if (!config) {
             throw new Error(`Unknown source: ${source}`);
         }
@@ -88,12 +78,12 @@ async function main() {
 
     // Check if a source is specified as positional argument
     if (positionals.length > 0) {
-        const sourceArgLower = positionals[0].toLowerCase() as keyof typeof SCRAPER_CONFIG;
-        if (SCRAPE_SOURCES.includes(sourceArgLower)) {
+        const sourceArgLower = positionals[0].toLowerCase() as keyof typeof WEBSITE_SCRAPER_CONFIG;
+        if (WEBSITE_SCRAPE_SOURCES.includes(sourceArgLower)) {
             targetSourceArg = sourceArgLower;
             console.log(`Targeting single source for scraping: ${targetSourceArg}`);
         } else {
-            console.warn(`Invalid source argument: ${positionals[0]}. Valid sources are: ${SCRAPE_SOURCES.join(', ')}. Scraping all sources.`);
+            console.warn(`Invalid source argument: ${positionals[0]}. Valid sources are: ${WEBSITE_SCRAPE_SOURCES.join(', ')}. Scraping all sources.`);
         }
     }
 
@@ -106,7 +96,7 @@ async function main() {
     }
 
     // --- Determine sources to scrape ---
-    const sourcesToScrape = targetSourceArg ? [targetSourceArg] : SCRAPE_SOURCES;
+    const sourcesToScrape = targetSourceArg ? [targetSourceArg] : WEBSITE_SCRAPE_SOURCES;
 
     // --- Run Scrapers in Parallel ---
     const scrapePromises = sourcesToScrape.map(source => scrapeSource(source));
@@ -148,7 +138,7 @@ async function main() {
             sourcesToClear = [targetSourceArg];
         } else {
             // Clear all scrape sources
-            sourcesToClear = SCRAPE_SOURCES;
+            sourcesToClear = WEBSITE_SCRAPE_SOURCES;
         }
 
         console.log(` -> Deleting events from sources: ${sourcesToClear.join(', ')}`);

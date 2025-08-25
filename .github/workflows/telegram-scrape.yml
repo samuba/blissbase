@@ -39,3 +39,8 @@ jobs:
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
         run: bun run scripts/telegram-scraper.ts ${{ github.event.inputs.params }}
+
+      - name: Remove duplicates
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bun run scripts/remove-duplicates.ts ${{ github.event.inputs.params }}
