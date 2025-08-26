@@ -333,13 +333,13 @@
 			</div>
 		{/if}
 
-		{#if event.descriptionOriginal}
+		<!-- {#if event.descriptionOriginal}
 			<div class="flex w-full justify-center gap-6">
 				<button class="btn btn-sm" onclick={() => (showOriginal = !showOriginal)}
 					>Original Nachricht zeigen</button
 				>
 			</div>
-		{/if}
+		{/if} -->
 
 		<EventAdminSection {event} />
 	</div>

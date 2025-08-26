@@ -8,21 +8,16 @@ search input is funky. löscht buchstaben
 
 duplicates managen
   - duplicates nachträglich entfernen
-  - before insert, check if description is longer, take imageUrls with longest length 
-telegram mega gruppen supporten
+  - before insert, check if description is longer, take imageUrls array with longest length 
+
 announcements mit mehreren events supporten
 
 Feedback joy
   Suchfeld für Ort benutzt
 
-telegram
-  BUG: messages mit mehreren bildern haben keinen text??
-
 tags für alle events
 
 online events ausblenden (standardmäßig?)
-
-mehr bilder anzeigen wenn mehr übermittelt wurden
 
 heilnetz extras aus liste sind teilweise sehr wichtig
 

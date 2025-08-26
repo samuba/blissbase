@@ -211,13 +211,8 @@ export async function fetchEvents(params: LoadEventsParams) {
         resolvedCityName = await reverseGeocodeCityCached(lat, lng, GOOGLE_MAPS_API_KEY);
     }
 
-    const eventsWithEnrichedTags = events.map(event => ({
-        ...event,
-        tags: event.tags?.map(x => allTagsMap.get(x) ?? x)
-    }));
-
     return {
-        events: eventsWithEnrichedTags,
+        events: prepareEventsForUi(events),
         pagination: {
             startDate: params.startDate ? startCalDate.toString() : undefined,
             endDate: params.endDate ? endCalDate.toString() : undefined,
@@ -236,6 +231,13 @@ export async function fetchEvents(params: LoadEventsParams) {
     };
 }
 
+
+export function prepareEventsForUi<T extends { tags?: string[] | null }>(events: T[]) {
+    return events.map(event => ({
+        ...event,
+        tags: event.tags?.map(x => allTagsMap.get(x) ?? x)
+    })) as T[];
+}
 
 export async function insertEvents(events: InsertEvent[]) {
     const processedEvents = events.map(event => {

@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { getPageMetaTags } from '$lib/common';
+import { prepareEventsForUi } from '$lib/server/events';
 
 export const load = (async ({ params: { slug }, url }) => {
     const event = await db.query.events.findFirst({
@@ -15,7 +16,7 @@ export const load = (async ({ params: { slug }, url }) => {
     }
 
     return {
-        event,
+        event: prepareEventsForUi([event])[0],
         pageMetaTags: getPageMetaTags({
             name: event.name,
             description: event.startAt.toLocaleDateString('de-DE', {

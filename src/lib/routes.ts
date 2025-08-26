@@ -20,9 +20,15 @@ export const routes = {
         return "/"
     },
     eventDetails: (slug: string, absolute: boolean = false) => {
-        const base = absolute ? `${BASE_URL}/` : "";
+        const base = absolute ? `${BASE_URL}/` : "/";
         return `${base}${slug}`
     },
     sources: () => '/sources',
-    newEvent: () => '/new'
+    newEvent: () => '/new',
+    editEvent: (id: number, hostSecret?: string) => {
+        const params = new URLSearchParams();
+        if (hostSecret) params.set('hostSecret', hostSecret);
+        if (params.size === 0) return `/edit/${id}`;
+        return `/edit/${id}?${params.toString()}`
+    }
 }

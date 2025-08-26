@@ -1,5 +1,5 @@
 import type { UiEvent } from '$lib/server/events';
-import { fetchEventsWithCookiePersistence } from '../routes/page.remote';
+import { fetchEventsWithCookiePersistence } from './events.remote';
 import type { DateRangePickerOnChange } from '$lib/components/DateRangePicker.svelte';
 import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.svelte';
 import { browser } from '$app/environment';

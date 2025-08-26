@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { UiEvent } from '$lib/server/events';
 	import { deleteEvent, getIsAdminSession } from '$lib/admin.remote';
+	import { routes } from '$lib/routes';
 
 	let { event }: { event: UiEvent } = $props();
 
@@ -41,7 +42,13 @@
 		</h3>
 		<div class="">
 			<div class="flex justify-between">
-				<button class="btn" onclick={() => (showJson = !showJson)}>Show JSON</button>
+				<div class="flex gap-2">
+					<a href={routes.editEvent(event.id)} class="btn btn-primary">
+						<i class="icon-[ph--pencil] mr-1 size-4"></i>
+						Edit Event
+					</a>
+					<button class="btn" onclick={() => (showJson = !showJson)}>Show JSON</button>
+				</div>
 
 				<button onclick={handleDeleteEvent} disabled={isDeletingEvent} class="btn btn-warning">
 					{#if isDeletingEvent}
