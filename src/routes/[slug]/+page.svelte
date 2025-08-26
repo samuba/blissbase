@@ -16,7 +16,7 @@
 		</a>
 	</div>
 
-	<div class="bg-base-100 sm:rounded-box overflow-hidden">
+	<div class="bg-base-100 sm:rounded-box overflow-hidden shadow">
 		<EventDetails
 			{event}
 			onShowEventForTag={(tag) => {

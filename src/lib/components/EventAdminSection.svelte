@@ -41,8 +41,8 @@
 			Admin Section
 		</h3>
 		<div class="">
-			<div class="flex justify-between">
-				<div class="flex gap-2">
+			<div class="flex flex-wrap justify-between gap-4">
+				<div class="flex gap-4">
 					<a href={routes.editEvent(event.id)} class="btn btn-primary">
 						<i class="icon-[ph--pencil] mr-1 size-4"></i>
 						Edit Event

@@ -114,17 +114,19 @@
 	}
 </script>
 
-<div class="container mx-auto max-w-4xl p-4">
+<div class="container mx-auto max-w-4xl sm:p-4">
 	<!-- Breadcrumb Navigation -->
-	<div class="breadcrumbs mb-4 text-sm">
+	<div class="breadcrumbs px-4 text-sm sm:mb-4 sm:px-0">
 		<ul>
-			<li><a href="/">Home</a></li>
-			<li><a href="/{event.slug}">{event.name}</a></li>
+			<li>
+				<a href={routes.eventList()}> <img src="/logo.svg" alt="Logo" class="h-8 min-w-6" /> </a>
+			</li>
+			<li><a href={routes.eventDetails(event.slug)}>{event.name}</a></li>
 			<li>Bearbeiten</li>
 		</ul>
 	</div>
 
-	<div class="card bg-base-100 shadow-xl">
+	<div class="sm:rounded-box bg-base-100 shadow">
 		<div class="card-body">
 			<h1 class="card-title mb-6 text-2xl">Event bearbeiten</h1>
 
