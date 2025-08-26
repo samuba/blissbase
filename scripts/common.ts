@@ -350,7 +350,3 @@ export interface WebsiteScraperInterface {
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-export function randomString(length: number) {
-    return Array.from({ length }, () => String.fromCharCode(Math.floor(Math.random() * 26) + (Math.random() < 0.5 ? 65 : 97))).join('');
-}

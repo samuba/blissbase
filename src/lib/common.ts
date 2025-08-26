@@ -254,3 +254,7 @@ export function parseTelegramContact(contact: string | undefined) {
     }
     return contact;
 }
+
+export function randomString(length: number) {
+    return Array.from({ length }, () => String.fromCharCode(Math.floor(Math.random() * 26) + (Math.random() < 0.5 ? 65 : 97))).join('');
+}

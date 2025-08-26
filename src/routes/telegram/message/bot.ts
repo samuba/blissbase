@@ -9,6 +9,7 @@ import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/telegramCommon';
 import { routes } from '$lib/routes';
 import { resizeCoverImage } from '$lib/imageProcessing';
+import { randomString } from '$lib/common';
 
 const cloudinaryCreds = {
     apiKey: CLOUDINARY_API_KEY,
@@ -258,8 +259,4 @@ async function recordMessage(ctx: Context) {
     } catch (error) {
         console.error("error recording telegram message", error)
     }
-}
-
-function randomString(arg0: number): string | null | undefined {
-    throw new Error('Function not implemented.');
 }
