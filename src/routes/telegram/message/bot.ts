@@ -142,7 +142,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         }
 
         if (!existingEvent || ctx.chat?.type === 'private') {
-            eventRow.hostSecret = eventRow.hostSecret ?? crypto.randomUUID().replace(/-/g, '').slice(0, 9)
+            eventRow.hostSecret = eventRow.hostSecret ?? randomString(10)
         }
 
         console.log({ eventRow })
@@ -150,9 +150,9 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         await ctx.react('⚡', false) // marker that the event was transferred
 
         const adminLinkText = `
-Benutze diesen Admin Link um den Event zu bearbeiten:
-${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}
-⚠️ ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten. Nicht teilen!.
+⚠️ Link zum bearbeiten des Events:
+[${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}](ADMIN LINK (nicht teilen))
+ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten!!
         `.trim()
 
         if (existingEvent) {
@@ -258,4 +258,8 @@ async function recordMessage(ctx: Context) {
     } catch (error) {
         console.error("error recording telegram message", error)
     }
+}
+
+function randomString(arg0: number): string | null | undefined {
+    throw new Error('Function not implemented.');
 }

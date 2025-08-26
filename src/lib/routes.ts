@@ -29,7 +29,7 @@ export const routes = {
         const base = absolute ? `${BASE_URL}/` : "/";
         const params = new URLSearchParams();
         if (hostSecret) params.set('hostSecret', hostSecret);
-        if (params.size === 0) return `${base}/edit/${id}#_LINK_NICHT_TEILEN`;
+        if (params.size === 0) return `${base}/edit/${id}?_ADMIN_LINK_NICHT_TEILEN`;
         return `${base}/edit/${id}?${params.toString()}`
     }
 }
