@@ -257,12 +257,7 @@
 
 				<!-- Form Actions -->
 				<div class="flex justify-end gap-4 pt-6">
-					<button
-						type="button"
-						onclick={handleCancel}
-						class="btn btn-outline"
-						disabled={isSubmitting}
-					>
+					<button type="button" onclick={handleCancel} class="btn" disabled={isSubmitting}>
 						Abbrechen
 					</button>
 					<button type="submit" class="btn btn-primary" disabled={isSubmitting}>
