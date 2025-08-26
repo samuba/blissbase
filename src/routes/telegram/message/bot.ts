@@ -139,9 +139,10 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                 eventRow.imageUrls = existingEvent.imageUrls ?? []
                 skippedImage = true;
             }
-        } else {
-            // event does not exist yet
-            eventRow.hostSecret = crypto.randomUUID().replace(/-/g, '')
+        }
+
+        if (!existingEvent || ctx.chat?.type === 'private') {
+            eventRow.hostSecret = eventRow.hostSecret ?? crypto.randomUUID().replace(/-/g, '')
         }
 
         console.log({ eventRow })
