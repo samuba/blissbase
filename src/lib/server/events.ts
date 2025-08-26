@@ -6,7 +6,7 @@ import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/goog
 import type { InsertEvent } from '$lib/types';
 import { generateSlug } from '$lib/common';
 import * as v from 'valibot';
-import { allTagsMap } from '$lib/tags';
+import { allTagsMap, type TagTranslation } from '$lib/tags';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
@@ -231,12 +231,12 @@ export async function fetchEvents(params: LoadEventsParams) {
     };
 }
 
-
+type StringOrTagTranslation = string & TagTranslation;
 export function prepareEventsForUi<T extends { tags?: string[] | null }>(events: T[]) {
     return events.map(event => ({
         ...event,
-        tags: event.tags?.map(x => allTagsMap.get(x) ?? x)
-    })) as T[];
+        tags: event.tags?.map(x => allTagsMap.get(x) ?? x) as StringOrTagTranslation[]
+    }));
 }
 
 export async function insertEvents(events: InsertEvent[]) {
