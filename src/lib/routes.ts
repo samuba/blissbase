@@ -28,8 +28,11 @@ export const routes = {
     editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
         const base = absolute ? `${BASE_URL}/` : "/";
         const params = new URLSearchParams();
-        if (hostSecret) params.set('hostSecret', hostSecret);
-        if (params.size === 0) return `${base}/edit/${id}?_ADMIN_LINK_NICHT_TEILEN`;
+        if (hostSecret) {
+            params.set('hostSecret', hostSecret)
+            params.set('_ADMIN_LINK_NICHT_TEILEN', '')
+        };
+        if (params.size === 0) return `${base}/edit/${id}`;
         return `${base}/edit/${id}?${params.toString()}`
     }
 }
