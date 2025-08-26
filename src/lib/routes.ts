@@ -25,10 +25,11 @@ export const routes = {
     },
     sources: () => '/sources',
     newEvent: () => '/new',
-    editEvent: (id: number, hostSecret?: string) => {
+    editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
+        const base = absolute ? `${BASE_URL}/` : "/";
         const params = new URLSearchParams();
         if (hostSecret) params.set('hostSecret', hostSecret);
-        if (params.size === 0) return `/edit/${id}`;
-        return `/edit/${id}?${params.toString()}`
+        if (params.size === 0) return `${base}/edit/${id}#_LINK_NICHT_TEILEN`;
+        return `${base}/edit/${id}?${params.toString()}`
     }
 }

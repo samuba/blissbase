@@ -93,7 +93,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
         }
 
-        const eventRow = {
+        const eventRow: InsertEvent = {
             name,
             imageUrls: imageUrl ? [imageUrl] : [],
             startAt,
@@ -139,6 +139,9 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                 eventRow.imageUrls = existingEvent.imageUrls ?? []
                 skippedImage = true;
             }
+        } else {
+            // event does not exist yet
+            eventRow.hostSecret = crypto.randomUUID().replace(/-/g, '')
         }
 
         console.log({ eventRow })
@@ -149,7 +152,14 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             await reply(ctx, `✅ Der Event wurde aktualisiert:\n\n${routes.eventDetails(dbEvent.slug, true)}\n
 ${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende Bild beibehalten." : ""}`.trim(), fromGroup, msgId)
         } else {
-            await reply(ctx, `✅ Der Event wurde in BlissBase eingetragen:\n\n${routes.eventDetails(dbEvent.slug, true)}`, fromGroup, msgId)
+            await reply(ctx, `
+✅ Der Event wurde in BlissBase eingetragen. Teile den Link mit deinen Teilnehmern:
+\n\n${routes.eventDetails(dbEvent.slug, true)}
+
+\n\n\nBenutze diesen Admin Link um den Event zu bearbeiten:
+\n\n${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}
+⚠️ ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten. Nicht teilen!.
+`.trim(), fromGroup, msgId)
         }
     } catch (error) {
         console.error(error)
