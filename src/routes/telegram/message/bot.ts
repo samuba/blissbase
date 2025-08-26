@@ -152,7 +152,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         const adminLinkText = `
 ⚠️ Link zum bearbeiten des Events:
-<a href="${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}">ADMIN LINK (nicht teilen)</a>
+<a href="${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}">Admin Link (nicht teilen)</a>
 ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten!!
         `.trim()
 
