@@ -159,15 +159,15 @@ ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten!!
         if (existingEvent) {
             await reply(ctx, `
 ✅ Der Event wurde aktualisiert:
-${routes.eventDetails(dbEvent.slug, true)}
+<a href="${routes.eventDetails(dbEvent.slug, true)}">Link zu deinem Event</a>
 ${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende Bild beibehalten." : ""}
 \n${adminLinkText}
 `.trim(), fromGroup, msgId)
         } else {
             await reply(ctx, `
 ✅ Der Event wurde in BlissBase eingetragen. Teile den Link mit deinen Teilnehmern:
-${routes.eventDetails(dbEvent.slug, true)}
-\n${adminLinkText}.
+<a href="${routes.eventDetails(dbEvent.slug, true)}">Link zu deinem Event</a>
+\n\n${adminLinkText}.
 `.trim(), fromGroup, msgId)
         }
     } catch (error) {
