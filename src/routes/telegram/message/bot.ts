@@ -146,20 +146,27 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         }
 
         console.log({ eventRow })
-
         const dbEvent = (await insertEvents([eventRow]))[0]
+
+        const adminLinkText = `
+Benutze diesen Admin Link um den Event zu bearbeiten:
+\n${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}
+⚠️ ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten. Nicht teilen!.
+        `.trim()
+
         await ctx.react('⚡', false) // marker that the event was transferred
         if (existingEvent) {
-            await reply(ctx, `✅ Der Event wurde aktualisiert:\n\n${routes.eventDetails(dbEvent.slug, true)}\n
-${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende Bild beibehalten." : ""}`.trim(), fromGroup, msgId)
+            await reply(ctx, `
+✅ Der Event wurde aktualisiert:
+\n\n${routes.eventDetails(dbEvent.slug, true)}
+\n${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende Bild beibehalten." : ""}
+\n\n\n${adminLinkText}
+`.trim(), fromGroup, msgId)
         } else {
             await reply(ctx, `
 ✅ Der Event wurde in BlissBase eingetragen. Teile den Link mit deinen Teilnehmern:
 \n\n${routes.eventDetails(dbEvent.slug, true)}
-
-\n\n\nBenutze diesen Admin Link um den Event zu bearbeiten:
-\n\n${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}
-⚠️ ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten. Nicht teilen!.
+\n\n\n${adminLinkText}.
 `.trim(), fromGroup, msgId)
         }
     } catch (error) {
