@@ -152,7 +152,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         const adminLinkText = `
 ⚠️ Link zum bearbeiten des Events:
-[${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}](ADMIN LINK (nicht teilen))
+<a href="${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}">ADMIN LINK (nicht teilen)</a>
 ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten!!
         `.trim()
 
@@ -183,7 +183,7 @@ async function reply(ctx: Context, text: string, fromGroup: boolean, msgId: stri
         const replyOptions = ctx.message?.message_id
             ? { reply_parameters: { message_id: ctx.message.message_id } }
             : undefined;
-        await ctx.reply(text, replyOptions)
+        await ctx.replyWithHTML(text, replyOptions)
     }
 
     if (msgId) {
