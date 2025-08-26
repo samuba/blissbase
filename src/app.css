@@ -23,6 +23,11 @@
 	--color-base-700: color-mix(in oklab, var(--color-base-content) 40%, #0000);
 }
 
+/* textarea looks ugly with full rounded cornders */
+.textarea {
+	@apply rounded-2xl;
+}
+
 /* disabled selects look ugly */
 .select,
 select {

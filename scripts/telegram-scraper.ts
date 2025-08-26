@@ -959,7 +959,7 @@ try {
     for (const target of scrapingTargets) {
         let resolvedRoomId = target.roomId;
         try {
-            console.log(`\nProcessing target: ${target.roomId}`);
+            console.log(`\n#### Processing target: ${target.roomId}`);
 
             // resolve roomId from name 
             if (target.roomId.includes("resolveName:")) {
