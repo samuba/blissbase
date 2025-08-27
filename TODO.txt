@@ -1,4 +1,3 @@
-editierfunktion mit admin link
 event erstellen auf website
 mehr gruppen eintragen
 

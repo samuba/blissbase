@@ -58,7 +58,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     const timeZone = 'Europe/Berlin';
     const today = getToday(timeZone);
     const startCalDate = params.startDate ? parseDate(params.startDate) : new CalendarDate(today.year, today.month, today.day);
-    const endCalDate = params.endDate ? parseDate(params.endDate) : startCalDate.add({ years: 3 });
+    const endCalDate = params.endDate ? parseDate(params.endDate) : startCalDate.add({ years: 99 });
     const limit = Math.min(params.limit ?? 10, 10);
     const page = Math.max(params.page ?? 1, 1);
     let sortBy = params.sortBy === 'distance' ? 'distance' : 'time';
@@ -68,7 +68,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     const now = new Date();
     const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
     const startDate = startCalDate.toDate(timeZone);
-    const endDate = endCalDate.add({ days: 1 }).toDate(timeZone);
+    const endDate = endCalDate.toDate(timeZone);
 
     // Check if the entire date range is in the past
     const isHistoricalRange = endDate <= now;
@@ -165,9 +165,7 @@ export async function fetchEvents(params: LoadEventsParams) {
             sql<boolean>`EXISTS (SELECT 1 FROM unnest(${s.events.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${searchTerm}%`})`,
             ilike(s.events.description, `%${searchTerm}%`)
         );
-        if (searchTermCondition) {
-            allConditions.push(searchTermCondition);
-        }
+        allConditions.push(searchTermCondition);
     }
 
     const finalCondition = and(...allConditions.filter(Boolean));
