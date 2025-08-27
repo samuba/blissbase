@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { formatAddress } from '$lib/common';
-	import { updateEvent } from '$lib/events.remote';
+	import { deleteEvent, updateEvent } from '$lib/events.remote';
 	import { allTags, type TagTranslation } from '$lib/tags';
 	import { isHttpError } from '@sveltejs/kit';
 	import type { PageProps } from './$types';
@@ -11,6 +10,8 @@
 
 	let { data }: PageProps = $props();
 	let { event } = data;
+
+	let isDeletingEvent = $state(false);
 
 	// Form state
 	let formData = $state({
@@ -111,6 +112,32 @@
 	// Handle cancel
 	function handleCancel() {
 		goto(`/${event.slug}`);
+	}
+
+	async function handleDeleteEvent() {
+		if (
+			!confirm(
+				`Willst du den Event "${event.name}" wirklich löschen?\nDie Aktion kann nicht rückgängig gemacht werden.`
+			)
+		) {
+			return;
+		}
+
+		try {
+			isDeletingEvent = true;
+			await deleteEvent({
+				eventId: event.id,
+				hostSecret: page.url.searchParams.get('hostSecret') ?? ''
+			});
+			alert(`Event wurde gelöscht`);
+
+			goto(routes.eventList());
+		} catch (error) {
+			console.error('Failed to delete event:', error);
+			alert('Failed to delete event. Please try again.');
+		} finally {
+			isDeletingEvent = false;
+		}
 	}
 </script>
 
@@ -258,18 +285,35 @@
 				</div>
 
 				<!-- Form Actions -->
-				<div class="flex justify-end gap-4 pt-6">
-					<button type="button" onclick={handleCancel} class="btn" disabled={isSubmitting}>
-						Abbrechen
-					</button>
-					<button type="submit" class="btn btn-primary" disabled={isSubmitting}>
-						{#if isSubmitting}
+				<div class="flex justify-between gap-4 pt-6">
+					<button
+						onclick={handleDeleteEvent}
+						disabled={isDeletingEvent}
+						type="button"
+						class="btn btn-warning"
+					>
+						{#if isDeletingEvent}
 							<span class="loading loading-spinner loading-sm"></span>
-							Speichern...
+							<span class="hidden sm:inline">Lösche...</span>
 						{:else}
-							Speichern
+							<i class="icon-[ph--trash] mr-1 size-4"></i>
+							<span class="hidden sm:inline">Event löschen</span>
 						{/if}
 					</button>
+
+					<div class="flex flex-wrap justify-end gap-4">
+						<button type="button" onclick={handleCancel} class="btn" disabled={isSubmitting}>
+							Abbrechen
+						</button>
+						<button type="submit" class="btn btn-primary" disabled={isSubmitting}>
+							{#if isSubmitting}
+								<span class="loading loading-spinner loading-sm"></span>
+								Speichern...
+							{:else}
+								Speichern
+							{/if}
+						</button>
+					</div>
 				</div>
 			</form>
 

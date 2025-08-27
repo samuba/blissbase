@@ -1,38 +1,23 @@
 export const BASE_URL = "https://blissbase.app" as const
 
-export interface SearchPageArgs {
-    searchTerm?: string | null;
-}
-
 export const routes = {
-    eventList: (args: SearchPageArgs = {}) => {
-        const params = new URLSearchParams();
-        const { searchTerm } = args;
-
-        if (searchTerm) params.set('searchTerm', searchTerm);
-
-        const queryString = params.toString();
-
-        if (queryString) {
-            return `/${queryString}`;
-        }
-
-        return "/"
+    eventList: (args: { searchTerm?: string | null } = {}) => {
+        const url = new URL('/', BASE_URL);
+        if (args.searchTerm) url.searchParams.set('searchTerm', args.searchTerm);
+        return url.toString().replace(url.origin, '');
     },
     eventDetails: (slug: string, absolute: boolean = false) => {
-        const base = absolute ? `${BASE_URL}/` : "/";
-        return `${base}${slug}`
+        const url = new URL(`/${slug}`, BASE_URL);
+        return absolute ? url.toString() : url.toString().replace(url.origin, '');
     },
     sources: () => '/sources',
     newEvent: () => '/new',
     editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
-        const base = absolute ? `${BASE_URL}/` : "/";
-        const params = new URLSearchParams();
+        const url = new URL(`/edit/${id}`, BASE_URL);
         if (hostSecret) {
-            params.set('hostSecret', hostSecret)
-            params.set('_ADMIN_LINK_NICHT_TEILEN', '')
-        };
-        if (params.size === 0) return `${base}/edit/${id}`;
-        return `${base}/edit/${id}?${params.toString()}`
+            url.searchParams.set('hostSecret', hostSecret);
+            url.searchParams.set('_ADMIN_LINK_NICHT_TEILEN', '');
+        }
+        return absolute ? url.toString() : url.toString().replace(url.origin, '');
     }
 }

@@ -105,9 +105,7 @@ const updateEventSchema = v.object({
 
 export const updateEvent = command(updateEventSchema, async (params) => {
     console.log({ params })
-    const event = await db.query.events.findFirst({ where: eq(s.events.id, params.event.id) });
-    if (!event) error(404, "Event not found");
-    if (!await isAdminSession() && params.hostSecret !== event.hostSecret) error(403, "Invalid host secret");
+    const event = await assertUserIsAllowedToEditEvent(params.event.id, params.hostSecret);
 
     const { id, ...eventWithoutId } = params.event;
     await db.update(s.events).set({
@@ -115,3 +113,38 @@ export const updateEvent = command(updateEventSchema, async (params) => {
         updatedAt: sql`now()`
     }).where(eq(s.events.id, event.id));
 })
+
+const deleteEventSchema = v.object({
+    eventId: v.number(),
+    hostSecret: v.string(),
+});
+
+export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecret }) => {
+    await assertUserIsAllowedToEditEvent(eventId, hostSecret);
+
+    try {
+        const result = await db
+            .delete(s.events)
+            .where(eq(s.events.id, eventId))
+            .returning({ id: s.events.id, name: s.events.name });
+
+        return {
+            success: true,
+            deletedEvent: result[0],
+            message: `Event ${result[0].id} has been deleted successfully`
+        };
+    } catch (err) {
+        console.error('Failed to delete event:', err);
+        if (err instanceof Error && 'status' in err) {
+            throw err; // Re-throw SvelteKit errors
+        }
+        return error(500, 'Failed to delete event');
+    }
+});
+
+async function assertUserIsAllowedToEditEvent(eventId: number, hostSecret: string) {
+    const event = await db.query.events.findFirst({ where: eq(s.events.id, eventId) });
+    if (!event) error(404, "Event not found");
+    if (!await isAdminSession() && hostSecret !== event.hostSecret) error(403, "Invalid host secret");
+    return event;
+}

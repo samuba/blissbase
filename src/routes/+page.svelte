@@ -43,6 +43,20 @@
 					{@render loading()}
 				{/if}
 			</div>
+		{:else if eventsStore.hasAnyFilter}
+			<div class="text-center text-gray-500">
+				Keine Events
+				{@html eventsStore.hasSearchFilter
+					? `mit <span class="font-bold"> "${eventsStore.searchFilter}"</span><br />`
+					: ''}
+				{@html eventsStore.hasLocationFilter
+					? `in <span class="font-bold">${eventsStore.locationFilter.plzCity} (${eventsStore.locationFilter.distance}km radius)</span><br />`
+					: ''}
+				{@html eventsStore.hasDateFilter
+					? `vom <span class="font-bold">${new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <span class="font-bold">${new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />`
+					: ''}
+				gefunden.
+			</div>
 		{:else}
 			<p class="text-gray-500">Keine Events gefunden.</p>
 		{/if}

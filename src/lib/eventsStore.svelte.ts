@@ -36,8 +36,6 @@ export class EventsStore {
     pagination = $state<PaginationState>(initialPagination());
     loadingState = $state<LoadingState>('not-loading');
 
-
-
     // Derived reactive values
     selectedSortValue = $derived(this.getSortValue(this.pagination.sortBy, this.pagination.sortOrder));
     isLoading = $derived(this.loadingState === 'loading');
@@ -48,8 +46,15 @@ export class EventsStore {
         this.pagination.totalPages != null &&
         this.pagination.page < this.pagination.totalPages
     );
-
-
+    hasSearchFilter = $derived(Boolean(this.pagination.searchTerm?.trim()));
+    hasDateFilter = $derived(this.pagination.startDate || this.pagination.endDate);
+    hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat && this.pagination.lng)));
+    hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
+    hasAnyFilter = $derived(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter);
+    searchFilter = $derived(this.pagination.searchTerm?.trim());
+    dateFilter = $derived({ start: this.pagination.startDate, end: this.pagination.endDate });
+    locationFilter = $derived({ plzCity: this.pagination.plzCity, lat: this.pagination.lat, lng: this.pagination.lng, distance: this.pagination.distance });
+    sortFilter = $derived({ sortBy: this.pagination.sortBy, sortOrder: this.pagination.sortOrder });
 
     constructor(initialData?: { events: UiEvent[]; pagination: PaginationState }) {
         if (initialData) {

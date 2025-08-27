@@ -54,12 +54,6 @@
 						class="rounded-button data-highlighted:bg-base-200 flex h-10 w-full items-center py-5 pr-1.5 pl-5 text-sm capitalize outline-hidden select-none data-selected:font-bold"
 						value={tag.value}
 						label={tag.label}
-						onHighlight={() => {
-							console.log('highlighted');
-						}}
-						onUnhighlight={() => {
-							console.log('unhighlighted');
-						}}
 					>
 						{#snippet children({ selected })}
 							{tag.label}

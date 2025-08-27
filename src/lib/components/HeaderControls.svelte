@@ -16,22 +16,6 @@
 
 	let isDatePickerOpen = $state(false);
 
-	const hasDateFilter = $derived(
-		eventsStore.pagination.startDate || eventsStore.pagination.endDate
-	);
-	const hasLocationFilter = $derived(
-		Boolean(
-			eventsStore.pagination.plzCity || (eventsStore.pagination.lat && eventsStore.pagination.lng)
-		)
-	);
-	const hasSearchFilter = $derived(Boolean(eventsStore.pagination.searchTerm?.trim()));
-	const hasSortFilter = $derived(
-		eventsStore.pagination.sortBy !== 'time' || eventsStore.pagination.sortOrder !== 'asc'
-	);
-	const hasAnyFilter = $derived(
-		hasDateFilter || hasLocationFilter || hasSearchFilter || hasSortFilter
-	);
-
 	const debouncedSearch = debounce(() => {
 		eventsStore.loadEvents({
 			...eventsStore.pagination,
@@ -104,7 +88,7 @@
 						</div>
 					{/snippet}
 				</PopOver>
-				{#if hasDateFilter}
+				{#if eventsStore.hasDateFilter}
 					{@render filteredIndicator()}
 				{/if}
 			</div>
@@ -138,7 +122,7 @@
 						</div>
 					{/snippet}
 				</PopOver>
-				{#if hasLocationFilter}
+				{#if eventsStore.hasLocationFilter}
 					{@render filteredIndicator()}
 				{/if}
 			</div>
@@ -167,7 +151,7 @@
 						</label>
 					{/snippet}
 				</PopOver>
-				{#if hasSearchFilter}
+				{#if eventsStore.hasSearchFilter}
 					{@render filteredIndicator()}
 				{/if}
 			</div>
@@ -186,10 +170,10 @@
 						onValueChange={eventsStore.handleSortChanged}
 						contentProps={{ class: 'z-10' }}
 						showAsButton
-						disabled={!hasLocationFilter}
+						disabled={!eventsStore.hasLocationFilter}
 					/>
 				</div>
-				{#if hasSortFilter}
+				{#if eventsStore.hasSortFilter}
 					{@render filteredIndicator()}
 				{/if}
 			</div>
@@ -262,7 +246,7 @@
 						value={eventsStore.selectedSortValue}
 						onValueChange={eventsStore.handleSortChanged}
 						showAsButton={false}
-						disabled={!hasLocationFilter}
+						disabled={!eventsStore.hasLocationFilter}
 					/>
 				</div>
 
@@ -344,7 +328,7 @@
 {/snippet}
 
 {#snippet clearButton()}
-	{#if hasAnyFilter}
+	{#if eventsStore.hasAnyFilter}
 		<button
 			onclick={() => eventsStore.resetFilters()}
 			class="btn btn-circle btn-ghost"
