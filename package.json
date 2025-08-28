@@ -72,9 +72,14 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@editorjs/editorjs": "^2.30.8",
+		"@editorjs/header": "^2.8.8",
+		"@editorjs/list": "^2.0.8",
+		"@editorjs/marker": "^1.4.0",
 		"@internationalized/date": "^3.8.0",
 		"@libsql/client": "^0.14.0",
 		"drizzle-orm": "^0.44.5",
+		"editorjs-html": "^4.0.5",
 		"ky": "^1.8.1",
 		"posthog-js": "^1.255.1",
 		"sharp": "^0.34.3",

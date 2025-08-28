@@ -7,6 +7,7 @@
 	import { page } from '$app/state';
 	import { routes } from '$lib/routes';
 	import TagsInput from '$lib/components/TagsInput.svelte';
+	import EditorJs from '$lib/components/EditorJs.svelte';
 
 	let { data }: PageProps = $props();
 	let { event } = data;
@@ -218,16 +219,7 @@
 				<!-- Description -->
 				<fieldset class="fieldset">
 					<legend class="fieldset-legend">Beschreibung</legend>
-					<textarea
-						bind:value={formData.description}
-						class="textarea w-full"
-						rows="6"
-						placeholder="Beschreibung des Events (HTML wird unterstützt)"
-						maxlength="5000"
-					></textarea>
-					<p class="label">
-						HTML-Tags werden unterstützt. Maximal 5000 Zeichen. ({formData.description.length} Zeichen)
-					</p>
+					<EditorJs bind:value={formData.description} />
 				</fieldset>
 
 				<!-- Host Information -->
