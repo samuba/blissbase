@@ -165,12 +165,8 @@
 
 <div bind:this={editorEl} class="prose-sm textarea w-full pl-4 md:pl-0"></div>
 
-<textarea>{value}</textarea>
-
 <style>
-	/* @reference 'tailwindcss'; */
-	@reference '../../app.css'
-
+	/* @reference '../../app.css'; */
 
 	:global(.codex-editor__redactor) {
 		padding-bottom: 0 !important;
