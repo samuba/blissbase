@@ -166,18 +166,22 @@
 <div bind:this={editorEl} class="prose-sm textarea w-full pl-4 md:pl-0"></div>
 
 <style>
-	/* @reference '../../app.css'; */
+	@reference '../../app.css';
 
 	:global(.codex-editor__redactor) {
 		padding-bottom: 0 !important;
 	}
 
 	:global(.ce-toolbar__content) {
-		/* margin-left: rem; */
-		/* left: 1; */
+		@apply sm:ml-16;
 	}
 
 	:global(.ce-block) {
+		@apply sm:ml-4;
+	}
+
+	:global(.ce-block__content) {
+		@apply sm:mr-0 sm:ml-12;
 	}
 
 	:global(.codex-editor) {
