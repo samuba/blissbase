@@ -141,7 +141,7 @@
 				onReady: async () => {
 					// removed br tags: https://github.com/codex-team/editor.js/issues/2800
 					editor?.blocks.renderFromHTML(value.replaceAll('<br>', '##br##'));
-					await sleep(100);
+					await sleep(300);
 					const temp = await editor?.save()!;
 					for (const block of temp.blocks) {
 						if (block.type === 'paragraph') {
