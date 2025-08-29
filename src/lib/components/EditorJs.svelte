@@ -173,7 +173,7 @@
 	}
 
 	:global(.ce-toolbar) {
-		@apply z-50; /* in prod input are covering the menu */
+		@apply z-10; /* in prod input are covering the menu */
 	}
 
 	:global(.ce-toolbar__content) {
