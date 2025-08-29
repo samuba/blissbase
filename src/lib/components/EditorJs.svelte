@@ -163,13 +163,17 @@
 	});
 </script>
 
-<div bind:this={editorEl} class="prose-sm textarea w-full pl-4 md:pl-0"></div>
+<div bind:this={editorEl} class="prose-sm textarea z-10 w-full pl-4 md:pl-0"></div>
 
 <style>
 	@reference '../../app.css';
 
 	:global(.codex-editor__redactor) {
 		padding-bottom: 0 !important;
+	}
+
+	:global(.ce-toolbar) {
+		@apply z-50; /* in prod input are covering the menu */
 	}
 
 	:global(.ce-toolbar__content) {
