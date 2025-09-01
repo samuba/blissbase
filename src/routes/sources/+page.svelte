@@ -42,6 +42,7 @@
 							ganzheitlich-gesund-brandenburg.de
 						</a>
 						<a href="https://kuschelraum.de" target="_blank">kuschelraum.de</a>
+						<a href="https://ciglobalcalendar.net" target="_blank">ciglobalcalendar.net</a>
 					</div>
 				</div>
 
