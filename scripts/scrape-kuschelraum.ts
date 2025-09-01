@@ -364,8 +364,17 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
     extractAddress(html: string): string[] {
         const $ = cheerio.load(html);
-        const addressText = $('p:contains("ORT")').text().replace('ORT', '').trim();
+        let addressText = $('strong').filter((_, el) => $(el).text().trim() === 'ORT').first().parent().text().replace('ORT', '').trim();
+        if (!addressText) {
+            addressText = $('strong').filter((_, el) => $(el).text().trim() === 'PLACE').first().parent().text().replace('PLACE', '').trim();
+        }
         if (!addressText) return [];
+
+        // add city if its not in the address text
+        const city = $('.mec-location').text().split('|')[0]?.trim();
+        if (!addressText.toUpperCase().includes(city?.toUpperCase() ?? '')) {
+            addressText = `${city}, ${addressText}`;
+        }
 
         return addressText.split(',').flatMap(part => part.split('\n')).map(part => part.trim()).filter(part => part.length > 0);
     }
