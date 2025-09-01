@@ -58,13 +58,13 @@
 			]}
 			style="scrollbar-width: thin;"
 		>
-			<div class="sticky z-20 ml-auto h-0 w-max">
+			<div class="sticky top-0 right-0 z-20 ml-auto h-0 w-max">
 				<button
 					onclick={() => window.history.back()}
-					class="rounded-full p-3"
+					class="rounded-full p-4"
 					aria-label="Schließen"
 				>
-					<div class="btn btn-circle shadow-lg">
+					<div class="btn btn-circle btn-neutral shadow-lg">
 						<i class="icon-[ph--x] size-5"></i>
 					</div>
 				</button>
