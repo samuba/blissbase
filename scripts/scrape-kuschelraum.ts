@@ -371,7 +371,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         if (!addressText) return [];
 
         // add city if its not in the address text
-        const city = $('.mec-location').text().split('|')[0]?.trim();
+        const city = $('.mec-single-event-location').text().split('|')[0]?.replace("Standort", "").trim();
         if (!addressText.toUpperCase().includes(city?.toUpperCase() ?? '')) {
             addressText = `${city}, ${addressText}`;
         }
