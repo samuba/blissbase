@@ -240,7 +240,7 @@ export const dance: TagTranslation[] = [
     { en: "5Rhythms", de: "5 Rhythmen", nl: "5 Ritmes" },
     { en: "Intuitive Dance", de: "Intuitiver Tanz", nl: "Intuitive Dance" },
     { en: "Free Dance", de: "Freier Tanz", nl: "Vrije Dans" },
-    { en: "Contact Improvisation", de: "Kontaktimprovisation", nl: "Contact Improvisatie" },
+    { en: "Contact Improvisation", de: "Contact Improvisation", nl: "Contact Improvisatie" },
     { en: "Somatic Dance", de: "Somatischer Tanz", nl: "Somatic Dance" },
     { en: "Dancing in Connection", de: "Tanzen in Verbindung", nl: "Dansen in verbinding" },
     { en: "Ritual Dance", de: "Ritueller Tanz", nl: "Ritual Dance" },

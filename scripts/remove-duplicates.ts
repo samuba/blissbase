@@ -12,7 +12,7 @@ for (const dup of duplicates) {
     console.log('Found duplicate:', dup);
 
     if (dup.source_a === dup.source_b && WEBSITE_SCRAPE_SOURCES.includes(dup.source_a as WebsiteScrapeSource)) {
-        console.log(`Skipping duplicate from ${dup.source_a} because it's a website and sources are the same`);
+        console.log(`Skipping this one cuz both are from ${dup.source_a} website. Unlikely to be real duplicate.`);
         continue
     }
 

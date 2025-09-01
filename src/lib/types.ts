@@ -1,4 +1,5 @@
 import type { events } from "./server/schema";
+import type { WebsiteScrapeSource } from "../../scripts/common";
 
 /**
  * Shared interface for scraped event data.
@@ -18,7 +19,7 @@ export interface ScrapedEvent {
     longitude: number | null | undefined;
     tags: string[]; // Tags/Categories from the event page
     sourceUrl: string; // Event detail page URL (should be unique)
-    source: string; // Source of the event e.g. 'awara', 'tribehaus', 'heilnetz', 'seijetzt'
+    source: WebsiteScrapeSource; // Source of the event e.g. 'awara', 'tribehaus', 'heilnetz', 'seijetzt'
 }
 
 export type InsertEvent = typeof events.$inferInsert;

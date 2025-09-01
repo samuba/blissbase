@@ -68,7 +68,8 @@
 		});
 
 	let showQuelleInsteadOfAnmelden = $derived(
-		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source)
+		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source) ||
+			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
 	function fixTelegramUnsupportedChars(text: string) {

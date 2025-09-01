@@ -9,7 +9,8 @@ export const WEBSITE_SCRAPER_CONFIG = {
     heilnetzowl: { module: './scrape-heilnetzowl.ts' },
     seijetzt: { module: './scrape-seijetzt.ts' },
     ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
-    kuschelraum: { module: './scrape-kuschelraum.ts' }
+    kuschelraum: { module: './scrape-kuschelraum.ts' },
+    ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts' }
 } as const;
 export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
 export type WebsiteScrapeSource = (typeof WEBSITE_SCRAPE_SOURCES)[number];
