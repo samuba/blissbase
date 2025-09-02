@@ -80,7 +80,7 @@
 								{event.distanceKm} km entfernt
 							</span>
 						{/if}
-						<div title={event.address?.join(', ')}>
+						<div title={event.address?.join(', ')} class="truncate-2lines">
 							{formatAddress(event.address)}
 						</div>
 					</div>

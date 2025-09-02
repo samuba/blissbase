@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 @plugin "@iconify/tailwind4";
 @plugin "@tailwindcss/typography";
+
+@utility truncate-2lines {
+	/* max-height: 50px; Your desired maximum height */
+	/*line-height: 20px;  Set a fixed line-height for consistent calculation */
+	overflow: hidden; /* Hide overflow content */
+	display: -webkit-box; /* Required for line-clamp in WebKit browsers */
+	-webkit-box-orient: vertical; /* Orientation for multi-line clamping */
+	-webkit-line-clamp: 2; /* Number of lines before truncation: max-height / line-height (e.g., 100px / 20px = 5) */
+}
+
 @plugin "daisyui" {
 	themes:
 		cupcake --default,
