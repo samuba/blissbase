@@ -62,14 +62,16 @@
 			if (contactUrl?.startsWith('mailto:')) {
 				return 'Email';
 			}
-			if (contactUrl?.startsWith('http')) {
-				return 'Website';
-			}
+			return 'Website';
 		});
 
 	let showQuelleInsteadOfAnmelden = $derived(
 		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source) ||
 			event.sourceUrl?.includes('ciglobalcalendar.net')
+	);
+
+	let sourceUrl = $derived(
+		event.sourceUrl?.startsWith('http') ? event.sourceUrl : `https://${event.sourceUrl}`
 	);
 
 	function fixTelegramUnsupportedChars(text: string) {
@@ -194,12 +196,12 @@
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 
 			{#if showQuelleInsteadOfAnmelden}
-				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
+				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
 					Quelle
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
-			{:else if event.sourceUrl}
-				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
+			{:else if sourceUrl}
+				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
 					Anmelden
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
