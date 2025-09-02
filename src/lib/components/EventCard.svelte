@@ -43,7 +43,7 @@
 						<img
 							src={imageUrl}
 							alt="illustration for event: {event.name}"
-							class="h-full max-h-72 max-w-full object-cover"
+							class="h-full max-h-72 max-w-full object-cover sm:max-h-54"
 							onerror={() => (imageLoadError = true)}
 						/>
 					</figure>
@@ -51,7 +51,7 @@
 			{:else}
 				<RandomPlaceholderImg
 					seed={event.name}
-					class="h-full max-h-52 rounded-t-lg sm:max-h-none  sm:scale-170 sm:rounded-l-lg sm:rounded-tr-none"
+					class="h-full max-h-38 rounded-t-lg sm:max-h-none  sm:scale-170 sm:rounded-l-lg sm:rounded-tr-none"
 				/>
 			{/if}
 		</div>
