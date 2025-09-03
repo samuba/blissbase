@@ -17,7 +17,7 @@
 
 <a
 	href={routes.eventDetails(event.slug)}
-	class="content-visibility-auto sm:contain-intrinsic-size[210px] contain-intrinsic-size-500px w-full"
+	class=" w-full"
 	data-sveltekit-preload-data="false"
 	onclick={(e) => {
 		e.preventDefault();
