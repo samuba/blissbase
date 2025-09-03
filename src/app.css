@@ -11,6 +11,18 @@
 	-webkit-line-clamp: 2; /* Number of lines before truncation: max-height / line-height (e.g., 100px / 20px = 5) */
 }
 
+@utility content-visibility-auto {
+	content-visibility: auto;
+}
+
+@utility contain-intrinsic-size-500px {
+	contain-intrinsic-size: 400px 500px;
+}
+
+@utility contain-intrinsic-size-210px {
+	contain-intrinsic-size: auto 210px;
+}
+
 @plugin "daisyui" {
 	themes:
 		cupcake --default,
