@@ -17,14 +17,14 @@
 
 <a
 	href={routes.eventDetails(event.slug)}
-	class="w-full"
+	class="content-visibility-auto sm:contain-intrinsic-size[210px] contain-intrinsic-size-500px w-full"
 	data-sveltekit-preload-data="false"
 	onclick={(e) => {
 		e.preventDefault();
 		pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
 	}}
 >
-	<div
+	<article
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg sm:flex-row {className}"
 	>
 		<div
@@ -97,5 +97,5 @@
 				</div>
 			{/if}
 		</div>
-	</div>
+	</article>
 </a>

@@ -25,6 +25,8 @@
 
 	let logoButton = $state<HTMLDivElement | null>(null);
 
+	let searchTerm = $state(eventsStore.pagination.searchTerm || ''); // only set in the beginning once in the inputs to prevent flickering
+
 	onMount(async () => {
 		await sleep(1200);
 		logoButton?.classList.remove('rotate-360');
@@ -140,7 +142,7 @@
 						<label class="input w-full">
 							<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
 							<input
-								value={eventsStore.pagination.searchTerm || ''}
+								value={searchTerm}
 								oninput={(e) => {
 									eventsStore.updateSearchTerm(e.currentTarget.value);
 									debouncedSearch();
@@ -223,7 +225,7 @@
 				<label class="input w-full">
 					<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
 					<input
-						value={eventsStore.pagination.searchTerm || ''}
+						value={searchTerm}
 						oninput={(e) => {
 							eventsStore.updateSearchTerm(e.currentTarget.value);
 							debouncedSearch();

@@ -64,7 +64,7 @@
 					class="rounded-full p-4"
 					aria-label="Schließen"
 				>
-					<div class="btn btn-circle btn-neutral shadow-lg">
+					<div class="btn btn-circle btn-primary shadow-lg drop-shadow-2xl">
 						<i class="icon-[ph--x] size-5"></i>
 					</div>
 				</button>
