@@ -16,11 +16,11 @@
 }
 
 @utility contain-intrinsic-size-500px {
-	contain-intrinsic-size: 400px 500px;
+	contain-intrinsic-size: 100% 500px;
 }
 
 @utility contain-intrinsic-size-210px {
-	contain-intrinsic-size: auto 210px;
+	contain-intrinsic-size: 100% 210px;
 }
 
 @plugin "daisyui" {
