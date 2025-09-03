@@ -46,6 +46,9 @@
 
 	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | 'Website' | undefined =
 		$derived.by(() => {
+			if (!contactUrl) {
+				return undefined;
+			}
 			if (
 				contactUrl?.startsWith('tg://') ||
 				contactUrl?.startsWith('t.me/') ||
@@ -70,9 +73,11 @@
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
-	let sourceUrl = $derived(
-		event.sourceUrl?.startsWith('http') ? event.sourceUrl : `https://${event.sourceUrl}`
-	);
+	let sourceUrl = $derived.by(() => {
+		if (!event.sourceUrl) return undefined;
+		if (!event.sourceUrl?.startsWith('http')) return `https://${event.sourceUrl}`;
+		return event.sourceUrl;
+	});
 
 	function fixTelegramUnsupportedChars(text: string) {
 		return text
