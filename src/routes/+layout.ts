@@ -1,10 +1,9 @@
 import type { MetaTagsProps } from 'svelte-meta-tags';
 import posthog from 'posthog-js'
 import { browser, dev } from '$app/environment';
-import { isAdminSession } from '$lib/server/admin.js';
 
 export const load = ({ url }) => {
-    if (browser && !dev && !isAdminSession()) {
+    if (browser && !dev) {
         posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {
             api_host: 'https://igel.blissbase.app',
             defaults: '2025-05-24',
