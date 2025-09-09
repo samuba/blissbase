@@ -23,8 +23,9 @@ export function setAdminCookie() {
 export function isAdminSession(): boolean {
     try {
         const cookieValue = getRequestEvent().cookies.get(ADMIN_COOKIE_NAME);
-        console.log('isAdminSession', isAdminSecret(cookieValue));
-        return isAdminSecret(cookieValue);
+        const isAdmin = isAdminSecret(cookieValue);
+        if (isAdmin) console.log('@@@ This is an admin session @@@');
+        return isAdmin;
     } catch (error) {
         console.error('Failed to validate admin cookie:', error);
         return false;

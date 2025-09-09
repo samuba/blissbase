@@ -1,17 +1,15 @@
 import type { MetaTagsProps } from 'svelte-meta-tags';
 import posthog from 'posthog-js'
 import { browser, dev } from '$app/environment';
+import { isAdminSession } from '$lib/server/admin.js';
 
 export const load = ({ url }) => {
-    if (browser && !dev) {
-        posthog.init(
-            'phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ',
-            {
-                api_host: 'https://igel.blissbase.app',
-                defaults: '2025-05-24',
-                person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
-            }
-        )
+    if (browser && !dev && !isAdminSession()) {
+        posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {
+            api_host: 'https://igel.blissbase.app',
+            defaults: '2025-05-24',
+            person_profiles: 'always', // or 'always' to create profiles for anonymous users as well
+        })
     }
 
 
