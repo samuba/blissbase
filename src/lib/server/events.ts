@@ -233,12 +233,13 @@ type StringOrTagTranslation = string & TagTranslation;
 const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
 export function prepareEventsForUi<T extends { tags?: string[] | null, telegramRoomIds?: string[] | null }>(events: T[]) {
     return events
-        .filter(event => {
-            if (event.telegramRoomIds?.every(roomId => ASI_ROOMS.includes(roomId))) {
-                return false;
-            }
-            return true;
-        })
+        // filter ASI rooms
+        // .filter(event => {
+        //     if (event.telegramRoomIds?.every(roomId => ASI_ROOMS.includes(roomId))) {
+        //         return false;
+        //     }
+        //     return true;
+        // })
         .map(event => ({
             ...event,
             tags: event.tags?.map(x => allTagsMap.get(x) ?? x) as StringOrTagTranslation[]
