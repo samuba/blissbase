@@ -7,6 +7,7 @@ import type { InsertEvent } from '$lib/types';
 import { generateSlug } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/tags';
+import { posthogCapture } from './common';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
@@ -208,6 +209,19 @@ export async function fetchEvents(params: LoadEventsParams) {
         // Only resolve city name when using coordinates directly (not when plzCity was provided)
         resolvedCityName = await reverseGeocodeCityCached(lat, lng, GOOGLE_MAPS_API_KEY);
     }
+
+    posthogCapture('events_fetched', {
+        events: events.length,
+        totalEvents,
+        totalPages,
+        lat: usedLat,
+        lng: usedLng,
+        plzCity: resolvedCityName || plzCity,
+        distance,
+        searchTerm,
+        sortBy,
+        sortOrder
+    })
 
     return {
         events: prepareEventsForUi(events),

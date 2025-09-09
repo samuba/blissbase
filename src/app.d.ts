@@ -1,9 +1,14 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
+import type { PostHog } from 'posthog-node';
+
 declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
+			posthog: PostHog;
+			posthogDistinctId: string | undefined;
+			user: { id: string | undefined };
 			requestInfo: {
 				ip: string | null;
 				continent: string | null;
@@ -21,12 +26,6 @@ declare global {
 			selectedEventId?: number;
 		}
 		interface Platform {
-			env: {
-				DB: D1Database;
-			};
-			context: {
-				waitUntil(promise: Promise<unknown>): void;
-			};
 			caches: CacheStorage & { default: Cache };
 		}
 	}
