@@ -3,7 +3,7 @@ import posthog from 'posthog-js'
 import { browser, dev } from '$app/environment';
 
 export const load = ({ url, data }) => {
-    if (browser && !dev) {
+    if (browser && !dev && !url.host.endsWith(".vercel.app")) {
         posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {
             api_host: 'https://igel.blissbase.app',
             defaults: '2025-05-24',
