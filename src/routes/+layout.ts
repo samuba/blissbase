@@ -2,13 +2,14 @@ import type { MetaTagsProps } from 'svelte-meta-tags';
 import posthog from 'posthog-js'
 import { browser, dev } from '$app/environment';
 
-export const load = ({ url }) => {
+export const load = ({ url, data }) => {
     if (browser && !dev) {
         posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {
             api_host: 'https://igel.blissbase.app',
             defaults: '2025-05-24',
             person_profiles: 'always', // or 'always' to create profiles for anonymous users as well
         })
+        if (data.userId) posthog.identify(data.userId);
     }
 
 
