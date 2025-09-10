@@ -37,6 +37,7 @@ jobs:
           TELEGRAM_APP_HASH: ${{ secrets.TELEGRAM_APP_HASH }}
           TELEGRAM_APP_SESSION: ${{ secrets.TELEGRAM_APP_SESSION }}
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
         run: bun run scripts/telegram-scraper.ts ${{ github.event.inputs.params }}
 
