@@ -133,7 +133,6 @@
 			tabindex={-1}
 		>
 			<div class="relative max-h-full max-w-full" onclick={(e) => e.stopPropagation()}>
-				{currentIndex}
 				{#if imageUrls.length > 0}
 					<img
 						src={imageUrls[currentIndex]}
