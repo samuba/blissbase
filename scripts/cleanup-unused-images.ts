@@ -14,17 +14,9 @@ async function getReferencedImageUrls(): Promise<Set<string>> {
     }).from(s.events)
         .where(and(isNotNull(s.events.imageUrls), sql`array_length(${s.events.imageUrls}, 1) > 0`));
 
-    const referencedUrls = new Set<string>();
+    const referencedUrlsArr = events.flatMap(event => event.imageUrls ?? []);
+    const referencedUrls = new Set(referencedUrlsArr);
 
-    for (const event of events) {
-        if (event.imageUrls) {
-            for (const url of event.imageUrls) {
-                if (url && url.trim()) {
-                    referencedUrls.add(url.trim());
-                }
-            }
-        }
-    }
 
     console.log(`Found ${referencedUrls.size} referenced unique image URLs`);
     return referencedUrls;
@@ -105,8 +97,8 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
 
         // Step 5: Show some examples of unreferenced images
         console.log('📋 Examples of unreferenced images:');
-        unreferencedImages.slice(0, 5).forEach((image, index) => {
-            console.log(`   ${index + 1}. ${image.public_id} (${Math.round(image.bytes / 1024)} KB)`);
+        unreferencedImages.slice(0, 30).forEach((image, index) => {
+            console.log(`   ${index + 1}. ${image.secure_url} (${Math.round(image.bytes / 1024)} KB)`);
         });
         if (unreferencedImages.length > 5) {
             console.log(`   ... and ${unreferencedImages.length - 5} more`);
