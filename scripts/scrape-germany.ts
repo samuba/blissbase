@@ -261,9 +261,11 @@ async function main() {
                 processedImageCount++;
             }
             event.imageUrls = cachedEventImageUrls;
-            await db.insert(s.imageCacheMap)
-                .values(newlyCachedImages)
-                .onConflictDoNothing();
+            if (newlyCachedImages.length > 0) {
+                await db.insert(s.imageCacheMap)
+                    .values(newlyCachedImages)
+                    .onConflictDoNothing();
+            }
         }
 
         const totalTime = Date.now() - startTime;
