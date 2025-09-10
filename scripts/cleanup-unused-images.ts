@@ -1,5 +1,5 @@
 import { db, s } from '../src/lib/server/db';
-import { isNotNull, sql, and } from 'drizzle-orm';
+import { isNotNull, sql, and, inArray } from 'drizzle-orm';
 import 'dotenv/config';
 import * as cloudinary from '../src/lib/cloudinary';
 
@@ -73,7 +73,6 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         // Step 1: Get all referenced image URLs from events
         console.log('Step 1: Fetching referenced image URLs...');
         const referencedUrls = await getReferencedImageUrls();
-
         if (referencedUrls.size === 0) {
             console.log('⚠️ No referenced image URLs found. This might indicate a problem with the database query.');
             return;
@@ -82,7 +81,6 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         // Step 2: Get all images from Cloudinary
         console.log('Step 2: Fetching all images from Cloudinary...');
         const cloudinaryImages = await cloudinary.getAllImageData(cloudinary.loadCreds());
-
         if (cloudinaryImages.length === 0) {
             console.log('⚠️ No images found in Cloudinary. Nothing to clean up.');
             return;
@@ -91,7 +89,6 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         // Step 3: Find unreferenced images
         console.log('Step 3: Identifying unreferenced images...');
         const unreferencedImages = findUnreferencedImages(cloudinaryImages, referencedUrls);
-
         if (unreferencedImages.length === 0) {
             console.log('🎉 No unused images found! All images are referenced in events.');
             return;
@@ -132,14 +129,16 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         // Step 6: Delete unreferenced images in batches
         console.log('Step 6: Deleting unreferenced images in Cloudinary...');
         const publicIds = unreferencedImages.map(image => image.public_id).filter(id => id && id.trim());
-
         if (publicIds.length === 0) {
             console.log('⚠️ No valid public IDs found for deletion.');
             return;
         }
-
         console.log(`Deleting ${publicIds.length} images...`);
         await cloudinary.deleteImages(publicIds, cloudinary.loadCreds());
+
+        // Step 7: Delete unreferenced images from the database
+        console.log('Step 7: Deleting unreferenced images from the db cache...');
+        await db.delete(s.imageCacheMap).where(inArray(s.imageCacheMap.url, Array.from(unreferencedImages.map(x => x.secure_url))));
 
         console.log('\n✅ Cleanup completed successfully!');
 
