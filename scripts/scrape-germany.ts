@@ -195,9 +195,6 @@ async function main() {
 
     // image processing
     await cacheImages(eventsToInsert);
-    const unusedImages = deletedEvents.flatMap(e => e.imageUrls || []);
-    console.log(`deleting ${unusedImages.length} now unused images`);
-    await cloudinary.deleteImages(unusedImages, cloudinary.loadCreds());
 
     // await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 

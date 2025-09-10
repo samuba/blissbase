@@ -181,8 +181,3 @@ export async function uploadImage(buffer: Buffer, eventSlug: string, phash: stri
         throw error;
     }
 }
-
-export const cachedImageUrl = (url: string | undefined, maxImageSize: number = 850) => {
-    if (!url) return url;
-    return `https://res.cloudinary.com/dy7jatmjz/image/fetch/f_auto,q_auto,c_limit,h_${maxImageSize},w_${maxImageSize}/${url}`
-}
