@@ -85,7 +85,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             console.error(`Processing ${eventUrls.length} events from page ${currentPage}...`);
             for (const eventUrl of eventUrls) {
                 try {
-                    const html = await customFetch(eventUrl);
+                    const html = await customFetch(eventUrl, { returnType: 'text' });
                     if (!html) continue;
                     const event = await this.extractEventData(html, eventUrl);
                     if (!event) continue;
@@ -248,7 +248,8 @@ async function fetchListingPageData(page: number): Promise<Record<string, unknow
             'X-Requested-With': 'XMLHttpRequest', // Important for AJAX detection
             'Origin': BASE_URL, // Important for CORS
         },
-        body: formData.toString()
+        body: formData.toString(),
+        returnType: 'text'
     }).then(responseText => {
         if (!responseText) return null;
         try {

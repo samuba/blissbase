@@ -1,5 +1,5 @@
 import { sql, type SQL } from 'drizzle-orm';
-import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, bigint } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, bigint, primaryKey } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -82,6 +82,17 @@ export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
 });
 
 export type TelegramScrapingTarget = typeof telegramScrapingTargets.$inferSelect;
+
+// All images are cached in cloudinary. For website-scraped-images we remember the original url so that we dont need to process the image again.
+export const imageCacheMap = pgTable('image_cache_map', {
+    originalUrl: text().notNull(),
+    eventSlug: text().notNull(),
+    url: text().notNull(),
+    createdAt: timestamp().notNull().defaultNow(),
+}, (t) => [
+    primaryKey({ columns: [t.originalUrl, t.eventSlug] })
+]);
+
 
 /*** Cronjobs ***/
 // SELECT cron.schedule(

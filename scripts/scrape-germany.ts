@@ -18,12 +18,14 @@
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import { db, s } from "../src/lib/server/db.ts";
 import { insertEvents } from '../src/lib/server/events.ts';
-import { cachedImageUrl, generateSlug } from '../src/lib/common.ts';
+import { generateSlug } from '../src/lib/common.ts';
 import { and, gte, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
-import { cleanProseHtml } from './common.ts';
+import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
 import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES } from './common.ts';
+import * as cloudinary from '../src/lib/cloudinary.ts';
+import { calculatePhash, resizeCoverImage } from '../src/lib/imageProcessing.ts';
 
 
 /**
@@ -165,7 +167,7 @@ async function main() {
             slug: generateSlug({ name: cleanedName, startAt: new Date(x.startAt), endAt: x.endAt ? new Date(x.endAt) : undefined }),
             startAt: new Date(x.startAt),
             endAt: x.endAt ? new Date(x.endAt) : undefined,
-            imageUrls: x.imageUrls?.filter(x => x).map(x => cachedImageUrl(x)!),
+            imageUrls: x.imageUrls?.filter(x => x),
             description: cleanProseHtml(x.description),
             listed: shouldBeListed({ name: cleanedName }),
             tags: [...new Set(x.tags)] // ensure tags are unique
@@ -190,6 +192,12 @@ async function main() {
             // gte(s.events.startAt, new Date())
         )).returning();
     console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
+
+    // image processing
+    await cacheImages(eventsToInsert);
+    const unusedImages = deletedEvents.flatMap(e => e.imageUrls || []);
+    console.log(`deleting ${unusedImages.length} now unused images`);
+    await cloudinary.deleteImages(unusedImages, cloudinary.loadCreds());
 
     // await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
@@ -217,10 +225,53 @@ async function main() {
     console.log('--- Germany Event Scraper Finished ---');
     process.exit(0);
     ///
+    ///
     /// End of main function
+    ///
     ///
 
 
+
+    async function cacheImages(events: typeof eventsToInsert) {
+        console.log('Starting image caching...');
+        const startTime = Date.now();
+        const alreadyCachedImages = await db.select().from(s.imageCacheMap)
+        const totalImageCount = events.reduce((sum, event) => sum + (event.imageUrls?.length ?? 0), 0);
+        let processedImageCount = 0;
+        console.log(` -> Total images to process: ${totalImageCount}`);
+
+        for (const event of events) {
+            const cachedEventImageUrls: string[] = []
+            const newlyCachedImages: { originalUrl: string, eventSlug: string, url: string }[] = []
+            for (const url of event.imageUrls ?? []) {
+                if (processedImageCount % 50 === 0) {
+                    const elapsedTime = Date.now() - startTime;
+                    console.log(` -> Progress: ${processedImageCount}/${totalImageCount} images processed (${(elapsedTime / 1000).toFixed(1)}s elapsed)`);
+                }
+                const cachedImage = alreadyCachedImages.find(x => x.originalUrl === url && x.eventSlug === event.slug)
+                if (cachedImage) {
+                    cachedEventImageUrls.push(cachedImage.url);
+                    processedImageCount++;
+                    continue;
+                }
+                console.log(` -> Image ${url} not found in image cache map`);
+                const bytes = await customFetch(url, { returnType: 'bytes' })
+                const imgBuffer = await resizeCoverImage(bytes)
+                const phash = await calculatePhash(imgBuffer);
+                const uploadedImage = await cloudinary.uploadImage(imgBuffer, event.slug, phash, cloudinary.loadCreds());
+                cachedEventImageUrls.push(uploadedImage.secure_url);
+                newlyCachedImages.push({ originalUrl: url, eventSlug: event.slug, url: uploadedImage.secure_url });
+                processedImageCount++;
+            }
+            event.imageUrls = cachedEventImageUrls;
+            await db.insert(s.imageCacheMap)
+                .values(newlyCachedImages)
+                .onConflictDoNothing();
+        }
+
+        const totalTime = Date.now() - startTime;
+        console.log(` -> Image caching completed: ${processedImageCount} images processed in ${(totalTime / 1000).toFixed(1)}s`);
+    }
 
     /**
      * Removes "sold out" suffixes from event names and detects if event is sold out
@@ -270,15 +321,6 @@ async function main() {
             await Promise.all(batch.map(url =>
                 fetch(url)
                     .then(res => res.ok ? res.text() : Promise.reject(res.headers.get('x-cld-error')))
-                    .catch((e) => {
-                        console.warn(`-> Failed to warm URL. Reverting to original URL: ${url}`, e)
-                        const ev = events.find(ev => ev.imageUrls?.includes(url))
-                        if (!ev) {
-                            console.error(`-> Failed to find event with image URL: ${url}`)
-                            return
-                        }
-                        ev.imageUrls = [url.replace(cachedImageUrl(url)!, ''), ...(ev.imageUrls?.slice(1) ?? [])]
-                    })
             ));
             console.log(` -> Warmed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uniqueImageUrls.length / batchSize)}`);
         }

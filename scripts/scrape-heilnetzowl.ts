@@ -56,7 +56,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         console.error(`Fetching initial listing page: ${startUrl}...`);
         let firstPageHtml: string;
         try {
-            firstPageHtml = await customFetch(startUrl);
+            firstPageHtml = await customFetch(startUrl, { returnType: 'text' });
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             console.error(`Failed to fetch initial page ${startUrl}:`, message);
@@ -83,7 +83,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                     (async () => {
                         console.error(`Fetching listing page ${i}: ${pageUrl}...`);
                         try {
-                            const currentPageHtml = await customFetch(pageUrl);
+                            const currentPageHtml = await customFetch(pageUrl, { returnType: 'text' });
                             const $currentPage = cheerio.load(currentPageHtml);
                             const urlsOnPage: EventUrlWithDate[] = [];
                             console.error(`Extracting event URLs from page ${i}...`);
@@ -118,7 +118,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             try {
                 let eventHtml: string;
                 try {
-                    eventHtml = await customFetch(eventInfo.url);
+                    eventHtml = await customFetch(eventInfo.url, { returnType: 'text' });
                 } catch (error) {
                     void error; // Mark as intentionally unused
                     console.error(`Skipping event detail page ${eventInfo.url} due to fetch error.`);

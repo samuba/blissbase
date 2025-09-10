@@ -258,12 +258,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         let allPermalinks: string[] = [];
 
         console.log('--- fetching permalinks ---')
-        const firstPageHtml = await customFetch(`${BASE_URL}/de/eventSearch?country_id=186`)
+        const firstPageHtml = await customFetch(`${BASE_URL}/de/eventSearch?country_id=186`, { returnType: 'text' })
         const firstPage = this.parseEventList(firstPageHtml);
         allPermalinks = allPermalinks.concat(firstPage.permalinks);
         let nextPageUrl = firstPage.nextPageUrl;
         while (nextPageUrl) {
-            const pageHtml = await customFetch(nextPageUrl!);
+            const pageHtml = await customFetch(nextPageUrl!, { returnType: 'text' });
             const currentPage = this.parseEventList(pageHtml);
             allPermalinks = allPermalinks.concat(currentPage.permalinks);
             nextPageUrl = currentPage.nextPageUrl;
@@ -273,7 +273,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         console.log('--- fetching event details ---')
         for (const url of allPermalinks) {
             console.log(`fetching event detail ${url}...`)
-            const eventHtml = await customFetch(url);
+            const eventHtml = await customFetch(url, { returnType: 'text' });
             const event = await this.extractEventData(eventHtml, url);
             console.log(event)
             if (event) allEvents.push(event);

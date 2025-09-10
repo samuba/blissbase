@@ -1,18 +1,20 @@
-import { CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import { CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, GOOGLE_MAPS_API_KEY, CLOUDINARY_API_SECRET } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
-import { generateSlug, parseTelegramContact, uploadToCloudinary } from '$lib/common';
+import { generateSlug, parseTelegramContact } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/telegramCommon';
 import { routes } from '$lib/routes';
-import { resizeCoverImage } from '$lib/imageProcessing';
+import { calculatePhash, resizeCoverImage } from '$lib/imageProcessing';
 import { randomString } from '$lib/common';
+import { uploadImage } from '$lib/cloudinary';
 
 const cloudinaryCreds = {
     apiKey: CLOUDINARY_API_KEY,
+    apiSecret: CLOUDINARY_API_SECRET,
     cloudName: CLOUDINARY_CLOUD_NAME
 }
 
@@ -86,7 +88,8 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                     throw new Error("could not download image " + imageUrl + " " + res.statusText + " " + await res.text())
                 }
                 const resizedBuffer = await resizeCoverImage(await res.bytes())
-                const uploadedImage = await uploadToCloudinary(resizedBuffer, `${slug}-${image.id}`, cloudinaryCreds)
+                const hash = await calculatePhash(resizedBuffer)
+                const uploadedImage = await uploadImage(resizedBuffer, slug, hash, cloudinaryCreds)
                 imageUrl = uploadedImage.secure_url
                 console.log(`image processing took: ${performance.now() - startTime}ms`);
             } catch (error) {
@@ -136,18 +139,28 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
 
             // if no image was provided, use the existing one
-            if (eventRow.imageUrls.length === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
+            if ((eventRow.imageUrls?.length ?? 0) === 0 && (existingEvent.imageUrls?.length ?? 0) > 0) {
                 eventRow.imageUrls = existingEvent.imageUrls ?? []
                 skippedImage = true;
             }
         }
 
-        if (!existingEvent || ctx.chat?.type === 'private') {
-            eventRow.hostSecret = eventRow.hostSecret ?? randomString(10)
-        }
+        eventRow.hostSecret = existingEvent?.hostSecret ?? (ctx.chat?.type === 'private' ? randomString(10) : undefined)
 
         console.log({ eventRow })
-        const dbEvent = (await insertEvents([eventRow]))[0]
+
+        let dbEvent;
+        try {
+            dbEvent = (await insertEvents([eventRow]))[0];
+            if (!dbEvent) {
+                throw new Error('Failed to create event in database');
+            }
+        } catch (error) {
+            console.error('Error inserting event:', error);
+            await reply(ctx, "⚠️ Fehler beim Speichern des Events. Bitte versuche es später erneut.", fromGroup, msgId);
+            return;
+        }
+
         await ctx.react('⚡', false) // marker that the event was transferred
 
         const adminLinkText = `
@@ -212,7 +225,14 @@ function getTelegramEventOriginalAuthor(message: Context['message']) {
     let lastName: string | undefined;
 
     if (wasMessageForwarded(message)) {
-        const msg = message as any;
+        const msg = message as unknown as {
+            forward_from?: { username?: string; first_name?: string; last_name?: string };
+            forward_origin?: {
+                chat?: { username?: string; first_name?: string; last_name?: string };
+                sender_user?: { username?: string; first_name?: string; last_name?: string };
+                author_signature?: string;
+            };
+        };
         username = msg?.forward_from?.username ??
             msg.forward_origin?.chat?.username ??
             msg.forward_origin?.sender_user?.username

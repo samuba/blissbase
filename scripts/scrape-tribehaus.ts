@@ -308,7 +308,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         console.error("--- Starting Phase 1: Collecting Permalinks ---");
         while (currentListUrl) {
             try {
-                const listHtml = await customFetch(currentListUrl);
+                const listHtml = await customFetch(currentListUrl, { returnType: 'text' });
                 const { permalinks, nextPageUrl } = this.parseEventList(listHtml);
 
                 if (permalinks.length === 0 && pageCount > 1) {
@@ -337,7 +337,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             detailCount++;
             console.error(`Fetching detail ${detailCount}/${allPermalinks.length}: ${permalink}...`);
             try {
-                const eventHtml = await customFetch(permalink);
+                const eventHtml = await customFetch(permalink, { returnType: 'text' });
                 const eventDetail = await this.extractEventData(eventHtml, permalink);
                 console.error(eventDetail);
                 if (eventDetail) {

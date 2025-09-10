@@ -322,7 +322,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             console.error(`\n--- Fetching Page ${currentPage}: ${pageUrl} ---`);
 
             await sleep(this.requestDelayMs);
-            const pageHtml = await customFetch(pageUrl);
+            const pageHtml = await customFetch(pageUrl, { returnType: 'text' });
             if (!pageHtml) {
                 console.error(`Failed to fetch page ${currentPage}. Stopping.`);
                 keepFetching = false;
@@ -341,7 +341,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 for (const eventUrl of eventUrls) {
                     try {
                         await sleep(this.requestDelayMs);
-                        const html = await customFetch(eventUrl);
+                        const html = await customFetch(eventUrl, { returnType: 'text' });
 
                         if (!html) {
                             console.error(`Failed to fetch details for: ${eventUrl}. Skipping event.`);

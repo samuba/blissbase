@@ -175,30 +175,6 @@ export function generateSlug({ name, startAt, endAt }: { name: string, startAt: 
     return includeTime ? `${day}-${hoursMinutes}-${slugify(name)}` : `${day}-${slugify(name)}`
 }
 
-const maxImageSize = 850
-
-export const cachedImageUrl = (url: string | undefined) => {
-    if (!url) return url;
-    return `https://res.cloudinary.com/dy7jatmjz/image/fetch/f_auto,q_auto,c_limit,h_${maxImageSize},w_${maxImageSize}/${url}`
-}
-
-export async function uploadToCloudinary(buffer: Buffer, publicId: string, cloudinaryCreds: { apiKey: string, cloudName: string }) {
-    const formData = new FormData();
-    formData.append("file", new Blob([buffer]), `${publicId}.jpg`);
-    formData.append("api_key", cloudinaryCreds.apiKey!);
-    formData.append("upload_preset", "blissbase");
-    formData.append("resource_type", "image");
-    formData.append("public_id", publicId);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCreds.cloudName}/image/upload`, {
-        method: "POST",
-        body: formData
-    });
-    if (!res.ok) {
-        throw new Error(`Failed to upload to Cloudinary: ${res.statusText} ${await res.text()} bufferlength: ${buffer.length}`);
-    }
-    return await res.json() as { secure_url: string };
-}
-
 export function stripHtml(html: string | undefined) {
     return html?.replace(/<[^>]*>?/g, '');
 }

@@ -4,7 +4,8 @@ import { getRequestEvent, command, query } from '$app/server';
 import * as v from 'valibot';
 import { db, eq, s, sql } from "./server/db";
 import { error } from "@sveltejs/kit";
-import { isAdminSession } from "./server/admin";
+import { isAdminSession } from "$lib/server/admin";
+import { posthogCapture } from "$lib/server/common";
 
 // using `command` instead of `query` cuz query does not allow setting cookies
 export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, async (params) => {
@@ -33,6 +34,19 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
 
     // Fetch events with current params
     const result = await fetchEvents(params);
+
+    posthogCapture('events_fetched', {
+        events: result.events.length,
+        totalEvents: result.pagination.totalEvents,
+        totalPages: result.pagination.totalPages,
+        lat: result.pagination.lat,
+        lng: result.pagination.lng,
+        plzCity: result.pagination.plzCity,
+        distance: result.pagination.distance,
+        searchTerm: result.pagination.searchTerm,
+        sortBy: result.pagination.sortBy,
+        sortOrder: result.pagination.sortOrder
+    })
 
     // Save to cookie only if params have changed (and not on pagination)
     if (hasChanged && params.page === 1) {

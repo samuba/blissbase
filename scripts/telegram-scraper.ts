@@ -4,24 +4,20 @@ import readline from "readline";
 import 'dotenv/config'
 import { db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
-import { generateSlug, parseTelegramContact, sleep, uploadToCloudinary } from "../src/lib/common";
+import { generateSlug, parseTelegramContact, sleep } from "../src/lib/common";
 import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
 import type { MsgAnalysisAnswer } from "../blissbase-telegram-entry/src/ai";
-import { resizeCoverImage } from '../src/lib/imageProcessing';
+import { calculatePhash, resizeCoverImage } from '../src/lib/imageProcessing';
 import { insertEvents } from "../src/lib/server/events";
 import type { Entity } from "telegram/define";
-
+import * as cloudinary from "../src/lib/cloudinary";
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
 const sessionAuthKeyString = process.env.TELEGRAM_APP_SESSION ?? "";
 const sessionAuthKey = new StringSession(sessionAuthKeyString);
-const cloudinaryCreds = {
-    apiKey: process.env.CLOUDINARY_API_KEY!,
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME!
-}
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
 
 // Minimal shape we rely on from the AI output to keep helpers local to this file
@@ -395,9 +391,9 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         });
 
         const resizedBuffer = await resizeCoverImage(imageBuffer!)
-        const publicId = `${slug}-${message.id}`
-        console.log("Uploading resized file to Cloudinary:", publicId);
-        const result = await uploadToCloudinary(resizedBuffer, publicId, cloudinaryCreds);
+        const hash = await calculatePhash(resizedBuffer)
+        console.log("Uploading resized file to Cloudinary:", `${slug}/${hash}`);
+        const result = await cloudinary.uploadImage(resizedBuffer, slug, hash, cloudinary.loadCreds());
 
         console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
         return result.secure_url;

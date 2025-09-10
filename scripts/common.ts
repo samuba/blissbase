@@ -26,6 +26,16 @@ export const FETCH_TIMEOUT_MS = 10000;
  */
 export const REQUEST_DELAY_MS = 500;
 
+export function customFetch(
+    url: string,
+    options: RequestInit & { returnType?: 'text' }
+): Promise<string>;
+
+export function customFetch(
+    url: string,
+    options: RequestInit & { returnType: 'bytes' }
+): Promise<Uint8Array<ArrayBufferLike>>;
+
 /**
  * Fetches a URL with a timeout, retry logic, and proper error handling.
  * @param url The URL to fetch
@@ -35,8 +45,8 @@ export const REQUEST_DELAY_MS = 500;
  */
 export async function customFetch(
     url: string,
-    options: RequestInit = {}
-): Promise<string> {
+    options: RequestInit & { returnType?: 'text' | 'bytes' } = { returnType: 'text' }
+): Promise<string | Uint8Array<ArrayBufferLike>> {
     const maxRetries = 5;
     let lastError: Error | undefined;
 
@@ -87,7 +97,13 @@ export async function customFetch(
                 throw new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
             }
 
-            return await response.text();
+            if (options.returnType === 'bytes') {
+                return await response.bytes();
+            } else if (options.returnType === 'text') {
+                return await response.text();
+            } else {
+                throw new Error(`Invalid return type: ${options.returnType}`);
+            }
         } catch (error) {
             lastError = error instanceof Error ? error : new Error(String(error));
 

@@ -22,6 +22,7 @@ for (const dup of duplicates) {
         'tribehaus',
         'awara',
         'kuschelraum',
+        'ciglobalcalendar',
         'heilnetz',
         'heilnetzowl',
         'ggbrandenburg',
