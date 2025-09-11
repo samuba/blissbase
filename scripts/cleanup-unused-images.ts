@@ -126,7 +126,7 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
             return;
         }
         console.log(`Deleting ${publicIds.length} images...`);
-        await cloudinary.deleteImages(publicIds, cloudinary.loadCreds());
+        await cloudinary.deleteImages(publicIds, cloudinary.loadCreds(), 'fetch');
 
         // Step 7: Delete unreferenced images from the database
         console.log('Step 7: Deleting unreferenced images from the db cache...');
