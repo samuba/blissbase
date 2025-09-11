@@ -77,7 +77,7 @@ Extract these information from the message:
 
 "endDate": string. The date and time of the event end. Assume german time zone if no other country is mentioned. Return as ISO 8601 with timezone. ONLY if specified in the message.
 
-"url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider urls for this that start with "https://t.me".
+"url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider google maps urls for this. Never consider urls for this that start with "https://t.me".
 
 "contact": string. If the text contains contact or registration information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host or register for the event. Only add the main registration/contact method, not multiple.
 
