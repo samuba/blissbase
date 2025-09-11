@@ -142,7 +142,7 @@
 						<label class="input w-full">
 							<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
 							<input
-								value={searchTerm}
+								bind:value={searchTerm}
 								oninput={(e) => {
 									eventsStore.updateSearchTerm(e.currentTarget.value);
 									debouncedSearch();
@@ -225,7 +225,7 @@
 				<label class="input w-full">
 					<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
 					<input
-						value={searchTerm}
+						bind:value={searchTerm}
 						oninput={(e) => {
 							eventsStore.updateSearchTerm(e.currentTarget.value);
 							debouncedSearch();
@@ -332,7 +332,10 @@
 {#snippet clearButton()}
 	{#if eventsStore.hasAnyFilter}
 		<button
-			onclick={() => eventsStore.resetFilters()}
+			onclick={() => {
+				searchTerm = '';
+				eventsStore.resetFilters();
+			}}
 			class="btn btn-circle btn-ghost"
 			title="Alle Filter zurücksetzen"
 			aria-label="Alle Filter zurücksetzen"
