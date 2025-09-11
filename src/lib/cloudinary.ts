@@ -8,7 +8,7 @@ export function loadCreds() {
     };
 }
 
-export async function deleteImages(publicIds: string[], creds: CloudinaryCreds) {
+export async function deleteImages(publicIds: string[], creds: CloudinaryCreds, type: 'upload' | 'fetch' = 'upload') {
     if (!publicIds?.length) {
         console.log('No public IDs provided for deletion');
         return [];
@@ -35,7 +35,7 @@ export async function deleteImages(publicIds: string[], creds: CloudinaryCreds) 
                 }
             });
 
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${creds.cloudName}/resources/image/upload`, {
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${creds.cloudName}/resources/image/${type}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Basic ${btoa(`${creds.apiKey}:${creds.apiSecret}`)}`
@@ -76,6 +76,32 @@ export interface Image {
     created_at: string;
     bytes: number;
     format: string;
+}
+
+
+
+export async function getImageData(publicIds: string[], creds: CloudinaryCreds): Promise<Image[]> {
+    try {
+        const promises = publicIds.map(async (publicId) => {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${creds.cloudName}/resources/image/upload/${publicId}`, {
+                method: 'GET',
+                headers: { 'Authorization': `Basic ${Buffer.from(`${creds.apiKey}:${creds.apiSecret}`).toString('base64')}` },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch Cloudinary image ${publicId}: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
+            const data: Image = await response.json();
+            return data;
+        });
+
+        return await Promise.all(promises);
+    } catch (error) {
+        console.error('Error fetching Cloudinary images:', error);
+        throw error;
+    }
 }
 
 /**
