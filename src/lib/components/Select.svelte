@@ -12,7 +12,8 @@
 		placeholder?: string;
 		items: SelectItem[];
 		contentProps?: WithoutChildren<Select.ContentProps>;
-		showAsButton?: boolean;
+		triggerProps?: WithoutChildren<Select.TriggerProps>;
+		hideTriggerText?: boolean;
 	};
 
 	let {
@@ -20,7 +21,8 @@
 		items,
 		contentProps,
 		placeholder,
-		showAsButton = false,
+		triggerProps,
+		hideTriggerText = false,
 		...restProps
 	}: Props = $props();
 
@@ -31,11 +33,11 @@
 </script>
 
 <Select.Root bind:value={value as never} {...restProps}>
-	<Select.Trigger class={[showAsButton ? 'btn btn-circle' : 'select']}>
+	<Select.Trigger {...triggerProps}>
 		<i class={[selectedIcon, 'size-5']}></i>
-		{#if !showAsButton}
+		<span class={['hidden', !hideTriggerText && 'sm:inline-block']}>
 			{selectedLabel ? selectedLabel : placeholder}
-		{/if}
+		</span>
 	</Select.Trigger>
 	<Select.Portal>
 		<Select.Content

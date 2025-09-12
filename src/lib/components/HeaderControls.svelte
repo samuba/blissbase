@@ -165,7 +165,7 @@
 			</div>
 
 			<!-- Sort Button -->
-			<div class="relative">
+			<div class="relative" class:hidden={!eventsStore.hasLocationFilter}>
 				<div class="btn btn-circle">
 					<Select
 						items={[
@@ -177,7 +177,8 @@
 						value={eventsStore.selectedSortValue}
 						onValueChange={eventsStore.handleSortChanged}
 						contentProps={{ class: 'z-10' }}
-						showAsButton
+						triggerProps={{ class: 'btn btn-circle' }}
+						hideTriggerText
 						disabled={!eventsStore.hasLocationFilter}
 					/>
 				</div>
@@ -245,9 +246,10 @@
 						placeholder="Suchbegriff"
 					/>
 				</label>
-				<div class="">
+				<div class:hidden={!eventsStore.hasLocationFilter}>
 					<label for="sort-select" class="sr-only">Sortieren nach</label>
 					<Select
+						triggerProps={{ class: 'select' }}
 						items={[
 							{ value: 'relevance', label: 'Sortierung', disabled: true },
 							{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
@@ -258,7 +260,6 @@
 						type="single"
 						value={eventsStore.selectedSortValue}
 						onValueChange={eventsStore.handleSortChanged}
-						showAsButton={false}
 						disabled={!eventsStore.hasLocationFilter}
 					/>
 				</div>
