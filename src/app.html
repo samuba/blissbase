@@ -8,21 +8,19 @@
 		content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 
 	<link rel="mask-icon" href="/logo.svg">
+
 	%sveltekit.head%
 </head>
 
 <script>
+	// If site was opened in telegram webview, redirect to default browser
 	if (window.TelegramWebview) {
-		const url = window.location.href;
-		const chromeUrl = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
-		window.location.href = chromeUrl;
+		window.location.href = `intent://${window.location.href.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
 	}
 </script>
 
 <body data-sveltekit-preload-data="hover" class="bg-base-200 h-full min-h-screen">
 	<div style="display: contents">%sveltekit.body%</div>
 </body>
-
-
 
 </html>
