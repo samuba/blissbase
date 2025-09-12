@@ -9,6 +9,7 @@
 	import { debounce, sleep } from '$lib/common';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { onMount } from 'svelte';
+	import BurgerMenu from './BurgerMenu.svelte';
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
@@ -56,7 +57,12 @@
 	{#if isSticky}
 		<!-- Collapsed Sticky Header -->
 		<div class="flex w-full items-center justify-center gap-3">
-			{@render logoMenu('size-6', ' btn')}
+			<BurgerMenu>
+				<div class="btn flex items-center justify-center text-sm font-medium">
+					<img src="/logo.svg" alt="Menü" class="mr-2 size-6" />
+					Menu
+				</div>
+			</BurgerMenu>
 
 			<!-- Date Button -->
 			<div class="relative">
@@ -188,7 +194,12 @@
 			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
 				<div class="flex w-full flex-wrap items-center gap-4 md:w-auto">
 					<div class="flex-shrink-0">
-						{@render logoMenu('size-6 min-w-6', ' btn bg-base-100  ')}
+						<BurgerMenu>
+							<div class="btn bg-base-100 flex items-center justify-center text-sm font-medium">
+								<img src="/logo.svg" alt="Menü" class="mr-2 size-6 min-w-6" />
+								Menu
+							</div>
+						</BurgerMenu>
 					</div>
 
 					<div class="flex-1 md:flex-none">
@@ -258,76 +269,6 @@
 		</div>
 	{/if}
 </header>
-
-{#snippet logoMenu(logoClass: string, btnClass: string)}
-	<div class="flex flex-col items-center">
-		<PopOver
-			triggerClass="cursor-pointer group  {btnClass}"
-			contentClass="card card-border shadow-lg bg-base-100 z-20"
-			contentProps={{
-				customAnchor: '.custom-popover-anchor'
-			}}
-		>
-			{#snippet trigger()}
-				<div class="relative flex items-center justify-center">
-					<!-- <i
-						class="icon-[ph--list] text-black transition-all duration-300 ease-out group-data-[state=open]:rotate-90 group-data-[state=open]:opacity-0 {logoClass}"
-					></i>-->
-					<i
-						class="icon-[ph--x] inset-50% absolute -rotate-90 text-black opacity-0 transition-all duration-300 ease-out group-data-[state=open]:rotate-0 group-data-[state=open]:opacity-100 {logoClass}"
-					></i>
-					<div
-						class="group-data- flex items-center justify-center text-sm font-medium transition-all duration-300 ease-out group-data-[state=open]:opacity-0"
-					>
-						<img src="/logo.svg" alt="Menü" class="mr-2 size-5 {logoClass}" />
-						Menu
-					</div>
-					<!-- <div class="flex items-center justify-center !text-sm font-medium">Menü</div> -->
-				</div>
-			{/snippet}
-			{#snippet content()}
-				<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
-					<h1 class="text-lg leading-tight font-bold">
-						<img src="logo.svg" alt="Blissbase" class="mr-1 inline-block size-8 min-w-8" />
-						Willkommen bei Blissbase
-					</h1>
-					<p class="-mt-2">
-						Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich
-						Events aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar,
-						komfortabel, alles an einem Ort.
-						<br />
-						Ich hoffe dir gefällt meine Arbeit.
-					</p>
-					<div class="-mt-2 flex items-center gap-3">
-						<img src="/me.jpg" alt="Samuel" class="size-12 min-w-12 rounded-full" />
-						<div class="flex flex-col">
-							<span>Peace, Love & Light 🌻</span>
-							<i class="text-sm">Samuel</i>
-						</div>
-					</div>
-
-					<p>
-						PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich
-						entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <a
-							href="mailto:hi@blissbase.app"
-							class="link w-fit font-semibold"
-						>
-							hi@blissbase.app
-						</a>
-					</p>
-
-					<a href={routes.newEvent()} class="btn btn-primary w-fit">
-						<i class="icon-[ph--plus] size-5"></i>
-						Neuen Event erstellen
-					</a>
-				</div>
-			{/snippet}
-		</PopOver>
-		<div class="custom-popover-anchor h-0 w-0">
-			<!-- too prevent flickering of popover content when rotating the icon -->
-		</div>
-	</div>
-{/snippet}
 
 {#snippet clearButton()}
 	{#if eventsStore.hasAnyFilter}
