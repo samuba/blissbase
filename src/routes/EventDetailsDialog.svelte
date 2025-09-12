@@ -25,36 +25,12 @@
 	}}
 >
 	<Dialog.Portal>
-		<Dialog.Overlay
-			class={[
-				'fixed inset-0 z-50 bg-stone-800/90 transition-opacity',
-				'data-[state=open]:animate-in',
-				'data-[state=open]:ease-out',
-				'data-[state=open]:fade-in',
-				'data-[state=open]:duration-300',
-				'data-[state=closed]:animate-out',
-				'data-[state=closed]:ease-in',
-				'data-[state=closed]:fade-out',
-				'data-[state=closed]:duration-150'
-			]}
-		/>
+		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity']} />
 
 		<Dialog.Content
 			role="dialog"
 			class={[
-				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
-				'data-[state=open]:animate-in',
-				'data-[state=open]:ease-out',
-				'data-[state=open]:fade-in',
-				'data-[state=open]:slide-in-from-top-4',
-				'data-[state=open]:sm:zoom-in-95',
-				'data-[state=open]:duration-300',
-				'data-[state=closed]:animate-out',
-				'data-[state=closed]:ease-in',
-				'data-[state=closed]:fade-out',
-				'data-[state=closed]:slide-out-to-top-4',
-				'data-[state=closed]:sm:zoom-out-95',
-				'data-[state=closed]:duration-150'
+				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl'
 			]}
 			style="scrollbar-width: thin;"
 		>

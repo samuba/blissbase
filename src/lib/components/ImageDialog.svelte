@@ -123,7 +123,7 @@
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.Overlay class="fixed inset-0 z-50 bg-black/95" />
+		<Dialog.Overlay class="fixed inset-0 z-50 bg-black/90 " />
 		<Dialog.Content
 			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
 			onclick={() => (open = false)}
