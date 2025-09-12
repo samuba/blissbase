@@ -11,8 +11,18 @@
 	%sveltekit.head%
 </head>
 
+<script>
+	if (window.TelegramWebview) {
+		const url = window.location.href;
+		const chromeUrl = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
+		window.location.href = chromeUrl;
+	}
+</script>
+
 <body data-sveltekit-preload-data="hover" class="bg-base-200 h-full min-h-screen">
 	<div style="display: contents">%sveltekit.body%</div>
 </body>
+
+
 
 </html>
