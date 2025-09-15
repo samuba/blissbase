@@ -952,6 +952,7 @@ try {
         process.exit(0);
     }
 
+    const fatalErrors: Error[] = [];
     for (const target of scrapingTargets) {
         let resolvedRoomId = target.roomId;
         try {
@@ -1033,7 +1034,7 @@ try {
             }
         } catch (error) {
             if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
-                throw error;
+                fatalErrors.push(error);
             }
             console.error(`❌ Error processing target ${target.roomId}:`, error);
             await db.update(s.telegramScrapingTargets)
@@ -1041,8 +1042,14 @@ try {
                 .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
         }
     }
-
     console.log(`\n✅ Completed processing ${scrapingTargets.length} targets`);
+
+    // in the end log fatal erors and exit so sam can have a look at them
+    if (fatalErrors.length > 0) {
+        console.error(`\n❌ Fatal errors occurred:`, fatalErrors.map(e => e.message));
+        process.exit(1);
+    }
+
 } catch (error) {
     console.error("Error processing scraping targets:", error);
     throw error;
