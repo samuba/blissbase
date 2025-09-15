@@ -29,7 +29,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
     try {
         if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
-            await reply(ctx, `👯 Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu BlissBase hinzu. Du musst uns diese Events also nicht schicken. 😉`, fromGroup, msgId)
+            await reply(ctx, `👯 Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu Blissbase hinzu. Du musst uns diese Events also nicht schicken. 😉`, fromGroup, msgId)
             return
         }
         if (!aiAnswer.hasEventData) {
@@ -178,7 +178,7 @@ ${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende
 `.trim(), fromGroup, msgId)
         } else {
             await reply(ctx, `
-✅ Der Event wurde in BlissBase eingetragen. Teile den Link mit deinen Teilnehmern:
+✅ Der Event wurde in Blissbase eingetragen. Teile den Link mit deinen Teilnehmern:
 <a href="${routes.eventDetails(dbEvent.slug, true)}">Link zu deinem Event</a>
 \n\n${adminLinkText}.
 `.trim(), fromGroup, msgId)

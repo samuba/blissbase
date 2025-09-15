@@ -15,7 +15,7 @@ export const load = ({ url, data }) => {
 
     // --- Meta Tags ---
     const baseUrl = new URL(url.pathname, url.origin).href
-    const title = 'BlissBase'
+    const title = 'Blissbase'
     const description = 'Hippie Events in deiner Nähe.'
     const faviconUrl = 'https://www.blissbase.app/favicon.png'
     const baseMetaTags = Object.freeze({

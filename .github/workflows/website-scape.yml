@@ -1,4 +1,4 @@
-name: Scrape Events
+name: Website Scraping
 
 on:
   schedule:

@@ -185,7 +185,7 @@ export const trimAllWhitespaces = (text: string | undefined) => {
 
 export function getPageMetaTags({ name, description, imageUrl, url }: { name: string, description?: string | null, imageUrl?: string | null, url: URL }) {
     const descriptionTeaser = trimAllWhitespaces(stripHtml(description?.slice(0, 140) ?? '')) + "…"
-    const title = `${name} | BlissBase`
+    const title = `${name} | Blissbase`
     return {
         title,
         description: descriptionTeaser,

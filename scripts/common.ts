@@ -71,7 +71,7 @@ export async function customFetch(
             const response = await fetch(url, {
                 ...options,
                 headers: {
-                    'User-Agent': 'BlissBase',
+                    'User-Agent': 'Blissbase',
                     ...(options.headers || {})
                 },
                 signal

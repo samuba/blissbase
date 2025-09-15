@@ -1,13 +1,24 @@
+neue telegramm gruppen aus, Conscious Events BW und Conscious Retreats
+
+suche nach deutsch tags funktioniert nicht -> tag tabelle mit übersetzungen?
+
+telegram blissbase account in alle gruppen joinen, damit privater account nicht genervt wird
+
+online events ausblenden (standardmäßig?) ONLINE events filtern - 
+Sticker drucken
+
+Profil Seiten für Veranstalter. Zeigt alle events von denen an.
+
+In gruppen posten
+  Healing Arts Dresden --- ✅ 29. August
+  😻&🐮Ext. Workshops 
+  🔥🌻Conscious South Germany🌿🙏 --- 1. September
+  Liebzige Mäuse --- 1. September
+
 event erstellen auf website
 mehr gruppen eintragen
 
 psychedelic/hippie it-guy landing page
-
-search input is funky. löscht buchstaben
-
-duplicates managen
-  - duplicates nachträglich entfernen
-  - before insert, check if description is longer, take imageUrls array with longest length 
 
 announcements mit mehreren events supporten
 
@@ -16,7 +27,6 @@ Feedback joy
 
 tags für alle events
 
-online events ausblenden (standardmäßig?)
 
 heilnetz extras aus liste sind teilweise sehr wichtig
 
