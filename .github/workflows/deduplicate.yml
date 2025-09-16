@@ -1,0 +1,31 @@
+name: Telegram Scraping
+
+on:
+  workflow_dispatch: # Allows manual triggering
+    inputs:
+      params:
+        description: 'parameters to pass to the script'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install cloudflare worker dependencies
+        run: bun install --cwd blissbase-telegram-entry
+
+      - name: Remove duplicates
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bun run scripts/remove-duplicates.ts ${{ github.event.inputs.params }}
