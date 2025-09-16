@@ -399,6 +399,9 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         return result.secure_url;
     } catch (error) {
         console.error("Error extracting photo from message", message.id, ":", error);
+        if (error.message.includes("FILE_REFERENCE_EXPIRED")) {
+            throw new Error("telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT");
+        }
 
         // Provide more specific error information
         if (error instanceof Error) {
@@ -420,10 +423,18 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
 async function getResizedImageBufferFromMessage(message: Api.Message, client: TelegramClient): Promise<Buffer | undefined> {
     if (!isImageMedia(message)) return undefined;
 
+    try {
     const imageBuffer = await client.downloadMedia(message, {});
     if (!imageBuffer) return undefined;
     const resizedBuffer = await resizeCoverImage(imageBuffer);
     return resizedBuffer;
+    } catch (error) {
+        console.error("Error downloading media from message", message.id, ":", error);
+        if (error.message.includes("FILE_REFERENCE_EXPIRED")) {
+            throw new Error("telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT");
+        }
+        throw error;
+    }
 }
 
 // Returns a data URL for AI analysis without uploading to Cloudinary
