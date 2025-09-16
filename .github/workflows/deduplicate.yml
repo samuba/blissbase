@@ -10,7 +10,7 @@ on:
         default: ''
 
 jobs:
-  scrape:
+  run:
     runs-on: ubuntu-latest
     environment: Production
     steps:
