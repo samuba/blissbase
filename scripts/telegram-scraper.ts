@@ -951,6 +951,7 @@ try {
         console.log("No scraping targets found in database");
         process.exit(0);
     }
+    scrapingTargets.sort(() => Math.random() - 0.5); // Shuffle scrapingTargets randomly
 
     const fatalErrors: Error[] = [];
     for (const target of scrapingTargets) {
