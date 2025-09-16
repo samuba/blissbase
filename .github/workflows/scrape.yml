@@ -13,7 +13,7 @@ on:
         default: ''
 
 jobs:
-  scrape:
+  scrape-websites:
     runs-on: ubuntu-latest
     environment: Production
     steps:
@@ -29,7 +29,7 @@ jobs:
         # or vendored, you might be able to skip this step.
         # However, it's good practice if your scrapers or common.ts might add some.
 
-      - name: Run scraping script
+      - name: scrape
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -38,7 +38,37 @@ jobs:
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: bun run scripts/scrape-germany.ts ${{ github.event.inputs.params }}
 
+  scrape-telegram:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install cloudflare worker dependencies
+        run: bun install --cwd blissbase-telegram-entry
+
+      - name: scrape
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_APP_ID: ${{ secrets.TELEGRAM_APP_ID }}
+          TELEGRAM_APP_HASH: ${{ secrets.TELEGRAM_APP_HASH }}
+          TELEGRAM_APP_SESSION: ${{ secrets.TELEGRAM_APP_SESSION }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+        run: bun run scripts/telegram-scraper.ts ${{ github.event.inputs.params }}
+
   deduplicate:
+    if: ${{ always() }}
+    needs: [scrape-websites, scrape-telegram]
     runs-on: ubuntu-latest
     environment: Production
     steps:
