@@ -1168,7 +1168,7 @@ async function createWorker(
         }
 
         onTargetComplete();
-        console.log(`✅ Worker #${workerId} completed: ${target.roomId}`);
+        console.log(`✅ Worker #${workerId} completed: ${target.name} (${target.roomId})`);
     }
 
     console.log(`🛑 Worker #${workerId} exiting - no more targets in queue`);
