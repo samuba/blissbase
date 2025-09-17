@@ -1,4 +1,4 @@
-name: TelegramScraping
+name: Telegram Scraping
 
 on:
   schedule:
