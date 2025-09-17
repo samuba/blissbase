@@ -1052,47 +1052,88 @@ if (!sessionAuthKeyString) {
 console.log("Connected to Telegram servers");
 
 /**
- * Processes targets with a worker pool that maintains exactly 3 concurrent workers
+ * Processes targets with a truly parallel worker pool that maintains exactly 3 concurrent workers
+ * Workers are dynamically spawned and replaced to ensure continuous processing
  */
 async function processTargetsWithWorkerPool(targets: TelegramScrapingTarget[], client: TelegramClient): Promise<Error[]> {
     const fatalErrors: Error[] = [];
     const MAX_CONCURRENT = 3;
-    const workers: Promise<void>[] = [];
-    let targetIndex = 0;
+    const targetQueue = [...targets]; // Copy targets to a queue
+    const activeWorkers = new Set<Promise<void>>();
+    let completedCount = 0;
+    let workerId = 0;
 
-    console.log(`\n🚀 Starting worker pool with ${MAX_CONCURRENT} concurrent workers for ${targets.length} targets`);
+    console.log(`\n🚀 Starting dynamic worker pool with ${MAX_CONCURRENT} concurrent workers for ${targets.length} targets`);
 
-    // Create initial workers
+    // Helper function to spawn a new worker
+    const spawnWorker = (): Promise<void> => {
+        const currentWorkerId = ++workerId;
+        console.log(`🆕 Spawning worker #${currentWorkerId}`);
+
+        const workerPromise = createWorker(currentWorkerId, targetQueue, client, fatalErrors, () => {
+            completedCount++;
+            console.log(`📊 Progress: ${completedCount}/${targets.length} targets completed`);
+        });
+
+        // When worker completes, remove it from active set and spawn replacement if needed
+        workerPromise.finally(() => {
+            activeWorkers.delete(workerPromise);
+            console.log(`🏁 Worker #${currentWorkerId} finished. Active workers: ${activeWorkers.size}`);
+
+            // Spawn replacement worker if there are still targets and we're below max concurrent
+            if (targetQueue.length > 0 && activeWorkers.size < MAX_CONCURRENT) {
+                const newWorker = spawnWorker();
+                activeWorkers.add(newWorker);
+            }
+        });
+
+        return workerPromise;
+    };
+
+    // Spawn initial workers
     for (let i = 0; i < Math.min(MAX_CONCURRENT, targets.length); i++) {
-        workers.push(createWorker(targets, client, fatalErrors, () => targetIndex++));
+        const worker = spawnWorker();
+        activeWorkers.add(worker);
     }
 
-    // Wait for all workers to complete
-    await Promise.all(workers);
+    // Wait for all work to complete by monitoring the queue and active workers
+    while (targetQueue.length > 0 || activeWorkers.size > 0) {
+        if (activeWorkers.size > 0) {
+            // Wait for at least one worker to complete, then check if we need to spawn more
+            await Promise.race(Array.from(activeWorkers));
+        }
 
-    console.log(`\n✅ Completed processing ${targets.length} targets`);
+        // Small delay to prevent tight polling
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    console.log(`\n✅ Completed processing all ${targets.length} targets`);
     return fatalErrors;
 }
 
 /**
- * Creates a worker that processes targets one by one until all are processed
+ * Creates a worker that continuously processes targets from the queue until empty
+ * This worker processes ONE target at a time and immediately looks for the next one
  */
 async function createWorker(
-    targets: TelegramScrapingTarget[],
+    workerId: number,
+    targetQueue: TelegramScrapingTarget[],
     client: TelegramClient,
     fatalErrors: Error[],
-    getNextTargetIndex: () => number
+    onTargetComplete: () => void
 ): Promise<void> {
-    while (true) {
-        const targetIndex = getNextTargetIndex();
+    console.log(`🔧 Worker #${workerId} started`);
 
-        // No more targets to process
-        if (targetIndex >= targets.length) {
+    while (targetQueue.length > 0) {
+        // Atomically get next target from queue
+        const target = targetQueue.shift();
+        if (!target) {
+            // Queue became empty while we were checking, exit gracefully
             break;
         }
 
-        const target = targets[targetIndex];
-        console.log(`\n🔄 Worker processing target ${targetIndex + 1}/${targets.length}: ${target.roomId}`);
+        const remainingTargets = targetQueue.length;
+        console.log(`\n🔄 Worker #${workerId} processing: ${target.roomId} (${remainingTargets} remaining)`);
 
         try {
             const result = await processScrapingTarget(target, client);
@@ -1101,14 +1142,17 @@ async function createWorker(
                 fatalErrors.push(result.error);
             }
         } catch (error) {
-            console.error(`❌ Worker error for target ${target.roomId}:`, error);
+            console.error(`❌ Worker #${workerId} error for target ${target.roomId}:`, error);
             if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
                 fatalErrors.push(error);
             }
         }
 
-        console.log(`✅ Worker completed target ${targetIndex + 1}/${targets.length}: ${target.roomId}`);
+        onTargetComplete();
+        console.log(`✅ Worker #${workerId} completed: ${target.roomId}`);
     }
+
+    console.log(`🛑 Worker #${workerId} exiting - no more targets in queue`);
 }
 
 try {
