@@ -1,4 +1,4 @@
-name: Website Scraping
+name: Scraping
 
 on:
   schedule:
