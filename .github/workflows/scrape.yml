@@ -66,9 +66,30 @@ jobs:
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
         run: bun run scripts/telegram-scraper.ts ${{ github.event.inputs.params }}
 
-  deduplicate:
+  deduplicate-after-website-scrape:
     if: ${{ always() }}
-    needs: [scrape-websites, scrape-telegram]
+    needs: [scrape-websites]
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+      - name: Remove duplicates
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: bun run scripts/remove-duplicates.ts ${{ github.event.inputs.params }}
+
+  deduplicate-after-telegram-scrape:
+    if: ${{ always() }}
+    needs: [scrape-telegram]
     runs-on: ubuntu-latest
     environment: Production
     steps:
