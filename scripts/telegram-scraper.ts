@@ -824,7 +824,7 @@ async function validateAndBuildEventBase(args: {
 
     const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
     const name = aiAnswer.name.trim()
-    const slug = generateSlug({ name, startAt, endAt: endAt ?? undefined })
+    const slug = generateSlug({ name, startAt, endAt: endAt || undefined })
 
     const baseEvent: InsertEvent = {
         name,
