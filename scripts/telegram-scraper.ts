@@ -4,6 +4,7 @@ import readline from "readline";
 import 'dotenv/config'
 import { db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
+import type { TelegramScrapingTarget } from "../src/lib/server/schema";
 import { generateSlug, parseTelegramContact, sleep } from "../src/lib/common";
 import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
@@ -424,10 +425,10 @@ async function getResizedImageBufferFromMessage(message: Api.Message, client: Te
     if (!isImageMedia(message)) return undefined;
 
     try {
-    const imageBuffer = await client.downloadMedia(message, {});
-    if (!imageBuffer) return undefined;
-    const resizedBuffer = await resizeCoverImage(imageBuffer);
-    return resizedBuffer;
+        const imageBuffer = await client.downloadMedia(message, {});
+        if (!imageBuffer) return undefined;
+        const resizedBuffer = await resizeCoverImage(imageBuffer);
+        return resizedBuffer;
     } catch (error) {
         console.error("Error downloading media from message", message.id, ":", error);
         if (error.message.includes("FILE_REFERENCE_EXPIRED")) {
@@ -838,6 +839,101 @@ async function validateAndBuildEventBase(args: {
 }
 
 /**
+ * Processes a single scraping target and returns the result
+ */
+async function processScrapingTarget(target: TelegramScrapingTarget, client: TelegramClient): Promise<{ success: boolean; error?: Error; target: TelegramScrapingTarget }> {
+    let resolvedRoomId = target.roomId;
+    try {
+        console.log(`\n#### Processing target: ${target.roomId}`);
+
+        // resolve roomId from name 
+        if (target.roomId.includes("resolveName:")) {
+            const chatName = target.roomId.split(":")[1].trim()
+            const chatId = await getChatIdByName(client, chatName);
+            if (!chatId) {
+                console.error(`No chat found for name "${chatName}"`);
+                return { success: false, error: new Error(`No chat found for name "${chatName}"`), target };
+            }
+            resolvedRoomId = chatId;
+            console.log(`resolved "${chatName}" to ${chatId}`)
+        }
+
+        const entity = await client.getEntity(resolvedRoomId);
+        const entityName = getEntityName(entity);
+        console.log(`Target name: ${entityName}`);
+
+        if (isForum(entity) && target.topicIds.length === 0) {
+            throw new Error(`FATAL->EXIT: ${target.roomId} (${entityName}) is a forum but no topicIds are set`);
+        }
+        if (!isForum(entity) && target.topicIds.length > 0) {
+            throw new Error(`FATAL->EXIT: ${target.roomId} (${entityName}) is not a forum but topicIds are set`);
+        }
+
+        let messages: Api.Message[] = [];
+        const limit = 50;
+        // "-1" signals that we want to process messages from all topics in a forum group. We have to optin to this.
+        if (target.topicIds.length > 0 && Number(target.topicIds[0]) !== -1) {
+            for (const topicId of target.topicIds) {
+                console.log(`Getting messages for topic ${topicId}`);
+                messages = messages.concat(await client.getMessages(entity, {
+                    replyTo: Number(topicId),
+                    limit,
+                    ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
+                }));
+            }
+        } else {
+            messages = await client.getMessages(entity, {
+                limit,
+                ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
+            });
+        }
+        console.log(`Found ${messages.length} new messages`);
+
+        if (messages.length > 0) {
+            const { scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client);
+            messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
+            const latestMsgId = BigInt(messages[0].id);
+            const latestMsgTime = new Date(messages[0].date * 1000);
+            const totalMessagesConsumed = target.messagesConsumed + messages.length;
+
+            console.log(`Messages consumed: ${messages.length} (Total: ${totalMessagesConsumed})`);
+            console.log(`New Last message ID: ${latestMsgId} (${latestMsgTime})`);
+
+            await db.update(s.telegramScrapingTargets)
+                .set({
+                    roomId: resolvedRoomId,
+                    name: entityName,
+                    messagesConsumed: totalMessagesConsumed,
+                    lastMessageId: latestMsgId,
+                    lastMessageTime: latestMsgTime,
+                    lastError: null,
+                    scrapedEvents: target.scrapedEvents + scrapedEventsCount,
+                    lastRunFinishedAt: new Date(),
+                })
+                .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
+        } else {
+            console.log(`No new messages for target ${target.roomId}`);
+            await db.update(s.telegramScrapingTargets)
+                .set({
+                    name: entityName,
+                    lastRunFinishedAt: new Date(),
+                    lastError: null,
+                })
+                .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
+        }
+
+        return { success: true, target };
+    } catch (error) {
+        console.error(`❌ Error processing target ${target.roomId}:`, error);
+        await db.update(s.telegramScrapingTargets)
+            .set({ lastError: error.message })
+            .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
+
+        return { success: false, error: error as Error, target };
+    }
+}
+
+/**
  * Processes messages and returns the newest message ID
  */
 async function processMessages(messages: TotalList<Api.Message>, chatId: string, client: TelegramClient) {
@@ -955,6 +1051,66 @@ if (!sessionAuthKeyString) {
 
 console.log("Connected to Telegram servers");
 
+/**
+ * Processes targets with a worker pool that maintains exactly 3 concurrent workers
+ */
+async function processTargetsWithWorkerPool(targets: TelegramScrapingTarget[], client: TelegramClient): Promise<Error[]> {
+    const fatalErrors: Error[] = [];
+    const MAX_CONCURRENT = 3;
+    const workers: Promise<void>[] = [];
+    let targetIndex = 0;
+
+    console.log(`\n🚀 Starting worker pool with ${MAX_CONCURRENT} concurrent workers for ${targets.length} targets`);
+
+    // Create initial workers
+    for (let i = 0; i < Math.min(MAX_CONCURRENT, targets.length); i++) {
+        workers.push(createWorker(targets, client, fatalErrors, () => targetIndex++));
+    }
+
+    // Wait for all workers to complete
+    await Promise.all(workers);
+
+    console.log(`\n✅ Completed processing ${targets.length} targets`);
+    return fatalErrors;
+}
+
+/**
+ * Creates a worker that processes targets one by one until all are processed
+ */
+async function createWorker(
+    targets: TelegramScrapingTarget[],
+    client: TelegramClient,
+    fatalErrors: Error[],
+    getNextTargetIndex: () => number
+): Promise<void> {
+    while (true) {
+        const targetIndex = getNextTargetIndex();
+
+        // No more targets to process
+        if (targetIndex >= targets.length) {
+            break;
+        }
+
+        const target = targets[targetIndex];
+        console.log(`\n🔄 Worker processing target ${targetIndex + 1}/${targets.length}: ${target.roomId}`);
+
+        try {
+            const result = await processScrapingTarget(target, client);
+
+            if (!result.success && result.error && result.error.message.includes("FATAL->EXIT")) {
+                fatalErrors.push(result.error);
+            }
+        } catch (error) {
+            console.error(`❌ Worker error for target ${target.roomId}:`, error);
+            if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
+                fatalErrors.push(error);
+            }
+        }
+
+        console.log(`✅ Worker completed target ${targetIndex + 1}/${targets.length}: ${target.roomId}`);
+    }
+}
+
 try {
     // Get all scraping targets from database
     const scrapingTargets = await db.query.telegramScrapingTargets.findMany();
@@ -964,97 +1120,8 @@ try {
     }
     scrapingTargets.sort(() => Math.random() - 0.5); // Shuffle scrapingTargets randomly
 
-    const fatalErrors: Error[] = [];
-    for (const target of scrapingTargets) {
-        let resolvedRoomId = target.roomId;
-        try {
-            console.log(`\n#### Processing target: ${target.roomId}`);
-
-            // resolve roomId from name 
-            if (target.roomId.includes("resolveName:")) {
-                const chatName = target.roomId.split(":")[1].trim()
-                const chatId = await getChatIdByName(client, chatName);
-                if (!chatId) {
-                    console.error(`No chat found for name "${chatName}"`);
-                    continue;
-                }
-                resolvedRoomId = chatId;
-                console.log(`resolved "${chatName}" to ${chatId}`)
-            }
-
-            const entity = await client.getEntity(resolvedRoomId);
-            const entityName = getEntityName(entity);
-            console.log(`Target name: ${entityName}`);
-
-            if (isForum(entity) && target.topicIds.length === 0) {
-                throw new Error(`FATAL->EXIT: ${target.roomId} (${entityName}) is a forum but no topicIds are set`);
-            }
-            if (!isForum(entity) && target.topicIds.length > 0) {
-                throw new Error(`FATAL->EXIT: ${target.roomId} (${entityName}) is not a forum but topicIds are set`);
-            }
-
-            let messages: Api.Message[] = [];
-            const limit = 50;
-            if (target.topicIds.length > 0) {
-                for (const topicId of target.topicIds) {
-                    console.log(`Getting messages for topic ${topicId}`);
-                    messages = messages.concat(await client.getMessages(entity, {
-                        replyTo: Number(topicId),
-                        limit,
-                        ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
-                    }));
-                }
-            } else {
-                messages = await client.getMessages(entity, {
-                    limit,
-                    ...(target.lastMessageId ? { minId: Number(target.lastMessageId) } : {}),
-                });
-            }
-            console.log(`Found ${messages.length} new messages`);
-
-            if (messages.length > 0) {
-                const { scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client);
-                messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
-                const latestMsgId = BigInt(messages[0].id);
-                const latestMsgTime = new Date(messages[0].date * 1000);
-                const totalMessagesConsumed = target.messagesConsumed + messages.length;
-
-                console.log(`Messages consumed: ${messages.length} (Total: ${totalMessagesConsumed})`);
-                console.log(`New Last message ID: ${latestMsgId} (${latestMsgTime})`);
-
-                await db.update(s.telegramScrapingTargets)
-                    .set({
-                        roomId: resolvedRoomId,
-                        name: entityName,
-                        messagesConsumed: totalMessagesConsumed,
-                        lastMessageId: latestMsgId,
-                        lastMessageTime: latestMsgTime,
-                        lastError: null,
-                        scrapedEvents: target.scrapedEvents + scrapedEventsCount,
-                        lastRunFinishedAt: new Date(),
-                    })
-                    .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
-            } else {
-                console.log(`No new messages for target ${target.roomId}`);
-                await db.update(s.telegramScrapingTargets)
-                    .set({
-                        name: entityName,
-                        lastRunFinishedAt: new Date(),
-                        lastError: null,
-                    })
-                    .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
-            }
-        } catch (error) {
-            if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
-                fatalErrors.push(error);
-            }
-            console.error(`❌ Error processing target ${target.roomId}:`, error);
-            await db.update(s.telegramScrapingTargets)
-                .set({ lastError: error.message })
-                .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
-        }
-    }
-    console.log(`\n✅ Completed processing ${scrapingTargets.length} targets`);
+    // Process targets with worker pool
+    const fatalErrors = await processTargetsWithWorkerPool(scrapingTargets, client);
 
     // in the end log fatal erors and exit so sam can have a look at them
     if (fatalErrors.length > 0) {
