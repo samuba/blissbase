@@ -447,6 +447,9 @@ async function getImageDataUrlFromMessage(message: Api.Message, client: Telegram
         return `data:image/jpeg;base64,${base64}`;
     } catch (err) {
         console.error("Failed to create data URL from message", message.id, err);
+        if (err instanceof Error && err.message.includes("FATAL->EXIT")) {
+            throw err;
+        }
         return undefined;
     }
 }
@@ -510,8 +513,15 @@ async function collectAdjacentImageDataUrls(
     const { messages, messageIds } = await findAdjacentImageMessages(currentMessage, allMessages);
     const imageDataUrls: string[] = [];
     for (const message of messages) {
-        const dataUrl = await getImageDataUrlFromMessage(message, client);
-        if (dataUrl) imageDataUrls.push(dataUrl);
+        try {
+            const dataUrl = await getImageDataUrlFromMessage(message, client);
+            if (dataUrl) imageDataUrls.push(dataUrl);
+        } catch (error) {
+            console.error(`Error getting data URL from message ${message.id}:`, error);
+            if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
+                throw error;
+            }
+        }
     }
     return { imageDataUrls, messageIds };
 }
@@ -530,6 +540,9 @@ async function extractAdjacentImagesWithIds(
             if (imageUrl) imageUrls.push(imageUrl);
         } catch (error) {
             console.error(`Error extracting adjacent photo from message ${message.id}:`, error);
+            if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
+                throw error;
+            }
         }
     }
     return { imageUrls, messageIds };
@@ -925,6 +938,12 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
         return { success: true, target };
     } catch (error) {
         console.error(`❌ Error processing target ${target.roomId}:`, error);
+
+        // Rethrow FATAL->EXIT errors immediately
+        if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
+            throw error;
+        }
+
         await db.update(s.telegramScrapingTargets)
             .set({ lastError: error.message })
             .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
