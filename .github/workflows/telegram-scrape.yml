@@ -15,6 +15,7 @@ on:
 jobs:
   scrape-telegram:
     runs-on: ubuntu-latest
+    environment: production
     concurrency:
       group: telegram-scrape # only one telegram scrape job can run at a time, because otherwise the telegram session key gets burned
       cancel-in-progress: true
@@ -47,6 +48,7 @@ jobs:
     if: ${{ always() }}
     needs: [scrape-telegram]
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
