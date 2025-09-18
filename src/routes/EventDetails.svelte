@@ -302,7 +302,7 @@
 			>
 				<i class="icon-[ph--user-circle] size-6"></i>
 				{#if event.hostLink}
-					<button onclick={() => openLink(event.hostLink)} class="cursor-pointer underline">
+					<button onclick={() => openLink(event.hostLink!)} class="cursor-pointer underline">
 						{event.host}
 					</button>
 				{:else}

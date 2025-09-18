@@ -29,4 +29,6 @@ declare global {
 			caches: CacheStorage & { default: Cache };
 		}
 	}
+
+	type Simplify<T> = { [KeyType in keyof T]: T[KeyType] } & {};
 }

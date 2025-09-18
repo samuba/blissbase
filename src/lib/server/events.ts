@@ -231,10 +231,12 @@ export async function fetchEvents(params: LoadEventsParams) {
 
 type StringOrTagTranslation = string & TagTranslation;
 const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
-export function prepareEventsForUi<T extends { tags?: string[] | null, telegramRoomIds?: string[] | null }>(events: T[]) {
+export function prepareEventsForUi<T extends { tags?: string[] | null; telegramRoomIds?: string[] | null }>(events: T[]):
+    Array<Simplify<Omit<T, 'hostSecret'> & { tags?: StringOrTagTranslation[]; hostSecret: undefined }>> {
     return events
         // filter ASI rooms
         // .filter(event => {
+        //     const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
         //     if (event.telegramRoomIds?.every(roomId => ASI_ROOMS.includes(roomId))) {
         //         return false;
         //     }
