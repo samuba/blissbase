@@ -104,6 +104,10 @@
 		selectedImageIndex = index;
 		imageLoadError = false;
 	}
+
+	function openLink(url: string) {
+		window.open(url, '_blank', 'noopener,noreferrer');
+	}
 </script>
 
 {#if event}
@@ -238,45 +242,29 @@
 						</span>
 						<div class="mt-3 flex justify-center">
 							{#if contactMethod === 'Telegram'}
-								<a
-									href={contactUrl}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="btn btn-primary"
-								>
+								<button type="button" onclick={() => openLink(contactUrl)} class="btn btn-primary">
 									<i class="icon-[ph--telegram-logo] size-5"></i>
 									Nachricht senden
-								</a>
+								</button>
 							{:else if contactMethod === 'WhatsApp'}
-								<a
-									href={contactUrl}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="btn btn-primary"
-								>
+								<button type="button" onclick={() => openLink(contactUrl)} class="btn btn-primary">
 									<i class="icon-[ph--whatsapp-logo] size-5"></i>
 									Nachricht senden
-								</a>
+								</button>
 							{:else if contactMethod === 'Telefon'}
-								<a
-									href={contactUrl}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="btn btn-primary"
-								>
+								<button type="button" onclick={() => openLink(contactUrl)} class="btn btn-primary">
 									<i class="icon-[ph--phone] size-5"></i>
 									Anrufen
-								</a>
+								</button>
 							{:else if contactMethod === 'Email'}
-								<a
-									href={contactUrl}
-									target="_blank"
-									rel="noopener noreferrer"
+								<button
+									type="button"
+									onclick={() => openLink(contactUrl)}
 									class="link flex w-fit items-center gap-2 text-lg"
 								>
 									<i class="icon-[ph--envelope] size-6"></i>
 									{contactUrl?.replace('mailto:', '').split('?')[0]}
-								</a>
+								</button>
 							{/if}
 						</div>
 					{/snippet}
@@ -314,9 +302,9 @@
 			>
 				<i class="icon-[ph--user-circle] size-6"></i>
 				{#if event.hostLink}
-					<a href={event.hostLink} class="underline" target="_blank" rel="noopener noreferrer">
+					<button onclick={() => openLink(event.hostLink)} class="cursor-pointer underline">
 						{event.host}
-					</a>
+					</button>
 				{:else}
 					{event.host}
 				{/if}
