@@ -883,7 +883,7 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
         }
 
         let messages: Api.Message[] = [];
-        const limit = 50;
+        const limit = 20;
         // "-1" signals that we want to process messages from all topics in a forum group. We have to optin to this.
         if (target.topicIds.length > 0 && Number(target.topicIds[0]) !== -1) {
             for (const topicId of target.topicIds) {
