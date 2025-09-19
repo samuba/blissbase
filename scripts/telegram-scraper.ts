@@ -939,14 +939,13 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
     } catch (error) {
         console.error(`❌ Error processing target ${target.roomId}:`, error);
 
-        // Rethrow FATAL->EXIT errors immediately
+        await db.update(s.telegramScrapingTargets)
+            .set({ lastError: error.message, lastRunFinishedAt: new Date() })
+            .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
+
         if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
             throw error;
         }
-
-        await db.update(s.telegramScrapingTargets)
-            .set({ lastError: error.message })
-            .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
 
         return { success: false, error: error as Error, target };
     }
