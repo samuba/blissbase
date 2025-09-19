@@ -32,5 +32,5 @@ console.log("Login succesfull")
 console.log("Session key:", client.session.save()); // Save this string to avoid logging in again
 
 for await (const dialog of client.iterDialogs({})) {
-    console.log(`${dialog.id}: ${dialog.title}`);
+    console.log(`${dialog.date}: (${dialog.id}) ${dialog.title}`);
 }

@@ -299,6 +299,7 @@ export const music: TagTranslation[] = [
 export const festivalsAndRetreats: TagTranslation[] = [
     { en: "Gatherings", de: "Zusammenkünfte", nl: "Gatherings" },
     { en: "Festivals", de: "Festivals", nl: "Festivals" },
+    { en: "Retreat", de: "Retreat", nl: "Retreat" },
     { en: "Multi-day Retreats", de: "Mehrtägige Retreats", nl: "Meerdaagse retraites" },
     { en: "Silent Retreat", de: "Schweigeretreat", nl: "Stilteretraite" },
     { en: "1-Day Retreat", de: "1-Tages-Retreat", nl: "1-Dags retraite" },

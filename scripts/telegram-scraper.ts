@@ -643,7 +643,7 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join('\n\n') : '';
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, [imageDataUrl]);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), [imageDataUrl]);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -677,7 +677,7 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
     const combinedText = [msgHtml, ...adjacentTextMessages].join('\n\n');
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, adjacentImageUrls);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), adjacentImageUrls);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
