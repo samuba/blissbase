@@ -42,7 +42,7 @@
 	<Select.Portal>
 		<Select.Content
 			{...contentProps}
-			class={['bg-base-100 rounded-lg p-1 shadow-lg', contentProps?.class]}
+			class={['bg-base-100 z-10 rounded-lg p-1 shadow-lg', contentProps?.class]}
 		>
 			<Select.ScrollUpButton>up</Select.ScrollUpButton>
 			<Select.Viewport class="flex flex-col ">
