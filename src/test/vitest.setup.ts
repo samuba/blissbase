@@ -27,7 +27,11 @@ vi.mock("$lib/server/db", async (importOriginal) => {
 
     // const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
 
-    const client = new PGlite({ extensions: { cube, earthdistance, pg_trgm } })
+    const client = new PGlite({
+        extensions: { cube, earthdistance, pg_trgm },
+        // Set debug mode to false to reduce noise in CI environments
+        debug: process.env.CI ? 0 : undefined
+    })
     const db = drizzle(client, { schema, casing: 'snake_case' })
 
     // Explicitly create the extensions (cube must come before earthdistance)
