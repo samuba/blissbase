@@ -124,7 +124,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 
         if (geocodedCoords) {
             const distanceMeters = parseFloat(distance) * 1000;
-            proximityCondition = sql`ST_DWithin(ST_SetSRID(ST_MakePoint(${s.events.longitude}, ${s.events.latitude}), 4326)::geography, ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography, ${distanceMeters}) AND ${s.events.latitude} IS NOT NULL AND ${s.events.longitude} IS NOT NULL`;
+            proximityCondition = sql`earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng})) <= ${distanceMeters} AND ${s.events.latitude} IS NOT NULL AND ${s.events.longitude} IS NOT NULL`;
         }
     }
 
@@ -138,10 +138,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         const distanceSortSql = sql`
             CASE
                 WHEN ${s.events.longitude} IS NOT NULL AND ${s.events.latitude} IS NOT NULL THEN
-                    ST_Distance(
-                        ST_SetSRID(ST_MakePoint(${s.events.longitude}, ${s.events.latitude}), 4326)::geography,
-                        ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
-                    )
+                    earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng}))
                 ELSE NULL
             END`;
         if (sortOrder === 'asc') {
@@ -179,10 +176,7 @@ export async function fetchEvents(params: LoadEventsParams) {
             distanceKm: geocodedCoords ? sql<number | null>`
             CASE
                 WHEN ${s.events.longitude} IS NOT NULL AND ${s.events.latitude} IS NOT NULL THEN
-                    GREATEST(1, ROUND(ST_Distance(
-                        ST_SetSRID(ST_MakePoint(${s.events.longitude}, ${s.events.latitude}), 4326)::geography,
-                        ST_SetSRID(ST_MakePoint(${geocodedCoords.lng}, ${geocodedCoords.lat}), 4326)::geography
-                    ) / 1000))
+                    GREATEST(1, ROUND(earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng})) / 1000))
                 ELSE NULL
             END
         `.as('distance_km') : sql<null>`NULL`.as('distance_km')
