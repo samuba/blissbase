@@ -1,5 +1,4 @@
 import { buildConflictUpdateColumns, db, s } from '$lib/server/db';
-
 import { asc, count, gte, or, and, lt, isNotNull, isNull, lte, gt, sql, ilike, desc, SQL } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
@@ -68,7 +67,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     const now = new Date();
     const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
     const startDate = startCalDate.toDate(timeZone);
-    const endDate = endCalDate.toDate(timeZone);
+    const endDate = new Date(endCalDate.toDate(timeZone).getTime() + 24 * 60 * 60 * 1000 - 1) // End of day
 
     // Check if the entire date range is in the past
     const isHistoricalRange = endDate <= now;

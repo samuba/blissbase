@@ -364,8 +364,10 @@ describe('Events Module - Happy Flow Tests', () => {
 
             const result = prepareEventsForUi(mockEvents);
 
-            expect(result[0].tags).toBeUndefined();
-            expect(result[0].hostSecret).toBeUndefined();
+            expect(result.length).toBe(1);
+            const firstEvent = result[0] as any;
+            expect(firstEvent.tags).toBeUndefined();
+            expect(firstEvent.hostSecret).toBeUndefined();
         });
 
         it('should handle events with translated tags', () => {
@@ -475,8 +477,10 @@ describe('Events Module - Happy Flow Tests', () => {
             const result = prepareEventsForUi(mockEvents);
 
             expect(result).toHaveLength(2);
-            expect(result[0].hostSecret).toBeUndefined();
-            expect(result[1].hostSecret).toBeUndefined();
+            const firstEvent = result[0] as any;
+            const secondEvent = result[1] as any;
+            expect(firstEvent.hostSecret).toBeUndefined();
+            expect(secondEvent.hostSecret).toBeUndefined();
         });
     });
 
@@ -655,6 +659,69 @@ describe('Events Module - Happy Flow Tests', () => {
 
                 expect(result.events).toHaveLength(1);
                 expect(result.events[0].name).toBe('Old Event');
+            });
+
+            it('should handle same-day events when start and end dates are the same', async () => {
+                // Create an event that starts and ends on the same day
+                const sameDayEvent = createTestEvent({
+                    name: 'Same Day Event',
+                    startAt: new Date('2024-12-05T19:00:00Z'),
+                    endAt: new Date('2024-12-05T22:00:00Z'),
+                    slug: 'same-day-event'
+                });
+
+                await insertEvents([sameDayEvent]);
+
+                // Search for events on that same day (start and end date are the same)
+                const result = await fetchEvents({
+                    startDate: '2024-12-05',
+                    endDate: '2024-12-05'
+                });
+
+                expect(result.events).toHaveLength(1);
+                expect(result.events[0].name).toBe('Same Day Event');
+            });
+
+            it('should handle events that start early and end late on the same day', async () => {
+                // Create an event that starts early morning and ends late night on the same day
+                const fullDayEvent = createTestEvent({
+                    name: 'Full Day Event',
+                    startAt: new Date('2024-12-05T08:00:00Z'),
+                    endAt: new Date('2024-12-05T23:59:00Z'),
+                    slug: 'full-day-event'
+                });
+
+                await insertEvents([fullDayEvent]);
+
+                // Search for events on that same day
+                const result = await fetchEvents({
+                    startDate: '2024-12-05',
+                    endDate: '2024-12-05'
+                });
+
+                expect(result.events).toHaveLength(1);
+                expect(result.events[0].name).toBe('Full Day Event');
+            });
+
+            it('should handle events without end time on the same day', async () => {
+                // Create an event without end time on a specific day
+                const noEndTimeEvent = createTestEvent({
+                    name: 'No End Time Event',
+                    startAt: new Date('2024-12-05T14:00:00Z'),
+                    endAt: null,
+                    slug: 'no-end-time-event'
+                });
+
+                await insertEvents([noEndTimeEvent]);
+
+                // Search for events on that same day
+                const result = await fetchEvents({
+                    startDate: '2024-12-05',
+                    endDate: '2024-12-05'
+                });
+
+                expect(result.events).toHaveLength(1);
+                expect(result.events[0].name).toBe('No End Time Event');
             });
         });
 
