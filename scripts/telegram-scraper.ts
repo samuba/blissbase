@@ -2,7 +2,7 @@ import { Api, TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import readline from "readline";
 import 'dotenv/config'
-import { db, eq, s } from '../src/lib/server/db';
+import { and, db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";
 import { generateSlug, parseTelegramContact, sleep } from "../src/lib/common";
@@ -393,9 +393,25 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
 
         const resizedBuffer = await resizeCoverImage(imageBuffer!)
         const hash = await calculatePhash(resizedBuffer)
+
+        const alreadyCachedImage = await db.query.imageCacheMap.findFirst({
+            where: and(
+                eq(s.imageCacheMap.originalUrl, `tg:${hash}:${slug}`),
+                eq(s.imageCacheMap.eventSlug, slug)
+            )
+        });
+        if (alreadyCachedImage) {
+            console.log("Image already cached, not uploading again", `tg:${hash}:${slug}`);
+            return alreadyCachedImage.url;
+        }
+
         console.log("Uploading resized file to Cloudinary:", `${slug}/${hash}`);
         const result = await cloudinary.uploadImage(resizedBuffer, slug, hash, cloudinary.loadCreds());
-
+        await db.insert(s.imageCacheMap).values({
+            originalUrl: `tg:${hash}:${slug}`,
+            eventSlug: slug,
+            url: result.secure_url
+        });
         console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
         return result.secure_url;
     } catch (error) {
