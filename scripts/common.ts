@@ -1,4 +1,4 @@
-import { ScrapedEvent } from "../src/lib/types.ts";
+import type { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 
 
@@ -10,7 +10,8 @@ export const WEBSITE_SCRAPER_CONFIG = {
     seijetzt: { module: './scrape-seijetzt.ts' },
     ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
     kuschelraum: { module: './scrape-kuschelraum.ts' },
-    ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts' }
+    ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts' },
+    lumaya: { module: './scrape-lumaya.ts' }
 } as const;
 export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
 export type WebsiteScrapeSource = (typeof WEBSITE_SCRAPE_SOURCES)[number];
@@ -25,6 +26,11 @@ export const FETCH_TIMEOUT_MS = 10000;
  * Common delay between requests in milliseconds to be polite to servers
  */
 export const REQUEST_DELAY_MS = 500;
+
+export function customFetch(
+    url: string,
+    options: RequestInit & { returnType?: 'json' }
+): Promise<any>;
 
 export function customFetch(
     url: string,
@@ -45,7 +51,7 @@ export function customFetch(
  */
 export async function customFetch(
     url: string,
-    options: RequestInit & { returnType?: 'text' | 'bytes' } = { returnType: 'text' }
+    options: RequestInit & { returnType?: 'text' | 'bytes' | 'json' } = { returnType: 'text' }
 ): Promise<string | Uint8Array<ArrayBufferLike>> {
     const maxRetries = 5;
     let lastError: Error | undefined;
@@ -101,6 +107,8 @@ export async function customFetch(
                 return await response.bytes();
             } else if (options.returnType === 'text') {
                 return await response.text();
+            } else if (options.returnType === 'json') {
+                return await response.json();
             } else {
                 throw new Error(`Invalid return type: ${options.returnType}`);
             }

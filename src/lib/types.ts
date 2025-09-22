@@ -15,6 +15,7 @@ export interface ScrapedEvent {
     imageUrls: string[]; // All images from detail page
     host: string | null | undefined; // Host name (artist/organizer)
     hostLink: string | null | undefined; // Link to host profile
+    contact: string[]  // Contact method (email, whatsapp, telegram, url)
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     tags: string[]; // Tags/Categories from the event page

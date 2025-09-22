@@ -24,7 +24,6 @@ describe('Image Processing for Event Extraction', () => {
             price: "50€",
             contact: "info@tantra.de",
             tags: ["tantra", "workshop", "transformation"],
-            summary: "A transformative tantra workshop for personal growth and connection."
         };
 
         (aiExtractEventData as any).mockResolvedValue(mockAiResponse);

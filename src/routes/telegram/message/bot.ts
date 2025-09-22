@@ -109,7 +109,6 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             price: aiAnswer.price,
             description: aiAnswer.description,
             descriptionOriginal: msgTextHtml,
-            summary: aiAnswer.summary,
             host: telegramAuthor?.name,
             hostLink: telegramAuthor?.link,
             sourceUrl: aiAnswer.url,

@@ -24,8 +24,34 @@
 		)
 	);
 
-	let contactUrl = $derived.by(() => {
-		let contact = event.contact ?? event.hostLink;
+	let singleContact = $derived(
+		event.contact?.length === 1
+			? {
+					method: getContactMethod(event.contact?.[0]) as ReturnType<typeof getContactMethod>,
+					url: getContactUrl(event.contact?.[0])
+				}
+			: undefined
+	);
+
+	function getContactMethod(str: string | undefined) {
+		if (!str?.trim()) return undefined;
+		if (str?.startsWith('tg://') || str?.startsWith('t.me/') || str?.startsWith('https://t.me/')) {
+			return 'Telegram';
+		}
+		if (str?.startsWith('https://wa.me/')) {
+			return 'WhatsApp';
+		}
+		if (str?.startsWith('tel:')) {
+			return 'Telefon';
+		}
+		if (str?.startsWith('mailto:')) {
+			return 'Email';
+		}
+		return 'Website';
+	}
+
+	function getContactUrl(str: string | undefined) {
+		let contact = str ?? event.hostLink;
 		if (contact && /^\+?\d[\d\s\-\(\)]+\d$/.test(contact)) {
 			contact = `tel:${contact.replace(/\s/g, '')}`;
 		}
@@ -42,36 +68,14 @@
 		}
 
 		return contact;
-	});
-
-	let contactMethod: 'Telegram' | 'WhatsApp' | 'Telefon' | 'Email' | 'Website' | undefined =
-		$derived.by(() => {
-			if (!contactUrl) {
-				return undefined;
-			}
-			if (
-				contactUrl?.startsWith('tg://') ||
-				contactUrl?.startsWith('t.me/') ||
-				contactUrl?.startsWith('https://t.me/')
-			) {
-				return 'Telegram';
-			}
-			if (contactUrl?.startsWith('https://wa.me/')) {
-				return 'WhatsApp';
-			}
-			if (contactUrl?.startsWith('tel:')) {
-				return 'Telefon';
-			}
-			if (contactUrl?.startsWith('mailto:')) {
-				return 'Email';
-			}
-			return 'Website';
-		});
+	}
 
 	let showQuelleInsteadOfAnmelden = $derived(
 		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source) ||
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
+
+	let dontShowSourceUrl = $derived(['lumaya'].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
@@ -209,64 +213,43 @@
 					Quelle
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
-			{:else if sourceUrl}
+			{:else if sourceUrl && !dontShowSourceUrl}
 				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
 					Anmelden
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
-			{:else if contactUrl && contactMethod === 'Website'}
-				<a href={contactUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
+			{:else if singleContact?.method === 'Website'}
+				<a
+					href={singleContact.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="btn-primary btn"
+				>
 					Anmelden
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
-			{:else if contactUrl}
+			{:else}
 				<PopOver contentClass="bg-base-100 p-5 max-w-sm z-30">
 					{#snippet trigger()}
 						<button class="btn btn-primary"> Anmelden </button>
 					{/snippet}
 					{#snippet content()}
-						<span class="word-wrap">
-							Der Veranstalter möchte Anmeldungen per <b> {contactMethod}</b> erhalten.
-							{#if contactMethod === 'Telegram'}
-								Eventuell musst du
-								<a
-									href="https://telegram.org"
-									target="_blank"
-									rel="noopener noreferrer"
-									class="underline"
-								>
-									Telegram Messenger
-								</a>
-								erst installieren.
-							{/if}
-						</span>
-						<div class="mt-3 flex justify-center">
-							{#if contactMethod === 'Telegram'}
-								<button type="button" onclick={() => openLink(contactUrl)} class="btn btn-primary">
-									<i class="icon-[ph--telegram-logo] size-5"></i>
-									Nachricht senden
-								</button>
-							{:else if contactMethod === 'WhatsApp'}
-								<button type="button" onclick={() => openLink(contactUrl)} class="btn btn-primary">
-									<i class="icon-[ph--whatsapp-logo] size-5"></i>
-									Nachricht senden
-								</button>
-							{:else if contactMethod === 'Telefon'}
-								<button type="button" onclick={() => openLink(contactUrl)} class="btn btn-primary">
-									<i class="icon-[ph--phone] size-5"></i>
-									Anrufen
-								</button>
-							{:else if contactMethod === 'Email'}
-								<button
-									type="button"
-									onclick={() => openLink(contactUrl)}
-									class="link flex w-fit items-center gap-2 text-lg"
-								>
-									<i class="icon-[ph--envelope] size-6"></i>
-									{contactUrl?.replace('mailto:', '').split('?')[0]}
-								</button>
-							{/if}
-						</div>
+						{#if singleContact?.url}
+							<span class="word-wrap">
+								Der Veranstalter möchte Anmeldungen per <b> {singleContact.method}</b> erhalten.
+							</span>
+
+							<div class="mt-3 flex justify-center">
+								{@render contactButton(singleContact.method, singleContact.url!)}
+							</div>
+						{:else}
+							<span class="word-wrap">
+								Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:
+							</span>
+							{#each event.contact as contact}
+								{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
+							{/each}
+						{/if}
 					{/snippet}
 				</PopOver>
 			{/if}
@@ -348,6 +331,41 @@
 		<a href="/" class="btn btn-primary">Go to Homepage</a>
 	</div>
 {/if}
+
+{#snippet contactButton(method: ReturnType<typeof getContactMethod>, url: string)}
+	{#if method === 'Telegram'}
+		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
+			<i class="icon-[ph--telegram-logo] size-5"></i>
+			Nachricht senden
+		</button>
+		<span class="word-wrap">
+			Eventuell musst du
+			<a href="https://telegram.org" target="_blank" rel="noopener noreferrer" class="underline">
+				Telegram Messenger
+			</a>
+			erst installieren.
+		</span>
+	{:else if method === 'WhatsApp'}
+		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
+			<i class="icon-[ph--whatsapp-logo] size-5"></i>
+			Nachricht senden
+		</button>
+	{:else if method === 'Telefon'}
+		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
+			<i class="icon-[ph--phone] size-5"></i>
+			Anrufen
+		</button>
+	{:else if method === 'Email'}
+		<button
+			type="button"
+			onclick={() => openLink(url)}
+			class="link flex w-fit items-center gap-2 text-lg"
+		>
+			<i class="icon-[ph--envelope] size-6"></i>
+			{url?.replace('mailto:', '').split('?')[0]}
+		</button>
+	{/if}
+{/snippet}
 
 <style>
 	:global(.event-description a) {

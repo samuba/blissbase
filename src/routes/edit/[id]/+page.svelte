@@ -23,7 +23,6 @@
 		price: event.price || '',
 		priceIsHtml: event.priceIsHtml,
 		description: event.description || '',
-		summary: event.summary || '',
 		imageUrls: (event.imageUrls || []).join('\n'),
 		host: event.host || '',
 		hostLink: event.hostLink || '',

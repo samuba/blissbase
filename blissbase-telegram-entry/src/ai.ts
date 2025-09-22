@@ -72,8 +72,6 @@ Extract these information from the message:
 
 "descriptionBrief": string. The same content as in "description" field, including html tags. Remove name/title, start time, end time if they were extracted into other fields.
 
-"summary": string. Summarise what the event is about in one descriptive sentence. Always use same language as the message. Never mention name of the event. Never mention date or location. Always sound friendly and keep it about this event.
-
 "startDate": string. The date and time of the event start. Assume german time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find date and not time assume start of the day. If multiple start dates are mentioned take the one thats in the future and closest to today. 
 
 "endDate": string. The date and time of the event end. Assume german time zone if no other country is mentioned. Return as ISO 8601 with timezone. ONLY if specified in the message.
@@ -105,7 +103,6 @@ export type MsgAnalysisAnswer = {
     name: string;
     description: string;
     descriptionBrief: string;
-    summary: string;
     startDate: string;
     endDate: string;
     url: string;

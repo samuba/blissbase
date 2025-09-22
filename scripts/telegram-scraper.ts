@@ -23,7 +23,7 @@ const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
 
 // Minimal shape we rely on from the AI output to keep helpers local to this file
 type AiAnswerMinimal = Pick<MsgAnalysisAnswer,
-    'hasEventData' | 'existingSource' | 'name' | 'description' | 'summary' |
+    'hasEventData' | 'existingSource' | 'name' | 'description' |
     'startDate' | 'endDate' | 'url' | 'contact' | 'contactAuthorForMore' | 'price' |
     'venue' | 'address' | 'city' | 'tags'
 >;
@@ -854,7 +854,6 @@ async function validateAndBuildEventBase(args: {
         price: aiAnswer.price,
         description: aiAnswer.description,
         descriptionOriginal,
-        summary: aiAnswer.summary,
         host: telegramAuthor?.name,
         hostLink: telegramAuthor?.link,
         sourceUrl: aiAnswer.url,
