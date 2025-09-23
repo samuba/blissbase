@@ -26,7 +26,12 @@ export async function aiExtractEventData(message: string, messageDate: Date, ima
     });
 
     try {
-        return JSON.parse(text || '{ "hasEventData": false }') as MsgAnalysisAnswer;
+        const result = JSON.parse(text || '{ "hasEventData": false }') as MsgAnalysisAnswer;
+        if (result.hasEventData) {
+            if (!Array.isArray(result.contact)) result.contact = [];
+            if (!Array.isArray(result.tags)) result.tags = [];
+        }
+        return result;
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         const msg = `Failed to parse OpenAI response as JSON: ${errorMessage}`
@@ -78,7 +83,7 @@ Extract these information from the message:
 
 "url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider google maps urls for this. Never consider urls for this that start with "https://t.me".
 
-"contact": string. If the text contains contact or registration information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host or register for the event. Only add the main registration/contact method, not multiple.
+"contact": Array<string>. If the text contains contact or registration information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host or register for the event. Add main registration/contact method first.
 
 "contactAuthorForMore": boolean. Wether the message states to contact the sender/author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
 
@@ -92,12 +97,14 @@ Extract these information from the message:
 
 "emojis": string. Up to 3 emojis that describe the event.
 
-"tags": string[]. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map(x => x.en).join(", ")}.
+"tags": Array<string>. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map(x => x.en).join(", ")}.
 
 `
 
 export type MsgAnalysisAnswer = {
     hasEventData: boolean;
+    contact: string[];
+    tags: string[];
 } & Partial<{
     existingSource: string;
     name: string;
@@ -106,12 +113,10 @@ export type MsgAnalysisAnswer = {
     startDate: string;
     endDate: string;
     url: string;
-    contact: string;
     contactAuthorForMore: boolean;
     price: string;
     venue: string;
     address: string;
     city: string;
-    tags: string[];
     emojis: string;
 }>

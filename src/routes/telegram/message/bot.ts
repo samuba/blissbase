@@ -1,7 +1,7 @@
 import { CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, GOOGLE_MAPS_API_KEY, CLOUDINARY_API_SECRET } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
-import { generateSlug, parseTelegramContact } from '$lib/common';
+import { generateSlug, parseTelegramContacts } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
@@ -63,11 +63,11 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
 
         const coords = await geocodeAddressCached(addressArr, GOOGLE_MAPS_API_KEY || '')
-        let contact = parseTelegramContact(aiAnswer.contact);
+        const contact = parseTelegramContacts(aiAnswer.contact)
         const telegramAuthor = getTelegramEventOriginalAuthor(ctx.message)
         if (aiAnswer.contactAuthorForMore) {
-            contact = telegramAuthor?.link
-            if (!contact) {
+            if (telegramAuthor?.link) contact.push(telegramAuthor.link)
+            if (!contact.some(x => x?.startsWith('tg://'))) {
                 await reply(ctx, "⚠️ In deiner Nachricht forderst du Teilnehmer auf sich bei dir per Telegram zu melden, allerdings hast du in deinem Profil keinen Telegram Username eingetragen.\n\nBitte lege erst einen Telegram Username fest damit dich Teilnehmer per Telegram Link erreichen können. Danach kannst du mir die Nachricht erneut senden.", fromGroup, msgId)
                 return
             }

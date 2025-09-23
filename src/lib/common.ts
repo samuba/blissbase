@@ -205,30 +205,33 @@ export function getPageMetaTags({ name, description, imageUrl, url }: { name: st
     } satisfies MetaTagsProps
 }
 
-export function parseTelegramContact(contact: string | undefined) {
-    if (!contact?.trim()) return undefined;
+export function parseTelegramContacts(contacts: string[] | undefined) {
+    if (!contacts?.length) return [];
+    return contacts.map(contact => {
+        if (!contact?.trim()) return undefined;
 
-    if (contact.startsWith('https://t.me/')) {
-        //https://t.me/MagdalenaHSC",
-        return `tg://resolve?domain=${contact.slice(14)}`
-    }
-    if (contact.startsWith('https://t.me/')) {
-        //t.me/MagdalenaHSC",
-        return `tg://resolve?domain=${contact.slice(6)}`
-    }
-    if (contact.startsWith('@')) {
-        return `tg://resolve?domain=${contact.slice(1)}`
-    }
-    if (contact.startsWith('+')) {
-        return `tel:${contact}`
-    }
-    if (contact.startsWith('http')) {
-        return contact
-    }
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
-        return `mailto:${contact}`
-    }
-    return contact;
+        if (contact.startsWith('https://t.me/')) {
+            //https://t.me/MagdalenaHSC",
+            return `tg://resolve?domain=${contact.slice(14)}`
+        }
+        if (contact.startsWith('https://t.me/')) {
+            //t.me/MagdalenaHSC",
+            return `tg://resolve?domain=${contact.slice(6)}`
+        }
+        if (contact.startsWith('@')) {
+            return `tg://resolve?domain=${contact.slice(1)}`
+        }
+        if (contact.startsWith('+')) {
+            return `tel:${contact}`
+        }
+        if (contact.startsWith('http')) {
+            return contact
+        }
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+            return `mailto:${contact}`
+        }
+        return contact;
+    }).filter(x => !!x) as string[];
 }
 
 export function randomString(length: number) {

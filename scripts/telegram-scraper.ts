@@ -5,7 +5,7 @@ import 'dotenv/config'
 import { and, db, eq, s } from '../src/lib/server/db';
 import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";
-import { generateSlug, parseTelegramContact, sleep } from "../src/lib/common";
+import { generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
 import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
@@ -828,11 +828,11 @@ async function validateAndBuildEventBase(args: {
     }
 
     const coords = await geocodeAddressCached(addressArr, googleMapsApiKey || '')
-    let contact = parseTelegramContact(aiAnswer.contact);
+    const contact = parseTelegramContacts(aiAnswer.contact)
     const telegramAuthor = await getTelegramEventOriginalAuthor(message, client);
     if (aiAnswer.contactAuthorForMore) {
-        contact = telegramAuthor?.link
-        if (!contact) {
+        if (telegramAuthor?.link) contact.push(telegramAuthor.link)
+        if (!contact.some(x => x?.startsWith('tg://'))) {
             console.log(`Skipping event - contact author requested but no telegram author link available`);
             return undefined;
         }
