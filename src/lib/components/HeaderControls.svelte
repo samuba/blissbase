@@ -17,12 +17,14 @@
 
 	let isDatePickerOpen = $state(false);
 
-	const debouncedSearch = debounce(() => {
+	function runSearch() {
 		eventsStore.loadEvents({
 			...eventsStore.pagination,
 			page: 1
 		});
-	}, 400);
+	}
+
+	const debouncedSearch = debounce(() => runSearch(), 400);
 
 	let logoButton = $state<HTMLDivElement | null>(null);
 
@@ -153,9 +155,22 @@
 									eventsStore.updateSearchTerm(e.currentTarget.value);
 									debouncedSearch();
 								}}
-								type="search"
+								type="text"
 								placeholder="Suchbegriff"
 							/>
+							{#if eventsStore.hasSearchFilter}
+								<button
+									onclick={() => {
+										searchTerm = '';
+										eventsStore.updateSearchTerm('');
+										runSearch();
+									}}
+									class="btn btn-sm btn-circle btn-ghost"
+									aria-label="Suchbegriff löschen"
+								>
+									<i class="icon-[ph--x] size-5"></i>
+								</button>
+							{/if}
 						</label>
 					{/snippet}
 				</PopOver>
@@ -242,9 +257,22 @@
 							eventsStore.updateSearchTerm(e.currentTarget.value);
 							debouncedSearch();
 						}}
-						type="search"
+						type="text"
 						placeholder="Suchbegriff"
 					/>
+					{#if eventsStore.hasSearchFilter}
+						<button
+							onclick={() => {
+								searchTerm = '';
+								eventsStore.updateSearchTerm('');
+								runSearch();
+							}}
+							class="btn btn-sm btn-circle btn-ghost"
+							aria-label="Suchbegriff löschen"
+						>
+							<i class="icon-[ph--x] size-5"></i>
+						</button>
+					{/if}
 				</label>
 				<div class:hidden={!eventsStore.hasLocationFilter}>
 					<label for="sort-select" class="sr-only">Sortieren nach</label>
