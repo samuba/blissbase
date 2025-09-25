@@ -111,7 +111,7 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         }
 
         // Safety check: Don't delete if there are too many unreferenced images
-        const maxDeletions = 1000;
+        const maxDeletions = Math.floor(cloudinaryImages.length * 0.4);
         if (unreferencedImages.length > maxDeletions) {
             console.error(`❌ Safety check failed: Too many unreferenced images (${unreferencedImages.length}). Maximum allowed: ${maxDeletions}`);
             console.error('This might indicate a problem with the reference detection. Please investigate manually.');
