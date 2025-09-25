@@ -11,7 +11,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
     kuschelraum: { module: './scrape-kuschelraum.ts' },
     ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts' },
-    lumaya: { module: './scrape-lumaya.ts' }
+    // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const;
 export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
 export type WebsiteScrapeSource = (typeof WEBSITE_SCRAPE_SOURCES)[number];

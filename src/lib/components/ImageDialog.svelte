@@ -137,7 +137,7 @@
 					<img
 						src={imageUrls[currentIndex]}
 						{alt}
-						class="max-h-full max-w-full object-contain select-none"
+						class="max-h-[100vh] max-w-full object-contain select-none"
 						draggable="false"
 					/>
 				{/if}

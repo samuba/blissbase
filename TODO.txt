@@ -1,10 +1,18 @@
-Spirituelle Treffen und Events in Dortmund und Umgebung - infos aus nachricht ziehen
+cloudinary exhausted
+
+alle webseiten betreiber anquatschen und scraping klären
+
+make it sexy like lumaya
+
+ duplicate erkennung: zeit nicht berücksichtigen, dafür adresse mit similarity
 
 Spendenaufruf
 
-KAtharina aus ulm blissbase geben sobald allgäu gruppen indexiert
+suche nach kategorien / kategorien entdecken
 
-neue telegramm gruppen aus, Conscious Events BW und Conscious Retreats
+SEO Seiten
+
+KAtharina aus ulm blissbase geben sobald allgäu gruppen indexiert
 
 suche nach deutsch tags funktioniert nicht -> tag tabelle mit übersetzungen?
 
@@ -48,7 +56,10 @@ SEO
 regelmäßig nach neuen gruppen checken in: 
   -> https://t.me/consciousretreats/82/4489
 
-https://lumaya.co  // stuttgart und andere städte. SEHR wie blissbase!!
+  zegg!!
+
+
+https://motionlab.cologne/
 
 https://planetallgaeu.de/spiritualitaet-glaube
 
