@@ -198,7 +198,7 @@ async function main() {
 
     // await Bun.write('events.json', JSON.stringify(eventsToInsert, null, 2));
 
-    await preWarmImageUrls(eventsToInsert);
+    // await preWarmImageUrls(eventsToInsert);
 
     let successCount = 0;
     const batchSize = 15;
@@ -258,6 +258,8 @@ async function main() {
                 const uploadedImage = await cloudinary.uploadImage(imgBuffer, event.slug, phash, cloudinary.loadCreds());
                 cachedEventImageUrls.push(uploadedImage.secure_url);
                 newlyCachedImages.push({ originalUrl: url, eventSlug: event.slug, url: uploadedImage.secure_url });
+                // warm up the image url
+                await customFetch(uploadedImage.secure_url, { returnType: 'bytes' });
                 processedImageCount++;
             }
             event.imageUrls = cachedEventImageUrls;
