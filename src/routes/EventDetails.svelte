@@ -47,6 +47,12 @@
 		if (str?.startsWith('mailto:')) {
 			return 'Email';
 		}
+		if (str?.match(/^[\w\.-]+@[\w\.-]+\.\w+$/)) {
+			return 'Email';
+		}
+		if (str?.startsWith('http')) {
+			return 'Website';
+		}
 		return 'Website';
 	}
 
@@ -65,6 +71,9 @@
 
 		if (contact?.startsWith('mailto:')) {
 			contact += `?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString('de-DE')})`)}&body=${contactMessage}`;
+		} else if (getContactMethod(str) === 'Email') {
+			// email without mailto: prefix
+			contact = `mailto:${contact}?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString('de-DE')})`)}&body=${contactMessage}`;
 		}
 
 		return contact;
@@ -229,7 +238,7 @@
 					<i class="icon-[ph--arrow-square-out] size-5"></i>
 				</a>
 			{:else}
-				<PopOver contentClass="bg-base-100 p-5 max-w-sm z-30">
+				<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
 					{#snippet trigger()}
 						<button class="btn btn-primary"> Anmelden </button>
 					{/snippet}
@@ -246,9 +255,11 @@
 							<span class="word-wrap">
 								Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:
 							</span>
-							{#each event.contact as contact}
-								{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
-							{/each}
+							<div class="mt-3 flex flex-col gap-3">
+								{#each event.contact as contact}
+									{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
+								{/each}
+							</div>
 						{/if}
 					{/snippet}
 				</PopOver>
@@ -356,14 +367,15 @@
 			Anrufen
 		</button>
 	{:else if method === 'Email'}
-		<button
-			type="button"
-			onclick={() => openLink(url)}
-			class="link flex w-fit items-center gap-2 text-lg"
-		>
+		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
 			<i class="icon-[ph--envelope] size-6"></i>
-			{url?.replace('mailto:', '').split('?')[0]}
+			Email
 		</button>
+	{:else if method === 'Website'}
+		<a href={url} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+			<i class="icon-[ph--arrow-square-out] size-5"></i>
+			Website
+		</a>
 	{/if}
 {/snippet}
 
