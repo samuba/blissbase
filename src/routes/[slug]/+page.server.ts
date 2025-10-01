@@ -25,7 +25,8 @@ export const load = (async ({ params: { slug }, url }) => {
                 day: 'numeric'
             }) + " - " + event.description,
             imageUrl: event.imageUrls?.[0],
-            url
+            url,
+            sourceUrl: event.sourceUrl
         })
     };
 }) satisfies PageServerLoad;

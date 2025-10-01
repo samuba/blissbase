@@ -123,6 +123,12 @@
 	}
 </script>
 
+<svelte:head>
+	{#if event.sourceUrl}
+		<link rel="canonical" href={event.sourceUrl} />
+	{/if}
+</svelte:head>
+
 {#if event}
 	{#if imageUrl}
 		<ImageDialog
