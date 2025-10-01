@@ -8,6 +8,12 @@
 	const { event } = $derived(data);
 </script>
 
+<svelte:head>
+	{#if event.sourceUrl}
+		<link rel="canonical" href={event.sourceUrl} />
+	{/if}
+</svelte:head>
+
 <div class="container mx-auto max-w-3xl">
 	<div class="flex h-14 items-center pl-2">
 		<a href={routes.eventList()} class="btn btn-sm">
