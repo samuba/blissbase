@@ -183,13 +183,13 @@ export const trimAllWhitespaces = (text: string | undefined) => {
     return text?.replace(/\s+/g, ' ').trim();
 }
 
-export function getPageMetaTags({ name, description, imageUrl, url }: { name: string, description?: string | null, imageUrl?: string | null, url: URL }) {
+export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null }) {
     const descriptionTeaser = trimAllWhitespaces(stripHtml(description?.slice(0, 140) ?? '')) + "…"
     const title = `${name} | Blissbase`
     return {
         title,
         description: descriptionTeaser,
-        canonical: url.href,
+        canonical: sourceUrl || url.href, // prevent damage to event source SEO ranking due to duplicate content
         openGraph: {
             title,
             description: descriptionTeaser,
