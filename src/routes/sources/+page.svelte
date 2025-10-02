@@ -34,13 +34,13 @@
 					<h2 class="mb-1 text-lg font-bold">Websites</h2>
 					<div class="flex flex-col gap-1.5 text-lg underline">
 						<a href="https://sei.jetzt" target="_blank">sei.jetzt</a>
-						<a href="https://tribehaus.org" target="_blank">tribehaus.org</a>
+						<!-- <a href="https://tribehaus.org" target="_blank">tribehaus.org</a> -->
 						<a href="https://awara.events" target="_blank">awara.events</a>
 						<a href="https://heilnetz.de" target="_blank">heilnetz.de</a>
 						<a href="https://heilnetz-owl.de" target="_blank">heilnetz-owl.de</a>
-						<!-- <a href="https://www.ganzheitlich-gesund-brandenburg.de" target="_blank">
+						<a href="https://www.ganzheitlich-gesund-brandenburg.de" target="_blank">
 							ganzheitlich-gesund-brandenburg.de
-						</a> -->
+						</a>
 						<a href="https://kuschelraum.de" target="_blank">kuschelraum.de</a>
 						<a href="https://ciglobalcalendar.net" target="_blank">ciglobalcalendar.net</a>
 					</div>
