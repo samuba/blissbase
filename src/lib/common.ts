@@ -186,10 +186,12 @@ export const trimAllWhitespaces = (text: string | undefined) => {
 export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null }) {
     const descriptionTeaser = trimAllWhitespaces(stripHtml(description?.slice(0, 140) ?? '')) + "…"
     const title = `${name} | Blissbase`
+    const eventIsFromDifferentWebsite = (sourceUrl?.trim()?.length ?? 0) > 0
     return {
         title,
         description: descriptionTeaser,
-        canonical: sourceUrl || url.href, // prevent damage to event source SEO ranking due to duplicate content
+        canonical: eventIsFromDifferentWebsite ? sourceUrl! : url.href, // prevent damage to event source SEO ranking due to duplicate content
+        robots: eventIsFromDifferentWebsite ? "noindex, follow" : undefined,
         openGraph: {
             title,
             description: descriptionTeaser,
