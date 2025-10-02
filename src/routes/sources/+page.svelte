@@ -38,9 +38,9 @@
 						<a href="https://awara.events" target="_blank">awara.events</a>
 						<a href="https://heilnetz.de" target="_blank">heilnetz.de</a>
 						<a href="https://heilnetz-owl.de" target="_blank">heilnetz-owl.de</a>
-						<a href="https://www.ganzheitlich-gesund-brandenburg.de" target="_blank">
+						<!-- <a href="https://www.ganzheitlich-gesund-brandenburg.de" target="_blank">
 							ganzheitlich-gesund-brandenburg.de
-						</a>
+						</a> -->
 						<a href="https://kuschelraum.de" target="_blank">kuschelraum.de</a>
 						<a href="https://ciglobalcalendar.net" target="_blank">ciglobalcalendar.net</a>
 					</div>
