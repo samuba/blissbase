@@ -25,7 +25,7 @@
 	}}
 >
 	<article
-		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all hover:scale-105 hover:shadow-lg sm:flex-row {className}"
+		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all sm:flex-row {className}"
 	>
 		<div
 			class={[
