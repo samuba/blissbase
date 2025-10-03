@@ -329,6 +329,22 @@
 			</div>
 		{/if}
 
+		{#if event.source !== 'telegram'}
+			<div
+				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
+			>
+				Quelle:
+				<a
+					href={event.sourceUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="cursor-pointer underline"
+				>
+					{event.source.charAt(0).toUpperCase() + event.source.slice(1)}
+				</a>
+			</div>
+		{/if}
+
 		<!-- {#if event.descriptionOriginal}
 			<div class="flex w-full justify-center gap-6">
 				<button class="btn btn-sm" onclick={() => (showOriginal = !showOriginal)}
