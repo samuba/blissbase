@@ -1,8 +1,5 @@
 <script lang="ts">
 	import { routes } from '$lib/routes';
-	import type { PageData } from './$types';
-
-	let { data }: { data: PageData } = $props();
 </script>
 
 <div class=" flex items-center justify-center">
@@ -54,7 +51,7 @@
 						</a>
 						<a href="tg://resolve?domain=@youmeunity" target="_blank" class="link">YouMeUnity</a>
 						<a href="tg://c/2424846023" target="_blank" class="link">Kendralah-Experience</a>
-						und noch {data.scrapingTargets.length} weitere Gruppen und Kanäle.
+						und noch weitere Gruppen und Kanäle.
 
 						<!-- {#each data.scrapingTargets as target}
 							{@const roomUrl = target.roomId.startsWith('-100')
