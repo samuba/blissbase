@@ -74,6 +74,3 @@ console.log(`  Error: ${stats.error}`);
 console.log(`  Uploaded: ${stats.uploaded}`);
 console.log(`  Total processed: ${results.length}`)
 
-// const res = await cloudinary.deleteImages(["id"], cloudinary.loadCreds());
-// console.log(JSON.stringify(res, null, 2));
-

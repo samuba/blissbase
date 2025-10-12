@@ -1,7 +1,7 @@
 import { db, s } from '../src/lib/server/db';
 import { isNotNull, sql, and, inArray } from 'drizzle-orm';
 import 'dotenv/config';
-import * as cloudinary from '../src/lib/cloudinary';
+import * as assets from '../src/lib/assets';
 
 /**
  * Fetches all image URLs referenced in events from the database.
@@ -25,12 +25,12 @@ async function getReferencedImageUrls(): Promise<Set<string>> {
 /**
  * Identifies images that are not referenced in any event.
  */
-function findUnreferencedImages(cloudinaryImages: cloudinary.Image[], referencedUrls: Set<string>): cloudinary.Image[] {
+function findUnreferencedImages(images: assets.Image[], referencedUrls: Set<string>): assets.Image[] {
     console.log('Identifying unreferenced images...');
 
-    const unreferencedImages: cloudinary.Image[] = [];
+    const unreferencedImages: assets.Image[] = [];
 
-    for (const image of cloudinaryImages) {
+    for (const image of images) {
         // Check if this image's URL is referenced in any event
         const isReferenced = referencedUrls.has(image.secure_url);
 
@@ -46,7 +46,7 @@ function findUnreferencedImages(cloudinaryImages: cloudinary.Image[], referenced
 /**
  * Calculates total storage savings from deleted images.
  */
-function calculateStorageSavings(images: cloudinary.Image[]): { totalBytes: number; totalMB: number } {
+function calculateStorageSavings(images: assets.Image[]): { totalBytes: number; totalMB: number } {
     const totalBytes = images.reduce((sum, image) => sum + image.bytes, 0);
     const totalMB = Math.round(totalBytes / (1024 * 1024) * 100) / 100;
 
@@ -70,17 +70,17 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
             return;
         }
 
-        // Step 2: Get all images from Cloudinary
-        console.log('Step 2: Fetching all images from Cloudinary...');
-        const cloudinaryImages = await cloudinary.getAllImageData(cloudinary.loadCreds());
-        if (cloudinaryImages.length === 0) {
-            console.log('⚠️ No images found in Cloudinary. Nothing to clean up.');
+        // Step 2: Get all images from R2
+        console.log('Step 2: Fetching all images from assets...');
+        const allImages = await assets.getAllImageData(assets.loadCreds());
+        if (allImages.length === 0) {
+            console.log('⚠️ No images found in assets. Nothing to clean up.');
             return;
         }
 
         // Step 3: Find unreferenced images
         console.log('Step 3: Identifying unreferenced images...');
-        const unreferencedImages = findUnreferencedImages(cloudinaryImages, referencedUrls);
+        const unreferencedImages = findUnreferencedImages(allImages, referencedUrls);
         if (unreferencedImages.length === 0) {
             console.log('🎉 No unused images found! All images are referenced in events.');
             return;
@@ -89,8 +89,8 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         // Step 4: Show summary
         const { totalMB } = calculateStorageSavings(unreferencedImages);
         console.log(`\n📊 Summary:`);
-        console.log(`   Total images in Cloudinary: ${cloudinaryImages.length}`);
-        console.log(`   Referenced images: ${cloudinaryImages.length - unreferencedImages.length}`);
+        console.log(`   Total images in R2: ${allImages.length}`);
+        console.log(`   Referenced images: ${allImages.length - unreferencedImages.length}`);
         console.log(`   Unreferenced images: ${unreferencedImages.length}`);
         console.log(`   Potential storage savings: ${totalMB} MB`);
         console.log('');
@@ -111,7 +111,7 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         }
 
         // Safety check: Don't delete if there are too many unreferenced images
-        const maxDeletions = Math.floor(cloudinaryImages.length * 0.4);
+        const maxDeletions = Math.floor(allImages.length * 0.4);
         if (unreferencedImages.length > maxDeletions) {
             console.error(`❌ Safety check failed: Too many unreferenced images (${unreferencedImages.length}). Maximum allowed: ${maxDeletions}`);
             console.error('This might indicate a problem with the reference detection. Please investigate manually.');
@@ -119,14 +119,14 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
         }
 
         // Step 6: Delete unreferenced images in batches
-        console.log('Step 6: Deleting unreferenced images in Cloudinary...');
+        console.log('Step 6: Deleting unreferenced images in assets...');
         const publicIds = unreferencedImages.map(image => image.public_id).filter(id => id && id.trim());
         if (publicIds.length === 0) {
             console.log('⚠️ No valid public IDs found for deletion.');
             return;
         }
         console.log(`Deleting ${publicIds.length} images...`);
-        await cloudinary.deleteImages(publicIds, cloudinary.loadCreds(), 'fetch');
+        await assets.deleteImages(publicIds, assets.loadCreds());
 
         // Step 7: Delete unreferenced images from the database
         console.log('Step 7: Deleting unreferenced images from the db cache...');
