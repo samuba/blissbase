@@ -82,7 +82,7 @@ export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
 
 export type TelegramScrapingTarget = typeof telegramScrapingTargets.$inferSelect;
 
-// All images are cached in cloudinary. For website-scraped-images we remember the original url so that we dont need to process the image again.
+// All images are cached in R2. For website-scraped-images we remember the original url so that we dont need to process the image again.
 export const imageCacheMap = pgTable('image_cache_map', {
     originalUrl: text().notNull(),
     eventSlug: text().notNull(),

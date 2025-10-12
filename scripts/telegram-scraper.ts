@@ -10,10 +10,10 @@ import { geocodeAddressCached } from "../src/lib/server/google";
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
 import type { MsgAnalysisAnswer } from "../blissbase-telegram-entry/src/ai";
-import { calculatePhash, resizeCoverImage } from '../src/lib/imageProcessing';
+import { resizeCoverImage } from '../src/lib/imageProcessing';
 import { insertEvents } from "../src/lib/server/events";
 import type { Entity } from "telegram/define";
-import * as cloudinary from "../src/lib/cloudinary";
+import * as assets from "../src/lib/assets";
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
@@ -391,9 +391,7 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
             // thumb: photo?.sizes[photo.sizes.length - 1], // use second biggest photo
         });
 
-        const resizedBuffer = await resizeCoverImage(imageBuffer!)
-        const hash = await calculatePhash(resizedBuffer)
-
+        const { buffer: resizedBuffer, phash: hash } = await resizeCoverImage(imageBuffer!)
         const alreadyCachedImage = await db.query.imageCacheMap.findFirst({
             where: and(
                 eq(s.imageCacheMap.originalUrl, `tg:${hash}:${slug}`),
@@ -405,15 +403,15 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
             return alreadyCachedImage.url;
         }
 
-        console.log("Uploading resized file to Cloudinary:", `${slug}/${hash}`);
-        const result = await cloudinary.uploadImage(resizedBuffer, slug, hash, cloudinary.loadCreds());
+        console.log("Uploading resized file to R2:", `${slug}/${hash}`);
+        const imgUrl = await assets.uploadImage(resizedBuffer, slug, hash, assets.loadCreds());
         await db.insert(s.imageCacheMap).values({
             originalUrl: `tg:${hash}:${slug}`,
             eventSlug: slug,
-            url: result.secure_url
+            url: imgUrl
         });
-        console.log("Successfully uploaded photo to cloudinary:", result.secure_url);
-        return result.secure_url;
+        console.log("Successfully uploaded photo to R2:", imgUrl);
+        return imgUrl;
     } catch (error) {
         console.error("Error extracting photo from message", message.id, ":", error);
         if (error.message.includes("FILE_REFERENCE_EXPIRED")) {
@@ -425,7 +423,7 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
             console.error("Error details:", {
                 message: error.message,
                 name: error.name,
-                // @ts-expect-error - cloudinary error might have http_code
+                // @ts-expect-error -  error might have http_code
                 http_code: error.http_code
             });
         }
@@ -443,8 +441,8 @@ async function getResizedImageBufferFromMessage(message: Api.Message, client: Te
     try {
         const imageBuffer = await client.downloadMedia(message, {});
         if (!imageBuffer) return undefined;
-        const resizedBuffer = await resizeCoverImage(imageBuffer);
-        return resizedBuffer;
+        const resize = await resizeCoverImage(imageBuffer);
+        return resize.buffer;
     } catch (error) {
         console.error("Error downloading media from message", message.id, ":", error);
         if (error.message.includes("FILE_REFERENCE_EXPIRED")) {
@@ -454,13 +452,13 @@ async function getResizedImageBufferFromMessage(message: Api.Message, client: Te
     }
 }
 
-// Returns a data URL for AI analysis without uploading to Cloudinary
+// Returns a data URL for AI analysis without uploading to R2
 async function getImageDataUrlFromMessage(message: Api.Message, client: TelegramClient): Promise<string | undefined> {
     try {
         const resized = await getResizedImageBufferFromMessage(message, client);
         if (!resized) return undefined;
         const base64 = Buffer.from(resized).toString('base64');
-        return `data:image/jpeg;base64,${base64}`;
+        return `data:image/webp;base64,${base64}`;
     } catch (err) {
         console.error("Failed to create data URL from message", message.id, err);
         if (err instanceof Error && err.message.includes("FATAL->EXIT")) {

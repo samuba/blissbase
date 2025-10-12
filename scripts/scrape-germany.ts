@@ -19,14 +19,13 @@ import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import { db, s } from "../src/lib/server/db.ts";
 import { insertEvents } from '../src/lib/server/events.ts';
 import { generateSlug } from '../src/lib/common.ts';
-import { and, gte, inArray, notInArray } from 'drizzle-orm';
+import { and, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
 import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES } from './common.ts';
-import * as cloudinary from '../src/lib/cloudinary.ts';
-import { calculatePhash, resizeCoverImage } from '../src/lib/imageProcessing.ts';
-
+import * as assets from '../src/lib/assets.ts';
+import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 
 /**
  * Dynamically scrapes a single source using its corresponding scraper
@@ -253,13 +252,12 @@ async function main() {
                 }
                 console.log(` -> Image ${url} not found in image cache map`);
                 const bytes = await customFetch(url, { returnType: 'bytes' })
-                const imgBuffer = await resizeCoverImage(bytes)
-                const phash = await calculatePhash(imgBuffer);
-                const uploadedImage = await cloudinary.uploadImage(imgBuffer, event.slug, phash, cloudinary.loadCreds());
-                cachedEventImageUrls.push(uploadedImage.secure_url);
-                newlyCachedImages.push({ originalUrl: url, eventSlug: event.slug, url: uploadedImage.secure_url });
+                const { buffer, phash } = await resizeCoverImage(bytes)
+                const imageUrl = await assets.uploadImage(buffer, event.slug, phash, assets.loadCreds());
+                cachedEventImageUrls.push(imageUrl);
+                newlyCachedImages.push({ originalUrl: url, eventSlug: event.slug, url: imageUrl });
                 // warm up the image url
-                await customFetch(uploadedImage.secure_url, { returnType: 'bytes' });
+                await customFetch(imageUrl, { returnType: 'bytes' });
                 processedImageCount++;
             }
             event.imageUrls = cachedEventImageUrls;

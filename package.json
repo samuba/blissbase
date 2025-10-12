@@ -48,7 +48,6 @@
 		"bits-ui": "^1.8.0",
 		"calendar-link": "^2.10.0",
 		"cheerio": "^1.0.0",
-		"cloudinary": "^2.7.0",
 		"daisyui": "^5.0.50",
 		"dotenv": "^16.5.0",
 		"drizzle-kit": "^0.31.4",
@@ -79,6 +78,7 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@bradenmacdonald/s3-lite-client": "npm:@jsr/bradenmacdonald__s3-lite-client@^0.9.3",
 		"@editorjs/editorjs": "^2.30.8",
 		"@editorjs/header": "^2.8.8",
 		"@editorjs/list": "^2.0.8",

@@ -1,4 +1,4 @@
-import { CLOUDINARY_API_KEY, CLOUDINARY_CLOUD_NAME, GOOGLE_MAPS_API_KEY, CLOUDINARY_API_SECRET } from '$env/static/private';
+import { GOOGLE_MAPS_API_KEY, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
 import { generateSlug, parseTelegramContacts } from '$lib/common';
@@ -8,15 +8,11 @@ import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import type { TelegramCloudflareBody } from '$lib/telegramCommon';
 import { routes } from '$lib/routes';
-import { calculatePhash, resizeCoverImage } from '$lib/imageProcessing';
+import { resizeCoverImage } from '$lib/imageProcessing';
 import { randomString } from '$lib/common';
-import { uploadImage } from '$lib/cloudinary';
+import { loadCreds, uploadImage } from '$lib/assets';
 
-const cloudinaryCreds = {
-    apiKey: CLOUDINARY_API_KEY,
-    apiSecret: CLOUDINARY_API_SECRET,
-    cloudName: CLOUDINARY_CLOUD_NAME
-}
+const assetsCreds = loadCreds({ S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID })
 
 export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image, fromGroup }: TelegramCloudflareBody) {
     if (!msgTextHtml.trim()) return
@@ -87,10 +83,8 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                 if (!res.ok) {
                     throw new Error("could not download image " + imageUrl + " " + res.statusText + " " + await res.text())
                 }
-                const resizedBuffer = await resizeCoverImage(await res.bytes())
-                const hash = await calculatePhash(resizedBuffer)
-                const uploadedImage = await uploadImage(resizedBuffer, slug, hash, cloudinaryCreds)
-                imageUrl = uploadedImage.secure_url
+                const { buffer: resizedBuffer, phash: hash } = await resizeCoverImage(await res.bytes())
+                imageUrl = await uploadImage(resizedBuffer, slug, hash, assetsCreds)
                 console.log(`image processing took: ${performance.now() - startTime}ms`);
             } catch (error) {
                 console.error("error processing image", error)

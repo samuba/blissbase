@@ -2,7 +2,7 @@ import sharp from "sharp"; // blows bundle size by 15MB!!!!
 import phash from "sharp-phash";
 import distance from "sharp-phash/distance";
 
-export async function resizeCoverImage(input: sharp.SharpInput | Array<sharp.SharpInput>): Promise<Buffer> {
+export async function resizeCoverImage(input: sharp.SharpInput | Array<sharp.SharpInput>): Promise<{ buffer: Buffer, phash: string }> {
     if (!input) throw new Error('Input cannot be null or undefined');
 
     try {
@@ -11,14 +11,14 @@ export async function resizeCoverImage(input: sharp.SharpInput | Array<sharp.Sha
                 fit: 'inside',
                 withoutEnlargement: true
             })
-            .jpeg({ quality: 95 })
+            .webp({ quality: 95 })
             .toBuffer();
 
         if (!result || result.length === 0) {
             throw new Error('Resize operation returned empty buffer');
         }
 
-        return result;
+        return { buffer: result, phash: await calculatePhash(result) };
     } catch (error) {
         console.error('Error resizing image:', error);
         throw new Error(`Failed to resize image: ${error instanceof Error ? error.message : 'Unknown error'}`);
