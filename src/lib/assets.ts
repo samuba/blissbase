@@ -26,7 +26,7 @@ export interface Image {
     format: string;
 }
 
-function eventImageObjectKey(eventSlug: string, phash: string) {
+export function eventImageObjectKey(eventSlug: string, phash: string) {
     return `events/${eventSlug}/${phash}.webp`;
 }
 
@@ -35,11 +35,11 @@ function publicUrl(objectKey: string) {
 }
 
 /**
- * Uploads an image to S3Mini storage.
+ * Uploads an image to R2 storage.
  * @param buffer - The image buffer to upload
  * @param eventSlug - The event slug for organizing images
  * @param phash - The perceptual hash for the image
- * @param creds - S3Mini credentials
+ * @param creds - R2 credentials
  * @returns Promise with the upload result containing secure_url
  */
 export async function uploadImage(buffer: Buffer, eventSlug: string, phash: string, creds: S3Creds) {
@@ -50,8 +50,8 @@ export async function uploadImage(buffer: Buffer, eventSlug: string, phash: stri
     const key = eventImageObjectKey(eventSlug, phash);
     try {
         const s3 = new S3Client(creds);
-        const res = await s3.putObject(key, buffer, { metadata: { 'Content-Type': 'image/webp' } });
-        console.log(`Uploaded image ${key} to R2:`, res);
+        await s3.putObject(key, buffer, { metadata: { 'Content-Type': 'image/webp' } });
+        console.log(`Uploaded to R2 ${key}`);
 
         return publicUrl(key);
     } catch (error) {
@@ -61,9 +61,9 @@ export async function uploadImage(buffer: Buffer, eventSlug: string, phash: stri
 }
 
 /**
- * Deletes multiple images from S3Mini storage.
+ * Deletes multiple images from R2 storage.
  * @param objectKeys - Array of image keys to delete
- * @param creds - S3Mini credentials
+ * @param creds - R2 credentials
  * @returns Promise with deletion results
  */
 export async function deleteImages(objectKeys: string[], creds: S3Creds) {
@@ -84,12 +84,12 @@ export async function deleteImages(objectKeys: string[], creds: S3Creds) {
 }
 
 /**
- * Lists all images from S3Mini storage.
- * @param creds - S3Mini credentials
+ * Lists all images from R2 storage.
+ * @param creds - R2 credentials
  * @returns Promise with array of all image metadata
  */
 export async function getAllImageData(creds: S3Creds): Promise<Image[]> {
-    console.log(`Fetching meta data for all images in S3Mini...`);
+    console.log(`Fetching meta data for all images in R2...`);
 
     try {
         const s3 = new S3Client(creds);
@@ -110,7 +110,17 @@ export async function getAllImageData(creds: S3Creds): Promise<Image[]> {
 
         return results;
     } catch (error) {
-        console.error(`Error fetching S3Mini images:`, error);
+        console.error(`Error fetching R2 images:`, error);
         throw error;
     }
+}
+
+/**
+ * Checks if an object exists in R2 storage.
+ * @param objectKey - The object key to check
+ * @param creds - R2 credentials
+ * @returns Promise with boolean indicating if the object exists
+ */
+export function exists(objectKey: string, creds: S3Creds) {
+    return new S3Client(creds).exists(objectKey);
 }

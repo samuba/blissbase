@@ -8,11 +8,12 @@
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
 	let imageLoadError = $state(false);
-	const imageUrl = $derived(
-		imageLoadError
-			? (event.imageUrls?.[0]?.split('https:')?.[2] ?? '')
-			: (event.imageUrls?.[0] ?? '')
-	);
+	const imageUrl = $derived.by(() => {
+		if ((event.imageUrls?.length ?? 0) === 0) return undefined;
+		const [file, slug, ..._] = event.imageUrls?.[0]?.split('/')?.reverse() ?? [];
+		const phash = file?.split('.')?.[0] ?? '';
+		return `https://assets.blissbase.app/events/${slug}/${phash}.webp`;
+	});
 </script>
 
 <a
