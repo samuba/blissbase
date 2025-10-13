@@ -135,7 +135,7 @@ export function formatAddress(address: string[]): string {
     return formattedAddress.join(' · ');
 }
 
-const slugify = (str: string) =>
+export const slugify = (str: string) =>
     str
         .toString()
         .toLowerCase()

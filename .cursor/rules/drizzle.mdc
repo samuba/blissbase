@@ -3,4 +3,5 @@ description:
 globs: **/*.ts
 alwaysApply: false
 ---
-When changing a drizzle schema always use "push" with drizzle kit instead of migrations.
+Always assume drizzle kit is used using the "push" command by hand instead if sql migrations.
+Never run "push" command yourself.

@@ -10,8 +10,6 @@ make it sexy like lumaya
 
 Spendenaufruf
 
-og:image => event image benutzen
-
 suche nach kategorien / kategorien entdecken
 
 SEO Seiten
@@ -44,9 +42,6 @@ Feedback joy
 tags für alle events
 
 heilnetz extras aus liste sind teilweise sehr wichtig
-
-Events bearbeiten/löschen über telegram
-  nur original Author kann das
 
 SEO
   ld+json anbieten

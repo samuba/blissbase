@@ -1,12 +1,12 @@
 export const workshops: TagTranslation[] = [
     { en: "Tantra", de: "Tantra", nl: "Tantra" },
     { en: "Family Constellations", de: "Familienaufstellung", nl: "Familieopstellingen" },
-    { en: "Men's Workshops", de: "Männer-Workshops", nl: "Mannen Workshops" },
-    { en: "Women's Workshops", de: "Frauen-Workshops", nl: "Vrouwen workshops" },
-    { en: "Cuddle Workshops", de: "Kuschel-Workshops", nl: "Knuffelworkshops" },
+    { en: "Men's Workshop", de: "Männer-Workshop", nl: "Mannen Workshop" },
+    { en: "Women's Workshop", de: "Frauen-Workshop", nl: "Vrouwen workshop" },
+    { en: "Cuddle Workshop", de: "Kuschel-Workshop", nl: "Knuffelworkshop" },
     { en: "Bodywork", de: "Körperarbeit", nl: "Lichaamswerk" },
-    { en: "Men's Circles", de: "Männerkreise", nl: "Mannencirkels" },
-    { en: "Women's Circles", de: "Frauenkreise", nl: "Vrouwencirkels" },
+    { en: "Men's Circle", de: "Männerkreis", nl: "Mannencirkel" },
+    { en: "Women's Circle", de: "Frauenkreis", nl: "Vrouwencirkel" },
     { en: "Healing", de: "Heilung", nl: "Healing" },
     { en: "Sound Healing", de: "Klangheilung", nl: "Soundhealing" },
     { en: "Breath", de: "Atem", nl: "Adem" },
@@ -19,7 +19,7 @@ export const workshops: TagTranslation[] = [
     { en: "Kundalini", de: "Kundalini", nl: "Kundalini" },
     { en: "Lightwork", de: "Lichtarbeit", nl: "Lichtwerk" },
     { en: "Energy Work", de: "Energiearbeit", nl: "Energiewerk" },
-    { en: "Relationships", de: "Beziehungen", nl: "Relaties" },
+    { en: "Relationship", de: "Beziehung", nl: "Relatie" },
     { en: "Entrepreneurship", de: "Unternehmertum", nl: "Ondernemen" },
     { en: "Personal Leadership", de: "Persönliche Führung", nl: "Persoonlijk Leiderschap" },
     { en: "The Inner Voice", de: "Die Stimme von innen", nl: "De stem van binnenuit" },
@@ -62,7 +62,7 @@ export const workshops: TagTranslation[] = [
     { en: "Personal Development", de: "Persönliche Entwicklung", nl: "Persoonlijke Ontwikkeling" },
     { en: "Shadow Work", de: "Schattenarbeit", nl: "Schaduwwerk" },
     { en: "Kundalini Activation", de: "Kundalini-Aktivierung", nl: "Kundalini activatie" },
-    { en: "Chakras", de: "Chakren", nl: "Chakra's" },
+    { en: "Chakra", de: "Chakra", nl: "Chakra" },
     { en: "Love", de: "Liebe", nl: "Liefde" },
     { en: "Heart Connection", de: "Herzverbindung", nl: "Hartsverbinding" },
     { en: "Astrology", de: "Astrologie", nl: "Astrologie" },
@@ -139,7 +139,7 @@ export const workshops: TagTranslation[] = [
     { en: "Self-Expression", de: "Selbstausdruck", nl: "Zelfexpressie" },
     { en: "Sexuality", de: "Sexualität", nl: "Seksualiteit" },
     { en: "Intuition", de: "Intuition", nl: "Intuïtie" },
-    { en: "Card Readings", de: "Kartenlegungen", nl: "Kaartleggingen" },
+    { en: "Card Reading", de: "Kartenlegung", nl: "Kaartlegging" },
     { en: "Vanishing Twin", de: "Alleingeborener Zwilling", nl: "Alleen Geboren Tweeling" },
     { en: "Primal Movement", de: "Primal Movement", nl: "Primal Movement" },
     { en: "Jewelry Making", de: "Schmuck herstellen", nl: "Sieraden Maken" },
@@ -200,7 +200,7 @@ export const workshops: TagTranslation[] = [
 export const ceremonies: TagTranslation[] = [
     { en: "Sweat Lodge", de: "Schwitzhütte", nl: "Zweethut" },
     { en: "Cacao Ceremony", de: "Kakaozeremonie", nl: "Cacao ceremonie" },
-    { en: "Initiations", de: "Einweihungen", nl: "Inwijdingen" },
+    { en: "Initiation", de: "Einweihung", nl: "Inwijding" },
     { en: "New Year's Eve", de: "Silvester", nl: "Oud & Nieuw" },
     { en: "Plant Medicine", de: "Pflanzenmedizin", nl: "Plantmedicijn" },
     { en: "Ritual", de: "Ritual", nl: "Ritueel" },
@@ -224,9 +224,9 @@ export const ceremonies: TagTranslation[] = [
     { en: "Firewalk", de: "Feuerlauf", nl: "Vuurloop" },
     { en: "Trance Journey", de: "Trancereise", nl: "Trancereis" },
     { en: "Blue Lotus", de: "Blaue Lotus", nl: "Blauwe Lotus" },
-    { en: "Rites of Passage", de: "Riten des Übergangs", nl: "Rites of Passage" },
+    { en: "Rite of Passage", de: "Übergangsritual", nl: "Rite of Passage" },
     { en: "Soul Retrieval", de: "Seelenrückholung", nl: "Soul Retrieval" },
-    { en: "Celtic Year Festivals", de: "Keltische Jahresfeste", nl: "Keltische Jaarfeesten" },
+    { en: "Celtic Year Festival", de: "Keltisches Jahresfest", nl: "Keltisch Jaarfeest" },
     { en: "Womb Healing", de: "Womb Healing", nl: "Womb Healing" },
     { en: "Despacho Ceremony", de: "Despacho-Zeremonie", nl: "Despacho Ceremonie" }
 ];
@@ -249,7 +249,6 @@ export const dance: TagTranslation[] = [
     { en: "Conscious Dance", de: "Conscious Dance", nl: "Conscious Dance" },
     { en: "Dance Improvisation", de: "Tanzimprovisation", nl: "Dansimprovisatie" },
     { en: "Balfolk", de: "Balfolk", nl: "Balfolk" },
-    { en: "Systemic Dance", de: "Systemischer Tanz", nl: "Systemic Dance" },
     { en: "Haka", de: "Haka", nl: "Haka" },
     { en: "Latin Dance", de: "Latin Dance", nl: "Latin Dance" },
     { en: "Zouk", de: "Zouk", nl: "Zouk" },
@@ -297,10 +296,10 @@ export const music: TagTranslation[] = [
 ];
 
 export const festivalsAndRetreats: TagTranslation[] = [
-    { en: "Gatherings", de: "Zusammenkünfte", nl: "Gatherings" },
-    { en: "Festivals", de: "Festivals", nl: "Festivals" },
+    { en: "Gathering", de: "Zusammenkunft", nl: "Gathering" },
+    { en: "Festival", de: "Festival", nl: "Festival" },
     { en: "Retreat", de: "Retreat", nl: "Retreat" },
-    { en: "Multi-day Retreats", de: "Mehrtägige Retreats", nl: "Meerdaagse retraites" },
+    { en: "Multi-day Retreat", de: "Mehrtägiges Retreat", nl: "Meerdaagse retraite" },
     { en: "Silent Retreat", de: "Schweigeretreat", nl: "Stilteretraite" },
     { en: "1-Day Retreat", de: "1-Tages-Retreat", nl: "1-Dags retraite" },
     { en: "Divine Living", de: "Divine Living", nl: "Divine Living" },
@@ -321,7 +320,7 @@ export const lecturesAndPerformances: TagTranslation[] = [
     { en: "Cabaret", de: "Kabarett", nl: "Cabaret" },
     { en: "Show", de: "Vorstellung", nl: "Voorstelling" },
     { en: "Presentation", de: "Präsentation", nl: "Presentatie" },
-    { en: "Experiential Lectures", de: "Erlebnisvorträge", nl: "Belevingslezingen" },
+    { en: "Experiential Lecture", de: "Erlebnisvortrag", nl: "Belevingslezing" },
     { en: "Conference", de: "Kongress", nl: "Congres" }
 ];
 

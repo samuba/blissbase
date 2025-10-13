@@ -9,7 +9,7 @@ export default defineConfig({
 	dialect: "postgresql",
 	extensionsFilters: ['postgis'],
 	dbCredentials: {
-		url: process.env.DATABASE_URL2!,
+		url: process.env.DATABASE_URL_NON_POOLING!,
 	},
 	casing: "snake_case"
 });
