@@ -1,4 +1,4 @@
-import { sql, type SQL } from 'drizzle-orm';
+import { sql, type SQL, relations } from 'drizzle-orm';
 import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, bigint, primaryKey } from 'drizzle-orm/pg-core';
 
 export const events = pgTable('events', {
@@ -30,6 +30,9 @@ export const events = pgTable('events', {
     hostSecret: text(),
 });
 
+export const eventsRelations = relations(events, ({ many }) => ({
+    eventTags: many(eventTags),
+}));
 
 export const botMessages = pgTable('message_to_bot', {
     id: uuid().primaryKey().defaultRandom(),
@@ -91,6 +94,59 @@ export const imageCacheMap = pgTable('image_cache_map', {
 }, (t) => [
     primaryKey({ columns: [t.originalUrl, t.eventSlug] })
 ]);
+
+export const tags = pgTable('tags', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    slug: text().notNull().unique(),
+    createdAt: timestamp().notNull().defaultNow(),
+});
+
+export type Tag = typeof tags.$inferSelect;
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+    translations: many(tagTranslations),
+    eventTags: many(eventTags),
+}));
+
+export const tagTranslations = pgTable('tag_translations', {
+    tagId: integer().notNull().references(() => tags.id, { onDelete: 'cascade' }),
+    locale: text().notNull(), // e.g. 'en', 'de', 'id'
+    name: text().notNull(),   // e.g. "Yoga", "Meditation", "Meditasi"
+}, (t) => [
+    uniqueIndex().on(t.tagId, t.locale)
+]);
+
+export type TagTranslation = typeof tagTranslations.$inferSelect;
+
+export const tagTranslationsRelations = relations(tagTranslations, ({ one }) => ({
+    tag: one(tags, {
+        fields: [tagTranslations.tagId],
+        references: [tags.id],
+    }),
+}));
+
+export const eventTags = pgTable('event_tags', {
+    eventId: integer().notNull().references(() => events.id, { onDelete: 'cascade' }),
+    tagId: integer().notNull().references(() => tags.id, { onDelete: 'cascade' }),
+    createdAt: timestamp().notNull().defaultNow(),
+}, (t) => [
+    primaryKey({ columns: [t.eventId, t.tagId] })
+]);
+
+export type EventTag = typeof eventTags.$inferSelect;
+
+export const eventTagsRelations = relations(eventTags, ({ one }) => ({
+    event: one(events, {
+        fields: [eventTags.eventId],
+        references: [events.id],
+    }),
+    tag: one(tags, {
+        fields: [eventTags.tagId],
+        references: [tags.id],
+    }),
+}));
+
+
 
 
 /*** Cronjobs ***/

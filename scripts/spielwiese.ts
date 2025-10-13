@@ -1,30 +1,51 @@
 import 'dotenv/config';
 import { db, s } from '../src/lib/server/db';
 import { eq } from 'drizzle-orm';
+import { allTags } from '../src/lib/tags';
+import { slugify } from '../src/lib/common';
 
-const events = await db.select().from(s.events);
+
+await db.delete(s.tags);
+await db.delete(s.tagTranslations);
+
+console.log("Inserting tags...");
+
 const BATCH_SIZE = 20;
 
-console.log(`Processing ${events.length} events in batches of ${BATCH_SIZE}`);
+for (let i = 0; i < allTags.length; i += BATCH_SIZE) {
+    const batch = allTags.slice(i, i + BATCH_SIZE);
 
-for (let i = 0; i < events.length; i += BATCH_SIZE) {
-    const batch = events.slice(i, i + BATCH_SIZE);
-    console.log(`\nProcessing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(events.length / BATCH_SIZE)} (events ${i + 1}-${Math.min(i + BATCH_SIZE, events.length)})`);
+    // Insert tags in parallel, collect their slugs and original tag info
+    const tagInsertPromises = batch.map(tag =>
+        db.insert(s.tags)
+            .values({ slug: slugify(tag.en) })
+            .returning()
+            .onConflictDoNothing()
+            .then(res => ({ res, tag }))
+    );
+    const insertedTags = await Promise.all(tagInsertPromises);
 
-    const updates = batch.map(event => {
-        const newImageUrls = event.imageUrls?.map(url => {
-            const [file, slug] = url?.split('/')?.reverse() ?? [];
-            const phash = file?.split('.')?.[0] ?? '';
-            return `https://assets.blissbase.app/events/${slug}/${phash}.webp`;
-        }) ?? [];
-        console.log(`  id ${event.id}`, newImageUrls);
-        return db.update(s.events).set({ imageUrls: newImageUrls }).where(eq(s.events.id, event.id));
-    });
+    // Prepare tag translations for all inserted tags that returned an id
+    const translationsToInsert = [] as any[];
+    for (const { res, tag } of insertedTags) {
+        // If no rows returned due to onConflictDoNothing, skip this tag
+        if (!res[0] || !res[0].id) continue;
+        const id = res[0].id;
+        translationsToInsert.push(
+            { tagId: id, locale: 'en', name: tag.en },
+            { tagId: id, locale: 'de', name: tag.de },
+            { tagId: id, locale: 'nl', name: tag.nl }
+        );
+    }
 
-    await Promise.all(updates);
-    console.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1} completed`);
+    // Insert all translations for this batch in a single query if any need inserting
+    if (translationsToInsert.length > 0) {
+        await db.insert(s.tagTranslations).values(translationsToInsert);
+    }
+
+    process.stdout.write(".");
 }
 
-console.log(`\nDone! Processed ${events.length} events`);
+console.log("\nDone inserting tags.");
 
 process.exit(0);
