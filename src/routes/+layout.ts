@@ -18,10 +18,15 @@ export const load = ({ url, data }) => {
     const title = 'Blissbase'
     const description = 'Hippie Events in deiner Nähe.'
     const faviconUrl = 'https://www.blissbase.app/favicon.png'
+    const posterUrl = 'https://www.blissbase.app/og-poster.png'
     const baseMetaTags = Object.freeze({
         title,
         description,
         canonical: baseUrl,
+        twitter: {
+            card: 'summary_large_image',
+            image: posterUrl
+        },
         openGraph: {
             type: 'website',
             url: baseUrl,
@@ -31,11 +36,11 @@ export const load = ({ url, data }) => {
             siteName: title,
             images: [
                 {
-                    url: faviconUrl,
+                    url: posterUrl,
                     alt: `${title} Logo`,
-                    width: 192,
-                    height: 192,
-                    secureUrl: faviconUrl,
+                    width: 337,
+                    height: 450,
+                    secureUrl: posterUrl,
                     type: 'image/png'
                 }
             ]
