@@ -33,7 +33,6 @@ export const load = ({ url, data }) => {
             images: [
                 {
                     url: posterUrl,
-                    alt: `${title} Logo`,
                     width: 337,
                     height: 450,
                     secureUrl: posterUrl,
