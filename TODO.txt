@@ -1,12 +1,8 @@
-email an heilnetz-owl, vorstellung und 
-
 quelle deutlich anzeigen
 
 impressum????
 
 anmelde button zeigt leer an für https://www.blissbase.app/2025-09-28-mantra-yoga-die-goettliche-shakti
-
-alle webseiten betreiber anquatschen und scraping klären
 
 make it sexy like lumaya
 
@@ -19,7 +15,6 @@ og:image => event image benutzen
 suche nach kategorien / kategorien entdecken
 
 SEO Seiten
-
 
 suche nach deutsch tags funktioniert nicht -> tag tabelle mit übersetzungen?
 

@@ -23,10 +23,6 @@ export const load = ({ url, data }) => {
         title,
         description,
         canonical: baseUrl,
-        twitter: {
-            card: 'summary_large_image',
-            image: posterUrl
-        },
         openGraph: {
             type: 'website',
             url: baseUrl,
