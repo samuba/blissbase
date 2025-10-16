@@ -13,7 +13,7 @@
 	let filterQuery = $state(eventsStore.searchFilter || '');
 	let selectedTags = $state<Tag[]>([]);
 
-	// Sync selected tags with store
+	// Sync selected tags with store 
 	$effect(() => {
 		if (eventsStore.pagination.tagIds?.length) {
 			const storeTags = allTags.filter((t) => eventsStore.pagination.tagIds?.includes(t.id));
