@@ -117,11 +117,10 @@
 		</div>
 	</div>
 {:else if eventsStore.searchFilter || eventsStore.showTextSearch}
-	<div class="lex-wrap flex items-center gap-2">
-		<label class="input w-full">
+		<label class="input w-full flex-grow">
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
 			<input
-				id="tag-selection-text-search-input"
+				id="tag-selection-text-search-input w-full sm:w-fit"
 				bind:value={filterQuery}
 				oninput={(e) => {
 					runTextSearch(e.currentTarget.value);
@@ -154,7 +153,6 @@
 		>
 			<i class="icon-[ph--x] size-5"></i>
 		</button>
-	</div>
 {:else}
 	<!-- Show tags with fade effect and overlay dropdown -->
 	<div class="relative flex w-full max-w-full min-w-0 items-center overflow-hidden">
