@@ -50,7 +50,7 @@
 				<EventDetails
 					{event}
 					onShowEventForTag={(tag) => {
-						eventsStore.handleTagClick(tag);
+						eventsStore.handleSearchTermChange(tag);
 						window.history.back();
 					}}
 				/>

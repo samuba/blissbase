@@ -35,7 +35,7 @@
 <Select.Root bind:value={value as never} {...restProps}>
 	<Select.Trigger {...triggerProps}>
 		<i class={[selectedIcon, 'size-5']}></i>
-		<span class={['hidden', !hideTriggerText && 'sm:inline-block']}>
+		<span class={[hideTriggerText && 'hidden', !hideTriggerText && 'sm:inline-block']}>
 			{selectedLabel ? selectedLabel : placeholder}
 		</span>
 	</Select.Trigger>

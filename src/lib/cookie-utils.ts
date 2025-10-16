@@ -19,6 +19,7 @@ export type FilterCookieData = {
     searchTerm?: string | null;
     sortBy?: string | null;
     sortOrder?: string | null;
+    tagIds?: number[] | null;
 };
 
 /**
@@ -44,6 +45,11 @@ function validateFilterData(data: unknown): FilterCookieData | null {
         return null;
     }
 
+    // Validate tagIds array
+    const tagIds = Array.isArray(filterData.tagIds)
+        ? filterData.tagIds.filter((id): id is number => typeof id === 'number' && !isNaN(id))
+        : null;
+
     return {
         startDate: typeof filterData.startDate === 'string' ? filterData.startDate : null,
         endDate: typeof filterData.endDate === 'string' ? filterData.endDate : null,
@@ -53,7 +59,8 @@ function validateFilterData(data: unknown): FilterCookieData | null {
         lng,
         searchTerm: typeof filterData.searchTerm === 'string' ? filterData.searchTerm : null,
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
-        sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null
+        sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
+        tagIds: tagIds?.length ? tagIds : null
     };
 }
 

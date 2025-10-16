@@ -2,9 +2,9 @@ import type { MetaTagsProps } from "svelte-meta-tags";
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
-export function debounce(func: (...args: unknown[]) => void, wait: number) {
+export function debounce<T>(func: (...args: T[]) => void, wait: number) {
     let timeout: NodeJS.Timeout;
-    return function executedFunction(...args: unknown[]) {
+    return function executedFunction(...args: T[]) {
         const later = () => {
             clearTimeout(timeout);
             func(...args);

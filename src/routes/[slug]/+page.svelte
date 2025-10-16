@@ -26,7 +26,7 @@
 		<EventDetails
 			{event}
 			onShowEventForTag={(tag) => {
-				eventsStore.handleTagClick(tag);
+				eventsStore.handleSearchTermChange(tag);
 				goto(routes.eventList());
 			}}
 		/>

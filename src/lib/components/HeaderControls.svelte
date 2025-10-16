@@ -10,12 +10,15 @@
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { onMount } from 'svelte';
 	import BurgerMenu from './BurgerMenu.svelte';
+	import TagSelection from './TagSelection.svelte';
+	import { getTags } from './TagSelection.remote';
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
 	const isSticky = $derived(scrollY > 40);
 
 	let isDatePickerOpen = $state(false);
+	const tags = $derived(await getTags()); // doing it here instead of TagSelection.svelte to avoid refetching when component is unmounted cuz of scrolling
 
 	function runSearch() {
 		eventsStore.loadEvents({
@@ -137,44 +140,20 @@
 				{/if}
 			</div>
 
-			<!-- Search Button -->
+			<!-- Tag-Filter/Search Button -->
 			<div class="relative">
 				<PopOver
 					triggerClass="btn btn-circle"
-					contentClass="card shadow-lg bg-base-200 min-w-72 p-4 z-20"
+					contentClass="card shadow-lg bg-base-200 p-2 z-20 max-w-dvw"
 				>
 					{#snippet trigger()}
 						<i class="icon-[ph--magnifying-glass] size-5"></i>
 					{/snippet}
 					{#snippet content()}
-						<label class="input w-full">
-							<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
-							<input
-								bind:value={searchTerm}
-								oninput={(e) => {
-									eventsStore.updateSearchTerm(e.currentTarget.value);
-									debouncedSearch();
-								}}
-								type="text"
-								placeholder="Suchbegriff"
-							/>
-							{#if eventsStore.hasSearchFilter}
-								<button
-									onclick={() => {
-										searchTerm = '';
-										eventsStore.updateSearchTerm('');
-										runSearch();
-									}}
-									class="btn btn-sm btn-circle btn-ghost"
-									aria-label="Suchbegriff löschen"
-								>
-									<i class="icon-[ph--x] size-5"></i>
-								</button>
-							{/if}
-						</label>
+						<TagSelection {tags}/>
 					{/snippet}
 				</PopOver>
-				{#if eventsStore.hasSearchFilter}
+				{#if eventsStore.hasTagFilter}
 					{@render filteredIndicator()}
 				{/if}
 			</div>
@@ -202,7 +181,7 @@
 				{/if}
 			</div>
 
-			{@render clearButton()}
+			{@render clearButton(false)}
 		</div>
 	{:else}
 		<!-- Expanded Header -->
@@ -249,31 +228,12 @@
 				</div>
 			</div>
 			<div class="flex w-full items-center justify-center gap-4">
-				<label class="input w-full">
-					<i class="icon-[ph--magnifying-glass] text-base-600 size-5"></i>
-					<input
-						bind:value={searchTerm}
-						oninput={(e) => {
-							eventsStore.updateSearchTerm(e.currentTarget.value);
-							debouncedSearch();
-						}}
-						type="text"
-						placeholder="Suchbegriff"
-					/>
-					{#if eventsStore.hasSearchFilter}
-						<button
-							onclick={() => {
-								searchTerm = '';
-								eventsStore.updateSearchTerm('');
-								runSearch();
-							}}
-							class="btn btn-sm btn-circle btn-ghost"
-							aria-label="Suchbegriff löschen"
-						>
-							<i class="icon-[ph--x] size-5"></i>
-						</button>
-					{/if}
-				</label>
+				<TagSelection {tags}/>
+			</div>
+
+			<div class="flex w-full items-center justify-center gap-4">
+				{@render clearButton(true)}
+
 				<div class:hidden={!eventsStore.hasLocationFilter}>
 					<label for="sort-select" class="sr-only">Sortieren nach</label>
 					<Select
@@ -285,32 +245,32 @@
 							// { value: 'time_desc', label: 'Startzeit', iconClass: 'icon-[ph--sort-descending]' }
 							// { value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
 						]}
+						hideTriggerText={false}
 						type="single"
 						value={eventsStore.selectedSortValue}
 						onValueChange={eventsStore.handleSortChanged}
 						disabled={!eventsStore.hasLocationFilter}
 					/>
 				</div>
-
-				{@render clearButton()}
 			</div>
 			<InstallButton />
 		</div>
 	{/if}
 </header>
 
-{#snippet clearButton()}
+{#snippet clearButton(big: boolean)}
 	{#if eventsStore.hasAnyFilter}
 		<button
 			onclick={() => {
 				searchTerm = '';
 				eventsStore.resetFilters();
 			}}
-			class="btn btn-circle btn-ghost"
+			class="btn {big ? 'lex-grow' : 'btn-circle btn-ghost'}"
 			title="Alle Filter zurücksetzen"
 			aria-label="Alle Filter zurücksetzen"
 		>
-			<i class="icon-[ph--x] size-5"></i>
+			<i class:hidden={big} class="icon-[ph--x] size-5"></i>
+			<span class:hidden={!big} class="">Alle Filter zurücksetzen</span>
 		</button>
 	{/if}
 {/snippet}

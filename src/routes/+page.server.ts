@@ -1,4 +1,4 @@
-import { fetchEvents } from "$lib/server/events";
+import { fetchEvents, prepareEventsResultForUi } from "$lib/server/events";
 import type { PageServerLoad } from "./$types";
 import { loadFiltersFromCookie } from "$lib/cookie-utils";
 import { posthogCapture } from "$lib/server/common";
@@ -15,7 +15,7 @@ export const load = (async ({ cookies }) => {
 
     const params = savedFilters ? { ...defaultParams, ...savedFilters } : defaultParams;
 
-    const { events, pagination } = await fetchEvents(params);
+    const { events, pagination } = prepareEventsResultForUi(await fetchEvents(params));
     posthogCapture('events_fetched', {
         events: events.length,
         totalEvents: pagination.totalEvents,
@@ -26,7 +26,8 @@ export const load = (async ({ cookies }) => {
         distance: pagination.distance,
         searchTerm: pagination.searchTerm,
         sortBy: pagination.sortBy,
-        sortOrder: pagination.sortOrder
+        sortOrder: pagination.sortOrder,
+        tagIds: pagination.tagIds
     })
 
     return {

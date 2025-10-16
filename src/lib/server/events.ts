@@ -1,15 +1,34 @@
 import { buildConflictUpdateColumns, db, s } from '$lib/server/db';
-import { asc, count, gte, or, and, lt, isNotNull, isNull, lte, gt, sql, ilike, desc, SQL } from 'drizzle-orm';
+import { asc, count, gte, or, and, lt, isNotNull, isNull, lte, gt, sql, ilike, desc, SQL, inArray, exists, eq } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
-import { generateSlug } from '$lib/common';
+import { generateSlug, type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/tags';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
 
+export const eventWith = {
+    eventTags: {
+        columns: {},
+        with: {
+            tag: {
+                columns: {},
+                with: {
+                    translations: {
+                        columns: {
+                            name: true,
+                            locale: true,
+                            tagId: true,
+                        },
+                    }
+                }
+            }
+        }
+    }
+} as const
 
 /**
  * Fetches events based on various filtering criteria.
@@ -53,6 +72,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         lat,
         lng,
         searchTerm,
+        tagIds,
     } = params;
     const timeZone = 'Europe/Berlin';
     const today = getToday(timeZone);
@@ -159,9 +179,34 @@ export async function fetchEvents(params: LoadEventsParams) {
         const searchTermCondition = or(
             ilike(s.events.name, `%${searchTerm}%`),
             sql<boolean>`EXISTS (SELECT 1 FROM unnest(${s.events.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${searchTerm}%`})`,
-            ilike(s.events.description, `%${searchTerm}%`)
+            ilike(s.events.description, `%${searchTerm}%`),
+            exists(
+                db.select({ eventId: s.eventTags.eventId })
+                    .from(s.eventTags)
+                    .innerJoin(s.tagTranslations, eq(s.eventTags.tagId, s.tagTranslations.tagId))
+                    .where(
+                        and(
+                            eq(s.eventTags.eventId, s.events.id),
+                            ilike(s.tagTranslations.name, `%${searchTerm}%`)
+                        )
+                    )
+            )
         );
         allConditions.push(searchTermCondition);
+    }
+
+    if (tagIds?.length) {
+        const tagCondition = exists(
+            db.select({ tagId: s.eventTags.tagId })
+                .from(s.eventTags)
+                .where(
+                    and(
+                        eq(s.eventTags.eventId, s.events.id),
+                        inArray(s.eventTags.tagId, tagIds)
+                    )
+                )
+        );
+        allConditions.push(tagCondition);
     }
 
     const finalCondition = and(...allConditions.filter(Boolean));
@@ -171,6 +216,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         orderBy: orderByClause,
         limit: limit,
         offset: offset,
+        with: eventWith,
         extras: {
             distanceKm: geocodedCoords ? sql<number | null>`
             CASE
@@ -178,8 +224,9 @@ export async function fetchEvents(params: LoadEventsParams) {
                     GREATEST(1, ROUND(earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng})) / 1000))
                 ELSE NULL
             END
-        `.as('distance_km') : sql<null>`NULL`.as('distance_km')
-        }
+        `.as('distance_km') : sql<null>`NULL`.as('distance_km'),
+        },
+
     });
 
     const totalEventsQuery = db.select({ count: count() }).from(s.events).where(finalCondition);
@@ -203,7 +250,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     }
 
     return {
-        events: prepareEventsForUi(events),
+        events,
         pagination: {
             startDate: params.startDate ? startCalDate.toString() : undefined,
             endDate: params.endDate ? endCalDate.toString() : undefined,
@@ -217,15 +264,19 @@ export async function fetchEvents(params: LoadEventsParams) {
             limit,
             searchTerm,
             sortBy,
-            sortOrder
+            sortOrder,
+            tagIds
         } satisfies LoadEventsParams & { totalEvents: number, totalPages: number }
     };
 }
 
+type TempFetchEventsResult = Awaited<ReturnType<typeof fetchEvents>>;
+type FetchEventsResult = Modify<TempFetchEventsResult, { events: Modify<TempFetchEventsResult['events'][number], { distanceKm?: number | null | undefined }>[] }>;
+type FetchEvent = FetchEventsResult['events'][number];
+
 type StringOrTagTranslation = string & TagTranslation;
-const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
-export function prepareEventsForUi<T extends { tags?: string[] | null; telegramRoomIds?: string[] | null }>(events: T[]):
-    Array<Simplify<Omit<T, 'hostSecret'> & { tags?: StringOrTagTranslation[]; hostSecret: undefined }>> {
+// const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
+export function prepareEventsForUi(events: FetchEvent[]) {
     return events
         // filter ASI rooms
         // .filter(event => {
@@ -235,11 +286,26 @@ export function prepareEventsForUi<T extends { tags?: string[] | null; telegramR
         //     }
         //     return true;
         // })
-        .map(event => ({
-            ...event,
-            tags: event.tags?.map(x => allTagsMap.get(x) ?? x) as StringOrTagTranslation[],
-            hostSecret: undefined, // never leak this to the ui
-        }));
+        .map(event => {
+            // hide that we took event from AIN channels. Stop when we have official cooperation with AIN.
+            if (event.host?.includes('Authentic Intimacy Network')) {
+                event.host = null
+            }
+            return {
+                ...event,
+                tags: event.tags?.map(x => allTagsMap.get(x) ?? x) as StringOrTagTranslation[],
+                tags2: event.eventTags?.flatMap(x => x.tag.translations) ?? [],
+                eventTags: undefined,
+                hostSecret: undefined, // never leak this to the ui
+            }
+        });
+}
+
+export function prepareEventsResultForUi(result: FetchEventsResult) {
+    return {
+        ...result,
+        events: prepareEventsForUi(result.events)
+    }
 }
 
 export async function insertEvents(events: InsertEvent[]) {
@@ -284,6 +350,7 @@ export const loadEventsParamsSchema = v.partial(v.object({
     searchTerm: v.nullable(v.string()),
     sortBy: v.nullable(v.string()),
     sortOrder: v.nullable(v.string()),
+    tagIds: v.nullable(v.array(v.number())),
     // these are not used as params but are returned in the pagination object
     totalEvents: v.nullable(v.number()),
     totalPages: v.nullable(v.number()),
@@ -291,4 +358,4 @@ export const loadEventsParamsSchema = v.partial(v.object({
 
 type LoadEventsParams = v.InferInput<typeof loadEventsParamsSchema>;
 
-export type UiEvent = Awaited<ReturnType<typeof fetchEvents>>['events'][number];
+export type UiEvent = ReturnType<typeof prepareEventsForUi>[number];

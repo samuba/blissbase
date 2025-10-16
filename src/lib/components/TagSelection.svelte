@@ -1,0 +1,231 @@
+<script lang="ts">
+	import { getTags } from './TagSelection.remote';
+	import PopOver from './PopOver.svelte';
+	import { eventsStore } from '$lib/eventsStore.svelte';
+	import { debounce } from '$lib/common';
+
+	let { tags }: { tags: Awaited<ReturnType<typeof getTags>> } = $props();
+
+	const { allTags, previewTags } = $derived(tags);
+	type Tag = typeof allTags[number];
+
+	let showDropdown = $state(false);
+	let filterQuery = $state(eventsStore.searchFilter || '');
+	let selectedTags = $state<Tag[]>([]);
+	
+	// Sync selected tags with store
+	$effect(() => {
+		if (eventsStore.pagination.tagIds?.length) {
+			const storeTags = allTags.filter((t) => eventsStore.pagination.tagIds?.includes(t.id));
+			// Only update if tags have actually changed
+			const currentIds = selectedTags.map(t => t.id).sort().join(',');
+			const storeIds = storeTags.map(t => t.id).sort().join(',');
+			if (currentIds !== storeIds) {
+				selectedTags = storeTags;
+			}
+		} else if (!eventsStore.pagination.tagIds?.length && selectedTags.length > 0) {
+			// Clear selection when filter is reset
+			selectedTags = [];
+		}
+	});
+
+
+	const selectedTagIds = $derived(new Set(selectedTags.map(t => t.id)));
+	const hiddenTags = $derived(allTags.filter(x => !previewTags.includes(x)));
+	const dropdownTags = $derived.by(() => {
+		const normalizedQuery = filterQuery.trim().toLowerCase();
+		// Filter out already selected tags
+		const availableTags = allTags.filter((tag) => !selectedTagIds.has(tag.id));
+		
+		// When tags are selected, show all available tags
+		if (selectedTags.length > 0) {
+			if (!normalizedQuery) {
+				return availableTags;
+			}
+			return availableTags.filter((tag) => 
+				tag.en?.toLowerCase().includes(normalizedQuery) || 
+				tag.de?.toLowerCase().includes(normalizedQuery) || 
+				tag.nl?.toLowerCase().includes(normalizedQuery)
+			);
+		}
+		// When no tags are selected, show hidden tags or filtered results
+		if (!normalizedQuery) {
+			return hiddenTags;
+		}
+		return availableTags.filter((tag) => 
+			tag.en?.toLowerCase().includes(normalizedQuery) || 
+			tag.de?.toLowerCase().includes(normalizedQuery) || 
+			tag.nl?.toLowerCase().includes(normalizedQuery)
+		);
+	});
+	const hasMoreTags = $derived(hiddenTags.length > 0 || selectedTags.length > 0);
+
+	function handleOpenChange(open: boolean) {
+		if (!open) filterQuery = '';
+	}
+
+	function selectTag(tag: Tag) {
+		selectedTags.push(tag);
+		filterQuery = '';
+		showDropdown = false;
+		eventsStore.handleTagsChange(selectedTags.map(t => t.id));
+	}
+
+	function removeTag(tag: Tag) {
+		selectedTags = selectedTags.filter(t => t.id !== tag.id);
+		eventsStore.handleTagsChange(selectedTags.map(t => t.id));
+	}
+
+	function runTextSearch(value?: string) {
+		selectedTags = [];
+		showDropdown = false;
+		eventsStore.showTextSearch = true;
+		debouncedSearch(value)	
+	}
+
+	function closeTextSearch() {
+		filterQuery = '';
+		eventsStore.showTextSearch = false;
+		eventsStore.handleSearchTermChange('');
+	}
+
+	const debouncedSearch = debounce<string | undefined>((term) => eventsStore.handleSearchTermChange(term?.trim() || ''), 400);
+</script>
+
+{#if selectedTags.length > 0}
+	<!-- Selected tags with individual clear buttons and "Clear All" option -->
+	<div class="flex items-center gap-2 flex-wrap">
+		{#each selectedTags as tag}
+			<button class="btn btn-primary min-w-fit gap-2" onclick={() => removeTag(tag)}>
+				{tag.de}
+				<i class="icon-[ph--x] size-5"></i>
+			</button>
+		{/each}
+
+		<div class="relative">
+			{@render moreTagsButton(false)}
+		</div>
+	</div>
+
+{:else if eventsStore.searchFilter || eventsStore.showTextSearch}
+	<div class="flex items-center gap-2 lex-wrap">
+
+		<label class="input w-full">
+			<i class="icon-[ph--magnifying-glass] text-base-600 min-w-5 size-5"></i>
+			<input
+				id="tag-selection-text-search-input"
+				bind:value={filterQuery}
+				oninput={(e) => {
+					runTextSearch(e.currentTarget.value);
+				}}
+				type="text"
+				placeholder="Suchbegriff"
+			/>
+				<button
+					onclick={() => {
+						if (filterQuery.trim()) {
+							filterQuery = '';
+							eventsStore.handleSearchTermChange(' ');
+						} else {
+							document.getElementById('tag-selection-text-search-input')?.focus();
+						}
+					}}
+					class="btn btn-sm btn-circle btn-ghost"
+					aria-label="Suchbegriff löschen"
+					class:opacity-0={!filterQuery.trim()}
+					class:cursor-text={!filterQuery.trim()}
+				>
+					<i class="icon-[ph--x] size-5 text-base-600"></i>
+				</button>
+		</label>
+
+		<button class="btn  min-w-fit gap-2 btn-circle btn-ghost" onclick={closeTextSearch} title="Textsuche schließen">
+			<i class="icon-[ph--x] size-5"></i>
+		</button>
+	</div>
+{:else}
+	<!-- Show tags with fade effect and overlay dropdown -->
+	<div class="relative flex items-center overflow-hidden min-w-0 w-full max-w-full ">
+		<!-- Tags container - no wrap, overflow hidden -->
+		<div class="flex flex-nowrap gap-2 overflow-hidden flex-shrink min-w-0 w-full pr-12">
+			{#each previewTags as tag}
+				<button
+					class="btn bg-base-100 flex-shrink-0 whitespace-nowrap font-normal"
+					onclick={() => selectTag(tag)}
+				>
+					{tag.de}
+				</button>
+			{/each}
+		</div>
+
+		{#if hasMoreTags}
+			<!-- Fade overlay gradient - gets stronger towards the right -->
+			<div
+				class="absolute right-0 top-0 bottom-0 w-32 pointer-events-none bg-gradient-to-l from-base-200 via-base-200/80 to-transparent"
+			></div>
+
+			<!-- Dropdown button positioned at the right edge, overlaying the tags -->
+			<div class="absolute right-0 flex items-center">
+				{@render moreTagsButton(true)}
+			</div>
+		{/if}
+	</div>
+{/if}
+
+{#snippet moreTagsButton(showTriggerShadow: boolean)}
+	<PopOver 
+		contentClass="bg-base-100 shadow-lg border-base-300 w-[250px]" 
+		triggerClass={showTriggerShadow ? 'btn-sm btn-circle btn btn-ghost' : 'btn bg-base-100'}
+		contentProps={{ align: 'center' }}
+		onOpenChange={handleOpenChange}
+		bind:open={showDropdown}
+	>
+		{#snippet trigger()}
+		   {#if showTriggerShadow}
+				<i
+					class="icon-[ph--caret-right] size-6 transition-transform {showDropdown
+					? 'rotate-90'
+					: ''}"
+				></i>
+		   {:else}
+		     	Mehr
+		   {/if}
+		{/snippet}
+
+		{#snippet content()}
+			<div class="border-base-300 sticky top-0 border-b-2 p-2 flex flex-col gap-2">
+				<input
+					type="search"
+					bind:value={filterQuery}
+					placeholder="Suchen..."
+					class="input input-sm bg-base-200 w-full"
+					onclick={(e) => e.stopPropagation()}
+				/>
+				<button onclick={() => {
+					runTextSearch(filterQuery)
+				}} class="btn btn-primary max-h-16 whitespace-normal break-words" disabled={!filterQuery.trim()}>
+					<i class="icon-[ph--magnifying-glass] size-5"></i>
+					In Event Texten suchen
+				</button>
+			</div>
+		<div
+			class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-70 flex-col gap-2 overflow-y-auto p-2"
+		>
+				{#each dropdownTags as tag}
+					<button
+						class="btn mb-1 w-full text-center last:mb-0 font-normal"
+						onclick={() => selectTag(tag)}
+					>
+						{tag.de}
+					</button>
+				{:else}
+					<div class="text-sm text-base-content/50 py-2 text-center flex flex-col items-center gap-4">
+						<span>
+							Kein Tag gefunden für <b class="font-bold">{filterQuery}</b>
+						</span>
+					</div>
+				{/each}
+			</div>
+		{/snippet}
+	</PopOver>
+{/snippet}

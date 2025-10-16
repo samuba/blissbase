@@ -4,11 +4,12 @@ import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { getPageMetaTags } from '$lib/common';
-import { prepareEventsForUi } from '$lib/server/events';
+import { eventWith, prepareEventsForUi } from '$lib/server/events';
 
 export const load = (async ({ params: { slug }, url }) => {
     const event = await db.query.events.findFirst({
-        where: eq(events.slug, slug)
+        where: eq(events.slug, slug),
+        with: eventWith
     });
 
     if (!event) {

@@ -18,6 +18,7 @@ type PaginationState = {
     searchTerm?: string | null;
     sortBy?: string | null;
     sortOrder?: string | null;
+    tagIds?: number[] | null;
     totalEvents?: number | null;
     totalPages?: number | null;
 };
@@ -35,6 +36,7 @@ export class EventsStore {
     events = $state<UiEvent[]>([]);
     pagination = $state<PaginationState>(initialPagination());
     loadingState = $state<LoadingState>('not-loading');
+    showTextSearch = $state(false);
 
     // Derived reactive values
     selectedSortValue = $derived(this.getSortValue(this.pagination.sortBy, this.pagination.sortOrder));
@@ -50,7 +52,8 @@ export class EventsStore {
     hasDateFilter = $derived(this.pagination.startDate || this.pagination.endDate);
     hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat && this.pagination.lng)));
     hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
-    hasAnyFilter = $derived(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter);
+    hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
+    hasAnyFilter = $derived(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter);
     searchFilter = $derived(this.pagination.searchTerm?.trim());
     dateFilter = $derived({ start: this.pagination.startDate, end: this.pagination.endDate });
     locationFilter = $derived({ plzCity: this.pagination.plzCity, lat: this.pagination.lat, lng: this.pagination.lng, distance: this.pagination.distance });
@@ -109,7 +112,8 @@ export class EventsStore {
                 lng: this.pagination.lng,
                 searchTerm: this.pagination.searchTerm,
                 sortBy: this.pagination.sortBy,
-                sortOrder: this.pagination.sortOrder
+                sortOrder: this.pagination.sortOrder,
+                tagIds: this.pagination.tagIds
             },
             true
         );
@@ -150,11 +154,12 @@ export class EventsStore {
         });
     };
 
-    handleTagClick = (tag: string) => {
+
+    handleTagsChange = (tagIds: number[]) => {
         this.loadEvents({
             ...this.pagination,
             page: 1,
-            searchTerm: tag
+            tagIds: tagIds.length > 0 ? tagIds : null
         });
     };
 
@@ -165,9 +170,13 @@ export class EventsStore {
         return `${sb}_${so}`;
     }
 
-    // Update search term (for binding)
-    updateSearchTerm(value: string) {
+    handleSearchTermChange(value: string) {
+        this.pagination.tagIds = null;
         this.pagination.searchTerm = value;
+        this.loadEvents({
+            ...this.pagination,
+            page: 1,
+        })
     }
 
     // Get event by ID
@@ -178,6 +187,7 @@ export class EventsStore {
     }
 
     resetFilters() {
+        this.showTextSearch = false;
         return this.loadEvents(initialPagination());
     }
 

@@ -1,4 +1,4 @@
-import { fetchEvents, loadEventsParamsSchema } from "$lib/server/events";
+import { fetchEvents, loadEventsParamsSchema, prepareEventsResultForUi } from "$lib/server/events";
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
 import { getRequestEvent, command, query } from '$app/server';
 import * as v from 'valibot';
@@ -13,7 +13,7 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
 
     if (!cookies) {
         // Fallback to regular fetchEvents if no cookies context
-        return fetchEvents(params);
+        return prepareEventsResultForUi(await fetchEvents(params));
     }
 
     // Load saved filters from cookie
@@ -29,11 +29,12 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         params.lng !== savedFilters.lng ||
         params.searchTerm !== savedFilters.searchTerm ||
         params.sortBy !== savedFilters.sortBy ||
-        params.sortOrder !== savedFilters.sortOrder
+        params.sortOrder !== savedFilters.sortOrder ||
+        JSON.stringify(params.tagIds) !== JSON.stringify(savedFilters.tagIds)
     ) : true;
 
     // Fetch events with current params
-    const result = await fetchEvents(params);
+    const result = prepareEventsResultForUi(await fetchEvents(params));
 
     posthogCapture('events_fetched', {
         events: result.events.length,
@@ -45,7 +46,8 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         distance: result.pagination.distance,
         searchTerm: result.pagination.searchTerm,
         sortBy: result.pagination.sortBy,
-        sortOrder: result.pagination.sortOrder
+        sortOrder: result.pagination.sortOrder,
+        tagIds: result.pagination.tagIds
     })
 
     // Save to cookie only if params have changed (and not on pagination)
@@ -59,7 +61,8 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
             lng: params.lng,
             searchTerm: params.searchTerm,
             sortBy: params.sortBy,
-            sortOrder: params.sortOrder
+            sortOrder: params.sortOrder,
+            tagIds: params.tagIds
         };
 
         saveFiltersToCookie(cookies, filterData);

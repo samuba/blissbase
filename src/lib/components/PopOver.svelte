@@ -8,12 +8,14 @@
 		contentClass?: string;
 		contentProps?: Popover.ContentProps;
 		triggerClass?: string;
+		open?: boolean;
+		onOpenChange?: (open: boolean) => void;
 	};
 
-	const { trigger, content, contentClass, contentProps, triggerClass }: Props = $props();
+	let { trigger, content, contentClass, contentProps, triggerClass, open = $bindable(false), onOpenChange }: Props = $props();
 </script>
 
-<Popover.Root>
+<Popover.Root bind:open={open} onOpenChange={onOpenChange}>
 	<Popover.Trigger class={triggerClass}>
 		{@render trigger()}
 	</Popover.Trigger>

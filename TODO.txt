@@ -1,3 +1,14 @@
+tags
+  fixen
+    actually filtern
+    text suche
+    mobile view mit selektiertem ort
+  tags die nicht kanon sind, wie handlen? additionalTags field im event?
+  ki tags für scraped WEBSITES
+    - caching for text or slug
+
+online event filter im ort drop down
+
 quelle deutlich anzeigen
 
 impressum????
