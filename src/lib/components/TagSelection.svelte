@@ -216,7 +216,6 @@
 						onclick={() => {
 							if (filterQuery.trim()) {
 								filterQuery = '';
-								eventsStore.handleSearchTermChange('');
 							} else {
 								document.getElementById('tag-selection-filter-input')?.focus();
 							}
