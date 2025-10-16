@@ -122,9 +122,7 @@
 			<input
 				id="tag-selection-text-search-input w-full sm:w-fit"
 				bind:value={filterQuery}
-				oninput={(e) => {
-					runTextSearch(e.currentTarget.value);
-				}}
+				oninput={(e) => runTextSearch(e.currentTarget.value)}
 				type="text"
 				placeholder="Suchbegriff"
 			/>
@@ -132,7 +130,7 @@
 				onclick={() => {
 					if (filterQuery.trim()) {
 						filterQuery = '';
-						eventsStore.handleSearchTermChange(' ');
+						eventsStore.handleSearchTermChange('');
 					} else {
 						document.getElementById('tag-selection-text-search-input')?.focus();
 					}
@@ -207,13 +205,32 @@
 
 		{#snippet content()}
 			<div class="border-base-300 bg-base-200 sticky top-0 flex flex-col gap-2 border-b-2 p-2">
-				<input
-					type="search"
-					bind:value={filterQuery}
-					placeholder="Suchen..."
-					class="input bg-base-100 w-full"
-					onclick={(e) => e.stopPropagation()}
-				/>
+				<label class="input w-full flex-grow">
+					<input
+						id="tag-selection-filter-input w-full sm:w-fit"
+						bind:value={filterQuery}
+						type="text"
+						placeholder="Suchen..."
+					/>
+					<button
+						onclick={() => {
+							if (filterQuery.trim()) {
+								filterQuery = '';
+								eventsStore.handleSearchTermChange('');
+							} else {
+								document.getElementById('tag-selection-filter-input')?.focus();
+							}
+						}}
+						class="btn btn-sm btn-circle btn-ghost"
+						aria-label="Suchbegriff löschen"
+						class:opacity-0={!filterQuery.trim()}
+						class:cursor-text={!filterQuery.trim()}
+					>
+						<i class="icon-[ph--x] text-base-600 size-5"></i>
+					</button>
+				</label>
+
+
 				<button
 					onclick={() => {
 						runTextSearch(filterQuery);
