@@ -5,7 +5,6 @@
 	import PopOver from './PopOver.svelte';
 	import InstallButton from './install-button/InstallButton.svelte';
 	import { parseDate } from '@internationalized/date';
-	import { routes } from '$lib/routes';
 	import { debounce, sleep } from '$lib/common';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { onMount } from 'svelte';
@@ -13,24 +12,13 @@
 	import TagSelection from './TagSelection.svelte';
 	import { getTags } from './TagSelection.remote';
 
+	let { tags }: { tags: Awaited<ReturnType<typeof getTags>> } = $props();
+
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
 	const isSticky = $derived(scrollY > 40);
-
 	let isDatePickerOpen = $state(false);
-	const tags = $derived(await getTags()); // doing it here instead of TagSelection.svelte to avoid refetching when component is unmounted cuz of scrolling
-
-	function runSearch() {
-		eventsStore.loadEvents({
-			...eventsStore.pagination,
-			page: 1
-		});
-	}
-
-	const debouncedSearch = debounce(() => runSearch(), 400);
-
 	let logoButton = $state<HTMLDivElement | null>(null);
-
 	let searchTerm = $state(eventsStore.pagination.searchTerm || ''); // only set in the beginning once in the inputs to prevent flickering
 
 	onMount(async () => {
