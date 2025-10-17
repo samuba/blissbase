@@ -183,7 +183,7 @@
 {#snippet moreTagsButton(showTriggerShadow: boolean)}
 	<PopOver
 		contentClass="bg-base-100 shadow-lg border-base-300 w-[250px]"
-		triggerClass={showTriggerShadow ? 'btn-sm btn-circle btn btn-ghost' : 'btn bg-base-100'}
+		triggerClass={showTriggerShadow ? 'btn btn-ghost ' : 'btn bg-base-100'}
 		contentProps={{
 			align: 'center',
 			onOpenAutoFocus: (e) => e.preventDefault()
@@ -194,7 +194,7 @@
 		{#snippet trigger()}
 			{#if showTriggerShadow}
 				<i
-					class="icon-[ph--caret-right] size-6 transition-transform {showDropdown
+					class="icon-[ph--caret-right-bold]  size-6 transition-transform {showDropdown
 						? 'rotate-90'
 						: ''}"
 				></i>
