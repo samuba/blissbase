@@ -42,13 +42,12 @@
 	]}
 >
 	{#if isSticky}
+		<!-- Collapsed Sticky Header -->
+		<!-- shadow -->
 		<div
 			class="pointer-events-none absolute right-0 left-0 z-20 h-6"
 			style="top: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, transparent 100%);"
 		></div>
-	{/if}
-	{#if isSticky}
-		<!-- Collapsed Sticky Header -->
 		<div class="flex w-full items-center justify-center gap-3">
 			<BurgerMenu>
 				<div class="btn flex items-center justify-center text-sm font-medium">
@@ -138,7 +137,7 @@
 						<i class="icon-[ph--magnifying-glass] size-5"></i>
 					{/snippet}
 					{#snippet content()}
-						<TagSelection {tags}/>
+						<TagSelection {tags} />
 					{/snippet}
 				</PopOver>
 				{#if eventsStore.hasTagFilter}
@@ -216,7 +215,7 @@
 				</div>
 			</div>
 			<div class="flex w-full items-center justify-center gap-4">
-				<TagSelection {tags}/>
+				<TagSelection {tags} />
 			</div>
 
 			<div class="flex w-full items-center justify-center gap-4">
