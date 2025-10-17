@@ -110,7 +110,8 @@
 		{ value: '100', label: '< 100 km' },
 		{ value: '150', label: '< 150 km' },
 		{ value: '300', label: '< 300 km' },
-		{ value: '400', label: '< 400 km' }
+		{ value: '500', label: '< 500 km' },
+		{ value: '9000', label: '< 9000 km' }
 	];
 
 	// Emit changes to the parent component
