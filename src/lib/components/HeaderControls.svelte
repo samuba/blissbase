@@ -16,7 +16,7 @@
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
-	const isSticky = $derived(scrollY > 40);
+	const isSticky = $derived(scrollY > (headerElement?.offsetHeight ?? 50) - 30);
 	let isDatePickerOpen = $state(false);
 	let logoButton = $state<HTMLDivElement | null>(null);
 	let searchTerm = $state(eventsStore.pagination.searchTerm || ''); // only set in the beginning once in the inputs to prevent flickering
@@ -31,7 +31,7 @@
 
 <!-- Placeholder to reserve space when header becomes sticky -->
 {#if isSticky}
-	<div class="h-16"></div>
+	<div class="" style="height: {headerElement?.offsetHeight}px;"></div>
 {/if}
 
 <header
