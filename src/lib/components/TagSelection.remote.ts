@@ -6,9 +6,7 @@ import type { AllTags } from "./TagSelection.devData";
 
 export const getTags = prerender(async () => {
     const previewTagSlugs = ['yoga', 'meditation', 'breathwork', 'tantra', 'conscious-dance', 'cacao-ceremony']
-    const allTags: AllTags = dev ?
-        // prerender is run every load in dev and takes too long, so we just return a dummy result for dev
-        (await import('./TagSelection.devData')).devDummyData :
+    const allTags =
         await db.query.tags.findMany({
             with: {
                 translations: true,
