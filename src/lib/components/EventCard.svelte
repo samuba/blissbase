@@ -4,10 +4,88 @@
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';
 	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
+	import { page } from '$app/state';
+	import { flushSync } from 'svelte';
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
 	let imageLoadError = $state(false);
+	const imageUrl = $derived(event.imageUrls?.[0]);
+	const isSelected = $derived(page.state.selectedEventId === event.id);
+
+	// Apply view-transition-name when hovering but NOT when selected (dialog will have it then)
+	// EXCEPT during closing transition where we need it back
+	let isHovering = $state(false);
+	let isClosing = $state(false);
+	let isOpening = $state(false);
+
+	const shouldHaveTransitionName = $derived.by(() => {
+		if (typeof window === 'undefined') return false;
+		// Apply when:
+		// 1. Hovering AND not selected (for opening - card -> dialog)
+		// 2. isClosing is true (for closing - dialog -> card)
+		// 3. isOpening is true (during opening transition - card -> dialog)
+		return (isHovering && !isSelected) || isClosing || isOpening;
+	});
+
+	// Listen for prepare-close-transition event from dialog
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+
+		const handlePrepareClose = (e: CustomEvent) => {
+			if (e.detail.eventId === event.id) {
+				isClosing = true;
+			}
+		};
+
+		const handleTransitionFinished = (e: CustomEvent) => {
+			if (e.detail.eventId === event.id) {
+				isClosing = false;
+			}
+		};
+
+		document.addEventListener('prepare-close-transition', handlePrepareClose as EventListener);
+		document.addEventListener('close-transition-finished', handleTransitionFinished as EventListener);
+
+		return () => {
+			document.removeEventListener('prepare-close-transition', handlePrepareClose as EventListener);
+			document.removeEventListener('close-transition-finished', handleTransitionFinished as EventListener);
+		};
+	});
+
+	async function handleClick(e: MouseEvent) {
+		e.preventDefault();
+
+		if (document.startViewTransition) {
+			// Ensure hover state is set for the transition
+			if (!isHovering) {
+				isHovering = true;
+				// Wait for the style to apply
+				await new Promise((resolve) => requestAnimationFrame(resolve));
+			}
+
+			// Mark that we're opening to keep the transition name during the transition
+			isOpening = true;
+			
+			const transition = document.startViewTransition(() => {
+				// Remove the transition name from card before updating state
+				// so only the dialog will have it in the NEW state
+				isOpening = false;
+				
+				flushSync(() => {
+					pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
+				});
+			});
+
+			// Clean up after transition
+			transition.finished.finally(() => {
+				isOpening = false;
+			});
+		} else {
+			pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
+		}
+	}
+
 	const tags  = $derived.by(() => {
 		const tags = new Set<string>();
 		event.tags2?.filter((x) => x.locale === 'de')?.forEach(x => tags.add(x.name));
@@ -23,13 +101,14 @@
 	href={routes.eventDetails(event.slug)}
 	class=" w-full"
 	data-sveltekit-preload-data="false"
-	onclick={(e) => {
-		e.preventDefault();
-		pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
-	}}
+	onclick={handleClick}
+	onmouseenter={() => (isHovering = true)}
+	onmouseleave={() => (isHovering = false)}
 >
 	<article
 		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all sm:flex-row {className}"
+		style={shouldHaveTransitionName ? `view-transition-name: event-card-${event.id}` : ''}
+		data-event-id={event.id}
 	>
 		<div
 			class={[
