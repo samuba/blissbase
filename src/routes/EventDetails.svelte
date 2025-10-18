@@ -33,6 +33,16 @@
 			: undefined
 	);
 
+	const tags = $derived.by(() => {
+		const tags = new Set<string>();
+		event.tags2?.filter((x) => x.locale === 'de')?.forEach(x => tags.add(x.name));
+		event.tags?.forEach(x => {
+			if (x.de) tags.add(x.de);
+			else tags.add(x);
+		});
+		return Array.from(tags);
+	});
+
 	function getContactMethod(str: string | undefined) {
 		if (!str?.trim()) return undefined;
 		if (str?.startsWith('tg://') || str?.startsWith('t.me/') || str?.startsWith('https://t.me/')) {
@@ -311,18 +321,18 @@
 			</div>
 		{/if}
 
-		{#if event.tags && event.tags.length > 0}
+		{#if tags.length}
 			<div>
 				<h2 class="mb-2 text-lg font-semibold">Tags</h2>
 				<div class="flex flex-wrap items-center gap-2">
-					{#each event.tags as tag}
+					{#each tags as tag}
 						<button
 							class="badge badge-ghost cursor-pointer hover:underline"
 							type="button"
-							onclick={() => onShowEventForTag(tag?.en ?? tag)}
+							onclick={() => onShowEventForTag(tag)}
 							title="Filter nach Tag"
 						>
-							{tag?.de ?? tag}
+							{tag}
 						</button>
 					{/each}
 				</div>

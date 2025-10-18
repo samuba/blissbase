@@ -8,7 +8,15 @@
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
 	let imageLoadError = $state(false);
-	const imageUrl = $derived(event.imageUrls?.[0])
+	const tags  = $derived.by(() => {
+		const tags = new Set<string>();
+		event.tags2?.filter((x) => x.locale === 'de')?.forEach(x => tags.add(x.name));
+		event.tags?.forEach(x => {
+			if (x.de) tags.add(x.de);
+			else tags.add(x);
+		});
+		return Array.from(tags);
+	});
 </script>
 
 <a
@@ -83,11 +91,11 @@
 				</div>
 			{/if}
 
-			{#if (event.tags?.length ?? 0) > 0}
+			{#if (tags.length)}
 				<div class="mt-1 flex flex-wrap gap-1 text-xs">
-					{#each event.tags! as tag}
+					{#each tags as tag}
 						<button class="badge badge-sm badge-ghost">
-							{tag?.de ?? tag}
+							{tag}
 						</button>
 					{/each}
 				</div>
