@@ -1,31 +1,36 @@
+import { dev } from "$app/environment";
 import { prerender } from "$app/server";
 import { db, s } from "$lib/server/db";
-import { desc, inArray, sql } from "drizzle-orm";
+import { desc, count, eq } from "drizzle-orm";
+import type { AllTags } from "./TagSelection.devData";
 
 export const getTags = prerender(async () => {
-    const result = await db.query.tags.findMany({
-        with: {
-            translations: true,
-        },
-        orderBy: [
-            desc(sql`(SELECT COUNT(*) FROM event_tags WHERE event_tags.tag_id = tags.id)`),
-        ],
-    });
-
     const previewTagSlugs = ['yoga', 'meditation', 'breathwork', 'tantra', 'conscious-dance', 'cacao-ceremony']
-    const previewTags = await db.query.tags.findMany({
-        with: {
-            translations: true,
-        },
-        where: inArray(s.tags.slug, previewTagSlugs)
-    })
+    const allTags: AllTags = dev ?
+        // prerender is run every load in dev and takes too long, so we just return a dummy result for dev
+        (await import('./TagSelection.devData')).devDummyData :
+        await db.query.tags.findMany({
+            with: {
+                translations: true,
+            },
+            orderBy: [
+                desc(
+                    db
+                        .select({ value: count(s.eventTags.eventId) })
+                        .from(s.eventTags)
+                        .where(eq(s.eventTags.tagId, s.tags.id))
+                ),
+            ],
+        })
+
+    const previewTags = allTags.filter(x => previewTagSlugs.includes(x.slug));
     previewTags.sort((a, b) => previewTagSlugs.indexOf(a.slug) - previewTagSlugs.indexOf(b.slug));
 
-
-    return {
-        allTags: buildUiTags(result),
+    const result = {
+        allTags: buildUiTags(allTags),
         previewTags: buildUiTags(previewTags),
     }
+    return result;
 });
 
 function buildUiTags(dbTags: {
