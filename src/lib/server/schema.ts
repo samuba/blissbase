@@ -1,5 +1,7 @@
 import { sql, type SQL, relations } from 'drizzle-orm';
-import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, bigint, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, bigint, primaryKey, pgEnum } from 'drizzle-orm/pg-core';
+
+export const eventAttendanceModeEnum = pgEnum('attendance_mode', ['online', 'offline', 'offline+online']);
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -28,7 +30,7 @@ export const events = pgTable('events', {
     listed: boolean().notNull().default(true),
     telegramRoomIds: text().array(),
     hostSecret: text(),
-    isOnline: boolean().notNull().default(false),
+    attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
 });
 
 export const eventsRelations = relations(events, ({ many }) => ({

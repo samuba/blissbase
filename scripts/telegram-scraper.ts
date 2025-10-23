@@ -766,7 +766,7 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
 
 async function normalizeAddress(args: { aiAnswer: MsgAnalysisAnswer; chatId: string }): Promise<string[] | undefined> {
     const { aiAnswer, chatId } = args;
-    if (aiAnswer.isOnline) return undefined;
+    if (aiAnswer.attendanceMode === "online") return undefined;
     if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
         const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.roomId, chatId) })
         if (chatConfig?.defaultAddress?.length) {
@@ -814,7 +814,7 @@ async function validateAndBuildEventBase(args: {
     }
 
     const addressArr = await normalizeAddress({ aiAnswer, chatId });
-    if (!aiAnswer.isOnline) {
+    if (aiAnswer.attendanceMode === "offline") {
         if (!addressArr || addressArr.length === 0) {
             console.log(`Skipping event - no address found`);
             return undefined;
@@ -841,7 +841,7 @@ async function validateAndBuildEventBase(args: {
         imageUrls: [],
         startAt,
         endAt,
-        isOnline: aiAnswer.isOnline,
+        attendanceMode: aiAnswer.attendanceMode,
         address: addressArr,
         tags: aiAnswer.tags,
         latitude: coords?.lat,

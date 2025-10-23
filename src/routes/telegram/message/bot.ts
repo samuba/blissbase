@@ -43,7 +43,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             await reply(ctx, "🙅🏻‍♂️📅 Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", fromGroup, msgId)
             return
         }
-        if (!aiAnswer.isOnline) {
+        if (aiAnswer.attendanceMode === "offline") {
             if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
                 const chatConfig = await db.query.telegramChatConfig.findFirst({ where: eq(s.telegramChatConfig.chatId, BigInt(ctx.chat?.id ?? 0)) })
                 if (chatConfig?.defaultAddress) {
@@ -108,7 +108,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             host: telegramAuthor?.name,
             hostLink: telegramAuthor?.link,
             sourceUrl: aiAnswer.url,
-            isOnline: aiAnswer.isOnline,
+            attendanceMode: aiAnswer.attendanceMode,
             messageSenderId: getTelegramSenderId(ctx.message),
             contact,
             source: "telegram",

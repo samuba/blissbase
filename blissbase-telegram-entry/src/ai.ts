@@ -93,7 +93,7 @@ Extract these information from the message:
 
 "address": string. The full address where the event is happening. Do not include html tags.
 
-"isOnline": boolean. Wether the event is happening online (via zoom, video conference, ...)
+"attendanceMode": string. The method of attendance for the event. Can be "online", "offline" or "offline+online" (means both offline and online attendance is possible).
 
 "city": string. Name of the city/town where the event is happening.
 
@@ -119,7 +119,7 @@ export type MsgAnalysisAnswer = {
     price: string;
     venue: string;
     address: string;
-    isOnline: boolean;
+    attendanceMode: "online" | "offline" | "offline+online";
     city: string;
     emojis: string;
 }>
