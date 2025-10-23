@@ -140,7 +140,7 @@
 						<TagSelection {tags} />
 					{/snippet}
 				</PopOver>
-				{#if eventsStore.hasTagFilter}
+				{#if eventsStore.hasTagFilter || eventsStore.hasSearchFilter}
 					{@render filteredIndicator()}
 				{/if}
 			</div>
