@@ -278,7 +278,7 @@ export const music: TagTranslation[] = [
     { en: "Voice Liberation", de: "Stimm-Befreiung", nl: "Stembevrijding" },
     { en: "Singing Bowls", de: "Klangschalen", nl: "Klankschalen" },
     { en: "Sound Bath", de: "Klangbad", nl: "Klankbad" },
-    { en: "Music Evening", de: "Musikabend", nl: "Muziekavond" },
+    { en: "Music", de: "Musik", nl: "Muziek" },
     { en: "Live Music", de: "Livemusik", nl: "Live muziek" },
     { en: "Handpan", de: "Handpan", nl: "Handpan" },
     { en: "Performance", de: "Auftritt", nl: "Optreden" },
