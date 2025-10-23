@@ -219,16 +219,23 @@
 				</div>
 			{/if}
 
-			{#if event.address?.length}
-				<a
-					href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="btn h-fit max-w-full min-w-0 py-1.5 leading-tight font-medium break-words"
-				>
-					<i class="icon-[ph--map-pin] mr-1 size-6 flex-shrink-0"></i>
-					<span class="block min-w-0 break-words">{formatAddress(event.address)}</span>
-				</a>
+			{#if event.attendanceMode === 'online'}
+				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
+					<i class="icon-[ph--globe] mr-2 size-6"></i>
+					<p class="font-medium">Online</p>
+				</div>
+			{:else}
+				{#if event.address?.length}
+					<a
+						href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn h-fit max-w-full min-w-0 py-1.5 leading-tight font-medium break-words flex items-center gap-1.5"
+					>
+						<i class="icon-[ph--map-pin] size-6 flex-shrink-0"></i>
+						<span class="block min-w-0 break-words">{formatAddress(event.address)}</span>
+					</a>
+				{/if}
 			{/if}
 
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />

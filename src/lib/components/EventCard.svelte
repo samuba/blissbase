@@ -153,22 +153,36 @@
 				{formatTimeStr(event.startAt, event.endAt)}
 			</div>
 
-			{#if event.address?.length}
-				<div class="flex items-center gap-1 text-sm">
-					<i class="icon-[ph--map-pin] mr-1.5 size-4 min-w-4"></i>
 
-					<div class="leading-tight">
-						{#if event.distanceKm}
-							<span class="font-medium">
-								{event.distanceKm} km entfernt
-							</span>
-						{/if}
-						<div title={event.address?.join(', ')} class="truncate-2lines">
-							{formatAddress(event.address)}
+			{#if event.attendanceMode === 'online'}
+				<div class="flex items-center gap-1.5 text-sm">
+					<i class="icon-[ph--globe] size-4 min-w-4"></i>
+					<span class="leading-tight">Online</span>
+				</div>
+			{:else}
+				{#if event.address?.length}
+					<div class="flex items-center gap-1.5 text-sm">
+						<div class="flex items-center gap-1">
+							<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
+							{#if event.attendanceMode === 'offline+online'}
+								<i class="icon-[ph--globe] size-4 min-w-4"></i>
+							{/if}
+						</div>
+
+						<div class="leading-tight">
+							{#if event.distanceKm}
+								<span class="font-medium">
+									{event.distanceKm} km entfernt
+								</span>
+							{/if}
+							<div title={event.address?.join(', ')} class="truncate-2lines">
+								{formatAddress(event.address)}
+							</div>
 						</div>
 					</div>
-				</div>
+				{/if}
 			{/if}
+
 
 			{#if (tags.length)}
 				<div class="mt-1 flex flex-wrap gap-1 text-xs">
