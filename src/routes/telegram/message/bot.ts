@@ -43,14 +43,16 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             await reply(ctx, "🙅🏻‍♂️📅 Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", fromGroup, msgId)
             return
         }
-        if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
-            const chatConfig = await db.query.telegramChatConfig.findFirst({ where: eq(s.telegramChatConfig.chatId, BigInt(ctx.chat?.id ?? 0)) })
-            if (chatConfig?.defaultAddress) {
-                aiAnswer.address = chatConfig.defaultAddress.join(',')
-            } else {
-                console.log("No event location found", msgTextHtml)
-                await reply(ctx, "🙅🏻‍♂️📍 Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
-                return
+        if (!aiAnswer.isOnline) {
+            if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
+                const chatConfig = await db.query.telegramChatConfig.findFirst({ where: eq(s.telegramChatConfig.chatId, BigInt(ctx.chat?.id ?? 0)) })
+                if (chatConfig?.defaultAddress) {
+                    aiAnswer.address = chatConfig.defaultAddress.join(',')
+                } else {
+                    console.log("No event location found", msgTextHtml)
+                    await reply(ctx, "🙅🏻‍♂️📍 Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
+                    return
+                }
             }
         }
 
@@ -106,6 +108,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             host: telegramAuthor?.name,
             hostLink: telegramAuthor?.link,
             sourceUrl: aiAnswer.url,
+            isOnline: aiAnswer.isOnline,
             messageSenderId: getTelegramSenderId(ctx.message),
             contact,
             source: "telegram",

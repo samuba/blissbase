@@ -21,13 +21,6 @@ const sessionAuthKeyString = process.env.TELEGRAM_APP_SESSION ?? "";
 const sessionAuthKey = new StringSession(sessionAuthKeyString);
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
 
-// Minimal shape we rely on from the AI output to keep helpers local to this file
-type AiAnswerMinimal = Pick<MsgAnalysisAnswer,
-    'hasEventData' | 'existingSource' | 'name' | 'description' |
-    'startDate' | 'endDate' | 'url' | 'contact' | 'contactAuthorForMore' | 'price' |
-    'venue' | 'address' | 'city' | 'tags'
->;
-
 function resolveTelegramFormattingToHtml(text: string, entities: Api.TypeMessageEntity[] | undefined): string {
     // Type definitions for converted entities
     type ConvertedEntity = {
@@ -771,8 +764,9 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
     return merged;
 }
 
-async function normalizeAddress(args: { aiAnswer: AiAnswerMinimal; chatId: string }): Promise<string[] | undefined> {
+async function normalizeAddress(args: { aiAnswer: MsgAnalysisAnswer; chatId: string }): Promise<string[] | undefined> {
     const { aiAnswer, chatId } = args;
+    if (aiAnswer.isOnline) return undefined;
     if (!aiAnswer.address && !aiAnswer.venue && !aiAnswer.city) {
         const chatConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.roomId, chatId) })
         if (chatConfig?.defaultAddress?.length) {
@@ -788,7 +782,7 @@ async function normalizeAddress(args: { aiAnswer: AiAnswerMinimal; chatId: strin
 }
 
 async function validateAndBuildEventBase(args: {
-    aiAnswer: AiAnswerMinimal,
+    aiAnswer: MsgAnalysisAnswer,
     message: Api.Message,
     client: TelegramClient,
     chatId: string,
@@ -820,9 +814,11 @@ async function validateAndBuildEventBase(args: {
     }
 
     const addressArr = await normalizeAddress({ aiAnswer, chatId });
-    if (!addressArr || addressArr.length === 0) {
-        console.log(`Skipping event - no address found`);
-        return undefined;
+    if (!aiAnswer.isOnline) {
+        if (!addressArr || addressArr.length === 0) {
+            console.log(`Skipping event - no address found`);
+            return undefined;
+        }
     }
 
     const coords = await geocodeAddressCached(addressArr, googleMapsApiKey || '')
@@ -845,6 +841,7 @@ async function validateAndBuildEventBase(args: {
         imageUrls: [],
         startAt,
         endAt,
+        isOnline: aiAnswer.isOnline,
         address: addressArr,
         tags: aiAnswer.tags,
         latitude: coords?.lat,

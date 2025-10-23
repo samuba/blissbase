@@ -28,6 +28,7 @@ export const events = pgTable('events', {
     listed: boolean().notNull().default(true),
     telegramRoomIds: text().array(),
     hostSecret: text(),
+    isOnline: boolean().notNull().default(false),
 });
 
 export const eventsRelations = relations(events, ({ many }) => ({

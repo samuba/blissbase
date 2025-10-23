@@ -93,6 +93,8 @@ Extract these information from the message:
 
 "address": string. The full address where the event is happening. Do not include html tags.
 
+"isOnline": boolean. Wether the event is happening online (via zoom, video conference, ...)
+
 "city": string. Name of the city/town where the event is happening.
 
 "emojis": string. Up to 3 emojis that describe the event.
@@ -117,6 +119,7 @@ export type MsgAnalysisAnswer = {
     price: string;
     venue: string;
     address: string;
+    isOnline: boolean;
     city: string;
     emojis: string;
 }>

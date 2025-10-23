@@ -7,7 +7,8 @@ import { geocodeCache, reverseGeocodeCache } from "./schema";
  * @param addressLines Array of address lines to geocode.
  * @returns Promise resolving to coordinates object or null if geocoding failed.
  */
-export async function geocodeAddressCached(addressLines: string[], apiKey: string): Promise<{ lat: number; lng: number } | null> {
+export async function geocodeAddressCached(addressLines: string[] | undefined, apiKey: string): Promise<{ lat: number; lng: number } | null> {
+    if (!addressLines) return null;
     if (!addressLines.length) return null;
 
     // Join the address lines to create a complete address string
