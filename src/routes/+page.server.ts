@@ -29,7 +29,8 @@ export const load = (async ({ cookies }) => {
         searchTerm: pagination.searchTerm,
         sortBy: pagination.sortBy,
         sortOrder: pagination.sortOrder,
-        tagIds: pagination.tagIds
+        tagIds: pagination.tagIds,
+        onlyOnlineEvents: pagination.onlyOnlineEvents
     })
 
     return {

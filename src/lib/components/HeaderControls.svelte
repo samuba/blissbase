@@ -105,7 +105,11 @@
 					}}
 				>
 					{#snippet trigger()}
-						<i class="icon-[ph--map-pin] size-5"></i>
+						{#if eventsStore.hasOnlineEventsFilter}
+							<i class="icon-[ph--globe] size-5"></i>
+						{:else}
+							<i class="icon-[ph--map-pin] size-5"></i>
+						{/if}
 					{/snippet}
 					{#snippet content()}
 						<div class="min-w-89 p-4">
@@ -118,11 +122,12 @@
 									? eventsStore.pagination.plzCity
 									: null}
 								onChange={eventsStore.handleLocationDistanceChange}
+								initialOnlyOnlineEvents={eventsStore.pagination.onlyOnlineEvents ?? false}
 							/>
 						</div>
 					{/snippet}
 				</PopOver>
-				{#if eventsStore.hasLocationFilter}
+				{#if eventsStore.hasLocationFilter || eventsStore.hasOnlineEventsFilter}
 					{@render filteredIndicator()}
 				{/if}
 			</div>
@@ -211,6 +216,7 @@
 							? eventsStore.pagination.plzCity
 							: null}
 						onChange={eventsStore.handleLocationDistanceChange}
+						initialOnlyOnlineEvents={eventsStore.pagination.onlyOnlineEvents ?? false}
 					/>
 				</div>
 			</div>

@@ -19,6 +19,7 @@ type PaginationState = {
     sortBy?: string | null;
     sortOrder?: string | null;
     tagIds?: number[] | null;
+    onlyOnlineEvents?: boolean | null;
     totalEvents?: number | null;
     totalPages?: number | null;
 };
@@ -53,7 +54,8 @@ export class EventsStore {
     hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat && this.pagination.lng)));
     hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
     hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
-    hasAnyFilter = $derived(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter);
+    hasOnlineEventsFilter = $derived(Boolean(this.pagination.onlyOnlineEvents));
+    hasAnyFilter = $derived(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter || this.hasOnlineEventsFilter);
     searchFilter = $derived(this.pagination.searchTerm?.trim());
     dateFilter = $derived({ start: this.pagination.startDate, end: this.pagination.endDate });
     locationFilter = $derived({ plzCity: this.pagination.plzCity, lat: this.pagination.lat, lng: this.pagination.lng, distance: this.pagination.distance });
@@ -90,7 +92,23 @@ export class EventsStore {
                 this.events = data.events;
             }
 
-            this.pagination = data.pagination;
+            // Normalize undefined to null for consistency with PaginationState type
+            this.pagination = {
+                ...data.pagination,
+                startDate: data.pagination.startDate ?? null,
+                endDate: data.pagination.endDate ?? null,
+                plzCity: data.pagination.plzCity ?? null,
+                distance: data.pagination.distance ?? null,
+                lat: data.pagination.lat ?? null,
+                lng: data.pagination.lng ?? null,
+                searchTerm: data.pagination.searchTerm ?? null,
+                sortBy: data.pagination.sortBy ?? null,
+                sortOrder: data.pagination.sortOrder ?? null,
+                tagIds: data.pagination.tagIds ?? null,
+                onlyOnlineEvents: data.pagination.onlyOnlineEvents ?? null,
+                totalEvents: data.pagination.totalEvents ?? null,
+                totalPages: data.pagination.totalPages ?? null,
+            };
         } finally {
             this.loadingState = 'not-loading';
         }
@@ -113,7 +131,8 @@ export class EventsStore {
                 searchTerm: this.pagination.searchTerm,
                 sortBy: this.pagination.sortBy,
                 sortOrder: this.pagination.sortOrder,
-                tagIds: this.pagination.tagIds
+                tagIds: this.pagination.tagIds,
+                onlyOnlineEvents: this.pagination.onlyOnlineEvents
             },
             true
         );
@@ -138,7 +157,8 @@ export class EventsStore {
             plzCity: event.location,
             lat: event.latitude ?? null,
             lng: event.longitude ?? null,
-            distance: event.distance
+            distance: event.distance,
+            onlyOnlineEvents: event.onlyOnlineEvents
         });
     };
 

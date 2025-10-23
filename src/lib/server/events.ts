@@ -73,6 +73,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         lng,
         searchTerm,
         tagIds,
+        onlyOnlineEvents,
     } = params;
     const timeZone = 'Europe/Berlin';
     const today = getToday(timeZone);
@@ -209,6 +210,14 @@ export async function fetchEvents(params: LoadEventsParams) {
         allConditions.push(tagCondition);
     }
 
+    if (onlyOnlineEvents) {
+        const onlineCondition = or(
+            eq(s.events.attendanceMode, 'online'),
+            eq(s.events.attendanceMode, 'offline+online')
+        );
+        allConditions.push(onlineCondition);
+    }
+
     const finalCondition = and(...allConditions.filter(Boolean));
 
     const eventsQuery = db.query.events.findMany({
@@ -265,7 +274,8 @@ export async function fetchEvents(params: LoadEventsParams) {
             searchTerm,
             sortBy,
             sortOrder,
-            tagIds
+            tagIds,
+            onlyOnlineEvents
         } satisfies LoadEventsParams & { totalEvents: number, totalPages: number }
     };
 }
@@ -351,6 +361,7 @@ export const loadEventsParamsSchema = v.partial(v.object({
     sortBy: v.nullable(v.string()),
     sortOrder: v.nullable(v.string()),
     tagIds: v.nullable(v.array(v.number())),
+    onlyOnlineEvents: v.nullable(v.boolean()),
     // these are not used as params but are returned in the pagination object
     totalEvents: v.nullable(v.number()),
     totalPages: v.nullable(v.number()),

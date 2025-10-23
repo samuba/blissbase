@@ -30,7 +30,8 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         params.searchTerm !== savedFilters.searchTerm ||
         params.sortBy !== savedFilters.sortBy ||
         params.sortOrder !== savedFilters.sortOrder ||
-        JSON.stringify(params.tagIds) !== JSON.stringify(savedFilters.tagIds)
+        JSON.stringify(params.tagIds) !== JSON.stringify(savedFilters.tagIds) ||
+        params.onlyOnlineEvents !== savedFilters.onlyOnlineEvents
     ) : true;
 
     // Fetch events with current params
@@ -47,7 +48,8 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         searchTerm: result.pagination.searchTerm,
         sortBy: result.pagination.sortBy,
         sortOrder: result.pagination.sortOrder,
-        tagIds: result.pagination.tagIds
+        tagIds: result.pagination.tagIds,
+        onlyOnlineEvents: result.pagination.onlyOnlineEvents
     })
 
     // Save to cookie only if params have changed (and not on pagination)
@@ -62,7 +64,8 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
             searchTerm: params.searchTerm,
             sortBy: params.sortBy,
             sortOrder: params.sortOrder,
-            tagIds: params.tagIds
+            tagIds: params.tagIds,
+            onlyOnlineEvents: params.onlyOnlineEvents
         };
 
         saveFiltersToCookie(cookies, filterData);
