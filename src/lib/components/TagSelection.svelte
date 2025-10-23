@@ -242,7 +242,7 @@
 				</button>
 			</div>
 			<div
-				class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-70 flex-col gap-2 overflow-y-auto p-2"
+				class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2"
 			>
 				{#each dropdownTags as tag}
 					<button
