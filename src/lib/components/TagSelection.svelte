@@ -112,15 +112,12 @@
 {#if selectedTags.length > 0}
 	<!-- Selected tags with individual clear buttons and "Clear All" option -->
 	<div class="flex flex-wrap items-center gap-2" in:fade={{ duration: 280 }} >
-		<div class="flex ">
-
-			{#each selectedTags as tag (tag.id)}
-				<button class="btn btn-primary min-w-fit gap-2" onclick={() => removeTag(tag)} in:fade={{ duration: 280 }} animate:flip={{ duration: 280 }} >
-					{tag.de}
-					<i class="icon-[ph--x] size-5"></i>
-				</button>
-			{/each}
-		</div>
+		{#each selectedTags as tag (tag.id)}
+			<button class="btn btn-primary min-w-fit gap-2" onclick={() => removeTag(tag)} in:fade={{ duration: 280 }} animate:flip={{ duration: 280 }} >
+				{tag.de}
+				<i class="icon-[ph--x] size-5"></i>
+			</button>
+		{/each}
 
 		<div class="relative">
 			{@render moreTagsButton(false)}
