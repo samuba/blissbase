@@ -220,7 +220,7 @@
 					/>
 				</div>
 			</div>
-			<div class="flex w-full items-center justify-center gap-4">
+			<div class="flex w-full items-center gap-4">
 				<TagSelection {tags} />
 			</div>
 
@@ -258,7 +258,7 @@
 				searchTerm = '';
 				eventsStore.resetFilters();
 			}}
-			class="btn {big ? 'lex-grow' : 'btn-circle btn-ghost'}"
+			class="btn {big ? 'flex-grow' : 'btn-circle btn-ghost'}"
 			title="Alle Filter zurücksetzen"
 			aria-label="Alle Filter zurücksetzen"
 		>

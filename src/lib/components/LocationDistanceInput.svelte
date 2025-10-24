@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 	export interface LocationChangeEvent {
 		location: string | null;
 		distance: string | null;
@@ -36,8 +37,13 @@
 	let displayLocationText = $state('');
 	let onlyOnlineEvents = $state(initialOnlyOnlineEvents);
 
-	let showDistanceInput = $derived(!onlyOnlineEvents && (initialLocation || typedPlzCity.trim() || usingCurrentLocation || isLoadingLocation));
-	let showOnlineButton = $derived(!initialLocation && !typedPlzCity.trim() && !usingCurrentLocation);
+	let showDistanceInput = $derived(
+		!onlyOnlineEvents &&
+			(initialLocation || typedPlzCity.trim() || usingCurrentLocation || isLoadingLocation)
+	);
+	let showOnlineButton = $derived(
+		!initialLocation?.trim() && !typedPlzCity.trim() && !usingCurrentLocation
+	);
 
 	// Effect to sync component state with props (reacts to prop changes)
 	$effect(() => {
@@ -186,103 +192,121 @@
 </script>
 
 <div class="flex items-center gap-2.5">
-
-{#if !onlyOnlineEvents}
-	<div class="form-control join flex items-center p-0 flex-grow ">
-		<div class="relative flex-1">
-			{#if usingCurrentLocation && !isLoadingLocation}
-				<span
-					class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0"
-				>
-					<i class="icon-[ph--map-pin] -mr-0.5 size-4"></i>
-					{resolvedCityName || displayLocationText}
-				</span>
-			{:else}
-				<input
-					bind:this={plzCityInput}
-					type="text"
-					id="plzCityInput"
-					placeholder="PLZ / Stadt"
-					class="input input-bordered join-item peer w-full border-r-0"
-					bind:value={typedPlzCity}
-					disabled={isLoadingLocation || disabled}
-					oninput={() => {
-						if (usingCurrentLocation) {
-							usingCurrentLocation = false;
-							coordsForFilter = null;
-							displayLocationText = '';
-						}
-					}}
-					onchange={handleFilterInputChange}
-				/>
-			{/if}
-			<div class="absolute top-1/2 right-1 -translate-y-1/2 flex items-center gap-1 rounded-r-full">
-				<button
-					class={[
-						'btn btn-xs flex h-full  items-center justify-center rounded py-0.5 peer-focus:hidden',
-						usingCurrentLocation && 'hover:bg-base-300',
-					]}
-					title="Aktuellen Standort verwenden"
-					onclick={usingCurrentLocation && !isLoadingLocation
-						? handleResetLocationClick
-						: handleUseCurrentLocationClick}
-					disabled={isLoadingLocation || disabled}
-				>
-					{#if isLoadingLocation}
-						<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
-					{:else if usingCurrentLocation}
-						<i class="icon-[ph--x] size-5"></i>
-					{:else}
-						<i class="icon-[ph--crosshair] size-5"></i>
-						<span class="text-xs"> Standort</span>
-					{/if}
-				</button>
-
-				{#if showOnlineButton}
-					<button
-						class={["btn btn-xs flex h-full  items-center justify-center rounded py-0.5 peer-focus:hidden",
-							!showDistanceInput && 'rounded-r-full'
-						]}
-						title="Online Events"
-						onclick={() => {
-							onlyOnlineEvents = !onlyOnlineEvents;
-							notifyChange();
-						}}
+	{#if !onlyOnlineEvents}
+		<div class="form-control join flex flex-grow items-center p-0" in:fade={{ duration: 280 }}>
+			<div class="relative flex-1">
+				{#if usingCurrentLocation && !isLoadingLocation}
+					<span
+						class="input input-bordered join-item bg-base-200 text-base-content/50 w-full border-r-0"
+						in:fade={{ duration: 280 }}
 					>
-						<i class="icon-[ph--globe] size-5"></i>
-						<span class="text-xs">Online</span>
-					</button>
+						<i class="icon-[ph--crosshair] -mr-0.5 size-5 "></i>
+						{resolvedCityName || displayLocationText}
+					</span>
+				{:else}
+					<input
+						bind:this={plzCityInput}
+						type="text"
+						id="plzCityInput"
+						placeholder="PLZ / Stadt"
+						class="input input-bordered join-item peer w-full border-r-0"
+						bind:value={typedPlzCity}
+						disabled={isLoadingLocation || disabled}
+						oninput={() => {
+							if (usingCurrentLocation) {
+								usingCurrentLocation = false;
+								coordsForFilter = null;
+								displayLocationText = '';
+							}
+						}}
+						onchange={handleFilterInputChange}
+						in:fade={{ duration: 280 }}
+					/>
 				{/if}
+				<div
+					class="absolute top-1/2 right-1.5 flex -translate-y-1/2 items-center gap-1 rounded-r-full"
+				>
+
+					{#if typedPlzCity.trim()}
+						<button 
+						title="Eingabe löschen"
+						class="btn-ghost bg-base-100 text-base-600 flex h-full  items-center justify-center px-1" onclick={() => {
+							typedPlzCity = '';
+							notifyChange();
+						}}>
+							<i class="icon-[ph--x] size-5"></i>
+						</button>
+					{/if}
+					<button
+						class={[
+							'btn btn-xs flex h-full  items-center justify-center rounded py-0.5 peer-focus:hidden',
+							usingCurrentLocation && 'bg-base-100'
+						]}
+						title="Aktuellen Standort verwenden"
+						onclick={usingCurrentLocation && !isLoadingLocation
+							? handleResetLocationClick
+							: handleUseCurrentLocationClick}
+						disabled={isLoadingLocation || disabled}
+					>
+						{#if isLoadingLocation}
+							<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
+						{:else if usingCurrentLocation}
+							<i class="icon-[ph--x] size-5"></i>
+						{:else}
+							<i class="icon-[ph--crosshair] size-5"></i>
+							{#if !typedPlzCity.trim()}
+								<span class="text-xs"> Standort</span>
+							{/if}
+						{/if}
+					</button>
+
+					{#if showOnlineButton}
+						<button
+							class={[
+								'btn btn-xs flex h-full  items-center justify-center rounded py-0.5 peer-focus:hidden',
+								!showDistanceInput && 'rounded-r-full'
+							]}
+							title="Online Events"
+							onclick={() => {
+								onlyOnlineEvents = !onlyOnlineEvents;
+								notifyChange();
+							}}
+						>
+							<i class="icon-[ph--globe] size-5"></i>
+							<span class="text-xs">Online</span>
+						</button>
+					{/if}
+				</div>
 			</div>
+
+			{#if showDistanceInput}
+				<select
+					id="distance"
+					class="select join-item w-auto"
+					bind:value={selectedDistance}
+					onchange={handleFilterInputChange}
+					disabled={isLoadingLocation || disabled || (typedPlzCity === '' && !usingCurrentLocation)}
+				>
+					<option value="">Überall</option>
+					{#each distanceOptions as option}
+						<option value={option.value}>{option.label}</option>
+					{/each}
+				</select>
+			{/if}
 		</div>
-
-
-		{#if showDistanceInput}
-			<select
-				id="distance"
-				class="select join-item w-auto"
-				bind:value={selectedDistance}
-				onchange={handleFilterInputChange}
-				disabled={isLoadingLocation || disabled || (typedPlzCity === '' && !usingCurrentLocation)}
-			>
-				<option value="">Überall</option>
-				{#each distanceOptions as option}
-					<option value={option.value}>{option.label}</option>
-				{/each}
-			</select>
-		{/if}
-	</div>
 	{:else}
-		<div class="bg-base-200 input flex items-center flex-grow w-fit gap-2.5">
-			<input
-				type="checkbox"
-				id="onlineInput"
-				name="onlineInput"
-				class="checkbox bg-base-100"
-				bind:checked={onlyOnlineEvents}
-				onchange={() => notifyChange()}
-				/>
-			<label for="onlineInput" class="">Nur Online Events</label>
-		</div>
+		<button
+			class="btn btn-primary min-w-fit gap-2"
+			title="Nur Online Events"
+			in:fade={{ duration: 280 }}
+			onclick={() => {
+				onlyOnlineEvents = false;
+				notifyChange();
+			}}
+		>
+			<i class="icon-[ph--globe] size-5"></i>
+			Nur Online Events
+			<i class="icon-[ph--x] size-5"></i>
+		</button>
 	{/if}
 </div>

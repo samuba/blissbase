@@ -78,9 +78,30 @@ export class EventsStore {
 
     // Core loading function
     async loadEvents(params: Parameters<typeof fetchEventsWithCookiePersistence>[0], append?: boolean) {
+        const applyPagination = (params: Parameters<typeof fetchEventsWithCookiePersistence>[0]) => {
+                // Normalize undefined to null for consistency with PaginationState type
+                this.pagination = {
+                    ...this.pagination,
+                    startDate: params.startDate ?? null,
+                    endDate: params.endDate ?? null,
+                    plzCity: params.plzCity ?? null,
+                    distance: params.distance ?? null,
+                    lat: params.lat ?? null,
+                    lng: params.lng ?? null,
+                    searchTerm: params.searchTerm ?? null,
+                    sortBy: params.sortBy ?? null,
+                    sortOrder: params.sortOrder ?? null,
+                    tagIds: params.tagIds ?? null,
+                    onlyOnlineEvents: params.onlyOnlineEvents ?? null,
+                    totalEvents: params.totalEvents ?? null,
+                    totalPages: params.totalPages ?? null,
+                };
+        }
+
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
 
+            applyPagination(params); // optimistically set pagination state
             const data = await fetchEventsWithCookiePersistence(params);
 
             if (append) {
@@ -92,23 +113,7 @@ export class EventsStore {
                 this.events = data.events;
             }
 
-            // Normalize undefined to null for consistency with PaginationState type
-            this.pagination = {
-                ...data.pagination,
-                startDate: data.pagination.startDate ?? null,
-                endDate: data.pagination.endDate ?? null,
-                plzCity: data.pagination.plzCity ?? null,
-                distance: data.pagination.distance ?? null,
-                lat: data.pagination.lat ?? null,
-                lng: data.pagination.lng ?? null,
-                searchTerm: data.pagination.searchTerm ?? null,
-                sortBy: data.pagination.sortBy ?? null,
-                sortOrder: data.pagination.sortOrder ?? null,
-                tagIds: data.pagination.tagIds ?? null,
-                onlyOnlineEvents: data.pagination.onlyOnlineEvents ?? null,
-                totalEvents: data.pagination.totalEvents ?? null,
-                totalPages: data.pagination.totalPages ?? null,
-            };
+            applyPagination(data.pagination);
         } finally {
             this.loadingState = 'not-loading';
         }
@@ -191,10 +196,10 @@ export class EventsStore {
     }
 
     handleSearchTermChange(value: string) {
-        this.pagination.tagIds = null;
-        this.pagination.searchTerm = value;
         this.loadEvents({
             ...this.pagination,
+            tagIds: null,
+            searchTerm: value,
             page: 1,
         })
     }
@@ -207,6 +212,7 @@ export class EventsStore {
     }
 
     resetFilters() {
+        this.hasAnyFilter = false
         this.showTextSearch = false;
         return this.loadEvents(initialPagination());
     }

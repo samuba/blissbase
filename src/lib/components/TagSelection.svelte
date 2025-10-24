@@ -3,6 +3,8 @@
 	import PopOver from './PopOver.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { debounce } from '$lib/common';
+	import { fade } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 
 	let { tags }: { tags: Awaited<ReturnType<typeof getTags>> } = $props();
 
@@ -100,27 +102,43 @@
 		(term) => eventsStore.handleSearchTermChange(term?.trim() || ''),
 		400
 	);
+
+	function clearTags() {
+		eventsStore.handleTagsChange([]);
+	}
+
 </script>
 
 {#if selectedTags.length > 0}
 	<!-- Selected tags with individual clear buttons and "Clear All" option -->
-	<div class="flex flex-wrap items-center gap-2">
-		{#each selectedTags as tag}
-			<button class="btn btn-primary min-w-fit gap-2" onclick={() => removeTag(tag)}>
-				{tag.de}
-				<i class="icon-[ph--x] size-5"></i>
-			</button>
-		{/each}
+	<div class="flex flex-wrap items-center gap-2" in:fade={{ duration: 280 }} >
+		<div class="flex ">
+
+			{#each selectedTags as tag (tag.id)}
+				<button class="btn btn-primary min-w-fit gap-2" onclick={() => removeTag(tag)} in:fade={{ duration: 280 }} animate:flip={{ duration: 280 }} >
+					{tag.de}
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
+			{/each}
+		</div>
 
 		<div class="relative">
 			{@render moreTagsButton(false)}
 		</div>
+		<button
+			class="btn btn-circle "
+			onclick={clearTags}
+			title="Textsuche schließen"
+		>
+			<i class="icon-[ph--x] size-5"></i>
+		</button>
 	</div>
 {:else if eventsStore.searchFilter || eventsStore.showTextSearch}
+	<div class="flex items-center gap-2 flex-grow" in:fade={{ duration: 280 }}>
 		<label class="input w-full flex-grow">
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
 			<input
-				id="tag-selection-text-search-input w-full sm:w-fit"
+				id="tag-selection-text-search-input w-full"
 				bind:value={filterQuery}
 				oninput={(e) => runTextSearch(e.currentTarget.value)}
 				type="text"
@@ -143,17 +161,17 @@
 				<i class="icon-[ph--x] text-base-600 size-5"></i>
 			</button>
 		</label>
-
 		<button
-			class="btn btn-circle btn-ghost min-w-fit gap-2"
+			class="btn btn-circle "
 			onclick={closeTextSearch}
 			title="Textsuche schließen"
 		>
 			<i class="icon-[ph--x] size-5"></i>
 		</button>
+	</div>
 {:else}
 	<!-- Show tags with fade effect and overlay dropdown -->
-	<div class="relative flex w-full max-w-full min-w-0 items-center overflow-hidden">
+	<div class="relative flex w-full max-w-full min-w-0 items-center overflow-hidden" in:fade={{ duration: 280 }}>
 		<!-- Tags container - no wrap, overflow hidden -->
 		<div class="flex w-full min-w-0 flex-shrink flex-nowrap gap-2 overflow-hidden pr-12">
 			{#each previewTags as tag}
