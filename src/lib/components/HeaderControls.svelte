@@ -18,13 +18,7 @@
 	let scrollY = $state(0);
 	const isSticky = $derived(scrollY > (headerElement?.offsetHeight ?? 50) - 30);
 	let isDatePickerOpen = $state(false);
-	let logoButton = $state<HTMLDivElement | null>(null);
 	let searchTerm = $state(eventsStore.pagination.searchTerm || ''); // only set in the beginning once in the inputs to prevent flickering
-
-	onMount(async () => {
-		await sleep(1200);
-		logoButton?.classList.remove('rotate-360');
-	});
 </script>
 
 <svelte:window bind:scrollY />
