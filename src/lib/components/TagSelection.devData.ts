@@ -95,17 +95,17 @@ export const devDummyData = [
             {
                 "tagId": 739,
                 "locale": "de",
-                "name": "Musikabend"
+                "name": "Musik"
             },
             {
                 "tagId": 739,
                 "locale": "en",
-                "name": "Music Evening"
+                "name": "Music"
             },
             {
                 "tagId": 739,
                 "locale": "nl",
-                "name": "Muziekavond"
+                "name": "Muziek"
             }
         ]
     },

@@ -226,6 +226,11 @@
 						bind:value={filterQuery}
 						type="text"
 						placeholder="Suchen..."
+						onkeydown={(e) => {
+							if (e.key === 'Enter' && filterQuery.trim()) {
+								runTextSearch(filterQuery);
+							}
+						}}
 					/>
 					<button
 						onclick={() => {
@@ -246,9 +251,7 @@
 
 
 				<button
-					onclick={() => {
-						runTextSearch(filterQuery);
-					}}
+					onclick={() => runTextSearch(filterQuery)}
 					class="btn btn-primary max-h-16 break-words whitespace-normal"
 					disabled={!filterQuery.trim()}
 				>
