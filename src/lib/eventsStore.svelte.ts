@@ -29,8 +29,10 @@ function initialPagination() {
         startDate: null,
         endDate: null,
         page: 1,
-        limit: 8
-    };
+        limit: 8,
+        sortBy: 'time',
+        sortOrder: 'asc',
+    } satisfies PaginationState;
 }
 
 export class EventsStore {
@@ -100,7 +102,7 @@ export class EventsStore {
 
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
-
+            
             applyPagination(params); // optimistically set pagination state
             const data = await fetchEventsWithCookiePersistence(params);
 

@@ -5,7 +5,7 @@
 	import PopOver from './PopOver.svelte';
 	import InstallButton from './install-button/InstallButton.svelte';
 	import { parseDate } from '@internationalized/date';
-	import { debounce, sleep } from '$lib/common';
+	import { sleep } from '$lib/common';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { onMount } from 'svelte';
 	import BurgerMenu from './BurgerMenu.svelte';
