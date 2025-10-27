@@ -5,9 +5,7 @@
 	import PopOver from './PopOver.svelte';
 	import InstallButton from './install-button/InstallButton.svelte';
 	import { parseDate } from '@internationalized/date';
-	import { sleep } from '$lib/common';
 	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { onMount } from 'svelte';
 	import BurgerMenu from './BurgerMenu.svelte';
 	import TagSelection from './TagSelection.svelte';
 	import { getTags } from './TagSelection.remote';
@@ -18,7 +16,6 @@
 	let scrollY = $state(0);
 	const isSticky = $derived(scrollY > (headerElement?.offsetHeight ?? 50) - 30);
 	let isDatePickerOpen = $state(false);
-	let searchTerm = $state(eventsStore.pagination.searchTerm || ''); // only set in the beginning once in the inputs to prevent flickering
 </script>
 
 <svelte:window bind:scrollY />
@@ -248,10 +245,7 @@
 {#snippet clearButton(big: boolean)}
 	{#if eventsStore.hasAnyFilter}
 		<button
-			onclick={() => {
-				searchTerm = '';
-				eventsStore.resetFilters();
-			}}
+			onclick={() => eventsStore.resetFilters()}
 			class="btn {big ? 'flex-grow' : 'btn-circle btn-ghost'}"
 			title="Alle Filter zurücksetzen"
 			aria-label="Alle Filter zurücksetzen"

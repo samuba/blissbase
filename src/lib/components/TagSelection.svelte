@@ -37,6 +37,10 @@
 		}
 	});
 
+	$effect(() => {
+		filterQuery = eventsStore.searchFilter || '';
+	})
+
 	const selectedTagIds = $derived(new Set(selectedTags.map((t) => t.id)));
 	const hiddenTags = $derived(allTags.filter((x) => !previewTags.includes(x)));
 	const dropdownTags = $derived.by(() => {
