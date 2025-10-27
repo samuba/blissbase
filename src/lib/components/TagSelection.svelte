@@ -122,6 +122,7 @@
 		<div class="relative">
 			{@render moreTagsButton(false)}
 		</div>
+		{#if selectedTags.length > 1}
 		<button
 			class="btn btn-circle "
 			onclick={clearTags}
@@ -129,6 +130,7 @@
 		>
 			<i class="icon-[ph--x] size-5"></i>
 		</button>
+		{/if}
 	</div>
 {:else if eventsStore.searchFilter || eventsStore.showTextSearch}
 	<div class="flex items-center gap-2 flex-grow" in:fade={{ duration: 280 }}>
