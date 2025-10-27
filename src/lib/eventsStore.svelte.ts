@@ -84,6 +84,7 @@ export class EventsStore {
                 // Normalize undefined to null for consistency with PaginationState type
                 this.pagination = {
                     ...this.pagination,
+                    page: params.page ?? this.pagination.page,
                     startDate: params.startDate ?? null,
                     endDate: params.endDate ?? null,
                     plzCity: params.plzCity ?? null,
