@@ -29,6 +29,7 @@ export const addFavorite = command(v.number(), async (eventId) => {
 	console.time('addFavorite');
 	try {
 		await db.insert(favorites).values({ userId, eventId }).onConflictDoNothing();
+		getFavoriteEventIds().refresh();
 	} catch (err) {
 		console.error(`Failed to add favorite:`, err);
 		error(500, `Failed to add favorite`);
