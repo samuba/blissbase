@@ -3,9 +3,9 @@ import { sequence } from '@sveltejs/kit/hooks';
 import type { HandleServerError } from '@sveltejs/kit';
 import { PostHog } from 'posthog-node';
 import { dev } from '$app/environment';
-import { isAdminSession } from '$lib/server/admin';
-import { ADMIN_USER_ID } from '$env/static/private';
 import { waitUntil } from '@vercel/functions';
+import { createSupabaseServerClient } from '$lib/server/supabase';
+import { isAdminSession } from '$lib/server/admin';
 
 const extractVercelHeader: Handle = async ({ event, resolve }) => {
     const latitude = event.request.headers.get('x-vercel-ip-latitude')
@@ -40,10 +40,25 @@ const insertPosthog: Handle = async ({ event, resolve }) => {
     return resolve(event);
 }
 
-const insertUserInfo: Handle = async ({ event, resolve }) => {
-    event.locals.user = { id: isAdminSession() ? ADMIN_USER_ID : event.locals.posthogDistinctId }
-    return resolve(event);
-}
+const supabaseAuth: Handle = async ({ event, resolve }) => {
+    event.locals.isAdminSession = isAdminSession();
+    event.locals.supabase = createSupabaseServerClient();
+
+    const { error, data } = await event.locals.supabase.auth.getClaims();
+    if (error) console.error('claimsError', error);
+    event.locals.jwtClaims = data?.claims as BlissabaseClaims;
+    event.locals.userId = event.locals.jwtClaims?.sub;
+
+    return resolve(event, {
+        filterSerializedResponseHeaders(name) {
+            /**
+             * Supabase libraries use the `content-range` and `x-supabase-api-version`
+             * headers, so we need to tell SvelteKit to pass it through.
+             */
+            return name === 'content-range' || name === 'x-supabase-api-version';
+        },
+    });
+};
 
 export const handleError: HandleServerError = async ({ error, status }) => {
     if (status === 404) return; // ignore 404 errors
@@ -60,7 +75,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         return await sequence(
             extractVercelHeader,
             insertPosthog,
-            insertUserInfo
+            supabaseAuth,
         )({ event, resolve });
     } finally {
         if (!dev) waitUntil(posthog.shutdown())

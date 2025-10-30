@@ -19,5 +19,6 @@ export const routes = {
             url.searchParams.set('_ADMIN_LINK_NICHT_TEILEN', '');
         }
         return absolute ? url.toString() : url.toString().replace(url.origin, '');
-    }
+    },
+    favorites: () => '/profile/favorites'
 }

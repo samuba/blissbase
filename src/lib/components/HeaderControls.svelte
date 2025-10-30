@@ -10,7 +10,12 @@
 	import TagSelection from './TagSelection.svelte';
 	import { getTags } from './TagSelection.remote';
 
-	let { tags }: { tags: Awaited<ReturnType<typeof getTags>> } = $props();
+	interface Props {
+		tags: Awaited<ReturnType<typeof getTags>>;
+		userId: string | undefined;
+	}
+
+	let { tags, userId }: Props = $props();
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
@@ -40,7 +45,7 @@
 			style="top: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, transparent 100%);"
 		></div>
 		<div class="flex w-full items-center justify-center gap-3">
-			<BurgerMenu>
+			<BurgerMenu {userId}>
 				<div class="btn flex items-center justify-center text-sm font-medium">
 					<img src="/logo.svg" alt="Menü" class="mr-2 size-6" />
 					Menu
@@ -172,7 +177,7 @@
 			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
 				<div class="flex w-full flex-wrap items-center gap-4 md:w-auto">
 					<div class="flex-shrink-0">
-						<BurgerMenu>
+						<BurgerMenu {userId}>
 							<div class="btn bg-base-100 flex items-center justify-center text-sm font-medium">
 								<img src="/logo.svg" alt="Menü" class="mr-2 size-6 min-w-6" />
 								Menu

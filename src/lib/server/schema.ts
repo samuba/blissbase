@@ -149,6 +149,40 @@ export const eventTagsRelations = relations(eventTags, ({ one }) => ({
     }),
 }));
 
+// Supabase Auth Tables
+export const profiles = pgTable('profiles', {
+    id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
+    createdAt: timestamp().notNull().defaultNow(),
+    updatedAt: timestamp().notNull().defaultNow(),
+});
+
+export type Profile = typeof profiles.$inferSelect;
+
+export const profilesRelations = relations(profiles, ({ many }) => ({
+    favorites: many(favorites),
+}));
+
+export const favorites = pgTable('favorites', {
+    userId: uuid().notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+    eventId: integer().notNull().references(() => events.id, { onDelete: 'cascade' }),
+    createdAt: timestamp().notNull().defaultNow(),
+}, (t) => [
+    primaryKey({ columns: [t.userId, t.eventId] })
+]);
+
+export type Favorite = typeof favorites.$inferSelect;
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+    profile: one(profiles, {
+        fields: [favorites.userId],
+        references: [profiles.id],
+    }),
+    event: one(events, {
+        fields: [favorites.eventId],
+        references: [events.id],
+    }),
+}));
+
 
 
 

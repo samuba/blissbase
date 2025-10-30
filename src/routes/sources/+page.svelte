@@ -1,22 +1,12 @@
 <script lang="ts">
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { routes } from '$lib/routes';
 </script>
 
+<PageHeader backRoute={routes.newEvent()} />
+
 <div class=" flex items-center justify-center">
 	<div>
-		<!-- header -->
-		<div class="flex items-center justify-between px-4">
-			<a href="/" class="my-4 flex items-center justify-center gap-4">
-				<img src="favicon.png" alt="Blissbase" class="size-10 min-w-10" />
-				<h1 class="text-base-content text-2xl font-bold">Blissbase</h1>
-			</a>
-
-			<a href={routes.newEvent()} class="btn-sm btn">
-				<i class="icon-[ph--arrow-left] size-5"></i>
-				Zurück
-			</a>
-		</div>
-
 		<div class="card bg-base-100 sm:rounded-box w-full max-w-2xl rounded-none">
 			<div class="card-body gap-8">
 				<div>

@@ -2,10 +2,32 @@
 	// not really a burger menu 🤷🏻‍♂️
 	import { routes } from '$lib/routes';
 	import { Dialog } from 'bits-ui';
+	import LoginDialog from './LoginDialog.svelte';
+	import { createSupabaseBrowserClient } from '$lib/supabase';
 
-	const { children } = $props();
+	interface Props {
+		children?: any;
+		userId?: string | null;
+	}
+
+	const { children, userId }: Props = $props();
 
 	let open = $state(false);
+	let loginDialogOpen = $state(false);
+	let isLoggingOut = $state(false);
+
+	async function handleLogout() {
+		isLoggingOut = true;
+		try {
+			const supabase = createSupabaseBrowserClient();
+			await supabase.auth.signOut();
+			open = false;
+		} catch (error) {
+			console.error(`Logout error:`, error);
+		} finally {
+			isLoggingOut = false;
+		}
+	}
 </script>
 
 <Dialog.Root bind:open>
@@ -49,10 +71,34 @@
 					</a>
 				</p>
 
-				<a href={routes.newEvent()} class="btn btn-primary w-fit">
-					<i class="icon-[ph--plus] size-5"></i>
-					Neuen Event erstellen
-				</a>
+				<div class="flex flex-wrap gap-4">
+					<a href={routes.newEvent()} class="btn btn-primary w-fit">
+						<i class="icon-[ph--plus] size-5"></i>
+						Neuen Event erstellen
+					</a>
+
+					{#if userId}
+						<a href={routes.favorites()} class="btn w-fit" onclick={() => (open = false)}>
+							<i class="icon-[ph--heart] size-5"></i>
+							Favoriten
+						</a>
+
+						<button class="btn w-fit" onclick={handleLogout} disabled={isLoggingOut}>
+							{#if isLoggingOut}
+								<span class="loading loading-spinner"></span>
+								Wird abgemeldet...
+							{:else}
+								<i class="icon-[ph--sign-out] size-5"></i>
+								Abmelden
+							{/if}
+						</button>
+					{:else}
+						<button class="btn w-fit" onclick={() => (loginDialogOpen = true)}>
+							<i class="icon-[ph--user] size-5"></i>
+							Login
+						</button>
+					{/if}
+				</div>
 			</div>
 
 			<Dialog.Close class="btn btn-circle absolute  top-3 right-3 shadow-lg sm:top-4 sm:right-4">
@@ -62,3 +108,5 @@
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
+
+<LoginDialog bind:open={loginDialogOpen} />

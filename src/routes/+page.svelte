@@ -8,6 +8,7 @@
 	import { browser } from '$app/environment';
 
 	const { data } = $props();
+	const { tags, userId } = $derived(data);
 
 	// Always initialize from server data during SSR to prevent state pollution
 	// On client, only initialize if store is empty (preserves navigation state)
@@ -23,7 +24,7 @@
 </script>
 
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 py-4 sm:w-2xl">
-	<HeaderControls tags={data.tags} />
+	<HeaderControls {tags} {userId} />
 
 	<div class="px-4">
 		{#if eventsStore.isLoading}

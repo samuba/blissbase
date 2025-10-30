@@ -6,6 +6,8 @@
 	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
 	import { page } from '$app/state';
 	import { flushSync } from 'svelte';
+	import LoginDialog from './LoginDialog.svelte';
+	import FavoriteButton from './FavoriteButton.svelte';
 
 	const { event, class: className }: { event: UiEvent; class?: string } = $props();
 
@@ -95,7 +97,11 @@
 		});
 		return Array.from(tags);
 	});
+
+	let showLoginDialog = $state(false);
 </script>
+
+<LoginDialog bind:open={showLoginDialog} />
 
 <a
 	href={routes.eventDetails(event.slug)}
@@ -115,6 +121,11 @@
 				'from-base-200/50 to-base-300 relative min-w-32 rounded-t-lg bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-l-lg sm:rounded-tr-none'
 			]}
 		>
+		<FavoriteButton 
+			eventId={event.id}
+			class="absolute bottom-2 right-2 z-5"
+		/>
+
 			{#if imageUrl}
 				<div
 					class="h-full rounded-t-lg bg-cover bg-center"

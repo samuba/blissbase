@@ -1,5 +1,7 @@
 <script lang="ts">
-	let { seed, class: className }: { seed: string; class?: string } = $props();
+	import type { Snippet } from "svelte";
+
+	let { seed, class: className, children }: { seed: string; class?: string; children?: Snippet } = $props();
 
 	// Curated array of aesthetically pleasing hue rotation values
 	const pleasingHueRotations = [0, 10, 20, 30, 35, 290, 300, 310, 320, 330, 340, 350, 360];
@@ -36,4 +38,5 @@
 		class="h-full w-full object-cover"
 		style={`${hueRotationStyle} ${transformStyle}`}
 	/>
+	{@render children?.()}
 </div>

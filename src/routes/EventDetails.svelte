@@ -7,6 +7,9 @@
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import ImageDialog from '$lib/components/ImageDialog.svelte';
 	import EventAdminSection from '$lib/components/EventAdminSection.svelte';
+	import { getFavoriteEventIds, addFavorite, removeFavorite } from '$lib/favorites.remote';
+	import LoginDialog from '$lib/components/LoginDialog.svelte';
+	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -131,7 +134,43 @@
 	function openLink(url: string) {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	}
+
+	// Get all favorites and check if this event is favorited
+	const favoritesQuery = getFavoriteEventIds();
+	let favorites = $state<number[]>([]);
+	let isFavorite = $derived(favorites.includes(event.id));
+	let showLoginDialog = $state(false);
+
+	// Load favorites asynchronously without blocking derived state
+	$effect(() => {
+		favoritesQuery.then(x => favorites = x);
+	});
+
+	async function toggleFavorite(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		try {
+			if (isFavorite) {
+				await removeFavorite(event.id).updates(
+					favoritesQuery.withOverride((current) => current.filter(id => id !== event.id))
+				);
+			} else {
+				await addFavorite(event.id).updates(
+					favoritesQuery.withOverride((current) => [...current, event.id])
+				);
+			}
+		} catch (error: unknown) {
+			// Handle 401 - show login dialog
+			if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
+				showLoginDialog = true;
+			} else {
+				console.error(`Failed to toggle favorite:`, error);
+			}
+		}
+	}
 </script>
+
+<LoginDialog bind:open={showLoginDialog} />
 
 <svelte:head>
 	{#if event.sourceUrl}
@@ -155,6 +194,7 @@
 						class="max-h-96 w-fit max-w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
 						onerror={() => (imageLoadError = true)}
 					/>
+					{@render favoriteButton()}
 				</figure>
 			</div>
 		</ImageDialog>
@@ -181,17 +221,21 @@
 			</div>
 		{/if}
 	{:else}
-		<RandomPlaceholderImg seed={event.name} class="h-full max-h-70 " />
+		<RandomPlaceholderImg seed={event.name} class="h-full max-h-70 relative">
+			{@render favoriteButton()}
+		</RandomPlaceholderImg>
 	{/if}
 
 	<div class="card-body text-base-content/90 w-full space-y-4 md:px-10">
-		<h1 class="card-title block w-full text-center text-2xl font-semibold">
-			{event.name}
+		<div class="relative">
+			<h1 class="card-title block w-full text-center text-2xl font-semibold pr-12">
+				{event.name}
 
-			{#if event.soldOut}
-				<span class="badge badge-accent ml-1">Ausgebucht</span>
-			{/if}
-		</h1>
+				{#if event.soldOut}
+					<span class="badge badge-accent ml-1">Ausgebucht</span>
+				{/if}
+			</h1>
+		</div>
 
 		<div class="flex w-full flex-wrap justify-center gap-4">
 			<div class="flex items-center">
@@ -423,3 +467,10 @@
 		text-decoration: underline;
 	}
 </style>
+
+{#snippet favoriteButton()}
+	<FavoriteButton 
+		eventId={event.id}
+		class="absolute bottom-4 right-4  z-5 flex  items-center justify-center rounded-full bg-base-100/80 backdrop-blur-sm transition-all hover:scale-110 hover:bg-base-100"
+	/>
+{/snippet}

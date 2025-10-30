@@ -1,10 +1,12 @@
-import { ADMIN_USER_ID } from '$env/static/private';
-import { isAdminSession } from '$lib/server/admin';
 import type { LayoutServerLoad } from './$types';
 
-export const load = (async () => {
-    const userId = isAdminSession() ? ADMIN_USER_ID : undefined
+export const load = (async ({ locals, cookies }) => {
+    // For PostHog identification: prioritize Supabase user, then admin, then undefined
+    const userId = await locals.jwtClaims?.sub;
     return {
-        userId
+        userId,
+        cookies: cookies.getAll(),
+        jwtClaims: locals.jwtClaims,
+        isAdminSession: locals.isAdminSession,
     };
 }) satisfies LayoutServerLoad;
