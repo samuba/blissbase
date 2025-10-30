@@ -6,14 +6,16 @@
 	import EventDetailsDialog from '../../EventDetailsDialog.svelte';
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
+	import { addHours } from '$lib/common';
+	import { now } from '$lib/now.svelte';
 
 	const favoritesQuery = getFavoriteEvents();
 	const favoriteEvents = $derived(await favoritesQuery);
 	const selectedEvent = $derived(
 		favoriteEvents.find((event) => event.id === page.state.selectedEventId)
 	);
-	const upcomingEvents = $derived(favoriteEvents.filter((event) => event.startAt > new Date()));
-	const pastEvents = $derived(favoriteEvents.filter((event) => event.startAt < new Date()));
+	const pastEvents = $derived(favoriteEvents.filter((event) => (event.endAt ?? addHours(event.startAt, 4)) < now.value));
+	const upcomingEvents = $derived(favoriteEvents.filter(x => !pastEvents.some(y => y.id === x.id)));
 
 	function onRemoveFavorite(eventId: number) {
 		removeFavorite(eventId).updates(

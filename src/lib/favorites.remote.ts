@@ -4,7 +4,7 @@ import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { events, favorites } from '$lib/server/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, asc } from 'drizzle-orm';
 import { eventWith, prepareEventsForUi } from './server/events';
 
 export const getFavoriteEventIds = query(async () => {
@@ -58,7 +58,8 @@ export const getFavoriteEvents = query(async () => {
 	const userId = ensureUserId();
 	const favoriteEvents = await db.query.events.findMany({
 		where: inArray(events.id, favoriteEventIdsQuery(userId)),
-		with: eventWith
+		with: eventWith,
+		orderBy: [asc(events.startAt)]
 	});
 	return prepareEventsForUi(favoriteEvents);
 });
