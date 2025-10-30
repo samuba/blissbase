@@ -1,20 +1,27 @@
 <script lang="ts">
-	import { addFavorite, getFavoriteEventIds, removeFavorite } from "$lib/favorites.remote";
-	import { user } from "$lib/user.svelte";
-	import LoginDialog from "./LoginDialog.svelte";
+	import { addFavorite, getFavoriteEventIds, removeFavorite } from '$lib/favorites.remote';
+	import { user } from '$lib/user.svelte';
+	import LoginDialog from './LoginDialog.svelte';
 
 	let {
 		class: className,
-		eventId
-	}: { class?: string; eventId: number } = $props();
+		eventId,
+		onAddFavorite,
+		onRemoveFavorite
+	}: {
+		class?: string;
+		eventId: number;
+		onAddFavorite?: (eventId: number) => void | undefined;
+		onRemoveFavorite?: (eventId: number) => void | undefined;
+	} = $props();
 
 	const name = crypto.randomUUID();
-	const favoritesQuery = getFavoriteEventIds();
-	let favorites = $derived(await favoritesQuery)
+	const favoriteIdsQuery = getFavoriteEventIds();
+	let favorites = $derived(await favoriteIdsQuery);
 	let isFavorite = $derived(favorites.includes(eventId));
 	let animate = $state(false);
 	let loginDialogOpen = $state(false);
-	
+
 	function handleChange(event: Event) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -26,13 +33,13 @@
 		}
 		animate = true;
 		if ((event.target as HTMLInputElement).checked) {
-			addFavorite(eventId).updates(
-				favoritesQuery.withOverride((current) => [...current, eventId])
-			);
+			if (onAddFavorite) onAddFavorite(eventId);
+			addFavorite(eventId).updates(favoriteIdsQuery.withOverride((current) => [...current, eventId]))
 		} else {
-			removeFavorite(eventId).updates(
-				favoritesQuery.withOverride((current) => current.filter(id => id !== eventId))
-			);
+			if (onRemoveFavorite) onRemoveFavorite(eventId)
+			else removeFavorite(eventId).updates(
+				favoriteIdsQuery.withOverride((current) => current.filter((id) => id !== eventId)), 
+			)
 		}
 	}
 

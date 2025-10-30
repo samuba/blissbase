@@ -44,7 +44,7 @@ export const removeFavorite = command(v.number(), async (eventId) => {
 		await db
 			.delete(favorites)
 			.where(and(eq(favorites.userId, userId), eq(favorites.eventId, eventId)));
-		getFavoriteEvents().refresh();
+		getFavoriteEventIds().refresh();
 	} catch (err) {
 		console.error(`Failed to remove favorite:`, err);
 		error(500, `Failed to remove favorite`);

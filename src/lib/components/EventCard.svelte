@@ -9,7 +9,17 @@
 	import LoginDialog from './LoginDialog.svelte';
 	import FavoriteButton from './FavoriteButton.svelte';
 
-	const { event, class: className }: { event: UiEvent; class?: string } = $props();
+	const {
+		event,
+		class: className,
+		onAddFavorite,
+		onRemoveFavorite
+	}: {
+		event: UiEvent;
+		class?: string;
+		onAddFavorite?: (eventId: number) => void | undefined;
+		onRemoveFavorite?: (eventId: number) => void | undefined;
+	} = $props();
 
 	let imageLoadError = $state(false);
 	const imageUrl = $derived(event.imageUrls?.[0]);
@@ -47,11 +57,17 @@
 		};
 
 		document.addEventListener('prepare-close-transition', handlePrepareClose as EventListener);
-		document.addEventListener('close-transition-finished', handleTransitionFinished as EventListener);
+		document.addEventListener(
+			'close-transition-finished',
+			handleTransitionFinished as EventListener
+		);
 
 		return () => {
 			document.removeEventListener('prepare-close-transition', handlePrepareClose as EventListener);
-			document.removeEventListener('close-transition-finished', handleTransitionFinished as EventListener);
+			document.removeEventListener(
+				'close-transition-finished',
+				handleTransitionFinished as EventListener
+			);
 		};
 	});
 
@@ -68,12 +84,12 @@
 
 			// Mark that we're opening to keep the transition name during the transition
 			isOpening = true;
-			
+
 			const transition = document.startViewTransition(() => {
 				// Remove the transition name from card before updating state
 				// so only the dialog will have it in the NEW state
 				isOpening = false;
-				
+
 				flushSync(() => {
 					pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
 				});
@@ -88,10 +104,10 @@
 		}
 	}
 
-	const tags  = $derived.by(() => {
+	const tags = $derived.by(() => {
 		const tags = new Set<string>();
-		event.tags2?.filter((x) => x.locale === 'de')?.forEach(x => tags.add(x.name));
-		event.tags?.forEach(x => {
+		event.tags2?.filter((x) => x.locale === 'de')?.forEach((x) => tags.add(x.name));
+		event.tags?.forEach((x) => {
 			if (x.de) tags.add(x.de);
 			else tags.add(x);
 		});
@@ -112,7 +128,7 @@
 	onmouseleave={() => (isHovering = false)}
 >
 	<article
-		class="card bg-base-100 flex flex-col rounded-lg shadow-sm transition-all sm:flex-row {className}"
+		class="card bg-base-100 fade-out-0 flex flex-col rounded-lg shadow-sm transition-all sm:flex-row {className}"
 		style={shouldHaveTransitionName ? `view-transition-name: event-card-${event.id}` : ''}
 		data-event-id={event.id}
 	>
@@ -121,10 +137,12 @@
 				'from-base-200/50 to-base-300 relative min-w-32 rounded-t-lg bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-l-lg sm:rounded-tr-none'
 			]}
 		>
-		<FavoriteButton 
-			eventId={event.id}
-			class="absolute bottom-2 right-2 z-5"
-		/>
+			<FavoriteButton
+				eventId={event.id}
+				class="absolute right-2 bottom-2 z-5"
+				{onAddFavorite}
+				{onRemoveFavorite}
+			/>
 
 			{#if imageUrl}
 				<div
@@ -164,38 +182,34 @@
 				{formatTimeStr(event.startAt, event.endAt)}
 			</div>
 
-
 			{#if event.attendanceMode === 'online'}
 				<div class="flex items-center gap-1.5 text-sm">
 					<i class="icon-[ph--globe] size-4 min-w-4"></i>
 					<span class="leading-tight">Online</span>
 				</div>
-			{:else}
-				{#if event.address?.length}
-					<div class="flex items-center gap-1.5 text-sm">
-						<div class="flex items-center gap-1">
-							<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
-							{#if event.attendanceMode === 'offline+online'}
-								<i class="icon-[ph--globe] size-4 min-w-4"></i>
-							{/if}
-						</div>
+			{:else if event.address?.length}
+				<div class="flex items-center gap-1.5 text-sm">
+					<div class="flex items-center gap-1">
+						<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
+						{#if event.attendanceMode === 'offline+online'}
+							<i class="icon-[ph--globe] size-4 min-w-4"></i>
+						{/if}
+					</div>
 
-						<div class="leading-tight">
-							{#if event.distanceKm}
-								<span class="font-medium">
-									{event.distanceKm} km entfernt
-								</span>
-							{/if}
-							<div title={event.address?.join(', ')} class="truncate-2lines">
-								{formatAddress(event.address)}
-							</div>
+					<div class="leading-tight">
+						{#if event.distanceKm}
+							<span class="font-medium">
+								{event.distanceKm} km entfernt
+							</span>
+						{/if}
+						<div title={event.address?.join(', ')} class="truncate-2lines">
+							{formatAddress(event.address)}
 						</div>
 					</div>
-				{/if}
+				</div>
 			{/if}
 
-
-			{#if (tags.length)}
+			{#if tags.length}
 				<div class="mt-1 flex flex-wrap gap-1 text-xs">
 					{#each tags as tag}
 						<button class="badge badge-sm badge-ghost">

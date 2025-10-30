@@ -1,21 +1,39 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
-	import { getFavoriteEvents } from '$lib/favorites.remote';
+	import {
+		getFavoriteEvents,
+		removeFavorite
+	} from '$lib/favorites.remote';
 	import { page } from '$app/state';
 	import EventDetailsDialog from '../../EventDetailsDialog.svelte';
+	import { flip } from 'svelte/animate';
+	import { fade } from 'svelte/transition';
 
-	let favoriteEvents = $derived(await getFavoriteEvents());
-    const selectedEvent = $derived(favoriteEvents.find(event => event.id === page.state.selectedEventId));
+	const favoritesQuery = getFavoriteEvents();
+	let favoriteEvents = $derived(await favoritesQuery);
+	const selectedEvent = $derived(favoriteEvents.find((event) => event.id === page.state.selectedEventId));
+
+	function onRemoveFavorite(eventId: number) {
+		removeFavorite(eventId).updates(
+			favoritesQuery.withOverride((current) => current.filter((x) => x.id !== eventId))
+		);
+	}
 </script>
 
 <PageHeader backRoute="/" title="Favoriten" />
 
-<div class=" flex items-center justify-center"> 
+<div class=" flex items-center justify-center">
 	<div class="w-full max-w-2xl">
 		<div class="flex w-full flex-col gap-6 px-4">
 			{#each favoriteEvents as event (event.id)}
-				<EventCard {event} />
+				<div animate:flip={{ duration: 450 }} out:fade={{ duration: 250 }}>
+					<EventCard {event} {onRemoveFavorite} />
+				</div>
+            {:else}
+                <div class="text-center text-gray-500 my-4">
+                    Du hast noch keine Events als Favoriten markiert.
+                </div>
 			{/each}
 		</div>
 
