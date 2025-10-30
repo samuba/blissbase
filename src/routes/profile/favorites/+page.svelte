@@ -2,8 +2,11 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import { getFavoriteEvents } from '$lib/favorites.remote';
+	import { page } from '$app/state';
+	import EventDetailsDialog from '../../EventDetailsDialog.svelte';
 
 	let favoriteEvents = $derived(await getFavoriteEvents());
+    const selectedEvent = $derived(favoriteEvents.find(event => event.id === page.state.selectedEventId));
 </script>
 
 <PageHeader backRoute="/" title="Favoriten" />
@@ -24,3 +27,5 @@
 		</div>
 	</div>
 </div>
+
+<EventDetailsDialog event={selectedEvent} />
