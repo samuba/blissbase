@@ -11,7 +11,7 @@
 <div class=" flex items-center justify-center"> 
 	<div class="w-full max-w-2xl">
 		<div class="flex w-full flex-col gap-6 px-4">
-			{#each favoriteEvents as event}
+			{#each favoriteEvents as event (event.id)}
 				<EventCard {event} />
 			{/each}
 		</div>
