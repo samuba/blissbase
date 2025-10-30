@@ -14,8 +14,12 @@
 	const selectedEvent = $derived(
 		favoriteEvents.find((event) => event.id === page.state.selectedEventId)
 	);
-	const pastEvents = $derived(favoriteEvents.filter((event) => (event.endAt ?? addHours(event.startAt, 4)) < now.value));
-	const upcomingEvents = $derived(favoriteEvents.filter(x => !pastEvents.some(y => y.id === x.id)));
+	const pastEvents = $derived(
+		favoriteEvents.filter((event) => (event.endAt ?? addHours(event.startAt, 4)) < now.value)
+	);
+	const upcomingEvents = $derived(
+		favoriteEvents.filter((x) => !pastEvents.some((y) => y.id === x.id))
+	);
 
 	function onRemoveFavorite(eventId: number) {
 		removeFavorite(eventId).updates(
@@ -34,22 +38,22 @@
 					<EventCard {event} {onRemoveFavorite} />
 				</div>
 			{:else}
-				<div class="text-center text-gray-500 my-4">
-					Keine kommenden Events in deinen Favoriten.
-				</div>
+				{#if pastEvents.length === 0}
+					<div class="text-center text-gray-500 my-4">Keine Events in deinen Favoriten.</div>
+				{/if}
 			{/each}
 		</div>
 
-        {#if pastEvents.length > 0}
-            <h2 class="text-xl font-bold mb-4 mt-8">Vergangene Favoriten</h2>
-            <div class="flex w-full flex-col gap-6">
-                {#each pastEvents as event (event.id)}
-                    <div animate:flip={{ duration: 450 }} out:fade={{ duration: 250 }}>
-                        <EventCard {event} {onRemoveFavorite} />
-                    </div>
-                {/each}
-            </div>
-        {/if}
+		{#if pastEvents.length > 0}
+			<h2 class="mt-8 mb-4 text-xl font-bold">Vergangene Favoriten</h2>
+			<div class="flex w-full flex-col gap-6">
+				{#each pastEvents as event (event.id)}
+					<div animate:flip={{ duration: 450 }} out:fade={{ duration: 250 }}>
+						<EventCard {event} {onRemoveFavorite} />
+					</div>
+				{/each}
+			</div>
+		{/if}
 
 		<div class="flex justify-center p-4">
 			<a href="/" class="btn-sm btn">
