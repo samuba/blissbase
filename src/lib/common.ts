@@ -18,6 +18,9 @@ export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export function addHours(date: Date, hours: number) {
+    return new Date(date.getTime() + hours * 60 * 60 * 1000);
+}
 
 export function formatTimeStr(start: Date | undefined, end: Date | undefined | null): string {
     if (!start) return 'Date TBD';

@@ -1,18 +1,19 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
-	import {
-		getFavoriteEvents,
-		removeFavorite
-	} from '$lib/favorites.remote';
+	import { getFavoriteEvents, removeFavorite } from '$lib/favorites.remote';
 	import { page } from '$app/state';
 	import EventDetailsDialog from '../../EventDetailsDialog.svelte';
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
 
 	const favoritesQuery = getFavoriteEvents();
-	let favoriteEvents = $derived(await favoritesQuery);
-	const selectedEvent = $derived(favoriteEvents.find((event) => event.id === page.state.selectedEventId));
+	const favoriteEvents = $derived(await favoritesQuery);
+	const selectedEvent = $derived(
+		favoriteEvents.find((event) => event.id === page.state.selectedEventId)
+	);
+	const upcomingEvents = $derived(favoriteEvents.filter((event) => event.startAt > new Date()));
+	const pastEvents = $derived(favoriteEvents.filter((event) => event.startAt < new Date()));
 
 	function onRemoveFavorite(eventId: number) {
 		removeFavorite(eventId).updates(
@@ -24,18 +25,29 @@
 <PageHeader backRoute="/" title="Favoriten" />
 
 <div class=" flex items-center justify-center">
-	<div class="w-full max-w-2xl">
-		<div class="flex w-full flex-col gap-6 px-4">
-			{#each favoriteEvents as event (event.id)}
+	<div class="w-full max-w-2xl px-4">
+		<div class="flex w-full flex-col gap-6">
+			{#each upcomingEvents as event (event.id)}
 				<div animate:flip={{ duration: 450 }} out:fade={{ duration: 250 }}>
 					<EventCard {event} {onRemoveFavorite} />
 				</div>
-            {:else}
-                <div class="text-center text-gray-500 my-4">
-                    Du hast noch keine Events als Favoriten markiert.
-                </div>
+			{:else}
+				<div class="text-center text-gray-500 my-4">
+					Keine kommenden Events in deinen Favoriten.
+				</div>
 			{/each}
 		</div>
+
+        {#if pastEvents.length > 0}
+            <h2 class="text-xl font-bold mb-4 mt-8">Vergangene Favoriten</h2>
+            <div class="flex w-full flex-col gap-6">
+                {#each pastEvents as event (event.id)}
+                    <div animate:flip={{ duration: 450 }} out:fade={{ duration: 250 }}>
+                        <EventCard {event} {onRemoveFavorite} />
+                    </div>
+                {/each}
+            </div>
+        {/if}
 
 		<div class="flex justify-center p-4">
 			<a href="/" class="btn-sm btn">

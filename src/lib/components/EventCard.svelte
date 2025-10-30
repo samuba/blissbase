@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { UiEvent } from '$lib/server/events';
-	import { formatAddress, formatTimeStr } from '$lib/common';
+	import { addHours, formatAddress, formatTimeStr } from '$lib/common';
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';
 	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
@@ -8,6 +8,7 @@
 	import { flushSync } from 'svelte';
 	import LoginDialog from './LoginDialog.svelte';
 	import FavoriteButton from './FavoriteButton.svelte';
+	import { now } from '$lib/now.svelte';
 
 	const {
 		event,
@@ -30,6 +31,9 @@
 	let isHovering = $state(false);
 	let isClosing = $state(false);
 	let isOpening = $state(false);
+
+	const isPast = $derived((event.endAt ?? addHours(event.startAt, 4)) < now.value);
+	const isOngoing = $derived(event.startAt < now.value && (event.endAt ?? addHours(event.startAt, 4) > now.value));
 
 	const shouldHaveTransitionName = $derived.by(() => {
 		if (typeof window === 'undefined') return false;
@@ -126,7 +130,7 @@
 	onclick={handleClick}
 	onmouseenter={() => (isHovering = true)}
 	onmouseleave={() => (isHovering = false)}
->
+> 
 	<article
 		class="card bg-base-100 fade-out-0 flex flex-col rounded-lg shadow-sm transition-all sm:flex-row {className}"
 		style={shouldHaveTransitionName ? `view-transition-name: event-card-${event.id}` : ''}
@@ -177,9 +181,17 @@
 				{/if}
 			</h3>
 
-			<div class="flex items-center gap-1">
+			<div class="flex items-center gap-1 flex-wrap">
 				<!-- <i class="icon-[ph--clock] mr-1.5 size-4 min-w-4"></i> -->
-				{formatTimeStr(event.startAt, event.endAt)}
+				 <span>
+					 {formatTimeStr(event.startAt, event.endAt)}
+				</span>
+				
+				{#if isPast}
+					<div class="badge badge-secondary badge-sm ml-2">Vorbei</div>
+				{:else if isOngoing}
+					<div class="badge badge-primary badge-sm ml-2">Läuft</div>
+				{/if}
 			</div>
 
 			{#if event.attendanceMode === 'online'}
