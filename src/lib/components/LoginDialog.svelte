@@ -53,8 +53,6 @@
 		<Dialog.Content
 			class={[
 				'bg-base-100 fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl',
-				'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top',
-				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:slide-out-to-top'
 			]}
 		>
 			<Dialog.Title class="mb-4 text-xl font-semibold">Anmelden</Dialog.Title>
