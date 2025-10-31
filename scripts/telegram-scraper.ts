@@ -21,6 +21,8 @@ const sessionAuthKeyString = process.env.TELEGRAM_APP_SESSION ?? "";
 const sessionAuthKey = new StringSession(sessionAuthKeyString);
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
 
+const maxSecondsBetweenMessagesForSameEvent = 20 * 60; // 20 minutes
+
 function resolveTelegramFormattingToHtml(text: string, entities: Api.TypeMessageEntity[] | undefined): string {
     // Type definitions for converted entities
     type ConvertedEntity = {
@@ -472,8 +474,6 @@ async function findAdjacentImageMessages(
     if (!currentAuthorId) return { messages: adjacentMessages, messageIds };
 
     const currentMessageTime = currentMessage.date;
-    const timeWindowSeconds = 300; // 5 minutes before/after
-
     console.log(`Looking for adjacent images from user ${currentAuthorId} around message ${currentMessage.id}`);
 
     const sortedMessages = [...allMessages].sort((a, b) => a.date - b.date);
@@ -485,7 +485,7 @@ async function findAdjacentImageMessages(
         if (messageAuthorId !== currentAuthorId) continue;
 
         const timeDiff = Math.abs(message.date - currentMessageTime);
-        if (timeDiff > timeWindowSeconds) continue;
+        if (timeDiff > maxSecondsBetweenMessagesForSameEvent) continue;
 
         if (isImageMedia(message)) {
             const messageIndex = sortedMessages.findIndex(msg => msg.id === message.id);
@@ -568,7 +568,6 @@ async function extractAdjacentTextMessages(
     if (!currentAuthorId) return { textMessages, messageIds };
 
     const currentMessageTime = currentMessage.date;
-    const timeWindowSeconds = 300; // 5 minutes before/after
 
     console.log(`Looking for adjacent text messages from user ${currentAuthorId} around message ${currentMessage.id}`);
 
@@ -586,7 +585,7 @@ async function extractAdjacentTextMessages(
         if (messageAuthorId !== currentAuthorId) continue;
 
         const timeDiff = Math.abs(message.date - currentMessageTime);
-        if (timeDiff > timeWindowSeconds) continue;
+        if (timeDiff > maxSecondsBetweenMessagesForSameEvent) continue;
 
         // Skip the current message itself
         if (message.id === currentMessage.id) continue;
