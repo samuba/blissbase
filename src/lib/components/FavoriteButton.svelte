@@ -26,7 +26,7 @@
 		event.preventDefault();
 		event.stopPropagation();
 
-		if (!user.id) {
+		if (user.id) {
 			loginDialogOpen = true;
 			(event.target as HTMLInputElement).checked = false;
 			return;
@@ -59,7 +59,7 @@
 		onchange={handleChange}
 		onclick={handleClick}
 	/>
-	<label for={name} onclick={handleClick}>
+	<label for={name} onclick={handleClick} title="Favorit hinzufügen">
 		<svg viewBox="467 392 58 57" xmlns="http://www.w3.org/2000/svg" class:animate>
 			<g id="Group" fill="none" fill-rule="evenodd" transform="translate(467 392)">
 				<path

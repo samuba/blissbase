@@ -85,28 +85,5 @@ body {
 	@apply data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:duration-150 data-[state=closed]:ease-in data-[state=open]:duration-300 data-[state=open]:ease-out;
 }
 [data-dialog-content] {
-	@apply data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-top-4 data-[state=open]:sm:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-4 data-[state=closed]:sm:zoom-out-95 data-[state=closed]:duration-15 data-[state=closed]:ease-in data-[state=open]:duration-300 data-[state=open]:ease-out;
-}
-
-/* View Transition API animations */
-::view-transition-old(root),
-::view-transition-new(root) {
-	animation: none;
-}
-
-::view-transition-group(root) {
-	animation-duration: 0s;
-}
-
-/* Match all event card transitions */
-::view-transition-group(*) {
-	animation-duration: 350ms;
-	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-::view-transition-old(*),
-::view-transition-new(*) {
-	animation-duration: 350ms;
-	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-	mix-blend-mode: normal;
+	@apply data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-top-8 data-[state=open]:sm:zoom-in-92 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-8 data-[state=closed]:sm:zoom-out-92 data-[state=closed]:duration-150 data-[state=closed]:ease-in data-[state=open]:duration-300 data-[state=open]:ease-out;
 }

@@ -1,13 +1,18 @@
+events aus vergangenheit werden nur angezeigt wenn ende noch nicht erreicht
+
+<script>emaillink('netzwerk','ganzheitlich-gesund-potsdam','de','','','');</script><object type="multipart/example"><noscript>netzwerk(at)ganzheitlich-gesund-potsdam.de</noscript></object>
+
+blissbase als chatgpt app?
+
+ort wählen + Überall zeigt nicht mehr distanz an
+
 tags
-  fixen
-    actually filtern
-    text suche
-    mobile view mit selektiertem ort
   tags die nicht kanon sind, wie handlen? additionalTags field im event?
   ki tags für scraped WEBSITES
     - caching for text or slug
 
-online event filter im ort drop down
+default tags für manche gruppen/untergruppen zB contact improvisation für contact osna etc
+
 
 quelle deutlich anzeigen
 
@@ -20,8 +25,6 @@ make it sexy like lumaya
  duplicate erkennung: zeit nicht berücksichtigen, dafür adresse mit similarity
 
 Spendenaufruf
-
-suche nach kategorien / kategorien entdecken
 
 SEO Seiten
 
