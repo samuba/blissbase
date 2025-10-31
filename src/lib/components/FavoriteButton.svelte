@@ -26,7 +26,7 @@
 		event.preventDefault();
 		event.stopPropagation();
 
-		if (user.id) {
+		if (!user.id) {
 			loginDialogOpen = true;
 			(event.target as HTMLInputElement).checked = false;
 			return;
