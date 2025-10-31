@@ -86,7 +86,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     const offset = (page - 1) * limit;
 
     const now = new Date();
-    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
     const startDate = startCalDate.toDate(timeZone);
     const endDate = new Date(endCalDate.toDate(timeZone).getTime() + 24 * 60 * 60 * 1000 - 1) // End of day
 
@@ -99,7 +99,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         isHistoricalRange ? undefined : or(
             gte(s.events.startAt, sql`NOW()`),   // Future events (haven't started yet)
             and(
-                gte(s.events.startAt, sixHoursAgo),   // Recent events (started within last 6 hours)
+                gte(s.events.startAt, twoHoursAgo),   // Recent events (started within last 6 hours)
                 or(
                     isNull(s.events.endAt),  // Events without end time
                     gte(s.events.endAt, sql`NOW()`)  // Events that haven't ended yet
@@ -112,7 +112,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         gte(s.events.endAt, startDate),
         lte(s.events.endAt, endDate),
         isHistoricalRange ? undefined : and(
-            gte(s.events.startAt, sixHoursAgo),
+            gte(s.events.startAt, twoHoursAgo),
             gte(s.events.endAt, sql`NOW()`)  // Event hasn't ended yet
         )
     );
@@ -121,7 +121,7 @@ export async function fetchEvents(params: LoadEventsParams) {
         lt(s.events.startAt, startDate),
         gt(s.events.endAt, endDate),
         isHistoricalRange ? undefined : and(
-            gte(s.events.startAt, sixHoursAgo),
+            gte(s.events.startAt, twoHoursAgo),
             gte(s.events.endAt, sql`NOW()`)  // Event hasn't ended yet
         )
     );
