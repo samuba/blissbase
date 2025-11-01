@@ -108,9 +108,14 @@
 				</span>
 				
 				{#if isPast}
-					<div class="badge badge-secondary badge-sm ml-2">Vorbei</div>
+					<div class="badge badge-secondary badge-sm ml-2">
+						Vorbei
+					</div>
 				{:else if isOngoing}
-					<div class="badge badge-primary badge-sm ml-2">Läuft</div>
+					<div class="badge badge-ghost badge-sm ml-2">
+						<div class="bg-success w-2 h-2 rounded-full"></div>
+						Läuft
+					</div>
 				{/if}
 			</div>
 
