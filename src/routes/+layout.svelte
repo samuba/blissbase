@@ -4,27 +4,26 @@
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { pwaAssetsHead } from 'virtual:pwa-assets/head';
 	import { beforeNavigate, invalidate } from '$app/navigation';
-	import { browser } from '$app/environment';
 	import { MetaTags, deepMerge } from 'svelte-meta-tags';
 	import { onMount } from 'svelte';
 	import { setupAutoRefresh } from '$lib/auto-refresh';
 	import { user } from '$lib/user.svelte';
 	import { getFavoriteEventIds } from '$lib/favorites.remote';
 	import { invalidateAll } from '$app/navigation';
+	import { navigationIsDelayed } from '$lib/components/navigationIsDelayed.svelte';
+	import { fade } from 'svelte/transition';
 
 	let { data, children } = $props();
 	let { jwtClaims, supabase, userId } = $derived(data);
 	let metaTags = $derived(deepMerge(data.baseMetaTags, page.data.pageMetaTags));
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
-	if (browser) {
-		beforeNavigate(({ willUnload, to }) => {
-			// do browser refresh if new version of website was deployed.
-			if (updated.current && !willUnload && to?.url) {
-				location.href = to.url.href;
-			}
-		});
-	}
+	beforeNavigate(({ willUnload, to }) => {
+		// do browser refresh if new version of website was deployed.
+		if (updated.current && !willUnload && to?.url) {
+			location.href = to.url.href;
+		}
+	});
 
 	$effect(() => {
 		user.id = userId;
@@ -63,3 +62,16 @@
 <MetaTags {...metaTags} />
 
 {@render children()}
+
+{#if $navigationIsDelayed}
+	<div class="fixed inset-0 z-100 h-full w-full" in:fade={{ duration: 200 }}>
+		<div class="absolute z-100 h-full w-full bg-white/30 backdrop-blur-sm"></div>
+		<div class="absolute z-110 flex h-full w-full items-center justify-center text-4xl">
+			<div class="rounded-full bg-base-200 p-3  size-20 animate-ping">
+			</div>
+			<div class="fixed rounded-full bg-base-200 p-3 shadow-md">
+				<img src="/logo.svg" alt="Loading Blissbase" class=" size-16 min-w-16  animate-spin" />
+			</div>
+		</div>
+	</div>
+{/if}

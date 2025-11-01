@@ -9,8 +9,10 @@
 	import { addHours } from '$lib/common';
 	import { now } from '$lib/now.svelte';
 
+	let { data } = $props();
+
 	const favoritesQuery = getFavoriteEvents();
-	const favoriteEvents = $derived(await favoritesQuery);
+	const favoriteEvents = $derived(favoritesQuery.loading ? data.favoriteEvents : await favoritesQuery); // needed as long as kit can not do preloading for remote functions
 	const selectedEvent = $derived(
 		favoriteEvents.find((event) => event.id === page.state.selectedEventId)
 	);
