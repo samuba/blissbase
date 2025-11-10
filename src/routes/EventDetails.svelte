@@ -97,7 +97,7 @@
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
-	let dontShowSourceUrl = $derived(['lumaya'].includes(event.source));
+	let dontShowSourceUrl = $derived(['lumaya', 'todotoday'].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
