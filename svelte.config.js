@@ -19,6 +19,9 @@ const config = {
 			remoteFunctions: true
 		}
 	},
+	vitePlugin: {
+		inspector: true,
+	},
 	compilerOptions: {
 		experimental: {
 			async: true

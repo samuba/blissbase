@@ -50,7 +50,9 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 
 		const messageDate = ctx.message?.date ? new Date(ctx.message.date * 1000) : new Date();
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
-		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml, messageDate, [image?.url]), !fromGroup)
+		// Note: Using default timezone "germany" here. For chat-specific timezones, 
+		// the architecture would need to be changed to fetch chat config before AI call.
+		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml, messageDate, "germany", [image?.url]), !fromGroup)
 
 		// console.log("calling vercel with", {
 		// 	telegramPayload: payloadJson,

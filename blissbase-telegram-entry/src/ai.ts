@@ -2,11 +2,11 @@ import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
 import { allTags } from '../../src/lib/tags';
 
-export async function aiExtractEventData(message: string, messageDate: Date, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
+export async function aiExtractEventData(message: string, messageDate: Date, timezone: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
     console.log(`🤖 AI extracting event data with ${imageUrls.length} images...`)
     const { text } = await generateText({
         model: openai('gpt-5-mini'),
-        system: msgAnalysisSystemPrompt(messageDate),
+        system: msgAnalysisSystemPrompt(messageDate, timezone),
         messages: [
             {
                 role: "user",
@@ -40,7 +40,7 @@ export async function aiExtractEventData(message: string, messageDate: Date, ima
     }
 }
 
-export const msgAnalysisSystemPrompt = (messageDate: Date) => `
+export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: Timezone) => `
 Your purpose is to analyze messenger text messages and images to extract information about events from them. 
 Ignore messages that are not event announcements by setting hasEventData to false. (Be strict about this. E.g. this is not an event announcement: "..Wir haben noch einen Platz frei für den nächsten Tantra event..")
 Answer only in valid, properly escaped, raw JSON. Do not wrap it inside markdown or anything else.
@@ -61,7 +61,7 @@ https://tribehaus.org/
 https://www.tribehaus.org/
 
 
-When extracting dates and time, always assume german time unless stated otherwise, be sure to take correct daylight saving time into account.
+When extracting dates and time, always assume ${timezone} time unless you know for sure the location is in another timezone, be sure to take correct daylight saving time into account.
 Today is  ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 But the message was sent on ${messageDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
 
@@ -77,9 +77,9 @@ Extract these information from the message:
 
 "descriptionBrief": string. The same content as in "description" field, including html tags. Remove name/title, start time, end time if they were extracted into other fields.
 
-"startDate": string. The date and time of the event start. Assume german time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find date and not time assume start of the day. If multiple start dates are mentioned take the one thats in the future and closest to today. 
+"startDate": string. The date and time of the event start. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find date and not time assume start of the day. If multiple start dates are mentioned take the one thats in the future and closest to today. 
 
-"endDate": string. The date and time of the event end. Assume german time zone if no other country is mentioned. Return as ISO 8601 with timezone. ONLY if specified in the message.
+"endDate": string. The date and time of the event end. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. ONLY if specified in the message.
 
 "url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider google maps urls for this. Never consider urls for this that start with "https://t.me".
 

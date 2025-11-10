@@ -632,9 +632,7 @@ function hasTextMessagesBetween(
     return false;
 }
 
-
-
-async function extractEventDataFromImageMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[]): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
+async function extractEventDataFromImageMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[], defaultTimezone: string): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
     if (message.media?.className !== 'MessageMediaPhoto') return undefined;
 
     console.log("Processing image-only message for event data:", message.id);
@@ -649,7 +647,7 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join('\n\n') : '';
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), [imageDataUrl]);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, [imageDataUrl]);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -673,7 +671,7 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
     return { event: mergedEvent, adjacentMessageIds: allAdjacentMessageIds };
 }
 
-async function extractEventDataFromMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[]): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
+async function extractEventDataFromMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[], defaultTimezone: string): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
     const msgHtml = resolveTelegramFormattingToHtml(message.message, message.entities);
     console.log("extracting event data from message", message.id)
 
@@ -683,7 +681,7 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
     const combinedText = [msgHtml, ...adjacentTextMessages].join('\n\n');
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), adjacentImageUrls);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, adjacentImageUrls);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -912,7 +910,7 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
         console.log(`Found ${messages.length} new messages`);
 
         if (messages.length > 0) {
-            const { scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client);
+            const { scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client, target.defaultTimezone);
             messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
             const latestMsgId = BigInt(messages[0].id);
             const latestMsgTime = new Date(messages[0].date * 1000);
@@ -963,7 +961,7 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
 /**
  * Processes messages and returns the newest message ID
  */
-async function processMessages(messages: TotalList<Api.Message>, chatId: string, client: TelegramClient) {
+async function processMessages(messages: TotalList<Api.Message>, chatId: string, client: TelegramClient, defaultTimezone: string) {
     let events: InsertEvent[] = [];
     const processedMessageIds = new Set<number>(); // Track processed messages to avoid duplicates
 
@@ -983,7 +981,7 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
 
         // Handle text messages with event data
         if (msg && msg.length > 30) {
-            const result = await extractEventDataFromMessage(message, chatId, client, allMessages);
+            const result = await extractEventDataFromMessage(message, chatId, client, allMessages, defaultTimezone);
             if (result) {
                 events.push(result.event);
                 // Mark this message and its adjacent images as processed
@@ -994,7 +992,7 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
         // Handle image-only messages that might contain event flyers
         else if (isImageMedia(message) && (!msg || msg.length <= 30)) {
             console.log(`Processing image-only message ${message.id} for potential event data`);
-            const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages);
+            const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages, defaultTimezone);
             if (result) {
                 events.push(result.event);
                 // Mark this message and its adjacent images as processed

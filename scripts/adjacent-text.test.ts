@@ -36,9 +36,9 @@ describe('Adjacent Text Message Processing', () => {
         const combinedText = [mainText, ...adjacentTexts].join('\n\n');
 
         const date = new Date();
-        const result = await aiExtractEventData(combinedText, date, []);
+        const result = await aiExtractEventData(combinedText, date, 'germany', []);
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, []);
+        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, 'germany', []);
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Yoga Workshop");
         expect(result.startDate).toBe("2024-12-20T18:00:00+01:00");
@@ -67,9 +67,9 @@ describe('Adjacent Text Message Processing', () => {
         const imageUrl = 'https://example.com/art-flyer.jpg';
 
         const date = new Date();
-        const result = await aiExtractEventData(combinedText, date, [imageUrl]);
+        const result = await aiExtractEventData(combinedText, date, 'germany', [imageUrl]);
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, [imageUrl]);
+        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, 'germany', [imageUrl]);
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Art Exhibition");
     });
@@ -90,9 +90,9 @@ describe('Adjacent Text Message Processing', () => {
         // Test the AI function with just the main message
         const mainText = "Join our dance class every Tuesday at 19:00";
         const date = new Date();
-        const result = await aiExtractEventData(mainText, date, []);
+        const result = await aiExtractEventData(mainText, date, 'germany', []);
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(mainText, date, []);
+        expect(aiExtractEventData).toHaveBeenCalledWith(mainText, date, 'germany', []);
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Dance Class");
     });
@@ -121,9 +121,9 @@ describe('Adjacent Text Message Processing', () => {
         const combinedText = [mainText, ...adjacentTexts].join('\n\n');
 
         const date = new Date();
-        const result = await aiExtractEventData(combinedText, date, []);
+        const result = await aiExtractEventData(combinedText, date, 'germany', []);
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, []);
+        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, 'germany', []);
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Meditation Retreat");
     });
@@ -154,9 +154,9 @@ describe('Adjacent Text Message Processing', () => {
         ];
 
         const date = new Date();
-        const result = await aiExtractEventData(combinedText, date, imageUrls);
+        const result = await aiExtractEventData(combinedText, date, 'germany', imageUrls);
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, imageUrls);
+        expect(aiExtractEventData).toHaveBeenCalledWith(combinedText, date, 'germany', imageUrls);
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Cooking Workshop");
     });
