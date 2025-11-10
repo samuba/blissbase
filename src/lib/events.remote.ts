@@ -165,6 +165,8 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 async function assertUserIsAllowedToEditEvent(eventId: number, hostSecret: string) {
     const event = await db.query.events.findFirst({ where: eq(s.events.id, eventId) });
     if (!event) error(404, "Event not found");
-    if (!await isAdminSession() && hostSecret !== event.hostSecret) error(403, "Invalid host secret");
+    if (!await isAdminSession()) {
+        if (hostSecret !== event.hostSecret) error(403, "Invalid host secret");
+    }
     return event;
 }

@@ -2,6 +2,7 @@
 	import type { UiEvent } from '$lib/server/events';
 	import { getIsAdminSession } from '$lib/admin.remote';
 	import { routes } from '$lib/routes';
+	import { deleteEvent } from '$lib/events.remote';
 
 	let { event }: { event: UiEvent } = $props();
 
@@ -23,6 +24,14 @@
 						Edit Event
 					</a>
 					<button class="btn" onclick={() => (showJson = !showJson)}>Show JSON</button>
+					<button class="btn btn-warning" onclick={async () => {
+						if (confirm('Are you sure you want to delete this event?')) {
+							await deleteEvent({
+								eventId: event.id,
+								hostSecret: 'admin does not need host secret'
+							});
+						}
+					}}>Delete</button>
 				</div>
 			</div>
 
