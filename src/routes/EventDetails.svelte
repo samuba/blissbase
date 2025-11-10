@@ -38,8 +38,8 @@
 
 	const tags = $derived.by(() => {
 		const tags = new Set<string>();
-		event.tags2?.filter((x) => x.locale === 'de')?.forEach(x => tags.add(x.name));
-		event.tags?.forEach(x => {
+		event.tags2?.filter((x) => x.locale === 'de')?.forEach((x) => tags.add(x.name));
+		event.tags?.forEach((x) => {
 			if (x.de) tags.add(x.de);
 			else tags.add(x);
 		});
@@ -97,7 +97,7 @@
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
-	let dontShowSourceUrl = $derived(['lumaya', 'todotoday'].includes(event.source));
+	let dontShowSourceUrl = $derived(event.sourceUrl?.includes('todo.today') ?? false);
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
@@ -143,7 +143,7 @@
 
 	// Load favorites asynchronously without blocking derived state
 	$effect(() => {
-		favoritesQuery.then(x => favorites = x);
+		favoritesQuery.then((x) => (favorites = x));
 	});
 
 	async function toggleFavorite(e: MouseEvent) {
@@ -152,7 +152,7 @@
 		try {
 			if (isFavorite) {
 				await removeFavorite(event.id).updates(
-					favoritesQuery.withOverride((current) => current.filter(id => id !== event.id))
+					favoritesQuery.withOverride((current) => current.filter((id) => id !== event.id))
 				);
 			} else {
 				await addFavorite(event.id).updates(
@@ -221,14 +221,14 @@
 			</div>
 		{/if}
 	{:else}
-		<RandomPlaceholderImg seed={event.name} class="h-full max-h-70 relative">
+		<RandomPlaceholderImg seed={event.name} class="relative h-full max-h-70">
 			{@render favoriteButton()}
 		</RandomPlaceholderImg>
 	{/if}
 
 	<div class="card-body text-base-content/90 w-full space-y-4 md:px-10">
 		<div class="relative">
-			<h1 class="card-title block w-full text-center text-2xl font-semibold pr-12">
+			<h1 class="card-title block w-full pr-12 text-center text-2xl font-semibold">
 				{event.name}
 
 				{#if event.soldOut}
@@ -268,68 +268,68 @@
 					<i class="icon-[ph--globe] mr-2 size-6"></i>
 					<p class="font-medium">Online</p>
 				</div>
-			{:else}
-				{#if event.address?.length}
-					<a
-						href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="btn h-fit max-w-full min-w-0 py-1.5 leading-tight font-medium break-words flex items-center gap-1.5"
-					>
-						<i class="icon-[ph--map-pin] size-6 flex-shrink-0"></i>
-						<span class="block min-w-0 break-words">{formatAddress(event.address)}</span>
-					</a>
-				{/if}
+			{:else if event.address?.length}
+				<a
+					href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="btn flex h-fit max-w-full min-w-0 items-center gap-1.5 py-1.5 leading-tight font-medium break-words"
+				>
+					<i class="icon-[ph--map-pin] size-6 flex-shrink-0"></i>
+					<span class="block min-w-0 break-words">{formatAddress(event.address)}</span>
+				</a>
 			{/if}
 
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 
-			{#if showQuelleInsteadOfAnmelden}
-				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
-					Quelle
-					<i class="icon-[ph--arrow-square-out] size-5"></i>
-				</a>
-			{:else if sourceUrl && !dontShowSourceUrl}
-				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
-					Anmelden
-					<i class="icon-[ph--arrow-square-out] size-5"></i>
-				</a>
-			{:else if singleContact?.method === 'Website'}
-				<a
-					href={singleContact.url}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="btn-primary btn"
-				>
-					Anmelden
-					<i class="icon-[ph--arrow-square-out] size-5"></i>
-				</a>
-			{:else}
-				<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
-					{#snippet trigger()}
-						<button class="btn btn-primary"> Anmelden </button>
-					{/snippet}
-					{#snippet content()}
-						{#if singleContact?.url}
-							<span class="word-wrap">
-								Der Veranstalter möchte Anmeldungen per <b> {singleContact.method}</b> erhalten.
-							</span>
+			{#if !dontShowSourceUrl}
+				{#if showQuelleInsteadOfAnmelden}
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
+						Quelle
+						<i class="icon-[ph--arrow-square-out] size-5"></i>
+					</a>
+				{:else if sourceUrl}
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
+						Anmelden
+						<i class="icon-[ph--arrow-square-out] size-5"></i>
+					</a>
+				{:else if singleContact?.method === 'Website'}
+					<a
+						href={singleContact.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn-primary btn"
+					>
+						Anmelden
+						<i class="icon-[ph--arrow-square-out] size-5"></i>
+					</a>
+				{:else}
+					<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
+						{#snippet trigger()}
+							<button class="btn btn-primary"> Anmelden </button>
+						{/snippet}
+						{#snippet content()}
+							{#if singleContact?.url}
+								<span class="word-wrap">
+									Der Veranstalter möchte Anmeldungen per <b> {singleContact.method}</b> erhalten.
+								</span>
 
-							<div class="mt-3 flex justify-center">
-								{@render contactButton(singleContact.method, singleContact.url!)}
-							</div>
-						{:else}
-							<span class="word-wrap">
-								Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:
-							</span>
-							<div class="mt-3 flex flex-col gap-3">
-								{#each event.contact as contact}
-									{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
-								{/each}
-							</div>
-						{/if}
-					{/snippet}
-				</PopOver>
+								<div class="mt-3 flex justify-center">
+									{@render contactButton(singleContact.method, singleContact.url!)}
+								</div>
+							{:else}
+								<span class="word-wrap">
+									Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:
+								</span>
+								<div class="mt-3 flex flex-col gap-3">
+									{#each event.contact as contact}
+										{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
+									{/each}
+								</div>
+							{/if}
+						{/snippet}
+					</PopOver>
+				{/if}
 			{/if}
 		</div>
 
@@ -390,7 +390,7 @@
 			</div>
 		{/if}
 
-		{#if event.source !== 'telegram'}
+		{#if event.source !== 'telegram' && !dontShowSourceUrl}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 			>
@@ -462,15 +462,15 @@
 	{/if}
 {/snippet}
 
+{#snippet favoriteButton()}
+	<FavoriteButton
+		eventId={event.id}
+		class="bg-base-100/80 hover:bg-base-100 absolute  right-4 bottom-4  z-5 flex items-center justify-center rounded-full backdrop-blur-sm transition-all hover:scale-110"
+	/>
+{/snippet}
+
 <style>
 	:global(.event-description a) {
 		text-decoration: underline;
 	}
 </style>
-
-{#snippet favoriteButton()}
-	<FavoriteButton 
-		eventId={event.id}
-		class="absolute bottom-4 right-4  z-5 flex  items-center justify-center rounded-full bg-base-100/80 backdrop-blur-sm transition-all hover:scale-110 hover:bg-base-100"
-	/>
-{/snippet}
