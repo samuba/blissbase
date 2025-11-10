@@ -326,20 +326,24 @@ export function linkify(html: string): string {
     return getHtmlBody($);
 }
 
-function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: string) {
-    const isoStringLocal = `${year.toString().padStart(4, '0')}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
+function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: string, countMonthFromZero: boolean) {
+    const yearStr = year.toString().padStart(4, '0')
+    const monthStr = (countMonthFromZero ? (month + 1) : month).toString().padStart(2, '0')
+    const dayStr = day.toString().padStart(2, '0')
+    const hourStr = hour.toString().padStart(2, '0')
+    const minuteStr = minute.toString().padStart(2, '0')
+    const isoStringLocal = `${yearStr}-${monthStr}-${dayStr}T${hourStr}:${minuteStr}:00`;
 
     // Create a Date object from this string, but we need to be careful about timezone interpretation
     // We'll create a date that represents "noon on this date" to check the timezone offset
     const referenceDate = new Date(year, month, day, 12, 0, 0);
 
-    // Get the Berlin timezone offset for this date (handles DST automatically)
-    const berlinFormatter = new Intl.DateTimeFormat('en', {
+    // Get the timezone offset for this date (handles DST automatically)
+    const formatter = new Intl.DateTimeFormat('en', {
         timeZone,
         timeZoneName: 'longOffset'
     });
-
-    const offsetPart = berlinFormatter.formatToParts(referenceDate).find(part => part.type === 'timeZoneName');
+    const offsetPart = formatter.formatToParts(referenceDate).find(part => part.type === 'timeZoneName');
     const offset = offsetPart?.value?.match(/[+-]\d{2}:\d{2}/)?.[0] || '+01:00';
 
     return `${isoStringLocal}${offset}`;
@@ -356,7 +360,7 @@ function dateToIsoStr(year: number, month: number, day: number, hour: number, mi
  * @returns ISO string with Berlin timezone offset (e.g., "2024-01-15T14:30:00+01:00" or "2024-07-15T14:30:00+02:00")
  */
 export function germanDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
-    return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin');
+    return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
 }
 
 /**
@@ -370,7 +374,7 @@ export function germanDateToIsoStr(year: number, month: number, day: number, hou
  * @returns ISO string with Bali timezone offset (e.g., "2024-01-15T14:30:00+08:00")
  */
 export function baliDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
-    return dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar');
+    return dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
 }
 
 export interface WebsiteScraperInterface {

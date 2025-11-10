@@ -49,10 +49,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         }
 
         // tommorrow
-        html = await customFetch('https://todo.today/', { 
-            returnType: 'text', 
+        html = await customFetch('https://todo.today/ubud/tomorrow/', {
+            returnType: 'text',
             // tomorrow only works logged in
-            headers: { 'Cookie': 'wordpress_logged_in_81ee6838d0646bf88530eae937360076=samuelbach%7C1763964374%7CFpczQIecBc6AmxjrN0R7WZH4XlGHMNHR7pvItAjcGN9%7Cbf90fc0491e1cd13d43dac6fa8f56400e66308c40317c385fdf052d67de07b4f;'} 
+            headers: { 'Cookie': 'wordpress_logged_in_81ee6838d0646bf88530eae937360076=samuelbach%7C1763964374%7CFpczQIecBc6AmxjrN0R7WZH4XlGHMNHR7pvItAjcGN9%7Cbf90fc0491e1cd13d43dac6fa8f56400e66308c40317c385fdf052d67de07b4f;' }
         });
         $ = cheerio.load(html);
         eventUrls = new Set(
@@ -81,29 +81,29 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
         const icalTimes = extractIcalStartAndEndTimes(html);
         const startAt = baliDateToIsoStr(
-            parseInt(icalTimes.startAt!.slice(0, 4)), 
-            parseInt(icalTimes.startAt!.slice(4, 6)), 
-            parseInt(icalTimes.startAt!.slice(6, 8)), 
-            parseInt(icalTimes.startAt!.slice(9, 11)), 
+            parseInt(icalTimes.startAt!.slice(0, 4)),
+            parseInt(icalTimes.startAt!.slice(4, 6)),
+            parseInt(icalTimes.startAt!.slice(6, 8)),
+            parseInt(icalTimes.startAt!.slice(9, 11)),
             parseInt(icalTimes.startAt!.slice(11, 13))
         );
         const endAt = baliDateToIsoStr(
-            parseInt(icalTimes.endAt!.slice(0, 4)), 
-            parseInt(icalTimes.endAt!.slice(4, 6)), 
-            parseInt(icalTimes.endAt!.slice(6, 8)), 
-            parseInt(icalTimes.endAt!.slice(9, 11)), 
+            parseInt(icalTimes.endAt!.slice(0, 4)),
+            parseInt(icalTimes.endAt!.slice(4, 6)),
+            parseInt(icalTimes.endAt!.slice(6, 8)),
+            parseInt(icalTimes.endAt!.slice(9, 11)),
             parseInt(icalTimes.endAt!.slice(11, 13))
         );
-            // Fallback to parsing from URL and time text
-            // const urlParts = url.split("/").reverse();
-            // const time = superTrim($('.event_single_page_time').text()!.split('·')[1])!
-            // const [startTime, endTime] = time.split(" - ");
-            // startAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]));
-            // endAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]));
+        // Fallback to parsing from URL and time text
+        // const urlParts = url.split("/").reverse();
+        // const time = superTrim($('.event_single_page_time').text()!.split('·')[1])!
+        // const [startTime, endTime] = time.split(" - ");
+        // startAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]));
+        // endAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]));
 
         const address = superTrim($('.data-entry-content-single-page .event_curren_venue').text())!.split(',').map(part => part.trim());
         const price = superTrim($('.data-entry-content-single-page .event_ticket_price_single').text())!;
-        const host = $('.data-entry-content-single-page .author-link').text()?.trim() || name.split(' w/ ')[1] ;
+        const host = $('.data-entry-content-single-page .author-link').text()?.trim() || name.split(' w/ ')[1];
         const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
         const sourceUrl = ($('.data-entry-content-single-page .ticket-link').attr('href')! ?? url).replace('TODOTODAY', '');
         const tags = $('.data-entry-content-single-page .event-category-label-no-image').map((_index, element) => $(element).text().trim()).get().filter(Boolean);
@@ -111,19 +111,19 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const event = {
             name,
             description,
-            imageUrls, 
-            startAt, 
-            endAt, 
-            address, 
-            price, 
-            priceIsHtml: false, 
-            host, 
-            hostLink: undefined, 
-            contact: [], 
-            latitude: coordinates?.lat, 
-            longitude: coordinates?.lng, 
-            tags, 
-            sourceUrl, 
+            imageUrls,
+            startAt,
+            endAt,
+            address,
+            price,
+            priceIsHtml: false,
+            host,
+            hostLink: undefined,
+            contact: [],
+            latitude: coordinates?.lat,
+            longitude: coordinates?.lng,
+            tags,
+            sourceUrl,
             source: 'todotoday' as const
         } satisfies ScrapedEvent;
         console.log({ event });
