@@ -20,7 +20,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:pull": "drizzle-kit pull",
-		"scrape": "bun run scripts/scrape-germany.ts",
+		"scrape": "bun run scripts/scrape-websites.ts",
 		"scrapeImport": "bun run scripts/import-events.ts",
 		"deduplicateImages": "bun run scripts/deduplicate-images.ts",
 		"cleanupUnusedImages": "bun run scripts/cleanup-unused-images.ts",

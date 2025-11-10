@@ -11,11 +11,20 @@ export const WEBSITE_SCRAPER_CONFIG = {
     ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
     kuschelraum: { module: './scrape-kuschelraum.ts' },
     ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts' },
+    todotoday: { module: './scrape-todotoday.ts' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const;
 export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
 export type WebsiteScrapeSource = (typeof WEBSITE_SCRAPE_SOURCES)[number];
 
+export function extractIcalStartAndEndTimes(html: string): { startAt: string | undefined, endAt: string | undefined } {
+    const startRegex = /\\nDTSTART:([0-9|T]*)\\/
+    const endRegex = /\\nDTEND:([0-9|T]*)\\/
+    return {
+        startAt: html.match(startRegex)?.[1],
+        endAt: html.match(endRegex)?.[1],
+    }
+}
 
 /**
  * Common timeout for fetch requests in milliseconds
@@ -317,6 +326,25 @@ export function linkify(html: string): string {
     return getHtmlBody($);
 }
 
+function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: string) {
+    const isoStringLocal = `${year.toString().padStart(4, '0')}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
+
+    // Create a Date object from this string, but we need to be careful about timezone interpretation
+    // We'll create a date that represents "noon on this date" to check the timezone offset
+    const referenceDate = new Date(year, month, day, 12, 0, 0);
+
+    // Get the Berlin timezone offset for this date (handles DST automatically)
+    const berlinFormatter = new Intl.DateTimeFormat('en', {
+        timeZone,
+        timeZoneName: 'longOffset'
+    });
+
+    const offsetPart = berlinFormatter.formatToParts(referenceDate).find(part => part.type === 'timeZoneName');
+    const offset = offsetPart?.value?.match(/[+-]\d{2}:\d{2}/)?.[0] || '+01:00';
+
+    return `${isoStringLocal}${offset}`;
+}
+
 /**
  * Converts German date/time components to an ISO string with Berlin timezone offset.
  * Automatically handles daylight saving time (DST) transitions.
@@ -328,26 +356,21 @@ export function linkify(html: string): string {
  * @returns ISO string with Berlin timezone offset (e.g., "2024-01-15T14:30:00+01:00" or "2024-07-15T14:30:00+02:00")
  */
 export function germanDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
-    // The key insight: we want to interpret the input as Berlin local time
-    // and return an ISO string with the correct Berlin timezone offset
+    return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin');
+}
 
-    // Create an ISO string treating the input as Berlin local time
-    const isoStringLocal = `${year.toString().padStart(4, '0')}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
-
-    // Create a Date object from this string, but we need to be careful about timezone interpretation
-    // We'll create a date that represents "noon on this date" to check the timezone offset
-    const referenceDate = new Date(year, month, day, 12, 0, 0);
-
-    // Get the Berlin timezone offset for this date (handles DST automatically)
-    const berlinFormatter = new Intl.DateTimeFormat('en', {
-        timeZone: 'Europe/Berlin',
-        timeZoneName: 'longOffset'
-    });
-
-    const offsetPart = berlinFormatter.formatToParts(referenceDate).find(part => part.type === 'timeZoneName');
-    const offset = offsetPart?.value?.match(/[+-]\d{2}:\d{2}/)?.[0] || '+01:00';
-
-    return `${isoStringLocal}${offset}`;
+/**
+ * Converts Bali date/time components to an ISO string with Bali timezone offset.
+ * Bali uses Indonesia Central Time (WITA, UTC+8) with no daylight saving time.
+ * @param year The year (e.g., 2024)
+ * @param month The month (0-indexed, 0 = January, 11 = December)
+ * @param day The day of the month (1-31)
+ * @param hour The hour (0-23), defaults to 0
+ * @param minute The minute (0-59), defaults to 0
+ * @returns ISO string with Bali timezone offset (e.g., "2024-01-15T14:30:00+08:00")
+ */
+export function baliDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
+    return dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar');
 }
 
 export interface WebsiteScraperInterface {

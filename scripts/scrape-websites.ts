@@ -4,13 +4,13 @@
  *
  * Requires Bun, for network requests and file system operations.
  * Usage: 
- * bun run scripts/scrape-germany.ts [source] [--clean]
+ * bun run scripts/scrape-websites.ts [source] [--clean]
  * 
  * Examples:
- * bun run scripts/scrape-germany.ts                    # Scrape all sources
- * bun run scripts/scrape-germany.ts awara              # Scrape only awara
- * bun run scripts/scrape-germany.ts --clean            # Clear all sources and scrape all
- * bun run scripts/scrape-germany.ts awara --clean      # Clear awara and scrape awara
+ * bun run scripts/scrape-websites.ts                    # Scrape all sources
+ * bun run scripts/scrape-websites.ts awara              # Scrape only awara
+ * bun run scripts/scrape-websites.ts --clean            # Clear all sources and scrape all
+ * bun run scripts/scrape-websites.ts awara --clean      # Clear awara and scrape awara
  * 
  * The '--clean' flag deletes all existing events from the target source(s) before insertion.
  */
