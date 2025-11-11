@@ -97,7 +97,8 @@
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
-	let dontShowSourceUrl = $derived(event.sourceUrl?.includes('todo.today') ?? false);
+	let dontShowSourceUrl = $derived((event.sourceUrl?.includes('todo.today') ?? false));
+	let dontShowSource = $derived(['todotoday'].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
@@ -390,7 +391,7 @@
 			</div>
 		{/if}
 
-		{#if event.source !== 'telegram' && !dontShowSourceUrl}
+		{#if event.source !== 'telegram' && !dontShowSource}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 			>
