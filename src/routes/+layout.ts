@@ -7,11 +7,15 @@ import type { LayoutLoad } from './$types';
 import { PUBLIC_ADMIN_USER_ID } from '$env/static/public';
 import { user } from '$lib/user.svelte';
 
+import { locales } from '../locales/data.js'
+import { loadLocale } from 'wuchale/load-utils'
+// so that the loaders are registered, only here, not required in nested ones (below)
+import '../locales/main.loader.svelte.js'
+import '../locales/js.loader.js'
+import { localeStore } from '../locales/localeStore.svelte';
+
 export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId, isAdminSession }, depends, fetch }) => {
-    /**
-     * Declare a dependency so the layout can be invalidated, for example, on
-     * session refresh.
-     */
+    // Declare a dependency so the layout can be invalidated, for example, on session refresh.
     depends('supabase:auth');
 
     const supabase = isBrowser()
@@ -19,13 +23,21 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
             global: { fetch },
         })
         : createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-            global: { fetch},
+            global: { fetch },
             cookies: {
-              getAll() {
-                return cookies
-              },
+                getAll() {
+                    return cookies
+                },
             },
-          })
+        })
+
+    if (browser) {
+        let locale = cookies.find(x => x.name === 'locale')?.value ?? navigator.language?.split('-')[0] ?? 'en';
+        if (!locales.includes(locale)) locale = 'en';
+        console.log('loading locale', locale);
+        await loadLocale(locale)
+        localeStore.locale = locale;
+    }
 
     if (browser && !dev && !url.host.endsWith('.vercel.app')) {
         posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {

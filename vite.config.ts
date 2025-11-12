@@ -3,10 +3,12 @@ import Icons from 'unplugin-icons/vite'
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
+import { wuchale } from '@wuchale/vite-plugin'
 
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
+		wuchale(),
 		sveltekit(),
 		Icons({ compiler: 'svelte', }),
 		SvelteKitPWA({

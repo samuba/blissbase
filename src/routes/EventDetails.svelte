@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAddress, formatTimeStr } from '$lib/common';
+	import { formatAddress, formatTimeStr, getLongLocale } from '$lib/common';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
@@ -10,6 +10,7 @@
 	import { getFavoriteEventIds, addFavorite, removeFavorite } from '$lib/favorites.remote';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
+	import { localeStore } from '../locales/localeStore.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -22,7 +23,7 @@
 		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
 		encodeURIComponent(
 			fixTelegramUnsupportedChars(
-				`Hi, ich möchte am Event '${event.name}' am ${event.startAt.toLocaleDateString('de-DE')} teilnehmen.`
+				`Hi, ich möchte am Event '${event.name}' am ${event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))} teilnehmen.`
 			)
 		)
 	);
@@ -38,9 +39,9 @@
 
 	const tags = $derived.by(() => {
 		const tags = new Set<string>();
-		event.tags2?.filter((x) => x.locale === 'de')?.forEach((x) => tags.add(x.name));
+		event.tags2?.filter((x) => x.locale === localeStore.locale)?.forEach((x) => tags.add(x.name));
 		event.tags?.forEach((x) => {
-			if (x.de) tags.add(x.de);
+			if (x[localeStore.locale]) tags.add(x[localeStore.locale]);
 			else tags.add(x);
 		});
 		return Array.from(tags);
@@ -83,10 +84,10 @@
 		}
 
 		if (contact?.startsWith('mailto:')) {
-			contact += `?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString('de-DE')})`)}&body=${contactMessage}`;
+			contact += `?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString(localeStore.longLocale)})`)}&body=${contactMessage}`;
 		} else if (getContactMethod(str) === 'Email') {
 			// email without mailto: prefix
-			contact = `mailto:${contact}?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString('de-DE')})`)}&body=${contactMessage}`;
+			contact = `mailto:${contact}?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString(localeStore.longLocale)})`)}&body=${contactMessage}`;
 		}
 
 		return contact;
@@ -243,7 +244,7 @@
 				<div class="bg-base-200 flex items-center justify-center rounded-l-full py-1.5 pr-2 pl-4">
 					<i class="icon-[ph--clock] mr-2 size-6"></i>
 					<p class="text-md font-medium">
-						{formatTimeStr(event.startAt, event.endAt)}
+						{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
 					</p>
 				</div>
 				<AddToCalendarButton

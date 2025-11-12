@@ -1,0 +1,726 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2025-11-12T05:38:04.607Z\n"
+"POT-Creation-Date: 2025-11-12T05:38:04.607Z\n"
+
+#: src/lib/components/BurgerMenu.svelte
+#: src/lib/components/PageHeader.svelte
+#: src/lib/components/PageHeader.svelte
+#: src/routes/+error.svelte
+#: src/routes/+error.svelte
+#: src/routes/+layout.ts
+#: src/routes/+page.svelte
+msgid "Blissbase"
+msgstr "Blissbase"
+
+#. placeholder {0}: page.status
+#: src/routes/+error.svelte
+msgid "Fehler {0}:"
+msgstr "Error {0}:"
+
+#: src/routes/+layout.svelte
+msgid "Loading Blissbase"
+msgstr "Loading Blissbase"
+
+#: src/routes/+page.svelte
+msgid "Keine Events <0/> <1/> <2/> gefunden."
+msgstr "No events <0/> <1/> <2/> found."
+
+#: src/routes/+page.svelte
+msgid "Keine Events gefunden."
+msgstr "No events found."
+
+#: src/routes/+page.svelte
+msgid "Lade..."
+msgstr "Loading..."
+
+#. placeholder {0}: event.name
+#. placeholder {1}: event.startAt.toLocaleDateString('de-DE')
+#: src/routes/EventDetails.svelte
+msgid "Hi, ich möchte am Event '{0}' am {1} teilnehmen."
+msgstr "Hi, I would like to participate in the event '{0}' on {1}."
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/sources/+page.svelte
+msgid "Telegram"
+msgstr "Telegram"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "Telefon"
+msgstr "Phone"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "Email"
+msgstr "Email"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "Website"
+msgstr "Website"
+
+#. placeholder {0}: event.name
+#. placeholder {1}: event.startAt.toLocaleDateString('de-DE')
+#. placeholder {0}: event.name
+#. placeholder {1}: event.startAt.toLocaleDateString('de-DE')
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "Anmeldung für {0} ({1})"
+msgstr "Registration for {0} ({1})"
+
+#: src/routes/EventDetails.svelte
+msgid "Ae"
+msgstr "Ae"
+
+#: src/routes/EventDetails.svelte
+msgid "Oe"
+msgstr "Oe"
+
+#: src/routes/EventDetails.svelte
+msgid "Ue"
+msgstr "Ue"
+
+#. placeholder {0}: i + 1
+#: src/routes/EventDetails.svelte
+msgid "Bild {0}"
+msgstr "Image {0}"
+
+#: src/lib/components/EventCard.svelte
+#: src/routes/EventDetails.svelte
+msgid "Ausgebucht"
+msgstr "Sold out"
+
+#: src/lib/components/EventCard.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+#: src/routes/EventDetails.svelte
+msgid "Online"
+msgstr "Online"
+
+#: src/routes/EventDetails.svelte
+msgid "Quelle <0/>"
+msgstr "Source <0/>"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "Anmelden <0/>"
+msgstr "Register <0/>"
+
+#: src/lib/components/LoginDialog.svelte
+#: src/routes/EventDetails.svelte
+msgid "Anmelden"
+msgstr "Register"
+
+#: src/routes/EventDetails.svelte
+msgid "Der Veranstalter möchte Anmeldungen per <0/> erhalten."
+msgstr "The organizer would like to receive registrations via <0/>."
+
+#: src/routes/EventDetails.svelte
+msgid "Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:"
+msgstr "The organizer would like to receive registrations through these channels:"
+
+#: src/routes/EventDetails.svelte
+msgid "Preise"
+msgstr "Prices"
+
+#: src/routes/EventDetails.svelte
+msgid "Original Message"
+msgstr "Original message"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/edit/[id]/+page.svelte
+msgid "Tags"
+msgstr "Tags"
+
+#: src/routes/EventDetails.svelte
+msgid "Filter nach Tag"
+msgstr "Filter by tag"
+
+#: src/routes/EventDetails.svelte
+msgid "Quelle: <0/>"
+msgstr "Source: <0/>"
+
+#: src/routes/EventDetails.svelte
+msgid "Event Not Found"
+msgstr "Event not found"
+
+#: src/routes/EventDetails.svelte
+msgid "The event you are looking for does not exist or may have been moved."
+msgstr "The event you are looking for does not exist or may have been moved."
+
+#: src/routes/EventDetails.svelte
+msgid "Go to Homepage"
+msgstr "Go to homepage"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "<0/> Nachricht senden"
+msgstr "<0/> Send message"
+
+#: src/routes/EventDetails.svelte
+msgid "Eventuell musst du <0>Telegram Messenger</0> erst installieren."
+msgstr "You may need to install <0>Telegram Messenger</0> first."
+
+#: src/routes/EventDetails.svelte
+msgid "<0/> Anrufen"
+msgstr "<0/> Call"
+
+#: src/routes/EventDetails.svelte
+msgid "<0/> Email"
+msgstr "<0/> Email"
+
+#: src/routes/EventDetails.svelte
+msgid "<0/> Website"
+msgstr "<0/> Website"
+
+#: src/lib/components/LoginDialog.svelte
+#: src/routes/EventDetailsDialog.svelte
+msgid "Schließen"
+msgstr "Close"
+
+#: src/routes/EventDetailsDialog.svelte
+msgid "<0/> Zurück zur Übersicht"
+msgstr "<0/> Back to overview"
+
+#: src/lib/components/DateRangePicker.svelte
+msgid "Kommende Events"
+msgstr "Upcoming events"
+
+#: src/lib/components/DateRangePicker.svelte
+msgid "Diese Woche"
+msgstr "This week"
+
+#: src/lib/components/DateRangePicker.svelte
+msgid "Dieses Wochenende"
+msgstr "This weekend"
+
+#: src/lib/components/DateRangePicker.svelte
+msgid "Nächste Woche"
+msgstr "Next week"
+
+#: src/lib/components/DateRangePicker.svelte
+msgid "Nächste 30 Tage"
+msgstr "Next 30 days"
+
+#: src/lib/components/DateRangePicker.svelte
+msgid "Alle kommende Events"
+msgstr "All upcoming events"
+
+#: src/lib/components/AddToCalendarButton.svelte
+msgid "Google"
+msgstr "Google"
+
+#: src/lib/components/AddToCalendarButton.svelte
+msgid "Apple"
+msgstr "Apple"
+
+#: src/lib/components/AddToCalendarButton.svelte
+msgid "Outlook Online"
+msgstr "Outlook Online"
+
+#: src/lib/components/AddToCalendarButton.svelte
+msgid "Yahoo"
+msgstr "Yahoo"
+
+#: src/lib/components/AddToCalendarButton.svelte
+#: src/lib/components/AddToCalendarButton.svelte
+msgid "Zum Kalender hinzufügen"
+msgstr "Add to calendar"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "<0/> Willkommen bei Blissbase"
+msgstr "<0/> Welcome to Blissbase"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid ""
+"Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events\n"
+"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
+"an einem Ort. <0/> Ich hoffe dir gefällt meine Arbeit."
+msgstr ""
+"I want to bring together the mindful communities of Germany. To do this, I collect events\n"
+"from various sources and make them accessible here. Searchable, convenient, all\n"
+"in one place. <0/> I hope you like my work."
+
+#: src/lib/components/BurgerMenu.svelte
+#: src/lib/components/BurgerMenu.svelte
+msgid "Samuel"
+msgstr "Samuel"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "Peace, Love & Light 🌻"
+msgstr "Peace, Love & Light 🌻"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid ""
+"PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich\n"
+"entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
+msgstr ""
+"PS. The project is still in its infancy and I don't yet know where it will\n"
+"go. Therefore, I am very grateful for any feedback, ideas and cooperation: <0>hi@blissbase.app</0>"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "<0/> Neuen Event erstellen"
+msgstr "<0/> Create new event"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "<0/> Favoriten"
+msgstr "<0/> Favorites"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "<0/> Wird abgemeldet..."
+msgstr "<0/> Logging out..."
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "<0/> Abmelden"
+msgstr "<0/> Log out"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "<0/> Login"
+msgstr "<0/> Login"
+
+#: src/lib/components/BurgerMenu.svelte
+#: src/lib/components/ImageDialog.svelte
+msgid "Close"
+msgstr "Close"
+
+#: src/lib/components/EventAdminSection.svelte
+msgid "<0/> Admin Section"
+msgstr "<0/> Admin section"
+
+#: src/lib/components/EventAdminSection.svelte
+msgid "<0/> Edit Event"
+msgstr "<0/> Edit event"
+
+#: src/lib/components/EventAdminSection.svelte
+msgid "Show JSON"
+msgstr "Show JSON"
+
+#: src/lib/components/EventAdminSection.svelte
+msgid "Are you sure you want to delete this event?"
+msgstr "Are you sure you want to delete this event?"
+
+#: src/lib/components/EventAdminSection.svelte
+msgid "Delete"
+msgstr "Delete"
+
+#: src/lib/components/EditorJs.svelte
+msgid "Beschreibung deines Events"
+msgstr "Description of your event"
+
+#: src/lib/components/EventCard.svelte
+msgid "Vorbei"
+msgstr "Past"
+
+#: src/lib/components/EventCard.svelte
+msgid "<0/> Läuft"
+msgstr "<0/> Ongoing"
+
+#. placeholder {0}: event.distanceKm
+#: src/lib/components/EventCard.svelte
+msgid "{0} km entfernt"
+msgstr "{0} km away"
+
+#: src/lib/components/FavoriteButton.svelte
+msgid "Favorit hinzufügen"
+msgstr "Add favorite"
+
+#: src/lib/components/FavoriteButton.svelte
+msgid "Group"
+msgstr "Group"
+
+#: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
+msgid "Menü"
+msgstr "Menu"
+
+#: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
+msgid "<0/> Menu"
+msgstr "<0/> Menu"
+
+#: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
+msgid "Sortierung"
+msgstr "Sort"
+
+#: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
+msgid "Startzeit"
+msgstr "Start time"
+
+#: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
+msgid "Distanz"
+msgstr "Distance"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Sortieren nach"
+msgstr "Sort by"
+
+#: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
+msgid "Alle Filter zurücksetzen"
+msgstr "Reset all filters"
+
+#: src/lib/components/ImageDialog.svelte
+msgid "Previous image"
+msgstr "Previous image"
+
+#: src/lib/components/ImageDialog.svelte
+msgid "Next image"
+msgstr "Next image"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Standort wird ermittelt..."
+msgstr "Determining location..."
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "PLZ / Stadt"
+msgstr "Postal code / City"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Eingabe löschen"
+msgstr "Clear input"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Aktuellen Standort verwenden"
+msgstr "Use current location"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Standort"
+msgstr "Location"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Online Events"
+msgstr "Online events"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Überall"
+msgstr "Everywhere"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Nur Online Events"
+msgstr "Only online events"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "<0/> Nur Online Events <1/>"
+msgstr "<0/> Only online events <1/>"
+
+#: src/lib/components/LoginDialog.svelte
+msgid "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
+msgstr "Enter your email address and you will receive a login link to sign in."
+
+#: src/lib/components/LoginDialog.svelte
+msgid "<0/> Wird gesendet..."
+msgstr "<0/> Sending..."
+
+#: src/lib/components/LoginDialog.svelte
+msgid "<0/> Login-Link senden"
+msgstr "<0/> Send login link"
+
+#: src/lib/components/PageHeader.svelte
+#: src/routes/new/+page.svelte
+#: src/routes/profile/favorites/+page.svelte
+#: src/routes/sources/+page.svelte
+msgid "<0/> Zurück"
+msgstr "<0/> Back"
+
+#: src/lib/components/Select.svelte
+msgid "up"
+msgstr "up"
+
+#: src/lib/components/Select.svelte
+msgid "down"
+msgstr "down"
+
+#. placeholder {0}: selectedHueRotation
+#. placeholder {1}: rotationAngle
+#: src/lib/components/RandomPlaceholderImg.svelte
+msgid "Hue: {0}°, Rotation: {1}°"
+msgstr "Hue: {0}°, Rotation: {1}°"
+
+#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TagSelection.svelte
+msgid "Textsuche schließen"
+msgstr "Close text search"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Suchbegriff"
+msgstr "Search term"
+
+#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TagSelection.svelte
+msgid "Suchbegriff löschen"
+msgstr "Clear search term"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Mehr"
+msgstr "More"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Suchen..."
+msgstr "Search..."
+
+#: src/lib/components/TagSelection.svelte
+msgid "Enter"
+msgstr "Enter"
+
+#: src/lib/components/TagSelection.svelte
+msgid "<0/> In Event Texten suchen"
+msgstr "<0/> Search in event texts"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Kein Tag gefunden für <0/>"
+msgstr "No tag found for <0/>"
+
+#: src/lib/components/ShareButton.svelte
+msgid "Mac"
+msgstr "Mac"
+
+#: src/lib/components/ShareButton.svelte
+msgid "<0/> Teilen"
+msgstr "<0/> Share"
+
+#: src/lib/components/ShareButton.svelte
+msgid "<0/> Link kopieren"
+msgstr "<0/> Copy link"
+
+#: src/lib/components/ShareButton.svelte
+msgid "Link kopiert"
+msgstr "Link copied"
+
+#: src/lib/components/TagsInput.svelte
+#: src/lib/components/TagsInput.svelte
+msgid "Suche nach einem Tag"
+msgstr "Search for a tag"
+
+#: src/lib/components/TagsInput.svelte
+msgid "Keine Tags gefunden"
+msgstr "No tags found"
+
+#: src/routes/sources/+page.svelte
+msgid "Event Quellen"
+msgstr "Event sources"
+
+#: src/routes/sources/+page.svelte
+msgid ""
+"Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen\n"
+"Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
+msgstr ""
+"I source events for you from these sources several times a day. <0/>Add your\n"
+"event to one of them so it will appear on Blissbase a few hours later."
+
+#: src/routes/sources/+page.svelte
+msgid "Websites"
+msgstr "Websites"
+
+#: src/routes/sources/+page.svelte
+msgid "sei.jetzt"
+msgstr "sei.jetzt"
+
+#: src/routes/sources/+page.svelte
+msgid "tribehaus.org"
+msgstr "tribehaus.org"
+
+#: src/routes/sources/+page.svelte
+msgid "awara.events"
+msgstr "awara.events"
+
+#: src/routes/sources/+page.svelte
+msgid "heilnetz.de"
+msgstr "heilnetz.de"
+
+#: src/routes/sources/+page.svelte
+msgid "heilnetz-owl.de"
+msgstr "heilnetz-owl.de"
+
+#: src/routes/sources/+page.svelte
+msgid "ganzheitlich-gesund-brandenburg.de"
+msgstr "ganzheitlich-gesund-brandenburg.de"
+
+#: src/routes/sources/+page.svelte
+msgid "kuschelraum.de"
+msgstr "kuschelraum.de"
+
+#: src/routes/sources/+page.svelte
+msgid "ciglobalcalendar.net"
+msgstr "ciglobalcalendar.net"
+
+#: src/routes/sources/+page.svelte
+msgid "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> und noch weitere Gruppen und Kanäle."
+msgstr "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> and more groups and channels."
+
+#. placeholder {0}: event.name
+#: src/routes/edit/[id]/+page.svelte
+msgid ""
+"Willst du den Event \"{0}\" wirklich löschen?\n"
+"Die Aktion kann nicht rückgängig gemacht werden."
+msgstr ""
+"Do you really want to delete the event \"{0}\"?\n"
+"This action cannot be undone."
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Logo"
+msgstr "Logo"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Bearbeiten"
+msgstr "Edit"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Event bearbeiten"
+msgstr "Edit event"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Event Name *"
+msgstr "Event name *"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Event Name"
+msgstr "Event name"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Preis"
+msgstr "Price"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Start Zeit *"
+msgstr "Start time *"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "End Zeit"
+msgstr "End time"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Adresse *"
+msgstr "Address *"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Adresse (eine Zeile pro Adresszeile)"
+msgstr "Address (one line per address line)"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Beschreibung"
+msgstr "Description"
+
+#: src/routes/edit/[id]/+page.svelte
+#: src/routes/edit/[id]/+page.svelte
+msgid "Veranstalter Name"
+msgstr "Organizer name"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Veranstalter Link"
+msgstr "Organizer link"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "z.B. Email, Website, Telegram Link, etc."
+msgstr "e.g. email, website, Telegram link, etc."
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Entfernen"
+msgstr "Remove"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "<0/> Ausgebucht"
+msgstr "<0/> Sold out"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "<0/> In Suche anzeigen"
+msgstr "<0/> Show in search"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Lösche..."
+msgstr "Deleting..."
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Event löschen"
+msgstr "Delete event"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Abbrechen"
+msgstr "Cancel"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "<0/> Speichern..."
+msgstr "<0/> Saving..."
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Speichern"
+msgstr "Save"
+
+#: src/routes/[slug]/+page.svelte
+#: src/routes/[slug]/+page.svelte
+msgid "<0/> Alle Events"
+msgstr "<0/> All events"
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Favoriten"
+msgstr "Favorites"
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Keine Events in deinen Favoriten."
+msgstr "No events in your favorites."
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Vergangene Favoriten"
+msgstr "Past favorites"
+
+#: src/routes/new/+page.svelte
+msgid "Event erstellen"
+msgstr "Create event"
+
+#: src/routes/new/+page.svelte
+msgid ""
+"Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst: <0><0/> Telegram-BotSende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!Event an Telegram-Bot senden <0/></0> <1><0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
+"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1></1>"
+msgstr ""
+"There are several ways you can create an event: <0><0/> Telegram BotSend your event to my Telegram bot. <0/><1>Attention:</1> Description, location, date and image must all be in one message!Send event to Telegram bot <0/></0> <1><0><0/> Event sources</0> Add your event to one of my event sources. I regularly import events from\n"
+"these sources. After about half a day you should see your event here. <1>Show event sources <0/></1></1>"
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "App installieren <0/>"
+msgstr "Install app <0/>"
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Installationsanleitung:"
+msgstr "Installation instructions:"
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Okay"
+msgstr "Okay"
+
+#: src/routes/+layout.ts
+msgid "Hippie Events in deiner Nähe."
+msgstr "Hippie events near you."
+
+#: src/routes/edit/[id]/+page.server.ts
+msgid "Invalid event ID"
+msgstr "Invalid event ID"
+
+#: src/routes/edit/[id]/+page.server.ts
+msgid "Event not found"
+msgstr "Event not found"
+
+#: src/routes/edit/[id]/+page.server.ts
+msgid "Host secret is required"
+msgstr "Host secret is required"
+
+#: src/routes/edit/[id]/+page.server.ts
+msgid "Invalid host secret"
+msgstr "Invalid host secret"

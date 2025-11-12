@@ -7,6 +7,7 @@
 	import LoginDialog from './LoginDialog.svelte';
 	import FavoriteButton from './FavoriteButton.svelte';
 	import { now } from '$lib/now.svelte';
+	import { localeStore } from '../../locales/localeStore.svelte';
 
 	const {
 		event,
@@ -33,9 +34,9 @@
 
 	const tags = $derived.by(() => {
 		const tags = new Set<string>();
-		event.tags2?.filter((x) => x.locale === 'de')?.forEach((x) => tags.add(x.name));
+		event.tags2?.filter((x) => x.locale === localeStore.locale)?.forEach((x) => tags.add(x.name));
 		event.tags?.forEach((x) => {
-			if (x.de) tags.add(x.de);
+			if (x[localeStore.locale]) tags.add(x[localeStore.locale]);
 			else tags.add(x);
 		});
 		return Array.from(tags);
@@ -104,7 +105,7 @@
 			<div class="flex items-center gap-1 flex-wrap">
 				<!-- <i class="icon-[ph--clock] mr-1.5 size-4 min-w-4"></i> -->
 				 <span>
-					 {formatTimeStr(event.startAt, event.endAt)}
+					 {formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
 				</span>
 				
 				{#if isPast}

@@ -6,6 +6,25 @@ import { dev } from '$app/environment';
 import { waitUntil } from '@vercel/functions';
 import { createSupabaseServerClient } from '$lib/server/supabase';
 import { isAdminSession } from '$lib/server/admin';
+import * as main from './locales/main.loader.server.svelte.js'
+import * as js from './locales/js.loader.server.js'
+import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
+import { locales } from './locales/data.js'
+import { localeStore } from './locales/localeStore.svelte.js';
+
+// load at server startup
+loadLocales(main.key, main.loadIDs, main.loadCatalog, locales)
+loadLocales(js.key, js.loadIDs, js.loadCatalog, locales)
+const wuchaleLocalization: Handle = async ({ event, resolve }) => {
+    let locale = event.cookies.get('locale')
+    if (!locale) { 
+        locale = 'en'
+    } else {
+        event.cookies.set('locale', locale, { path: '/' });
+    }
+    localeStore.locale = locale;
+    return await runWithLocale(locale, () => resolve(event))
+};
 
 const extractVercelHeader: Handle = async ({ event, resolve }) => {
     const latitude = event.request.headers.get('x-vercel-ip-latitude')
@@ -74,6 +93,7 @@ export const handleError: HandleServerError = async ({ error, status }) => {
 export const handle: Handle = async ({ event, resolve }) => {
     try {
         return await sequence(
+            wuchaleLocalization,
             extractVercelHeader,
             insertPosthog,
             supabaseAuth,

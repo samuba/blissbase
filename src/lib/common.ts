@@ -22,8 +22,14 @@ export function addHours(date: Date, hours: number) {
     return new Date(date.getTime() + hours * 60 * 60 * 1000);
 }
 
-export function formatTimeStr(start: Date | undefined, end: Date | undefined | null): string {
+export function getLongLocale(locale: string) {
+    return locale === 'de' ? 'de-DE' : 'en-US';
+}
+
+export function formatTimeStr(start: Date | undefined, end: Date | undefined | null, locale: string): string {
     if (!start) return 'Date TBD';
+
+    console.log('formatTimeStr', start, end, locale);
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -32,7 +38,7 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
     const diffTime = eventStartDay.getTime() - today.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-    const rtf = new Intl.RelativeTimeFormat('de', { numeric: 'auto' });
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 
     let dateString: string;
 
@@ -41,10 +47,10 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
         // Capitalize first letter for German "Gestern", "Heute", "Morgen"
         dateString = relativeDate.charAt(0).toUpperCase() + relativeDate.slice(1);
     } else {
-        dateString = start.toLocaleDateString('de-DE', { dateStyle: 'medium' });
+        dateString = start.toLocaleDateString(getLongLocale(locale), { dateStyle: 'medium' });
     }
 
-    let str = `${dateString}, ${start.toLocaleTimeString('de-DE', { timeStyle: 'short' })}`;
+    let str = `${dateString}, ${start.toLocaleTimeString(getLongLocale(locale), { timeStyle: 'short' })}`;
     let shouldAddWeekday = false;
 
     if (end) {
@@ -59,13 +65,13 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
 
         if (endsOnSameDayOrBeforeNoonNextDay) {
             // Only show end time
-            str += ` – ${end.toLocaleTimeString('de-DE', { timeStyle: 'short' })}`;
+            str += ` – ${end.toLocaleTimeString(getLongLocale(locale), { timeStyle: 'short' })}`;
             // Only add weekday if it's not today, tomorrow, or yesterday
             shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
         } else {
             // Show start date – end date (no times)
             str = dateString; // Initialize str with only the date string, removing the start time
-            str += ` – ${end.toLocaleDateString('de-DE', { dateStyle: 'medium' })}`;
+            str += ` – ${end.toLocaleDateString(getLongLocale(locale), { dateStyle: 'medium' })}`;
             shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
         }
     } else {
@@ -75,7 +81,7 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
 
     // Add German weekday abbreviation for events that are not today, tomorrow, or yesterday
     if (shouldAddWeekday) {
-        const weekday = start.toLocaleDateString('de-DE', { weekday: 'short' });
+        const weekday = start.toLocaleDateString(getLongLocale(locale), { weekday: 'short' });
         str = `${weekday}. ${str}`;
     }
 
