@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-12T05:38:04.607Z\n"
-"PO-Revision-Date: 2025-11-13T03:32:06.910Z\n"
+"PO-Revision-Date: 2025-11-13T03:55:27.294Z\n"
 "Last-Translator: \n"
 "Language: en\n"
 "Language-Team: \n"
@@ -683,14 +683,6 @@ msgstr "Past favorites"
 msgid "Event erstellen"
 msgstr "Create event"
 
-#: src/routes/new/+page.svelte
-msgid ""
-"Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst: <0><0/> Telegram-BotSende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!Event an Telegram-Bot senden <0/></0> <1><0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
-"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1></1>"
-msgstr ""
-"There are several ways you can create an event: <0><0/> Telegram BotSend your event to my Telegram bot. <0/><1>Attention:</1> Description, location, date and image must all be in one message!Send event to Telegram bot <0/></0> <1><0><0/> Event sources</0> Add your event to one of my event sources. I regularly import events from\n"
-"these sources. After about half a day you should see your event here. <1>Show event sources <0/></1></1>"
-
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "App installieren <0/>"
 msgstr "Install app <0/>"
@@ -745,3 +737,32 @@ msgstr "Share app link"
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
 msgstr "City / postal code"
+
+#: src/routes/new/+page.svelte
+msgctxt "split"
+msgid "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
+msgstr "There are several ways to create an event:"
+
+#: src/routes/new/+page.svelte
+msgctxt "split"
+msgid "<0/> Telegram-Bot"
+msgstr "<0/> Telegram Bot"
+
+#: src/routes/new/+page.svelte
+msgctxt "split"
+msgid "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!"
+msgstr "Send your event to my Telegram bot. <0/><1>Attention:</1> Description, location, date and image must all be in one message!"
+
+#: src/routes/new/+page.svelte
+msgctxt "split"
+msgid "Event an Telegram-Bot senden <0/>"
+msgstr "Send event to Telegram bot <0/>"
+
+#: src/routes/new/+page.svelte
+msgctxt "split"
+msgid ""
+"<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
+"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
+msgstr ""
+"<0><0/> Event Sources</0> Enter your event into one of my event sources. I regularly import events from\n"
+"these sources. After about half a day you should see your event here. <1>Show event sources <0/></1>```"

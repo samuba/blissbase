@@ -17,6 +17,7 @@ import { routes } from '$lib/routes';
 				</div>
 
 				<div class="flex flex-col gap-4">
+					<!-- @wc-context: split --> 
 					Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:
 
 					<div class="card bg-info/15">
