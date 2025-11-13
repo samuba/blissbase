@@ -1,6 +1,8 @@
 import { db, eq, and } from "./db";
 import { geocodeCache, reverseGeocodeCache } from "./schema";
 
+const geocodeLocalCache = new Map<string, { lat: number; lng: number }>();
+
 /**
  * Geocodes a location address and returns latitude and longitude.
  * First checks the database cache, then calls the geocoding API if not found.
@@ -15,7 +17,11 @@ export async function geocodeAddressCached(addressLines: string[] | undefined, a
     const addressString = addressLines.filter(x => x?.trim()).join(', ').trim();
 
     try {
-        // First, check the cache
+        // First, check the caches
+        if (geocodeLocalCache.get(addressString)) {
+            return geocodeLocalCache.get(addressString)!;
+        }
+
         const cachedResult = await db.select()
             .from(geocodeCache)
             .where(eq(geocodeCache.address, addressString))
@@ -23,10 +29,11 @@ export async function geocodeAddressCached(addressLines: string[] | undefined, a
 
         if (cachedResult.length > 0) {
             console.log(`Found cached geocoding result for "${addressString}"`);
-            return {
+            geocodeLocalCache.set(addressString, {
                 lat: Number(cachedResult[0].latitude),
                 lng: Number(cachedResult[0].longitude)
-            };
+            });
+            return geocodeLocalCache.get(addressString)!;
         }
 
         // If not in cache, use the geocoding API
@@ -41,6 +48,10 @@ export async function geocodeAddressCached(addressLines: string[] | undefined, a
                 cachedAt: new Date()
             });
             console.log(`Cached geocoding result for "${addressString}"`);
+            geocodeLocalCache.set(addressString, {
+                lat: Number(coordinates?.lat),
+                lng: Number(coordinates?.lng)
+            });
         } catch (cacheError) {
             console.error(`Error caching geocoding result: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
         }
