@@ -394,9 +394,6 @@ msgstr "Next image"
 msgid "Standort wird ermittelt..."
 msgstr "Determining location..."
 
-#~ msgid "PLZ / Stadt"
-#~ msgstr "Postal code / City"
-
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Eingabe löschen"
 msgstr "Clear input"
@@ -747,4 +744,4 @@ msgstr "Share app link"
 
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
-msgstr "City / ZIP code"
+msgstr "City / postal code"

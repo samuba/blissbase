@@ -2,7 +2,7 @@ import { browser } from "$app/environment";
 import { getLongLocale } from "$lib/common";
 
 class LocaleStore {
-    locale = $state('en');
+    locale: 'en' | 'de' = $state('en');
     longLocale = $derived(getLongLocale(this.locale));
 
     constructor() {
