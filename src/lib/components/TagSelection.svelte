@@ -5,6 +5,7 @@
 	import { debounce } from '$lib/common';
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import { localeStore } from '../../locales/localeStore.svelte';
 
 	let { tags }: { tags: Awaited<ReturnType<typeof getTags>> } = $props();
 
@@ -118,7 +119,7 @@
 	<div class="flex flex-wrap items-center gap-2" in:fade={{ duration: 280 }} >
 		{#each selectedTags as tag (tag.id)}
 			<button class="btn btn-primary min-w-fit gap-2" onclick={() => removeTag(tag)} in:fade={{ duration: 280 }} animate:flip={{ duration: 280 }} >
-				{tag.de}
+				{tag[localeStore.locale]}
 				<i class="icon-[ph--x] size-5"></i>
 			</button>
 		{/each}
@@ -182,7 +183,7 @@
 					class="btn bg-base-100 flex-shrink-0 font-normal whitespace-nowrap"
 					onclick={() => selectTag(tag)}
 				>
-					{tag.de}
+					{tag[localeStore.locale]}
 				</button>
 			{/each}
 		</div>
@@ -207,7 +208,7 @@
 		triggerClass={showTriggerShadow ? 'btn btn-ghost ' : 'btn bg-base-100'}
 		contentProps={{
 			align: 'center',
-			onOpenAutoFocus: (e) => e.preventDefault()
+			onOpenAutoFocus: (e) => e.preventDefault(), // ugly blue focus on close button in safari otherwise
 		}}
 		onOpenChange={handleOpenChange}
 		bind:open={showDropdown}
@@ -273,7 +274,7 @@
 						class="btn mb-1 w-full text-center font-normal last:mb-0"
 						onclick={() => selectTag(tag)}
 					>
-						{tag.de}
+						{tag[localeStore.locale]}
 					</button>
 				{:else}
 					<div
