@@ -82,22 +82,22 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             const address = [activity._activity._center.center_data.name, "Ubud"];
             const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
 
-            const startDate = new Date(activity.start_date);
+            const startDate = new Date(activity.start_date + (8 * 60 * 60 * 1000)); // bali is utc+8
             const startAt = baliDateToIsoStr(
                 startDate.getUTCFullYear(),
                 startDate.getUTCMonth() + 1,
                 startDate.getUTCDate(),
-                startDate.getUTCHours() + 8, // bali is utc+8
+                startDate.getUTCHours(), 
                 startDate.getUTCMinutes()
             ); 
 
-            const endDate = Number.isInteger(activity._activity.duration) ? new Date(activity.start_date + activity._activity.duration * 60 * 1000)
+            const endDate = Number.isInteger(activity._activity.duration) ? new Date(activity.start_date + (8 * 60 * 60 * 1000) + activity._activity.duration * 60 * 1000)
                 : undefined;
             const endAt = endDate ? baliDateToIsoStr(
                 endDate.getUTCFullYear(),
                 endDate.getUTCMonth() + 1,
                 endDate.getUTCDate(),
-                endDate.getUTCHours() + 8, // bali is utc+8
+                endDate.getUTCHours(), 
                 endDate.getUTCMinutes()
             ) : undefined;
 
