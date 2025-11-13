@@ -182,15 +182,6 @@ export class EventsStore {
         });
     };
 
-
-    handleTagsChange = (tagIds: number[]) => {
-        this.loadEvents({
-            ...this.pagination,
-            page: 1,
-            tagIds: tagIds.length > 0 ? tagIds : null
-        });
-    };
-
     // Helper function to get sort value
     private getSortValue(sortBy?: string | null, sortOrder?: string | null) {
         const sb = sortBy ?? 'time';

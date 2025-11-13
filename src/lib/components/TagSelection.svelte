@@ -14,29 +14,21 @@
 
 	let showDropdown = $state(false);
 	let filterQuery = $state(eventsStore.searchFilter || '');
+	let filterQueryInPopup = $state('');
 	let selectedTags = $state<Tag[]>([]);
 
-	// Sync selected tags with store 
+	// sync selected tags with search term from store
 	$effect(() => {
-		if (eventsStore.pagination.tagIds?.length) {
-			const storeTags = allTags.filter((t) => eventsStore.pagination.tagIds?.includes(t.id));
-			// Only update if tags have actually changed
-			const currentIds = selectedTags
-				.map((t) => t.id)
-				.sort()
-				.join(',');
-			const storeIds = storeTags
-				.map((t) => t.id)
-				.sort()
-				.join(',');
-			if (currentIds !== storeIds) {
-				selectedTags = storeTags;
-			}
-		} else if (!eventsStore.pagination.tagIds?.length && selectedTags.length > 0) {
-			// Clear selection when filter is reset
-			selectedTags = [];
-		}
-	});
+		// Split by spaces but keep quoted phrases together
+		const term = eventsStore.pagination.searchTerm || '';
+		const searchWords = term.trim().match(/(?:[^\s"]+|"[^"]*")+/g)?.map(word => word.replace(/^"|"$/g, '') // Remove surrounding quotes
+		) || [];
+		selectedTags = allTags.filter(tag => 
+			searchWords.some(word => 
+				tag.en === word || tag.de === word || tag.nl === word
+			)
+		);
+	})
 
 	$effect(() => {
 		filterQuery = eventsStore.searchFilter || '';
@@ -45,7 +37,7 @@
 	const selectedTagIds = $derived(new Set(selectedTags.map((t) => t.id)));
 	const hiddenTags = $derived(allTags.filter((x) => !previewTags.includes(x)));
 	const dropdownTags = $derived.by(() => {
-		const normalizedQuery = filterQuery.trim().toLowerCase();
+		const normalizedQuery = filterQueryInPopup.trim().toLowerCase();
 		// Filter out already selected tags
 		const availableTags = allTags.filter((tag) => !selectedTagIds.has(tag.id));
 
@@ -82,14 +74,15 @@
 		selectedTags.push(tag);
 		filterQuery = '';
 		showDropdown = false;
-		eventsStore.handleTagsChange(selectedTags.map((t) => t.id));
+		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[localeStore.locale]).join(' '));
+		eventsStore.showTextSearch = false;
 	}
 
 	function removeTag(tag: Tag) {
 		selectedTags = selectedTags.filter((t) => t.id !== tag.id);
-		eventsStore.handleTagsChange(selectedTags.map((t) => t.id));
+		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[localeStore.locale]).join(' '));
 	}
-
+ 
 	function runTextSearch(value?: string) {
 		selectedTags = [];
 		showDropdown = false;
@@ -109,8 +102,11 @@
 	);
 
 	function clearTags() {
-		eventsStore.handleTagsChange([]);
+		eventsStore.handleSearchTermChange('');
+		filterQueryInPopup = '';
 	}
+
+$inspect(selectedTags);
 
 </script>
 
@@ -137,7 +133,7 @@
 		</button>
 		{/if}
 	</div>
-{:else if eventsStore.searchFilter || eventsStore.showTextSearch}
+{:else if eventsStore.showTextSearch}
 	<div class="flex items-center gap-2 flex-grow" in:fade={{ duration: 280 }}>
 		<label class="input w-full flex-grow">
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
@@ -230,27 +226,27 @@
 				<label class="input w-full flex-grow">
 					<input
 						id="tag-selection-filter-input w-full sm:w-fit"
-						bind:value={filterQuery}
+						bind:value={filterQueryInPopup}
 						type="text"
 						placeholder="Suchen..."
 						onkeydown={(e) => {
-							if (e.key === 'Enter' && filterQuery.trim()) {
-								runTextSearch(filterQuery);
+							if (e.key === 'Enter' && filterQueryInPopup.trim()) {
+								runTextSearch(filterQueryInPopup);
 							}
 						}}
 					/>
 					<button
 						onclick={() => {
-							if (filterQuery.trim()) {
-								filterQuery = '';
+							if (filterQueryInPopup.trim()) {
+								filterQueryInPopup = '';
 							} else {
 								document.getElementById('tag-selection-filter-input')?.focus();
 							}
 						}}
 						class="btn btn-sm btn-circle btn-ghost"
 						aria-label="Suchbegriff löschen"
-						class:opacity-0={!filterQuery.trim()}
-						class:cursor-text={!filterQuery.trim()}
+						class:opacity-0={!filterQueryInPopup.trim()}
+						class:cursor-text={!filterQueryInPopup.trim()}
 					>
 						<i class="icon-[ph--x] text-base-600 size-5"></i>
 					</button>
@@ -258,34 +254,28 @@
 
 
 				<button
-					onclick={() => runTextSearch(filterQuery)}
+					onclick={() => runTextSearch(filterQueryInPopup)}
 					class="btn btn-primary max-h-16 break-words whitespace-normal"
-					disabled={!filterQuery.trim()}
+					disabled={!filterQueryInPopup.trim()}
 				>
 					<i class="icon-[ph--magnifying-glass] size-5"></i>
-					In Event Texten suchen
+					Suchen
 				</button>
 			</div>
-			<div
-				class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2"
-			>
-				{#each dropdownTags as tag}
-					<button
-						class="btn mb-1 w-full text-center font-normal last:mb-0"
-						onclick={() => selectTag(tag)}
-					>
-						{tag[localeStore.locale]}
-					</button>
-				{:else}
-					<div
-						class="text-sm text-base-content/50 py-2 text-center flex flex-col items-center gap-4"
-					>
-						<span>
-							Kein Tag gefunden für <b class="font-bold">{filterQuery}</b>
-						</span>
-					</div>
-				{/each}
-			</div>
+			{#if dropdownTags.length}
+				<div
+					class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2"
+				>
+					{#each dropdownTags as tag}
+						<button
+							class="btn mb-1 w-full text-center font-normal last:mb-0"
+							onclick={() => selectTag(tag)}
+						>
+							{tag[localeStore.locale]}
+						</button>
+					{/each}
+				</div>
+			{/if}
 		{/snippet}
 	</PopOver>
 {/snippet}

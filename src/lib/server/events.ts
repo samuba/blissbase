@@ -177,38 +177,50 @@ export async function fetchEvents(params: LoadEventsParams) {
     const allConditions = [dateCondition, proximityCondition, and(s.events.listed)];
 
     if (searchTerm && searchTerm.trim() !== '') {
-        const searchTermCondition = or(
-            ilike(s.events.name, `%${searchTerm}%`),
-            sql<boolean>`EXISTS (SELECT 1 FROM unnest(${s.events.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${searchTerm}%`})`,
-            ilike(s.events.description, `%${searchTerm}%`),
-            exists(
-                db.select({ eventId: s.eventTags.eventId })
-                    .from(s.eventTags)
-                    .innerJoin(s.tagTranslations, eq(s.eventTags.tagId, s.tagTranslations.tagId))
-                    .where(
-                        and(
-                            eq(s.eventTags.eventId, s.events.id),
-                            ilike(s.tagTranslations.name, `%${searchTerm}%`)
+        // Split by spaces but keep quoted phrases together
+        const searchWords = searchTerm.trim().match(/(?:[^\s"]+|"[^"]*")+/g)?.map(word => 
+            word.replace(/^"|"$/g, '') // Remove surrounding quotes
+        ) || [];
+        
+        // For each word, create a condition that checks all searchable fields
+        const wordConditions = searchWords.map(word => 
+            or(
+                ilike(s.events.name, `%${word}%`),
+                sql<boolean>`EXISTS (SELECT 1 FROM unnest(${s.events.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${word}%`})`,
+                ilike(s.events.description, `%${word}%`),
+                exists(
+                    db.select({ eventId: s.eventTags.eventId })
+                        .from(s.eventTags)
+                        .innerJoin(s.tagTranslations, eq(s.eventTags.tagId, s.tagTranslations.tagId))
+                        .where(
+                            and(
+                                eq(s.eventTags.eventId, s.events.id),
+                                ilike(s.tagTranslations.name, `%${word}%`)
+                            )
                         )
-                    )
+                )
             )
         );
+        
+        // All words must match (AND logic)
+        const searchTermCondition = and(...wordConditions);
         allConditions.push(searchTermCondition);
     }
 
-    if (tagIds?.length) {
-        const tagCondition = exists(
-            db.select({ tagId: s.eventTags.tagId })
-                .from(s.eventTags)
-                .where(
-                    and(
-                        eq(s.eventTags.eventId, s.events.id),
-                        inArray(s.eventTags.tagId, tagIds)
-                    )
-                )
-        );
-        allConditions.push(tagCondition);
-    }
+    // not needed anymore as everything is handled using searchTerm
+    // if (tagIds?.length) {
+    //     const tagCondition = exists(
+    //         db.select({ tagId: s.eventTags.tagId })
+    //             .from(s.eventTags)
+    //             .where(
+    //                 and(
+    //                     eq(s.eventTags.eventId, s.events.id),
+    //                     inArray(s.eventTags.tagId, tagIds)
+    //                 )
+    //             )
+    //     );
+    //     allConditions.push(tagCondition);
+    // }
 
     if (onlyOnlineEvents) {
         const onlineCondition = or(

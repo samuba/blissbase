@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-12T05:38:04.607Z\n"
-"PO-Revision-Date: 2025-11-13T03:55:27.294Z\n"
+"PO-Revision-Date: 2025-11-13T05:18:34.716Z\n"
 "Last-Translator: \n"
 "Language: en\n"
 "Language-Team: \n"
@@ -481,13 +481,11 @@ msgstr "Search..."
 msgid "Enter"
 msgstr "Enter"
 
-#: src/lib/components/TagSelection.svelte
-msgid "<0/> In Event Texten suchen"
-msgstr "<0/> Search in event texts"
+#~ msgid "<0/> In Event Texten suchen"
+#~ msgstr "<0/> Search in event texts"
 
-#: src/lib/components/TagSelection.svelte
-msgid "Kein Tag gefunden für <0/>"
-msgstr "No tag found for <0/>"
+#~ msgid "Kein Tag gefunden für <0/>"
+#~ msgstr "No tag found for <0/>"
 
 #: src/lib/components/ShareButton.svelte
 msgid "Mac"
@@ -766,3 +764,7 @@ msgid ""
 msgstr ""
 "<0><0/> Event Sources</0> Enter your event into one of my event sources. I regularly import events from\n"
 "these sources. After about half a day you should see your event here. <1>Show event sources <0/></1>```"
+
+#: src/lib/components/TagSelection.svelte
+msgid "<0/> Suchen"
+msgstr "<0/> Search```"

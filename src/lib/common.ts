@@ -29,8 +29,6 @@ export function getLongLocale(locale: string) {
 export function formatTimeStr(start: Date | undefined, end: Date | undefined | null, locale: string): string {
     if (!start) return 'Date TBD';
 
-    console.log('formatTimeStr', start, end, locale);
-
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const eventStartDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
