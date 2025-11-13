@@ -5,7 +5,7 @@
 	import LoginDialog from './LoginDialog.svelte';
 	import { createSupabaseBrowserClient } from '$lib/supabase';
 	import ShareButton from './ShareButton.svelte';
-	import { getPWADisplayMode } from '$lib/common';
+	import { isPwa } from '$lib/isPwa.svelte';
 
 	interface Props {
 		children?: any;
@@ -100,7 +100,7 @@
 						</button>
 					{/if}
 
-					{#if getPWADisplayMode() === 'standalone'}
+					{#if isPwa.value}
 						<ShareButton url="https://blissbase.app" btnTextMobile="App teilen" btnTextNonMobile="App link teilen" />
 					{/if}
 				</div>

@@ -29,3 +29,5 @@ vite.config.ts.timestamp-*
 events.json
 
 dev-dist
+
+src/locales/.wuchale
