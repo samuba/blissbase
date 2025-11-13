@@ -1,12 +1,16 @@
 msgid ""
 msgstr ""
-"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-12T05:38:04.607Z\n"
+"PO-Revision-Date: 2025-11-13T02:44:42.280Z\n"
+"Last-Translator: \n"
 "Language: en\n"
-"MIME-Version: 1.0\n"
+"Language-Team: \n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2025-11-12T05:38:04.607Z\n"
-"POT-Creation-Date: 2025-11-12T05:38:04.607Z\n"
+"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;\n"
+"MIME-Version: 1.0\n"
 
 #: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/PageHeader.svelte
@@ -40,7 +44,7 @@ msgid "Lade..."
 msgstr "Loading..."
 
 #. placeholder {0}: event.name
-#. placeholder {1}: event.startAt.toLocaleDateString('de-DE')
+#. placeholder {1}: event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))
 #: src/routes/EventDetails.svelte
 msgid "Hi, ich möchte am Event '{0}' am {1} teilnehmen."
 msgstr "Hi, I would like to participate in the event '{0}' on {1}."
@@ -76,9 +80,9 @@ msgid "Website"
 msgstr "Website"
 
 #. placeholder {0}: event.name
-#. placeholder {1}: event.startAt.toLocaleDateString('de-DE')
+#. placeholder {1}: event.startAt.toLocaleDateString(localeStore.longLocale)
 #. placeholder {0}: event.name
-#. placeholder {1}: event.startAt.toLocaleDateString('de-DE')
+#. placeholder {1}: event.startAt.toLocaleDateString(localeStore.longLocale)
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 msgid "Anmeldung für {0} ({1})"
@@ -493,13 +497,11 @@ msgstr "No tag found for <0/>"
 msgid "Mac"
 msgstr "Mac"
 
-#: src/lib/components/ShareButton.svelte
-msgid "<0/> Teilen"
-msgstr "<0/> Share"
+#~ msgid "<0/> Teilen"
+#~ msgstr "<0/> Share"
 
-#: src/lib/components/ShareButton.svelte
-msgid "<0/> Link kopieren"
-msgstr "<0/> Copy link"
+#~ msgid "<0/> Link kopieren"
+#~ msgstr "<0/> Copy link"
 
 #: src/lib/components/ShareButton.svelte
 msgid "Link kopiert"
@@ -724,3 +726,22 @@ msgstr "Host secret is required"
 #: src/routes/edit/[id]/+page.server.ts
 msgid "Invalid host secret"
 msgstr "Invalid host secret"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "App teilen"
+msgstr "Share App"
+
+#~ msgid "<0/> {0} Teilen"
+#~ msgstr "<0/> Share {0}"
+
+#: src/lib/components/ShareButton.svelte
+msgid "Teilen"
+msgstr "Share"
+
+#: src/lib/components/ShareButton.svelte
+msgid "Link kopieren"
+msgstr "Copy link"
+
+#: src/lib/components/BurgerMenu.svelte
+msgid "App link teilen"
+msgstr "Share app link"

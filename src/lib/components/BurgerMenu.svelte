@@ -4,6 +4,8 @@
 	import { Dialog } from 'bits-ui';
 	import LoginDialog from './LoginDialog.svelte';
 	import { createSupabaseBrowserClient } from '$lib/supabase';
+	import ShareButton from './ShareButton.svelte';
+	import { getPWADisplayMode } from '$lib/common';
 
 	interface Props {
 		children?: any;
@@ -96,6 +98,10 @@
 							<i class="icon-[ph--user] size-5"></i>
 							Login
 						</button>
+					{/if}
+
+					{#if getPWADisplayMode() === 'standalone'}
+						<ShareButton url="https://blissbase.app" btnTextMobile="App teilen" btnTextNonMobile="App link teilen" />
 					{/if}
 				</div>
 			</div>

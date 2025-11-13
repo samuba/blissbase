@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { Popover } from 'bits-ui';
 
-	const { title, text, url }: { title?: string; text?: string; url?: string } = $props();
+	const { title, text, url, btnTextMobile, btnTextNonMobile }: { title?: string; text?: string; url?: string; btnTextMobile?: string; btnTextNonMobile?: string } = $props();
 
 	const isAppleDevice = $derived(
 		browser
@@ -56,10 +56,10 @@
 >
 	{#if isTouchDevice && !!navigator.share}
 		<i class={['size-5', isAppleDevice ? 'icon-[lucide--share]' : 'icon-[ph--share-network]']}></i>
-		Teilen
+		{btnTextMobile ?? 'Teilen'}
 	{:else}
 		<i class="icon-[ph--clipboard] size-5"></i>
-		Link kopieren
+		{btnTextNonMobile ?? 'Link kopieren'}
 	{/if}
 </button>
 

@@ -1,3 +1,4 @@
+import { browser } from "$app/environment";
 import type { MetaTagsProps } from "svelte-meta-tags";
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
@@ -246,4 +247,17 @@ export function parseTelegramContacts(contacts: string[] | undefined) {
 
 export function randomString(length: number) {
     return Array.from({ length }, () => String.fromCharCode(Math.floor(Math.random() * 26) + (Math.random() < 0.5 ? 65 : 97))).join('');
+}
+
+export function getPWADisplayMode() {
+    if (!browser) return 'unknown';
+    if (document.referrer.startsWith('android-app://')) return 'twa';
+    if (window.matchMedia('(display-mode: browser)').matches) return 'browser';
+    if (window.matchMedia('(display-mode: standalone)').matches) return 'standalone';
+    if (window.matchMedia('(display-mode: minimal-ui)').matches) return 'minimal-ui';
+    if (window.matchMedia('(display-mode: fullscreen)').matches) return 'fullscreen';
+    if (window.matchMedia('(display-mode: window-controls-overlay)').matches)
+        return 'window-controls-overlay';
+
+    return 'unknown';
 }
