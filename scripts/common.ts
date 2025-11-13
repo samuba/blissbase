@@ -12,6 +12,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     kuschelraum: { module: './scrape-kuschelraum.ts' },
     ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts' },
     todotoday: { module: './scrape-todotoday.ts' },
+    vortexapp: { module: './scrape-vortexapp.ts' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const;
 export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
