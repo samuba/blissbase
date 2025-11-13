@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
 	import { Dialog } from 'bits-ui';
-	import { getPWADisplayMode } from '$lib/common';
+	import { isPwa } from '$lib/isPwa.svelte';
 
 	// TODO: add video for safari desktop
 
@@ -41,8 +41,7 @@
 	onMount(() => {
 		if (!browser) return;
 
-		// Check if we're already in standalone mode (PWA already installed)
-		if (getPWADisplayMode() === 'standalone') {
+		if (isPwa.value) {
 			showInstallButton = false;
 			return;
 		}
