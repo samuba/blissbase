@@ -74,7 +74,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             let host: string | undefined = activity.teacher_name
             if (host.includes('TBD') || host.includes('Tbd')) host = undefined;
             let name = activity._activity.name;
-            if (host && !name.includes(host)) name = `${name} w/ ${host}`;
+            if (name.split(' ').length === 1) name = `${name} Yoga`;
+            if (host && !name.includes(host)) name = `${name} w/ ${host}`
 
             let tag: string | undefined = activity._activity._activity_tag.name;
             if (tag.includes('Unassigned')) tag = undefined;
