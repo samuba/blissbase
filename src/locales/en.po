@@ -763,8 +763,8 @@ msgid ""
 "diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
 msgstr ""
 "<0><0/> Event Sources</0> Enter your event into one of my event sources. I regularly import events from\n"
-"these sources. After about half a day you should see your event here. <1>Show event sources <0/></1>```"
+"these sources. After about half a day you should see your event here. <1>Show event sources <0/></1>"
 
 #: src/lib/components/TagSelection.svelte
 msgid "<0/> Suchen"
-msgstr "<0/> Search```"
+msgstr "<0/> Search"
