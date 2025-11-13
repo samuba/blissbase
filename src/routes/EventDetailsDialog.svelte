@@ -45,6 +45,9 @@
 				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl'
 			]}
 			style="scrollbar-width: thin"
+			onOpenAutoFocus={(e) => {
+				e.preventDefault(); // ugly blue focus on close button in safari otherwise
+			}}
 			onInteractOutside={(e) => {
 				e.preventDefault();
 				handleClose();

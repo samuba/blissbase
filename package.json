@@ -48,7 +48,7 @@
 		"bits-ui": "^2.11.5",
 		"calendar-link": "^2.10.0",
 		"cheerio": "^1.0.0",
-		"daisyui": "^5.3.8",
+		"daisyui": "^5.5.0",
 		"dotenv": "^16.5.0",
 		"drizzle-kit": "^0.31.4",
 		"eslint": "^9.18.0",
