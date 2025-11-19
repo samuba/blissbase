@@ -346,6 +346,17 @@ export async function insertEvents(events: InsertEvent[]) {
             endAt: event.endAt ?? undefined,
         });
 
+        // Validate and clean up latitude/longitude values
+        if (event.latitude !== undefined && event.latitude !== null) {
+            if (isNaN(event.latitude) || event.latitude < -90 || event.latitude > 90) {
+                event.latitude = undefined;
+            }
+        }
+        if (event.longitude !== undefined && event.longitude !== null) {
+            if (isNaN(event.longitude) || event.longitude < -180 || event.longitude > 180) {
+                event.longitude = undefined;
+            }
+        }
         return event;
     });
 
