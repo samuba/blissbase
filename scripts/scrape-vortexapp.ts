@@ -122,6 +122,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 sourceUrl: activity._activity.booking_link,
                 source: 'vortexapp' as const
             } satisfies ScrapedEvent;
+
+            // lots of daily yoga classes from here, they are too boring to list
+            const skipWords = ['yoga', 'vinyasa', ' flow', 'ashtanga', 'ether (meditation)'];
+            if (skipWords.some(word => name.toLowerCase().includes(word))) {
+                console.log(`Skipping ${name} because it is a daily yoga class.`);
+                continue;
+            }
+            
             allEvents.push(event);
         }
 
