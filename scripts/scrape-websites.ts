@@ -252,12 +252,16 @@ async function main() {
                 }
                 console.log(` -> Image ${url} not found in image cache map`);
                 const bytes = await customFetch(url, { returnType: 'bytes' })
-                const { buffer, phash } = await resizeCoverImage(bytes)
-                const imageUrl = await assets.uploadImage(buffer, event.slug, phash, assets.loadCreds());
-                cachedEventImageUrls.push(imageUrl);
-                newlyCachedImages.push({ originalUrl: url, eventSlug: event.slug, url: imageUrl });
-                // warm up the image url
-                await customFetch(imageUrl, { returnType: 'bytes' });
+                try {
+                    const { buffer, phash } = await resizeCoverImage(bytes)
+                    const imageUrl = await assets.uploadImage(buffer, event.slug, phash, assets.loadCreds());
+                    cachedEventImageUrls.push(imageUrl);
+                    newlyCachedImages.push({ originalUrl: url, eventSlug: event.slug, url: imageUrl });
+                    // warm up the image url
+                    await customFetch(imageUrl, { returnType: 'bytes' });
+                } catch (error) {
+                    console.error(`Error processing image. Skipping this one ${url}:`, error);
+                }
                 processedImageCount++;
             }
             event.imageUrls = cachedEventImageUrls;
