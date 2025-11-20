@@ -33,7 +33,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     async scrapeWebsite(): Promise<ScrapedEvent[]> {
         const allEvents: ScrapedEvent[] = [];
 
-        const pagesToFetch = [0,1,2,3,4,5,6,7,8,9,10];
+        const pagesToFetch = [1,2,3,4,5];
         for (const page of pagesToFetch) {
             const pageResults = await (customFetch(`https://megatix.co.id/api/v2/events/search?page=${page}&pageSize=16&search`, { returnType: 'json' }) as Promise<SearchEntry>);
             for (const result of pageResults.data) {
@@ -49,25 +49,30 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
     async extractEntryData(entry: SearchEntry['data'][number]): Promise<ScrapedEvent | undefined> {
         const host = entry.promoter_name;
-
-        const hostsToInclude = ['the yoga barn', 'paradiso '];
-        if (!hostsToInclude.some(x => host.toLowerCase().includes(x))) {
+        const hostsToInclude = ['the yoga barn', 'paradiso'];
+        if (!hostsToInclude.some(x => host.toLowerCase().includes(x) || entry.venue_name?.toLowerCase()?.includes(x))) {
             console.log(`Skipping ${entry.name} because it is not hosted by known host`);
             return undefined;
         }
 
         const name = entry.name;
-        const imageUrls = entry.cover ? [entry.cover] : [];
-        const sourceUrl = `https://megatix.co.id/event/${entry.slug}`;
+        const price = entry.display_price
+        const imageUrls: string[] = []
+        if (entry.cover && entry.cover.startsWith('http')) {
+            imageUrls.push(entry.cover)
+        }
+        const sourceUrl = `https://megatix.co.id/events/${entry.slug}`;
         const eventData = await (customFetch(`https://megatix.co.id/api/v3/events/${entry.id}`, { returnType: 'json' }) as Promise<EventData>)
         const data = eventData.data;
         const description = cleanProseHtml(data.description);
+
         let [year, month, day] = entry.start_datetime.split(' ')[0].split('-').map(x => parseInt(x));
         let [hour, minute] = entry.start_datetime.split(' ')[1].split(':').map(x => parseInt(x));
         const startAt = baliDateToIsoStr(year, month, day, hour, minute);
         [year, month, day] = entry.end_datetime.split(' ')[0].split('-').map(x => parseInt(x));
         [hour, minute] = entry.end_datetime.split(' ')[1].split(':').map(x => parseInt(x));
         const endAt = baliDateToIsoStr(year, month, day, hour, minute);
+
         const address: string[] = [] 
         if (data.venue?.full_address?.includes('The Yoga Barn')) {
             address.push('The Yoga Barn', 'Ubud');
@@ -79,9 +84,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const coordinates = data.venue.latitude && data.venue.longitude 
             ? { lat: data.venue.latitude, lng: data.venue.longitude } 
             : await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
-        const price = entry.display_price
         
-
         const event = {
             name,
             description,

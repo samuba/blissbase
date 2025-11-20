@@ -6,6 +6,7 @@
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
+	import { onMount } from 'svelte';
 
 	let { tags }: { tags: Awaited<ReturnType<typeof getTags>> } = $props();
 
@@ -17,22 +18,27 @@
 	let filterQueryInPopup = $state('');
 	let selectedTags = $state<Tag[]>([]);
 
-	// sync selected tags with search term from store
-	$effect(() => {
-		// Split by spaces but keep quoted phrases together
-		const term = eventsStore.pagination.searchTerm || '';
-		const searchWords = term.trim().match(/(?:[^\s"]+|"[^"]*")+/g)?.map(word => word.replace(/^"|"$/g, '') // Remove surrounding quotes
-		) || [];
-		selectedTags = allTags.filter(tag => 
-			searchWords.some(word => 
-				tag.en === word || tag.de === word || tag.nl === word
-			)
+	onMount(() => {
+		// sync selected tags with search term from store
+		const term = eventsStore.searchFilter || '';
+		const searchWords =
+			term
+				.trim()
+				.match(/(?:[^\s"]+|"[^"]*")+/g)
+				?.map(
+					(word) => word.replace(/^"|"$/g, '') // Remove surrounding quotes
+				) || []; // Split by spaces but keep quoted phrases together
+		selectedTags = allTags.filter((tag) =>
+			searchWords.some((word) => tag.en?.toLowerCase() === word.toLowerCase() || tag.de?.toLowerCase() === word.toLowerCase() || tag.nl?.toLowerCase() === word.toLowerCase())
 		);
-	})
+		if (term.trim() && selectedTags.length === 0) {
+			eventsStore.showTextSearch = true
+		}
+	});
 
 	$effect(() => {
 		filterQuery = eventsStore.searchFilter || '';
-	})
+	});
 
 	const selectedTagIds = $derived(new Set(selectedTags.map((t) => t.id)));
 	const hiddenTags = $derived(allTags.filter((x) => !previewTags.includes(x)));
@@ -82,7 +88,7 @@
 		selectedTags = selectedTags.filter((t) => t.id !== tag.id);
 		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[localeStore.locale]).join(' '));
 	}
- 
+
 	function runTextSearch(value?: string) {
 		selectedTags = [];
 		showDropdown = false;
@@ -106,15 +112,19 @@
 		filterQueryInPopup = '';
 	}
 
-$inspect(selectedTags);
-
+	$inspect(selectedTags);
 </script>
 
 {#if selectedTags.length > 0}
 	<!-- Selected tags with individual clear buttons and "Clear All" option -->
-	<div class="flex flex-wrap items-center gap-2" in:fade={{ duration: 280 }} >
+	<div class="flex flex-wrap items-center gap-2" in:fade={{ duration: 280 }}>
 		{#each selectedTags as tag (tag.id)}
-			<button class="btn btn-primary min-w-fit gap-2" onclick={() => removeTag(tag)} in:fade={{ duration: 280 }} animate:flip={{ duration: 280 }} >
+			<button
+				class="btn btn-primary min-w-fit gap-2"
+				onclick={() => removeTag(tag)}
+				in:fade={{ duration: 280 }}
+				animate:flip={{ duration: 280 }}
+			>
 				{tag[localeStore.locale]}
 				<i class="icon-[ph--x] size-5"></i>
 			</button>
@@ -124,17 +134,13 @@ $inspect(selectedTags);
 			{@render moreTagsButton(false)}
 		</div>
 		{#if selectedTags.length > 1}
-		<button
-			class="btn btn-circle "
-			onclick={clearTags}
-			title="Textsuche schließen"
-		>
-			<i class="icon-[ph--x] size-5"></i>
-		</button>
+			<button class="btn btn-circle" onclick={clearTags} title="Textsuche schließen">
+				<i class="icon-[ph--x] size-5"></i>
+			</button>
 		{/if}
 	</div>
 {:else if eventsStore.showTextSearch}
-	<div class="flex items-center gap-2 flex-grow" in:fade={{ duration: 280 }}>
+	<div class="flex flex-grow items-center gap-2" in:fade={{ duration: 280 }}>
 		<label class="input w-full flex-grow">
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
 			<input
@@ -161,17 +167,16 @@ $inspect(selectedTags);
 				<i class="icon-[ph--x] text-base-600 size-5"></i>
 			</button>
 		</label>
-		<button
-			class="btn btn-circle "
-			onclick={closeTextSearch}
-			title="Textsuche schließen"
-		>
+		<button class="btn btn-circle" onclick={closeTextSearch} title="Textsuche schließen">
 			<i class="icon-[ph--x] size-5"></i>
 		</button>
 	</div>
 {:else}
 	<!-- Show tags with fade effect and overlay dropdown -->
-	<div class="relative flex w-full max-w-full min-w-0 items-center overflow-hidden" in:fade={{ duration: 280 }}>
+	<div
+		class="relative flex w-full max-w-full min-w-0 items-center overflow-hidden"
+		in:fade={{ duration: 280 }}
+	>
 		<!-- Tags container - no wrap, overflow hidden -->
 		<div class="flex w-full min-w-0 flex-shrink flex-nowrap gap-2 overflow-hidden pr-12">
 			{#each previewTags as tag}
@@ -204,7 +209,7 @@ $inspect(selectedTags);
 		triggerClass={showTriggerShadow ? 'btn btn-ghost ' : 'btn bg-base-100'}
 		contentProps={{
 			align: 'center',
-			onOpenAutoFocus: (e) => e.preventDefault(), // ugly blue focus on close button in safari otherwise
+			onOpenAutoFocus: (e) => e.preventDefault() // ugly blue focus on close button in safari otherwise
 		}}
 		onOpenChange={handleOpenChange}
 		bind:open={showDropdown}
@@ -212,7 +217,7 @@ $inspect(selectedTags);
 		{#snippet trigger()}
 			{#if showTriggerShadow}
 				<i
-					class="icon-[ph--caret-right-bold]  size-6 transition-transform {showDropdown
+					class="icon-[ph--caret-right-bold] size-6 transition-transform {showDropdown
 						? 'rotate-90'
 						: ''}"
 				></i>
@@ -251,7 +256,6 @@ $inspect(selectedTags);
 						<i class="icon-[ph--x] text-base-600 size-5"></i>
 					</button>
 				</label>
-
 
 				<button
 					onclick={() => runTextSearch(filterQueryInPopup)}
