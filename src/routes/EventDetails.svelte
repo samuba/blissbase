@@ -99,7 +99,7 @@
 	);
 
 	let dontShowSourceUrl = $derived((event.sourceUrl?.includes('todo.today') ?? false));
-	let dontShowSource = $derived(['todotoday'].includes(event.source));
+	let dontShowSource = $derived(['todotoday', 'megatix_indonesia'].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
