@@ -48,7 +48,7 @@ async function scrapeSource(source: string): Promise<ScrapedEvent[]> {
         const events = await new ScraperClass().scrapeWebsite();
         console.log(` -> Found ${events.length} events in ${source}`);
 
-        if (events.length === 0) {
+        if (events.length === 0 && source !== 'vortexapp') {
             throw new Error(`No ${source} events found`);
         }
 
@@ -110,7 +110,7 @@ async function main() {
 
     if (allEvents.length === 0) {
         console.log('No events to process. Exiting.');
-        process.exit(0);
+        process.exit(1);
     }
 
     // --- Connect to Database and Insert Data ---
@@ -232,6 +232,7 @@ async function main() {
         console.log('Starting image caching...');
         const startTime = Date.now();
         const alreadyCachedImages = await db.select().from(s.imageCacheMap)
+        console.log("images in imageCacheMap table", alreadyCachedImages.length);
         const totalImageCount = events.reduce((sum, event) => sum + (event.imageUrls?.length ?? 0), 0);
         let processedImageCount = 0;
         console.log(` -> Total images to process: ${totalImageCount}`);
