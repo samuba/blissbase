@@ -52,17 +52,21 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         html = await customFetch('https://todo.today/ubud/tomorrow/', {
             returnType: 'text',
             // tomorrow only works logged in
-            headers: { 'Cookie': 'wordpress_logged_in_81ee6838d0646bf88530eae937360076=samuelbach%7C1763964374%7CFpczQIecBc6AmxjrN0R7WZH4XlGHMNHR7pvItAjcGN9%7Cbf90fc0491e1cd13d43dac6fa8f56400e66308c40317c385fdf052d67de07b4f;' }
+            headers: { 'Cookie': 'wordpress_logged_in_81ee6838d0646bf88530eae937360076=samuelbach%7C1765339717%7CSYrFqh44MH4lSz9qotLJ57ZFmIiqIkmDGX0rw8gdWsD%7C459061d0af158d5aa77be444195ba7c4ea5b132ea7ee095aff81218c4c0c4342;' }
         });
         $ = cheerio.load(html);
         eventUrls = new Set(
             $('.event_image').map((_index, element) => $(element).attr('href')).get().filter(Boolean)
         );
+        const eventCountBeforeTomorrow = allEvents.length + 0;
         for (const eventUrl of eventUrls) {
             const eventHtml = await customFetch(eventUrl, { returnType: 'text' });
             const event = await this.extractEventData(eventHtml, eventUrl);
             if (event) allEvents.push(event);
         }
+        if (eventCountBeforeTomorrow === allEvents.length) {
+            console.error('No new events found for tomorrow. Cookie expired? Go to https://todo.today/ubud/tomorrow/ and copy wordpress_logged_in header');
+        } 
 
         console.log({ allEvents });
 
