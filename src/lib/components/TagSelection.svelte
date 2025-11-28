@@ -227,7 +227,7 @@
 		{/snippet}
 
 		{#snippet content()}
-			<div class="border-base-300 bg-base-200 sticky top-0 flex flex-col gap-2 border-b-2 p-2">
+			<div class="border-base-300 bg-base-200 flex flex-col gap-2 border-b-2 p-2 ">
 				<label class="input w-full flex-grow">
 					<input
 						id="tag-selection-filter-input w-full sm:w-fit"
