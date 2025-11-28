@@ -88,13 +88,13 @@
 		"@libsql/client": "^0.14.0",
 		"@supabase/ssr": "^0.7.0",
 		"@supabase/supabase-js": "^2.76.1",
-		"@wuchale/svelte": "^0.17.4",
+		"@wuchale/svelte": "^0.17.5",
 		"@wuchale/vite-plugin": "^0.15.3",
 		"drizzle-orm": "^0.44.5",
 		"editorjs-html": "^4.0.5",
 		"ky": "^1.8.1",
 		"posthog-js": "^1.255.1",
 		"ws": "^8.18.1",
-		"wuchale": "^0.18.3"
+		"wuchale": "^0.18.5"
 	}
 }
