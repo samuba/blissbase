@@ -73,7 +73,10 @@ async function processDuplicates(duplicates: { eventAId: number, eventBId: numbe
     for (const dupe of duplicates) {
         const eventA = eventsWithSameStart.find(e => e.id === dupe.eventAId);
         const eventB = eventsWithSameStart.find(e => e.id === dupe.eventBId);
-        if (!eventA || !eventB) throw new Error(`Event not found for id: ${dupe.eventAId} or ${dupe.eventBId}`);
+        if (!eventA || !eventB) {
+            console.warn(`Event not found for id: ${dupe.eventAId} or ${dupe.eventBId}`);
+            continue;
+        }
 
         ({ deletedCount } = await mergeEvents(eventA!, eventB!, deletedCount));
     }
