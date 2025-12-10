@@ -2,7 +2,7 @@ events aus vergangenheit werden nur angezeigt wenn ende noch nicht erreicht
 
 <script>emaillink('netzwerk','ganzheitlich-gesund-potsdam','de','','','');</script><object type="multipart/example"><noscript>netzwerk(at)ganzheitlich-gesund-potsdam.de</noscript></object>
 
-blissbase als chatgpt app?
+blissbase als chatgpt app??
 
 ort wählen + Überall zeigt nicht mehr distanz an
 
