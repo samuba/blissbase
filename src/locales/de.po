@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-12T05:38:04.606Z\n"
-"PO-Revision-Date: 2025-11-13T05:18:34.715Z\n"
+"PO-Revision-Date: 2025-11-20T02:42:19.287Z\n"
 "Last-Translator: \n"
 "Language: de\n"
 "Language-Team: \n"
@@ -768,3 +768,7 @@ msgstr ""
 #: src/lib/components/TagSelection.svelte
 msgid "<0/> Suchen"
 msgstr "<0/> Suchen"
+
+#: src/routes/+page.svelte
+msgid "Fehler beim Laden der Events:"
+msgstr "Fehler beim Laden der Events:"

@@ -26,42 +26,54 @@
 <div class="container mx-auto flex flex-col items-center justify-center gap-6 py-4 sm:w-2xl">
 	<HeaderControls {tags} {userId} />
 
-	<div class="px-4">
-		{#if eventsStore.isLoading}
-			{@render loading()}
-		{:else if eventsStore.hasEvents}
-			<div class="fade-in flex w-full flex-col items-center gap-6">
-				{#each eventsStore.events as event, i (event.id)}
-					<EventCard {event} />
-				{/each}
+	<svelte:boundary>
+		<div class="px-4">
+			{#if eventsStore.isLoading}
+				{@render loading()}
+			{:else if eventsStore.hasEvents}
+				<div class="fade-in flex w-full flex-col items-center gap-6">
+					{#each eventsStore.events as event, i (event.id)}
+						<EventCard {event} />
+					{/each}
+	
+					<div
+						{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
+						class="-translate-y-72"
+					/>
+	
+					{#if eventsStore.isLoadingMore}
+						{@render loading()}
+					{/if}
+				</div>
+			{:else if eventsStore.hasAnyFilter}
+				<div class="text-center text-gray-500">
+					Keine Events
+					{@html eventsStore.hasSearchFilter
+						? `mit <span class="font-bold"> "${eventsStore.searchFilter}"</span><br />`
+						: ''}
+					{@html eventsStore.hasLocationFilter
+						? `in <span class="font-bold">${eventsStore.locationFilter.plzCity} (${eventsStore.locationFilter.distance}km radius)</span><br />`
+						: ''}
+					{@html eventsStore.hasDateFilter
+						? `vom <span class="font-bold">${new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <span class="font-bold">${new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />`
+						: ''}
+					gefunden.
+				</div>
+			{:else}
+				<p class="text-gray-500">Keine Events gefunden.</p>
+			{/if}
+		</div>
 
-				<div
-					{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
-					class="-translate-y-72"
-				/>
-
-				{#if eventsStore.isLoadingMore}
-					{@render loading()}
-				{/if}
+		{#snippet failed(error, reset)}
+			<div role="alert" class="alert alert-error">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+				</svg>
+				<b>Fehler beim Laden der Events:</b>
+				{error.message}
 			</div>
-		{:else if eventsStore.hasAnyFilter}
-			<div class="text-center text-gray-500">
-				Keine Events
-				{@html eventsStore.hasSearchFilter
-					? `mit <span class="font-bold"> "${eventsStore.searchFilter}"</span><br />`
-					: ''}
-				{@html eventsStore.hasLocationFilter
-					? `in <span class="font-bold">${eventsStore.locationFilter.plzCity} (${eventsStore.locationFilter.distance}km radius)</span><br />`
-					: ''}
-				{@html eventsStore.hasDateFilter
-					? `vom <span class="font-bold">${new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <span class="font-bold">${new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />`
-					: ''}
-				gefunden.
-			</div>
-		{:else}
-			<p class="text-gray-500">Keine Events gefunden.</p>
-		{/if}
-	</div>
+		{/snippet}
+	</svelte:boundary>
 </div>
 
 {#snippet loading()}
