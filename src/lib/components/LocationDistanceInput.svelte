@@ -142,7 +142,7 @@
 
 	function handleFilterInputChange() {
 		if (typedPlzCity && selectedDistance === '') {
-			selectedDistance = '100';
+			selectedDistance = '50';
 		}
 		notifyChange();
 	}
