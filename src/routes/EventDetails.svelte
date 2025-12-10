@@ -311,7 +311,7 @@
 							<button class="btn btn-primary"> Anmelden </button>
 						{/snippet}
 						{#snippet content()}
-							{#if singleContact?.url}
+							{#if singleContact?.method && singleContact?.url}
 								<span class="word-wrap">
 									Der Veranstalter möchte Anmeldungen per <b> {singleContact.method}</b> erhalten.
 								</span>
@@ -319,7 +319,7 @@
 								<div class="mt-3 flex justify-center">
 									{@render contactButton(singleContact.method, singleContact.url!)}
 								</div>
-							{:else}
+							{:else if event.contact?.length}
 								<span class="word-wrap">
 									Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:
 								</span>
