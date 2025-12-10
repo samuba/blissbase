@@ -1,5 +1,5 @@
 import { sql, type SQL, relations } from 'drizzle-orm';
-import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, bigint, primaryKey, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, index, bigint, primaryKey, pgEnum } from 'drizzle-orm/pg-core';
 
 export const eventAttendanceModeEnum = pgEnum('attendance_mode', ['online', 'offline', 'offline+online']);
 
@@ -117,7 +117,8 @@ export const tagTranslations = pgTable('tag_translations', {
     locale: text().notNull(), // e.g. 'en', 'de', 'id'
     name: text().notNull(),   // e.g. "Yoga", "Meditation", "Meditasi"
 }, (t) => [
-    uniqueIndex().on(t.tagId, t.locale)
+    uniqueIndex().on(t.tagId, t.locale),
+    index().on(t.tagId)
 ]);
 
 export type TagTranslation = typeof tagTranslations.$inferSelect;
@@ -134,7 +135,8 @@ export const eventTags = pgTable('event_tags', {
     tagId: integer().notNull().references(() => tags.id, { onDelete: 'cascade' }),
     createdAt: timestamp().notNull().defaultNow(),
 }, (t) => [
-    primaryKey({ columns: [t.eventId, t.tagId] })
+    primaryKey({ columns: [t.eventId, t.tagId] }),
+    index().on(t.tagId)
 ]);
 
 export type EventTag = typeof eventTags.$inferSelect;
