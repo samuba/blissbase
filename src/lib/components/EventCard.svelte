@@ -93,7 +93,7 @@
 			{/if}
 		</div>
 
-		<div class="card-body flex flex-col gap-2">
+		<div class="card-body flex flex-col gap-2 pt-4.5 md:pt-6">
 			<h3 class="card-title leading-snug tracking-tight">
 				{event.name}
 
