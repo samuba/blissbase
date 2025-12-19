@@ -5,6 +5,7 @@
 	import { createSupabaseBrowserClient } from '$lib/supabase';
 	import ShareButton from './ShareButton.svelte';
 	import { isPwa } from '$lib/isPwa.svelte';
+	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 
 	interface Props {
 		children?: any;
@@ -37,9 +38,12 @@
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.Overlay class="fixed inset-0 z-50 bg-black/80" />
+		<Dialog.Overlay class={["fixed inset-0 z-50 bg-black/80", dialogOverlayAnimationClasses]} />
 		<Dialog.Content
-			class="card bg-base-100 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] outline-hidden sm:max-w-lg sm:p-4 md:w-full"
+			class={[
+				"card bg-base-100 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] outline-hidden sm:max-w-lg sm:p-4 md:w-full", 
+				dialogContentAnimationClasses
+			]}
 			tabindex={-1}
 		>
 			<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">

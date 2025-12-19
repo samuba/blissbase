@@ -4,6 +4,7 @@
 	import EventDetails from './EventDetails.svelte';
 	import { page } from '$app/state';
 	import { eventsStore } from '$lib/eventsStore.svelte';
+	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 
 	let { event: eventParam }: { event: UiEvent | undefined } = $props();
 	let event = $state<UiEvent | undefined>(eventParam);
@@ -37,12 +38,13 @@
 	}}
 >
 	<Dialog.Portal>
-		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity']} />
+		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 
 		<Dialog.Content
 			role="dialog"
 			class={[
-				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl'
+				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
+				dialogContentAnimationClasses
 			]}
 			style="scrollbar-width: thin"
 			onOpenAutoFocus={(e) => {

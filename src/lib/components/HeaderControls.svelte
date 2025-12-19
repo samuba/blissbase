@@ -6,8 +6,9 @@
 	import BurgerMenu from './BurgerMenu.svelte';
 	import TagSelection from './TagSelection.svelte';
 	import { getTags } from './TagSelection.remote';
-	import { Dialog} from 'bits-ui';
+	import { Dialog } from 'bits-ui';
 	import ToggleButton from './ToggleButton.svelte';
+	import { dialogContentAnimationClasses } from '$lib/common';
 	interface Props {
 		tags: Awaited<ReturnType<typeof getTags>>;
 		userId: string | undefined;
@@ -98,11 +99,10 @@
 <!-- filter dialog -->
 <Dialog.Root bind:open={isFilterDialogOpen}>
 	<Dialog.Portal>
-		<Dialog.Overlay
-			class="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-sm duration-700"
-		/>
+		<Dialog.Overlay class={dialogContentAnimationClasses} />
 		<Dialog.Content
 			class={[
+				dialogContentAnimationClasses,
 				'bg-base-200 fixed top-1/2 left-1/2 z-50 h-full md:h-auto max-h-dvh w-full max-w-dvw -translate-x-1/2 -translate-y-1/2',
 				'md:rounded-lg shadow-xl sm:max-w-md flex flex-col',
 				'overflow-y-auto' 
@@ -215,7 +215,7 @@
 				class="focus-visible:ring-foreground focus-visible:ring-offset-background absolute top-5 right-5 rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden active:scale-[0.98]"
 			>
 				<div>
-					<i class="icon-[ph--x] text-foreground size-5" />
+					<i class="icon-[ph--x] text-foreground size-5"></i>
 					<span class="sr-only">Close</span>
 				</div>
 			</Dialog.Close>
