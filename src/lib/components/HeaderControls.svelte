@@ -105,7 +105,7 @@
 			class={[
 				'bg-base-200 fixed top-1/2 left-1/2 z-50 h-full md:h-auto max-h-dvh w-full max-w-dvw -translate-x-1/2 -translate-y-1/2',
 				'md:rounded-lg shadow-xl sm:max-w-md flex flex-col',
-				'overflow-visible' 
+				'overflow-y-auto' 
 			]}
 		>
 			<Dialog.Title
@@ -114,7 +114,7 @@
 				Filter
 			</Dialog.Title>
 
-			<div class="flex flex-col gap-6 p-6">
+			<div class="flex flex-col gap-5 p-6">
 				<div class="flex flex-col items-start gap-3">
 					<h3>Zeitraum</h3>
 					<DateRangePicker
@@ -124,17 +124,16 @@
 					/>
 				</div>
 
-			<div class="flex w-full min-w-0 flex-col items-start gap-3">
-				<h3>Entfernung</h3>
-				<div class="w-full min-w-0">
-					<LocationDistanceInput
-						initialLocation={initialLocation}
-						initialDistance={eventsStore.pagination.distance}
-						resolvedCityName={resolvedCityName}
-						onChange={eventsStore.handleLocationDistanceChange}
-						showActiveIndicator={eventsStore.hasLocationFilter}
-					/>
-					
+				<div class="flex flex-col items-start gap-3">
+					<h3>Entfernung</h3>
+					<div class="w-full min-w-0">
+						<LocationDistanceInput
+							initialLocation={initialLocation}
+							initialDistance={eventsStore.pagination.distance}
+							resolvedCityName={resolvedCityName}
+							onChange={eventsStore.handleLocationDistanceChange}
+						/>
+					</div>
 				</div>
 
 				<div class="flex flex-col items-start gap-3">
@@ -207,9 +206,9 @@
 				</div>
 			</div>
 
-			<div class="grow"></div>
-			<div class="mt-6 flex w-full items-center justify-end py-4 ">
-				<Dialog.Close class="btn btn-primary">Ergebnisse anzeigen</Dialog.Close>
+			<!-- <div class="grow"></div> -->
+			<div class="flex w-full items-center justify-end px-6 pb-6 pt-3">
+				<Dialog.Close class="btn btn-primary w-full md:w-auto">Ergebnisse anzeigen</Dialog.Close>
 			</div>
 
 			<Dialog.Close
