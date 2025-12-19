@@ -186,6 +186,7 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
+#: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
 msgid "Schließen"
@@ -284,7 +285,6 @@ msgid "<0/> Login"
 msgstr "<0/> Login"
 
 #: src/lib/components/BurgerMenu.svelte
-#: src/lib/components/HeaderControls.svelte
 #: src/lib/components/ImageDialog.svelte
 msgid "Close"
 msgstr "Close"
@@ -838,3 +838,6 @@ msgstr "Hero Image"
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
 msgstr "Location <0/> not found"
+
+#~ msgid "<0>Filter</0> class=\"mb-4 text-xl font-semibold\" <1>ZeitraumEntfernungTeilnahmeVorortOnlineSortierungStartzeitDistanzZurücksetzen<0/> Alle Filter zurücksetzen</1> <2>Ergebnisse anzeigen</2> <3>Close</3>"
+#~ msgstr ""

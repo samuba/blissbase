@@ -3,6 +3,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { Dialog } from 'bits-ui';
 	import { isPwa } from '$lib/isPwa.svelte';
+	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 
 	// TODO: add video for safari desktop
 
@@ -130,8 +131,8 @@
 
 <Dialog.Root bind:open={showIosInstallHowto}>
 	<Dialog.Portal>
-		<Dialog.Overlay class="bg-base-100 fixed inset-0 z-50" />
-		<Dialog.Content class="fixed inset-0 z-50 flex flex-col items-center px-8 pb-2 outline-none">
+		<Dialog.Overlay class={['bg-base-100 fixed inset-0 z-50', dialogOverlayAnimationClasses]} />
+		<Dialog.Content class={['fixed inset-0 z-50 flex flex-col items-center px-8 pb-2 outline-none', dialogContentAnimationClasses]}>
 			<div bind:this={explanationDiv} class="my-3 flex w-full items-center justify-between">
 				<h3 class="text-center text-2xl">Installationsanleitung:</h3>
 				<Dialog.Close class="btn btn-primary">Okay</Dialog.Close>

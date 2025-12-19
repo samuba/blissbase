@@ -8,7 +8,7 @@
 	import { getTags } from './TagSelection.remote';
 	import { Dialog } from 'bits-ui';
 	import ToggleButton from './ToggleButton.svelte';
-	import { dialogContentAnimationClasses } from '$lib/common';
+	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	interface Props {
 		tags: Awaited<ReturnType<typeof getTags>>;
 		userId: string | undefined;
@@ -99,7 +99,7 @@
 <!-- filter dialog -->
 <Dialog.Root bind:open={isFilterDialogOpen}>
 	<Dialog.Portal>
-		<Dialog.Overlay class={dialogContentAnimationClasses} />
+		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-sm', dialogOverlayAnimationClasses]} />
 		<Dialog.Content
 			class={[
 				dialogContentAnimationClasses,
@@ -108,9 +108,7 @@
 				'overflow-y-auto' 
 			]}
 		>
-			<Dialog.Title
-				class="flex w-full items-center justify-center pt-4 text-lg font-semibold tracking-tight"
-			>
+			<Dialog.Title class="text-xl font-semibold w-full text-center mt-4">
 				Filter
 			</Dialog.Title>
 
@@ -210,14 +208,11 @@
 			<div class="flex w-full items-center justify-end px-6 pb-6 pt-3">
 				<Dialog.Close class="btn btn-primary w-full md:w-auto">Ergebnisse anzeigen</Dialog.Close>
 			</div>
-
 			<Dialog.Close
-				class="focus-visible:ring-foreground focus-visible:ring-offset-background absolute top-5 right-5 rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden active:scale-[0.98]"
+				class="hover:bg-base-100 absolute top-4 right-4 flex size-8 items-center justify-center rounded-full transition-colors"
+				aria-label="Schließen"
 			>
-				<div>
-					<i class="icon-[ph--x] text-foreground size-5"></i>
-					<span class="sr-only">Close</span>
-				</div>
+				<i class="icon-[ph--x] size-6"></i>
 			</Dialog.Close>
 		</Dialog.Content>
 	</Dialog.Portal>

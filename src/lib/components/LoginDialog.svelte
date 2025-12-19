@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
 	import { createSupabaseBrowserClient } from '$lib/supabase';
+	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
@@ -48,11 +49,12 @@
 <Dialog.Root bind:open>
 	<Dialog.Portal>
 		<Dialog.Overlay
-			class="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-sm duration-700"
+			class={['fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-sm', dialogOverlayAnimationClasses]}
 		/>
 		<Dialog.Content
 			class={[
 				'bg-base-100 fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl',
+				dialogContentAnimationClasses
 			]}
 		>
 			<Dialog.Title class="mb-4 text-xl font-semibold">Anmelden</Dialog.Title>
