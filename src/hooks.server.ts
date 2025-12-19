@@ -62,6 +62,22 @@ const insertPosthog: Handle = async ({ event, resolve }) => {
     return resolve(event);
 }
 
+const clearStaleFilters: Handle = async ({ event, resolve }) => {
+    const lastDelete = event.cookies.get('blissbase_filters_last_delete');
+    if (lastDelete) {
+        return resolve(event);
+    }
+    
+    event.cookies.delete('blissbase_filters', { path: '/' });
+    event.cookies.set('blissbase_filters_last_delete', String(Math.floor(Date.now() / 1000)), {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        httpOnly: false
+    });
+    
+    return resolve(event);
+};
+
 const supabaseAuth: Handle = async ({ event, resolve }) => {
     event.locals.isAdminSession = isAdminSession();
     event.locals.supabase = createSupabaseServerClient();
@@ -95,6 +111,7 @@ export const handleError: HandleServerError = async ({ error, status }) => {
 export const handle: Handle = async ({ event, resolve }) => {
     try {
         return await sequence(
+            clearStaleFilters,
             wuchaleLocalization,
             extractVercelHeader,
             insertPosthog,
