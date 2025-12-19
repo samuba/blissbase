@@ -15,23 +15,18 @@ export async function geocodeAddressCached(addressLines: string[] | undefined, a
 
     // Join the address lines to create a complete address string
     const addressString = addressLines.filter(x => x?.trim()).join(', ').trim();
-
     try {
         // First, check the caches
         if (geocodeLocalCache.get(addressString)) {
             return geocodeLocalCache.get(addressString)!;
         }
 
-        const cachedResult = await db.select()
-            .from(geocodeCache)
-            .where(eq(geocodeCache.address, addressString))
-            .limit(1);
-
-        if (cachedResult.length > 0) {
-            console.log(`Found cached geocoding result for "${addressString}"`);
+        const dbCachedResult = await db.query.geocodeCache.findFirst({ where: eq(geocodeCache.address, addressString) })
+        if (dbCachedResult) {
+            console.log(`Found cached geocoding result for "${addressString}" in db: ${dbCachedResult.latitude}, ${dbCachedResult.longitude}`);
             geocodeLocalCache.set(addressString, {
-                lat: Number(cachedResult[0].latitude),
-                lng: Number(cachedResult[0].longitude)
+                lat: Number(dbCachedResult.latitude),
+                lng: Number(dbCachedResult.longitude)
             });
             return geocodeLocalCache.get(addressString)!;
         }
@@ -40,7 +35,6 @@ export async function geocodeAddressCached(addressLines: string[] | undefined, a
         const coordinates = await geocodeLocation(addressString, apiKey);
 
         try {
-            // Insert a single record
             await db.insert(geocodeCache).values({
                 address: addressString,
                 latitude: coordinates?.lat ?? null,
@@ -49,8 +43,8 @@ export async function geocodeAddressCached(addressLines: string[] | undefined, a
             });
             console.log(`Cached geocoding result for "${addressString}"`);
             geocodeLocalCache.set(addressString, {
-                lat: Number(coordinates?.lat),
-                lng: Number(coordinates?.lng)
+                lat: Number(coordinates?.lat ?? null),
+                lng: Number(coordinates?.lng ?? null)
             });
         } catch (cacheError) {
             console.error(`Error caching geocoding result: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
@@ -135,6 +129,7 @@ async function geocodeLocation(location: string, apiKey: string): Promise<{ lat:
             return null;
         }
         const data = await response.json();
+        console.log('geocodeLocation', data);
         if (data.status === 'OK' && data.results && data.results.length > 0) {
             return data.results[0].geometry.location; // { lat, lng }
         } else {

@@ -27,6 +27,8 @@ const wuchaleLocalization: Handle = async ({ event, resolve }) => {
 };
 
 const extractVercelHeader: Handle = async ({ event, resolve }) => {
+    if (dev) return resolve(event);
+    
     const latitude = event.request.headers.get('x-vercel-ip-latitude')
     const longitude = event.request.headers.get('x-vercel-ip-longitude')
 

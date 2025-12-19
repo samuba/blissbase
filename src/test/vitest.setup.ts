@@ -17,6 +17,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 vi.mock("$lib/server/db", async (importOriginal) => {
+    console.log('mocking db...')
     const { s: schema, db: _db, ...rest } = await importOriginal<typeof import("../lib/server/db")>()
 
     const { PGlite } = await vi.importActual<typeof import("@electric-sql/pglite")>("@electric-sql/pglite")
@@ -39,6 +40,7 @@ vi.mock("$lib/server/db", async (importOriginal) => {
     await client.exec('CREATE EXTENSION IF NOT EXISTS earthdistance;')
     await client.exec('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
 
+    console.log('pushing schema to pglite instance...')
     await pushSchema(db, schema)
 
     // seed test data

@@ -43,6 +43,8 @@
 	--color-base-500: var(--input-color);
 	--color-base-600: color-mix(in oklab, var(--color-base-content) 30%, #0000);
 	--color-base-700: color-mix(in oklab, var(--color-base-content) 40%, #0000);
+
+	--color-primary-btn-border: color-mix(in oklab, var(--color-primary), #000 calc(var(--depth) * 5%));
 }
 
 /* textarea looks ugly with full rounded cornders */
@@ -54,6 +56,17 @@
 .select,
 select {
 	@apply disabled:!border-base-300 disabled:!border-2;
+}
+
+@font-face {
+	font-family: 'Baloo-2-SemiBold';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('Baloo2-SemiBold.woff2') format('woff2');
+}
+.font-brand {
+	font-family: 'Baloo-2-SemiBold', 'Arial';
 }
 
 /* no prose text should be too bold */
@@ -78,6 +91,10 @@ img {
 
 body {
 	touch-action: manipulation; /* Enable panning and pinch zoom gestures, but disable additional non-standard gestures such as double-tap to zoom. Disabling double-tap to zoom removes the need for browsers to delay the generation of click events when the user taps the screen. */
+}
+
+.active {
+	@apply border-primary-btn-border bg-primary/15 ;
 }
 
 /* animations for bits-ui dialogs */

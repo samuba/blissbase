@@ -128,10 +128,10 @@
 			{:else if event.address?.length}
 				<div class="flex items-center gap-1.5 text-sm">
 					<div class="flex items-center gap-1">
-						<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
 						{#if event.attendanceMode === 'offline+online'}
 							<i class="icon-[ph--globe] size-4 min-w-4"></i>
 						{/if}
+						<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
 					</div>
 
 					<div class="leading-tight">

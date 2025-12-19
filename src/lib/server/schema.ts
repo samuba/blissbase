@@ -2,6 +2,8 @@ import { sql, type SQL, relations } from 'drizzle-orm';
 import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, index, bigint, primaryKey, pgEnum } from 'drizzle-orm/pg-core';
 
 export const eventAttendanceModeEnum = pgEnum('attendance_mode', ['online', 'offline', 'offline+online']);
+export type AttendanceMode = typeof eventAttendanceModeEnum.enumValues[number];
+export const attendanceModeEnum = eventAttendanceModeEnum.enumValues;
 
 export const events = pgTable('events', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),

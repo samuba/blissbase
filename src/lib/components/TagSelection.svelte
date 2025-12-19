@@ -111,35 +111,10 @@
 		eventsStore.handleSearchTermChange('');
 		filterQueryInPopup = '';
 	}
-
-	$inspect(selectedTags);
 </script>
 
-{#if selectedTags.length > 0}
-	<!-- Selected tags with individual clear buttons and "Clear All" option -->
-	<div class="flex flex-wrap items-center gap-2" in:fade={{ duration: 280 }}>
-		{#each selectedTags as tag (tag.id)}
-			<button
-				class="btn btn-primary min-w-fit gap-2"
-				onclick={() => removeTag(tag)}
-				in:fade={{ duration: 280 }}
-				animate:flip={{ duration: 280 }}
-			>
-				{tag[localeStore.locale]}
-				<i class="icon-[ph--x] size-5"></i>
-			</button>
-		{/each}
 
-		<div class="relative">
-			{@render moreTagsButton(false)}
-		</div>
-		{#if selectedTags.length > 1}
-			<button class="btn btn-circle" onclick={clearTags} title="Textsuche schließen">
-				<i class="icon-[ph--x] size-5"></i>
-			</button>
-		{/if}
-	</div>
-{:else if eventsStore.showTextSearch}
+{#if eventsStore.showTextSearch}
 	<div class="flex flex-grow items-center gap-2" in:fade={{ duration: 280 }}>
 		<label class="input w-full flex-grow">
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
@@ -179,7 +154,19 @@
 	>
 		<!-- Tags container - no wrap, overflow hidden -->
 		<div class="flex w-full min-w-0 flex-shrink flex-nowrap gap-2 overflow-hidden pr-12">
-			{#each previewTags as tag}
+			{#each selectedTags as tag (tag.id)}
+				<button
+					class="btn active min-w-fit gap-2"
+					onclick={() => removeTag(tag)}
+					in:fade={{ duration: 280 }}
+					animate:flip={{ duration: 280 }}
+				>
+					{tag[localeStore.locale]}
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
+			{/each}
+
+			{#each previewTags.filter((t) => !selectedTags.some((st) => st.id === t.id)) as tag}
 				<button
 					class="btn bg-base-100 flex-shrink-0 font-normal whitespace-nowrap"
 					onclick={() => selectTag(tag)}
@@ -206,7 +193,7 @@
 {#snippet moreTagsButton(showTriggerShadow: boolean)}
 	<PopOver
 		contentClass="bg-base-100 shadow-lg border-base-300 w-[250px]"
-		triggerClass={showTriggerShadow ? 'btn btn-ghost ' : 'btn bg-base-100'}
+		triggerClass={showTriggerShadow ? 'btn btn-circle bg-base-100 btn-sm' : 'btn bg-base-100'}
 		contentProps={{
 			align: 'center',
 			onOpenAutoFocus: (e) => e.preventDefault() // ugly blue focus on close button in safari otherwise
@@ -217,7 +204,7 @@
 		{#snippet trigger()}
 			{#if showTriggerShadow}
 				<i
-					class="icon-[ph--caret-right-bold] size-6 transition-transform {showDropdown
+					class="icon-[ph--caret-right-bold] size-5 transition-transform {showDropdown
 						? 'rotate-90'
 						: ''}"
 				></i>

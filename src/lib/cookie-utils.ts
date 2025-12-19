@@ -1,4 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
+import type { AttendanceMode } from './server/schema';
 
 const COOKIE_NAME = 'blissbase_filters';
 const COOKIE_OPTIONS = {
@@ -20,7 +21,7 @@ export type FilterCookieData = {
     sortBy?: string | null;
     sortOrder?: string | null;
     tagIds?: number[] | null;
-    onlyOnlineEvents?: boolean | null;
+    attendanceMode?: AttendanceMode | null;
 };
 
 /**
@@ -62,7 +63,7 @@ function validateFilterData(data: unknown): FilterCookieData | null {
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
         sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
         tagIds: tagIds?.length ? tagIds : null,
-        onlyOnlineEvents: typeof filterData.onlyOnlineEvents === 'boolean' ? filterData.onlyOnlineEvents : null
+        attendanceMode: typeof filterData.attendanceMode === 'string' ? filterData.attendanceMode as AttendanceMode : null
     };
 }
 

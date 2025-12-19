@@ -1,3 +1,19 @@
+active state vom datepicker geht nicht weg bei reset
+
+sort distanz everywhere geht nicht
+
+app installation übersetzen
+
+show that a location was not found in the input somehow
+
+favoriten in filter aufnehmen? braucht dann keine extra seite mehr? -> wir brauchen burger menu nicht im sticky header
+
+write to all scraped authors and ask if they want to delete
+date picker läd events schon bei erstem date select. wartet nicht auf zweites
+
+location input gut machen
+
+
 events aus vergangenheit werden nur angezeigt wenn ende noch nicht erreicht
 
 <script>emaillink('netzwerk','ganzheitlich-gesund-potsdam','de','','','');</script><object type="multipart/example"><noscript>netzwerk(at)ganzheitlich-gesund-potsdam.de</noscript></object>

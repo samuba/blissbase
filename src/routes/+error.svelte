@@ -6,7 +6,7 @@
 	<div class="flex flex-col gap-8">
 		<a href="/" class="flex items-center gap-3">
 			<img src="/logo.svg" alt="Blissbase" class="size-12" />
-			<h1 class="text-2xl font-bold">Blissbase</h1>
+			<h1 class="text-3xl font-bold font-brand">Blissbase</h1>
 		</a>
 
 		<div>

@@ -3,6 +3,8 @@ import { fetchEventsWithCookiePersistence } from './events.remote';
 import type { DateRangePickerOnChange } from '$lib/components/DateRangePicker.svelte';
 import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.svelte';
 import { browser } from '$app/environment';
+import { SvelteSet } from 'svelte/reactivity';
+import type { AttendanceMode } from './server/schema';
 
 type LoadingState = 'not-loading' | 'loading' | 'loading-more';
 
@@ -19,7 +21,7 @@ type PaginationState = {
     sortBy?: string | null;
     sortOrder?: string | null;
     tagIds?: number[] | null;
-    onlyOnlineEvents?: boolean | null;
+    attendanceMode?: AttendanceMode | null;
     totalEvents?: number | null;
     totalPages?: number | null;
 };
@@ -41,6 +43,8 @@ export class EventsStore {
     loadingState = $state<LoadingState>('not-loading');
     showTextSearch = $state(false);
 
+    private finishedLoadingCallbacks = new SvelteSet<FinishedLoadingCallback>();
+
     // Derived reactive values
     selectedSortValue = $derived(this.getSortValue(this.pagination.sortBy, this.pagination.sortOrder));
     isLoading = $derived(this.loadingState === 'loading');
@@ -56,12 +60,13 @@ export class EventsStore {
     hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat && this.pagination.lng)));
     hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
     hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
-    hasOnlineEventsFilter = $derived(Boolean(this.pagination.onlyOnlineEvents));
+    hasAttendanceModeFilter = $derived(this.pagination.attendanceMode);
+    sortFilter = $derived({ sortBy: this.pagination.sortBy, sortOrder: this.pagination.sortOrder });
     hasAnyFilter = $derived(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter || this.hasOnlineEventsFilter);
+    hasFilterBehindButton = $derived(this.hasDateFilter || this.hasAttendanceModeFilter || this.sortFilter.sortBy !== 'time');
     searchFilter = $derived(this.pagination.searchTerm?.trim());
     dateFilter = $derived({ start: this.pagination.startDate, end: this.pagination.endDate });
     locationFilter = $derived({ plzCity: this.pagination.plzCity, lat: this.pagination.lat, lng: this.pagination.lng, distance: this.pagination.distance });
-    sortFilter = $derived({ sortBy: this.pagination.sortBy, sortOrder: this.pagination.sortOrder });
 
     constructor(initialData?: { events: UiEvent[]; pagination: PaginationState }) {
         if (initialData) {
@@ -95,7 +100,7 @@ export class EventsStore {
                     sortBy: params.sortBy ?? null,
                     sortOrder: params.sortOrder ?? null,
                     tagIds: params.tagIds ?? null,
-                    onlyOnlineEvents: params.onlyOnlineEvents ?? null,
+                    attendanceMode: params.attendanceMode ?? null,
                     totalEvents: params.totalEvents ?? null,
                     totalPages: params.totalPages ?? null,
                 };
@@ -103,13 +108,12 @@ export class EventsStore {
 
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
-            
             applyPagination(params); // optimistically set pagination state
             const data = await fetchEventsWithCookiePersistence(params);
 
             if (append) {
                 // Filter out duplicate events that may result from pagination
-                const existingEventIds = new Set(this.events.map((event) => event.id));
+                const existingEventIds = new SvelteSet(this.events.map((event) => event.id));
                 const newEvents = data.events.filter((event) => !existingEventIds.has(event.id));
                 this.events.push(...newEvents);
             } else {
@@ -119,6 +123,7 @@ export class EventsStore {
             applyPagination(data.pagination);
         } finally {
             this.loadingState = 'not-loading';
+            this.finishedLoadingCallbacks.forEach((callback) => callback(append));
         }
     }
 
@@ -140,7 +145,7 @@ export class EventsStore {
                 sortBy: this.pagination.sortBy,
                 sortOrder: this.pagination.sortOrder,
                 tagIds: this.pagination.tagIds,
-                onlyOnlineEvents: this.pagination.onlyOnlineEvents
+                attendanceMode: this.pagination.attendanceMode
             },
             true
         );
@@ -166,7 +171,6 @@ export class EventsStore {
             lat: event.latitude ?? null,
             lng: event.longitude ?? null,
             distance: event.distance,
-            onlyOnlineEvents: event.onlyOnlineEvents
         });
     };
 
@@ -198,6 +202,14 @@ export class EventsStore {
         })
     }
 
+    handleAttendanceModeChange(value: AttendanceMode | null) {
+        this.loadEvents({
+            ...this.pagination,
+            attendanceMode: value,
+            page: 1,
+        })
+    }
+
     // Get event by ID
     getEventById(id: number | null) {
         if (!id) return undefined;
@@ -218,6 +230,17 @@ export class EventsStore {
             page: 1
         });
     }
+
+    /**
+     * Register a callback to be invoked when loading finishes.
+     * @example
+     * const unsubscribe = eventsStore.onFinishedLoading(() => console.log('done!'));
+     * // later: unsubscribe();
+     */
+    onFinishedLoading(callback: FinishedLoadingCallback) {
+        this.finishedLoadingCallbacks.add(callback);
+        return () => this.finishedLoadingCallbacks.delete(callback);
+    }
 }
 
 // Create a new store instance for each server request, or use singleton on client
@@ -237,3 +260,5 @@ export const eventsStore = createEventsStore();
 declare global {
     var __eventsStore: EventsStore | undefined;
 }
+
+type FinishedLoadingCallback = (append?: boolean) => void;

@@ -5,7 +5,7 @@ import { desc, count, eq } from "drizzle-orm";
 import type { AllTags } from "./TagSelection.devData";
 
 export const getTags = prerender(async () => {
-    const previewTagSlugs = ['yoga', 'meditation', 'breathwork', 'tantra', 'conscious-dance', 'cacao-ceremony']
+    const previewTagSlugs = ['meditation', 'breathwork', 'tantra', 'conscious-dance', 'cacao-ceremony', 'kirtan']
     const allTags: AllTags = dev ?
         // prerender is run every load in dev and takes too long, so we just return a dummy result for dev
         (await import('./TagSelection.devData')).devDummyData :

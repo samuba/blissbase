@@ -6,6 +6,8 @@
 
 	// TODO: add video for safari desktop
 
+	const { class: className }: { class?: string } = $props();
+
 	let deferredPrompt: any;
 
 	let showInstallButton = $state(false);
@@ -121,7 +123,7 @@
 <svelte:window bind:innerHeight />
 
 {#if showInstallButton}
-	<button onclick={onInstallClick} class="btn">
+	<button onclick={onInstallClick} class={['btn btn-primary w-fit', className]}>
 		App installieren <i class="icon--ph-app-store"></i>
 	</button>
 {/if}

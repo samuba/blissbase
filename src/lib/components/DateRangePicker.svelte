@@ -24,6 +24,7 @@
 		rootProps?: DateRangePickerRootProps;
 		onChange: DateRangePickerOnChange;
 		open?: boolean;
+		showLongText?: boolean;
 	};
 
 	let {
@@ -31,7 +32,8 @@
 		triggerProps,
 		rootProps,
 		onChange,
-		open = $bindable(false)
+		open = $bindable(false),
+		showLongText = false,
 	}: DateRangePickerProps = $props();
 
 	let previousStart = $state(value?.start);
@@ -98,38 +100,42 @@
 	onValueChange={internalOnChange}
 >
 	<DateRangePicker.Trigger
-		class="h-input input focus-within:border-neutral focus-within:shadow-date-field-focus !w-full flex-grow cursor-pointer justify-center pr-4 select-none {triggerProps?.class}"
+		class={["h-input input focus-within:border-neutral focus-within:shadow-date-field-focus w-full! grow cursor-pointer justify-center pr-4 select-none", triggerProps?.class, value?.start && 'active']}
 	>
 		<i class="icon-[ph--calendar-dots] size-6"></i>
 
-		{#if !value?.start && !value?.end}
-			Kommende Events
+		{#if showLongText}
+			{#if !value?.start && !value?.end}
+				Alle zukünftigen Events
+			{:else}
+				{#each ['start', 'end'] as const as type}
+					<DateRangePicker.Input {type}>
+						{#snippet children({ segments })}
+							{#each segments as { part, value }}
+								<div class="inline-block select-none">
+									{#if part === 'literal'}
+										<DateRangePicker.Segment {part} class="text-base-content/70 ">
+											{value}
+										</DateRangePicker.Segment>
+									{:else}
+										<DateRangePicker.Segment
+											{part}
+											class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] focus-visible:ring-0! focus-visible:ring-offset-0!"
+										>
+											{value}
+										</DateRangePicker.Segment>
+									{/if}
+								</div>
+							{/each}
+						{/snippet}
+					</DateRangePicker.Input>
+					{#if type === 'start'}
+						<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
+					{/if}
+				{/each}
+			{/if}
 		{:else}
-			{#each ['start', 'end'] as const as type}
-				<DateRangePicker.Input {type}>
-					{#snippet children({ segments })}
-						{#each segments as { part, value }}
-							<div class="inline-block select-none">
-								{#if part === 'literal'}
-									<DateRangePicker.Segment {part} class="text-base-content/70 ">
-										{value}
-									</DateRangePicker.Segment>
-								{:else}
-									<DateRangePicker.Segment
-										{part}
-										class="hover:bg-base-200 focus:bg-base-200 focus:text-base-content aria-[valuetext=Empty]:text-base-content/50 rounded-[5px] focus-visible:ring-0! focus-visible:ring-offset-0!"
-									>
-										{value}
-									</DateRangePicker.Segment>
-								{/if}
-							</div>
-						{/each}
-					{/snippet}
-				</DateRangePicker.Input>
-				{#if type === 'start'}
-					<div aria-hidden="true" class="text-base-content/70 px-1">⁠–⁠⁠⁠⁠⁠</div>
-				{/if}
-			{/each}
+			Datum
 		{/if}
 	</DateRangePicker.Trigger>
 	<DateRangePicker.Content sideOffset={6} class="z-50">
@@ -141,7 +147,7 @@
 					<button class="btn btn-sm px-0" onclick={getNextWeek}> Nächste Woche </button>
 					<button class="btn btn-sm px-0" onclick={getNext30Days}> Nächste 30 Tage </button>
 					<button class="btn btn-sm col-span-2 px-0" onclick={getAllFutureEvents}>
-						Alle kommende Events
+						Alle zukünftigen Events
 					</button>
 				</div>
 

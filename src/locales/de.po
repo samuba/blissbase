@@ -19,6 +19,8 @@ msgstr ""
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
 #: src/routes/+page.svelte
+#: src/routes/+page.svelte
+#: src/routes/+page.svelte
 msgid "Blissbase"
 msgstr "Blissbase"
 
@@ -30,14 +32,6 @@ msgstr "Fehler {0}:"
 #: src/routes/+layout.svelte
 msgid "Loading Blissbase"
 msgstr "Loading Blissbase"
-
-#: src/routes/+page.svelte
-msgid "Keine Events <0/> <1/> <2/> gefunden."
-msgstr "Keine Events <0/> <1/> <2/> gefunden."
-
-#: src/routes/+page.svelte
-msgid "Keine Events gefunden."
-msgstr "Keine Events gefunden."
 
 #: src/routes/+page.svelte
 msgid "Lade..."
@@ -111,7 +105,7 @@ msgid "Ausgebucht"
 msgstr "Ausgebucht"
 
 #: src/lib/components/EventCard.svelte
-#: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/HeaderControls.svelte
 #: src/routes/EventDetails.svelte
 msgid "Online"
 msgstr "Online"
@@ -202,10 +196,6 @@ msgid "<0/> Zurück zur Übersicht"
 msgstr "<0/> Zurück zur Übersicht"
 
 #: src/lib/components/DateRangePicker.svelte
-msgid "Kommende Events"
-msgstr "Kommende Events"
-
-#: src/lib/components/DateRangePicker.svelte
 msgid "Diese Woche"
 msgstr "Diese Woche"
 
@@ -220,10 +210,6 @@ msgstr "Nächste Woche"
 #: src/lib/components/DateRangePicker.svelte
 msgid "Nächste 30 Tage"
 msgstr "Nächste 30 Tage"
-
-#: src/lib/components/DateRangePicker.svelte
-msgid "Alle kommende Events"
-msgstr "Alle kommende Events"
 
 #: src/lib/components/AddToCalendarButton.svelte
 msgid "Google"
@@ -298,6 +284,7 @@ msgid "<0/> Login"
 msgstr "<0/> Login"
 
 #: src/lib/components/BurgerMenu.svelte
+#: src/lib/components/HeaderControls.svelte
 #: src/lib/components/ImageDialog.svelte
 msgid "Close"
 msgstr "Close"
@@ -348,39 +335,16 @@ msgid "Group"
 msgstr "Group"
 
 #: src/lib/components/HeaderControls.svelte
-#: src/lib/components/HeaderControls.svelte
-msgid "Menü"
-msgstr "Menü"
-
-#: src/lib/components/HeaderControls.svelte
-#: src/lib/components/HeaderControls.svelte
-msgid "<0/> Menu"
-msgstr "<0/> Menu"
-
-#: src/lib/components/HeaderControls.svelte
-#: src/lib/components/HeaderControls.svelte
 msgid "Sortierung"
 msgstr "Sortierung"
 
-#: src/lib/components/HeaderControls.svelte
 #: src/lib/components/HeaderControls.svelte
 msgid "Startzeit"
 msgstr "Startzeit"
 
 #: src/lib/components/HeaderControls.svelte
-#: src/lib/components/HeaderControls.svelte
 msgid "Distanz"
 msgstr "Distanz"
-
-#: src/lib/components/HeaderControls.svelte
-msgid "Sortieren nach"
-msgstr "Sortieren nach"
-
-#: src/lib/components/HeaderControls.svelte
-#: src/lib/components/HeaderControls.svelte
-#: src/lib/components/HeaderControls.svelte
-msgid "Alle Filter zurücksetzen"
-msgstr "Alle Filter zurücksetzen"
 
 #: src/lib/components/ImageDialog.svelte
 msgid "Previous image"
@@ -407,20 +371,8 @@ msgid "Standort"
 msgstr "Standort"
 
 #: src/lib/components/LocationDistanceInput.svelte
-msgid "Online Events"
-msgstr "Online Events"
-
-#: src/lib/components/LocationDistanceInput.svelte
 msgid "Überall"
 msgstr "Überall"
-
-#: src/lib/components/LocationDistanceInput.svelte
-msgid "Nur Online Events"
-msgstr "Nur Online Events"
-
-#: src/lib/components/LocationDistanceInput.svelte
-msgid "<0/> Nur Online Events <1/>"
-msgstr "<0/> Nur Online Events <1/>"
 
 #: src/lib/components/LoginDialog.svelte
 msgid "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
@@ -456,7 +408,6 @@ msgid "Hue: {0}°, Rotation: {1}°"
 msgstr "Hue: {0}°, Rotation: {1}°"
 
 #: src/lib/components/TagSelection.svelte
-#: src/lib/components/TagSelection.svelte
 msgid "Textsuche schließen"
 msgstr "Textsuche schließen"
 
@@ -481,21 +432,9 @@ msgstr "Suchen..."
 msgid "Enter"
 msgstr "Enter"
 
-#~ msgid "<0/> In Event Texten suchen"
-#~ msgstr "<0/> In Event Texten suchen"
-
-#~ msgid "Kein Tag gefunden für <0/>"
-#~ msgstr "Kein Tag gefunden für <0/>"
-
 #: src/lib/components/ShareButton.svelte
 msgid "Mac"
 msgstr "Mac"
-
-#~ msgid "<0/> Teilen"
-#~ msgstr "<0/> Teilen"
-
-#~ msgid "<0/> Link kopieren"
-#~ msgstr "<0/> Link kopieren"
 
 #: src/lib/components/ShareButton.svelte
 msgid "Link kopiert"
@@ -717,9 +656,6 @@ msgstr "Invalid host secret"
 msgid "App teilen"
 msgstr "App teilen"
 
-#~ msgid "<0/> {0} Teilen"
-#~ msgstr "<0/> {0} Teilen"
-
 #: src/lib/components/ShareButton.svelte
 msgid "Teilen"
 msgstr "Teilen"
@@ -772,3 +708,133 @@ msgstr "<0/> Suchen"
 #: src/routes/+page.svelte
 msgid "Fehler beim Laden der Events:"
 msgstr "Fehler beim Laden der Events:"
+
+#. placeholder {0}: email
+#: src/lib/components/LoginDialog.svelte
+msgid "Login-Link wurde an <b>{0}</b> gesendet. Bitte überprüfe dein Postfach."
+msgstr "Login-Link wurde an <b>{0}</b> gesendet. Bitte überprüfe dein Postfach."
+
+#: src/lib/components/LoginDialog.svelte
+msgid "Ein Fehler ist aufgetreten"
+msgstr "Ein Fehler ist aufgetreten"
+
+#: src/lib/components/ShareButton.svelte
+msgid "AbortError"
+msgstr "AbortError"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Dein Standort"
+msgstr "Dein Standort"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein."
+msgstr "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein."
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Filter"
+msgstr "Filter"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "<0/> Filter"
+msgstr "<0/> Filter"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Vorort"
+msgstr "Vorort"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Teilnahme"
+msgstr "Teilnahme"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Zeitraum"
+msgstr "Zeitraum"
+
+#: src/lib/components/DateRangePicker.svelte
+#: src/lib/components/DateRangePicker.svelte
+msgid "Alle zukünftigen Events"
+msgstr "Alle zukünftigen Events"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Entfernung"
+msgstr "Entfernung"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "<0/> Alle Filter zurücksetzen"
+msgstr "<0/> Alle Filter zurücksetzen"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Zurücksetzen"
+msgstr "Zurücksetzen"
+
+#: src/lib/components/DateRangePicker.svelte
+msgid "Datum"
+msgstr "Datum"
+
+#: src/lib/components/EditorJs.svelte
+msgid "Unordered"
+msgstr "Unordered"
+
+#: src/lib/components/EditorJs.svelte
+msgid "Ordered"
+msgstr "Ordered"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Event updated successfully!"
+msgstr "Event updated successfully!"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Error updating event: ("
+msgstr "Error updating event: ("
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Failed to update event."
+msgstr "Failed to update event."
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Event wurde gelöscht"
+msgstr "Event wurde gelöscht"
+
+#: src/routes/edit/[id]/+page.svelte
+msgid "Failed to delete event. Please try again."
+msgstr "Failed to delete event. Please try again."
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Ergebnisse anzeigen"
+msgstr "Ergebnisse anzeigen"
+
+#: src/routes/+page.svelte
+msgid "✨ Hippie Events in deiner Nähe ✨"
+msgstr "✨ Hippie Events in deiner Nähe ✨"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Setze zuerst einen Standort"
+msgstr "Setze zuerst einen Standort"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
+msgstr "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
+
+#: src/routes/+page.svelte
+msgid "Keine Events gefunden <0/> <1/> <2/>"
+msgstr "Keine Events gefunden <0/> <1/> <2/>"
+
+#: src/routes/+page.svelte
+msgid "mit <0/> <1/><2/>"
+msgstr "mit <0/> <1/><2/>"
+
+#: src/routes/+page.svelte
+msgid "in <0/> <1>{0} ({1}km radius)</1><2/>"
+msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
+
+#: src/routes/+page.svelte
+msgid "vom <0/> <1/> bis <2/> <3/><4/>"
+msgstr "vom <0/> <1/> bis <2/> <3/><4/>"
+
+#: src/routes/+page.svelte
+msgid "Hero image"
+msgstr "Hero image"
+
+#: src/routes/+page.svelte
+msgid "Ort <0/> nicht gefunden"
+msgstr "Ort <0/> nicht gefunden"

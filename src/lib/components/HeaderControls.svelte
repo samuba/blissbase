@@ -1,15 +1,13 @@
 <script lang="ts">
 	import DateRangePicker from './DateRangePicker.svelte';
 	import LocationDistanceInput from './LocationDistanceInput.svelte';
-	import Select from './Select.svelte';
-	import PopOver from './PopOver.svelte';
-	import InstallButton from './install-button/InstallButton.svelte';
 	import { parseDate } from '@internationalized/date';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import BurgerMenu from './BurgerMenu.svelte';
 	import TagSelection from './TagSelection.svelte';
 	import { getTags } from './TagSelection.remote';
-
+	import { Dialog} from 'bits-ui';
+	import ToggleButton from './ToggleButton.svelte';
 	interface Props {
 		tags: Awaited<ReturnType<typeof getTags>>;
 		userId: string | undefined;
@@ -19,247 +17,212 @@
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
-	const isSticky = $derived(scrollY > (headerElement?.offsetHeight ?? 50) - 30);
-	let isDatePickerOpen = $state(false);
+	let contentBeforeMenuHeight = $state(0);
+	const showShadow = $derived(scrollY > ((headerElement?.offsetHeight ?? 50) + contentBeforeMenuHeight - 100));
+	let isFilterDialogOpen = $state(false);
+	const sortByTime = $derived(eventsStore.selectedSortValue === 'time_asc');
+	const sortByDistance = $derived(eventsStore.selectedSortValue === 'distance_asc');
+
+	const startDate = $derived(eventsStore.pagination.startDate ? parseDate(eventsStore.pagination.startDate) : undefined);
+	const endDate = $derived(eventsStore.pagination.endDate ? parseDate(eventsStore.pagination.endDate) : undefined);
+
+	const resolvedCityName = $derived(eventsStore.pagination.lat && eventsStore.pagination.lng
+		? eventsStore.pagination.plzCity
+		: null);
+	const initialLocation = $derived(eventsStore.pagination.lat && eventsStore.pagination.lng
+		? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
+		: eventsStore.pagination.plzCity);
+
+	$effect(() => {
+		contentBeforeMenuHeight = document.getElementById('content-before-menu')?.clientHeight ?? 0;
+		const unsubscribe = eventsStore.onFinishedLoading((append) => {
+			if (!append) {
+				window.scrollTo({ top: scrollY - (headerElement?.clientHeight ?? 0), behavior: 'instant' });
+			}
+		})
+		return () => {
+			unsubscribe();
+		}
+	})
 </script>
 
 <svelte:window bind:scrollY />
 
-<!-- Placeholder to reserve space when header becomes sticky -->
-{#if isSticky}
-	<div class="" style="height: {headerElement?.offsetHeight}px;"></div>
-{/if}
-
 <header
 	bind:this={headerElement}
-	class={[
-		'z-10 w-full',
-		isSticky ? 'bg-base-200 fixed top-0  mx-auto max-w-161 py-2.5' : 'relative'
-	]}
->
-	{#if isSticky}
-		<!-- Collapsed Sticky Header -->
-		<!-- shadow -->
+	class={[ 'z-10 w-full flex flex-col gap-3 bg-base-200 sticky top-0  max-w-161 py-3 mt-3' ]}
+	id="header-controls"
+>		
+	<!-- shadow -->
+	{#if showShadow}
 		<div
 			class="pointer-events-none absolute right-0 left-0 z-20 h-6"
 			style="top: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, transparent 100%);"
 		></div>
-		<div class="flex w-full items-center justify-center gap-3">
-			<BurgerMenu {userId}>
-				<div class="btn flex items-center justify-center text-sm font-medium">
-					<img src="/logo.svg" alt="Menü" class="mr-2 size-6" />
-					Menu
-				</div>
-			</BurgerMenu>
-
-			<!-- Date Button -->
-			<div class="relative">
-				<PopOver
-					triggerClass="btn btn-circle"
-					contentClass="card shadow-lg bg-base-200 z-20"
-					contentProps={{
-						onOpenAutoFocus: (e) => {
-							e.preventDefault();
-							isDatePickerOpen = true;
-						}
-					}}
-				>
-					{#snippet trigger()}
-						<i class="icon-[ph--calendar-dots] size-5"></i>
-					{/snippet}
-					{#snippet content()}
-						<div class="p-4">
-							<DateRangePicker
-								onChange={eventsStore.onDateChange}
-								bind:open={isDatePickerOpen}
-								value={{
-									start: eventsStore.pagination.startDate
-										? parseDate(eventsStore.pagination.startDate)
-										: undefined,
-									end: eventsStore.pagination.endDate
-										? parseDate(eventsStore.pagination.endDate)
-										: undefined
-								}}
-							/>
-						</div>
-					{/snippet}
-				</PopOver>
-				{#if eventsStore.hasDateFilter}
-					{@render filteredIndicator()}
-				{/if}
-			</div>
-
-			<!-- Location Button -->
-			<div class="relative">
-				<PopOver
-					triggerClass="btn btn-circle"
-					contentClass="card shadow-lg bg-base-200 z-20"
-					contentProps={{
-						onOpenAutoFocus: (e) => {
-							e.preventDefault(); // not giving focus cuz it would hide the "Standort" btn
-						}
-					}}
-				>
-					{#snippet trigger()}
-						{#if eventsStore.hasOnlineEventsFilter}
-							<i class="icon-[ph--globe] size-5"></i>
-						{:else}
-							<i class="icon-[ph--map-pin] size-5"></i>
-						{/if}
-					{/snippet}
-					{#snippet content()}
-						<div class="min-w-89 p-4">
-							<LocationDistanceInput
-								initialLocation={eventsStore.pagination.lat && eventsStore.pagination.lng
-									? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
-									: eventsStore.pagination.plzCity}
-								initialDistance={eventsStore.pagination.distance}
-								resolvedCityName={eventsStore.pagination.lat && eventsStore.pagination.lng
-									? eventsStore.pagination.plzCity
-									: null}
-								onChange={eventsStore.handleLocationDistanceChange}
-								initialOnlyOnlineEvents={eventsStore.pagination.onlyOnlineEvents ?? false}
-							/>
-						</div>
-					{/snippet}
-				</PopOver>
-				{#if eventsStore.hasLocationFilter || eventsStore.hasOnlineEventsFilter}
-					{@render filteredIndicator()}
-				{/if}
-			</div>
-
-			<!-- Tag-Filter/Search Button -->
-			<div class="relative">
-				<PopOver
-					triggerClass="btn btn-circle"
-					contentClass="card shadow-lg bg-base-200 p-2 z-20 max-w-dvw"
-				>
-					{#snippet trigger()}
-						<i class="icon-[ph--magnifying-glass] size-5"></i>
-					{/snippet}
-					{#snippet content()}
-						<TagSelection {tags} />
-					{/snippet}
-				</PopOver>
-				{#if eventsStore.hasTagFilter || eventsStore.hasSearchFilter}
-					{@render filteredIndicator()}
-				{/if}
-			</div>
-
-			<!-- Sort Button -->
-			<div class="relative" class:hidden={!eventsStore.hasLocationFilter}>
-				<div class="btn btn-circle">
-					<Select
-						items={[
-							{ value: 'relevance', label: 'Sortierung', disabled: true },
-							{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
-							{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' }
-						]}
-						type="single"
-						value={eventsStore.selectedSortValue}
-						onValueChange={eventsStore.handleSortChanged}
-						contentProps={{ class: 'z-10' }}
-						triggerProps={{ class: 'btn btn-circle' }}
-						hideTriggerText
-						disabled={!eventsStore.hasLocationFilter}
-					/>
-				</div>
-				{#if eventsStore.hasSortFilter}
-					{@render filteredIndicator()}
-				{/if}
-			</div>
-
-			{@render clearButton(false)}
-		</div>
-	{:else}
-		<!-- Expanded Header -->
-		<div class="flex flex-col gap-4 px-4">
-			<div class="flex w-full flex-col items-center gap-4 md:flex-row">
-				<div class="flex w-full flex-wrap items-center gap-4 md:w-auto">
-					<div class="flex-shrink-0">
-						<BurgerMenu {userId}>
-							<div class="btn bg-base-100 flex items-center justify-center text-sm font-medium">
-								<img src="/logo.svg" alt="Menü" class="mr-2 size-6 min-w-6" />
-								Menu
-							</div>
-						</BurgerMenu>
-					</div>
-
-					<div class="flex-1 md:flex-none">
-						<DateRangePicker
-							triggerProps={{ class: 'w-full flex-grow' }}
-							rootProps={{ class: 'w-full flex-grow' }}
-							onChange={eventsStore.onDateChange}
-							value={{
-								start: eventsStore.pagination.startDate
-									? parseDate(eventsStore.pagination.startDate)
-									: undefined,
-								end: eventsStore.pagination.endDate
-									? parseDate(eventsStore.pagination.endDate)
-									: undefined
-							}}
-						/>
-					</div>
-				</div>
-
-				<div class="w-full flex-1 md:w-auto">
-					<LocationDistanceInput
-						initialLocation={eventsStore.pagination.lat && eventsStore.pagination.lng
-							? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
-							: eventsStore.pagination.plzCity}
-						initialDistance={eventsStore.pagination.distance}
-						resolvedCityName={eventsStore.pagination.lat && eventsStore.pagination.lng
-							? eventsStore.pagination.plzCity
-							: null}
-						onChange={eventsStore.handleLocationDistanceChange}
-						initialOnlyOnlineEvents={eventsStore.pagination.onlyOnlineEvents ?? false}
-					/>
-				</div>
-			</div>
-			<div class="flex w-full items-center gap-4">
-				<TagSelection {tags} />
-			</div>
-
-			<div class="flex w-full items-center justify-center gap-4">
-				{@render clearButton(true)}
-
-				<div class:hidden={!eventsStore.hasLocationFilter}>
-					<label for="sort-select" class="sr-only">Sortieren nach</label>
-					<Select
-						triggerProps={{ class: 'select' }}
-						items={[
-							{ value: 'relevance', label: 'Sortierung', disabled: true },
-							{ value: 'time_asc', label: 'Startzeit', iconClass: 'icon-[ph--sort-ascending]' },
-							{ value: 'distance_asc', label: 'Distanz', iconClass: 'icon-[ph--sort-ascending]' }
-							// { value: 'time_desc', label: 'Startzeit', iconClass: 'icon-[ph--sort-descending]' }
-							// { value: 'distance_desc', label: 'Distanz', iconClass: 'icon-[ph--sort-descending]' }
-						]}
-						hideTriggerText={false}
-						type="single"
-						value={eventsStore.selectedSortValue}
-						onValueChange={eventsStore.handleSortChanged}
-						disabled={!eventsStore.hasLocationFilter}
-					/>
-				</div>
-			</div>
-			<InstallButton />
-		</div>
 	{/if}
+	<div class="flex w-full items-center justify-center gap-3 px-4 sm:px-0">
+		<BurgerMenu {userId} class="hidden md:block">
+			<div class="py-2 flex items-center justify-center text-sm font-medium">
+				<i class="icon-[ph--list] size-5"></i>
+			</div>
+		</BurgerMenu>
+		<div class="w-full min-w-0 flex-1 md:w-auto">
+			<LocationDistanceInput
+				initialLocation={initialLocation}
+				initialDistance={eventsStore.pagination.distance}
+				resolvedCityName={resolvedCityName}
+				onChange={eventsStore.handleLocationDistanceChange}
+			/>
+		</div>
+
+		<button class={['btn relative', eventsStore.hasFilterBehindButton && 'active']} onclick={() => isFilterDialogOpen = true}>		
+			<i class="icon-[ph--sliders] size-5"></i>
+			Filter
+		</button>
+	</div>
+
+
+	<div class="flex w-full items-center gap-4 px-4 sm:px-0">
+		<BurgerMenu {userId} class="block md:hidden">
+			<div class="py-2 flex items-center justify-center text-sm font-medium">
+				<i class="icon-[ph--list] size-5"></i>
+				<!-- <img src="/logo.svg" alt="Menü" class="mr-2 size-6" />
+				Menu -->
+			</div>
+		</BurgerMenu>
+
+		<TagSelection {tags} />
+	</div>
 </header>
 
-{#snippet clearButton(big: boolean)}
-	{#if eventsStore.hasAnyFilter}
-		<button
-			onclick={() => eventsStore.resetFilters()}
-			class="btn {big ? 'flex-grow' : 'btn-circle btn-ghost'}"
-			title="Alle Filter zurücksetzen"
-			aria-label="Alle Filter zurücksetzen"
+<!-- filter dialog -->
+<Dialog.Root bind:open={isFilterDialogOpen}>
+	<Dialog.Portal>
+		<Dialog.Overlay
+			class="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-sm duration-700"
+		/>
+		<Dialog.Content
+			class={[
+				'bg-base-200 fixed top-1/2 left-1/2 z-50 h-full md:h-auto max-h-dvh w-full max-w-dvw -translate-x-1/2 -translate-y-1/2',
+				'md:rounded-lg shadow-xl sm:max-w-md flex flex-col',
+				'overflow-visible' 
+			]}
 		>
-			<i class:hidden={big} class="icon-[ph--x] size-5"></i>
-			<span class:hidden={!big} class="">Alle Filter zurücksetzen</span>
-		</button>
-	{/if}
-{/snippet}
+			<Dialog.Title
+				class="flex w-full items-center justify-center pt-4 text-lg font-semibold tracking-tight"
+			>
+				Filter
+			</Dialog.Title>
+
+			<div class="flex flex-col gap-6 p-6">
+				<div class="flex flex-col items-start gap-3">
+					<h3>Zeitraum</h3>
+					<DateRangePicker
+						onChange={eventsStore.onDateChange}
+						value={{ start: startDate, end: endDate }}
+						showLongText
+					/>
+				</div>
+
+			<div class="flex w-full min-w-0 flex-col items-start gap-3">
+				<h3>Entfernung</h3>
+				<div class="w-full min-w-0">
+					<LocationDistanceInput
+						initialLocation={initialLocation}
+						initialDistance={eventsStore.pagination.distance}
+						resolvedCityName={resolvedCityName}
+						onChange={eventsStore.handleLocationDistanceChange}
+						showActiveIndicator={eventsStore.hasLocationFilter}
+					/>
+					
+				</div>
+
+				<div class="flex flex-col items-start gap-3">
+					<h3>Teilnahme</h3>
+					<div class="flex flex-row items-center gap-3">
+						<ToggleButton 
+							checked={eventsStore.pagination.attendanceMode === 'offline' || eventsStore.pagination.attendanceMode === 'offline+online'}
+							onchange={() => {
+								if (eventsStore.pagination.attendanceMode === 'online') {
+									eventsStore.handleAttendanceModeChange('offline+online');
+								} else if (eventsStore.pagination.attendanceMode === 'offline+online') {
+									eventsStore.handleAttendanceModeChange('online');
+								} else if (eventsStore.pagination.attendanceMode === 'offline') {
+									eventsStore.handleAttendanceModeChange(null);
+								} else if (!eventsStore.pagination.attendanceMode) {
+									eventsStore.handleAttendanceModeChange('offline');
+								}
+							}}
+						>
+							Vorort
+						</ToggleButton>
+
+						<ToggleButton checked={eventsStore.pagination.attendanceMode === 'online' || eventsStore.pagination.attendanceMode === 'offline+online'} 				
+							onchange={() => {
+								if (eventsStore.pagination.attendanceMode === 'offline') {
+									eventsStore.handleAttendanceModeChange('offline+online');
+								} else if (eventsStore.pagination.attendanceMode === 'offline+online') {
+									eventsStore.handleAttendanceModeChange('offline');
+								} else if (eventsStore.pagination.attendanceMode === 'online') {
+									eventsStore.handleAttendanceModeChange(null);
+								} else if (!eventsStore.pagination.attendanceMode) {
+									eventsStore.handleAttendanceModeChange('online');
+								}
+							}}
+						>
+							Online
+						</ToggleButton>
+					</div>
+				</div>
+
+				<div class="flex flex-col items-start gap-3">
+					<h3>Sortierung</h3>
+					<div class="flex flex-row items-center gap-3">
+						<ToggleButton 
+							checked={sortByTime} 
+							onchange={() => eventsStore.handleSortChanged('time_asc')}
+						>
+							Startzeit
+						</ToggleButton>
+						<ToggleButton 
+							checked={sortByDistance} 
+							tooltip={eventsStore.pagination.attendanceMode === 'online' ? 'Sortieren nach Distanz macht nur für Vorort-Events Sinn' : eventsStore.pagination.lat && eventsStore.pagination.lng ? '' : 'Setze zuerst einen Standort'}
+							onchange={() => {
+								if (eventsStore.pagination.lat && eventsStore.pagination.lng) {
+									eventsStore.handleSortChanged('distance_asc');
+								}
+							}}
+						>
+							Distanz
+						</ToggleButton>
+					</div>
+				</div>
+
+				<div class="flex flex-col items-start gap-3">
+					<h3>Zurücksetzen</h3>
+					<button class="btn" onclick={() => eventsStore.resetFilters()}>
+						<i class="icon-[ph--arrow-u-up-left] size-5"></i>
+						Alle Filter zurücksetzen
+					</button>
+				</div>
+			</div>
+
+			<div class="grow"></div>
+			<div class="mt-6 flex w-full items-center justify-end py-4 ">
+				<Dialog.Close class="btn btn-primary">Ergebnisse anzeigen</Dialog.Close>
+			</div>
+
+			<Dialog.Close
+				class="focus-visible:ring-foreground focus-visible:ring-offset-background absolute top-5 right-5 rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden active:scale-[0.98]"
+			>
+				<div>
+					<i class="icon-[ph--x] text-foreground size-5" />
+					<span class="sr-only">Close</span>
+				</div>
+			</Dialog.Close>
+		</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>
 
 {#snippet filteredIndicator()}
 	<div

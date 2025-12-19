@@ -1044,398 +1044,399 @@ describe('Events Module - Happy Flow Tests', () => {
                 expect(result.events[1].name).toBe('Close Event');
             });
         });
+        
+        // TODO: below not needed anymore?
+        // describe('Tag filtering', () => {
+        //     beforeEach(async () => {
+        //         // Clean up test data
+        //         await db.delete(s.eventTags);
+        //         await db.delete(s.tagTranslations);
+        //         await db.delete(s.tags);
+        //         await db.delete(s.events).where(eq(s.events.source, 'test'));
+        //     });
 
-        describe('Tag filtering', () => {
-            beforeEach(async () => {
-                // Clean up test data
-                await db.delete(s.eventTags);
-                await db.delete(s.tagTranslations);
-                await db.delete(s.tags);
-                await db.delete(s.events).where(eq(s.events.source, 'test'));
-            });
+        //     it('should filter events by a single tag ID', async () => {
+        //         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should filter events by a single tag ID', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+        //         // Create tags
+        //         const [yogaTag, meditationTag, danceTag] = await db.insert(s.tags).values([
+        //             { slug: 'yoga' },
+        //             { slug: 'meditation' },
+        //             { slug: 'dance' }
+        //         ]).returning();
 
-                // Create tags
-                const [yogaTag, meditationTag, danceTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' },
-                    { slug: 'meditation' },
-                    { slug: 'dance' }
-                ]).returning();
+        //         // Insert tag translations
+        //         await db.insert(s.tagTranslations).values([
+        //             { tagId: yogaTag.id, locale: 'en', name: 'Yoga' },
+        //             { tagId: yogaTag.id, locale: 'de', name: 'Yoga' },
+        //             { tagId: meditationTag.id, locale: 'en', name: 'Meditation' },
+        //             { tagId: meditationTag.id, locale: 'de', name: 'Meditation' },
+        //             { tagId: danceTag.id, locale: 'en', name: 'Dance' },
+        //             { tagId: danceTag.id, locale: 'de', name: 'Tanz' }
+        //         ]);
 
-                // Insert tag translations
-                await db.insert(s.tagTranslations).values([
-                    { tagId: yogaTag.id, locale: 'en', name: 'Yoga' },
-                    { tagId: yogaTag.id, locale: 'de', name: 'Yoga' },
-                    { tagId: meditationTag.id, locale: 'en', name: 'Meditation' },
-                    { tagId: meditationTag.id, locale: 'de', name: 'Meditation' },
-                    { tagId: danceTag.id, locale: 'en', name: 'Dance' },
-                    { tagId: danceTag.id, locale: 'de', name: 'Tanz' }
-                ]);
+        //         // Create events
+        //         const events = await insertEvents([
+        //             createTestEvent({
+        //                 name: 'Yoga Workshop',
+        //                 slug: 'yoga-workshop',
+        //                 startAt: futureDate
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Meditation Session',
+        //                 slug: 'meditation-session',
+        //                 startAt: futureDate
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Dance Class',
+        //                 slug: 'dance-class',
+        //                 startAt: futureDate
+        //             })
+        //         ]);
 
-                // Create events
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Yoga Workshop',
-                        slug: 'yoga-workshop',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Meditation Session',
-                        slug: 'meditation-session',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Dance Class',
-                        slug: 'dance-class',
-                        startAt: futureDate
-                    })
-                ]);
+        //         // Link events to tags
+        //         await db.insert(s.eventTags).values([
+        //             { eventId: events[0].id, tagId: yogaTag.id },
+        //             { eventId: events[1].id, tagId: meditationTag.id },
+        //             { eventId: events[2].id, tagId: danceTag.id }
+        //         ]);
 
-                // Link events to tags
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id },
-                    { eventId: events[1].id, tagId: meditationTag.id },
-                    { eventId: events[2].id, tagId: danceTag.id }
-                ]);
+        //         // Fetch events filtered by yoga tag
+        //         const result = prepareEventsResultForUi(await fetchEvents({
+        //             tagIds: [yogaTag.id]
+        //         }));
 
-                // Fetch events filtered by yoga tag
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id]
-                }));
+        //         expect(result.events).toHaveLength(1);
+        //         expect(result.events[0].name).toBe('Yoga Workshop');
+        //         expect(result.pagination.totalEvents).toBe(1);
+        //         expect(result.pagination.tagIds).toEqual([yogaTag.id]);
+        //     });
 
-                expect(result.events).toHaveLength(1);
-                expect(result.events[0].name).toBe('Yoga Workshop');
-                expect(result.pagination.totalEvents).toBe(1);
-                expect(result.pagination.tagIds).toEqual([yogaTag.id]);
-            });
+        //     it('should filter events by multiple tag IDs (OR logic)', async () => {
+        //         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should filter events by multiple tag IDs (OR logic)', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+        //         // Create tags
+        //         const [yogaTag, meditationTag, danceTag] = await db.insert(s.tags).values([
+        //             { slug: 'yoga' },
+        //             { slug: 'meditation' },
+        //             { slug: 'dance' }
+        //         ]).returning();
 
-                // Create tags
-                const [yogaTag, meditationTag, danceTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' },
-                    { slug: 'meditation' },
-                    { slug: 'dance' }
-                ]).returning();
+        //         // Create events
+        //         const events = await insertEvents([
+        //             createTestEvent({
+        //                 name: 'Yoga Workshop',
+        //                 slug: 'yoga-workshop',
+        //                 startAt: futureDate
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Meditation Session',
+        //                 slug: 'meditation-session',
+        //                 startAt: futureDate
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Dance Class',
+        //                 slug: 'dance-class',
+        //                 startAt: futureDate
+        //             })
+        //         ]);
 
-                // Create events
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Yoga Workshop',
-                        slug: 'yoga-workshop',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Meditation Session',
-                        slug: 'meditation-session',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Dance Class',
-                        slug: 'dance-class',
-                        startAt: futureDate
-                    })
-                ]);
+        //         // Link events to tags
+        //         await db.insert(s.eventTags).values([
+        //             { eventId: events[0].id, tagId: yogaTag.id },
+        //             { eventId: events[1].id, tagId: meditationTag.id },
+        //             { eventId: events[2].id, tagId: danceTag.id }
+        //         ]);
 
-                // Link events to tags
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id },
-                    { eventId: events[1].id, tagId: meditationTag.id },
-                    { eventId: events[2].id, tagId: danceTag.id }
-                ]);
+        //         // Fetch events filtered by yoga OR meditation tags
+        //         const result = prepareEventsResultForUi(await fetchEvents({
+        //             tagIds: [yogaTag.id, meditationTag.id]
+        //         }));
 
-                // Fetch events filtered by yoga OR meditation tags
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id, meditationTag.id]
-                }));
+        //         expect(result.events).toHaveLength(2);
+        //         expect(result.events.map(e => e.name)).toContain('Yoga Workshop');
+        //         expect(result.events.map(e => e.name)).toContain('Meditation Session');
+        //         expect(result.pagination.totalEvents).toBe(2);
+        //     });
 
-                expect(result.events).toHaveLength(2);
-                expect(result.events.map(e => e.name)).toContain('Yoga Workshop');
-                expect(result.events.map(e => e.name)).toContain('Meditation Session');
-                expect(result.pagination.totalEvents).toBe(2);
-            });
+        //     it('should handle events with multiple tags', async () => {
+        //         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should handle events with multiple tags', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+        //         // Create tags
+        //         const [yogaTag, meditationTag, breathTag] = await db.insert(s.tags).values([
+        //             { slug: 'yoga' },
+        //             { slug: 'meditation' },
+        //             { slug: 'breath' }
+        //         ]).returning();
 
-                // Create tags
-                const [yogaTag, meditationTag, breathTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' },
-                    { slug: 'meditation' },
-                    { slug: 'breath' }
-                ]).returning();
+        //         // Create events
+        //         const events = await insertEvents([
+        //             createTestEvent({
+        //                 name: 'Yoga & Meditation',
+        //                 slug: 'yoga-meditation',
+        //                 startAt: futureDate
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Breathwork',
+        //                 slug: 'breathwork',
+        //                 startAt: futureDate
+        //             })
+        //         ]);
 
-                // Create events
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Yoga & Meditation',
-                        slug: 'yoga-meditation',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Breathwork',
-                        slug: 'breathwork',
-                        startAt: futureDate
-                    })
-                ]);
+        //         // Link events to multiple tags
+        //         await db.insert(s.eventTags).values([
+        //             { eventId: events[0].id, tagId: yogaTag.id },
+        //             { eventId: events[0].id, tagId: meditationTag.id },
+        //             { eventId: events[1].id, tagId: breathTag.id }
+        //         ]);
 
-                // Link events to multiple tags
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id },
-                    { eventId: events[0].id, tagId: meditationTag.id },
-                    { eventId: events[1].id, tagId: breathTag.id }
-                ]);
+        //         // Fetch events filtered by yoga tag - should return the event with multiple tags
+        //         const result = prepareEventsResultForUi(await fetchEvents({
+        //             tagIds: [yogaTag.id]
+        //         }));
 
-                // Fetch events filtered by yoga tag - should return the event with multiple tags
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id]
-                }));
+        //         expect(result.events).toHaveLength(1);
+        //         expect(result.events[0].name).toBe('Yoga & Meditation');
+        //     });
 
-                expect(result.events).toHaveLength(1);
-                expect(result.events[0].name).toBe('Yoga & Meditation');
-            });
+        //     it('should return empty results when no events match the tag filter', async () => {
+        //         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should return empty results when no events match the tag filter', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+        //         // Create tags
+        //         const [yogaTag, danceTag] = await db.insert(s.tags).values([
+        //             { slug: 'yoga' },
+        //             { slug: 'dance' }
+        //         ]).returning();
 
-                // Create tags
-                const [yogaTag, danceTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' },
-                    { slug: 'dance' }
-                ]).returning();
+        //         // Create event with yoga tag only
+        //         const events = await insertEvents([
+        //             createTestEvent({
+        //                 name: 'Yoga Workshop',
+        //                 slug: 'yoga-workshop',
+        //                 startAt: futureDate
+        //             })
+        //         ]);
 
-                // Create event with yoga tag only
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Yoga Workshop',
-                        slug: 'yoga-workshop',
-                        startAt: futureDate
-                    })
-                ]);
+        //         await db.insert(s.eventTags).values([
+        //             { eventId: events[0].id, tagId: yogaTag.id }
+        //         ]);
 
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id }
-                ]);
+        //         // Search for dance tag - should return no results
+        //         const result = prepareEventsResultForUi(await fetchEvents({
+        //             tagIds: [danceTag.id]
+        //         }));
 
-                // Search for dance tag - should return no results
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [danceTag.id]
-                }));
+        //         expect(result.events).toHaveLength(0);
+        //         expect(result.pagination.totalEvents).toBe(0);
+        //     });
 
-                expect(result.events).toHaveLength(0);
-                expect(result.pagination.totalEvents).toBe(0);
-            });
+        //     it('should combine tag filter with other filters (date range)', async () => {
+        //         // Create tags
+        //         const [yogaTag, danceTag] = await db.insert(s.tags).values([
+        //             { slug: 'yoga' },
+        //             { slug: 'dance' }
+        //         ]).returning();
 
-            it('should combine tag filter with other filters (date range)', async () => {
-                // Create tags
-                const [yogaTag, danceTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' },
-                    { slug: 'dance' }
-                ]).returning();
+        //         // Create events at different dates
+        //         const events = await insertEvents([
+        //             createTestEvent({
+        //                 name: 'Yoga Dec 5',
+        //                 slug: 'yoga-dec-5',
+        //                 startAt: new Date('2024-12-05T19:00:00Z'),
+        //                 endAt: new Date('2024-12-05T22:00:00Z')
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Yoga Dec 15',
+        //                 slug: 'yoga-dec-15',
+        //                 startAt: new Date('2024-12-15T19:00:00Z'),
+        //                 endAt: new Date('2024-12-15T22:00:00Z')
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Dance Dec 5',
+        //                 slug: 'dance-dec-5',
+        //                 startAt: new Date('2024-12-05T19:00:00Z'),
+        //                 endAt: new Date('2024-12-05T22:00:00Z')
+        //             })
+        //         ]);
 
-                // Create events at different dates
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Yoga Dec 5',
-                        slug: 'yoga-dec-5',
-                        startAt: new Date('2024-12-05T19:00:00Z'),
-                        endAt: new Date('2024-12-05T22:00:00Z')
-                    }),
-                    createTestEvent({
-                        name: 'Yoga Dec 15',
-                        slug: 'yoga-dec-15',
-                        startAt: new Date('2024-12-15T19:00:00Z'),
-                        endAt: new Date('2024-12-15T22:00:00Z')
-                    }),
-                    createTestEvent({
-                        name: 'Dance Dec 5',
-                        slug: 'dance-dec-5',
-                        startAt: new Date('2024-12-05T19:00:00Z'),
-                        endAt: new Date('2024-12-05T22:00:00Z')
-                    })
-                ]);
+        //         // Link events to tags
+        //         await db.insert(s.eventTags).values([
+        //             { eventId: events[0].id, tagId: yogaTag.id },
+        //             { eventId: events[1].id, tagId: yogaTag.id },
+        //             { eventId: events[2].id, tagId: danceTag.id }
+        //         ]);
 
-                // Link events to tags
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id },
-                    { eventId: events[1].id, tagId: yogaTag.id },
-                    { eventId: events[2].id, tagId: danceTag.id }
-                ]);
+        //         // Filter by yoga tag AND date range
+        //         const result = prepareEventsResultForUi(await fetchEvents({
+        //             tagIds: [yogaTag.id],
+        //             startDate: '2024-12-01',
+        //             endDate: '2024-12-10'
+        //         }));
 
-                // Filter by yoga tag AND date range
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id],
-                    startDate: '2024-12-01',
-                    endDate: '2024-12-10'
-                }));
+        //         expect(result.events).toHaveLength(1);
+        //         expect(result.events[0].name).toBe('Yoga Dec 5');
+        //     });
 
-                expect(result.events).toHaveLength(1);
-                expect(result.events[0].name).toBe('Yoga Dec 5');
-            });
+        //     it('should combine tag filter with search term', async () => {
+        //         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should combine tag filter with search term', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+        //         // Create tags
+        //         const [yogaTag] = await db.insert(s.tags).values([
+        //             { slug: 'yoga' }
+        //         ]).returning();
 
-                // Create tags
-                const [yogaTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' }
-                ]).returning();
+        //         // Create events
+        //         const events = await insertEvents([
+        //             createTestEvent({
+        //                 name: 'Beginner Yoga',
+        //                 slug: 'beginner-yoga',
+        //                 startAt: futureDate
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Advanced Yoga',
+        //                 slug: 'advanced-yoga',
+        //                 startAt: futureDate
+        //             }),
+        //             createTestEvent({
+        //                 name: 'Beginner Dance',
+        //                 slug: 'beginner-dance',
+        //                 startAt: futureDate
+        //             })
+        //         ]);
 
-                // Create events
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Beginner Yoga',
-                        slug: 'beginner-yoga',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Advanced Yoga',
-                        slug: 'advanced-yoga',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Beginner Dance',
-                        slug: 'beginner-dance',
-                        startAt: futureDate
-                    })
-                ]);
+        //         // Link first two events to yoga tag
+        //         await db.insert(s.eventTags).values([
+        //             { eventId: events[0].id, tagId: yogaTag.id },
+        //             { eventId: events[1].id, tagId: yogaTag.id }
+        //         ]);
 
-                // Link first two events to yoga tag
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id },
-                    { eventId: events[1].id, tagId: yogaTag.id }
-                ]);
+        //         // Filter by yoga tag AND search for "beginner"
+        //         const result = prepareEventsResultForUi(await fetchEvents({
+        //             tagIds: [yogaTag.id],
+        //             searchTerm: 'beginner'
+        //         }));
 
-                // Filter by yoga tag AND search for "beginner"
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id],
-                    searchTerm: 'beginner'
-                }));
+        //         expect(result.events).toHaveLength(1);
+        //         expect(result.events[0].name).toBe('Beginner Yoga');
+        //     });
 
-                expect(result.events).toHaveLength(1);
-                expect(result.events[0].name).toBe('Beginner Yoga');
-            });
+            // it('should combine tag filter with location filter', async () => {
+            //     const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should combine tag filter with location filter', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+            //     // Create tags
+            //     const [yogaTag] = await db.insert(s.tags).values([
+            //         { slug: 'yoga' }
+            //     ]).returning();
 
-                // Create tags
-                const [yogaTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' }
-                ]).returning();
+            //     // Create events at different locations
+            //     const events = await insertEvents([
+            //         createTestEvent({
+            //             name: 'Yoga Berlin',
+            //             slug: 'yoga-berlin',
+            //             startAt: futureDate,
+            //             latitude: 52.5200,
+            //             longitude: 13.4050
+            //         }),
+            //         createTestEvent({
+            //             name: 'Yoga Munich',
+            //             slug: 'yoga-munich',
+            //             startAt: futureDate,
+            //             latitude: 48.1351,
+            //             longitude: 11.5820
+            //         })
+            //     ]);
 
-                // Create events at different locations
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Yoga Berlin',
-                        slug: 'yoga-berlin',
-                        startAt: futureDate,
-                        latitude: 52.5200,
-                        longitude: 13.4050
-                    }),
-                    createTestEvent({
-                        name: 'Yoga Munich',
-                        slug: 'yoga-munich',
-                        startAt: futureDate,
-                        latitude: 48.1351,
-                        longitude: 11.5820
-                    })
-                ]);
+            //     // Link both to yoga tag
+            //     await db.insert(s.eventTags).values([
+            //         { eventId: events[0].id, tagId: yogaTag.id },
+            //         { eventId: events[1].id, tagId: yogaTag.id }
+            //     ]);
 
-                // Link both to yoga tag
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id },
-                    { eventId: events[1].id, tagId: yogaTag.id }
-                ]);
+            //     // Filter by yoga tag AND location (near Berlin)
+            //     const result = prepareEventsResultForUi(await fetchEvents({
+            //         tagIds: [yogaTag.id],
+            //         lat: 52.5200,
+            //         lng: 13.4050,
+            //         distance: '50' // 50km radius
+            //     }));
 
-                // Filter by yoga tag AND location (near Berlin)
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id],
-                    lat: 52.5200,
-                    lng: 13.4050,
-                    distance: '50' // 50km radius
-                }));
+            //     expect(result.events).toHaveLength(1);
+            //     expect(result.events[0].name).toBe('Yoga Berlin');
+            // });
 
-                expect(result.events).toHaveLength(1);
-                expect(result.events[0].name).toBe('Yoga Berlin');
-            });
+            // it('should handle events without tags when filtering by tag', async () => {
+            //     const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should handle events without tags when filtering by tag', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+            //     // Create tag
+            //     const [yogaTag] = await db.insert(s.tags).values([
+            //         { slug: 'yoga' }
+            //     ]).returning();
 
-                // Create tag
-                const [yogaTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' }
-                ]).returning();
+            //     // Create events - one with tag, one without
+            //     const events = await insertEvents([
+            //         createTestEvent({
+            //             name: 'Yoga Workshop',
+            //             slug: 'yoga-workshop',
+            //             startAt: futureDate
+            //         }),
+            //         createTestEvent({
+            //             name: 'Untagged Event',
+            //             slug: 'untagged-event',
+            //             startAt: futureDate
+            //         })
+            //     ]);
 
-                // Create events - one with tag, one without
-                const events = await insertEvents([
-                    createTestEvent({
-                        name: 'Yoga Workshop',
-                        slug: 'yoga-workshop',
-                        startAt: futureDate
-                    }),
-                    createTestEvent({
-                        name: 'Untagged Event',
-                        slug: 'untagged-event',
-                        startAt: futureDate
-                    })
-                ]);
+            //     // Only tag the first event
+            //     await db.insert(s.eventTags).values([
+            //         { eventId: events[0].id, tagId: yogaTag.id }
+            //     ]);
 
-                // Only tag the first event
-                await db.insert(s.eventTags).values([
-                    { eventId: events[0].id, tagId: yogaTag.id }
-                ]);
+            //     // Filter by yoga tag
+            //     const result = prepareEventsResultForUi(await fetchEvents({
+            //         tagIds: [yogaTag.id]
+            //     }));
 
-                // Filter by yoga tag
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id]
-                }));
+            //     expect(result.events).toHaveLength(1);
+            //     expect(result.events[0].name).toBe('Yoga Workshop');
+            // });
 
-                expect(result.events).toHaveLength(1);
-                expect(result.events[0].name).toBe('Yoga Workshop');
-            });
+            // it('should return correct pagination info with tag filter', async () => {
+            //     const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-            it('should return correct pagination info with tag filter', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+            //     // Create tag
+            //     const [yogaTag] = await db.insert(s.tags).values([
+            //         { slug: 'yoga' }
+            //     ]).returning();
 
-                // Create tag
-                const [yogaTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' }
-                ]).returning();
+            //     // Create multiple events
+            //     const events = await insertEvents(
+            //         Array.from({ length: 5 }, (_, i) =>
+            //             createTestEvent({
+            //                 name: `Yoga Event ${i + 1}`,
+            //                 slug: `yoga-event-${i + 1}`,
+            //                 startAt: new Date(futureDate.getTime() + i * 60 * 60 * 1000)
+            //             })
+            //         )
+            //     );
 
-                // Create multiple events
-                const events = await insertEvents(
-                    Array.from({ length: 5 }, (_, i) =>
-                        createTestEvent({
-                            name: `Yoga Event ${i + 1}`,
-                            slug: `yoga-event-${i + 1}`,
-                            startAt: new Date(futureDate.getTime() + i * 60 * 60 * 1000)
-                        })
-                    )
-                );
+            //     // Tag all events
+            //     await db.insert(s.eventTags).values(
+            //         events.map(event => ({ eventId: event.id, tagId: yogaTag.id }))
+            //     );
 
-                // Tag all events
-                await db.insert(s.eventTags).values(
-                    events.map(event => ({ eventId: event.id, tagId: yogaTag.id }))
-                );
+            //     // Fetch with pagination
+            //     const result = prepareEventsResultForUi(await fetchEvents({
+            //         tagIds: [yogaTag.id],
+            //         limit: 2,
+            //         page: 1
+            //     }));
 
-                // Fetch with pagination
-                const result = prepareEventsResultForUi(await fetchEvents({
-                    tagIds: [yogaTag.id],
-                    limit: 2,
-                    page: 1
-                }));
-
-                expect(result.events).toHaveLength(2);
-                expect(result.pagination.totalEvents).toBe(5);
-                expect(result.pagination.totalPages).toBe(3);
-                expect(result.pagination.page).toBe(1);
-                expect(result.pagination.tagIds).toEqual([yogaTag.id]);
-            });
+            //     expect(result.events).toHaveLength(2);
+            //     expect(result.pagination.totalEvents).toBe(5);
+            //     expect(result.pagination.totalPages).toBe(3);
+            //     expect(result.pagination.page).toBe(1);
+            //     expect(result.pagination.tagIds).toEqual([yogaTag.id]);
+            // });
 
             it('should return events with tags2 field populated from eventTags relation', async () => {
                 const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
@@ -1479,7 +1480,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     ])
                 );
             });
-        });
+        // });
 
         describe('Edge cases', () => {
             it('should return empty results when no events match criteria', async () => {

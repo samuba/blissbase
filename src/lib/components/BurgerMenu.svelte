@@ -1,5 +1,4 @@
 <script lang="ts">
-	// not really a burger menu 🤷🏻‍♂️
 	import { routes } from '$lib/routes';
 	import { Dialog } from 'bits-ui';
 	import LoginDialog from './LoginDialog.svelte';
@@ -10,9 +9,10 @@
 	interface Props {
 		children?: any;
 		userId?: string | null;
+		class?: string;
 	}
 
-	const { children, userId }: Props = $props();
+	const { children, userId, class: className }: Props = $props();
 
 	let open = $state(false);
 	let loginDialogOpen = $state(false);
@@ -33,7 +33,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Trigger>
+	<Dialog.Trigger class={[className, 'cursor-pointer']}>
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>

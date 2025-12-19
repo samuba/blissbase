@@ -30,7 +30,7 @@ export const load = (async ({ cookies }) => {
         sortBy: pagination.sortBy,
         sortOrder: pagination.sortOrder,
         tagIds: pagination.tagIds,
-        onlyOnlineEvents: pagination.onlyOnlineEvents
+        attendanceMode: pagination.attendanceMode
     })
 
     return {
