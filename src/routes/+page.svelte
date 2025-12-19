@@ -53,7 +53,7 @@
 				</h1>
 			</div>
 
-			<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent font-brand">
+			<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
 				✨ Hippie Events in deiner Nähe ✨
 			</h2>
 		</div>
