@@ -243,7 +243,7 @@ msgid ""
 "aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
 "an einem Ort. <0/> Ich hoffe dir gefällt meine Arbeit."
 msgstr ""
-"I want to bring together the mindful communities of Germany. To do this, I collect events\n"
+"I want to bring the conscious communities together. To do this, I collect events\n"
 "from various sources and make them accessible here. Searchable, convenient, all\n"
 "in one place. <0/> I hope you like my work."
 
