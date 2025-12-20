@@ -234,7 +234,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 		);
 
 		// All words must match (AND logic)
-		const searchTermCondition = and(...wordConditions);
+		const searchTermCondition = or(...wordConditions);
 		allConditions.push(searchTermCondition);
 	}
 
