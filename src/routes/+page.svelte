@@ -84,7 +84,7 @@
 			{:else if eventsStore.hasEvents}
 				<div class="fade-in flex w-full flex-col items-center gap-6">
 					{#each eventsStore.events as event, i (event.id)}
-						<EventCard {event} />
+						<EventCard {event} hidePastEvent />
 					{/each}
 	
 					<div
