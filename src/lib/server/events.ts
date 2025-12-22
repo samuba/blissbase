@@ -23,7 +23,7 @@ import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/goog
 import type { InsertEvent } from '$lib/types';
 import { generateSlug, type Modify } from '$lib/common';
 import * as v from 'valibot';
-import { allTagsMap, type TagTranslation } from '$lib/tags';
+import { allTagsMap, type TagTranslation } from '$lib/server/tags';
 import { attendanceModeEnum, eventAttendanceModeEnum, type AttendanceMode } from './schema';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;

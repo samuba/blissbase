@@ -1,3 +1,5 @@
+// dont import these on client side
+
 export const workshops: TagTranslation[] = [
     { en: "Tantra", de: "Tantra", nl: "Tantra" },
     { en: "Family Constellations", de: "Familienaufstellung", nl: "Familieopstellingen" },

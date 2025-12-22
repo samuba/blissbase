@@ -1,18 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { deleteEvent, updateEvent } from '$lib/events.remote';
-	import { allTags, type TagTranslation } from '$lib/tags';
 	import { isHttpError } from '@sveltejs/kit';
 	import type { PageProps } from './$types';
 	import { page } from '$app/state';
 	import { routes } from '$lib/routes';
 	import TagsInput from '$lib/components/TagsInput.svelte';
 	import EditorJs from '$lib/components/EditorJs.svelte';
+	import { getTags, type UiTag } from '$lib/components/TagSelection.remote';
+	import { localeStore } from '$lib/../locales/localeStore.svelte';
 
 	let { data }: PageProps = $props();
 	let { event } = data;
 
 	let isDeletingEvent = $state(false);
+	const { allTags } = await getTags();
 
 	// Form state
 	let formData = $state({
@@ -51,11 +53,11 @@
 	let successMessage = $state('');
 
 	// Handle tag selection
-	function toggleTag(tag: TagTranslation) {
-		if (formData.tags.includes(tag.en)) {
+	function toggleTag(tag: UiTag) {
+		if (formData.tags.includes(tag.en ?? tag.slug)) {
 			formData.tags = formData.tags.filter((t) => t !== tag.en);
 		} else {
-			formData.tags = [...formData.tags, tag.en];
+			formData.tags = [...formData.tags, tag.en ?? tag.slug];
 		}
 	}
 
@@ -250,11 +252,11 @@
 					<div class="mb-1 flex flex-wrap gap-2">
 						{#each formData.tags as tag}
 							<div class="badge badge-ghost break-keep">
-								{allTags.find((t) => t.en === tag)?.de ?? tag}
+								{allTags.find((t) => t[localeStore.locale] === tag)?.[localeStore.locale] ?? tag}
 								<i
 									class="icon-[ph--x] size-4 cursor-pointer"
 									title="Entfernen"
-									onclick={() => toggleTag(allTags.find((t) => t.en === tag)!)}
+									onclick={() => toggleTag(allTags.find((t) => t[localeStore.locale] === tag))}
 								/>
 							</div>
 						{/each}

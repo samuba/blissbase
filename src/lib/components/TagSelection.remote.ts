@@ -33,6 +33,8 @@ export const getTags = prerender(async () => {
     return result;
 });
 
+export type UiTag = ReturnType<typeof buildUiTags>[number];
+
 function buildUiTags(dbTags: {
     id: number;
     createdAt: Date;

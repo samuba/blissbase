@@ -1,6 +1,6 @@
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
-import { allTags } from '../../src/lib/tags';
+import { allTags } from '../../src/lib/server/tags';
 
 export async function aiExtractEventData(message: string, messageDate: Date, timezone: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
     console.log(`🤖 AI extracting event data with ${imageUrls.length} images...`)

@@ -8,13 +8,11 @@
 	import { localeStore } from '../../locales/localeStore.svelte';
 	import { onMount } from 'svelte';
 
-	let { tags }: { tags: Awaited<ReturnType<typeof getTags>> } = $props();
-
-	const { allTags, previewTags } = $derived(tags);
+	const { allTags, previewTags } = await getTags();
 	type Tag = (typeof allTags)[number];
 
 	let showDropdown = $state(false);
-	let filterQuery = $state(eventsStore.searchFilter || '');
+	let filterQuery = $derived(eventsStore.searchFilter || '');
 	let filterQueryInPopup = $state('');
 	let selectedTags = $state<Tag[]>([]);
 
@@ -34,10 +32,6 @@
 		if (term.trim() && selectedTags.length === 0) {
 			eventsStore.showTextSearch = true
 		}
-	});
-
-	$effect(() => {
-		filterQuery = eventsStore.searchFilter || '';
 	});
 
 	const selectedTagIds = $derived(new Set(selectedTags.map((t) => t.id)));

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { allTags } from '$lib/tags';
 	import { Combobox } from 'bits-ui';
+	import { getTags } from './TagSelection.remote';
+	import { localeStore } from '../../locales/localeStore.svelte';
 
 	let { selectedTags = $bindable([]) }: { selectedTags: string[] } = $props();
-
-	const tags = allTags.map((t) => ({ value: t.en, label: t.de }));
+	const { allTags: tags } = await getTags();
 
 	let searchValue = $state('');
 	let open = $state(false);
@@ -12,13 +12,20 @@
 	const filteredTags = $derived(
 		searchValue === ''
 			? tags
-			: tags.filter((fruit) => fruit.label.toLowerCase().includes(searchValue.trim().toLowerCase()))
+			: tags.filter((x) => {
+					const search = searchValue.trim().toLowerCase();
+					return (
+						x.slug.toLowerCase().includes(search) ||
+						x.en?.toLowerCase().includes(search) ||
+						x.de?.toLowerCase().includes(search) ||
+						x.nl?.toLowerCase().includes(search)
+					);
+			  })
 	);
 </script>
 
 <Combobox.Root
 	type="multiple"
-	name="favoriteFruit"
 	onOpenChange={(o) => {
 		if (!o) searchValue = '';
 	}}
@@ -49,14 +56,15 @@
 				<i class="icon-[ph--caret-double-up] size-3" />
 			</Combobox.ScrollUpButton>
 			<Combobox.Viewport class="p-1">
-				{#each filteredTags as tag, i (i + tag.value)}
+				{#each filteredTags as tag (tag.id)}
+					{@const label = tag[localeStore.locale] ?? tag.slug}
 					<Combobox.Item
 						class="rounded-button data-highlighted:bg-base-200 flex h-10 w-full items-center py-5 pr-1.5 pl-5 text-sm capitalize outline-hidden select-none data-selected:font-bold"
-						value={tag.value}
-						label={tag.label}
+						value={label}
+						label={label}
 					>
 						{#snippet children({ selected })}
-							{tag.label}
+							{label}
 							{#if selected}
 								<div class="ml-auto">
 									<i class="icon-[ph--check] size-5" />

@@ -838,6 +838,3 @@ msgstr "Hero image"
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
 msgstr "Ort <0/> nicht gefunden"
-
-#~ msgid "<0>Filter</0> class=\"mb-4 text-xl font-semibold\" <1>ZeitraumEntfernungTeilnahmeVorortOnlineSortierungStartzeitDistanzZurücksetzen<0/> Alle Filter zurücksetzen</1> <2>Ergebnisse anzeigen</2> <3>Close</3>"
-#~ msgstr "<0>Filter</0> class=\"mb-4 text-xl font-semibold\" <1>ZeitraumEntfernungTeilnahmeVorortOnlineSortierungStartzeitDistanzZurücksetzen<0/> Alle Filter zurücksetzen</1> <2>Ergebnisse anzeigen</2> <3>Close</3>"
