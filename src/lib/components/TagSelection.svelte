@@ -192,7 +192,7 @@
 
 {#snippet moreTagsButton(showTriggerShadow: boolean)}
 	<PopOver
-		contentClass="bg-base-100 shadow-lg border-base-300 w-[250px]"
+		contentClass="bg-base-100 shadow-lg border-base-300 w-[250px] z-20"
 		triggerClass={showTriggerShadow ? 'btn btn-circle bg-base-100 btn-sm' : 'btn bg-base-100'}
 		contentProps={{
 			align: 'center',
