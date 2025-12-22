@@ -9,7 +9,7 @@
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
 
 	const { data } = $props();
-	const { tags, userId } = $derived(data);
+	const { userId } = $derived(data);
 
 	let contentBeforeMenu = $state<HTMLElement | null>(null);
 
@@ -65,7 +65,7 @@
 	
 <div class="container mx-auto flex flex-col items-center justify-center pb-4 sm:w-2xl">
 	
-	<HeaderControls {tags} {userId} />
+	<HeaderControls {userId} />
 
 	<svelte:boundary>
 		<div class="px-4">

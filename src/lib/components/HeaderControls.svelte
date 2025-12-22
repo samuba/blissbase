@@ -5,16 +5,14 @@
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import BurgerMenu from './BurgerMenu.svelte';
 	import TagSelection from './TagSelection.svelte';
-	import { getTags } from './TagSelection.remote';
 	import { Dialog } from 'bits-ui';
 	import ToggleButton from './ToggleButton.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	interface Props {
-		tags: Awaited<ReturnType<typeof getTags>>;
 		userId: string | undefined;
 	}
 
-	let { tags, userId }: Props = $props();
+	let { userId }: Props = $props();
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
@@ -92,7 +90,7 @@
 			</div>
 		</BurgerMenu>
 
-		<TagSelection {tags} />
+		<TagSelection />
 	</div>
 </header>
 
