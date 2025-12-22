@@ -1,8 +1,8 @@
 import { fetchEvents, loadEventsParamsSchema, prepareEventsResultForUi } from "$lib/server/events";
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
-import { getRequestEvent, command, query } from '$app/server';
+import { getRequestEvent, command, query, prerender } from '$app/server';
 import * as v from 'valibot';
-import { db, eq, s, sql } from "./server/db";
+import { db, eq, getTableName, s, sql } from "./server/db";
 import { error } from "@sveltejs/kit";
 import { isAdminSession } from "$lib/server/admin";
 import { posthogCapture } from "$lib/server/common";
@@ -160,6 +160,15 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
         }
         return error(500, 'Failed to delete event');
     }
+});
+
+export const estimateEventCount = prerender(async () => {
+    // fast way to estimate the number of events in the database
+    const [{ estimate }] = await db.execute(sql`
+        SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = ${getTableName(s.events)}::regclass
+    `);
+
+    return Number.parseInt(estimate as string);
 });
 
 async function assertUserIsAllowedToEditEvent(eventId: number, hostSecret: string) {

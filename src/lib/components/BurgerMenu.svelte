@@ -6,6 +6,7 @@
 	import ShareButton from './ShareButton.svelte';
 	import { isPwa } from '$lib/isPwa.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
+	import { estimateEventCount } from '$lib/events.remote';
 
 	interface Props {
 		children?: any;
@@ -18,6 +19,9 @@
 	let open = $state(false);
 	let loginDialogOpen = $state(false);
 	let isLoggingOut = $state(false);
+
+	const eventCount = $derived(Math.floor((await estimateEventCount()) / 1000) * 1000);
+	
 
 	async function handleLogout() {
 		isLoggingOut = true;
@@ -52,7 +56,7 @@
 					Willkommen bei Blissbase
 				</h1>
 				<p class="-mt-2">
-					Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events
+					Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <b>{eventCount}</b>)
 					aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles
 					an einem Ort.
 					<br />

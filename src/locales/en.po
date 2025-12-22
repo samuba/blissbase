@@ -238,16 +238,6 @@ msgid "<0/> Willkommen bei Blissbase"
 msgstr "<0/> Welcome to Blissbase"
 
 #: src/lib/components/BurgerMenu.svelte
-msgid ""
-"Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events\n"
-"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
-"an einem Ort. <0/> Ich hoffe dir gefällt meine Arbeit."
-msgstr ""
-"I want to bring the conscious communities together. To do this, I collect events\n"
-"from various sources and make them accessible here. Searchable, convenient, all\n"
-"in one place. <0/> I hope you like my work."
-
-#: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/BurgerMenu.svelte
 msgid "Samuel"
 msgstr "Sam"
@@ -838,3 +828,12 @@ msgstr "Hero Image"
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
 msgstr "Location <0/> not found"
+#: src/lib/components/BurgerMenu.svelte
+msgid ""
+"Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>)\n"
+"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
+"an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+msgstr ""
+"I want to bring together the mindful communities. For this, I collect events (over <0/>)\n"
+"from various sources and make them accessible here. Searchable, convenient, all\n"
+"in one place. <1/> I hope you like my work."
