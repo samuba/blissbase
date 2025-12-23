@@ -116,7 +116,7 @@
 
 			<Dialog.Close class="btn btn-circle absolute  top-3 right-3 shadow-lg sm:top-4 sm:right-4">
 				<i class="icon-[ph--x] size-5"></i>
-				<span class="sr-only">Close</span>
+				<span class="sr-only">Schließen</span>
 			</Dialog.Close>
 		</Dialog.Content>
 	</Dialog.Portal>

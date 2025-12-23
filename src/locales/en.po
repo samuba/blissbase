@@ -186,6 +186,7 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
+#: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
@@ -274,7 +275,6 @@ msgstr "<0/> Log out"
 msgid "<0/> Login"
 msgstr "<0/> Login"
 
-#: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/ImageDialog.svelte
 msgid "Close"
 msgstr "Close"
@@ -828,6 +828,7 @@ msgstr "Hero Image"
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
 msgstr "Location <0/> not found"
+
 #: src/lib/components/BurgerMenu.svelte
 msgid ""
 "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>)\n"

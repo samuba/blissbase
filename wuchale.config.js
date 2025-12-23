@@ -2,8 +2,13 @@
 import { adapter as svelte } from "@wuchale/svelte"
 import { adapter as js } from 'wuchale/adapter-vanilla'
 import { defineConfig } from "wuchale"
-import {  } from "wuchale";
+import { generateText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
 import 'dotenv/config';
+
+const openai = createOpenAI({
+    apiKey: process.env.OPENAI_API_KEY_FOR_LOCALIZATION,
+});
 
 export default defineConfig({
     // sourceLocale is en by default
@@ -19,18 +24,17 @@ export default defineConfig({
             ],
         })
     },
-    // ai: gemini({
-    //     batchSize: 40,
-    //     parallel: 5,
-    //     think: false,
-    // }),
     ai: {
-        name: "openai/gpt-5-nano", // e.g.
+        name: "gpt-5-mini",
         batchSize: 50,
         parallel: 3,
-        translate: (content, instruction) => {
-          // logic
-          return translatedContent;
-        },
+        translate: async (messages, instruction) => {
+            const { text } = await generateText({
+                model: openai('gpt-5-mini'),
+                system: instruction,
+                prompt: messages,
+            })
+            return text
+        }
       },
 })
