@@ -23,7 +23,7 @@ import { and, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
-import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES } from './common.ts';
+import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES } from '../src/lib/commonWithScripts.ts';
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 

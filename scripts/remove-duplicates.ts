@@ -3,7 +3,7 @@ import {
     db, s, sql, and, lt, eq, isNotNull, gte,
     inArray
 } from '../src/lib/server/db';
-import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSource } from './common';
+import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts';
 import { calculateHammingDistance } from '../src/lib/imageProcessing';
 
 
@@ -87,7 +87,7 @@ async function processDuplicates(duplicates: { eventAId: number, eventBId: numbe
  * Merges the two events into one. Will delete one event and take all properties from the deleted event and add it to the surviving event, if these properties were not already set.
  */
 async function mergeEvents(eventA: typeof s.events.$inferSelect, eventB: typeof s.events.$inferSelect, deletedCount: number) {
-    if (eventA.source === eventB.source && WEBSITE_SCRAPE_SOURCES.includes(eventA.source as WebsiteScrapeSource)) {
+    if (eventA.source === eventB.source && WEBSITE_SCRAPE_SOURCES.includes(eventA.source as WebsiteScrapeSourceName)) {
         console.log(`Skipping this one cuz both are from ${eventA.source} website. Unlikely to be real duplicate.`);
         return { deletedCount };
     }
@@ -102,7 +102,7 @@ async function mergeEvents(eventA: typeof s.events.$inferSelect, eventB: typeof 
         'heilnetz',
         'heilnetzowl',
         'ggbrandenburg',
-    ] satisfies WebsiteScrapeSource[]).reverse();
+    ] satisfies WebsiteScrapeSourceName[]).reverse();
     const priorityA = websiteSourcePriority.indexOf(eventA.source);
     const priorityB = websiteSourcePriority.indexOf(eventB.source);
     if (priorityA > -1 || priorityB > -1) {

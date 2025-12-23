@@ -11,6 +11,7 @@
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { localeStore } from '../locales/localeStore.svelte';
+	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -99,7 +100,7 @@
 	);
 
 	let dontShowSourceUrl = $derived((event.sourceUrl?.includes('todo.today') ?? false));
-	let dontShowSource = $derived(['todotoday', 'megatix_indonesia'].includes(event.source));
+	let dontShowSource = $derived(['megatix_indonesia'].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
@@ -402,7 +403,7 @@
 					rel="noopener noreferrer"
 					class="cursor-pointer underline"
 				>
-					{event.source.charAt(0).toUpperCase() + event.source.slice(1)}
+					{WEBSITE_SCRAPER_CONFIG[event.source as keyof typeof WEBSITE_SCRAPER_CONFIG].label}
 				</a>
 			</div>
 		{/if}

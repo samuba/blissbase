@@ -1,24 +1,6 @@
 import type { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 
-
-export const WEBSITE_SCRAPER_CONFIG = {
-    awara: { module: './scrape-awara.ts' },
-    tribehaus: { module: './scrape-tribehaus.ts' },
-    heilnetz: { module: './scrape-heilnetz.ts' },
-    heilnetzowl: { module: './scrape-heilnetzowl.ts' },
-    seijetzt: { module: './scrape-seijetzt.ts' },
-    ggbrandenburg: { module: './scrape-ggbrandenburg.ts' },
-    kuschelraum: { module: './scrape-kuschelraum.ts' },
-    ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts' },
-    todotoday: { module: './scrape-todotoday.ts' },
-    vortexapp: { module: './scrape-vortexapp.ts' },
-    megatix_indonesia: { module: './scrape-megatix_indonesia.ts' },
-    // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
-} as const;
-export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
-export type WebsiteScrapeSource = (typeof WEBSITE_SCRAPE_SOURCES)[number];
-
 export function extractIcalStartAndEndTimes(html: string): { startAt: string | undefined, endAt: string | undefined } {
     const startRegex = /\\nDTSTART:([0-9|T]*)\\/
     const endRegex = /\\nDTEND:([0-9|T]*)\\/
