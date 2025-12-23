@@ -63,8 +63,9 @@ select {
 	font-style: normal;
 	font-weight: 600;
 	font-display: swap;
-	src: url('Baloo2-SemiBold.woff2') format('woff2');
+	src: url('$lib/fonts/Baloo2-SemiBold.woff2') format('woff2');
 }
+
 .font-brand {
 	font-family: 'Baloo-2-SemiBold', 'Arial';
 }
