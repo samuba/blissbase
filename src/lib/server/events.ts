@@ -13,8 +13,6 @@ import {
 	sql,
 	ilike,
 	desc,
-	SQL,
-	inArray,
 	exists,
 	eq
 } from 'drizzle-orm';
@@ -24,7 +22,7 @@ import type { InsertEvent } from '$lib/types';
 import { generateSlug, type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
-import { attendanceModeEnum, eventAttendanceModeEnum, type AttendanceMode } from './schema';
+import { attendanceModeEnum, type AttendanceMode } from './schema';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');

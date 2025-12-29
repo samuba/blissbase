@@ -97,8 +97,3 @@ body {
 .active {
 	@apply border-primary-btn-border bg-primary/15 ;
 }
-
-
-.fooooo {
-	background-color: red;
-}

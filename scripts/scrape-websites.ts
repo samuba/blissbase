@@ -102,11 +102,28 @@ async function main() {
     // --- Run Scrapers in Parallel ---
     const scrapePromises = sourcesToScrape.map(source => scrapeSource(source));
 
-    // Wait for all scrapers to complete
-    const results = await Promise.all(scrapePromises);
-    const allEvents = results.flat();
+    // Wait for all scrapers to complete (using allSettled to not fail on first error)
+    const results = await Promise.allSettled(scrapePromises);
+    
+    // Separate successful results from failures
+    const failedSources: { source: string; error: unknown }[] = [];
+    const allEvents: ScrapedEvent[] = [];
+    
+    results.forEach((result, index) => {
+        const source = sourcesToScrape[index];
+        if (result.status === 'fulfilled') {
+            allEvents.push(...result.value);
+        } else {
+            failedSources.push({ source, error: result.reason });
+            console.error(`Source "${source}" failed:`, result.reason);
+        }
+    });
 
     console.log(`--- Total events scraped this run: ${allEvents.length} ---`);
+    
+    if (failedSources.length > 0) {
+        console.warn(`--- ${failedSources.length} source(s) failed: ${failedSources.map(f => f.source).join(', ')} ---`);
+    }
 
     if (allEvents.length === 0) {
         console.log('No events to process. Exiting.');
@@ -173,6 +190,8 @@ async function main() {
         } satisfies InsertEvent;
     });
 
+    console.log("eventsToInsert count", eventsToInsert.length);
+
     // remove events that span more than 2 months. These are usually spammy events with people posting their courses, no real "events"
     eventsToInsert = eventsToInsert.filter(e => {
         if (!e.endAt) return true;
@@ -219,6 +238,13 @@ async function main() {
 
     console.log(` -> Successfully inserted/updated ${successCount} out of ${eventsToInsert.length} events.`);
     console.log('--- Germany Event Scraper Finished ---');
+    
+    // Throw error at the end if any sources failed
+    if (failedSources.length > 0) {
+        const errorMessages = failedSources.map(f => `  - ${f.source}: ${f.error instanceof Error ? f.error.message : String(f.error)}`).join('\n');
+        throw new Error(`Scraping completed but ${failedSources.length} source(s) failed:\n${errorMessages}`);
+    }
+    
     process.exit(0);
     ///
     ///
