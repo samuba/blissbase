@@ -278,8 +278,8 @@ async function main() {
                     continue;
                 }
                 console.log(` -> Image ${url} not found in image cache map`);
-                const bytes = await customFetch(url, { returnType: 'bytes' })
                 try {
+                    const bytes = await customFetch(url, { returnType: 'bytes' })
                     const { buffer, phash } = await resizeCoverImage(bytes)
                     const imageUrl = await assets.uploadImage(buffer, event.slug, phash, assets.loadCreds());
                     cachedEventImageUrls.push(imageUrl);
@@ -287,7 +287,7 @@ async function main() {
                     // warm up the image url
                     await customFetch(imageUrl, { returnType: 'bytes' });
                 } catch (error) {
-                    console.error(`Error processing image. Skipping this one ${url}:`, error);
+                    console.error(`Error fetching/processing image. Skipping ${url}:`, error);
                 }
                 processedImageCount++;
             }
