@@ -1,6 +1,14 @@
 import type { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';
 
+/** Error thrown when a resource is not found (404). This error should not be retried. */
+export class NotFoundError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundError';
+    }
+}
+
 export function extractIcalStartAndEndTimes(html: string): { startAt: string | undefined, endAt: string | undefined } {
     const startRegex = /\\nDTSTART:([0-9|T]*)\\/
     const endRegex = /\\nDTEND:([0-9|T]*)\\/
@@ -87,6 +95,11 @@ export async function customFetch(
                 console.error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
                 console.error(`Error body: ${errorBody}`);
 
+                // Don't retry on 404 - resource doesn't exist
+                if (response.status === 404) {
+                    throw new NotFoundError(`Error fetching ${url}: 404 Not Found`);
+                }
+
                 // Check if error is retryable (5xx server errors or specific network errors)
                 if (response.status >= 500 && response.status < 600 && attempt < maxRetries) {
                     lastError = new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
@@ -107,6 +120,11 @@ export async function customFetch(
             }
         } catch (error) {
             lastError = error instanceof Error ? error : new Error(String(error));
+
+            // Don't retry on 404 errors - resource doesn't exist
+            if (error instanceof NotFoundError) {
+                throw error;
+            }
 
             if (error instanceof DOMException && error.name === 'AbortError') {
                 console.error(`Timeout fetching ${url}: Request took longer than ${FETCH_TIMEOUT_MS}ms`);
