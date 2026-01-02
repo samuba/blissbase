@@ -37,6 +37,8 @@ jobs:
           S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
           S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          TODOTODAY_EMAIL: ${{ secrets.TODOTODAY_EMAIL }}
+          TODOTODAY_PASSWORD: ${{ secrets.TODOTODAY_PASSWORD }}
         run: bun run scripts/scrape-websites.ts ${{ github.event.inputs.params }}
 
   deduplicate:
