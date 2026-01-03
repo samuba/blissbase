@@ -256,7 +256,7 @@
 		{#if showDistanceInput}
 			<select
 				id="distance"
-				class={["select join-item w-auto z-60 appearance-none", usingCurrentLocation && 'active']} 
+				class={["select join-item w-auto appearance-none", usingCurrentLocation && 'active']} 
 				bind:value={selectedDistance}
 				onchange={handleFilterInputChange}
 				disabled={isLoadingLocation || disabled || (typedPlzCity === '' && !usingCurrentLocation)}
