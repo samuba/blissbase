@@ -213,9 +213,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     extractImageUrls(html: string): string[] | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
         const imageUrlsSet = new Set<string>();
-        $('.embla__container .rounded-xl > img').each((_i, img) => {
+        $('.h-20 img').each((_i, img) => {
             const src = $(img).attr('src') || $(img).attr('data-src') || $(img).attr('data-lazy-src');
-            if (src && !src.startsWith('data:') && !src.includes('placeholder') && src.length < 1200) {
+            console.error({src});
+            if (src && !src.startsWith('data:') && !src.includes('placeholder') && !src.includes('-thumb') && src.length < 1200) {
                 try {
                     imageUrlsSet.add(new URL(src, this.baseUrl).toString());
                 } catch { /* ignore */ }
