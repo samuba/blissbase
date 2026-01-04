@@ -23,6 +23,14 @@
 	contain-intrinsic-size: 100% 210px;
 }
 
+/* Prevent mobile flickering during dialog/modal animations */
+@utility backface-visibility-hidden {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+	-webkit-transform: translateZ(0);
+	transform: translateZ(0);
+}
+
 @plugin "daisyui" {
 	themes:
 		cupcake --default,

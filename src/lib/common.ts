@@ -247,5 +247,6 @@ export function randomString(length: number) {
 }
 
 // we have it here cuz for some reason having it in app.css via @apply will result in flickering of the dialog content when closing 
-export const dialogContentAnimationClasses = 'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95';
-export const dialogOverlayAnimationClasses = 'data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:duration-150 data-[state=closed]:ease-in data-[state=open]:duration-300 data-[state=open]:ease-out';
+// added backface-visibility-hidden and will-change-transform to prevent mobile flickering during animations
+export const dialogContentAnimationClasses = 'backface-visibility-hidden will-change-transform data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95';
+export const dialogOverlayAnimationClasses = 'backface-visibility-hidden will-change-[opacity] data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:duration-150 data-[state=closed]:ease-in data-[state=open]:duration-300 data-[state=open]:ease-out';
