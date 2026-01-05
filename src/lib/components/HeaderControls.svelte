@@ -95,7 +95,12 @@
 </header>
 
 <!-- filter dialog -->
-<Dialog.Root bind:open={isFilterDialogOpen}>
+<Dialog.Root
+	open={isFilterDialogOpen}
+	onOpenChange={(shouldOpen) => {
+		if (!shouldOpen) isFilterDialogOpen = false;
+	}}
+>
 	<Dialog.Portal>
 		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 		<Dialog.Content
@@ -105,6 +110,7 @@
 				'md:rounded-lg shadow-xl sm:max-w-md flex flex-col',
 				'overflow-y-auto' 
 			]}
+			onOpenAutoFocus={(e) => e.preventDefault()}
 		>
 			<Dialog.Title class="text-xl font-semibold w-full text-center mt-4">
 				Filter

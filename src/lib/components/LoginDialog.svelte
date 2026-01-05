@@ -46,7 +46,12 @@
 	}
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root
+	{open}
+	onOpenChange={(shouldOpen) => {
+		if (!shouldOpen) open = false;
+	}}
+>
 	<Dialog.Portal>
 		<Dialog.Overlay
 			class={['fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-sm', dialogOverlayAnimationClasses]}
@@ -56,6 +61,7 @@
 				'bg-base-100 fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl',
 				dialogContentAnimationClasses
 			]}
+			onOpenAutoFocus={(e) => e.preventDefault()}
 		>
 			<Dialog.Title class="mb-4 text-xl font-semibold">Anmelden</Dialog.Title>
 
