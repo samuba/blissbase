@@ -97,7 +97,7 @@
 <!-- filter dialog -->
 <Dialog.Root bind:open={isFilterDialogOpen}>
 	<Dialog.Portal>
-		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-900/70', dialogOverlayAnimationClasses]} />
+		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 		<Dialog.Content
 			class={[
 				dialogContentAnimationClasses,
