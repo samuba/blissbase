@@ -124,7 +124,7 @@
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.OverlayAnimated class="bg-black/90" />
+		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
 			onclick={() => (open = false)}

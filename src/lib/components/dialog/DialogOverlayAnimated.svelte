@@ -2,18 +2,19 @@
 	import { Dialog, type WithoutChildrenOrChild } from 'bits-ui';
 	import { fade } from 'svelte/transition';
 	import type { Snippet } from 'svelte';
+	import type { ClassValue } from 'svelte/elements';
 
 	let {
 		ref = $bindable(null),
 		inDuration = 200,
-		outDuration = 150,
+		outDuration = 100,
 		class: className,
 		children,
 		...restProps
 	}: WithoutChildrenOrChild<Dialog.OverlayProps> & {
 		inDuration?: number;
 		outDuration?: number;
-		class?: string;
+		class?: ClassValue;
 		children?: Snippet;
 	} = $props();
 </script>
@@ -23,7 +24,7 @@
 		{#if open}
 			<div
 				{...props}
-				class={['fixed inset-0 z-50', className]}
+				class={['fixed inset-0 z-50 backdrop-blur-sm bg-stone-800/65', className]}
 				in:fade={{ duration: inDuration }}
 				out:fade={{ duration: outDuration }}
 			>

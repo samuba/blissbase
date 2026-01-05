@@ -41,7 +41,7 @@
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.OverlayAnimated class="bg-black/80" />
+		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class="card bg-base-100 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] outline-hidden sm:max-w-lg sm:p-4 md:w-full"
 		>

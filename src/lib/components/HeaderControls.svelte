@@ -96,7 +96,7 @@
 <!-- filter dialog -->
 <Dialog.Root bind:open={isFilterDialogOpen}>
 	<Dialog.Portal>
-		<Dialog.OverlayAnimated class="bg-stone-800/90" />
+		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class="bg-base-200 fixed top-1/2 left-1/2 z-50 h-full md:h-auto max-h-dvh w-full max-w-dvw -translate-x-1/2 -translate-y-1/2 md:rounded-lg shadow-xl sm:max-w-md flex flex-col overflow-y-auto"
 		>
