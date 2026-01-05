@@ -6,37 +6,74 @@
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
+	import { browser } from '$app/environment';
 
 	const { allTags, previewTags } = await getTags();
 	type Tag = (typeof allTags)[number];
 
-	// Parse initial search term into matched tags (must run synchronously before first render)
-	const initialTerm = eventsStore.searchFilter || '';
-	const initialSearchWords =
-		initialTerm
-			.trim()
-			.match(/(?:[^\s"]+|"[^"]*")+/g)
-			?.map((word) => word.replace(/^"|"$/g, '')) || [];
-	const initialMatchedTags = allTags.filter((tag) =>
-		initialSearchWords.some(
-			(word) =>
-				tag.en?.toLowerCase() === word.toLowerCase() ||
-				tag.de?.toLowerCase() === word.toLowerCase() ||
-				tag.nl?.toLowerCase() === word.toLowerCase()
-		)
-	);
-
-	// Set showTextSearch BEFORE first render to avoid state change during mount
-	if (initialTerm.trim() && initialMatchedTags.length === 0) {
-		eventsStore.showTextSearch = true;
+	/** Parses search term and returns matched tags */
+	function parseSearchTermToTags(searchTerm: string): Tag[] {
+		const searchWords =
+			searchTerm
+				.trim()
+				.match(/(?:[^\s"]+|"[^"]*")+/g)
+				?.map((word) => word.replace(/^"|"$/g, '')) || [];
+		return allTags.filter((tag) =>
+			searchWords.some(
+				(word) =>
+					tag.en?.toLowerCase() === word.toLowerCase() ||
+					tag.de?.toLowerCase() === word.toLowerCase() ||
+					tag.nl?.toLowerCase() === word.toLowerCase()
+			)
+		);
 	}
 
+	// Initialize with empty/default state to ensure SSR/hydration consistency
+	// (eventsStore and localeStore are singletons on client but fresh on server)
 	let showDropdown = $state(false);
-	let filterQuery = $state(initialTerm);
+	let filterQuery = $state('');
 	let filterQueryInPopup = $state('');
-	let selectedTags = $state<Tag[]>(initialMatchedTags);
+	let selectedTags = $state<Tag[]>([]);
 	let filterInputRef = $state<HTMLInputElement | null>(null);
 	let textSearchInputRef = $state<HTMLInputElement | null>(null);
+	let showTextSearch = $state(false);
+	let locale = $state<'en' | 'de'>('en'); // Start with server default
+	let hydrated = $state(false);
+
+	// After hydration, sync with actual store state
+	$effect(() => {
+		if (browser && !hydrated) {
+			hydrated = true;
+			// Sync locale from store
+			locale = localeStore.locale;
+			
+			// Sync search state from store
+			const searchTerm = eventsStore.searchFilter || '';
+			const matchedTags = parseSearchTermToTags(searchTerm);
+			
+			if (searchTerm.trim()) {
+				if (matchedTags.length > 0) {
+					selectedTags = matchedTags;
+					filterQuery = searchTerm;
+				} else {
+					showTextSearch = true;
+					filterQuery = searchTerm;
+				}
+			}
+		}
+	});
+	
+	// Keep locale in sync with store after hydration
+	$effect(() => {
+		if (hydrated) {
+			locale = localeStore.locale;
+		}
+	});
+
+	// Sync local showTextSearch state with store
+	$effect(() => {
+		eventsStore.showTextSearch = showTextSearch;
+	});
 
 
 	const selectedTagIds = $derived(new Set(selectedTags.map((t) => t.id)));
@@ -79,13 +116,13 @@
 		selectedTags.push(tag);
 		filterQuery = '';
 		showDropdown = false;
-		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[localeStore.locale]).join(' '));
-		eventsStore.showTextSearch = false;
+		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[locale]).join(' '));
+		showTextSearch = false;
 	}
 
 	function removeTag(tag: Tag) {
 		selectedTags = selectedTags.filter((t) => t.id !== tag.id);
-		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[localeStore.locale]).join(' '));
+		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[locale]).join(' '));
 	}
 
 	function runTextSearch(value?: string) {
@@ -93,13 +130,13 @@
 		showDropdown = false;
 		filterQuery = value ?? '';
 		filterQueryInPopup = '';
-		eventsStore.showTextSearch = true;
+		showTextSearch = true;
 		debouncedSearch(value);
 	}
 
 	function closeTextSearch() {
 		filterQuery = '';
-		eventsStore.showTextSearch = false;
+		showTextSearch = false;
 		eventsStore.handleSearchTermChange('');
 	}
 
@@ -120,7 +157,7 @@
 </script>
 
 
-{#if eventsStore.showTextSearch}
+{#if showTextSearch}
 	<div class="flex flex-grow items-center gap-2" in:fade={{ duration: 280 }}>
 		<label class="input w-full flex-grow">
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
@@ -168,7 +205,7 @@
 					in:fade={{ duration: 280 }}
 					animate:flip={{ duration: 280 }}
 				>
-					{tag[localeStore.locale]}
+					{tag[locale]}
 					<i class="icon-[ph--x] size-5"></i>
 				</button>
 			{/each}
@@ -178,7 +215,7 @@
 					class="btn bg-base-100 flex-shrink-0 font-normal whitespace-nowrap"
 					onclick={() => selectTag(tag)}
 				>
-					{tag[localeStore.locale]}
+					{tag[locale]}
 				</button>
 			{/each}
 		</div>
@@ -268,14 +305,14 @@
 				<div
 					class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2"
 				>
-			{#each dropdownTags as tag (tag.id)}
-					<button
+					{#each dropdownTags as tag (tag.id)}
+						<button
 						class="btn mb-1 w-full text-center font-normal last:mb-0"
 						onclick={() => selectTag(tag)}
 					>
-						{tag[localeStore.locale]}
-					</button>
-				{/each}
+						{tag[locale]}
+						</button>
+					{/each}
 				</div>
 			{/if}
 		{/snippet}
