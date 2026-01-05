@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
-	import { Dialog, type DialogTriggerProps } from 'bits-ui';
+	import { Dialog } from '$lib/components/dialog';
+	import type { DialogTriggerProps } from 'bits-ui';
 	import type { Snippet } from 'svelte';
 
 	let {
@@ -124,9 +124,9 @@
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.Overlay class={['fixed inset-0 z-50 bg-black/90 ', dialogOverlayAnimationClasses]} />
-		<Dialog.Content
-			class={['fixed inset-0 z-50 flex items-center justify-center outline-none', dialogContentAnimationClasses]}
+		<Dialog.OverlayAnimated class="bg-black/90" />
+		<Dialog.ContentAnimated
+			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
 			onclick={() => (open = false)}
 			onkeydown={handleKeydown}
 			ontouchstart={handleTouchStart}
@@ -164,10 +164,10 @@
 				{/if}
 			</div>
 
-			<Dialog.Close class="btn btn-circle absolute top-4 right-4 shadow-lg">
-				<i class="icon-[ph--x] size-5"></i>
-				<span class="sr-only">Close</span>
-			</Dialog.Close>
-		</Dialog.Content>
+		<Dialog.Close class="btn btn-circle absolute top-4 right-4 shadow-lg">
+			<i class="icon-[ph--x] size-5"></i>
+			<span class="sr-only">Close</span>
+		</Dialog.Close>
+		</Dialog.ContentAnimated>
 	</Dialog.Portal>
 </Dialog.Root>

@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { routes } from '$lib/routes';
-	import { Dialog } from 'bits-ui';
+	import { Dialog } from '$lib/components/dialog';
 	import LoginDialog from './LoginDialog.svelte';
 	import { createSupabaseBrowserClient } from '$lib/supabase';
 	import ShareButton from './ShareButton.svelte';
 	import { isPwa } from '$lib/isPwa.svelte';
-	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	import { estimateEventCount } from '$lib/events.remote';
 
 	interface Props {
@@ -42,13 +41,9 @@
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.Overlay class={["fixed inset-0 z-50 bg-black/80", dialogOverlayAnimationClasses]} />
-		<Dialog.Content
-			class={[
-				"card bg-base-100 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] outline-hidden sm:max-w-lg sm:p-4 md:w-full", 
-				dialogContentAnimationClasses
-			]}
-			tabindex={-1}
+		<Dialog.OverlayAnimated class="bg-black/80" />
+		<Dialog.ContentAnimated
+			class="card bg-base-100 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] outline-hidden sm:max-w-lg sm:p-4 md:w-full"
 		>
 			<div class="flex max-w-lg flex-col gap-4 p-4 text-sm">
 				<h1 class="text-lg leading-tight font-bold">
@@ -118,7 +113,7 @@
 				<i class="icon-[ph--x] size-5"></i>
 				<span class="sr-only">Schließen</span>
 			</Dialog.Close>
-		</Dialog.Content>
+		</Dialog.ContentAnimated>
 	</Dialog.Portal>
 </Dialog.Root>
 
