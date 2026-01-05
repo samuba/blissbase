@@ -17,12 +17,11 @@ loadLocales(main.key, main.loadIDs, main.loadCatalog, locales)
 loadLocales(js.key, js.loadIDs, js.loadCatalog, locales)
 const wuchaleLocalization: Handle = async ({ event, resolve }) => {
     let locale = event.cookies.get('locale')
-    if (!locale) { 
+    if (!locale || !locales.includes(locale)) { 
         locale = 'en'
-    } else {
-        event.cookies.set('locale', locale, { path: '/' });
     }
-    localeStore.locale = locale;
+    event.cookies.set('locale', locale, { path: '/' });
+    localeStore.locale = locale as 'en' | 'de';
     return await runWithLocale(locale, () => resolve(event))
 };
 
