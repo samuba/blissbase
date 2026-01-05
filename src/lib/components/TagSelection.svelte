@@ -6,33 +6,38 @@
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
-	import { onMount } from 'svelte';
 
 	const { allTags, previewTags } = await getTags();
 	type Tag = (typeof allTags)[number];
 
-	let showDropdown = $state(false);
-	let filterQuery = $derived(eventsStore.searchFilter || '');
-	let filterQueryInPopup = $state('');
-	let selectedTags = $state<Tag[]>([]);
+	// Parse initial search term into matched tags (must run synchronously before first render)
+	const initialTerm = eventsStore.searchFilter || '';
+	const initialSearchWords =
+		initialTerm
+			.trim()
+			.match(/(?:[^\s"]+|"[^"]*")+/g)
+			?.map((word) => word.replace(/^"|"$/g, '')) || [];
+	const initialMatchedTags = allTags.filter((tag) =>
+		initialSearchWords.some(
+			(word) =>
+				tag.en?.toLowerCase() === word.toLowerCase() ||
+				tag.de?.toLowerCase() === word.toLowerCase() ||
+				tag.nl?.toLowerCase() === word.toLowerCase()
+		)
+	);
 
-	onMount(() => {
-		// sync selected tags with search term from store
-		const term = eventsStore.searchFilter || '';
-		const searchWords =
-			term
-				.trim()
-				.match(/(?:[^\s"]+|"[^"]*")+/g)
-				?.map(
-					(word) => word.replace(/^"|"$/g, '') // Remove surrounding quotes
-				) || []; // Split by spaces but keep quoted phrases together
-		selectedTags = allTags.filter((tag) =>
-			searchWords.some((word) => tag.en?.toLowerCase() === word.toLowerCase() || tag.de?.toLowerCase() === word.toLowerCase() || tag.nl?.toLowerCase() === word.toLowerCase())
-		);
-		if (term.trim() && selectedTags.length === 0) {
-			eventsStore.showTextSearch = true
-		}
-	});
+	// Set showTextSearch BEFORE first render to avoid state change during mount
+	if (initialTerm.trim() && initialMatchedTags.length === 0) {
+		eventsStore.showTextSearch = true;
+	}
+
+	let showDropdown = $state(false);
+	let filterQuery = $state(initialTerm);
+	let filterQueryInPopup = $state('');
+	let selectedTags = $state<Tag[]>(initialMatchedTags);
+	let filterInputRef = $state<HTMLInputElement | null>(null);
+	let textSearchInputRef = $state<HTMLInputElement | null>(null);
+
 
 	const selectedTagIds = $derived(new Set(selectedTags.map((t) => t.id)));
 	const hiddenTags = $derived(allTags.filter((x) => !previewTags.includes(x)));
@@ -101,10 +106,6 @@
 		400
 	);
 
-	function clearTags() {
-		eventsStore.handleSearchTermChange('');
-		filterQueryInPopup = '';
-	}
 </script>
 
 
@@ -113,8 +114,9 @@
 		<label class="input w-full flex-grow">
 			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
 			<input
-				id="tag-selection-text-search-input w-full"
+				class="w-full"
 				bind:value={filterQuery}
+				bind:this={textSearchInputRef}
 				oninput={(e) => runTextSearch(e.currentTarget.value)}
 				type="text"
 				placeholder="Suchbegriff"
@@ -125,7 +127,7 @@
 						filterQuery = '';
 						eventsStore.handleSearchTermChange('');
 					} else {
-						document.getElementById('tag-selection-text-search-input')?.focus();
+						textSearchInputRef?.focus();
 					}
 				}}
 				class="btn btn-sm btn-circle btn-ghost"
@@ -189,7 +191,9 @@
 		contentClass="bg-base-100 shadow-lg border-base-300 w-[250px] z-20"
 		triggerClass={showTriggerShadow ? 'btn btn-circle bg-base-100 btn-sm' : 'btn bg-base-100'}
 		contentProps={{
+			side: 'bottom',
 			align: 'center',
+			collisionPadding: { top: 9999, bottom: 8, left: 8, right: 8 },
 			onOpenAutoFocus: (e) => e.preventDefault() // ugly blue focus on close button in safari otherwise
 		}}
 		onOpenChange={handleOpenChange}
@@ -209,10 +213,11 @@
 
 		{#snippet content()}
 			<div class="border-base-300 bg-base-200 flex flex-col gap-2 border-b-2 p-2 ">
-				<label class="input w-full flex-grow">
+				<label class="input w-full grow">
 					<input
-						id="tag-selection-filter-input w-full sm:w-fit"
+						class="w-full sm:w-fit"
 						bind:value={filterQueryInPopup}
+						bind:this={filterInputRef}
 						type="text"
 						placeholder="Suchen..."
 						onkeydown={(e) => {
@@ -226,7 +231,7 @@
 							if (filterQueryInPopup.trim()) {
 								filterQueryInPopup = '';
 							} else {
-								document.getElementById('tag-selection-filter-input')?.focus();
+								filterInputRef?.focus();
 							}
 						}}
 						class="btn btn-sm btn-circle btn-ghost"
