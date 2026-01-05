@@ -127,8 +127,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const price = superTrim(
 			$('.data-entry-content-single-page .event_ticket_price_single').text()
 		)!;
-		const host =
+		let host: string | undefined =
 			$('.data-entry-content-single-page .author-link').text()?.trim() || name.split(' w/ ')[1];
+        host = host.toLowerCase() === 'todo.today' ? undefined : host;
 		const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
 		const sourceUrl = (
 			$('.data-entry-content-single-page .ticket-link').attr('href')! ?? url

@@ -108,6 +108,9 @@
 		return event.sourceUrl;
 	});
 
+	const hostNamesToHide = ["todo.today"];
+	const shouldShowHost = $derived(event.host && hostNamesToHide.every(x => !event.host?.toLowerCase().includes(x)));
+
 	function fixTelegramUnsupportedChars(text: string) {
 		return text
 			.replace(/'/g, '"')
@@ -360,7 +363,7 @@
 			</p>
 		{/if}
 
-		{#if event.host}
+		{#if shouldShowHost}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 			>
