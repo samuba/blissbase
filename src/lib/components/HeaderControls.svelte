@@ -7,7 +7,7 @@
 	import TagSelection from './TagSelection.svelte';
 	import { Dialog } from 'bits-ui';
 	import ToggleButton from './ToggleButton.svelte';
-	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
+	import { fade, fly } from 'svelte/transition';
 	interface Props {
 		userId: string | undefined;
 	}
@@ -95,23 +95,27 @@
 </header>
 
 <!-- filter dialog -->
-<Dialog.Root
-	open={isFilterDialogOpen}
-	onOpenChange={(shouldOpen) => {
-		if (!shouldOpen) isFilterDialogOpen = false;
-	}}
->
+<Dialog.Root bind:open={isFilterDialogOpen}>
 	<Dialog.Portal>
-		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
-		<Dialog.Content
-			class={[
-				dialogContentAnimationClasses,
-				'bg-base-200 fixed top-1/2 left-1/2 z-50 h-full md:h-auto max-h-dvh w-full max-w-dvw -translate-x-1/2 -translate-y-1/2',
-				'md:rounded-lg shadow-xl sm:max-w-md flex flex-col',
-				'overflow-y-auto' 
-			]}
-			onOpenAutoFocus={(e) => e.preventDefault()}
-		>
+		<Dialog.Overlay forceMount>
+			{#snippet child({ props, open })}
+				{#if open}
+					<div {...props} class="fixed inset-0 z-50 bg-stone-800/90" transition:fade={{ duration: 200 }}></div>
+				{/if}
+			{/snippet}
+		</Dialog.Overlay>
+		<Dialog.Content forceMount>
+			{#snippet child({ props, open })}
+				{#if open}
+					<div 
+						{...props} 
+						class={[
+							'bg-base-200 fixed top-1/2 left-1/2 z-50 h-full md:h-auto max-h-dvh w-full max-w-dvw -translate-x-1/2 -translate-y-1/2',
+							'md:rounded-lg shadow-xl sm:max-w-md flex flex-col',
+							'overflow-y-auto' 
+						]}
+						transition:fly={{ y: 50, duration: 250 }}
+					>
 			<Dialog.Title class="text-xl font-semibold w-full text-center mt-4">
 				Filter
 			</Dialog.Title>
@@ -218,6 +222,9 @@
 			>
 				<i class="icon-[ph--x] size-6"></i>
 			</Dialog.Close>
+					</div>
+				{/if}
+			{/snippet}
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
