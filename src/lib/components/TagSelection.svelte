@@ -91,6 +91,8 @@
 	function runTextSearch(value?: string) {
 		selectedTags = [];
 		showDropdown = false;
+		filterQuery = value ?? '';
+		filterQueryInPopup = '';
 		eventsStore.showTextSearch = true;
 		debouncedSearch(value);
 	}
@@ -105,6 +107,15 @@
 		(term) => eventsStore.handleSearchTermChange(term?.trim() || ''),
 		400
 	);
+
+	function focusPopupInput() {
+		requestAnimationFrame(() => filterInputRef?.focus());
+	}
+
+	// Auto-focus input when popup opens
+	$effect(() => {
+		if (showDropdown) focusPopupInput();
+	});
 
 </script>
 
@@ -220,6 +231,7 @@
 						bind:this={filterInputRef}
 						type="text"
 						placeholder="Suchen..."
+						oninput={focusPopupInput}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' && filterQueryInPopup.trim()) {
 								runTextSearch(filterQueryInPopup);
@@ -256,14 +268,14 @@
 				<div
 					class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2"
 				>
-					{#each dropdownTags as tag}
-						<button
-							class="btn mb-1 w-full text-center font-normal last:mb-0"
-							onclick={() => selectTag(tag)}
-						>
-							{tag[localeStore.locale]}
-						</button>
-					{/each}
+			{#each dropdownTags as tag (tag.id)}
+					<button
+						class="btn mb-1 w-full text-center font-normal last:mb-0"
+						onclick={() => selectTag(tag)}
+					>
+						{tag[localeStore.locale]}
+					</button>
+				{/each}
 				</div>
 			{/if}
 		{/snippet}
