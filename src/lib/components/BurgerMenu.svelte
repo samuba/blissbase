@@ -20,7 +20,7 @@
 	let loginDialogOpen = $state(false);
 	let isLoggingOut = $state(false);
 
-	const eventCount = $derived(Math.floor((await estimateEventCount()) / 1000) * 1000);
+	const eventCount = Math.floor((await estimateEventCount()) / 1000) * 1000;
 	
 
 	async function handleLogout() {
