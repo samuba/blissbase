@@ -95,8 +95,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 		// move hidden elements to the end of description
 		const descriptionElement = $('.event_content_single_page');
-		const hiddenElements = descriptionElement.find('.todo-today-hidden').remove();
-		descriptionElement.append(hiddenElements);
+		const hiddenElements = descriptionElement.find('.tt-hidden').remove();
+		//descriptionElement.append(hiddenElements);
 		const description = cleanProseHtml(descriptionElement.html());
 
 		const icalTimes = extractIcalStartAndEndTimes(html);
@@ -128,17 +128,19 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			$('.data-entry-content-single-page .event_ticket_price_single').text()
 		)!;
 		let host: string | undefined =
-			$('.data-entry-content-single-page .author-link').text()?.trim() || name.split(' w/ ')[1];
+			$('.data-entry-content-single-page .author-link')
+				.filter((_i, el) => !$(el).parent().hasClass('tt-hidden'))
+				.text()?.trim() || name.split(' w/ ')[1];
         host = host.toLowerCase() === 'todo.today' ? undefined : host;
 		const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
 		const sourceUrl = (
 			$('.data-entry-content-single-page .ticket-link').attr('href')! ?? url
 		).replace('TODOTODAY', '');
-		const tags = $('.data-entry-content-single-page .event-category-label-no-image')
+		const tags = $('.tt-single-page-tags-container .tt-tag-box')
 			.map((_index, element) => {
 				const $el = $(element);
                 // dont include hidden tags, they use it to put todo.today in our tags
-				if ($el.hasClass('todo-today-hidden')) return null;
+				if ($el.hasClass('tt-hidden')) return null;
 				// Remove special characters that are not normal text like emojis
 				return $el.text().replace(/[^\w\s\-&]/g, '').trim();
 			})
