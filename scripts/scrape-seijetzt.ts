@@ -64,13 +64,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     private async extractEventUrls(html: string): Promise<string[]> {
         const $ = cheerio.load(html);
         const permalinks: string[] = [];
-        const eventCards = $('div.fi-ta-record');
+        const eventLinks = $('a[wire\\:key^="event-"]');
 
-        eventCards.each((_index, element) => {
-            const $card = $(element);
-            const $link = $card.find('a[href^="https://sei.jetzt/event/"]').first();
+        eventLinks.each((_index, element) => {
+            const $link = $(element);
             const permalink = $link.attr('href');
-
             if (permalink) {
                 permalinks.push(permalink);
             }
@@ -206,8 +204,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
-        const description = $('.prose').first().html();
-        return description ?? undefined;
+        return $('.prose').first().html()?.trim()
     }
 
     extractImageUrls(html: string): string[] | undefined {
