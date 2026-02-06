@@ -39,6 +39,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		// today
 		let html = await customFetch('https://todo.today/ubud/today/', { returnType: 'text' });
 		let $ = cheerio.load(html);
+		$('[aria-labelledby="section-heading-early_tomorrow"]').remove(); // we process events for tomorrow separately
 		let eventUrls = new Set(
 			$('.event_image')
 				.map((_index, element) => $(element).attr('href'))
@@ -66,7 +67,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		);
 		const eventCountBeforeTomorrow = allEvents.length + 0;
 		for (const eventUrl of eventUrls) {
-			const eventHtml = await customFetch(eventUrl, { returnType: 'text' });
+			const eventHtml = await customFetch(eventUrl, { returnType: 'text', headers: { Cookie: authCookie } });
 			const event = await this.extractEventData(eventHtml, eventUrl);
 			if (event) allEvents.push(event);
 		}
