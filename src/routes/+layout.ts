@@ -53,9 +53,9 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
     // --- Meta Tags ---
     const baseUrl = new URL(url.pathname, url.origin).href
     const title = 'Blissbase'
-    const description = 'Hippie Events in deiner Nähe.'
+    const description = 'Achtsame Events in deiner Nähe.'
     const faviconUrl = 'https://www.blissbase.app/favicon.png'
-    const posterUrl = 'https://www.blissbase.app/og-poster.png'
+    const posterUrl = 'https://www.blissbase.app/og-poster.jpg'
     const baseMetaTags = Object.freeze({
         title,
         description,
@@ -70,10 +70,10 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
             images: [
                 {
                     url: posterUrl,
-                    width: 337,
-                    height: 450,
+                    width: 899,
+                    height: 1198,
                     secureUrl: posterUrl,
-                    type: 'image/png'
+                    type: 'image/jpeg'
                 }
             ]
         },

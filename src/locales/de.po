@@ -623,8 +623,8 @@ msgid "Okay"
 msgstr "Okay"
 
 #: src/routes/+layout.ts
-msgid "Hippie Events in deiner Nähe."
-msgstr "Hippie Events in deiner Nähe."
+msgid "Achtsame Events in deiner Nähe."
+msgstr "Achtsame Events in deiner Nähe."
 
 #: src/routes/edit/[id]/+page.server.ts
 msgid "Invalid event ID"
@@ -794,8 +794,8 @@ msgid "Ergebnisse anzeigen"
 msgstr "Ergebnisse anzeigen"
 
 #: src/routes/+page.svelte
-msgid "✨ Hippie Events in deiner Nähe ✨"
-msgstr "✨ Hippie Events in deiner Nähe ✨"
+msgid "✨ Achtsame Events in deiner Nähe ✨"
+msgstr "✨ Achtsame Events in deiner Nähe ✨"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Setze zuerst einen Standort"
