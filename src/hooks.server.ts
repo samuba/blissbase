@@ -17,8 +17,14 @@ loadLocales(main.key, main.loadIDs, main.loadCatalog, locales)
 loadLocales(js.key, js.loadIDs, js.loadCatalog, locales)
 const wuchaleLocalization: Handle = async ({ event, resolve }) => {
     let locale = event.cookies.get('locale')
+    const browserLang = (event.request.headers.get('accept-language') ?? '').split(',')[0]?.split('-')[0]?.trim();
+    if (browserLang === "de") {
+        // force german locale if browser is german. (this overrides the cookie to fix a bug where wrong locale was set in cookies for some time)
+        // TODO: remove this if block in the future when we have a settings to switch language
+        locale = "de";
+    }
     if (!locale || !locales.includes(locale)) { 
-        locale = 'en'
+        locale = browserLang && locales.includes(browserLang) ? browserLang : 'en';
     }
     event.cookies.set('locale', locale, { path: '/' });
     localeStore.locale = locale as 'en' | 'de';
