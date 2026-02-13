@@ -40,7 +40,6 @@ jobs:
   e2e-tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    environment: production
     needs: unit-tests
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +48,21 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase Local
+        run: |
+          supabase start
+          supabase status
+
+      - name: Run database migrations
+        run: |
+          bun run db:push || true
+          supabase status
 
       - name: Install dependencies
         run: bun install
@@ -59,9 +73,9 @@ jobs:
       - name: Run Playwright tests
         env:
           CI: true
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://postgres:postgres@localhost:54322/postgres
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_URL: http://localhost:54321
           PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           PUBLIC_ADMIN_USER_ID: ${{ secrets.PUBLIC_ADMIN_USER_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -79,3 +93,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
