@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 import { wuchale } from '@wuchale/vite-plugin'
 import { enhancedImages } from '@sveltejs/enhanced-img';
+import { resolve } from 'path';
 
 export default defineConfig({
 	plugins: [
@@ -51,6 +52,11 @@ export default defineConfig({
 			}
 		})
 	],
+	resolve: {
+		alias: process.env.E2E_TEST === 'true' ? {
+			'$lib/server/db': resolve('./src/lib/server/db.e2e.ts')
+		} : {}
+	},
 	server: {
 		allowedHosts: ['localdev.soulspots.app', 'localhost', '127.0.0.1', 'blissbase.app', 'blissbase.vercel.app']
 	}
