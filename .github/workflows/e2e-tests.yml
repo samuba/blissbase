@@ -59,7 +59,8 @@ jobs:
         env:
           CI: true
           E2E_TEST: true
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # E2E tests use PGlite (in-memory database) - no external DB needed
+          # Other services still need their configs:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
