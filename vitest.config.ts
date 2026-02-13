@@ -6,7 +6,7 @@ export default defineConfig({
         globals: true,
         environment: 'node',
         include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-        exclude: ['blissbase-telegram-entry', 'node_modules', 'dist', '.idea', '.git', '.cache'],
+        exclude: ['blissbase-telegram-entry', 'node_modules', 'dist', '.idea', '.git', '.cache', 'tests/e2e'],
         env: {
             NODE_ENV: 'test',
             VITEST: 'true',
