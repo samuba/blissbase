@@ -1,9 +1,20 @@
 import { test, expect } from '@playwright/test';
+import { createEvent, createEvents, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent } from './helpers/seed';
 
 test.describe('Filter Modal', () => {
 	test.beforeEach(async ({ page }) => {
+		await clearTestEvents(page);
+		await createEvents(page, [
+			createMeditationEvent(),
+			createYogaEvent(),
+			createOnlineEvent()
+		]);
 		await page.goto('/');
 		await page.waitForSelector('[data-testid="event-card"]', { timeout: 10000 });
+	});
+
+	test.afterEach(async ({ page }) => {
+		await clearTestEvents(page);
 	});
 
 	test('filter modal opens and closes', async ({ page }) => {
@@ -51,6 +62,13 @@ test.describe('Filter Modal', () => {
 	});
 
 	test('distance filter with location input', async ({ page }) => {
+		// Create event with coordinates for distance filtering
+		await createEvent(page, createMeditationEvent({ 
+			latitude: 52.5200, 
+			longitude: 13.4050,
+			address: ['Berlin Center', 'Berlin']
+		}));
+		
 		// Open filter modal
 		const filterButton = page.locator('button').filter({ hasText: /Filter/i }).first();
 		await filterButton.click();
@@ -210,8 +228,18 @@ test.describe('Filter Modal', () => {
 
 test.describe('Filter Combinations', () => {
 	test.beforeEach(async ({ page }) => {
+		await clearTestEvents(page);
+		await createEvents(page, [
+			createMeditationEvent({ address: ['Berlin Center', 'Berlin'] }),
+			createYogaEvent({ address: ['Munich Studio', 'Munich'] }),
+			createOnlineEvent()
+		]);
 		await page.goto('/');
 		await page.waitForSelector('[data-testid="event-card"]', { timeout: 10000 });
+	});
+
+	test.afterEach(async ({ page }) => {
+		await clearTestEvents(page);
 	});
 
 	test('category + search combination', async ({ page }) => {

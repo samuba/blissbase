@@ -1,9 +1,16 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { createEvent, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent, createMultiDayEvent } from './helpers/seed';
 
 test.describe('Event Details Modal', () => {
 	test.beforeEach(async ({ page }) => {
+		await clearTestEvents(page);
+		await createEvent(page, createMeditationEvent());
 		await page.goto('/');
 		await page.waitForSelector('[data-testid="event-card"]', { timeout: 10000 });
+	});
+
+	test.afterEach(async ({ page }) => {
+		await clearTestEvents(page);
 	});
 
 	test('event details modal displays all required elements', async ({ page }) => {
@@ -42,6 +49,14 @@ test.describe('Event Details Modal', () => {
 	});
 
 	test('event details show location with map link', async ({ page }) => {
+		await createEvent(page, createMeditationEvent({ 
+			address: ['Test Venue', 'Berlin'],
+			latitude: 52.5200,
+			longitude: 13.4050
+		}));
+		await page.reload();
+		await page.waitForSelector('[data-testid="event-card"]', { timeout: 10000 });
+		
 		await expectAnyEventModalToContain({
 			page,
 			description: `a location map link`,
@@ -50,6 +65,10 @@ test.describe('Event Details Modal', () => {
 	});
 
 	test('event details show tags/categories', async ({ page }) => {
+		await createEvent(page, createYogaEvent({ tags: ['Yoga', 'Fitness', 'Wellness'] }));
+		await page.reload();
+		await page.waitForSelector('[data-testid="event-card"]', { timeout: 10000 });
+		
 		await expectAnyEventModalToContain({
 			page,
 			description: `tags/categories`,
@@ -162,8 +181,14 @@ test.describe('Event Details Modal', () => {
 
 test.describe('Navigation Menu', () => {
 	test.beforeEach(async ({ page }) => {
+		await clearTestEvents(page);
+		await createEvent(page, createMeditationEvent());
 		await page.goto('/');
 		await page.waitForSelector('[data-testid="event-card"]', { timeout: 10000 });
+	});
+
+	test.afterEach(async ({ page }) => {
+		await clearTestEvents(page);
 	});
 
 	test('hamburger menu opens welcome modal', async ({ page }) => {
@@ -211,27 +236,15 @@ test.describe('Navigation Menu', () => {
 
 test.describe('Event Deep Linking', () => {
 	test('event page loads directly from URL', async ({ page }) => {
-		// First get an event slug from the main page
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="event-card"]', { timeout: 10000 });
-
-		const firstCard = page.locator('[data-testid="event-card"]').first();
-		await firstCard.click();
-
-		const modal = page.locator('[role="dialog"], .modal').first();
-		await expect(modal).toBeVisible();
-
-		// Get the current URL which should contain the event slug
-		const currentUrl = page.url();
+		await clearTestEvents(page);
+		const { event } = await createEvent(page, createMeditationEvent({ slug: 'test-deep-link-event' }));
 		
-		if (currentUrl.includes('/202') || currentUrl.includes('/event')) {
-			// Navigate directly to that URL
-			await page.goto(currentUrl);
-			
-			// Event details should be visible (either as modal or page)
-			await expect(page.locator('body')).toBeVisible();
-			await expect(page.locator('h1, h2').first()).toBeVisible();
-		}
+		// Navigate directly to the event URL
+		await page.goto(`/${event.slug}`);
+		
+		// Event details should be visible (either as modal or page)
+		await expect(page.locator('body')).toBeVisible();
+		await expect(page.locator('h1, h2').first()).toBeVisible();
 	});
 });
 
