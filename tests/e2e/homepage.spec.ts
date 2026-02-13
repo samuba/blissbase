@@ -68,9 +68,10 @@ test.describe('Homepage', () => {
 			// Chip should now be selected/active
 			await expect(meditationChip).toHaveClass(/bg-primary|selected|active/i).catch(() => {});
 			
-			// Events should be filtered (count may be same or different)
+			// Events should be filtered and the displayed set should change
 			const filteredCount = await page.locator('[data-testid="event-card"]').count();
-			expect(filteredCount).toBeGreaterThanOrEqual(0);
+			expect(filteredCount).toBeLessThanOrEqual(initialCount);
+			expect(filteredCount).not.toBe(initialCount);
 		}
 	});
 
