@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { db, s } from '$lib/server/db';
+import { sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 // Test data seeding endpoint - only available in E2E mode
@@ -56,7 +57,3 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: String(error) }, { status: 500 });
 	}
 };
-
-// Helper for raw SQL queries in tests
-import { sql } from 'drizzle-orm';
-export { sql };
