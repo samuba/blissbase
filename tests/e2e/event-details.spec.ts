@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 
 test.describe('Event Details Modal', () => {
 	test.beforeEach(async ({ page }) => {
@@ -33,44 +33,27 @@ test.describe('Event Details Modal', () => {
 	});
 
 	test('event details show price information', async ({ page }) => {
-		const firstCard = page.locator('[data-testid="event-card"]').first();
-		await firstCard.click();
-
-		const modal = page.locator('[role="dialog"], .modal').first();
-		await expect(modal).toBeVisible();
-
-		// Look for price info (Free or € amount)
-		const priceElement = modal.locator('text=/Free|€|\\$|Price/i').first();
-		await priceElement.isVisible().catch(() => {
-			// Price might not be present on all events
+		await expectAnyEventModalToContain({
+			page,
+			description: `price information`,
+			createTargetLocator: (modal) =>
+				modal.locator(`text=/Free|€|\\$|Price|Preis|Preise|kostenlos/i`).first()
 		});
 	});
 
 	test('event details show location with map link', async ({ page }) => {
-		const firstCard = page.locator('[data-testid="event-card"]').first();
-		await firstCard.click();
-
-		const modal = page.locator('[role="dialog"], .modal').first();
-		await expect(modal).toBeVisible();
-
-		// Look for location info
-		const locationElement = modal.locator('text=/Location|Address|Venue/i, a[href*="google.com/maps"]').first();
-		await locationElement.isVisible().catch(() => {
-			// Location might not be present on all events
+		await expectAnyEventModalToContain({
+			page,
+			description: `a location map link`,
+			createTargetLocator: (modal) => modal.locator(`a[href*="google.com/maps"]`).first()
 		});
 	});
 
 	test('event details show tags/categories', async ({ page }) => {
-		const firstCard = page.locator('[data-testid="event-card"]').first();
-		await firstCard.click();
-
-		const modal = page.locator('[role="dialog"], .modal').first();
-		await expect(modal).toBeVisible();
-
-		// Look for tags section
-		const tags = modal.locator('.tag, [data-testid="tag"], button').filter({ hasText: /Meditation|Yoga|Workshop|Dance/i }).first();
-		await tags.isVisible().catch(() => {
-			// Tags might not be present on all events
+		await expectAnyEventModalToContain({
+			page,
+			description: `tags/categories`,
+			createTargetLocator: (modal) => modal.locator(`h2`).filter({ hasText: /Tags/i }).first()
 		});
 	});
 
@@ -109,10 +92,11 @@ test.describe('Event Details Modal', () => {
 		await expect(modal).toBeVisible();
 
 		// Look for copy/share button
-		const copyButton = modal.locator('button').filter({ hasText: /Copy|Share|Link/i }).first();
-		await copyButton.isVisible().catch(() => {
-			// Copy button might not be present
-		});
+		const copyButton = modal
+			.locator(`button`)
+			.filter({ hasText: /Copy|Share|Link|Teilen|kopieren/i })
+			.first();
+		await expect(copyButton).toBeVisible();
 	});
 
 	test('modal closes with X button', async ({ page }) => {
@@ -250,3 +234,38 @@ test.describe('Event Deep Linking', () => {
 		}
 	});
 });
+
+async function expectAnyEventModalToContain(args: {
+	page: Page;
+	description: string;
+	createTargetLocator: (modal: Locator) => Locator;
+	maxCardsToCheck?: number;
+}) {
+	const { page, description, createTargetLocator, maxCardsToCheck = 10 } = args;
+	const eventCards = page.locator(`[data-testid="event-card"]`);
+	const totalCards = await eventCards.count();
+	const cardsToCheck = Math.min(totalCards, maxCardsToCheck);
+
+	if (!cardsToCheck) {
+		throw new Error(`No event cards available while checking for ${description}`);
+	}
+
+	for (let index = 0; index < cardsToCheck; index += 1) {
+		await eventCards.nth(index).click();
+
+		const modal = page.locator(`[role="dialog"], .modal`).first();
+		await expect(modal).toBeVisible();
+
+		const target = createTargetLocator(modal);
+		if (await target.isVisible()) {
+			return;
+		}
+
+		await page.keyboard.press(`Escape`);
+		await expect(modal).not.toBeVisible({ timeout: 5000 });
+	}
+
+	throw new Error(
+		`Expected ${description} in at least one event details modal, but none of the first ${cardsToCheck} events had it`
+	);
+}
