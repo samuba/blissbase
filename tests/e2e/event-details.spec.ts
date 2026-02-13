@@ -138,7 +138,38 @@ test.describe('Event Details Modal', () => {
 		await expect(modal).toBeVisible();
 
 		// Click outside the modal (on the backdrop)
-		await page.keyboard.press('Escape');
+		const modalBox = await modal.boundingBox();
+		const viewport = page.viewportSize();
+
+		if (!modalBox || !viewport) {
+			throw new Error(`Could not determine modal or viewport dimensions for outside click test`);
+		}
+
+		const candidatePoints = [
+			{ x: Math.floor(modalBox.x) - 10, y: Math.floor(modalBox.y + modalBox.height / 2) },
+			{ x: Math.floor(modalBox.x + modalBox.width) + 10, y: Math.floor(modalBox.y + modalBox.height / 2) },
+			{ x: 5, y: 5 },
+			{ x: viewport.width - 5, y: 5 },
+			{ x: 5, y: viewport.height - 5 },
+			{ x: viewport.width - 5, y: viewport.height - 5 }
+		];
+
+		const clickPoint = candidatePoints.find(({ x, y }) => {
+			const isInViewport = x >= 0 && y >= 0 && x < viewport.width && y < viewport.height;
+			const isInsideModal =
+				x >= modalBox.x &&
+				x <= modalBox.x + modalBox.width &&
+				y >= modalBox.y &&
+				y <= modalBox.y + modalBox.height;
+
+			return isInViewport && !isInsideModal;
+		});
+
+		if (!clickPoint) {
+			throw new Error(`Could not find a click point outside the modal bounds`);
+		}
+
+		await page.mouse.click(clickPoint.x, clickPoint.y);
 
 		// Modal should close
 		await expect(modal).not.toBeVisible({ timeout: 5000 });
