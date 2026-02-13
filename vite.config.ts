@@ -7,6 +7,8 @@ import { wuchale } from '@wuchale/vite-plugin'
 import { enhancedImages } from '@sveltejs/enhanced-img';
 import { resolve } from 'path';
 
+const isE2E = process.env.E2E_TEST === 'true';
+
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
@@ -50,10 +52,20 @@ export default defineConfig({
 					}
 				]
 			}
-		})
-	],
+		}),
+		// E2E mode: replace db module with PGlite version
+		isE2E && {
+			name: 'e2e-db-replacement',
+			enforce: 'pre',
+			resolveId(id) {
+				if (id === '$lib/server/db' || id.endsWith('/src/lib/server/db')) {
+					return resolve('./src/lib/server/db.e2e.ts');
+				}
+			}
+		}
+	].filter(Boolean),
 	resolve: {
-		alias: process.env.E2E_TEST === 'true' ? {
+		alias: isE2E ? {
 			'$lib/server/db': resolve('./src/lib/server/db.e2e.ts')
 		} : {}
 	},
