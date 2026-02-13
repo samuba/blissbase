@@ -28,6 +28,7 @@ jobs:
   e2e-tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    environment: production
     needs: unit-tests
     steps:
       - uses: actions/checkout@v4
@@ -43,24 +44,21 @@ jobs:
       - name: Install Playwright Browsers
         run: bunx playwright install --with-deps chromium
 
-      - name: Create .env file
-        run: |
-          echo "DATABASE_URL=file:local.db" > .env
-          echo "GOOGLE_MAPS_API_KEY=test-api-key" >> .env
-          echo "PUBLIC_SUPABASE_URL=https://test.supabase.co" >> .env
-          echo "PUBLIC_SUPABASE_PUBLISHABLE_KEY=test-publishable-key" >> .env
-          echo "PUBLIC_ADMIN_USER_ID=test-admin-id" >> .env
-          echo "TELEGRAM_BOT_TOKEN=test-telegram-token" >> .env
-          echo "S3_ACCESS_KEY_ID=test-s3-key" >> .env
-          echo "S3_SECRET_ACCESS_KEY=test-s3-secret" >> .env
-          echo "S3_BUCKET_NAME=test-bucket" >> .env
-          echo "CLOUDFLARE_ACCOUNT_ID=test-account-id" >> .env
-          echo "ADMIN_SECRET=test-admin-secret" >> .env
-
       - name: Run Playwright tests
-        run: bun run test:e2e
         env:
           CI: true
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          PUBLIC_ADMIN_USER_ID: ${{ secrets.PUBLIC_ADMIN_USER_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+        run: bun run test:e2e
 
       - name: Upload test results
         if: always()
