@@ -164,6 +164,12 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 
 export const estimateEventCount = prerender(async () => {
     // fast way to estimate the number of events in the database
+    // E2E mode uses PGlite which doesn't support pg_class queries the same way
+    if (process.env.E2E_TEST === 'true') {
+        const count = await db.select({ count: sql`count(*)`.mapWith(Number) }).from(s.events);
+        return count[0]?.count || 0;
+    }
+
     const [{ estimate }] = await db.execute(sql`
         SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = ${getTableName(s.events)}::regclass
     `);
