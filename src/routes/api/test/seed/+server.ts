@@ -41,9 +41,11 @@ export const POST: RequestHandler = async ({ request }) => {
 				}).returning();
 				return json({ success: true, event });
 
-			case 'clearEvents':
-				await db.delete(s.events).where(sql`${s.events.source} = 'test'`);
+			case 'clearEvents': {
+				const source = typeof data?.source === 'string' && data.source.length > 0 ? data.source : 'test';
+				await db.delete(s.events).where(sql`${s.events.source} = ${source}`);
 				return json({ success: true });
+			}
 
 			case 'clearAllEvents':
 				await db.delete(s.events);

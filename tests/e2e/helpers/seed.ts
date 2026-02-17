@@ -21,11 +21,21 @@ export interface TestEvent {
 	attendanceMode?: 'offline' | 'online' | 'offline+online';
 }
 
+function getWorkerTestSource() {
+	const workerIndex = process.env.TEST_WORKER_INDEX ?? process.env.TEST_PARALLEL_INDEX ?? '0';
+	return `test-worker-${workerIndex}`;
+}
+
 export async function createEvent(page: Page, eventData: TestEvent = {}) {
+	const source = eventData.source ?? getWorkerTestSource();
+
 	const response = await page.request.post('/api/test/seed', {
 		data: {
 			action: 'createEvent',
-			data: eventData
+			data: {
+				...eventData,
+				source
+			}
 		}
 	});
 
@@ -43,7 +53,12 @@ export async function createEvents(page: Page, events: TestEvent[]) {
 
 export async function clearTestEvents(page: Page) {
 	const response = await page.request.post('/api/test/seed', {
-		data: { action: 'clearEvents' }
+		data: {
+			action: 'clearEvents',
+			data: {
+				source: getWorkerTestSource()
+			}
+		}
 	});
 
 	if (!response.ok()) {
