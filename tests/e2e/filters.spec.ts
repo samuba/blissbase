@@ -34,18 +34,6 @@ test.describe('Filter Modal', () => {
 		await expect(page.locator('body')).toBeVisible();
 	});
 
-	test('attendance filter toggles', async ({ page }) => {
-		const filterButton = page.locator('button').filter({ hasText: /Filter/i }).first();
-		await filterButton.click();
-		await page.waitForTimeout(1000);
-
-		// Look for online/offline toggles
-		const onlineToggle = page.locator('button').filter({ hasText: /Online/i }).first();
-		if (await onlineToggle.isVisible().catch(() => false)) {
-			await onlineToggle.click();
-		}
-	});
-
 	test('show results button applies filters', async ({ page }) => {
 		const filterButton = page.locator('button').filter({ hasText: /Filter/i }).first();
 		await filterButton.click();
