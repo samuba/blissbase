@@ -4,15 +4,36 @@ import { getTableColumns, sql, SQL } from 'drizzle-orm';
 import postgres from 'postgres'
 import * as schema from './schema';
 import type { PgTable } from 'drizzle-orm/pg-core';
+import type { PGlite } from '@electric-sql/pglite';
 
 export * from 'drizzle-orm';
 export const s = schema;
 
-// E2E test mode uses PGlite instead of PostgreSQL
-let db: any;
+/**
+ * Creates the production Postgres drizzle instance.
+ * @example
+ * const db = createPostgresDb();
+ */
+const createPostgresDb = () => {
+	if (!process.env.DATABASE_URL) {
+		throw new Error('DATABASE_URL is not set');
+	}
 
-if (process.env.E2E_TEST === 'true') {
-	// For E2E tests, dynamically import PGlite
+	return drizzle({
+		client: postgres(process.env.DATABASE_URL, {
+			prepare: false
+		}),
+		schema,
+		casing: 'snake_case'
+	});
+};
+
+/**
+ * Creates and initializes the E2E PGlite drizzle instance.
+ * @example
+ * const db = await createPgliteDb();
+ */
+const createPgliteDb = async () => {
 	const { PGlite } = await import('@electric-sql/pglite');
 	const { drizzle: pgliteDrizzle } = await import('drizzle-orm/pglite');
 	const { cube } = await import('@electric-sql/pglite/contrib/cube');
@@ -23,17 +44,25 @@ if (process.env.E2E_TEST === 'true') {
 		extensions: { cube, earthdistance, pg_trgm }
 	});
 
-	db = pgliteDrizzle(client, { schema, casing: 'snake_case' });
+	await initializePglite({ client });
+	console.log('E2E test database initialized');
 
-	// Initialize extensions and schema
+	return pgliteDrizzle(client, { schema, casing: 'snake_case' });
+};
+
+/**
+ * Applies required extensions and schema migrations for PGlite.
+ * @example
+ * await initializePglite({ client });
+ */
+const initializePglite = async ({ client }: InitializePgliteArgs) => {
 	await client.exec('CREATE EXTENSION IF NOT EXISTS cube;');
 	await client.exec('CREATE EXTENSION IF NOT EXISTS earthdistance;');
 	await client.exec('CREATE EXTENSION IF NOT EXISTS pg_trgm;');
 
-	// Push schema using drizzle-kit API
 	const { createRequire } = await import('node:module');
 	const require = createRequire(import.meta.url);
-	const { generateDrizzleJson, generateMigration } = require('drizzle-kit/api');
+	const { generateDrizzleJson, generateMigration } = require('drizzle-kit/api') as typeof import('drizzle-kit/api');
 
 	const prevJson = generateDrizzleJson({});
 	const curJson = generateDrizzleJson(schema, prevJson.id, undefined, 'snake_case');
@@ -42,26 +71,33 @@ if (process.env.E2E_TEST === 'true') {
 	for (const statement of statements) {
 		try {
 			await client.exec(statement);
-		} catch (e) {
-			// Ignore errors for existing tables
+		} catch (error) {
+			if (isIgnorableMigrationError(error)) {
+				continue;
+			}
+
+			throw error;
 		}
 	}
-	console.log('E2E test database initialized');
-} else {
-	if (!process.env.DATABASE_URL) {
-		throw new Error('DATABASE_URL is not set');
+};
+
+/**
+ * Returns true for idempotent migration failures we can safely ignore.
+ * @example
+ * if (isIgnorableMigrationError(error)) continue;
+ */
+const isIgnorableMigrationError = (error: unknown) => {
+	if (!(error instanceof Error)) {
+		return false;
 	}
 
-	db = drizzle({
-		client: postgres(process.env.DATABASE_URL, {
-			prepare: false
-		}),
-		schema,
-		casing: 'snake_case'
-	});
-}
+	return error.message.toLowerCase().includes('already exists');
+};
 
-export { db };
+export type Db = ReturnType<typeof createPostgresDb> | Awaited<ReturnType<typeof createPgliteDb>>;
+export const db: Db = process.env.E2E_TEST === 'true'
+	? await createPgliteDb()
+	: createPostgresDb();
 
 /**
  * Builds a set of columns to update when using the `onConflictDoUpdate` method.
@@ -83,4 +119,8 @@ export const buildConflictUpdateColumns = <
 			acc[column] = sql.raw(`excluded.${colName}`);
 			return acc;
 		}, {} as Record<Q, SQL>);
+};
+
+type InitializePgliteArgs = {
+	client: PGlite;
 };
