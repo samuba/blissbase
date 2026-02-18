@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { UiEvent } from '$lib/server/events';
-	import { Dialog } from 'bits-ui';
+	import { Dialog } from '$lib/components/dialog';
 	import EventDetails from './EventDetails.svelte';
 	import { page } from '$app/state';
 	import { eventsStore } from '$lib/eventsStore.svelte';

@@ -1,4 +1,17 @@
-active state vom datepicker geht nicht weg bei reset
+den ecstatic dance dj um rat fragen, error gefixt
+johnnies sachen durchgucken
+
+###
+https://www.fyndery.de/ scrapen
+https://holistictravelplan.pt/ scrapen?
+
+tags anklicken aus popup liste scrollt nach oben
+tags anklicken
+tags klicken zeigt nicht den gefilterten tag oben an
+
+events editieren checken insbesondere tags!
+
+häßlicher schwarzer ring bei fokus um inputs
 
 sort distanz everywhere geht nicht
 
