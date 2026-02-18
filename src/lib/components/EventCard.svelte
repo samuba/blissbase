@@ -68,6 +68,7 @@
 		<article
 			class="card bg-base-100 fade-out-0 flex flex-col rounded-lg shadow-sm transition-all sm:flex-row {className}"
 			data-event-id={event.id}
+			data-testid="event-card"
 		>
 			<div
 				class={[

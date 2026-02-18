@@ -393,14 +393,23 @@ async function main() {
     }
 
     function shouldBeListed({ name }: { name: string }): boolean {
-        // yoga classes are too boring to list
         const nameBlacklist = [
+            // yoga classes are too boring to list
             'hatha yoga',
             'hatha-yoga',
             'yin yoga',
             'yin-yoga',
             'yoga im ',
             'yoga für ',
+            // no crypto 
+            'bitcoin', 
+            'crypto',
+            'blockchain',
+            'ethereum',
+            // no low frequency
+            'pub crawl',
+            'business',
+            'entrepreneur'
         ];
         return nameBlacklist.every(x => !name.toLowerCase().includes(x));
     }

@@ -31,3 +31,7 @@ events.json
 dev-dist
 
 src/locales/.wuchale
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
