@@ -1,11 +1,10 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js'
-import { eq, getTableColumns, getTableName, sql, SQL } from 'drizzle-orm';
+import { getTableColumns, sql, SQL } from 'drizzle-orm';
 import postgres from 'postgres'
 import * as schema from './schema';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { PGlite } from '@electric-sql/pglite';
-import { DATABASE_URL, E2E_TEST } from '$env/static/private';
 
 const casing = 'snake_case';
 
@@ -13,13 +12,13 @@ export * from 'drizzle-orm';
 export const s = schema;
 
 type DB = ReturnType<typeof createPostgresDrizzle>; // not adding `| ReturnType<typeof createPgliteDrizzle>`  because it has weird type errors when using .returning(...) 
-export const db: DB = E2E_TEST === 'true' ? 
+export const db: DB = process.env.E2E_TEST === 'true' ? 
 	await createPgliteDrizzle() as unknown as DB : 
 	createPostgresDrizzle();
 
 function createPostgresDrizzle() {
 	return drizzle({
-		client: postgres(DATABASE_URL, {
+		client: postgres(process.env.DATABASE_URL!, {
 			prepare: false
 		}),
 		schema,
