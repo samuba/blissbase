@@ -52,8 +52,23 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Install Playwright Browsers
+      - name: Get Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
+      
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ env.PLAYWRIGHT_VERSION }}
+      
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: bunx playwright install --with-deps chromium
+      
+      - name: Install system deps only (if cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium
 
       - name: Run Playwright tests
         env:
