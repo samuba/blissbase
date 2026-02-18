@@ -2,7 +2,7 @@ import { fetchEvents, loadEventsParamsSchema, prepareEventsResultForUi } from "$
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
 import { getRequestEvent, command, query, prerender } from '$app/server';
 import * as v from 'valibot';
-import { db, eq, getTableName, s, sql } from "./server/db";
+import { db, eq, s, sql } from "./server/db";
 import { error } from "@sveltejs/kit";
 import { isAdminSession } from "$lib/server/admin";
 import { posthogCapture } from "$lib/server/common";
@@ -127,7 +127,7 @@ export const updateEvent = command(updateEventSchema, async (params) => {
     console.log({ params })
     const event = await assertUserIsAllowedToEditEvent(params.event.id, params.hostSecret);
 
-    const { id, ...eventWithoutId } = params.event;
+    const { id: _, ...eventWithoutId } = params.event;
     await db.update(s.events).set({
         ...eventWithoutId,
         updatedAt: sql`now()`
@@ -163,18 +163,7 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 });
 
 export const estimateEventCount = prerender(async () => {
-    // fast way to estimate the number of events in the database
-    // E2E mode uses PGlite which doesn't support pg_class queries the same way
-    if (process.env.E2E_TEST === 'true') {
-        const count = await db.select({ count: sql`count(*)`.mapWith(Number) }).from(s.events);
-        return count[0]?.count || 0;
-    }
-
-    const [{ estimate }] = await db.execute(sql`
-        SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = ${getTableName(s.events)}::regclass
-    `);
-
-    return Number.parseInt(estimate as string);
+    return await db.$count(s.events);
 });
 
 async function assertUserIsAllowedToEditEvent(eventId: number, hostSecret: string) {

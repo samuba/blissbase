@@ -8,15 +8,13 @@ export function posthog() {
     return locals().posthog
 }
 
-export function posthogCapture(event: string, properties: Record<string, any>) {
-    const { posthog, user } = locals()
-    if (user?.id) {
+export function posthogCapture(event: string, properties: Record<string, unknown>) {
+    const { posthog, userId } = locals()
+    if (userId) {
         posthog.captureImmediate({
             event,
-            distinctId: user?.id,
+            distinctId: userId,
             properties
         })
-    } else {
-        console.warn(`No posthog distinct id or user id found for event: ${event}`, properties)
     }
 }

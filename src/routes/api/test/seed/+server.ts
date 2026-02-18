@@ -2,10 +2,11 @@ import { json } from '@sveltejs/kit';
 import { db, s } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { E2E_TEST } from '$env/static/private';
+import { dev } from '$app/environment';
 
-// Test data seeding endpoint - only available in E2E mode
 export const POST: RequestHandler = async ({ request }) => {
-	if (process.env.E2E_TEST !== 'true') {
+	if (E2E_TEST !== 'true' || !dev) {
 		return json({ error: 'Only available in E2E mode' }, { status: 403 });
 	}
 
@@ -13,7 +14,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	try {
 		switch (action) {
-			case 'createEvent':
+			case 'createEvent': {
 				const [event] = await db.insert(s.events).values({
 					name: data.name || 'Test Event',
 					description: data.description || 'Test description',
@@ -29,9 +30,9 @@ export const POST: RequestHandler = async ({ request }) => {
 					latitude: data.latitude || null,
 					longitude: data.longitude || null,
 					tags: data.tags || ['Meditation'],
-					source: data.source || 'test',
+					source: data.source || 'awara',
 					sourceUrl: data.sourceUrl || 'https://example.com',
-					slug: data.slug || `test-event-${Date.now()}`,
+					slug: data.slug || `e2e-${Date.now()}`,
 					listed: true,
 					soldOut: false,
 					hostSecret: data.hostSecret || 'test-secret',
@@ -40,10 +41,15 @@ export const POST: RequestHandler = async ({ request }) => {
 					updatedAt: new Date()
 				}).returning();
 				return json({ success: true, event });
+			}
 
 			case 'clearEvents': {
-				const source = typeof data?.source === 'string' && data.source.length > 0 ? data.source : 'test';
-				await db.delete(s.events).where(sql`${s.events.source} = ${source}`);
+				const slugPrefix = data?.slugPrefix;
+				if (slugPrefix) {
+					await db.delete(s.events).where(sql`${s.events.slug} LIKE ${slugPrefix + '%'}`);
+				} else {
+					await db.delete(s.events);
+				}
 				return json({ success: true });
 			}
 

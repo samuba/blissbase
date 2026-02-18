@@ -1,39 +1,34 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js'
-import { getTableColumns, sql, SQL } from 'drizzle-orm';
+import { eq, getTableColumns, getTableName, sql, SQL } from 'drizzle-orm';
 import postgres from 'postgres'
 import * as schema from './schema';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { PGlite } from '@electric-sql/pglite';
+import { DATABASE_URL, E2E_TEST } from '$env/static/private';
+
+const casing = 'snake_case';
 
 export * from 'drizzle-orm';
 export const s = schema;
 
-/**
- * Creates the production Postgres drizzle instance.
- * @example
- * const db = createPostgresDb();
- */
-const createPostgresDb = () => {
-	if (!process.env.DATABASE_URL) {
-		throw new Error('DATABASE_URL is not set');
-	}
+type DB = ReturnType<typeof createPostgresDrizzle>; // not adding `| ReturnType<typeof createPgliteDrizzle>`  because it has weird type errors when using .returning(...) 
+export const db: DB = E2E_TEST === 'true' ? 
+	await createPgliteDrizzle() as unknown as DB : 
+	createPostgresDrizzle();
 
+function createPostgresDrizzle() {
 	return drizzle({
-		client: postgres(process.env.DATABASE_URL, {
+		client: postgres(DATABASE_URL, {
 			prepare: false
 		}),
 		schema,
-		casing: 'snake_case'
+		casing
 	});
 };
 
-/**
- * Creates and initializes the E2E PGlite drizzle instance.
- * @example
- * const db = await createPgliteDb();
- */
-const createPgliteDb = async () => {
+// Only used for E2E tests
+async function createPgliteDrizzle() {
 	const { PGlite } = await import('@electric-sql/pglite');
 	const { drizzle: pgliteDrizzle } = await import('drizzle-orm/pglite');
 	const { cube } = await import('@electric-sql/pglite/contrib/cube');
@@ -44,22 +39,16 @@ const createPgliteDb = async () => {
 		extensions: { cube, earthdistance, pg_trgm }
 	});
 
-	await initializePglite({ client });
-	console.log('E2E test database initialized');
+	await migratePglite(client);
+	console.log('E2E test database migrated');
 
-	return pgliteDrizzle(client, { schema, casing: 'snake_case' });
+	return pgliteDrizzle(client, { 
+		schema, 
+		casing
+	});
 };
 
-/**
- * Applies required extensions and schema migrations for PGlite.
- * @example
- * await initializePglite({ client });
- */
-const initializePglite = async ({ client }: InitializePgliteArgs) => {
-	await client.exec('CREATE EXTENSION IF NOT EXISTS cube;');
-	await client.exec('CREATE EXTENSION IF NOT EXISTS earthdistance;');
-	await client.exec('CREATE EXTENSION IF NOT EXISTS pg_trgm;');
-
+async function migratePglite(client: PGlite) {
 	const { createRequire } = await import('node:module');
 	const require = createRequire(import.meta.url);
 	const { generateDrizzleJson, generateMigration } = require('drizzle-kit/api') as typeof import('drizzle-kit/api');
@@ -69,35 +58,9 @@ const initializePglite = async ({ client }: InitializePgliteArgs) => {
 	const statements = await generateMigration(prevJson, curJson);
 
 	for (const statement of statements) {
-		try {
-			await client.exec(statement);
-		} catch (error) {
-			if (isIgnorableMigrationError(error)) {
-				continue;
-			}
-
-			throw error;
-		}
+		await client.exec(statement);
 	}
 };
-
-/**
- * Returns true for idempotent migration failures we can safely ignore.
- * @example
- * if (isIgnorableMigrationError(error)) continue;
- */
-const isIgnorableMigrationError = (error: unknown) => {
-	if (!(error instanceof Error)) {
-		return false;
-	}
-
-	return error.message.toLowerCase().includes('already exists');
-};
-
-export type Db = ReturnType<typeof createPostgresDb> | Awaited<ReturnType<typeof createPgliteDb>>;
-export const db: Db = process.env.E2E_TEST === 'true'
-	? await createPgliteDb()
-	: createPostgresDb();
 
 /**
  * Builds a set of columns to update when using the `onConflictDoUpdate` method.
@@ -119,8 +82,4 @@ export const buildConflictUpdateColumns = <
 			acc[column] = sql.raw(`excluded.${colName}`);
 			return acc;
 		}, {} as Record<Q, SQL>);
-};
-
-type InitializePgliteArgs = {
-	client: PGlite;
 };

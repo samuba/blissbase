@@ -21,20 +21,28 @@ export interface TestEvent {
 	attendanceMode?: 'offline' | 'online' | 'offline+online';
 }
 
-function getWorkerTestSource() {
+function getWorkerSlugPrefix() {
 	const workerIndex = process.env.TEST_WORKER_INDEX ?? process.env.TEST_PARALLEL_INDEX ?? '0';
-	return `test-worker-${workerIndex}`;
+	return `e2e-w${workerIndex}`;
 }
 
+/**
+ * Creates a test event via the seed API. Slug is auto-prefixed for worker isolation.
+ *
+ * @example await createEvent(page, createMeditationEvent())
+ */
 export async function createEvent(page: Page, eventData: TestEvent = {}) {
-	const source = eventData.source ?? getWorkerTestSource();
+	const prefix = getWorkerSlugPrefix();
+	const slug = eventData.slug
+		? `${prefix}-${eventData.slug}`
+		: `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 	const response = await page.request.post('/api/test/seed', {
 		data: {
 			action: 'createEvent',
 			data: {
 				...eventData,
-				source
+				slug
 			}
 		}
 	});
@@ -47,16 +55,26 @@ export async function createEvent(page: Page, eventData: TestEvent = {}) {
 	return response.json();
 }
 
+/**
+ * Creates multiple test events in parallel.
+ *
+ * @example await createEvents(page, [createMeditationEvent(), createYogaEvent()])
+ */
 export async function createEvents(page: Page, events: TestEvent[]) {
 	return Promise.all(events.map(e => createEvent(page, e)));
 }
 
+/**
+ * Clears test events for the current worker by slug prefix.
+ *
+ * @example await clearTestEvents(page)
+ */
 export async function clearTestEvents(page: Page) {
 	const response = await page.request.post('/api/test/seed', {
 		data: {
 			action: 'clearEvents',
 			data: {
-				source: getWorkerTestSource()
+				slugPrefix: getWorkerSlugPrefix()
 			}
 		}
 	});
@@ -67,6 +85,11 @@ export async function clearTestEvents(page: Page) {
 	}
 }
 
+/**
+ * Clears all events from the database.
+ *
+ * @example await clearAllEvents(page)
+ */
 export async function clearAllEvents(page: Page) {
 	const response = await page.request.post('/api/test/seed', {
 		data: { action: 'clearAllEvents' }
@@ -78,7 +101,6 @@ export async function clearAllEvents(page: Page) {
 	}
 }
 
-// Common test event factories
 export function createMeditationEvent(overrides: TestEvent = {}): TestEvent {
 	return {
 		name: 'Meditation Workshop',
@@ -86,7 +108,10 @@ export function createMeditationEvent(overrides: TestEvent = {}): TestEvent {
 		startAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 		address: ['Zen Center', 'Berlin'],
 		price: 'Free',
+		host: 'Awara Studio',
 		tags: ['Meditation', 'Wellness'],
+		source: 'awara',
+		sourceUrl: 'https://awara.com/meditation-workshop',
 		...overrides
 	};
 }
@@ -98,7 +123,10 @@ export function createYogaEvent(overrides: TestEvent = {}): TestEvent {
 		startAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
 		address: ['Yoga Studio', 'Munich'],
 		price: '€15',
+		host: 'Heilnetz München',
 		tags: ['Yoga', 'Fitness'],
+		source: 'heilnetz',
+		sourceUrl: 'https://heilnetz.de/yoga-flow',
 		...overrides
 	};
 }
@@ -110,8 +138,26 @@ export function createOnlineEvent(overrides: TestEvent = {}): TestEvent {
 		startAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
 		address: [],
 		price: '€10',
+		host: 'Tribehaus Community',
 		tags: ['Breathwork', 'Online'],
 		attendanceMode: 'online',
+		source: 'tribehaus',
+		sourceUrl: 'https://tribehaus.com/breathwork',
+		...overrides
+	};
+}
+
+export function createTelegramEvent(overrides: TestEvent = {}): TestEvent {
+	return {
+		name: 'Community Gathering',
+		description: 'A community meetup shared via Telegram',
+		startAt: new Date(Date.now() + 36 * 60 * 60 * 1000).toISOString(),
+		address: ['Community Space', 'Hamburg'],
+		price: 'Free',
+		host: 'Berlin Community',
+		tags: ['Community', 'Wellness'],
+		source: 'telegram',
+		sourceUrl: 'https://t.me/example',
 		...overrides
 	};
 }
@@ -127,7 +173,10 @@ export function createMultiDayEvent(overrides: TestEvent = {}): TestEvent {
 		endAt: endAt.toISOString(),
 		address: ['Retreat Center', 'Hamburg'],
 		price: '€200',
+		host: 'Sei.Jetzt Retreats',
 		tags: ['Retreat', 'Wellness', 'Meditation'],
+		source: 'seijetzt',
+		sourceUrl: 'https://seijetzt.de/retreat',
 		...overrides
 	};
 }
