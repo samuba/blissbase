@@ -409,7 +409,8 @@ async function main() {
             // no low frequency
             'pub crawl',
             'business',
-            'entrepreneur'
+            'entrepreneur',
+            'muay thai'
         ];
         return nameBlacklist.every(x => !name.toLowerCase().includes(x));
     }
