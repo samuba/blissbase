@@ -163,7 +163,7 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 });
 
 export const estimateEventCount = prerender(async () => {
-    return await db.$count(s.events);
+    return await db.$count(s.events, eq(s.events.listed, true));
 });
 
 async function assertUserIsAllowedToEditEvent(eventId: number, hostSecret: string) {

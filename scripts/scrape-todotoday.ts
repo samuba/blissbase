@@ -35,44 +35,49 @@ import { geocodeAddressCached } from '../src/lib/server/google.ts';
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
+		const locations = ["ubud", "koh-phangan", "pai"]
 
-		// today
-		let html = await customFetch('https://todo.today/ubud/today/', { returnType: 'text' });
-		let $ = cheerio.load(html);
-		$('[aria-labelledby="section-heading-early_tomorrow"]').remove(); // we process events for tomorrow separately
-		let eventUrls = new Set(
-			$('.event_image')
-				.map((_index, element) => $(element).attr('href'))
-				.get()
-				.filter(Boolean)
-		);
-		for (const eventUrl of eventUrls) {
-			const eventHtml = await customFetch(eventUrl, { returnType: 'text' });
-			const event = await this.extractEventData(eventHtml, eventUrl);
-			if (event) allEvents.push(event);
-		}
+		for (const location of locations) {
+			console.log(`Scraping events for ${location}...`);
 
-		// tommorrow
-        const authCookie = await login();
-		html = await customFetch('https://todo.today/ubud/tomorrow/', {
-			returnType: 'text',
-			headers: { Cookie: authCookie } // tomorrow only works logged in
-		});
-		$ = cheerio.load(html);
-		eventUrls = new Set(
-			$('.event_image')
-				.map((_index, element) => $(element).attr('href'))
-				.get()
-				.filter(Boolean)
-		);
-		const eventCountBeforeTomorrow = allEvents.length + 0;
-		for (const eventUrl of eventUrls) {
-			const eventHtml = await customFetch(eventUrl, { returnType: 'text', headers: { Cookie: authCookie } });
-			const event = await this.extractEventData(eventHtml, eventUrl);
-			if (event) allEvents.push(event);
-		}
-		if (eventCountBeforeTomorrow === allEvents.length) {
-			throw new Error('No new events found for tomorrow! Something went wrong with the login.')
+			// today
+			let html = await customFetch(`https://todo.today/${location}/today/`, { returnType: 'text' });
+			let $ = cheerio.load(html);
+			$('[aria-labelledby="section-heading-early_tomorrow"]').remove(); // we process events for tomorrow separately
+			let eventUrls = new Set(
+				$('.event_image')
+					.map((_index, element) => $(element).attr('href'))
+					.get()
+					.filter(Boolean)
+			);
+			for (const eventUrl of eventUrls) {
+				const eventHtml = await customFetch(eventUrl, { returnType: 'text' });
+				const event = await this.extractEventData(eventHtml, eventUrl, location);
+				if (event) allEvents.push(event);
+			}
+
+			// tommorrow
+			const authCookie = await login();
+			html = await customFetch(`https://todo.today/${location}/tomorrow/`, {
+				returnType: 'text',
+				headers: { Cookie: authCookie } // tomorrow only works logged in
+			});
+			$ = cheerio.load(html);
+			eventUrls = new Set(
+				$('.event_image')
+					.map((_index, element) => $(element).attr('href'))
+					.get()
+					.filter(Boolean)
+			);
+			const eventCountBeforeTomorrow = allEvents.length + 0;
+			for (const eventUrl of eventUrls) {
+				const eventHtml = await customFetch(eventUrl, { returnType: 'text', headers: { Cookie: authCookie } });
+				const event = await this.extractEventData(eventHtml, eventUrl, location);
+				if (event) allEvents.push(event);
+			}
+			if (eventCountBeforeTomorrow === allEvents.length) {
+				throw new Error('No new events found for tomorrow! Something went wrong with the login.')
+			}
 		}
 
 		console.log({ allEvents });
@@ -84,7 +89,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]> {
 		throw new Error('Method not implemented.' + filePath);
 	}
-	async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
+	async extractEventData(html: string, url: string, location: string): Promise<ScrapedEvent | undefined> {
 		const $ = await cheerio.load(html);
 		const name = superTrim($('h1').text())!;
 		const imageUrls = $(
@@ -122,9 +127,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		// startAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]));
 		// endAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]));
 
-		const address = superTrim($('.data-entry-content-single-page .event_curren_venue').text())!
+		let address = (superTrim($('.data-entry-content-single-page .event_curren_venue')?.text() ?? '') ?? '')
+			.trim()
 			.split(',')
 			.map((part) => part.trim());
+		if (!address?.length) {
+			const formattedLocation = location
+				.replace(/-/g, ' ')
+				.split(' ')
+				.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+				.join(' ');
+			address = [formattedLocation];
+		}
 		const price = superTrim(
 			$('.data-entry-content-single-page .event_ticket_price_single').text()
 		)!;
