@@ -417,7 +417,30 @@ async function main() {
             'entrepreneur',
             'muay thai'
         ];
-        return nameBlacklist.every(x => !name.toLowerCase().includes(x));
+        // names that match blacklist AND whitelist are allowed
+        const whitelist = [
+            'cacao',
+            'kakao',
+            'sound',
+            'klang',
+            'meditation',
+            'chakra',
+            'tantra',
+            'tantric',
+            'mantra',
+            'sing',
+            'shant',
+            'nidra',
+            'vagus',
+            'dance',
+            'somatic'
+        ]
+        const lowerName = name.toLowerCase();
+        const hasWhitelistMatch = whitelist.some(x => lowerName.includes(x));
+        if (hasWhitelistMatch) return true;
+
+        const hasBlacklistMatch = nameBlacklist.some(x => lowerName.includes(x));
+        return !hasBlacklistMatch;
     }
 }
 await main();
