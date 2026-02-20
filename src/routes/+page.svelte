@@ -72,7 +72,7 @@
 	
 <div class="container mx-auto flex flex-col items-center justify-center pb-4 sm:w-2xl">
 	
-	{#if !showAutoLocationHint}
+	{#if showAutoLocationHint}
 		<div class="px-4 w-full mt-4">
 			<div class="alert bg-base-100 mb-2 relative">
 				<i class="icon-[ph--info] size-6 shrink-0"></i>
