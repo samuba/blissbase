@@ -37,9 +37,10 @@ Never run "drizzle push" command yourself.
 Prefer remote functions when calling server.
 Always use `src/libs/routes.ts` when referencing routes. 
 
-## UI
+## UI & CSS
 Assume Tailwind use.
 Use Bits-UI for component primitives.
+Use Daisy UI
 
 ## Scraping
 Always assume the scripts are running in bun runtime
