@@ -7,11 +7,14 @@
 	import HeaderControls from '$lib/components/HeaderControls.svelte';
 	import { browser } from '$app/environment';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
+	import { setLocationInteractedCookie } from '$lib/cookie-utils';
 
 	const { data } = $props();
-	const { userId } = $derived(data);
+	const { userId, autoDetectedCity } = $derived(data);
 
 	let contentBeforeMenu = $state<HTMLElement | null>(null);
+	let dismissedAutoLocationHint = $state(false);
+	const showAutoLocationHint = $derived(Boolean(autoDetectedCity) && !dismissedAutoLocationHint);
 
 	// Always initialize from server data during SSR to prevent state pollution
 	// On client, only initialize if store is empty (preserves navigation state)
@@ -19,7 +22,11 @@
 		console.log('Initializing events store from server data');
 		eventsStore.initialize({
 			events: data.events,
-			pagination: data.pagination
+			pagination: {
+				...data.pagination,
+				startDate: data.pagination.startDate ?? null,
+				endDate: data.pagination.endDate ?? null
+			}
 		});
 	}
 
@@ -65,6 +72,28 @@
 	
 <div class="container mx-auto flex flex-col items-center justify-center pb-4 sm:w-2xl">
 	
+	{#if !showAutoLocationHint}
+		<div class="px-4 w-full mt-4">
+			<div class="alert bg-base-100 mb-2 relative">
+				<i class="icon-[ph--info] size-6 shrink-0"></i>
+				<button
+					class="btn btn-ghost btn-circle btn-sm p-0.25 absolute top-1 right-1"
+					aria-label="Hinweis schließen"
+					onclick={() => {
+						dismissedAutoLocationHint = true;
+						setLocationInteractedCookie();
+					}}
+				>
+					<i class="icon-[ph--x] size-4"></i>
+				</button>
+				<div class="w-full">
+					Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
+					Wenn das nicht dein Standort ist, ändere ihn unten.
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<HeaderControls {userId} />
 
 	<svelte:boundary>
@@ -120,7 +149,7 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
 				</svg>
 				<b>Fehler beim Laden der Events:</b>
-				{error.message}
+				{error instanceof Error ? error.message : String(error)}
 			</div>
 		{/snippet}
 	</svelte:boundary>

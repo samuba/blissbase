@@ -2,13 +2,15 @@ import type { Cookies } from '@sveltejs/kit';
 import type { AttendanceMode } from './server/schema';
 
 const COOKIE_NAME = 'blissbase_filters';
+export const LOCATION_INTERACTED_COOKIE_NAME = 'blissbase_location_set';
 const COOKIE_OPTIONS = {
     path: '/',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 365, // 1 year
     httpOnly: false,
     secure: false,
     sameSite: 'lax' as const
 };
+const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
 export type FilterCookieData = {
     startDate?: string | null;
@@ -105,4 +107,13 @@ export function loadFiltersFromCookie(cookies: Cookies): FilterCookieData | null
  */
 export function clearFiltersCookie(cookies: Cookies) {
     cookies.delete(COOKIE_NAME, { path: '/' });
-} 
+}
+
+/**
+ * Marks that the user manually interacted with location controls.
+ * Once set, server-side auto-location detection should not run again.
+ */
+export function setLocationInteractedCookie() {
+    if (typeof document === 'undefined') return;
+    document.cookie = `${LOCATION_INTERACTED_COOKIE_NAME}=1; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
+}

@@ -5,6 +5,7 @@ import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.
 import { browser } from '$app/environment';
 import { SvelteSet } from 'svelte/reactivity';
 import type { AttendanceMode } from './server/schema';
+import { setLocationInteractedCookie } from './cookie-utils';
 
 type LoadingState = 'not-loading' | 'loading' | 'loading-more';
 
@@ -164,6 +165,7 @@ export class EventsStore {
 
     // Location/distance change handler
     handleLocationDistanceChange = (event: LocationChangeEvent) => {
+        setLocationInteractedCookie();
         this.loadEvents({
             ...this.pagination,
             page: 1,
@@ -218,6 +220,7 @@ export class EventsStore {
     }
 
     resetFilters() {
+        setLocationInteractedCookie();
         this.hasAnyFilter = false
         this.showTextSearch = false;
         return this.loadEvents(initialPagination());
