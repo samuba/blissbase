@@ -23,7 +23,7 @@ export const load = (async ({ cookies, locals }) => {
 
     let autoDetectedCity: string | null = null;
     if (!hasSavedLocation && !userAlreadySetLocation && locals.requestInfo?.city) {
-        let decodedCity = locals.requestInfo.city.trim();
+        let decodedCity = locals.requestInfo.city.trim() + ", " + locals.requestInfo.country;
         try {
             decodedCity = decodeURIComponent(decodedCity).trim();
         } catch {
