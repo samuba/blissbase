@@ -401,6 +401,11 @@ async function main() {
             'yin-yoga',
             'yoga im ',
             'yoga für ',
+            'vinyasa',
+            'ashtanga',
+            'gentle flow',
+            'slow flow',
+            'pilates',
             // no crypto 
             'bitcoin', 
             'crypto',
