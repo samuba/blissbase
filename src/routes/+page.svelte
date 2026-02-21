@@ -74,10 +74,14 @@
 	
 	{#if showAutoLocationHint}
 		<div class="px-4 w-full mt-4">
-			<div class="alert bg-base-100 mb-2 relative">
+			<div class="alert bg-base-100 mb-2 relative alert-horizontal">
 				<i class="icon-[ph--info] size-6 shrink-0"></i>
+				<span class="w-full">
+					Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
+					Wenn das nicht dein Standort ist, ändere ihn unten.
+				</span>
 				<button
-					class="btn btn-ghost btn-circle btn-sm p-0.25 absolute top-1 right-1"
+					class="btn btn-circle btn-ghost btn-sm p-0.25"
 					aria-label="Hinweis schließen"
 					onclick={() => {
 						dismissedAutoLocationHint = true;
@@ -86,10 +90,6 @@
 				>
 					<i class="icon-[ph--x] size-4"></i>
 				</button>
-				<div class="w-full">
-					Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
-					Wenn das nicht dein Standort ist, ändere ihn unten.
-				</div>
 			</div>
 		</div>
 	{/if}
