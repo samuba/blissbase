@@ -3,6 +3,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { Dialog } from '$lib/components/dialog';
 	import { isPwa } from '$lib/isPwa.svelte';
+	import { localeStore } from '../../../locales/localeStore.svelte';
 
 	// TODO: add video for safari desktop
 
@@ -138,7 +139,7 @@
 			</div>
 
 			<video
-				src="/ios-install-howto.mp4"
+				src="/ios-install-howto-{localeStore.locale}.mp4"
 				autoplay
 				loop
 				muted
