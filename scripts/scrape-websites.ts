@@ -406,6 +406,7 @@ async function main() {
             'gentle flow',
             'slow flow',
             'pilates',
+            'beginner yoga',
             // no crypto 
             'bitcoin', 
             'crypto',
