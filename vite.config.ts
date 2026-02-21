@@ -14,7 +14,7 @@ export default defineConfig({
 		sveltekit(),
 		Icons({ compiler: 'svelte', }),
 		SvelteKitPWA({
-			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'logo.svg'],
+			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'pwa-512-maskable.png', 'logo.svg'],
 			registerType: 'autoUpdate',
 			injectRegister: false,
 			kit: {
