@@ -17,6 +17,7 @@
 	let explanationDiv: HTMLDivElement | null = $state(null);
 
 	const mode = $derived(browser ? detectIosDevice() : 'not-ios');
+	const iosVideoPrefix = $derived(browser ? getIosVideoPrefix() : 'ios18');
 
 	function detectIosDevice() {
 		if (!browser) return 'unknown';
@@ -24,12 +25,10 @@
 		const userAgent = window.navigator.userAgent.toLowerCase();
 		const platform = window.navigator.platform?.toLowerCase() ?? '';
 
-		// iOS detection via user agent and platform
 		const isSmallIosDevice = /iphone|ipod/i.test(userAgent) || /iphone|ipod/i.test(platform);
 
 		const isIpad =
 			/ipad/i.test(userAgent) ||
-			// Modern iPad detection (reports as macOS)
 			(/macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1);
 
 		if (isSmallIosDevice) {
@@ -39,6 +38,16 @@
 		}
 
 		return 'not-ios';
+	}
+
+	/** Detects major iOS version from the UA string and returns the matching video prefix.
+	 * @example getIosVideoPrefix() // 'ios26' on iOS 26+, 'ios18' otherwise */
+	function getIosVideoPrefix(): 'ios18' | 'ios26' {
+		const match = navigator.userAgent.match(/OS (\d+)[_\.]/);
+		if (!match) return 'ios18';
+
+		const majorVersion = parseInt(match[1], 10);
+		return majorVersion >= 26 ? 'ios26' : 'ios18';
 	}
 
 	onMount(() => {
@@ -139,7 +148,7 @@
 			</div>
 
 			<video
-				src="/ios-install-howto-{localeStore.locale}.mp4"
+				src="/{iosVideoPrefix}-install-howto-{localeStore.locale}.mp4"
 				autoplay
 				loop
 				muted
