@@ -12,7 +12,7 @@
 	let deferredPrompt: any;
 
 	let showInstallButton = $state(false);
-	let showIosInstallHowto = $state(true);
+	let showIosInstallHowto = $state(false);
 	let innerHeight = $state(700);
 	let explanationDiv: HTMLDivElement | null = $state(null);
 
