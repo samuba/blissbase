@@ -84,6 +84,12 @@
 		// The button will be shown when that event fires
 	});
 
+	$effect(() => {
+		if (showIosInstallHowto) {
+			alert(navigator.userAgent);
+		}
+	});
+
 	onDestroy(() => {
 		if (!browser) return;
 
