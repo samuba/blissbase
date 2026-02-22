@@ -614,13 +614,11 @@ msgstr "Create event"
 msgid "App installieren <0/>"
 msgstr "Install app <0/>"
 
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Installationsanleitung:"
-msgstr "Installation instructions:"
+#~ msgid "Installationsanleitung:"
+#~ msgstr "Installation instructions:"
 
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Okay"
-msgstr "Okay"
+#~ msgid "Okay"
+#~ msgstr "Okay"
 
 #: src/routes/+layout.ts
 msgid "Achtsame Events in deiner Nähe."
@@ -892,3 +890,20 @@ msgid ""
 msgstr ""
 "You're being shown events around <0/>.\n"
 "If that's not your location, change it below."
+
+#~ msgid "<0>Installationsanleitung:</0> span <1>Okay</1>"
+#~ msgstr "<0>Installation instructions:</0> span <1>Okay</1>"
+
+#~ msgid "So install"
+#~ msgstr "Install this way"
+
+#~ msgid "So installierst du die App auf deinem iPhone:"
+#~ msgstr ""
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "So installierst du die App auf deinem iPhone"
+msgstr "How to install the app on your iPhone"
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Installationsanleitung"
+msgstr "Installation instructions"

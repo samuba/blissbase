@@ -12,7 +12,7 @@
 	let deferredPrompt: any;
 
 	let showInstallButton = $state(false);
-	let showIosInstallHowto = $state(false);
+	let showIosInstallHowto = $state(true);
 	let innerHeight = $state(700);
 	let explanationDiv: HTMLDivElement | null = $state(null);
 
@@ -141,10 +141,15 @@
 <Dialog.Root bind:open={showIosInstallHowto}>
 	<Dialog.Portal>
 		<Dialog.OverlayAnimated class="bg-base-100" />
-		<Dialog.ContentAnimated class="fixed inset-0 z-50 flex flex-col items-center px-8 pb-2 outline-none">
-			<div bind:this={explanationDiv} class="my-3 flex w-full items-center justify-between">
-				<h3 class="text-center text-2xl">Installationsanleitung:</h3>
-				<Dialog.Close class="btn btn-primary">Okay</Dialog.Close>
+		<Dialog.ContentAnimated class="fixed inset-0 z-50 flex flex-col items-center px-8 pb-2 outline-none bg-base-200">
+			<div bind:this={explanationDiv} class="flex flex-col justify-center items-center w-full h-12 my-3">
+				<div class="flex w-full items-center justify-between">
+					<h3 class="text-center text-xl leading-tight">Installationsanleitung</h3>
+					<Dialog.Close class="btn btn-primary btn-circle absolute top-1 right-3">
+						<i class="icon-[ph--x] size-5"></i>
+					</Dialog.Close>
+				</div>
+				<span class="leading-tight text-sm w-full">So installierst du die App auf deinem iPhone</span>
 			</div>
 
 			<video
@@ -155,7 +160,7 @@
 				playsinline
 				disablepictureinpicture
 				disableremoteplayback
-				class="mx-auto max-h-[900px] flex-1 rounded-[3rem] object-contain"
+				class="mx-auto flex-1 rounded-[3rem] object-contain"
 				style="height: {innerHeight - ((explanationDiv?.offsetHeight ?? 0) + 30)}px"
 			/>
 		</Dialog.ContentAnimated>
