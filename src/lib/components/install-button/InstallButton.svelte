@@ -40,14 +40,22 @@
 		return 'not-ios';
 	}
 
-	/** Detects major iOS version from the UA string and returns the matching video prefix.
+	/** Detects iOS version from the UA `Version/` field (Apple's user-facing version)
+	 * since `CPU iPhone OS` still reports the old internal build number.
 	 * @example getIosVideoPrefix() // 'ios26' on iOS 26+, 'ios18' otherwise */
 	function getIosVideoPrefix(): 'ios18' | 'ios26' {
-		const match = navigator.userAgent.match(/OS (\d+)[_\.]/);
-		if (!match) return 'ios18';
+		const ua = navigator.userAgent;
+		const versionMatch = ua.match(/Version\/(\d+)\./);
+		if (versionMatch) {
+			return parseInt(versionMatch[1], 10) >= 26 ? 'ios26' : 'ios18';
+		}
 
-		const majorVersion = parseInt(match[1], 10);
-		return majorVersion >= 26 ? 'ios26' : 'ios18';
+		const osMatch = ua.match(/OS (\d+)[_\.]/);
+		if (osMatch) {
+			return parseInt(osMatch[1], 10) >= 26 ? 'ios26' : 'ios18';
+		}
+
+		return 'ios18';
 	}
 
 	onMount(() => {
@@ -82,12 +90,6 @@
 		}
 		// For non-iOS devices, wait for the beforeinstallprompt event
 		// The button will be shown when that event fires
-	});
-
-	$effect(() => {
-		if (showIosInstallHowto) {
-			alert(navigator.userAgent);
-		}
 	});
 
 	onDestroy(() => {
