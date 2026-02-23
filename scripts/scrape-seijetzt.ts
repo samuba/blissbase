@@ -103,7 +103,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     extractStartAt(html: string) {
         const $ = cheerio.load(html);
 
-        const dateElement = $('[x-data*="date"]')?.[0];
+        const dateElement = $('[x-data]')
+            .toArray()
+            .find(el => $(el).attr('x-data')?.includes('new Date'));
         if (!dateElement) throw new Error('No startAt elements found in HTML');
 
         return this._extractDateFromXDataElement($, dateElement);
@@ -112,7 +114,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     extractEndAt(html: string) {
         const $ = cheerio.load(html);
 
-        const dateElement = $('[x-data*="date"]')?.[1];
+        const dateElement = $('[x-data]')
+            .toArray()
+            .filter(el => $(el).attr('x-data')?.includes('new Date'))[1];
         if (!dateElement) return undefined;
 
         return this._extractDateFromXDataElement($, dateElement);
@@ -125,14 +129,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const dateMatch = xDataAttr.match(/new Date\((.*?)\)/);
         if (!dateMatch || !dateMatch[1]) throw new Error('No date match found in x-data attribute');
 
-        const dateParams = dateMatch[1].split(',').map(param => param.trim());
-        if (dateParams.length < 5) throw new Error('Invalid date parameters');
-
-        const year = parseInt(dateParams[0]);
-        const month = parseInt(dateParams[1]);
-        const day = parseInt(dateParams[2]);
-        const hour = parseInt(dateParams[3]);
-        const minute = parseInt(dateParams[4]);
+        const [dateStr, timeStr] = dateMatch[1].replace(/['"]/g, '').split('T');
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const [hour, minute] = timeStr.split(':').map(Number);
+        if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Invalid time parameters');
+        if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900 || year > 2100) throw new Error('Invalid date parameters');
 
         return germanDateToIsoStr(year, month, day, hour, minute);
     }
@@ -204,7 +205,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
     extractDescription(html: string): string | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
-        return $('.prose').first().html()?.trim()
+        const h2 = $('h2').filter((_i, el) => $(el).text().toLowerCase().includes('beschreibung')).first();
+        if (h2.length > 0) {
+            const prose = h2.nextAll('.prose').first();
+            return prose.length > 0 ? prose.html()?.trim() : undefined;
+        }
+        return undefined;
     }
 
     extractImageUrls(html: string): string[] | undefined {

@@ -186,7 +186,8 @@ async function main() {
             imageUrls: x.imageUrls?.filter(x => x),
             description: cleanProseHtml(x.description),
             listed: shouldBeListed({ name: cleanedName }),
-            tags: [...new Set(x.tags)] // ensure tags are unique
+            tags: [...new Set(x.tags)], // ensure tags are unique
+            attendanceMode: detectAttendanceModeFromAddress({ address: x.address }),
         } satisfies InsertEvent;
     });
 
@@ -442,6 +443,43 @@ async function main() {
 
         const hasBlacklistMatch = nameBlacklist.some(x => lowerName.includes(x));
         return !hasBlacklistMatch;
+    }
+
+    /**
+     * Detects event attendance mode from address text.
+     * Returns `online` when the address clearly contains virtual meeting hints, otherwise `offline`.
+     * Example: detectAttendanceModeFromAddress({ address: ['Zoom Link: https://zoom.us/j/123'] }) // 'online'
+     */
+    function detectAttendanceModeFromAddress({ address }: { address: string[] | null | undefined }): InsertEvent['attendanceMode'] {
+        if (!address?.length) return `offline`;
+
+        const addressText = address.join(` `).toLowerCase().trim();
+        if (!addressText) return `offline`;
+
+        const onlineIndicators = [
+            `online`,
+            `remote`,
+            `livestream`,
+            `webinar`,
+            `zoom`,
+            `google meet`,
+            `meet.google`,
+            `microsoft teams`,
+            `teams.microsoft`,
+            `jitsi`,
+            `discord`,
+            `telegram`,
+            `via link`,
+            'video call'
+        ];
+
+        const hasOnlineIndicator = onlineIndicators.some(indicator => addressText.includes(indicator));
+        if (hasOnlineIndicator) return `online`;
+
+        const hasUrl = /https?:\/\/\S+/i.test(addressText);
+        if (hasUrl) return `online`;
+
+        return `offline`;
     }
 }
 await main();
