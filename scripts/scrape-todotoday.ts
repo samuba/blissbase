@@ -27,7 +27,8 @@ import {
 	cleanProseHtml,
 	superTrim,
 	baliDateToIsoStr,
-	extractIcalStartAndEndTimes
+	extractIcalStartAndEndTimes,
+thailandDateToIsoStr
 } from './common.ts';
 import * as cheerio from 'cheerio';
 import { geocodeAddressCached } from '../src/lib/server/google.ts';
@@ -35,7 +36,7 @@ import { geocodeAddressCached } from '../src/lib/server/google.ts';
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
-		const locations = ["ubud", "koh-phangan", "pai"]
+		const locations = ["ubud", "koh-phangan", "pai"] // when adding make sure to also add e.g. baliDateToIsoStr 
 
 		for (const location of locations) {
 			console.log(`Scraping events for ${location}...`);
@@ -101,31 +102,26 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 		// move hidden elements to the end of description
 		const descriptionElement = $('.event_content_single_page');
-		const hiddenElements = descriptionElement.find('.tt-hidden').remove();
-		//descriptionElement.append(hiddenElements);
+		descriptionElement.find('.tt-hidden').remove();
 		const description = cleanProseHtml(descriptionElement.html());
 
+		const dateToIsoStr = location === 'ubud' ? baliDateToIsoStr : thailandDateToIsoStr;
+
 		const icalTimes = extractIcalStartAndEndTimes(html);
-		const startAt = baliDateToIsoStr(
+		const startAt = dateToIsoStr(
 			parseInt(icalTimes.startAt!.slice(0, 4)),
 			parseInt(icalTimes.startAt!.slice(4, 6)),
 			parseInt(icalTimes.startAt!.slice(6, 8)),
 			parseInt(icalTimes.startAt!.slice(9, 11)),
 			parseInt(icalTimes.startAt!.slice(11, 13))
 		);
-		const endAt = baliDateToIsoStr(
+		const endAt = dateToIsoStr(
 			parseInt(icalTimes.endAt!.slice(0, 4)),
 			parseInt(icalTimes.endAt!.slice(4, 6)),
 			parseInt(icalTimes.endAt!.slice(6, 8)),
 			parseInt(icalTimes.endAt!.slice(9, 11)),
 			parseInt(icalTimes.endAt!.slice(11, 13))
 		);
-		// Fallback to parsing from URL and time text
-		// const urlParts = url.split("/").reverse();
-		// const time = superTrim($('.event_single_page_time').text()!.split('·')[1])!
-		// const [startTime, endTime] = time.split(" - ");
-		// startAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]));
-		// endAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]));
 
 		let address = (superTrim($('.data-entry-content-single-page .event_curren_venue')?.text() ?? '') ?? '')
 			.trim()

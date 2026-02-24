@@ -379,6 +379,20 @@ export function baliDateToIsoStr(year: number, month: number, day: number, hour:
     return dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
 }
 
+/**
+ * Converts Thailand date/time components to an ISO string with Thailand timezone offset.
+ * Bali uses Indonesia Central Time (WITA, UTC+8) with no daylight saving time.
+ * @param year The year (e.g., 2024)
+ * @param month The month (0-indexed, 0 = January, 11 = December)
+ * @param day The day of the month (1-31)
+ * @param hour The hour (0-23), defaults to 0
+ * @param minute The minute (0-59), defaults to 0
+ * @returns ISO string with Bali timezone offset (e.g., "2024-01-15T14:30:00+08:00")
+ */
+export function thailandDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
+    return dateToIsoStr(year, month, day, hour, minute, 'Asia/Bangkok', false);
+}
+
 export interface WebsiteScraperInterface {
     // scrapes the entire website and returns a list of events
     scrapeWebsite(): Promise<ScrapedEvent[]>;
