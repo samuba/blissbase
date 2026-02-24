@@ -10,6 +10,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     todotoday: { module: './scrape-todotoday.ts', label: 'Todo.Today' },
     vortexapp: { module: './scrape-vortexapp.ts', label: 'Vortexapp' },
     megatix_indonesia: { module: './scrape-megatix_indonesia.ts', label: 'Megatix Indonesia' },
+    whatsupdanang: { module: './scrape-whatsupdanang.ts', label: 'WhatsUpDaNang' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const;
 

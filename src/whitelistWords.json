@@ -1,0 +1,3077 @@
+[
+	{
+		"word": "acro yoga",
+		"synonyms": {
+			"de": ["Akrobatisches Yoga", "Akro-Yoga"],
+			"en": ["acro", "acroyoga"],
+			"es": ["yoga acrobático"],
+			"fr": ["yoga acrobatique"],
+			"it": ["yoga acrobatico"],
+			"pt": [],
+			"ru": ["акройога", "акробатическая йога"],
+			"tr": ["akro yoga"],
+			"hi": ["एक्रो योग"]
+		}
+	},
+	{
+		"word": "astrology",
+		"synonyms": {
+			"de": ["Astrologie", "Sternenkunde"],
+			"en": ["horoscope"],
+			"es": ["astrología"],
+			"fr": [],
+			"it": ["astrologia"],
+			"pt": [],
+			"ru": ["астрология"],
+			"tr": ["astroloji"],
+			"hi": ["ज्योतिष", "राशिफल"]
+		}
+	},
+	{
+		"word": "ayurveda",
+		"synonyms": {
+			"de": ["Ayurveda", "ayurvedisch"],
+			"en": ["ayurvedic"],
+			"es": ["ayurvédico", "ayurvédica"],
+			"fr": ["ayurvéda", "ayurvédique"],
+			"it": ["ayurvedico", "ayurvedica"],
+			"pt": [],
+			"ru": ["аюрведа", "аюрведический", "аюрведическая"],
+			"tr": [],
+			"hi": ["आयुर्वेद", "आयुर्वेदिक"]
+		}
+	},
+	{
+		"word": "ballet dance",
+		"synonyms": {
+			"de": ["Ballett", "Ballettanz"],
+			"en": ["ballet"],
+			"es": ["danza de ballet"],
+			"fr": ["danse classique"],
+			"it": ["danza classica", "balletto"],
+			"pt": ["dança de balé", "balé"],
+			"ru": ["балет", "балетный танец"],
+			"tr": ["bale dansı"],
+			"hi": ["बैले नृत्य"]
+		}
+	},
+	{
+		"word": "beach cleaning",
+		"synonyms": {
+			"de": ["Strandreinigung", "Strandputzaktion"],
+			"en": ["beach cleanup", "coastal cleanup"],
+			"es": ["limpieza de playa"],
+			"fr": ["nettoyage de plage"],
+			"it": ["pulizia della spiaggia"],
+			"pt": ["limpeza de praia"],
+			"ru": ["уборка пляжа"],
+			"tr": ["plaj temizliği"],
+			"hi": ["समुद्र तट सफाई"]
+		}
+	},
+	{
+		"word": "bonfire",
+		"synonyms": {
+			"de": ["Lagerfeuer", "Freudenfeuer"],
+			"en": ["campfire"],
+			"es": ["hoguera", "fogata"],
+			"fr": ["feu de camp", "feu de joie"],
+			"it": ["falò", "fuoco da campo"],
+			"pt": ["fogueira"],
+			"ru": ["костёр", "пионерский костёр"],
+			"tr": ["kamp ateşi"],
+			"hi": ["अलाव"]
+		}
+	},
+	{
+		"word": "boobs painting",
+		"synonyms": {
+			"de": ["Brustmalerei"],
+			"en": ["breast painting"],
+			"es": ["pintura de senos"],
+			"fr": ["peinture sur seins"],
+			"it": ["pittura sul seno"],
+			"pt": ["pintura de seios"],
+			"ru": ["роспись груди"],
+			"tr": ["göğüs boyama"],
+			"hi": ["स्तन पेंटिंग"]
+		}
+	},
+	{
+		"word": "boundaries",
+		"synonyms": {
+			"de": ["Grenzen", "Grenzsetzung"],
+			"en": ["personal boundaries", "limits"],
+			"es": ["límites personales"],
+			"fr": ["limites personnelles"],
+			"it": ["confini personali"],
+			"pt": ["limites pessoais"],
+			"ru": ["личные границы"],
+			"tr": ["kişisel sınırlar"],
+			"hi": ["सीमाएं", "व्यक्तिगत सीमाएं"]
+		}
+	},
+	{
+		"word": "breathwork",
+		"synonyms": {
+			"de": [
+				"Atemarbeit",
+				"Atemtechnik",
+				"holotropes",
+				"psychotropes",
+				"atmen",
+				"feueratmung",
+				"wechselatmung"
+			],
+			"en": [
+				"breath work",
+				"breathing exercises",
+				"breath control",
+				"wim hof",
+				"holotropic",
+				"psychotropic",
+				"buteyko",
+				"pranayama",
+				"kapalabhati",
+				"tummo",
+				"nadi shodhana"
+			],
+			"es": ["trabajo de respiración", "ejercicios de respiración"],
+			"fr": ["travail respiratoire", "exercices de respiration"],
+			"it": ["lavoro di respirazione", "esercizi di respirazione"],
+			"pt": ["trabalho respiratório", "exercícios de respiração"],
+			"ru": ["дыхательные практики", "дыхательные упражнения"],
+			"tr": ["nefes çalışması"],
+			"hi": ["श्वास व्यायाम", "प्राणायाम"]
+		}
+	},
+	{
+		"word": "cacao",
+		"synonyms": {
+			"de": ["Kakao", "Kakaozeremonie"],
+			"en": ["cacao ceremony", "cocoa"],
+			"es": ["ceremonia de cacao"],
+			"fr": ["cérémonie de cacao"],
+			"it": ["cerimonia del cacao"],
+			"pt": ["cerimônia do cacau", "cacau"],
+			"ru": ["какао-церемония"],
+			"tr": ["kakao töreni"],
+			"hi": ["कोको समारोह"]
+		}
+	},
+	{
+		"word": "capoeira",
+		"synonyms": {
+			"de": ["Capoeira"],
+			"en": [],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["капоэйра"],
+			"tr": [],
+			"hi": ["कैपोएरा"]
+		}
+	},
+	{
+		"word": "charity",
+		"synonyms": {
+			"de": ["Wohltätigkeit", "Spendenaktion"],
+			"en": ["charitable event", "fundraising"],
+			"es": ["caridad", "beneficencia"],
+			"fr": ["charité", "bienfaisance"],
+			"it": ["beneficenza", "carità"],
+			"pt": ["caridade", "beneficência"],
+			"ru": ["благотворительность", "благотворительная акция"],
+			"tr": ["hayır işi"],
+			"hi": ["दान", "परोपकार"]
+		}
+	},
+	{
+		"word": "circus",
+		"synonyms": {
+			"de": ["Zirkus"],
+			"en": ["circus"],
+			"es": ["circo"],
+			"fr": ["cirque"],
+			"it": [],
+			"pt": [],
+			"ru": ["цирк"],
+			"tr": ["sirk"],
+			"hi": ["सर्कस"]
+		}
+	},
+	{
+		"word": "clothing swap",
+		"synonyms": {
+			"de": ["Kleidertausch", "Kleidermarkt"],
+			"en": ["clothes swap", "garment exchange"],
+			"es": ["intercambio de ropa"],
+			"fr": ["échange de vêtements", "troc de vêtements"],
+			"it": ["scambio di vestiti"],
+			"pt": ["troca de roupas"],
+			"ru": ["обмен одеждой", "своп одежды"],
+			"tr": ["kıyafet takası"],
+			"hi": ["कपड़े की अदला-बदली"]
+		}
+	},
+	{
+		"word": "comedy",
+		"synonyms": {
+			"de": ["Komödie", "Comedy", "Stand-up"],
+			"en": ["humor", "comic"],
+			"es": ["comedia"],
+			"fr": ["comédie", "humour"],
+			"it": ["commedia", "umorismo"],
+			"pt": ["comédia"],
+			"ru": ["комедия", "юмор"],
+			"tr": ["komedi", "mizah"],
+			"hi": ["हास्य", "कॉमेडी"]
+		}
+	},
+	{
+		"word": "culture",
+		"synonyms": {
+			"de": ["Kultur", "Kulturen"],
+			"en": ["cultural", "heritage"],
+			"es": ["cultura", "culturas"],
+			"fr": ["culture", "cultures"],
+			"it": [],
+			"pt": [],
+			"ru": ["культура", "культуры"],
+			"tr": ["kültür", "kültürler"],
+			"hi": ["संस्कृति", "संस्कृतियाँ"]
+		}
+	},
+	{
+		"word": "concert",
+		"synonyms": {
+			"de": ["Konzert", "Konzerte"],
+			"en": ["gig"],
+			"es": ["concierto", "conciertos"],
+			"fr": ["concert", "concerts"],
+			"it": ["concerto", "concerti"],
+			"pt": ["concertos"],
+			"ru": ["концерт", "концерты"],
+			"tr": ["konser", "konserler"],
+			"hi": ["संगीत कार्यक्रम", "कॉन्सर्ट"]
+		}
+	},
+	{
+		"word": "connection",
+		"synonyms": {
+			"de": ["Verbindung", "Bewusstsein"],
+			"en": ["consciousness", "awareness"],
+			"es": ["conexión", "conciencia"],
+			"fr": ["connexion", "conscience"],
+			"it": ["connessione", "coscienza"],
+			"pt": ["conexão", "consciência"],
+			"ru": ["связь", "сознание"],
+			"tr": ["bağlantı", "bilinç"],
+			"hi": ["संबंध", "चेतना"]
+		}
+	},
+	{
+		"word": "sacred",
+		"synonyms": {
+			"de": ["heilig", "geweiht"],
+			"en": ["holy", "divine"],
+			"es": ["sagrado", "sagrada"],
+			"fr": ["sacré", "sacrée"],
+			"it": ["sacro", "sacra"],
+			"pt": [],
+			"ru": ["священный", "священная"],
+			"tr": ["kutsal"],
+			"hi": ["पवित्र"]
+		}
+	},
+	{
+		"word": "mindful",
+		"synonyms": {
+			"de": ["achtsam", "achtsamer", "bewusst", "bewusster"],
+			"en": ["aware", "conscious"],
+			"es": ["consciente", "atento"],
+			"fr": ["attentif", "conscient"],
+			"it": ["consapevole", "attento"],
+			"pt": [],
+			"ru": ["осознанный", "внимательный"],
+			"tr": ["bilinçli", "farkında"],
+			"hi": ["सचेत", "जागरूक"]
+		}
+	},
+	{
+		"word": "communication",
+		"synonyms": {
+			"de": ["Kommunikation", "gewaltfreie Kommunikation", "GFK"],
+			"en": ["non violent", "nonviolent", "nvc"],
+			"es": ["comunicación", "comunicación no violenta", "CNV"],
+			"fr": ["communication", "communication non-violente"],
+			"it": ["comunicazione", "comunicazione nonviolenta"],
+			"pt": ["comunicação", "comunicação não-violenta"],
+			"ru": ["общение", "ненасильственное общение"],
+			"tr": ["iletişim", "şiddetsiz iletişim"],
+			"hi": ["संचार", "अहिंसक संचार"]
+		}
+	},
+	{
+		"word": "contact improv",
+		"synonyms": {
+			"de": ["Kontaktimprovisation", "CI Jam"],
+			"en": ["contact improvisation", "contact impro", "ci flow"],
+			"es": ["improvisación de contacto", "jam de CI"],
+			"fr": ["improvisation de contact"],
+			"it": ["improvvisazione di contatto", "jam di CI"],
+			"pt": ["improvisação de contato", "Contato e Improvisação"],
+			"ru": ["контактная импровизация", "джем CI"],
+			"tr": ["temas doğaçlama"],
+			"hi": ["संपर्क इम्प्रोवाइजेशन", "सीआई जैम"]
+		}
+	},
+	{
+		"word": "improvisation",
+		"synonyms": {
+			"de": ["Improvisation", "Impro"],
+			"en": ["improv"],
+			"es": ["improvisación"],
+			"fr": [],
+			"it": ["improvvisazione"],
+			"pt": ["improvisação"],
+			"ru": ["импровизация", "импро"],
+			"tr": ["doğaçlama"],
+			"hi": ["तात्कालिक रचना", "इम्प्रोव"]
+		}
+	},
+	{
+		"word": "cooking class",
+		"synonyms": {
+			"de": ["Kochkurs", "Kochklasse"],
+			"en": ["culinary workshop", "cooking workshop"],
+			"es": ["clase de cocina", "taller de cocina"],
+			"fr": ["cours de cuisine", "atelier culinaire"],
+			"it": ["corso di cucina", "laboratorio culinario"],
+			"pt": ["aula de culinária", "oficina de culinária"],
+			"ru": ["кулинарный класс", "кулинарный мастер-класс"],
+			"tr": ["yemek kursu", "mutfak atölyesi"],
+			"hi": ["पाक कला कक्षा", "खाना पकाने की कक्षा"]
+		}
+	},
+	{
+		"word": "dakini night",
+		"synonyms": {
+			"de": ["Dakini-Nacht"],
+			"en": ["dakini evening"],
+			"es": ["noche de dakini"],
+			"fr": ["nuit de dakini"],
+			"it": ["notte di dakini"],
+			"pt": ["noite de dakini"],
+			"ru": ["ночь дакини"],
+			"tr": ["dakini gecesi"],
+			"hi": ["डाकिनी रात्रि"]
+		}
+	},
+	{
+		"word": "dance",
+		"synonyms": {
+			"de": ["Tanz", "Tanzparty", "lateinamerikanischer Tanz", "Bachata"],
+			"en": ["dance party", "latin dance"],
+			"es": ["baile", "fiesta de baile", "baile latino"],
+			"fr": ["danse", "soirée dansante", "danse latine"],
+			"it": ["danza", "festa di ballo", "ballo latino"],
+			"pt": ["dança", "festa dançante", "dança latina"],
+			"ru": ["танец", "танцевальная вечеринка", "латинский танец", "бачата"],
+			"tr": ["dans", "dans partisi", "latin dansı"],
+			"hi": ["नृत्य", "डांस पार्टी", "लैटिन नृत्य", "बचाता"]
+		}
+	},
+	{
+		"word": "detox",
+		"synonyms": {
+			"de": ["Entgiftung", "Entschlackung"],
+			"en": ["cleanse", "purification"],
+			"es": ["desintoxicación", "depuración"],
+			"fr": ["détoxification", "cure de désintoxication"],
+			"it": ["disintossicazione", "depurazione"],
+			"pt": ["desintoxicação", "depuração"],
+			"ru": ["детоксикация", "очищение"],
+			"tr": ["detoks", "arınma"],
+			"hi": ["विषहरण", "शुद्धिकरण"]
+		}
+	},
+	{
+		"word": "wellness",
+		"synonyms": {
+			"de": ["Wohlbefinden", "Wellness"],
+			"en": ["well-being", "health"],
+			"es": ["bienestar", "salud"],
+			"fr": ["bien-être", "santé"],
+			"it": ["benessere", "salute"],
+			"pt": ["bem-estar", "saúde"],
+			"ru": ["велнес", "благополучие"],
+			"tr": ["sağlık", "esenlik"],
+			"hi": ["तंदुरुस्ती", "स्वास्थ्य"]
+		}
+	},
+	{
+		"word": "fire dance",
+		"synonyms": {
+			"de": ["Feuertanz"],
+			"en": ["fire dancing", "fire performance"],
+			"es": ["danza del fuego"],
+			"fr": ["danse du feu"],
+			"it": ["danza del fuoco"],
+			"pt": ["dança do fogo"],
+			"ru": ["танец с огнем"],
+			"tr": ["ateş dansı"],
+			"hi": ["अग्नि नृत्य"]
+		}
+	},
+	{
+		"word": "fire show",
+		"synonyms": {
+			"de": ["Feuershow"],
+			"en": ["fire performance", "fire spectacle"],
+			"es": ["espectáculo de fuego"],
+			"fr": ["spectacle de feu"],
+			"it": ["spettacolo di fuoco"],
+			"pt": ["espetáculo de fogo"],
+			"ru": ["огненное шоу"],
+			"tr": ["ateş gösterisi"],
+			"hi": ["अग्नि प्रदर्शन"]
+		}
+	},
+	{
+		"word": "sex",
+		"synonyms": {
+			"de": ["Sexualität", "Spielparty", "Orgie"],
+			"en": ["play party", "orgy"],
+			"es": ["sexo", "fiesta de juegos", "orgía"],
+			"fr": ["sexe", "soirée de jeux"],
+			"it": ["sesso", "festa di giochi", "orgia"],
+			"pt": ["festa de jogos"],
+			"ru": ["секс", "игровая вечеринка", "оргия"],
+			"tr": ["seks", "oyun partisi", "orji"],
+			"hi": ["यौन", "खेल पार्टी", "समूह यौन क्रीड़ा"]
+		}
+	},
+	{
+		"word": "fetish",
+		"synonyms": {
+			"de": ["Fetisch"],
+			"en": ["kink", "paraphilia"],
+			"es": ["fetiche"],
+			"fr": ["fétiche"],
+			"it": ["feticismo"],
+			"pt": [],
+			"ru": ["фетиш"],
+			"tr": ["fetiş"],
+			"hi": ["फेटिश"]
+		}
+	},
+	{
+		"word": "kinky",
+		"synonyms": {
+			"de": ["ausgefallen", "pikant"],
+			"en": ["naughty", "risqué"],
+			"es": ["pervertido", "picante"],
+			"fr": ["coquin", "osé"],
+			"it": ["piccante", "trasgressivo"],
+			"pt": ["safado"],
+			"ru": ["пикантный", "непристойный"],
+			"tr": ["müstehcen", "çapkın"],
+			"hi": ["कामुक", "उत्तेजक"]
+		}
+	},
+	{
+		"word": "tantra",
+		"synonyms": {
+			"de": ["tantrisch"],
+			"en": ["tantric", "tan tra", "tan tric"],
+			"es": ["tántrico"],
+			"fr": ["tantrique"],
+			"it": ["tantrico"],
+			"pt": ["tântrico"],
+			"ru": ["тантрический"],
+			"tr": ["tantrik"],
+			"hi": ["तांत्रिक"]
+		}
+	},
+	{
+		"word": "shibari",
+		"synonyms": {
+			"de": ["Shibari", "Fesselkunst", "japanische Bondage"],
+			"en": ["Japanese rope bondage"],
+			"es": ["bondage japonés"],
+			"fr": ["bondage japonais"],
+			"it": ["bondage giapponese"],
+			"pt": ["bondage japonês"],
+			"ru": ["сибари", "шибари", "японский бондаж"],
+			"tr": ["Japon ip bağlama sanatı"],
+			"hi": ["शिबारी", "जापानी रस्सी बंधन"]
+		}
+	},
+	{
+		"word": "community eating",
+		"synonyms": {
+			"de": ["Gemeinschaftsessen", "gemeinsames Essen", "Gemeinschaftsmahlzeit"],
+			"en": ["community eating", "community dinner", "community meal", "community lunch"],
+			"es": ["comida comunitaria", "cena comunitaria", "almuerzo comunitario"],
+			"fr": ["repas communautaire", "dîner communautaire", "déjeuner communautaire"],
+			"it": ["pasto comunitario", "pranzo comunitario"],
+			"pt": ["refeição comunitária", "jantar comunitário", "almoço comunitário"],
+			"ru": ["общественное питание", "общественный обед", "общественный ужин"],
+			"tr": ["topluluk yemeği", "topluluk akşam yemeği", "topluluk öğle yemeği"],
+			"hi": ["सामुदायिक भोजन", "सामुदायिक रात्रिभोज", "सामुदायिक दोपहर का भोजन"]
+		}
+	},
+	{
+		"word": "dragon staff",
+		"synonyms": {
+			"de": ["Drachenstab"],
+			"en": ["dragon staff"],
+			"es": ["bastón de dragón"],
+			"fr": ["bâton dragon"],
+			"it": ["bastone del drago"],
+			"pt": ["bastão do dragão"],
+			"ru": ["посох дракона"],
+			"tr": ["ejderha asası"],
+			"hi": ["ड्रैगन स्टाफ"]
+		}
+	},
+	{
+		"word": "drum circle",
+		"synonyms": {
+			"de": ["Trommelkreis", "Trommelzirkel"],
+			"en": ["drum circle", "drumming circle"],
+			"es": ["círculo de tambores"],
+			"fr": ["cercle de tambours"],
+			"it": ["cerchio di tamburi"],
+			"pt": ["roda de tambores"],
+			"ru": ["барабанный круг"],
+			"tr": ["davul çemberi"],
+			"hi": ["ड्रम सर्कल", "ढोल वृत्त"]
+		}
+	},
+	{
+		"word": "ecstatic dance",
+		"synonyms": {
+			"de": ["ekstatischer Tanz"],
+			"en": ["ecstatic dance", "ecstatic movement"],
+			"es": ["danza extática"],
+			"fr": ["danse extatique"],
+			"it": ["danza estatica"],
+			"pt": ["dança extática"],
+			"ru": ["экстатический танец"],
+			"tr": ["coşkulu dans"],
+			"hi": ["उन्मत्त नृत्य", "एक्स्टैटिक डांस"]
+		}
+	},
+	{
+		"word": "temazcal",
+		"synonyms": {
+			"de": ["Temazcal", "Schwitzhütte"],
+			"en": ["sweat lodge"],
+			"es": [],
+			"fr": ["hutte de sudation"],
+			"it": ["capanna sudatoria"],
+			"pt": ["tenda do suor", "Temascal"],
+			"ru": ["темаскаль", "парильня"],
+			"tr": ["ter çadırı"],
+			"hi": ["तेमाज़्काल", "स्वेट लॉज"]
+		}
+	},
+	{
+		"word": "embodiment",
+		"synonyms": {
+			"de": ["Verkörperung", "Embodiment"],
+			"en": [],
+			"es": ["encarnación", "personificación"],
+			"fr": ["incarnation", "personnification"],
+			"it": ["incarnazione", "personificazione"],
+			"pt": ["encarnação", "personificação"],
+			"ru": ["воплощение", "олицетворение"],
+			"tr": ["cisimleşme", "somutlaşma"],
+			"hi": ["साक्षात्कार", "मूर्तरूप"]
+		}
+	},
+	{
+		"word": "energy healing",
+		"synonyms": {
+			"de": ["Energieheilung"],
+			"en": ["energy healing", "healing energy", "healing energies"],
+			"es": ["sanación energética"],
+			"fr": ["guérison énergétique"],
+			"it": ["guarigione energetica"],
+			"pt": ["cura energética"],
+			"ru": ["энергетическое целительство"],
+			"tr": ["enerji şifası"],
+			"hi": ["ऊर्जा चिकित्सा"]
+		}
+	},
+	{
+		"word": "healing",
+		"synonyms": {
+			"de": ["Heilung", "Genesung"],
+			"en": ["healing", "recovery"],
+			"es": ["curación", "sanación"],
+			"fr": ["guérison", "rétablissement"],
+			"it": ["guarigione", "recupero"],
+			"pt": ["cura", "recuperação"],
+			"ru": ["исцеление", "выздоровление"],
+			"tr": ["iyileşme", "şifa"],
+			"hi": ["चंगाई", "स्वास्थ्यलाभ"]
+		}
+	},
+	{
+		"word": "family constellation",
+		"synonyms": {
+			"de": ["Familienaufstellung", "Familienstellen"],
+			"en": ["family constellation", "family constellations", "Bert Hellinger"],
+			"es": ["constelación familiar", "constelaciones familiares"],
+			"fr": ["constellation familiale", "constellations familiales"],
+			"it": ["costellazione familiare", "costellazioni familiari"],
+			"pt": [
+				"constelação familiar",
+				"constelações familiares",
+				"Constelação Familiares",
+				"Constelação Empresarial",
+				"Constelação Organizacional"
+			],
+			"ru": ["семейная расстановка", "семейные расстановки"],
+			"tr": ["aile dizimi", "aile dizilimleri"],
+			"hi": ["पारिवारिक नक्षत्र", "पारिवारिक तारामंडल"]
+		}
+	},
+	{
+		"word": "feminine embodiment",
+		"synonyms": {
+			"de": ["weibliche Verkörperung", "feminine Verkörperung"],
+			"en": ["feminine embodiment"],
+			"es": ["encarnación femenina"],
+			"fr": ["incarnation féminine"],
+			"it": ["incarnazione femminile"],
+			"pt": ["encarnação feminina"],
+			"ru": ["женское воплощение"],
+			"tr": ["kadınsı cisimleşme"],
+			"hi": ["स्त्री साक्षात्कार"]
+		}
+	},
+	{
+		"word": "forest experience",
+		"synonyms": {
+			"de": ["Walderlebnis", "Walderfahrung"],
+			"en": ["forest experience", "woodland experience"],
+			"es": ["experiencia en el bosque"],
+			"fr": ["expérience en forêt"],
+			"it": ["esperienza nella foresta"],
+			"pt": ["experiência na floresta"],
+			"ru": ["лесной опыт"],
+			"tr": ["orman deneyimi"],
+			"hi": ["वन अनुभव"]
+		}
+	},
+	{
+		"word": "full moon",
+		"synonyms": {
+			"de": ["Vollmond"],
+			"en": ["full moon", "fullmoon"],
+			"es": ["luna llena"],
+			"fr": ["pleine lune"],
+			"it": ["luna piena"],
+			"pt": ["lua cheia"],
+			"ru": ["полнолуние"],
+			"tr": ["dolunay"],
+			"hi": ["पूर्णिमा", "पूर्ण चंद्रमा"]
+		}
+	},
+	{
+		"word": "solstice",
+		"synonyms": {
+			"de": ["Sonnenwende", "Solstitium"],
+			"en": ["solstice"],
+			"es": ["solsticio"],
+			"fr": [],
+			"it": ["solstizio"],
+			"pt": ["solstício"],
+			"ru": ["солнцестояние"],
+			"tr": ["gündönümü"],
+			"hi": ["संक्रांति"]
+		}
+	},
+	{
+		"word": "lunar",
+		"synonyms": {
+			"de": ["lunar", "Mond-"],
+			"en": ["moon-related"],
+			"es": [],
+			"fr": ["lunaire"],
+			"it": ["lunare"],
+			"pt": [],
+			"ru": ["лунный"],
+			"tr": ["ay ile ilgili"],
+			"hi": ["चंद्र", "चांद्र"]
+		}
+	},
+	{
+		"word": "garden",
+		"synonyms": {
+			"de": ["Garten", "Gärten"],
+			"en": ["garden", "gardens"],
+			"es": ["jardín", "jardines"],
+			"fr": ["jardin", "jardins"],
+			"it": ["giardino", "giardini"],
+			"pt": ["jardim"],
+			"ru": ["сад", "сады"],
+			"tr": ["bahçe", "bahçeler"],
+			"hi": ["बगीचा", "बाग"]
+		}
+	},
+	{
+		"word": "guitar concert",
+		"synonyms": {
+			"de": ["Gitarrenkonzert"],
+			"en": ["guitar concert", "guitar performance"],
+			"es": ["concierto de guitarra"],
+			"fr": ["concert de guitare"],
+			"it": ["concerto di chitarra"],
+			"pt": ["concerto de violão", "concerto de guitarra"],
+			"ru": ["гитарный концерт"],
+			"tr": ["gitar konseri"],
+			"hi": ["गिटार कॉन्सर्ट"]
+		}
+	},
+	{
+		"word": "halfmoon",
+		"synonyms": {
+			"de": ["Halbmond"],
+			"en": ["halfmoon", "half moon"],
+			"es": ["media luna"],
+			"fr": ["demi-lune"],
+			"it": ["mezza luna"],
+			"pt": ["meia-lua"],
+			"ru": ["полумесяц"],
+			"tr": ["yarım ay"],
+			"hi": ["अर्धचंद्र"]
+		}
+	},
+	{
+		"word": "handcraft",
+		"synonyms": {
+			"de": ["Handwerk", "Handarbeit", "Kunsthandwerk"],
+			"en": ["handicraft", "artisanship", "craftsmanship"],
+			"es": ["artesanía", "manualidad", "artesanías"],
+			"fr": ["artisanat", "travail manuel", "artisanat d'art"],
+			"it": ["artigianato", "lavoro manuale", "manufatto"],
+			"pt": ["artesanato", "trabalho manual", "manufatura"],
+			"ru": ["ремесло", "рукоделие", "ручная работа"],
+			"tr": ["el sanatı", "el işi", "zanaat"],
+			"hi": ["हस्तशिल्प", "दस्तकारी", "हाथ का काम"]
+		}
+	},
+	{
+		"word": "handstand",
+		"synonyms": {
+			"de": ["Handstand"],
+			"en": ["hand balance"],
+			"es": ["parada de manos"],
+			"fr": ["poirier", "équilibre sur les mains"],
+			"it": ["verticale", "equilibrio sulle mani"],
+			"pt": ["parada de mão", "bananeira"],
+			"ru": ["стойка на руках"],
+			"tr": ["amuda kalkmak", "el üstünde durma"],
+			"hi": ["हस्तासन", "हाथों पर खड़ा होना"]
+		}
+	},
+	{
+		"word": "health",
+		"synonyms": {
+			"de": ["Gesundheit", "Wohlbefinden"],
+			"en": ["wellness", "well-being"],
+			"es": ["salud", "bienestar"],
+			"fr": ["santé", "bien-être"],
+			"it": ["salute", "benessere"],
+			"pt": ["saúde", "bem-estar"],
+			"ru": ["здоровье", "благополучие"],
+			"tr": ["sağlık", "esenlik"],
+			"hi": ["स्वास्थ्य", "तंदुरुस्ती"]
+		}
+	},
+	{
+		"word": "hula hoop",
+		"synonyms": {
+			"de": ["Hula-Hoop", "Reifen"],
+			"en": ["hooping"],
+			"es": ["hula-hula", "aro"],
+			"fr": ["hula hoop", "cerceau"],
+			"it": ["cerchio"],
+			"pt": ["bambolê", "arco"],
+			"ru": ["хула-хуп", "обруч"],
+			"tr": ["hula hop", "çember"],
+			"hi": ["हुला हूप", "चक्र"]
+		}
+	},
+	{
+		"word": "human design",
+		"synonyms": {
+			"de": ["Human Design", "Menschliches Design"],
+			"en": ["humandesign"],
+			"es": ["diseño humano"],
+			"fr": ["design humain"],
+			"it": ["design umano"],
+			"pt": ["design humano"],
+			"ru": ["дизайн человека"],
+			"tr": ["insan tasarımı"],
+			"hi": ["मानव डिजाइन"]
+		}
+	},
+	{
+		"word": "ice bath",
+		"synonyms": {
+			"de": ["Eisbad", "Kältebad"],
+			"en": ["cold plunge", "cryotherapy"],
+			"es": ["baño de hielo", "crioterapia"],
+			"fr": ["bain de glace", "cryothérapie"],
+			"it": ["bagno di ghiaccio"],
+			"pt": ["banho de gelo"],
+			"ru": ["ледяная ванна", "криотерапия"],
+			"tr": ["buz banyosu", "kriyoterapi"],
+			"hi": ["बर्फ का स्नान", "क्रायोथेरेपी"]
+		}
+	},
+	{
+		"word": "indian dance",
+		"synonyms": {
+			"de": ["indischer Tanz", "Bollywood-Tanz"],
+			"en": ["Bharatanatyam", "Kathak", "Bollywood dance"],
+			"es": ["danza india", "baile de Bollywood"],
+			"fr": ["danse indienne", "danse bollywood"],
+			"it": ["danza indiana", "danza bollywood"],
+			"pt": ["dança indiana", "dança de Bollywood"],
+			"ru": ["индийский танец", "танец Болливуда"],
+			"tr": ["Hint dansı", "Bollywood dansı"],
+			"hi": ["भारतीय नृत्य", "बॉलीवुड नृत्य"]
+		}
+	},
+	{
+		"word": "innerwalk",
+		"synonyms": {
+			"de": ["innerer Spaziergang"],
+			"en": ["inner walk"],
+			"es": ["caminata interior"],
+			"fr": ["marche intérieure"],
+			"it": ["camminata interiore"],
+			"pt": ["caminhada interior"],
+			"ru": ["внутренняя прогулка"],
+			"tr": ["iç yürüyüş"],
+			"hi": ["आंतरिक चहलकदमी"]
+		}
+	},
+	{
+		"word": "innerdance",
+		"synonyms": {
+			"de": ["innerer Tanz"],
+			"en": ["inner dance"],
+			"es": ["danza interior"],
+			"fr": ["danse intérieure"],
+			"it": ["danza interiore"],
+			"pt": ["dança interior"],
+			"ru": ["внутренний танец"],
+			"tr": ["iç dans"],
+			"hi": ["आंतरिक नृत्य"]
+		}
+	},
+	{
+		"word": "inner child",
+		"synonyms": {
+			"de": ["inneres Kind"],
+			"en": ["innerchild"],
+			"es": ["niño interior"],
+			"fr": ["enfant intérieur"],
+			"it": ["bambino interiore"],
+			"pt": ["criança interior"],
+			"ru": ["внутренний ребенок"],
+			"tr": ["iç çocuk"],
+			"hi": ["आंतरिक बच्चा"]
+		}
+	},
+	{
+		"word": "ancestor",
+		"synonyms": {
+			"de": ["Vorfahre", "Vorfahren", "Ahne", "Ahnen"],
+			"en": ["ancestors", "forebears"],
+			"es": ["antepasado", "antepasados"],
+			"fr": ["ancêtre", "ancêtres"],
+			"it": ["antenato", "antenati"],
+			"pt": ["antepassado", "antepassados"],
+			"ru": ["предок", "предки"],
+			"tr": ["ata", "atalar"],
+			"hi": ["पूर्वज", "पूर्वजों"]
+		}
+	},
+	{
+		"word": "kirtan",
+		"synonyms": {
+			"de": ["Kirtan", "Bhajan"],
+			"en": ["devotional chanting"],
+			"es": ["canto devocional"],
+			"fr": ["chant dévotionnel"],
+			"it": ["canto devozionale"],
+			"pt": [],
+			"ru": ["киртан", "бхаджан"],
+			"tr": ["dini şarkı söyleme"],
+			"hi": ["कीर्तन", "भजन"]
+		}
+	},
+	{
+		"word": "kundalini",
+		"synonyms": {
+			"de": ["Kundalini", "Kundalini-Yoga"],
+			"en": ["kundalini yoga"],
+			"es": ["yoga kundalini"],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["кундалини", "кундалини-йога"],
+			"tr": ["kundalini yogası"],
+			"hi": ["कुंडलिनी", "कुंडलिनी योग"]
+		}
+	},
+	{
+		"word": "learning",
+		"synonyms": {
+			"de": ["Lernen", "Bildung", "Weiterbildung"],
+			"en": ["learn", "education", "studying"],
+			"es": ["aprendizaje", "aprender", "educación"],
+			"fr": ["apprentissage", "apprendre", "éducation"],
+			"it": ["apprendimento", "imparare", "istruzione"],
+			"pt": ["aprendizagem", "educação"],
+			"ru": ["обучение", "учиться", "образование"],
+			"tr": ["öğrenme", "öğrenmek", "eğitim"],
+			"hi": ["सीखना", "शिक्षा", "अध्ययन"]
+		}
+	},
+	{
+		"word": "discussion",
+		"synonyms": {
+			"de": ["Diskussion", "Gespräch", "Debatte"],
+			"en": ["dialogue", "debate", "conversation"],
+			"es": ["discusión", "conversación"],
+			"fr": ["discussion", "débat"],
+			"it": ["discussione", "dibattito", "conversazione"],
+			"pt": ["discussão", "conversa"],
+			"ru": ["обсуждение", "дебаты", "разговор"],
+			"tr": ["tartışma", "münazara", "sohbet"],
+			"hi": ["चर्चा", "बहस", "वार्तालाप"]
+		}
+	},
+	{
+		"word": "philosophy",
+		"synonyms": {
+			"de": [
+				"Philosophie",
+				"Philosophien",
+				"philosophisch",
+				"Philosoph",
+				"Philosophin",
+				"Sokrates",
+				"sokratisch",
+				"Stoizismus",
+				"stoisch",
+				"Stoiker",
+				"Platon",
+				"platonisch",
+				"Aristoteles",
+				"aristotelisch"
+			],
+			"en": [
+				"philosophy",
+				"philosophical",
+				"philosopher",
+				"philosophers",
+				"philosophies",
+				"Socrates",
+				"Socratic",
+				"Stoicism",
+				"stoic",
+				"stoics",
+				"Plato",
+				"Platonic",
+				"Aristotle",
+				"Aristotelian",
+				"Aristotelianism"
+			],
+			"es": [
+				"filosofía",
+				"filosófico",
+				"filósofo",
+				"filósofa",
+				"filósofos",
+				"filósofas",
+				"Sócrates",
+				"socrático",
+				"estoicismo",
+				"estoico",
+				"estoicos",
+				"Platón",
+				"platónico",
+				"Aristóteles",
+				"aristotélico",
+				"philosophia"
+			],
+			"fr": [
+				"philosophique",
+				"philosophe",
+				"philosophes",
+				"Socrate",
+				"socratique",
+				"stoïcisme",
+				"stoïque",
+				"stoïcien",
+				"platonicien",
+				"Aristote",
+				"aristotélicien"
+			],
+			"it": [
+				"filosofia",
+				"filosofico",
+				"filosofo",
+				"filosofa",
+				"filosofi",
+				"filosofe",
+				"socratico",
+				"stoicismo",
+				"stoico",
+				"stoici",
+				"Platone",
+				"platonico",
+				"Aristotele",
+				"aristotelico"
+			],
+			"pt": ["Platão", "platônico"],
+			"ru": [
+				"философия",
+				"философский",
+				"философ",
+				"философы",
+				"Сократ",
+				"сократический",
+				"стоицизм",
+				"стоик",
+				"стоики",
+				"Платон",
+				"платонический",
+				"Аристотель",
+				"аристотелевский"
+			],
+			"tr": [
+				"felsefe",
+				"felsefi",
+				"filozof",
+				"Sokratik",
+				"Stoacılık",
+				"stoacı",
+				"Platonik",
+				"Aristo",
+				"Aristocu"
+			],
+			"hi": [
+				"दर्शन",
+				"दार्शनिक",
+				"सुकरात",
+				"सुकराती",
+				"स्टोइसिज्म",
+				"स्टोइक",
+				"प्लेटो",
+				"प्लेटोनिक",
+				"अरस्तू",
+				"अरस्तूवादी"
+			]
+		}
+	},
+	{
+		"word": "movies",
+		"synonyms": {
+			"de": ["Filme", "Film", "Kino", "Kinofilm"],
+			"en": ["movies", "movie", "cinema", "films", "movie night"],
+			"es": ["películas", "película", "cine", "noche de cine"],
+			"fr": ["cinéma", "soirée cinéma"],
+			"it": ["serata cinema"],
+			"pt": ["filmes", "noite de cinema"],
+			"ru": ["фильмы", "фильм", "кино", "киновечер"],
+			"tr": ["filmler", "sinema", "film gecesi"],
+			"hi": ["फिल्में", "फिल्म", "सिनेमा", "मूवी नाइट"]
+		}
+	},
+	{
+		"word": "theatre",
+		"synonyms": {
+			"de": [
+				"Theater",
+				"theatralisch",
+				"Theateraufführung",
+				"Theaterproduktion",
+				"Theatershow",
+				"Theaterbühne"
+			],
+			"en": [
+				"theatre",
+				"theatres",
+				"theaters",
+				"theatrical",
+				"theatricals",
+				"theatricality",
+				"theatrical performance",
+				"theatrical performances",
+				"theatrical production",
+				"theatrical productions",
+				"theatrical show",
+				"theatrical shows",
+				"theatrical stage",
+				"theatrical stages"
+			],
+			"es": [
+				"teatro",
+				"teatros",
+				"teatral",
+				"representación teatral",
+				"producción teatral",
+				"espectáculo teatral",
+				"escenario teatral"
+			],
+			"fr": [
+				"théâtre",
+				"théâtres",
+				"théâtral",
+				"représentation théâtrale",
+				"production théâtrale",
+				"spectacle théâtral",
+				"scène théâtrale"
+			],
+			"it": [
+				"teatri",
+				"teatrale",
+				"rappresentazione teatrale",
+				"produzione teatrale",
+				"spettacolo teatrale",
+				"palcoscenico teatrale"
+			],
+			"pt": ["representação teatral", "produção teatral", "espetáculo teatral", "palco teatral"],
+			"ru": [
+				"театр",
+				"театры",
+				"театральный",
+				"театральное представление",
+				"театральная постановка",
+				"театральное шоу",
+				"театральная сцена"
+			],
+			"tr": [
+				"tiyatro",
+				"tiyatrolar",
+				"tiyatro gösterisi",
+				"tiyatro prodüksiyonu",
+				"tiyatro şovu",
+				"tiyatro sahnesi"
+			],
+			"hi": ["थिएटर", "नाटक", "नाट्य प्रदर्शन", "नाट्य उत्पादन", "नाट्य शो", "रंगमंच"]
+		}
+	},
+	{
+		"word": "live music",
+		"synonyms": {
+			"de": ["Live-Musik", "Unplugged", "Jazzmusik"],
+			"en": ["live music", "jazz"],
+			"es": ["música en vivo", "desenchufado"],
+			"fr": ["musique live", "acoustique"],
+			"it": ["musica dal vivo"],
+			"pt": ["música ao vivo", "acústico"],
+			"ru": ["живая музыка", "акустика"],
+			"tr": ["canlı müzik", "akustik"],
+			"hi": ["लाइव संगीत", "अनप्लग्ड"]
+		}
+	},
+	{
+		"word": "love",
+		"synonyms": {
+			"de": ["Liebe", "liebevoll"],
+			"en": ["love", "loving"],
+			"es": ["amor", "amoroso"],
+			"fr": ["amour", "aimant"],
+			"it": ["amore", "amorevole"],
+			"pt": [],
+			"ru": ["любовь", "любящий"],
+			"tr": ["aşk", "sevgi"],
+			"hi": ["प्यार", "प्रेम"]
+		}
+	},
+	{
+		"word": "mandala",
+		"synonyms": {
+			"de": ["Mandala"],
+			"en": [],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["мандала"],
+			"tr": [],
+			"hi": ["मंडल"]
+		}
+	},
+	{
+		"word": "manifest",
+		"synonyms": {
+			"de": ["manifestieren", "Manifestation"],
+			"en": ["manifest"],
+			"es": ["manifestar", "manifestación"],
+			"fr": ["manifester"],
+			"it": ["manifestare", "manifestazione"],
+			"pt": ["manifestação"],
+			"ru": ["проявлять", "проявление"],
+			"tr": ["tezahür etmek", "tezahür"],
+			"hi": ["प्रकट करना", "प्रकटीकरण"]
+		}
+	},
+	{
+		"word": "martial arts",
+		"synonyms": {
+			"de": ["Kampfkunst", "Kampfkünste", "Muay Thai", "Grappling", "BJJ", "Jiu-Jitsu", "Kung-Fu"],
+			"en": ["martial arts", "Muay-Thai", "Jiu Jitsu", "Kungfu", "Kung Fu"],
+			"es": ["artes marciales", "lucha libre"],
+			"fr": ["arts martiaux", "Muay-thaï"],
+			"it": ["arti marziali"],
+			"pt": ["artes marciais"],
+			"ru": ["боевые искусства", "Муай Тай", "грэпплинг", "джиу-джитсу", "кунг-фу"],
+			"tr": ["dövüş sanatları", "güreş"],
+			"hi": ["मार्शल आर्ट", "मुआय थाई", "जीउ जीत्सू", "कुंग फू"]
+		}
+	},
+	{
+		"word": "meditation",
+		"synonyms": {
+			"de": ["Meditation", "meditieren", "meditationen"],
+			"en": ["meditate", "meditations"],
+			"es": ["meditación", "meditar"],
+			"fr": ["méditation", "méditer"],
+			"it": ["meditazione", "meditare"],
+			"pt": ["meditação", "meditações", "meditatcion", "meditacao", "meditacaos"],
+			"ru": ["медитация", "медитировать"],
+			"tr": ["meditasyon", "meditasyon yapmak"],
+			"hi": ["ध्यान", "मेडिटेशन"]
+		}
+	},
+	{
+		"word": "men circle",
+		"synonyms": {
+			"de": ["Männerkreis", "Männlichkeit"],
+			"en": ["men circle", "mens circle", "men's circle", "men’s circle", "menhood"],
+			"es": ["círculo de hombres", "masculinidad"],
+			"fr": ["cercle d'hommes", "masculinité"],
+			"it": ["cerchio degli uomini", "mascolinità"],
+			"pt": ["círculo de homens", "masculinidade"],
+			"ru": ["мужской круг", "мужественность"],
+			"tr": ["erkek çemberi", "erkeklik"],
+			"hi": ["पुरुष मंडली", "पुरुषत्व"]
+		}
+	},
+	{
+		"word": "woman circle",
+		"synonyms": {
+			"de": ["Frauenkreis", "Weiblichkeit"],
+			"en": [
+				"woman circle",
+				"women circle",
+				"womens circle",
+				"woman's circle",
+				"women's circle",
+				"woman’s circle",
+				"women’s circle",
+				"womanhood"
+			],
+			"es": ["círculo de mujeres", "feminidad"],
+			"fr": ["cercle de femmes", "féminité"],
+			"it": ["cerchio delle donne", "femminilità"],
+			"pt": ["círculo de mulheres", "feminilidade"],
+			"ru": ["женский круг", "женственность"],
+			"tr": ["kadın çemberi", "kadınlık"],
+			"hi": ["महिला मंडली", "नारीत्व"]
+		}
+	},
+	{
+		"word": "authentic relating",
+		"synonyms": {
+			"de": ["authentische Beziehung", "authentisches Beziehungsverhalten"],
+			"en": ["authentic relating"],
+			"es": ["relación auténtica"],
+			"fr": ["relation authentique"],
+			"it": ["relazione autentica"],
+			"pt": ["relacionamento autêntico"],
+			"ru": ["аутентичные отношения"],
+			"tr": ["otantik ilişki"],
+			"hi": ["प्रामाणिक संबंध"]
+		}
+	},
+	{
+		"word": "abundance",
+		"synonyms": {
+			"de": ["Überfluss", "Fülle"],
+			"en": ["abundance"],
+			"es": ["abundancia"],
+			"fr": ["abondance"],
+			"it": ["abbondanza"],
+			"pt": ["abundância"],
+			"ru": ["изобилие"],
+			"tr": ["bolluk"],
+			"hi": ["प्रचुरता"]
+		}
+	},
+	{
+		"word": "music class",
+		"synonyms": {
+			"de": ["Musikunterricht", "Musikkurs"],
+			"en": ["music class", "music lesson"],
+			"es": ["clase de música", "lección de música"],
+			"fr": ["cours de musique", "leçon de musique"],
+			"it": ["lezione di musica", "corso di musica"],
+			"pt": ["aula de música", "lição de música"],
+			"ru": ["урок музыки", "музыкальный класс"],
+			"tr": ["müzik dersi"],
+			"hi": ["संगीत कक्षा"]
+		}
+	},
+	{
+		"word": "music jam",
+		"synonyms": {
+			"de": ["Musik-Jam", "Jam-Session"],
+			"en": ["music jam", "jam session"],
+			"es": ["jam de música", "sesión de improvisación"],
+			"fr": ["jam musicale", "bœuf musical"],
+			"it": ["sessione di improvvisazione"],
+			"pt": ["jam musical", "sessão de improviso"],
+			"ru": ["музыкальный джем", "джем-сейшн"],
+			"tr": ["müzik doğaçlaması"],
+			"hi": ["संगीत जैम"]
+		}
+	},
+	{
+		"word": "fasting",
+		"synonyms": {
+			"de": ["Fasten", "Fastenkur"],
+			"en": ["fasting", "fast"],
+			"es": ["ayuno", "ayunar"],
+			"fr": ["jeûne", "jeûner"],
+			"it": ["digiuno", "digiunare"],
+			"pt": ["jejum", "jejuar"],
+			"ru": ["пост", "голодание"],
+			"tr": ["oruç", "oruç tutmak"],
+			"hi": ["उपवास"]
+		}
+	},
+	{
+		"word": "natural cosmetics",
+		"synonyms": {
+			"de": ["Naturkosmetik"],
+			"en": ["natural cosmetics"],
+			"es": ["cosméticos naturales"],
+			"fr": ["cosmétiques naturels"],
+			"it": ["cosmetici naturali"],
+			"pt": ["cosméticos naturais"],
+			"ru": ["натуральная косметика"],
+			"tr": ["doğal kozmetik"],
+			"hi": ["प्राकृतिक सौंदर्य प्रसाधन"]
+		}
+	},
+	{
+		"word": "organic",
+		"synonyms": {
+			"de": ["Bio", "biologisch", "ökologisch"],
+			"en": ["organic"],
+			"es": ["orgánico", "ecológico"],
+			"fr": ["biologique"],
+			"it": ["biologico"],
+			"pt": ["orgânico", "biológico"],
+			"ru": ["органический", "экологический"],
+			"tr": ["organik"],
+			"hi": ["जैविक"]
+		}
+	},
+	{
+		"word": "new moon",
+		"synonyms": {
+			"de": ["Neumond"],
+			"en": ["new moon"],
+			"es": ["luna nueva"],
+			"fr": ["nouvelle lune"],
+			"it": ["luna nuova"],
+			"pt": ["lua nova"],
+			"ru": ["новолуние"],
+			"tr": ["yeni ay"],
+			"hi": ["अमावस्या", "amāvasyā"]
+		}
+	},
+	{
+		"word": "numerology",
+		"synonyms": {
+			"de": ["Numerologie"],
+			"en": ["numerology"],
+			"es": ["numerología"],
+			"fr": ["numérologie"],
+			"it": ["numerologia"],
+			"pt": [],
+			"ru": ["нумерология"],
+			"tr": ["numeroloji"],
+			"hi": ["अंकशास्त्र", "aṅkaśāstra"]
+		}
+	},
+	{
+		"word": "open mic",
+		"synonyms": {
+			"de": ["offenes Mikrofon", "offene Bühne"],
+			"en": ["open mic", "open mike"],
+			"es": ["micrófono abierto"],
+			"fr": ["scène ouverte"],
+			"it": ["microfono aperto"],
+			"pt": ["microfone aberto"],
+			"ru": ["открытый микрофон"],
+			"tr": ["açık mikrofon"],
+			"hi": ["ओपन माइक", "open māik"]
+		}
+	},
+	{
+		"word": "personal development",
+		"synonyms": {
+			"de": ["persönliche Entwicklung", "Selbstentwicklung"],
+			"en": ["personal development", "self-improvement"],
+			"es": ["desarrollo personal"],
+			"fr": ["développement personnel"],
+			"it": ["sviluppo personale"],
+			"pt": ["desenvolvimento pessoal"],
+			"ru": ["личностное развитие"],
+			"tr": ["kişisel gelişim"],
+			"hi": ["व्यक्तिगत विकास", "vyaktigat vikās"]
+		}
+	},
+	{
+		"word": "photography",
+		"synonyms": {
+			"de": ["Fotografie", "Lichtbildkunst"],
+			"en": ["photography", "photographing"],
+			"es": ["fotografía"],
+			"fr": ["photographie"],
+			"it": ["fotografia"],
+			"pt": [],
+			"ru": ["фотография"],
+			"tr": ["fotoğrafçılık"],
+			"hi": ["छायाचित्रण", "chāyācitraṇ"]
+		}
+	},
+	{
+		"word": "poetry",
+		"synonyms": {
+			"de": ["Poesie", "Dichtung", "Lyrik"],
+			"en": ["poetry", "poems", "verse"],
+			"es": ["poesía", "poemas"],
+			"fr": ["poésie", "poèmes"],
+			"it": ["poesia"],
+			"pt": [],
+			"ru": ["поэзия", "стихи"],
+			"tr": ["şiir"],
+			"hi": ["कविता", "kavitā"]
+		}
+	},
+	{
+		"word": "holistic",
+		"synonyms": {
+			"de": ["ganzheitlich", "holistisch"],
+			"en": ["holistic", "holistic health", "holistic wellness", "holistic therapy"],
+			"es": ["holístico", "integral"],
+			"fr": ["holistique", "global"],
+			"it": ["olistico", "integrale"],
+			"pt": [],
+			"ru": ["холистический", "целостный"],
+			"tr": ["bütüncül", "holistik"],
+			"hi": ["समग्र", "samagra"]
+		}
+	},
+	{
+		"word": "pottery",
+		"synonyms": {
+			"de": ["Töpferei", "Keramik"],
+			"en": ["pottery", "clay", "ceramics", "ceramic"],
+			"es": ["alfarería", "cerámica"],
+			"fr": ["poterie", "céramique"],
+			"it": ["ceramica", "terracotta"],
+			"pt": ["olaria", "cerâmica"],
+			"ru": ["гончарное дело", "керамика"],
+			"tr": ["çömlekçilik", "seramik"],
+			"hi": ["कुम्हारी", "kumhārī"]
+		}
+	},
+	{
+		"word": "hiking",
+		"synonyms": {
+			"de": ["Wandern", "Bergwandern"],
+			"en": ["hiking", "trekking", "hike", "hikes"],
+			"es": ["senderismo", "caminata"],
+			"fr": ["randonnée", "randonner"],
+			"it": ["escursionismo"],
+			"pt": ["caminhada", "trilha"],
+			"ru": ["пеший туризм", "поход"],
+			"tr": ["doğa yürüyüşü"],
+			"hi": ["पैदल यात्रा", "paidal yātrā"]
+		}
+	},
+	{
+		"word": "pregnancy",
+		"synonyms": {
+			"de": ["Schwangerschaft", "schwanger"],
+			"en": ["pregnancy", "pregnant"],
+			"es": ["embarazo", "embarazada"],
+			"fr": ["grossesse", "enceinte"],
+			"it": ["gravidanza", "incinta"],
+			"pt": ["gravidez", "grávida"],
+			"ru": ["беременность", "беременная"],
+			"tr": ["hamilelik", "gebe"],
+			"hi": ["गर्भावस्था", "garbhāvasthā"]
+		}
+	},
+	{
+		"word": "tarot",
+		"synonyms": {
+			"de": ["Tarot", "Tarotkarten"],
+			"en": ["tarot cards"],
+			"es": ["cartas del tarot"],
+			"fr": ["cartes de tarot"],
+			"it": ["tarocchi"],
+			"pt": ["tarô", "cartas de tarô"],
+			"ru": ["таро", "карты таро"],
+			"tr": ["tarot kartları"],
+			"hi": ["टैरो", "ṭairo"]
+		}
+	},
+	{
+		"word": "readings",
+		"synonyms": {
+			"de": ["Lesungen", "Deutungen"],
+			"en": ["readings", "interpretations"],
+			"es": ["lecturas", "interpretaciones"],
+			"fr": ["lectures", "interprétations"],
+			"it": ["letture", "interpretazioni"],
+			"pt": ["leituras", "interpretações"],
+			"ru": ["чтения", "толкования"],
+			"tr": ["okumalar", "yorumlar"],
+			"hi": ["पठन", "paṭhan"]
+		}
+	},
+	{
+		"word": "connected movement",
+		"synonyms": {
+			"de": ["verbundene Bewegung"],
+			"en": ["connected movement"],
+			"es": ["movimiento conectado"],
+			"fr": ["mouvement connecté"],
+			"it": ["movimento connesso"],
+			"pt": ["movimento conectado"],
+			"ru": ["связанное движение"],
+			"tr": ["bağlantılı hareket"],
+			"hi": ["जुड़ी हुई गति", "juṛī huī gati"]
+		}
+	},
+	{
+		"word": "psychology",
+		"synonyms": {
+			"de": [
+				"Psychologie",
+				"psychologisch",
+				"Schattenarbeit",
+				"Psychologe",
+				"Psychologin",
+				"Familienaufstellung",
+				"inneres Team"
+			],
+			"en": [
+				"psychology",
+				"psychological",
+				"shadow work",
+				"psychologist",
+				"family constellation",
+				"inner team"
+			],
+			"es": [
+				"psicología",
+				"psicológico",
+				"trabajo de sombra",
+				"psicólogo",
+				"constelaciones familiares",
+				"equipo interno"
+			],
+			"fr": [
+				"psychologique",
+				"travail de l'ombre",
+				"psychologue",
+				"constellation familiale",
+				"équipe interne"
+			],
+			"it": [
+				"psicologia",
+				"psicologico",
+				"lavoro sull'ombra",
+				"psicologo",
+				"costellazioni familiari",
+				"team interno"
+			],
+			"pt": ["trabalho de sombra", "constelação familiar", "equipe interna"],
+			"ru": [
+				"психология",
+				"психологический",
+				"работа с тенью",
+				"психолог",
+				"семейные расстановки",
+				"внутренняя команда"
+			],
+			"tr": ["psikoloji", "psikolojik", "gölge çalışması", "psikolog", "aile dizimi", "iç takım"],
+			"hi": [
+				"मनोविज्ञान",
+				"manovijñān",
+				"मनोवैज्ञानिक",
+				"manovaijñānik",
+				"छाया कार्य",
+				"chāyā kārya",
+				"पारिवारिक संरचना",
+				"pārivārik saṃracnā",
+				"आंतरिक टीम",
+				"āntarik ṭīm"
+			]
+		}
+	},
+	{
+		"word": "empowerment",
+		"synonyms": {
+			"de": ["Ermächtigung", "Selbstermächtigung", "Shiva", "Shakti", "Göttin", "Göttinnen"],
+			"en": ["empowerment", "goddess", "goddesses"],
+			"es": ["empoderamiento", "diosa", "diosas"],
+			"fr": ["autonomisation", "déesse", "déesses"],
+			"it": ["dea", "dee"],
+			"pt": ["empoderamento", "deusa", "deusas"],
+			"ru": ["расширение прав и возможностей", "шива", "шакти", "богиня", "богини"],
+			"tr": ["güçlendirme", "tanrıça", "tanrıçalar"],
+			"hi": ["सशक्तिकरण", "saśaktīkaraṇ", "शिव", "śiva", "शक्ति", "śakti", "देवी", "devī"]
+		}
+	},
+	{
+		"word": "psychedelic",
+		"synonyms": {
+			"de": [
+				"psychedelisch",
+				"DMT",
+				"Psilocybin",
+				"Pilze",
+				"Ayahuasca",
+				"Kambo",
+				"Bufo",
+				"magische Trüffel"
+			],
+			"en": ["psychedelic", "shrooms", "magic truffles", "magic truffle"],
+			"es": ["psicodélico", "psilocibina", "hongos", "trufas mágicas"],
+			"fr": ["psychédélique", "psilocybine", "champignons", "truffes magiques"],
+			"it": ["psichedelico", "funghi", "tartufi magici"],
+			"pt": ["cogumelos"],
+			"ru": [
+				"психоделический",
+				"дмт",
+				"псилоцибин",
+				"грибы",
+				"аяуаска",
+				"камбо",
+				"жаба",
+				"магические трюфели"
+			],
+			"tr": ["psikedelik", "psilosibin", "mantar", "sihirli trüfler"],
+			"hi": [
+				"मनोविकारी",
+				"manovikārī",
+				"डीएमटी",
+				"ḍīemṭī",
+				"साइलोसाइबिन",
+				"sāilosāibin",
+				"मशरूम",
+				"maśarūm",
+				"अयाहुआस्का",
+				"ayāhuāskā",
+				"काम्बो",
+				"kāmbo",
+				"बूफो",
+				"būpho",
+				"जादुई ट्रफल",
+				"jāduī ṭraphal"
+			]
+		}
+	},
+	{
+		"word": "mushrooms",
+		"synonyms": {
+			"de": ["Pilze", "Pilz"],
+			"en": ["mushrooms", "mushroom"],
+			"es": ["hongos", "hongo"],
+			"fr": ["champignons", "champignon"],
+			"it": ["funghi", "fungo"],
+			"pt": ["cogumelos", "cogumelo"],
+			"ru": ["грибы", "гриб"],
+			"tr": ["mantarlar", "mantar"],
+			"hi": ["मशरूम", "maśarūm"]
+		}
+	},
+	{
+		"word": "qi gong",
+		"synonyms": {
+			"de": ["Qigong", "Chi Gong"],
+			"en": ["qi gong", "qi-gong"],
+			"es": ["chi kung"],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["цигун", "ци-гун"],
+			"tr": ["çi gong"],
+			"hi": ["ची गोंग", "cī goṅg"]
+		}
+	},
+	{
+		"word": "tai chi",
+		"synonyms": {
+			"de": ["Tai-Chi", "Taijiquan", "Schattenboxen"],
+			"en": ["taichi", "tai chi chuan"],
+			"es": ["taichí"],
+			"fr": ["tai-chi-chuan"],
+			"it": [],
+			"pt": [],
+			"ru": ["тайцзи", "тайцзицюань"],
+			"tr": ["tai chi", "tai çi"],
+			"hi": ["ताई ची", "ताइची"]
+		}
+	},
+	{
+		"word": "relationship",
+		"synonyms": {
+			"de": ["Beziehung", "Beziehungen", "Partnerschaft", "Partnerschaften"],
+			"en": ["relationships", "partnership", "partnerships"],
+			"es": ["relación", "relaciones", "pareja", "parejas"],
+			"fr": ["relation", "relations", "partenariat", "partenariats"],
+			"it": ["relazione", "relazioni", "rapporto", "rapporti"],
+			"pt": ["relacionamento", "relacionamentos", "parceria", "parcerias"],
+			"ru": ["отношения", "отношение", "партнерство"],
+			"tr": ["ilişki", "ilişkiler", "ortaklık", "ortaklıklar"],
+			"hi": ["रिश्ता", "रिश्ते", "संबंध", "साझेदारी"]
+		}
+	},
+	{
+		"word": "sauna",
+		"synonyms": {
+			"de": ["Schwitzbad", "Dampfbad"],
+			"en": ["steam room", "sweat lodge"],
+			"es": ["sauna", "saunas", "baño de vapor"],
+			"fr": ["bain de vapeur"],
+			"it": ["saune", "bagno turco"],
+			"pt": ["banho a vapor"],
+			"ru": ["сауна", "парная", "баня"],
+			"tr": ["buhar odası"],
+			"hi": ["सौना", "वाष्प स्नान"]
+		}
+	},
+	{
+		"word": "shamanism",
+		"synonyms": {
+			"de": ["Schamanismus", "Schamane", "Schamanin", "schamanisch"],
+			"en": ["shaman", "shamanic"],
+			"es": ["chamanismo", "chamán", "chamánico"],
+			"fr": ["chamanisme", "chaman", "chamanique"],
+			"it": ["sciamanesimo", "sciamano", "sciamana", "sciamanico"],
+			"pt": ["xamanismo", "xamã", "xamânico"],
+			"ru": ["шаманизм", "шаман", "шаманка", "шаманский"],
+			"tr": ["şamanizm", "şaman", "şamanik"],
+			"hi": ["शमनवाद", "शमन", "शामनिक"]
+		}
+	},
+	{
+		"word": "singing circle",
+		"synonyms": {
+			"de": ["Singkreis", "Gesangsrunde"],
+			"en": ["song circle", "vocal circle", "singing circle", "circle song"],
+			"es": ["círculo de canto", "ronda de canto"],
+			"fr": ["cercle de chant", "ronde de chant"],
+			"it": ["circolo di canto", "cerchio canoro"],
+			"pt": ["roda de canto"],
+			"ru": ["певческий круг", "вокальный круг"],
+			"tr": ["şarkı çemberi", "vokal çember"],
+			"hi": ["गायन मंडली", "गाना वृत्त"]
+		}
+	},
+	{
+		"word": "open mic",
+		"synonyms": {
+			"de": ["offene Bühne", "offenes Mikrofon"],
+			"en": ["open microphone", "open stage"],
+			"es": ["micrófono abierto", "escenario abierto"],
+			"fr": ["scène ouverte", "micro ouvert"],
+			"it": ["microfono aperto", "palco aperto"],
+			"pt": ["microfone aberto", "palco aberto"],
+			"ru": ["открытый микрофон", "свободная сцена"],
+			"tr": ["açık mikrofon", "açık sahne"],
+			"hi": ["ओपन माइक", "खुला मंच"]
+		}
+	},
+	{
+		"word": "somatic",
+		"synonyms": {
+			"de": ["somatisch", "körperlich"],
+			"en": ["bodily", "physical"],
+			"es": ["somático", "corporal"],
+			"fr": ["somatique", "corporel"],
+			"it": ["somatico", "corporeo"],
+			"pt": [],
+			"ru": ["соматический", "телесный"],
+			"tr": ["somatik", "bedensel"],
+			"hi": ["शारीरिक", "कायिक"]
+		}
+	},
+	{
+		"word": "sound healing",
+		"synonyms": {
+			"de": [
+				"Klangtherapie",
+				"Klangmassage",
+				"Klangschale",
+				"Klangschalen",
+				"Klangbad",
+				"Klangbäder"
+			],
+			"en": [
+				"gong healing",
+				"gong sound",
+				"gong journey",
+				"sound journey",
+				"tibetan bowl",
+				"tibetan bowls",
+				"singing bowl",
+				"singing bowls",
+				"crystal bowl",
+				"crystal bowls",
+				"sound bowl",
+				"sound bath",
+				"sound bowls",
+				"bowl healing"
+			],
+			"es": [
+				"sanación con sonido",
+				"terapia de sonido",
+				"cuenco tibetano",
+				"cuencos tibetanos",
+				"baño de sonido"
+			],
+			"fr": [
+				"guérison par le son",
+				"thérapie par le son",
+				"bol chantant",
+				"bols chantants",
+				"bain sonore"
+			],
+			"it": [
+				"guarigione sonora",
+				"terapia del suono",
+				"campana tibetana",
+				"campane tibetane",
+				"bagno di suono"
+			],
+			"pt": [
+				"cura sonora",
+				"terapia do som",
+				"tigela tibetana",
+				"tigelas tibetanas",
+				"banho de som"
+			],
+			"ru": ["звукотерапия", "поющая чаша", "поющие чаши", "звуковая ванна"],
+			"tr": ["ses terapisi", "tibet çanağı", "tibet çanakları", "ses banyosu"],
+			"hi": ["ध्वनि चिकित्सा", "ध्वनि स्नान", "टिब्बती कटोरा", "टिब्बती कटोरे"]
+		}
+	},
+	{
+		"word": "handpan",
+		"synonyms": {
+			"de": ["Handpan", "Handpans", "Hang"],
+			"en": ["hang drum", "hang drums"],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["хэндпан", "ханг"],
+			"tr": ["hang davulu"],
+			"hi": ["हैंडपैन", "हैंग ड्रम"]
+		}
+	},
+	{
+		"word": "speed dating",
+		"synonyms": {
+			"de": ["Schnelldating", "Blitzdating"],
+			"en": ["rapid dating", "fast dating"],
+			"es": ["citas rápidas", "citas express"],
+			"fr": ["rencontres rapides", "rencontres express"],
+			"it": ["incontri veloci", "appuntamenti lampo"],
+			"pt": ["encontros rápidos", "encontros relâmpago"],
+			"ru": ["быстрые свидания", "экспресс-свидания"],
+			"tr": ["hızlı tanışma", "ekspres buluşma"],
+			"hi": ["स्पीड डेटिंग", "तेज़ डेटिंग"]
+		}
+	},
+	{
+		"word": "spiritual",
+		"synonyms": {
+			"de": ["spirituell", "geistig"],
+			"en": ["spirituality", "mystical"],
+			"es": ["espiritual", "espiritualidad"],
+			"fr": ["spirituel", "spiritualité"],
+			"it": ["spirituale", "spiritualità"],
+			"pt": ["espiritualidade"],
+			"ru": ["духовный", "духовность"],
+			"tr": ["manevi", "ruhsal"],
+			"hi": ["आध्यात्मिक", "आध्यात्मिकता"]
+		}
+	},
+	{
+		"word": "wisdom",
+		"synonyms": {
+			"de": ["Weisheit", "Klugheit"],
+			"en": ["sagacity", "insight"],
+			"es": ["sabiduría", "prudencia"],
+			"fr": ["sagesse", "sapience"],
+			"it": ["saggezza", "sapienza"],
+			"pt": ["sabedoria", "prudência"],
+			"ru": ["мудрость", "мудрое"],
+			"tr": ["bilgelik", "hikmet"],
+			"hi": ["ज्ञान", "बुद्धिमत्ता"]
+		}
+	},
+	{
+		"word": "storytelling",
+		"synonyms": {
+			"de": ["Geschichtenerzählen", "Erzählkunst"],
+			"en": ["narration", "tale-telling"],
+			"es": ["narración de historias", "cuentacuentos"],
+			"fr": ["art de conter"],
+			"it": ["narrazione", "racconto di storie"],
+			"pt": ["narração de histórias", "contação de histórias"],
+			"ru": ["рассказывание историй", "сторителлинг"],
+			"tr": ["hikaye anlatımı", "öykü anlatımı"],
+			"hi": ["कहानी सुनाना", "कथावाचन"]
+		}
+	},
+	{
+		"word": "sufi",
+		"synonyms": {
+			"de": ["Sufismus", "sufistisch"],
+			"en": ["sufism", "sufi mysticism"],
+			"es": ["sufí", "sufismo"],
+			"fr": ["soufi", "soufisme"],
+			"it": ["sufi"],
+			"pt": [],
+			"ru": ["суфий", "суфизм"],
+			"tr": ["tasavvuf"],
+			"hi": ["सूफी", "सूफीवाद"]
+		}
+	},
+	{
+		"word": "sun",
+		"synonyms": {
+			"de": ["Sonne", "solar"],
+			"en": ["sunshine"],
+			"es": ["sol"],
+			"fr": ["soleil", "solaire"],
+			"it": ["sole", "solare"],
+			"pt": [],
+			"ru": ["солнце", "солнечный"],
+			"tr": ["güneş", "güneşli"],
+			"hi": ["सूरज", "सौर"]
+		}
+	},
+	{
+		"word": "sup",
+		"synonyms": {
+			"de": ["Stand-up-Paddling", "Stehpaddeln"],
+			"en": ["stand-up paddle", "stand-up paddleboarding"],
+			"es": ["paddle surf", "stand up paddle"],
+			"fr": ["planche à rame"],
+			"it": ["tavola con pagaia"],
+			"pt": ["prancha com remo"],
+			"ru": ["сап", "стэнд-ап пэддл"],
+			"tr": ["ayakta kürek", "sup"],
+			"hi": ["स्टैंड अप पैडल", "खड़े होकर नौका चलाना"]
+		}
+	},
+	{
+		"word": "ceremony",
+		"synonyms": {
+			"de": ["Zeremonie", "Ritual", "Feier"],
+			"en": ["rite", "celebration"],
+			"es": ["ceremonia", "celebración"],
+			"fr": ["cérémonie", "rituel", "célébration"],
+			"it": ["cerimonia", "rituale", "celebrazione"],
+			"pt": ["cerimônia", "celebração"],
+			"ru": ["церемония", "ритуал", "торжество"],
+			"tr": ["tören", "ritüel", "kutlama"],
+			"hi": ["समारोह", "अनुष्ठान", "उत्सव"]
+		}
+	},
+	{
+		"word": "tea ceremony",
+		"synonyms": {
+			"de": ["Teezeremonie", "Teeritual"],
+			"en": ["tea ritual", "traditional tea serving"],
+			"es": ["ceremonia del té", "ritual del té"],
+			"fr": ["cérémonie du thé", "rituel du thé"],
+			"it": ["cerimonia del tè", "rituale del tè"],
+			"pt": ["cerimônia do chá", "ritual do chá"],
+			"ru": ["чайная церемония", "чайный ритуал"],
+			"tr": ["çay töreni", "çay ritüeli"],
+			"hi": ["चाय समारोह", "चाय अनुष्ठान"]
+		}
+	},
+	{
+		"word": "thai culture",
+		"synonyms": {
+			"de": ["thailändische Kultur", "Thai-Kultur"],
+			"en": ["Thai culture", "Thai traditions"],
+			"es": ["cultura tailandesa", "tradiciones tailandesas"],
+			"fr": ["culture thaïlandaise", "traditions thaïes"],
+			"it": ["cultura thailandese", "tradizioni thailandesi"],
+			"pt": ["tradições tailandesas"],
+			"ru": ["тайская культура", "тайские традиции"],
+			"tr": ["Tayland kültürü", "Tay kültürü"],
+			"hi": ["थाई संस्कृति", "थाई परंपराएं"]
+		}
+	},
+	{
+		"word": "vegan",
+		"synonyms": {
+			"de": ["vegan", "Veganer", "Veganerin", "Veganerinnen"],
+			"en": ["vegans", "plant-based"],
+			"es": ["vegano", "vegana", "veganos", "veganas"],
+			"fr": ["végétalien", "végétalienne", "végétaliens", "végétaliennes"],
+			"it": ["vegani", "vegane"],
+			"pt": [],
+			"ru": ["веган", "веганка", "веганы"],
+			"tr": ["veganlar"],
+			"hi": ["शाकाहारी", "वीगन"]
+		}
+	},
+	{
+		"word": "voice",
+		"synonyms": {
+			"de": ["Stimme", "Stimmen"],
+			"en": ["voice", "voices"],
+			"es": ["voz", "voces"],
+			"fr": ["voix"],
+			"it": ["voce", "voci"],
+			"pt": ["vozes"],
+			"ru": ["голос", "голоса"],
+			"tr": ["ses", "sesler"],
+			"hi": ["आवाज़", "आवाज़ें"]
+		}
+	},
+	{
+		"word": "water",
+		"synonyms": {
+			"de": ["Wasser"],
+			"en": ["water", "H2O"],
+			"es": ["agua"],
+			"fr": ["eau"],
+			"it": ["acqua"],
+			"pt": ["água"],
+			"ru": ["вода"],
+			"tr": ["su"],
+			"hi": ["पानी", "जल"]
+		}
+	},
+	{
+		"word": "writing",
+		"synonyms": {
+			"de": ["Schreiben", "schriftlich"],
+			"en": ["writing", "penmanship", "writers group", "writer's group"],
+			"es": ["escritura", "escribir"],
+			"fr": ["écriture", "écrire"],
+			"it": ["scrittura", "scrivere"],
+			"pt": ["escrita", "escrever"],
+			"ru": ["письмо", "писательство"],
+			"tr": ["yazma", "yazı"],
+			"hi": ["लेखन", "लिखना"]
+		}
+	},
+	{
+		"word": "reiki",
+		"synonyms": {
+			"de": ["Reiki"],
+			"en": [],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["Рейки"],
+			"tr": [],
+			"hi": ["रेकी"]
+		}
+	},
+	{
+		"word": "brahma kumaris",
+		"synonyms": {
+			"de": ["Brahma Kumaris"],
+			"en": [],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["Брахма Кумарис"],
+			"tr": [],
+			"hi": ["ब्रह्माकुमारी"]
+		}
+	},
+	{
+		"word": "zen buddhism",
+		"synonyms": {
+			"de": ["Zen-Buddhismus", "Zen"],
+			"en": ["Zen Buddhism"],
+			"es": ["budismo zen"],
+			"fr": ["bouddhisme zen"],
+			"it": ["buddhismo zen"],
+			"pt": [],
+			"ru": ["дзэн-буддизм", "дзэн"],
+			"tr": ["Zen Budizmi"],
+			"hi": ["ज़ेन बौद्ध धर्म", "ज़ेन"]
+		}
+	},
+	{
+		"word": "buddhism",
+		"synonyms": {
+			"de": ["Buddhismus", "buddhistisch", "Buddha"],
+			"en": ["Buddhism", "Buddhist"],
+			"es": ["budismo", "budista", "Buda"],
+			"fr": ["bouddhisme", "bouddhiste", "Bouddha"],
+			"it": ["buddismo", "buddista"],
+			"pt": [],
+			"ru": ["буддизм", "буддист", "буддистка", "Будда"],
+			"tr": ["Budizm", "Budist"],
+			"hi": ["बौद्ध धर्म", "बौद्ध", "बुद्ध"]
+		}
+	},
+	{
+		"word": "osho",
+		"synonyms": {
+			"de": ["Osho"],
+			"en": [],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["Ошо"],
+			"tr": [],
+			"hi": ["ओशो"]
+		}
+	},
+	{
+		"word": "chakra",
+		"synonyms": {
+			"de": ["Chakra", "Chakren", "Energiezentrum", "Energiezentren"],
+			"en": ["chakras", "energy center", "energy centers"],
+			"es": ["centro energético", "centros energéticos"],
+			"fr": ["centre énergétique", "centres énergétiques"],
+			"it": ["centro energetico", "centri energetici"],
+			"pt": [],
+			"ru": ["чакра", "чакры", "энергетический центр", "энергетические центры"],
+			"tr": ["çakra", "çakralar", "enerji merkezi", "enerji merkezleri"],
+			"hi": ["चक्र", "चक्रों", "ऊर्जा केंद्र", "ऊर्जा केंद्रों"]
+		}
+	},
+	{
+		"word": "djembe",
+		"synonyms": {
+			"de": [
+				"Djembe",
+				"Djembé",
+				"Djembes",
+				"Djembés",
+				"afrikanische Trommel",
+				"afrikanische Trommeln"
+			],
+			"en": ["African drum", "African drums"],
+			"es": ["yembe", "yembé", "yembes", "yembés", "tambor africano", "tambores africanos"],
+			"fr": ["tambour africain", "tambours africains"],
+			"it": ["tamburo africano", "tamburi africani"],
+			"pt": [],
+			"ru": ["джембе", "джемба", "африканский барабан", "африканские барабаны"],
+			"tr": ["djembe davulu", "djembeler", "Afrika davulu", "Afrika davulları"],
+			"hi": ["जेम्बे", "जेम्बी", "अफ्रीकी ड्रम", "अफ्रीकी ढोल"]
+		}
+	},
+	{
+		"word": "Didgeridoo",
+		"synonyms": {
+			"de": ["Didgeridoo", "Didgeridoos", "Didjeridu", "Didjeridus", "Yidaki", "Yidakis"],
+			"en": ["Drone pipe"],
+			"es": ["Didyeridu"],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": ["Диджериду", "Йидаки"],
+			"tr": ["Didjeridular"],
+			"hi": ["डिजेरिडू", "डिजेरिडूज़", "यिडाकी"]
+		}
+	},
+	{
+		"word": "Sitar",
+		"synonyms": {
+			"de": ["Sitar", "Sitars"],
+			"en": [],
+			"es": ["sitares"],
+			"fr": [],
+			"it": ["sitari"],
+			"pt": [],
+			"ru": ["ситар", "ситары"],
+			"tr": ["sitarlar"],
+			"hi": ["सितार", "सितारें"]
+		}
+	},
+	{
+		"word": "Harmonium",
+		"synonyms": {
+			"de": [
+				"Harmonium",
+				"Harmoniums",
+				"Druckwindharmonium",
+				"Druckwindharmoniums",
+				"Saugwindharmonium",
+				"Saugwindharmoniums",
+				"Indisches Harmonium",
+				"Indische Harmoniums"
+			],
+			"en": [
+				"reed organ",
+				"reed organs",
+				"pump organ",
+				"pump organs",
+				"Indian harmonium",
+				"Indian harmoniums"
+			],
+			"es": [
+				"armonio",
+				"armonios",
+				"armonium",
+				"armoniums",
+				"órgano de lengüetas",
+				"órganos de lengüetas",
+				"armonio indio",
+				"armonios indios"
+			],
+			"fr": [
+				"orgue à anches",
+				"orgues à anches",
+				"orgue de salon",
+				"orgues de salon",
+				"harmonium indien",
+				"harmoniums indiens"
+			],
+			"it": [
+				"organo a canne",
+				"organi a canne",
+				"organo da salotto",
+				"organi da salotto",
+				"armonium indiano",
+				"armonium indiani"
+			],
+			"pt": [
+				"harmônio",
+				"harmônios",
+				"órgão de palhetas",
+				"órgãos de palhetas",
+				"harmônio indiano",
+				"harmônios indianos"
+			],
+			"ru": [
+				"фисгармония",
+				"фисгармонии",
+				"гармониум",
+				"гармониумы",
+				"индийский гармониум",
+				"индийские гармониумы"
+			],
+			"tr": [
+				"armoniyum",
+				"armoniyumlar",
+				"pedallı org",
+				"pedallı orglar",
+				"Hint armoniyumu",
+				"Hint armoniyumları"
+			],
+			"hi": ["हारमोनियम", "हारमोनियम्स", "रीड ऑर्गन", "पंप ऑर्गन", "भारतीय हारमोनियम"]
+		}
+	},
+	{
+		"word": "Kalimba",
+		"synonyms": {
+			"de": ["Kalimba", "Kalimbas", "Daumenklavier", "Daumenpianos", "Mbira", "Mbiras"],
+			"en": ["Thumb piano", "Thumb pianos"],
+			"es": ["Piano de pulgar", "Pianos de pulgar"],
+			"fr": ["Piano à pouce", "Pianos à pouce"],
+			"it": ["Kalimbe", "Piano a pollice", "Pianoforti a pollice", "Mbire"],
+			"pt": ["Piano de polegar", "Pianos de polegar"],
+			"ru": [
+				"Калимба",
+				"Калимбы",
+				"Мбира",
+				"Мбиры",
+				"Санза",
+				"Санзы",
+				"Пальцевое пианино",
+				"Пальцевые пианино"
+			],
+			"tr": ["Kalimbalar", "Başparmak piyanosu", "Başparmak piyanoları", "Mbiralar"],
+			"hi": ["कलिम्बा", "कलिम्बाएँ", "अंगूठा पियानो", "म्बीरा", "संजा"]
+		}
+	},
+	{
+		"word": "Jaw Harp",
+		"synonyms": {
+			"de": ["Maultrommel", "Maultrommeln", "Brummeisen", "Mundharfe", "Mundharfen"],
+			"en": [
+				"jews harp",
+				"Jew's harp",
+				"Jew's harps",
+				"mouth harp",
+				"mouth harps",
+				"juice harp",
+				"juice harps",
+				"guimbarde",
+				"guimbardes"
+			],
+			"es": [
+				"birimbao",
+				"biribaos",
+				"arpa de boca",
+				"arpas de boca",
+				"trompa gallega",
+				"trompas gallegas"
+			],
+			"fr": ["harpe buccale", "harpes buccales", "bombarde", "bombarbes"],
+			"it": ["scacciapensieri", "ribeba", "ribebe", "arpa di bocca", "arpe di bocca"],
+			"pt": [
+				"berimbau de boca",
+				"berimbaus de boca",
+				"harpa de boca",
+				"harpas de boca",
+				"trompa galega",
+				"trompas galegas"
+			],
+			"ru": ["варган", "варганы", "губная арфа", "губные арфы", "зубанка", "зубанки"],
+			"tr": ["ağız kopuzu", "ağız kopuzları", "dilli kaval", "dilli kavallar"],
+			"hi": ["मोरचंग", "मुखचंग", "मुँह का बाजा", "मुँह के बाजे"]
+		}
+	},
+	{
+		"word": "Rainstick",
+		"synonyms": {
+			"de": ["Regenstab", "Regenstäbe", "Regenrohr", "Regenrohre", "Regenmacher", "Regenmacherin"],
+			"en": ["Rainstick", "Rainsticks", "Rain stick", "Rain sticks", "Rain maker", "Rain makers"],
+			"es": [
+				"Palo de lluvia",
+				"Palos de lluvia",
+				"Bastón de lluvia",
+				"Bastones de lluvia",
+				"Tubo de lluvia",
+				"Tubos de lluvia"
+			],
+			"fr": [
+				"Bâton de pluie",
+				"Bâtons de pluie",
+				"Tube de pluie",
+				"Tubes de pluie",
+				"Bâton de la pluie",
+				"Bâtons de la pluie"
+			],
+			"it": [
+				"Bastone della pioggia",
+				"Bastoni della pioggia",
+				"Tubo della pioggia",
+				"Tubi della pioggia"
+			],
+			"pt": [
+				"Pau de chuva",
+				"Paus de chuva",
+				"Bastão de chuva",
+				"Bastões de chuva",
+				"Tubo de chuva",
+				"Tubos de chuva"
+			],
+			"ru": [
+				"Дождевая палочка",
+				"Дождевые палочки",
+				"Посох дождя",
+				"Посохи дождя",
+				"Дождевая трубка",
+				"Дождевые трубки"
+			],
+			"tr": ["Yağmur çubuğu", "Yağmur çubukları", "Yağmur sopası", "Yağmur sopaları"],
+			"hi": ["वर्षा छड़ी", "वर्षा छड़ियाँ", "बारिश की छड़ी", "बारिश की छड़ियाँ"]
+		}
+	},
+	{
+		"word": "Shakuhachi",
+		"synonyms": {
+			"de": ["Shakuhachi", "Shakuhachis", "japanische Bambusflöte", "japanische Bambusflöten"],
+			"en": ["Japanese bamboo flute", "Japanese bamboo flutes"],
+			"es": ["flauta de bambú japonesa", "flautas de bambú japonesas"],
+			"fr": ["flûte en bambou japonaise", "flûtes en bambou japonaises"],
+			"it": ["flauto di bambù giapponese", "flauti di bambù giapponesi"],
+			"pt": ["flauta de bambu japonesa", "flautas de bambu japonesas"],
+			"ru": ["Сякухати", "Сякухачи", "японская бамбуковая флейта", "японские бамбуковые флейты"],
+			"tr": ["Shakuhachiler", "Japon bambu flütü", "Japon bambu flütleri"],
+			"hi": ["शाकुहाची", "शाकुहाचियाँ", "जापानी बाँस की बाँसुरी", "जापानी बाँस की बाँसुरियाँ"]
+		}
+	},
+	{
+		"word": "Shruti Box",
+		"synonyms": {
+			"de": [
+				"Shruti-Box",
+				"Shruti Box",
+				"Drone-Instrument",
+				"Harmonium-Box",
+				"Indisches Bordun-Instrument"
+			],
+			"en": ["Drone Box", "Indian Drone", "Sruti Box", "Surpeti"],
+			"es": ["Caja Shruti", "Caja de Shruti", "Instrumento Drone Indio", "Caja de Bordoneo"],
+			"fr": ["Boîte Shruti", "Boîte à Bourdon", "Instrument Drone Indien", "Harmonium Portable"],
+			"it": ["Scatola Shruti", "Scatola Drone", "Strumento Drone Indiano", "Armonium Portatile"],
+			"pt": ["Caixa Shruti", "Caixa de Drone", "Instrumento Drone Indiano", "Harmônio Portátil"],
+			"ru": ["Шрути-бокс", "Шрути-ящик", "Индийский дрон-инструмент", "Портативный гармониум"],
+			"tr": ["Shruti Kutusu", "Drone Kutusu", "Hint Drone Aleti", "Taşınabilir Armonik"],
+			"hi": ["श्रुति बॉक्स", "श्रुति पेटी", "सुरपेटी", "ड्रोन बॉक्स", "भारतीय ड्रोन वाद्य"]
+		}
+	},
+	{
+		"word": "Ocean Drum",
+		"synonyms": {
+			"de": [
+				"Ozean-Trommel",
+				"Ozeantrommeln",
+				"Meerestrommel",
+				"Meerestrommeln",
+				"Wassertrommel",
+				"Wassertrommeln",
+				"Wellentrommel",
+				"Wellentrommeln"
+			],
+			"en": [
+				"Ocean Drum",
+				"Ocean Drums",
+				"Sea Drum",
+				"Sea Drums",
+				"Wave Drum",
+				"Wave Drums",
+				"Water Drum",
+				"Water Drums"
+			],
+			"es": [
+				"Tambor oceánico",
+				"Tambores oceánicos",
+				"Tambor del mar",
+				"Tambores del mar",
+				"Tambor de olas",
+				"Tambores de olas"
+			],
+			"fr": [
+				"Tambour océanique",
+				"Tambours océaniques",
+				"Tambour de mer",
+				"Tambours de mer",
+				"Tambour à vagues",
+				"Tambours à vagues"
+			],
+			"it": [
+				"Tamburo oceanico",
+				"Tamburi oceanici",
+				"Tamburo del mare",
+				"Tamburi del mare",
+				"Tamburo delle onde",
+				"Tamburi delle onde"
+			],
+			"pt": [
+				"Tambor oceânico",
+				"Tambores oceânicos",
+				"Tambor do mar",
+				"Tambores do mar",
+				"Tambor de ondas",
+				"Tambores de ondas"
+			],
+			"ru": [
+				"Океанский барабан",
+				"Океанские барабаны",
+				"Морской барабан",
+				"Морские барабаны",
+				"Волновой барабан",
+				"Волновые барабаны"
+			],
+			"tr": [
+				"Okyanus davulu",
+				"Okyanus davulları",
+				"Deniz davulu",
+				"Deniz davulları",
+				"Dalga davulu",
+				"Dalga davulları"
+			],
+			"hi": ["सागर ढोल", "सागर ढोलक", "समुद्री ढोल", "समुद्री ढोलक", "लहर ढोल", "लहर ढोलक"]
+		}
+	},
+	{
+		"word": "forest bathing",
+		"synonyms": {
+			"de": [
+				"Waldbaden",
+				"Waldtherapie",
+				"Waldmedizin",
+				"Shinrin-Yoku",
+				"Waldheilkunde",
+				"Waldgesundheit"
+			],
+			"en": [
+				"forest bathing",
+				"forest therapy",
+				"sylvotherapy",
+				"nature therapy",
+				"ecotherapy",
+				"green therapy"
+			],
+			"es": [
+				"baño de bosque",
+				"baños de bosque",
+				"terapia forestal",
+				"baño de naturaleza",
+				"terapia de naturaleza"
+			],
+			"fr": [
+				"bain de forêt",
+				"bains de forêt",
+				"sylvothérapie",
+				"thérapie par la forêt",
+				"bain de nature"
+			],
+			"it": ["bagno nella foresta", "bagni nella foresta", "terapia forestale", "bagno di natura"],
+			"pt": [
+				"banho de floresta",
+				"banhos de floresta",
+				"terapia florestal",
+				"banho de natureza",
+				"terapia na natureza"
+			],
+			"ru": [
+				"лесные ванны",
+				"лесотерапия",
+				"лесная терапия",
+				"синрин-йоку",
+				"природотерапия",
+				"лесное купание"
+			],
+			"tr": ["orman banyosu", "orman terapisi", "doğa terapisi", "ormanda şifa", "orman kürü"],
+			"hi": [
+				"वन स्नान",
+				"जंगल स्नान",
+				"शिनरिन-योकु",
+				"वन चिकित्सा",
+				"प्रकृति चिकित्सा",
+				"हरित चिकित्सा"
+			]
+		}
+	},
+	{
+		"word": "retreat",
+		"synonyms": {
+			"de": ["Einkehrtage", "Besinnungstage"],
+			"en": ["retreat", "retreats"],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": [],
+			"tr": [],
+			"hi": []
+		}
+	},
+	{
+		"word": "flea market",
+		"synonyms": {
+			"de": [
+				"Flohmarkt",
+				"Flohmärkte",
+				"Trödelmarkt",
+				"Trödelmärkte",
+				"Second-Hand-Markt",
+				"Second-Hand-Märkte"
+			],
+			"en": [
+				"flea market",
+				"flea markets",
+				"swap meet",
+				"swap meets",
+				"car boot sale",
+				"car boot sales",
+				"thrift market",
+				"thrift markets"
+			],
+			"es": [
+				"mercadillo",
+				"mercadillos",
+				"rastro",
+				"rastros",
+				"mercado de pulgas",
+				"mercados de pulgas",
+				"feria de las pulgas",
+				"ferias de las pulgas"
+			],
+			"fr": [
+				"marché aux puces",
+				"marchés aux puces",
+				"brocante",
+				"brocantes",
+				"vide-grenier",
+				"vide-greniers"
+			],
+			"it": [
+				"mercatino delle pulci",
+				"mercatini delle pulci",
+				"mercato delle pulci",
+				"mercati delle pulci",
+				"mercatino dell'usato",
+				"mercatini dell'usato"
+			],
+			"pt": ["feira da ladra", "feiras da ladra", "brechó", "brechós"],
+			"ru": ["блошиный рынок", "блошиные рынки", "барахолка", "барахолки", "толкучка", "толкучки"],
+			"tr": [
+				"bit pazarı",
+				"bit pazarları",
+				"eskici pazarı",
+				"eskici pazarları",
+				"ikinci el pazarı",
+				"ikinci el pazarları"
+			],
+			"hi": ["पुराने सामान का बाज़ार", "पुराने सामान के बाज़ार", "कबाड़ी बाज़ार", "चोर बाज़ार"]
+		}
+	},
+	{
+		"word": "solarpunk",
+		"synonyms": {
+			"de": ["Solarpunk", "Solarpunks"],
+			"en": ["solar punk"],
+			"es": [],
+			"fr": [],
+			"it": [],
+			"pt": [],
+			"ru": [],
+			"tr": []
+		}
+	},
+	{
+		"word": "water dance",
+		"synonyms": {
+			"de": ["Wassertanz", "Wassertänze", "Aquatanz", "Aquatänze", "Hydrotanz", "Hydrotänze"],
+			"en": [
+				"water dance",
+				"water dancing",
+				"aquatic dance",
+				"aquatic dancing",
+				"hydro dance",
+				"hydro dancing"
+			],
+			"es": [
+				"danza acuática",
+				"danzas acuáticas",
+				"baile en el agua",
+				"bailes en el agua",
+				"danza del agua",
+				"danzas del agua"
+			],
+			"fr": [
+				"danse aquatique",
+				"danses aquatiques",
+				"danse dans l'eau",
+				"danses dans l'eau",
+				"danse de l'eau",
+				"danses de l'eau"
+			],
+			"it": [
+				"danza acquatica",
+				"danze acquatiche",
+				"ballo nell'acqua",
+				"balli nell'acqua",
+				"danza dell'acqua",
+				"danze dell'acqua"
+			],
+			"pt": [
+				"dança aquática",
+				"danças aquáticas",
+				"dança na água",
+				"danças na água",
+				"dança da água",
+				"danças da água"
+			],
+			"ru": [
+				"водный танец",
+				"водные танцы",
+				"аква-танец",
+				"аква-танцы",
+				"танец на воде",
+				"танцы на воде"
+			],
+			"tr": [
+				"su dansı",
+				"su dansları",
+				"suda dans",
+				"suda danslar",
+				"su ile dans",
+				"su ile danslar"
+			],
+			"hi": [
+				"जल नृत्य",
+				"जल नृत्यों",
+				"पानी का नृत्य",
+				"पानी के नृत्य",
+				"जलीय नृत्य",
+				"जलीय नृत्यों"
+			]
+		}
+	},
+	{
+		"word": "trauma release exercise",
+		"synonyms": {
+			"de": [
+				"Trauma-Release-Übung",
+				"Trauma-Release-Übungen",
+				"TRE",
+				"Traumalösende Übungen",
+				"Traumabefreiungsübungen",
+				"Spannungsabbauübungen"
+			],
+			"en": [
+				"trauma release exercise",
+				"trauma release exercises",
+				"tension release exercises",
+				"trauma releasing exercises",
+				"stress release exercises"
+			],
+			"es": [
+				"ejercicio de liberación del trauma",
+				"ejercicios de liberación del trauma",
+				"ejercicios de liberación de tensión",
+				"ejercicios de liberación emocional"
+			],
+			"fr": [
+				"exercice de libération des traumatismes",
+				"exercices de libération des traumatismes",
+				"exercices de relâchement des tensions",
+				"exercices de libération émotionnelle"
+			],
+			"it": [
+				"esercizio di rilascio del trauma",
+				"esercizi di rilascio del trauma",
+				"esercizi di rilascio della tensione",
+				"esercizi di liberazione emotiva"
+			],
+			"pt": [
+				"exercício de liberação do trauma",
+				"exercícios de liberação do trauma",
+				"exercícios de liberação de tensão",
+				"exercícios de libertação emocional"
+			],
+			"ru": [
+				"упражнения для освобождения от травм",
+				"упражнения для релиза травм",
+				"ТРЕ",
+				"упражнения для снятия напряжения",
+				"травма-релизинг"
+			],
+			"tr": [
+				"travma salıverme egzersizi",
+				"travma salıverme egzersizleri",
+				"gerginlik salıverme egzersizleri",
+				"duygusal salıverme egzersizleri"
+			],
+			"hi": [
+				"ट्रॉमा रिलीज एक्सरसाइज",
+				"आघात मुक्ति व्यायाम",
+				"तनाव मुक्ति अभ्यास",
+				"ट्रॉमा रिलीज एक्सरसाइजेज",
+				"तनाव मुक्ति व्यायाम"
+			]
+		}
+	},
+	{
+		"word": "medicine song",
+		"synonyms": {
+			"de": [
+				"Heilungslied",
+				"Heilungslieder",
+				"Medizinlied",
+				"Medizinlieder",
+				"Heilgesang",
+				"Heilgesänge",
+				"Medizingesang",
+				"Medizingesänge",
+				"Kraftlied",
+				"Kraftlieder"
+			],
+			"en": [
+				"medicine song",
+				"medicine songs",
+				"healing song",
+				"healing songs",
+				"power song",
+				"power songs",
+				"sacred song",
+				"sacred songs",
+				"medicine chant",
+				"medicine chants"
+			],
+			"es": [
+				"canción medicina",
+				"canciones medicina",
+				"canto medicina",
+				"cantos medicina",
+				"canción sagrada",
+				"canciones sagradas",
+				"canto sagrado",
+				"cantos sagrados",
+				"canción de sanación",
+				"canciones de sanación"
+			],
+			"fr": [
+				"chant médicinal",
+				"chants médicinaux",
+				"chant de guérison",
+				"chants de guérison",
+				"chant sacré",
+				"chants sacrés",
+				"chant de médecine",
+				"chants de médecine"
+			],
+			"it": [
+				"canto medicinale",
+				"canti medicinali",
+				"canto di guarigione",
+				"canti di guarigione",
+				"canto sacro",
+				"canti sacri",
+				"canto sciamanico",
+				"canti sciamanici"
+			],
+			"pt": [
+				"canção medicina",
+				"canções medicina",
+				"canção sagrada",
+				"canções sagradas",
+				"canção de cura",
+				"canções de cura"
+			],
+			"ru": [
+				"целебная песня",
+				"целебные песни",
+				"лечебная песня",
+				"лечебные песни",
+				"священная песня",
+				"священные песни",
+				"шаманская песня",
+				"шаманские песни"
+			],
+			"tr": [
+				"şifa şarkısı",
+				"şifa şarkıları",
+				"şifa türküsü",
+				"şifa türküleri",
+				"kutsal şarkı",
+				"kutsal şarkılar",
+				"şaman şarkısı",
+				"şaman şarkıları"
+			],
+			"hi": [
+				"औषधीय गीत",
+				"औषधीय गाना",
+				"चिकित्सा गीत",
+				"चिकित्सा गाना",
+				"शिफा गीत",
+				"शिफा गाना",
+				"पवित्र गीत",
+				"पवित्र गाना"
+			]
+		}
+	},
+	{
+		"word": "Awakening",
+		"synonyms": {
+			"de": [
+				"Erwachen",
+				"Erweckung",
+				"Erleuchtung",
+				"Bewusstwerdung",
+				"Erwachungen",
+				"spirituelles Erwachen",
+				"Bewusstseinserweiterung"
+			],
+			"en": [
+				"Awakening",
+				"Awakenings",
+				"Enlightenment",
+				"Spiritual awakening",
+				"Consciousness",
+				"Awareness",
+				"Realization",
+				"Illumination",
+				"Conscious awakening"
+			],
+			"es": [
+				"Despertar",
+				"Despertares",
+				"Iluminación",
+				"Despertar espiritual",
+				"Concientización",
+				"Toma de conciencia",
+				"Despertar consciente"
+			],
+			"fr": [
+				"Éveil",
+				"Éveils",
+				"Éveil spirituel",
+				"Prise de conscience",
+				"Conscientisation",
+				"Éveil de la conscience"
+			],
+			"it": [
+				"Risveglio",
+				"Risvegli",
+				"Illuminazione",
+				"Risveglio spirituale",
+				"Consapevolezza",
+				"Presa di coscienza",
+				"Risveglio della coscienza"
+			],
+			"pt": ["Iluminação", "Conscientização", "Tomada de consciência"],
+			"ru": [
+				"Пробуждение",
+				"Пробуждения",
+				"Просветление",
+				"Духовное пробуждение",
+				"Осознание",
+				"Осознанность",
+				"Пробуждение сознания"
+			],
+			"tr": [
+				"Uyanış",
+				"Uyanışlar",
+				"Aydınlanma",
+				"Ruhsal uyanış",
+				"Bilinçlenme",
+				"Uyanma",
+				"Bilinç uyanışı"
+			],
+			"hi": ["जागृति", "जागरण", "बोध", "आध्यात्मिक जागृति", "चेतना", "जाग्रति", "बोधन", "चैतन्य"]
+		}
+	},
+	{
+		"word": "inner journey",
+		"synonyms": {
+			"de": [
+				"innere Reise",
+				"innere Reisen",
+				"Selbsterfahrung",
+				"Selbsterfahrungen",
+				"innerer Weg",
+				"innere Wege",
+				"spirituelle Reise",
+				"spirituelle Reisen",
+				"Seelenreise",
+				"Seelenreisen"
+			],
+			"en": [
+				"inner journey",
+				"inner journeys",
+				"inner path",
+				"inner paths",
+				"spiritual journey",
+				"spiritual journeys",
+				"soul searching",
+				"self-discovery",
+				"self discovery",
+				"inner exploration"
+			],
+			"es": [
+				"viaje interior",
+				"viajes interiores",
+				"camino interior",
+				"caminos interiores",
+				"búsqueda interior",
+				"búsquedas interiores",
+				"viaje espiritual",
+				"viajes espirituales"
+			],
+			"fr": [
+				"voyage intérieur",
+				"voyages intérieurs",
+				"chemin intérieur",
+				"chemins intérieurs",
+				"quête intérieure",
+				"quêtes intérieures",
+				"voyage spirituel",
+				"voyages spirituels"
+			],
+			"it": [
+				"viaggio interiore",
+				"viaggi interiori",
+				"cammino interiore",
+				"cammini interiori",
+				"percorso spirituale",
+				"percorsi spirituali",
+				"ricerca interiore",
+				"ricerche interiori"
+			],
+			"pt": [
+				"jornada interior",
+				"jornadas interiores",
+				"caminho interior",
+				"caminhos interiores",
+				"busca interior",
+				"buscas interiores",
+				"viagem espiritual",
+				"viagens espirituais"
+			],
+			"ru": [
+				"внутреннее путешествие",
+				"внутренние путешествия",
+				"духовный путь",
+				"духовные пути",
+				"путь к себе",
+				"внутренний поиск",
+				"духовный поиск"
+			],
+			"tr": [
+				"içsel yolculuk",
+				"içsel yolculuklar",
+				"iç yolculuk",
+				"iç yolculuklar",
+				"manevi yolculuk",
+				"manevi yolculuklar",
+				"ruhsal yolculuk",
+				"ruhsal yolculuklar"
+			],
+			"hi": [
+				"आंतरिक यात्रा",
+				"आंतरिक यात्राएं",
+				"आत्मिक यात्रा",
+				"आत्मिक यात्राएं",
+				"अंतर्यात्रा",
+				"अंतर्यात्राएं",
+				"आत्म खोज",
+				"आत्मानुभूति"
+			]
+		}
+	}
+]
