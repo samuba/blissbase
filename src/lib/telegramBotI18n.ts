@@ -5,12 +5,13 @@
 export type BotLanguage = 'en' | 'de';
 
 export function detectLanguage(languageCode: string | undefined): BotLanguage {
-	if (languageCode === 'de') return 'de';
+	if (languageCode?.includes('de')) return 'de';
 	return 'en';
 }
 
 type MessageKey = 
 	| 'eventExistsOnSource'
+	| 'extractingEventData'
 	| 'noEventData'
 	| 'noEventName'
 	| 'noStartDate'
@@ -31,9 +32,13 @@ const messages: Record<MessageKey, Record<BotLanguage, MessageTemplate>> = {
 		en: (source: string) => `👯 It looks like this event already exists on ${source}.\nWe regularly add all events from ${source} to Blissbase, so you don't need to send them to us. 😉`,
 		de: (source: string) => `👯 Es sieht aus als ob dieser Event bereits auf ${source} existiert.\nWir fügen regelmäßig alle Events von ${source} zu Blissbase hinzu. Du musst uns diese Events also nicht schicken. 😉`,
 	},
+	extractingEventData: {
+		en: `⏳ I am extracting the event data from your message...`,
+		de: `⏳ Ich extrahiere die Eventdaten aus deiner Nachricht...`,
+	},
 	noEventData: {
-		en: "🙅🏻‍♂️🎫 I couldn't extract any event data from this message. Please send me an event description or announcement.",
-		de: "🙅🏻‍♂️🎫 Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.",
+		en: "🙅🏻‍♂️🎫 I couldn't extract any event data from this message. Please send me an event description or announcement in one message (including images).",
+		de: "🙅🏻‍♂️🎫 Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung in einer Nachricht (einschließlich Bilder).",
 	},
 	noEventName: {
 		en: "🙅🏻‍♂️🪧 I couldn't extract a clear title for the event from this message.",

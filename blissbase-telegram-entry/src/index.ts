@@ -2,6 +2,7 @@ import { Telegraf, type Context } from "telegraf";
 import type { Update, MessageEntity, PhotoSize } from "telegraf/types";
 import { aiExtractEventData } from './ai';
 import { msgFilters, type TelegramCloudflareBody } from '../../src/lib/telegramCommon';
+import { detectLanguage, t } from '../../src/lib/telegramBotI18n';
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
@@ -27,6 +28,7 @@ export default {
 async function handleMessage(ctx: Context, payloadJson: Update) {
 	if (!ctx.message && !ctx.text) return;
 	const fromGroup = isGroup(ctx)
+	const lang = detectLanguage(ctx.from?.language_code);
 
 	try {
 		let msgText = ctx.text ?? ctx.channelPost?.text ?? '';
@@ -46,7 +48,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			image = await getImage(ctx.channelPost.photo, ctx)
 		}
 
-		await reply(ctx, "⏳ Ich extrahiere die Eventdaten aus deiner Nachricht...")
+		await reply(ctx, t('extractingEventData', lang))
 
 		const messageDate = ctx.message?.date ? new Date(ctx.message.date * 1000) : new Date();
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
@@ -83,7 +85,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 	} catch (error) {
 		console.error(error)
 		try {
-			await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error)
+			await reply(ctx, t('genericError', lang, String(error)))
 		} catch { /* ignore */ }
 	}
 }
