@@ -24,7 +24,7 @@
 		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
 		encodeURIComponent(
 			fixTelegramUnsupportedChars(
-				`Hi, ich möchte am Event '${event.name}' am ${event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))} teilnehmen.`
+				`Hallo, ich habe deinen Event '${event.name}' am ${event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))} auf Blissbase.app gefunden und möchte gerne teilnehmen.`
 			)
 		)
 	);
@@ -317,15 +317,15 @@
 						{#snippet content()}
 							{#if singleContact?.method && singleContact?.url}
 								<span class="word-wrap">
-									Der Veranstalter möchte Anmeldungen per <b> {singleContact.method}</b> erhalten.
+									Anmeldung per <b> {singleContact.method}</b>.
 								</span>
 
-								<div class="mt-3 flex justify-center">
+								<div class="mt-3 flex flex-col gap-3 justify-center">
 									{@render contactButton(singleContact.method, singleContact.url!)}
 								</div>
 							{:else if event.contact?.length}
 								<span class="word-wrap">
-									Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:
+									Anmeldung über diese Kanäle:
 								</span>
 								<div class="mt-3 flex flex-col gap-3">
 									{#each event.contact as contact}

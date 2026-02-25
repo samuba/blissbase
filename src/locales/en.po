@@ -37,12 +37,6 @@ msgstr "Loading Blissbase"
 msgid "Lade..."
 msgstr "Loading..."
 
-#. placeholder {0}: event.name
-#. placeholder {1}: event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))
-#: src/routes/EventDetails.svelte
-msgid "Hi, ich möchte am Event '{0}' am {1} teilnehmen."
-msgstr "Hi, I would like to participate in the event '{0}' on {1}."
-
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/sources/+page.svelte
@@ -123,14 +117,6 @@ msgstr "Register <0/>"
 #: src/routes/EventDetails.svelte
 msgid "Anmelden"
 msgstr "Register"
-
-#: src/routes/EventDetails.svelte
-msgid "Der Veranstalter möchte Anmeldungen per <0/> erhalten."
-msgstr "The organizer would like to receive registrations via <0/>."
-
-#: src/routes/EventDetails.svelte
-msgid "Der Veranstalter möchte Anmeldungen über diese Kanäle erhalten:"
-msgstr "The organizer would like to receive registrations through these channels:"
 
 #: src/routes/EventDetails.svelte
 msgid "Preise"
@@ -614,12 +600,6 @@ msgstr "Create event"
 msgid "App installieren <0/>"
 msgstr "Install app <0/>"
 
-#~ msgid "Installationsanleitung:"
-#~ msgstr "Installation instructions:"
-
-#~ msgid "Okay"
-#~ msgstr "Okay"
-
 #: src/routes/+layout.ts
 msgid "Achtsame Events in deiner Nähe."
 msgstr "Conscious events near you."
@@ -837,51 +817,9 @@ msgstr ""
 "from various sources and make them accessible here. Searchable, convenient, all\n"
 "in one place. <1/> I hope you like my work."
 
-#~ msgid ""
-#~ "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist,\n"
-#~ "ändere ihn hier:"
-#~ msgstr ""
-#~ "You are shown events around <0/>. If this is not your location,\n"
-#~ "change it here:"
-
 #: src/routes/+page.svelte
 msgid "Hinweis schließen"
 msgstr "Close notice"
-
-#~ msgid ""
-#~ "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist,\n"
-#~ "ändere ihn unten."
-#~ msgstr ""
-#~ "Events around <0/> are shown to you. If that's not your location,\n"
-#~ "change it below."
-
-#~ msgid ""
-#~ "Dir werden Events um <0/> angezeigt.\n"
-#~ "Wenn das nicht dein Standort ist,\n"
-#~ "ändere ihn unten."
-#~ msgstr ""
-#~ "You are being shown events around <0/>.\n"
-#~ "If this is not your location,\n"
-#~ "change it below."
-
-#~ msgid ""
-#~ "Dir werden Events um <0/> angezeigt. <1/> Wenn das nicht dein Standort ist,\n"
-#~ "ändere ihn unten."
-#~ msgstr ""
-#~ "You are being shown events around <0/>. <1/> If this is not your location,\n"
-#~ "change it below."
-
-#~ msgid ""
-#~ "Dir werden Events um <0/> angezeigt. <1/> Wenn das nicht dein Standort ist,\n"
-#~ "ändere ihn unten.\n"
-#~ "‚"
-#~ msgstr ""
-#~ "You are being shown events around <0/>. <1/> If this is not your location,\n"
-#~ "change it below.\n"
-#~ "‚"
-
-#~ msgid "Dir werden Events um <0/> angezeigt. <1/> Wenn das nicht dein Standort ist, ändere ihn unten."
-#~ msgstr "Events near <0/> are shown to you. <1/> If this is not your location, change it below."
 
 #: src/routes/+page.svelte
 msgid ""
@@ -891,15 +829,6 @@ msgstr ""
 "You're being shown events around <0/>.\n"
 "If that's not your location, change it below."
 
-#~ msgid "<0>Installationsanleitung:</0> span <1>Okay</1>"
-#~ msgstr "<0>Installation instructions:</0> span <1>Okay</1>"
-
-#~ msgid "So install"
-#~ msgstr "Install this way"
-
-#~ msgid "So installierst du die App auf deinem iPhone:"
-#~ msgstr ""
-
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "So installierst du die App auf deinem iPhone"
 msgstr "How to install the app on your iPhone"
@@ -907,3 +836,30 @@ msgstr "How to install the app on your iPhone"
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "Installationsanleitung"
 msgstr "Installation instructions"
+
+#: src/routes/EventDetails.svelte
+msgid "Anmeldung per <0/>."
+msgstr "Registration via <0/>."
+
+#: src/routes/EventDetails.svelte
+msgid "Anmeldung über diese Kanäle:"
+msgstr "Registration via these channels:"
+
+#. placeholder {0}: event.name
+#. placeholder {1}: event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))
+#: src/routes/EventDetails.svelte
+msgid "Hallo, ich habe deinen Event '{0}' am {1} auf Blissbase.app gefunden und möchte gerne teilnehmen."
+msgstr "Hello, I found your event '{0}' for {1} on Blissbase.app and would like to attend."
+
+#~ msgid "Zur Startseite"
+#~ msgstr "Back to the homepage"
+
+#~ msgid "Zurück zur Startseite"
+#~ msgstr ""
+
+#~ msgid "<0/> Zurück zur Startseite"
+#~ msgstr "<0/> Back to the homepage"
+
+#: src/routes/+error.svelte
+msgid "<0/> Zur Startseite"
+msgstr "<0/> Back to the homepage"
