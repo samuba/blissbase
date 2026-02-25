@@ -9,8 +9,8 @@ export default {
 		const bot = new Telegraf(env.TELEGRAM_BOT_TOKEN, {
 			handlerTimeout: 1000 * 60 * 5, // 5 minutes
 		});
-		bot.start((ctx) => {
-			reply(ctx, t.start(detectLanguage(ctx.from?.language_code)))
+		bot.start(async (ctx) => {
+			await reply(ctx, t.start(detectLanguage(ctx.from?.language_code)))
 		})
 
 		const data = await request.json() as Update
