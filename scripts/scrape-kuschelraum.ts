@@ -27,7 +27,7 @@ import {
     WebsiteScraperInterface,
     REQUEST_DELAY_MS,
     cleanProseHtml,
-    germanDateToIsoStr
+    dateToIsoStr
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
@@ -336,12 +336,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
         const ldEvent = extractLDJsonEvent(html);
         const startDate = new Date(ldEvent.startDate);
-        return germanDateToIsoStr(
+        return dateToIsoStr(
             startDate.getFullYear(),
             startDate.getMonth(),
             startDate.getDate(),
             hours,
-            minutes
+            minutes,
+            'Europe/Berlin',
+            true
         );
     }
 
@@ -353,12 +355,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
         const ldEvent = extractLDJsonEvent(html);
         const endDate = new Date(ldEvent.endDate);
-        return germanDateToIsoStr(
+        return dateToIsoStr(
             endDate.getFullYear(),
             endDate.getMonth(),
             endDate.getDate(),
             hours,
-            minutes
+            minutes,
+            'Europe/Berlin',
+            true
         );
     }
 

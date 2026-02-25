@@ -3,6 +3,7 @@ import {
 	customFetch,
 	WebsiteScraperInterface,
 	cleanProseHtml,
+dateToIsoStr,
 } from './common.ts';
 import * as cheerio from 'cheerio';
 import { matchesWhiteListWords } from '../src/whitelistWords.ts';
@@ -66,8 +67,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const name = schemaJson.name;
 		const description = cleanProseHtml($(".prose").html());
 		const imageUrls = [schemaJson.image];
-		const startAt = schemaJson.startDate;
-		const endAt = schemaJson.endDate; 
+		// 2026-02-26T09:00:00
+		console.log(schemaJson.startDate);
+		const [year, month, day] = schemaJson.startDate.split('T')[0].split('-').map(Number);
+		const [hour, minute] = schemaJson.startDate.split('T')[1].split(':').map(Number);
+		const startAt = dateToIsoStr(year, month, day, hour, minute, 'Asia/Ho_Chi_Minh', false);
+		// const endAt = schemaJson.endDate; 
 		const address = [schemaJson.location.name ?? '', ...schemaJson.location.address.split(',').map(x => x.trim())].filter(x => x);
 		const latitude = schemaJson.location.geo.latitude;
 		const longitude = schemaJson.location.geo.longitude;

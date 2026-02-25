@@ -26,9 +26,8 @@ import {
 	WebsiteScraperInterface,
 	cleanProseHtml,
 	superTrim,
-	baliDateToIsoStr,
+	dateToIsoStr,
 	extractIcalStartAndEndTimes,
-thailandDateToIsoStr
 } from './common.ts';
 import * as cheerio from 'cheerio';
 import { geocodeAddressCached } from '../src/lib/server/google.ts';
@@ -105,7 +104,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		descriptionElement.find('.tt-hidden').remove();
 		const description = cleanProseHtml(descriptionElement.html());
 
-		const dateToIsoStr = location === 'ubud' ? baliDateToIsoStr : thailandDateToIsoStr;
+		const timeZone = location === 'ubud' ? 'Asia/Makassar' : 'Asia/Bangkok';
 
 		const icalTimes = extractIcalStartAndEndTimes(html);
 		const startAt = dateToIsoStr(
@@ -113,14 +112,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			parseInt(icalTimes.startAt!.slice(4, 6)),
 			parseInt(icalTimes.startAt!.slice(6, 8)),
 			parseInt(icalTimes.startAt!.slice(9, 11)),
-			parseInt(icalTimes.startAt!.slice(11, 13))
+			parseInt(icalTimes.startAt!.slice(11, 13)),
+			timeZone,
+			false
 		);
 		const endAt = dateToIsoStr(
 			parseInt(icalTimes.endAt!.slice(0, 4)),
 			parseInt(icalTimes.endAt!.slice(4, 6)),
 			parseInt(icalTimes.endAt!.slice(6, 8)),
 			parseInt(icalTimes.endAt!.slice(9, 11)),
-			parseInt(icalTimes.endAt!.slice(11, 13))
+			parseInt(icalTimes.endAt!.slice(11, 13)),
+			timeZone,
+			false
 		);
 
 		let address = (superTrim($('.data-entry-content-single-page .event_curren_venue')?.text() ?? '') ?? '')

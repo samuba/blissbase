@@ -24,7 +24,7 @@ import {
     REQUEST_DELAY_MS,
     WebsiteScraperInterface,
     customFetch,
-    germanDateToIsoStr,
+    dateToIsoStr,
     superTrim
 } from "./common.ts";
 import { sleep } from "bun";
@@ -135,7 +135,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Invalid time parameters');
         if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900 || year > 2100) throw new Error('Invalid date parameters');
 
-        return germanDateToIsoStr(year, month, day, hour, minute);
+        return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
     }
 
     extractAddress(html: string): string[] | undefined {

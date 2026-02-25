@@ -26,7 +26,7 @@ import {
     WebsiteScraperInterface,
     cleanProseHtml,
     superTrim,
-    baliDateToIsoStr,
+    dateToIsoStr,
     extractIcalStartAndEndTimes,
 } from "./common.ts";
 import * as cheerio from 'cheerio';
@@ -84,22 +84,26 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
 
             const startDate = new Date(activity.start_date + (8 * 60 * 60 * 1000)); // bali is utc+8
-            const startAt = baliDateToIsoStr(
+            const startAt = dateToIsoStr(
                 startDate.getUTCFullYear(),
                 startDate.getUTCMonth() + 1,
                 startDate.getUTCDate(),
                 startDate.getUTCHours(), 
-                startDate.getUTCMinutes()
+                startDate.getUTCMinutes(),
+                'Asia/Makassar',
+                false
             ); 
 
             const endDate = Number.isInteger(activity._activity.duration) ? new Date(activity.start_date + (8 * 60 * 60 * 1000) + activity._activity.duration * 60 * 1000)
                 : undefined;
-            const endAt = endDate ? baliDateToIsoStr(
+            const endAt = endDate ? dateToIsoStr(
                 endDate.getUTCFullYear(),
                 endDate.getUTCMonth() + 1,
                 endDate.getUTCDate(),
                 endDate.getUTCHours(), 
-                endDate.getUTCMinutes()
+                endDate.getUTCMinutes(),
+                'Asia/Makassar',
+                false
             ) : undefined;
 
             if (!activity._activity.image_url) continue; // for now only events with images are included
@@ -151,26 +155,30 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const imageUrls = $('.data-entry-content-single-page .event-image-container .lightbox-scope img').map((_index, element) => $(element).attr('src')).get().filter(Boolean);
 
         const icalTimes = extractIcalStartAndEndTimes(html);
-        const startAt = baliDateToIsoStr(
+        const startAt = dateToIsoStr(
             parseInt(icalTimes.startAt!.slice(0, 4)),
             parseInt(icalTimes.startAt!.slice(4, 6)),
             parseInt(icalTimes.startAt!.slice(6, 8)),
             parseInt(icalTimes.startAt!.slice(9, 11)),
-            parseInt(icalTimes.startAt!.slice(11, 13))
+            parseInt(icalTimes.startAt!.slice(11, 13)),
+            'Asia/Makassar',
+            false
         );
-        const endAt = baliDateToIsoStr(
+        const endAt = dateToIsoStr(
             parseInt(icalTimes.endAt!.slice(0, 4)),
             parseInt(icalTimes.endAt!.slice(4, 6)),
             parseInt(icalTimes.endAt!.slice(6, 8)),
             parseInt(icalTimes.endAt!.slice(9, 11)),
-            parseInt(icalTimes.endAt!.slice(11, 13))
+            parseInt(icalTimes.endAt!.slice(11, 13)),
+            'Asia/Makassar',
+            false
         );
         // Fallback to parsing from URL and time text
         // const urlParts = url.split("/").reverse();
         // const time = superTrim($('.event_single_page_time').text()!.split('·')[1])!
         // const [startTime, endTime] = time.split(" - ");
-        // startAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]));
-        // endAt = baliDateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]));
+        // startAt = dateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]), 'Asia/Makassar', false);
+        // endAt = dateToIsoStr(parseInt(urlParts[3]), parseInt(urlParts[2]), parseInt(urlParts[1]), parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]), 'Asia/Makassar', false);
 
         const address = superTrim($('.data-entry-content-single-page .event_curren_venue').text())!.split(',').map(part => part.trim());
         const price = superTrim($('.data-entry-content-single-page .event_ticket_price_single').text())!;

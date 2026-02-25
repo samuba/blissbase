@@ -17,7 +17,7 @@ import {
     makeAbsoluteUrl as commonMakeAbsoluteUrl,
     superTrim,
     cleanProseHtml,
-    germanDateToIsoStr
+    dateToIsoStr
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
@@ -88,7 +88,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             hour = 0;
         }
 
-        return germanDateToIsoStr(year, month, day, hour, minute);
+        return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
     }
 
     extractDates(html: string): { startAt: string | undefined, endAt: string | undefined } {

@@ -25,7 +25,7 @@ import {
     customFetch,
     WebsiteScraperInterface,
     cleanProseHtml,
-    baliDateToIsoStr,
+    dateToIsoStr,
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
@@ -68,10 +68,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
         let [year, month, day] = entry.start_datetime.split(' ')[0].split('-').map(x => parseInt(x));
         let [hour, minute] = entry.start_datetime.split(' ')[1].split(':').map(x => parseInt(x));
-        const startAt = baliDateToIsoStr(year, month, day, hour, minute);
+        const startAt = dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
         [year, month, day] = entry.end_datetime.split(' ')[0].split('-').map(x => parseInt(x));
         [hour, minute] = entry.end_datetime.split(' ')[1].split(':').map(x => parseInt(x));
-        const endAt = baliDateToIsoStr(year, month, day, hour, minute);
+        const endAt = dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
 
         const address: string[] = [] 
         if (data.venue?.full_address?.includes('The Yoga Barn')) {

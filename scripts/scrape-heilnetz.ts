@@ -28,7 +28,7 @@ import {
     WebsiteScraperInterface,
     REQUEST_DELAY_MS,
     cleanProseHtml,
-    germanDateToIsoStr
+    dateToIsoStr
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
 
@@ -292,9 +292,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             const [day, month, year] = eventDate.split('.').map(Number);
             if (eventTime) {
                 const [hour, minute] = eventTime.split(':').map(Number);
-                return germanDateToIsoStr(year, month - 1, day, hour, minute);
+                return dateToIsoStr(year, month - 1, day, hour, minute, 'Europe/Berlin', true);
             } else {
-                return germanDateToIsoStr(year, month - 1, day);
+                return dateToIsoStr(year, month - 1, day, 0, 0, 'Europe/Berlin', true);
             }
         }
 
@@ -330,7 +330,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
         if (endTime && eventDate) {
             const [day, month, year] = eventDate.split('.').map(Number);
-            return germanDateToIsoStr(year, month - 1, day, endHour, endMinute);
+            return dateToIsoStr(year, month - 1, day, endHour, endMinute, 'Europe/Berlin', true);
         }
 
         return undefined;

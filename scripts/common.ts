@@ -194,7 +194,7 @@ export function parseGermanDate(dateStr: string | undefined | null): string | un
         if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 &&
             parsedYear > 1900 && parsedHour >= 0 && parsedHour < 24 && parsedMinute >= 0 && parsedMinute < 60) {
             // Format to ISO string YYYY-MM-DDTHH:mm:ss
-            return germanDateToIsoStr(parsedYear, parsedMonth - 1, parsedDay, parsedHour, parsedMinute);
+            return dateToIsoStr(parsedYear, parsedMonth - 1, parsedDay, parsedHour, parsedMinute, 'Europe/Berlin', true);
         }
     }
 
@@ -207,7 +207,7 @@ export function parseGermanDate(dateStr: string | undefined | null): string | un
 
         if (parsedMonth >= 1 && parsedMonth <= 12 && parsedDay > 0 && parsedDay <= 31 && parsedYear > 1900) {
             // Format to ISO string YYYY-MM-DD
-            return germanDateToIsoStr(parsedYear, parsedMonth - 1, parsedDay);
+            return dateToIsoStr(parsedYear, parsedMonth - 1, parsedDay, 0, 0, 'Europe/Berlin', true);
         }
     }
 
@@ -228,7 +228,7 @@ export function parseGermanDateTime(dateStr: string, timeStr?: string) {
 
     const [day, month, year] = dateStr.split('.');
     const parsedDay = parseInt(day);
-    const parsedMonth = parseInt(month) - 1; // Convert to 0-indexed month for germanDateToIsoStr
+    const parsedMonth = parseInt(month) - 1; // Convert to 0-indexed month for dateToIsoStr
     const parsedYear = parseInt(year);
 
     let parsedHour = 0;
@@ -250,7 +250,7 @@ export function parseGermanDateTime(dateStr: string, timeStr?: string) {
     }
 
     try {
-        return germanDateToIsoStr(parsedYear, parsedMonth, parsedDay, parsedHour, parsedMinute);
+        return dateToIsoStr(parsedYear, parsedMonth, parsedDay, parsedHour, parsedMinute, 'Europe/Berlin', true);
     } catch (error) {
         console.error(`Error generating ISO string from ${dateStr} ${timeStr}:`, error);
         return undefined;
@@ -328,7 +328,7 @@ export function linkify(html: string): string {
     return getHtmlBody($);
 }
 
-function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: string, countMonthFromZero: boolean) {
+export function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: string, countMonthFromZero: boolean) {
     const yearStr = year.toString().padStart(4, '0')
     const monthStr = (countMonthFromZero ? (month + 1) : month).toString().padStart(2, '0')
     const dayStr = day.toString().padStart(2, '0')
@@ -349,48 +349,6 @@ function dateToIsoStr(year: number, month: number, day: number, hour: number, mi
     const offset = offsetPart?.value?.match(/[+-]\d{2}:\d{2}/)?.[0] || '+01:00';
 
     return `${isoStringLocal}${offset}`;
-}
-
-/**
- * Converts German date/time components to an ISO string with Berlin timezone offset.
- * Automatically handles daylight saving time (DST) transitions.
- * @param year The year (e.g., 2024)
- * @param month The month (0-indexed, 0 = January, 11 = December)
- * @param day The day of the month (1-31)
- * @param hour The hour (0-23), defaults to 0
- * @param minute The minute (0-59), defaults to 0
- * @returns ISO string with Berlin timezone offset (e.g., "2024-01-15T14:30:00+01:00" or "2024-07-15T14:30:00+02:00")
- */
-export function germanDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
-    return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
-}
-
-/**
- * Converts Bali date/time components to an ISO string with Bali timezone offset.
- * Bali uses Indonesia Central Time (WITA, UTC+8) with no daylight saving time.
- * @param year The year (e.g., 2024)
- * @param month The month (0-indexed, 0 = January, 11 = December)
- * @param day The day of the month (1-31)
- * @param hour The hour (0-23), defaults to 0
- * @param minute The minute (0-59), defaults to 0
- * @returns ISO string with Bali timezone offset (e.g., "2024-01-15T14:30:00+08:00")
- */
-export function baliDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
-    return dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
-}
-
-/**
- * Converts Thailand date/time components to an ISO string with Thailand timezone offset.
- * Bali uses Indonesia Central Time (WITA, UTC+8) with no daylight saving time.
- * @param year The year (e.g., 2024)
- * @param month The month (0-indexed, 0 = January, 11 = December)
- * @param day The day of the month (1-31)
- * @param hour The hour (0-23), defaults to 0
- * @param minute The minute (0-59), defaults to 0
- * @returns ISO string with Bali timezone offset (e.g., "2024-01-15T14:30:00+08:00")
- */
-export function thailandDateToIsoStr(year: number, month: number, day: number, hour: number = 0, minute: number = 0) {
-    return dateToIsoStr(year, month, day, hour, minute, 'Asia/Bangkok', false);
 }
 
 export interface WebsiteScraperInterface {

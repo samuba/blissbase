@@ -25,7 +25,7 @@ import {
     WebsiteScraperInterface,
     cleanProseHtml,
     customFetch,
-    germanDateToIsoStr
+    dateToIsoStr
 } from "./common.ts";
 import { sleep } from "bun";
 import { geocodeAddressCached } from "../src/lib/server/google.ts";
@@ -99,7 +99,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             const hour = parseInt(multiDayMatch[4]);
             const minute = parseInt(multiDayMatch[5]);
 
-            return germanDateToIsoStr(year, month, day, hour, minute);
+            return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
         }
 
         // Parse single-day patterns (only if no "bis" is found): "08.07.2025 von 18:30 – 20:30 Uhr"
@@ -112,7 +112,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 const hour = parseInt(singleDayMatch[4]);
                 const minute = parseInt(singleDayMatch[5]);
 
-                return germanDateToIsoStr(year, month, day, hour, minute);
+                return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
             }
         }
 
@@ -135,7 +135,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 const hour = parseInt(timeMatch[1]);
                 const minute = parseInt(timeMatch[2]);
 
-                return germanDateToIsoStr(year, month, day, hour, minute);
+                return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
             }
         }
 
@@ -159,7 +159,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             const endHour = parseInt(singleDayMatch[4]);
             const endMinute = parseInt(singleDayMatch[5]);
 
-            return germanDateToIsoStr(year, month, day, endHour, endMinute);
+            return dateToIsoStr(year, month, day, endHour, endMinute, 'Europe/Berlin', true);
         }
 
         // Check for multi-day events like "05.09.2025 bis 07.09.2025 von 17:00 – 00:00 Uhr"
@@ -175,11 +175,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             if (endTimeMatch) {
                 const endHour = parseInt(endTimeMatch[1]);
                 const endMinute = parseInt(endTimeMatch[2]);
-                return germanDateToIsoStr(endYear, endMonth, endDay, endHour, endMinute);
+                return dateToIsoStr(endYear, endMonth, endDay, endHour, endMinute, 'Europe/Berlin', true);
             }
 
             // Default to end of day for multi-day events
-            return germanDateToIsoStr(endYear, endMonth, endDay, 15, 0); // 15:00 as mentioned in description
+            return dateToIsoStr(endYear, endMonth, endDay, 15, 0, 'Europe/Berlin', true); // 15:00 as mentioned in description
         }
 
         // Alternative: look for second time element (for same-day events)
@@ -201,7 +201,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 const hour = parseInt(timeMatch[1]);
                 const minute = parseInt(timeMatch[2]);
 
-                return germanDateToIsoStr(year, month, day, hour, minute);
+                return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
             }
         }
 
