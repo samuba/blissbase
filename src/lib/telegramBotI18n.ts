@@ -11,7 +11,7 @@ export function detectLanguage(languageCode: string | undefined): BotLanguage {
 
 export const t = {
 	start: (lang: BotLanguage) => {
-		const de = `Willkommen bei Blissbase.app! 👋 \nUm deinen Event hinzuzufügen, sende einfach die ganze Event Beschreibung, einschließlich Bilder, in EINER Nachricht und ich erledige den rest. ☺️✨`;
+		const de = `Willkommen bei Blissbase.app! 👋 \nUm deinen Event hinzuzufügen, sende einfach die ganze Event Beschreibung, einschließlich Bilder, in EINER Nachricht und ich erledige den Rest. ☺️✨`;
 		const en = `Welcome to Blissbase.app! 👋 \nTo add your event, just send me the whole event description, including images, in ONE message and I'll take care of it. ☺️✨`;
 		return lang === 'de' ? de : en;
 	},
