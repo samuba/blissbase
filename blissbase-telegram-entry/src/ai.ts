@@ -1,12 +1,13 @@
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
 import { allTags } from '../../src/lib/server/tags';
+import { WEBSITE_SCRAPE_SOURCE_URLS } from '../../src/lib/commonWithScripts';
 
-export async function aiExtractEventData(message: string, messageDate: Date, timezone: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
+export async function aiExtractEventData(message: string, messageDate: Date, timezone: string, authorName?: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
     console.log(`🤖 AI extracting event data with ${imageUrls.length} images...`)
     const { text } = await generateText({
         model: openai('gpt-5-mini'),
-        system: msgAnalysisSystemPrompt(messageDate, timezone),
+        system: msgAnalysisSystemPrompt(messageDate, timezone, authorName),
         messages: [
             {
                 role: "user",
@@ -40,7 +41,7 @@ export async function aiExtractEventData(message: string, messageDate: Date, tim
     }
 }
 
-export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: Timezone) => `
+export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: Timezone, authorName?: string) => `
 Your purpose is to analyze messenger text messages and images to extract information about events from them. 
 Ignore messages that are not event announcements by setting hasEventData to false. (Be strict about this. E.g. this is not an event announcement: "..Wir haben noch einen Platz frei für den nächsten Tantra event..")
 Answer only in valid, properly escaped, raw JSON. Do not wrap it inside markdown or anything else.
@@ -51,19 +52,12 @@ If there are links present in the message that start with any of the following s
 If there was an image attached, consider all text on the image as part of the message. For image-only messages (flyers), extract all visible text and treat it as the message content.
 
 # existing sources:
-https://sei.jetzt/
-https://www.sei.jetzt/
-https://awara.events/
-https://www.awara.events/
-https://heilnetz.de/
-https://www.heilnetz.de/
-https://tribehaus.org/
-https://www.tribehaus.org/
+${WEBSITE_SCRAPE_SOURCE_URLS.join("\n")}
 
-
-When extracting dates and time, always assume ${timezone} time unless you know for sure the location is in another timezone, be sure to take correct daylight saving time into account.
+When extracting dates and time, assume ${timezone} time unless you know for sure the location is in another timezone, be sure to take correct daylight saving time into account.
 Today is  ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 But the message was sent on ${messageDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
+${authorName ? `Author's name of this message: ${authorName}` : ''}
 
 Extract these information from the message:
 
@@ -85,7 +79,7 @@ Extract these information from the message:
 
 "contact": Array<string>. If the text contains contact or registration information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host or register for the event. Add main registration/contact method first.
 
-"contactAuthorForMore": boolean. Wether the message states to contact the sender/author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
+"contactAuthorForMore": boolean. Wether the message states to contact the author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
 
 "price": string. The price or costs of the event for the guest. Do not include html tags. If the price information includes new lines or is longer than 100 characters do not extract the price.
 

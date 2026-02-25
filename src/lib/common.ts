@@ -215,7 +215,7 @@ export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }:
 
 export function parseTelegramContacts(contacts: string[] | undefined) {
     if (!contacts?.length) return [];
-    return contacts.map(contact => {
+    return Array.from(new Set(contacts.map(contact => {
         if (!contact?.trim()) return undefined;
 
         if (contact.startsWith('https://t.me/')) {
@@ -239,7 +239,7 @@ export function parseTelegramContacts(contacts: string[] | undefined) {
             return `mailto:${contact}`
         }
         return contact;
-    }).filter(x => !!x) as string[];
+    }).filter(x => !!x)! as string[]));
 }
 
 export function randomString(length: number) {

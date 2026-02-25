@@ -6,7 +6,7 @@ import { geocodeAddressCached } from '$lib/server/google';
 import { insertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
-import type { TelegramCloudflareBody } from '$lib/telegramCommon';
+import { getTelegramEventOriginalAuthor, type TelegramCloudflareBody } from '$lib/telegramCommon';
 import { routes } from '$lib/routes';
 import { resizeCoverImage } from '$lib/imageProcessing';
 import { randomString } from '$lib/common';
@@ -193,67 +193,9 @@ async function reply(ctx: Context, text: string, fromGroup: boolean, msgId: stri
     }
 }
 
-function wasMessageForwarded(message: Context['message']): boolean {
-    if (!message) return false;
-    return 'forward_from' in message || 'forward_origin' in message;
-}
-
 function getTelegramSenderId(message: Context['message']): string | undefined {
     if (!message) return undefined;
     return message.from.id?.toString();
-}
-
-function getTelegramEventOriginalAuthor(message: Context['message']) {
-    if (!message) return undefined;
-
-    let username: string | undefined;
-    let firstName: string | undefined;
-    let lastName: string | undefined;
-
-    if (wasMessageForwarded(message)) {
-        const msg = message as unknown as {
-            forward_from?: { username?: string; first_name?: string; last_name?: string };
-            forward_origin?: {
-                chat?: { username?: string; first_name?: string; last_name?: string };
-                sender_user?: { username?: string; first_name?: string; last_name?: string };
-                author_signature?: string;
-            };
-        };
-        username = msg?.forward_from?.username ??
-            msg.forward_origin?.chat?.username ??
-            msg.forward_origin?.sender_user?.username
-        firstName = msg?.forward_from?.first_name ??
-            msg.forward_origin?.author_signature ?? // might be full name but screw it
-            msg.forward_origin?.chat?.first_name ??
-            msg.forward_origin?.sender_user?.first_name
-        lastName = msg?.forward_from?.last_name ??
-            msg.forward_origin?.chat?.last_name ??
-            msg.forward_origin?.sender_user?.last_name
-    } else {
-        firstName = message?.from.first_name;
-        lastName = message?.from.last_name;
-        username = message?.from.username;
-    }
-
-    console.log({ username, firstName, lastName })
-
-    let name: string | undefined;
-    if (firstName && lastName && username) {
-        name = `${firstName} ${lastName} (@${username})`;
-    } else if (firstName && lastName) {
-        name = `${firstName} ${lastName}`;
-    } else if (firstName && username) {
-        name = `${firstName} (@${username})`;
-    } else if (firstName) {
-        name = firstName;
-    } else if (username) {
-        name = username;
-    }
-    return {
-        name,
-        id: message?.from.id,
-        link: username ? `tg://resolve?domain=${username}` : undefined
-    };
 }
 
 async function recordMessage(ctx: Context) {

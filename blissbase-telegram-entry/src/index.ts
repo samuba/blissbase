@@ -1,7 +1,7 @@
 import { Telegraf, type Context } from "telegraf";
 import type { Update, MessageEntity, PhotoSize } from "telegraf/types";
 import { aiExtractEventData } from './ai';
-import { msgFilters, type TelegramCloudflareBody } from '../../src/lib/telegramCommon';
+import { getTelegramEventOriginalAuthor, msgFilters, type TelegramCloudflareBody } from '../../src/lib/telegramCommon';
 import { detectLanguage, t } from '../../src/lib/telegramBotI18n';
 
 export default {
@@ -53,11 +53,12 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 
 		await reply(ctx, t.extractingEventData(lang))
 
+		const author = await getTelegramEventOriginalAuthor(ctx.message)
 		const messageDate = ctx.message?.date ? new Date(ctx.message.date * 1000) : new Date();
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
 		// Note: Using default timezone "germany" here. For chat-specific timezones, 
 		// the architecture would need to be changed to fetch chat config before AI call.
-		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml, messageDate, "germany", [image?.url]), !fromGroup)
+		const aiAnswer = await wrapInTyping(ctx, () => aiExtractEventData(msgTextHtml, messageDate, "germany", author?.username, [image?.url]), !fromGroup)
 
 		// console.log("calling vercel with", {
 		// 	telegramPayload: payloadJson,
@@ -249,8 +250,8 @@ function resolveTelegramFormattingToHtml(text: string, entities: MessageEntity[]
 			case "code": return '<code>';
 			case "pre": return '<pre>';
 			case "text_link": return `<a href="${entity.url.startsWith("http") ? entity.url : "https://" + entity.url}" target="_blank">`;
-			case "text_mention": return `<a href="tg://user?id=${entity.user?.id}" target="_blank">`;
-			case "mention": return `<a href="tg://user?id=${content.slice(1)}" target="_blank">`;
+			case "text_mention": return `<a href="tg://resolve?domain=${entity.user?.id}" target="_blank">`;
+			case "mention": return `<a href="tg://resolve?domain=${content.slice(1)}" target="_blank">`;
 			case "hashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
 			case "cashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
 			case "bot_command": return '<code>';

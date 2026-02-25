@@ -14,6 +14,7 @@ import { resizeCoverImage } from '../src/lib/imageProcessing';
 import { insertEvents } from "../src/lib/server/events";
 import type { Entity } from "telegram/define";
 import * as assets from "../src/lib/assets";
+import { resolveTelegramFormattingToHtml } from "../src/lib/telegramCommon";
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
@@ -22,223 +23,6 @@ const sessionAuthKey = new StringSession(sessionAuthKeyString);
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
 
 const maxSecondsBetweenMessagesForSameEvent = 20 * 60; // 20 minutes
-
-function resolveTelegramFormattingToHtml(text: string, entities: Api.TypeMessageEntity[] | undefined): string {
-    // Type definitions for converted entities
-    type ConvertedEntity = {
-        offset: number;
-        length: number;
-        type: string;
-        url?: string;
-        user?: { id: number };
-    };
-
-    // Interface for MessageEntityMentionName to avoid using any
-    interface MessageEntityMentionName {
-        className: string;
-        offset: number;
-        length: number;
-        userId: number;
-    }
-
-
-    // Early return for no entities
-    if (!entities?.length) {
-        return lineBreaksToBr(text);
-    }
-
-    // Convert entities to a format compatible with the original function
-    const convertedEntities: ConvertedEntity[] = entities.map(entity => {
-        const baseEntity = {
-            offset: entity.offset,
-            length: entity.length,
-        };
-
-        // Map Telegram API entity types to our format
-        if (entity.className === 'MessageEntityBold') {
-            return { ...baseEntity, type: 'bold' };
-        } else if (entity.className === 'MessageEntityItalic') {
-            return { ...baseEntity, type: 'italic' };
-        } else if (entity.className === 'MessageEntityCode') {
-            return { ...baseEntity, type: 'code' };
-        } else if (entity.className === 'MessageEntityPre') {
-            return { ...baseEntity, type: 'pre' };
-        } else if (entity.className === 'MessageEntityUrl') {
-            return { ...baseEntity, type: 'url' };
-        } else if (entity.className === 'MessageEntityTextUrl') {
-            return { ...baseEntity, type: 'text_link', url: (entity as Api.MessageEntityTextUrl).url };
-        } else if (entity.className === 'MessageEntityMention') {
-            return { ...baseEntity, type: 'mention' };
-        } else if (entity.className === 'MessageEntityHashtag') {
-            return { ...baseEntity, type: 'hashtag' };
-        } else if (entity.className === 'MessageEntityStrike') {
-            return { ...baseEntity, type: 'strikethrough' };
-        } else if (entity.className === 'MessageEntityUnderline') {
-            return { ...baseEntity, type: 'underline' };
-        } else if (entity.className === 'MessageEntityMentionName') {
-            return { ...baseEntity, type: 'text_mention', user: { id: (entity as unknown as MessageEntityMentionName).userId } };
-        } else if (entity.className === 'MessageEntityCashtag') {
-            return { ...baseEntity, type: 'cashtag' };
-        } else if (entity.className === 'MessageEntityBotCommand') {
-            return { ...baseEntity, type: 'bot_command' };
-        } else if (entity.className === 'MessageEntityEmail') {
-            return { ...baseEntity, type: 'email' };
-        } else if (entity.className === 'MessageEntityPhone') {
-            return { ...baseEntity, type: 'phone_number' };
-        } else if (entity.className === 'MessageEntitySpoiler') {
-            return { ...baseEntity, type: 'spoiler' };
-        } else if (entity.className === 'MessageEntityBlockquote') {
-            return { ...baseEntity, type: 'blockquote' };
-        }
-
-        // Default case - return with empty type
-        return { ...baseEntity, type: '' };
-    });
-
-    // Pre-calculate opening and closing tags for all entities to avoid repeated function calls
-    const entityTags = new WeakMap<ConvertedEntity, { opening: string, closing: string }>();
-
-    for (const entity of convertedEntities) {
-        const content = text.slice(entity.offset, entity.offset + entity.length);
-        entityTags.set(entity, {
-            opening: getOpeningTag(entity, content),
-            closing: getClosingTag(entity.type)
-        });
-    }
-
-    // Pre-group entities by their start and end positions for faster lookup
-    const entitiesByStartPos = new Map<number, ConvertedEntity[]>();
-    const entitiesByEndPos = new Map<number, ConvertedEntity[]>();
-    const changePositions = new Set<number>();
-
-    for (const entity of convertedEntities) {
-        const startPos = entity.offset;
-        const endPos = entity.offset + entity.length;
-
-        // Group starting entities
-        if (!entitiesByStartPos.has(startPos)) {
-            entitiesByStartPos.set(startPos, []);
-        }
-        entitiesByStartPos.get(startPos)!.push(entity);
-
-        // Group ending entities
-        if (!entitiesByEndPos.has(endPos)) {
-            entitiesByEndPos.set(endPos, []);
-        }
-        entitiesByEndPos.get(endPos)!.push(entity);
-
-        changePositions.add(startPos);
-        changePositions.add(endPos);
-    }
-
-    const sortedPositions = Array.from(changePositions).sort((a, b) => a - b);
-
-    // Build result using array for better performance than string concatenation
-    const resultParts: string[] = [];
-    const activeEntities: ConvertedEntity[] = [];
-    let lastPos = 0;
-
-    // Process only positions where formatting actually changes
-    for (const pos of sortedPositions) {
-        // Add text segment before this position
-        if (pos > lastPos) {
-            resultParts.push(text.slice(lastPos, pos));
-        }
-
-        // Get entities that start or end at this position (pre-calculated)
-        const startingEntities = entitiesByStartPos.get(pos) || [];
-        const endingEntities = entitiesByEndPos.get(pos) || [];
-
-        // Handle ending entities first (close tags in reverse order)
-        if (endingEntities.length > 0) {
-            // Close all active entities in reverse order (LIFO)
-            for (let i = activeEntities.length - 1; i >= 0; i--) {
-                resultParts.push(entityTags.get(activeEntities[i])!.closing);
-            }
-
-            // Remove ending entities from active list efficiently
-            for (const endingEntity of endingEntities) {
-                const index = activeEntities.indexOf(endingEntity);
-                if (index !== -1) {
-                    activeEntities.splice(index, 1);
-                }
-            }
-
-            // Reopen remaining active entities in original order
-            for (const entity of activeEntities) {
-                resultParts.push(entityTags.get(entity)!.opening);
-            }
-        }
-
-        // Handle starting entities (open new tags)
-        for (const entity of startingEntities) {
-            activeEntities.push(entity);
-            resultParts.push(entityTags.get(entity)!.opening);
-        }
-
-        lastPos = pos;
-    }
-
-    // Add remaining text after the last formatting change
-    if (lastPos < text.length) {
-        resultParts.push(text.slice(lastPos));
-    }
-
-    // Join all parts and apply line break formatting
-    return lineBreaksToBr(resultParts.join(''));
-
-    function getOpeningTag(entity: ConvertedEntity, content: string): string {
-        switch (entity.type) {
-            case "bold": return '<b>';
-            case "italic": return '<i>';
-            case "underline": return '<u>';
-            case "strikethrough": return '<s>';
-            case "code": return '<code>';
-            case "pre": return '<pre>';
-            case "text_link": return `<a href="${entity.url?.startsWith("http") ? entity.url : "https://" + entity.url}" target="_blank">`;
-            case "text_mention": return `<a href="tg://user?id=${entity.user?.id}" target="_blank">`;
-            case "mention": return `<a href="tg://user?id=${content.slice(1)}" target="_blank">`;
-            case "hashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
-            case "cashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
-            case "bot_command": return '<code>';
-            case "url": return `<a href="${content}" target="_blank">`;
-            case "email": return `<a href="mailto:${content}" target="_blank">`;
-            case "phone_number": return `<a href="tel:${content}" target="_blank">`;
-            case "spoiler": return '<span class="tg-spoiler">';
-            case "blockquote": return '<blockquote>';
-            default: return '';
-        }
-    }
-
-    function getClosingTag(entityType: string): string {
-        switch (entityType) {
-            case "bold": return '</b>';
-            case "italic": return '</i>';
-            case "underline": return '</u>';
-            case "strikethrough": return '</s>';
-            case "code":
-            case "bot_command": return '</code>';
-            case "pre": return '</pre>';
-            case "text_link":
-            case "text_mention":
-            case "mention":
-            case "hashtag":
-            case "cashtag":
-            case "url":
-            case "email":
-            case "phone_number": return '</a>';
-            case "spoiler": return '</span>';
-            case "blockquote": return '</blockquote>';
-            default: return '';
-        }
-    }
-
-    function lineBreaksToBr(text: string): string {
-        return text
-            .replaceAll("\n", "<br>")
-            .replace(/<br>(\s*<br>){2,}/g, '<br><br>');
-    }
-}
 
 function getTelegramOriginalAuthorId(message: Api.Message) {
     if (message.fwdFrom?.fromId) {
@@ -361,9 +145,17 @@ async function getTelegramEventOriginalAuthor(message: Api.Message, client: Tele
 
     return {
         name,
-        id: message.fromId ?? message.peerId,
-        link: username ? `tg://resolve?domain=${username}` : undefined
-    };
+        id: getTelegramOriginalAuthorId(message),
+        link: username ? `tg://resolve?domain=${username}` : undefined,
+        username
+    } satisfies TelegramAuthor;
+}
+
+type TelegramAuthor = {
+    name: string | undefined;
+    id: string | undefined;
+    link: string | undefined;
+    username: string | undefined;
 }
 
 function isImageMedia(message: Api.Message): boolean {
@@ -426,8 +218,6 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         return undefined;
     }
 }
-
-
 
 // Returns a resized image buffer for a Telegram photo message
 async function getResizedImageBufferFromMessage(message: Api.Message, client: TelegramClient): Promise<Buffer | undefined> {
@@ -632,7 +422,14 @@ function hasTextMessagesBetween(
     return false;
 }
 
-async function extractEventDataFromImageMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[], defaultTimezone: string): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
+async function extractEventDataFromImageMessage(
+    message: Api.Message, 
+    chatId: string, 
+    client: TelegramClient, 
+    allMessages: Api.Message[], 
+    defaultTimezone: string, 
+    author: TelegramAuthor | undefined
+): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
     if (message.media?.className !== 'MessageMediaPhoto') return undefined;
 
     console.log("Processing image-only message for event data:", message.id);
@@ -647,7 +444,7 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join('\n\n') : '';
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, [imageDataUrl]);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, [imageDataUrl]);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -671,7 +468,14 @@ async function extractEventDataFromImageMessage(message: Api.Message, chatId: st
     return { event: mergedEvent, adjacentMessageIds: allAdjacentMessageIds };
 }
 
-async function extractEventDataFromMessage(message: Api.Message, chatId: string, client: TelegramClient, allMessages: Api.Message[], defaultTimezone: string): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
+async function extractEventDataFromMessage(
+    message: Api.Message, 
+    chatId: string, 
+    client: TelegramClient, 
+    allMessages: Api.Message[], 
+    defaultTimezone: string,
+    author: TelegramAuthor | undefined
+): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
     const msgHtml = resolveTelegramFormattingToHtml(message.message, message.entities);
     console.log("extracting event data from message", message.id)
 
@@ -681,7 +485,7 @@ async function extractEventDataFromMessage(message: Api.Message, chatId: string,
     const combinedText = [msgHtml, ...adjacentTextMessages].join('\n\n');
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, adjacentImageUrls);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, adjacentImageUrls);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -822,7 +626,7 @@ async function validateAndBuildEventBase(args: {
     const contact = parseTelegramContacts(aiAnswer.contact)
     const telegramAuthor = await getTelegramEventOriginalAuthor(message, client);
     if (aiAnswer.contactAuthorForMore) {
-        if (telegramAuthor?.link) contact.push(telegramAuthor.link)
+        if (telegramAuthor?.link && contact.every(x => x !== telegramAuthor.link)) contact.push(telegramAuthor.link)
         if (!contact.some(x => x?.startsWith('tg://'))) {
             console.log(`Skipping event - contact author requested but no telegram author link available`);
             return undefined;
@@ -978,10 +782,11 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
 
         console.log(`msg#${message.id}: ${message.className} ${message.classType} ${message.media?.className}`);
         const msg = message.message;
+        const author = await getTelegramEventOriginalAuthor(message, client);
 
         // Handle text messages with event data
         if (msg && msg.length > 30) {
-            const result = await extractEventDataFromMessage(message, chatId, client, allMessages, defaultTimezone);
+            const result = await extractEventDataFromMessage(message, chatId, client, allMessages, defaultTimezone, author);
             if (result) {
                 events.push(result.event);
                 // Mark this message and its adjacent images as processed
@@ -992,7 +797,7 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
         // Handle image-only messages that might contain event flyers
         else if (isImageMedia(message) && (!msg || msg.length <= 30)) {
             console.log(`Processing image-only message ${message.id} for potential event data`);
-            const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages, defaultTimezone);
+            const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages, defaultTimezone, author);
             if (result) {
                 events.push(result.event);
                 // Mark this message and its adjacent images as processed
