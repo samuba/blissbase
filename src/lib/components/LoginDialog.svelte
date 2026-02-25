@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Dialog } from '$lib/components/dialog';
 	import { createSupabaseBrowserClient } from '$lib/supabase';
+	import { localeStore } from '../../locales/localeStore.svelte';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
@@ -20,7 +21,10 @@
 			const { error: signInError } = await supabase.auth.signInWithOtp({
 				email,
 				options: {
-					emailRedirectTo: `${window.location.origin}/auth/callback`
+					emailRedirectTo: `${window.location.origin}/auth/callback`,
+					data: {
+						locale: localeStore.locale
+					}
 				}
 			});
 
