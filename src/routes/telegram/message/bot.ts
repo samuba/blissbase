@@ -11,6 +11,7 @@ import { routes } from '$lib/routes';
 import { resizeCoverImage } from '$lib/imageProcessing';
 import { randomString } from '$lib/common';
 import { loadCreds, uploadImage } from '$lib/assets';
+import { detectLanguage, t, type BotLanguage } from '$lib/telegramBotI18n';
 
 const assetsCreds = loadCreds({ S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID })
 
@@ -18,29 +19,30 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
     if (!msgTextHtml.trim()) return
 
     const isAdmin = ctx.from?.id === 218154725;
+    const lang: BotLanguage = detectLanguage(ctx.from?.language_code);
 
-    console.log({ fromGroup, aiAnswer, isAdmin })
+    console.log({ fromGroup, aiAnswer, isAdmin, languageCode: ctx.from?.language_code, detectedLang: lang })
 
     const msgId = await recordMessage(ctx)
     try {
         if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
-            await reply(ctx, `👯 Es sieht aus als ob dieser Event bereits auf ${aiAnswer.existingSource} existiert.\nWir fügen regelmäßig alle events von ${aiAnswer.existingSource} zu Blissbase hinzu. Du musst uns diese Events also nicht schicken. 😉`, fromGroup, msgId)
+            await reply(ctx, t('eventExistsOnSource', lang, aiAnswer.existingSource), fromGroup, msgId)
             return
         }
         if (!aiAnswer.hasEventData) {
             console.log("No event data found", msgTextHtml)
-            await reply(ctx, "🙅🏻‍♂️🎫 Aus dieser Nachricht konnte ich keine Eventdaten extrahieren. Bitte schicke mir eine Event Beschreibung/Ankündigung.", fromGroup, msgId)
+            await reply(ctx, t('noEventData', lang), fromGroup, msgId)
             return
         }
         if (!aiAnswer.name) {
             console.log("No event name found", msgTextHtml)
-            await reply(ctx, "🙅🏻‍♂️🪧 Aus dieser Nachricht konnte ich keinen eindeutigen Titel für den Event extrahieren", fromGroup, msgId)
+            await reply(ctx, t('noEventName', lang), fromGroup, msgId)
             return
         }
         if (!aiAnswer.startDate) {
             console.log("No event start date found", msgTextHtml)
-            await reply(ctx, "🙅🏻‍♂️📅 Aus dieser Nachricht konnte ich keine Startzeit für den Event extrahieren", fromGroup, msgId)
+            await reply(ctx, t('noStartDate', lang), fromGroup, msgId)
             return
         }
         if (aiAnswer.attendanceMode === "offline") {
@@ -50,7 +52,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                     aiAnswer.address = chatConfig.defaultAddress.join(',')
                 } else {
                     console.log("No event location found", msgTextHtml)
-                    await reply(ctx, "🙅🏻‍♂️📍 Aus dieser Nachricht konnte ich keinen Ort für den Event extrahieren. Bitte gebe immer einen Ort an.", fromGroup, msgId)
+                    await reply(ctx, t('noLocation', lang), fromGroup, msgId)
                     return
                 }
             }
@@ -66,7 +68,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         if (aiAnswer.contactAuthorForMore) {
             if (telegramAuthor?.link) contact.push(telegramAuthor.link)
             if (!contact.some(x => x?.startsWith('tg://'))) {
-                await reply(ctx, "⚠️ In deiner Nachricht forderst du Teilnehmer auf sich bei dir per Telegram zu melden, allerdings hast du in deinem Profil keinen Telegram Username eingetragen.\n\nBitte lege erst einen Telegram Username fest damit dich Teilnehmer per Telegram Link erreichen können. Danach kannst du mir die Nachricht erneut senden.", fromGroup, msgId)
+                await reply(ctx, t('noTelegramUsername', lang), fromGroup, msgId)
                 return
             }
         }
@@ -122,7 +124,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                 // assert its the same user that created the event
                 if (existingEvent.messageSenderId !== getTelegramSenderId(ctx.message)) {
                     console.log("not the same user that created the event, not updating description for ", eventRow.slug, `user trying: ${getTelegramSenderId(ctx.message)}, original: ${existingEvent.messageSenderId}`)
-                    await reply(ctx, "🙅🏻‍♂️🔐 Dieser Event existiert schon und du hast ihn nicht erstellt. Deshalb kannst du ihn auch nicht bearbeiten.", fromGroup, msgId)
+                    await reply(ctx, t('notEventOwner', lang), fromGroup, msgId)
                     return
                 }
             } else {
@@ -153,36 +155,24 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
         } catch (error) {
             console.error('Error inserting event:', error);
-            await reply(ctx, "⚠️ Fehler beim Speichern des Events. Bitte versuche es später erneut.", fromGroup, msgId);
+            await reply(ctx, t('saveError', lang), fromGroup, msgId);
             return;
         }
 
         await ctx.react('⚡', false) // marker that the event was transferred
 
-        const adminLinkText = `
-⚠️ Link zum bearbeiten des Events:
-<a href="${routes.editEvent(dbEvent.id, eventRow.hostSecret!, true)}">Admin Link (nicht teilen)</a>
-ACHTUNG: Jeder mit dem Admin Link kann den Event bearbeiten oder löschen!!
-        `.trim()
+        const adminLinkText = t('adminLinkWarning', lang, routes.editEvent(dbEvent.id, eventRow.hostSecret!, true).toString());
 
         if (existingEvent) {
-            await reply(ctx, `
-✅ Der Event wurde aktualisiert:
-<a href="${routes.eventDetails(dbEvent.slug, true)}">Link zu deinem Event</a>
-${skippedImage ? "ℹ️ Du hast kein Bild angegeben, daher wurde das bestehende Bild beibehalten." : ""}
-\n${adminLinkText}
-`.trim(), fromGroup, msgId)
+            const skippedImageMsg = skippedImage ? t('imageKept', lang) : "";
+            await reply(ctx, t('eventUpdated', lang, routes.eventDetails(dbEvent.slug, true).toString(), skippedImageMsg, adminLinkText), fromGroup, msgId)
         } else {
-            await reply(ctx, `
-✅ Der Event wurde in Blissbase eingetragen. Teile den Link mit deinen Teilnehmern:
-<a href="${routes.eventDetails(dbEvent.slug, true)}">Link zu deinem Event</a>
-\n\n${adminLinkText}.
-`.trim(), fromGroup, msgId)
+            await reply(ctx, t('eventCreated', lang, routes.eventDetails(dbEvent.slug, true).toString(), adminLinkText), fromGroup, msgId)
         }
     } catch (error) {
         console.error(error)
         try {
-            await reply(ctx, "⚠️ Die Nachricht konnte nicht verarbeitet werden versuche es später erneut.\n\nFehler: " + error, fromGroup, msgId)
+            await reply(ctx, t('genericError', lang, String(error)), fromGroup, msgId)
         } catch { /* ignore */ }
     }
 }
