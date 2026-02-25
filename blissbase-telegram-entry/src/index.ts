@@ -9,6 +9,9 @@ export default {
 		const bot = new Telegraf(env.TELEGRAM_BOT_TOKEN, {
 			handlerTimeout: 1000 * 60 * 5, // 5 minutes
 		});
+		bot.start((ctx) => {
+			reply(ctx, t.start(detectLanguage(ctx.from?.language_code)))
+		})
 
 		const data = await request.json() as Update
 
@@ -48,7 +51,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			image = await getImage(ctx.channelPost.photo, ctx)
 		}
 
-		await reply(ctx, t('extractingEventData', lang))
+		await reply(ctx, t.extractingEventData(lang))
 
 		const messageDate = ctx.message?.date ? new Date(ctx.message.date * 1000) : new Date();
 		const msgTextHtml = resolveTelegramFormattingToHtml(msgText, [...msgEntities])
@@ -85,7 +88,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 	} catch (error) {
 		console.error(error)
 		try {
-			await reply(ctx, t('genericError', lang, String(error)))
+			await reply(ctx, t.genericError(lang, String(error)))
 		} catch { /* ignore */ }
 	}
 }

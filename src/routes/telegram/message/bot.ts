@@ -27,22 +27,22 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
     try {
         if (aiAnswer.existingSource) {
             console.log("event from existing source", msgTextHtml)
-            await reply(ctx, t('eventExistsOnSource', lang, aiAnswer.existingSource), fromGroup, msgId)
+            await reply(ctx, t.eventExistsOnSource(lang, aiAnswer.existingSource), fromGroup, msgId)
             return
         }
         if (!aiAnswer.hasEventData) {
             console.log("No event data found", msgTextHtml)
-            await reply(ctx, t('noEventData', lang), fromGroup, msgId)
+            await reply(ctx, t.noEventData(lang), fromGroup, msgId)
             return
         }
         if (!aiAnswer.name) {
             console.log("No event name found", msgTextHtml)
-            await reply(ctx, t('noEventName', lang), fromGroup, msgId)
+            await reply(ctx, t.noEventName(lang), fromGroup, msgId)
             return
         }
         if (!aiAnswer.startDate) {
             console.log("No event start date found", msgTextHtml)
-            await reply(ctx, t('noStartDate', lang), fromGroup, msgId)
+            await reply(ctx, t.noStartDate(lang), fromGroup, msgId)
             return
         }
         if (aiAnswer.attendanceMode === "offline") {
@@ -52,7 +52,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                     aiAnswer.address = chatConfig.defaultAddress.join(',')
                 } else {
                     console.log("No event location found", msgTextHtml)
-                    await reply(ctx, t('noLocation', lang), fromGroup, msgId)
+                    await reply(ctx, t.noLocation(lang), fromGroup, msgId)
                     return
                 }
             }
@@ -68,7 +68,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         if (aiAnswer.contactAuthorForMore) {
             if (telegramAuthor?.link) contact.push(telegramAuthor.link)
             if (!contact.some(x => x?.startsWith('tg://'))) {
-                await reply(ctx, t('noTelegramUsername', lang), fromGroup, msgId)
+                await reply(ctx, t.noTelegramUsername(lang), fromGroup, msgId)
                 return
             }
         }
@@ -124,7 +124,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                 // assert its the same user that created the event
                 if (existingEvent.messageSenderId !== getTelegramSenderId(ctx.message)) {
                     console.log("not the same user that created the event, not updating description for ", eventRow.slug, `user trying: ${getTelegramSenderId(ctx.message)}, original: ${existingEvent.messageSenderId}`)
-                    await reply(ctx, t('notEventOwner', lang), fromGroup, msgId)
+                    await reply(ctx, t.notEventOwner(lang), fromGroup, msgId)
                     return
                 }
             } else {
@@ -155,24 +155,24 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
         } catch (error) {
             console.error('Error inserting event:', error);
-            await reply(ctx, t('saveError', lang), fromGroup, msgId);
+            await reply(ctx, t.saveError(lang), fromGroup, msgId);
             return;
         }
 
         await ctx.react('⚡', false) // marker that the event was transferred
 
-        const adminLinkText = t('adminLinkWarning', lang, routes.editEvent(dbEvent.id, eventRow.hostSecret!, true).toString());
+        const adminLinkText = t.adminLinkWarning(lang, routes.editEvent(dbEvent.id, eventRow.hostSecret!, true).toString());
 
         if (existingEvent) {
-            const skippedImageMsg = skippedImage ? t('imageKept', lang) : "";
-            await reply(ctx, t('eventUpdated', lang, routes.eventDetails(dbEvent.slug, true).toString(), skippedImageMsg, adminLinkText), fromGroup, msgId)
+            const skippedImageMsg = skippedImage ? t.imageKept(lang) : "";
+            await reply(ctx, t.eventUpdated(lang, routes.eventDetails(dbEvent.slug, true).toString(), skippedImageMsg, adminLinkText), fromGroup, msgId)
         } else {
-            await reply(ctx, t('eventCreated', lang, routes.eventDetails(dbEvent.slug, true).toString(), adminLinkText), fromGroup, msgId)
+            await reply(ctx, t.eventCreated(lang, routes.eventDetails(dbEvent.slug, true).toString(), adminLinkText), fromGroup, msgId)
         }
     } catch (error) {
         console.error(error)
         try {
-            await reply(ctx, t('genericError', lang, String(error)), fromGroup, msgId)
+            await reply(ctx, t.genericError(lang, String(error)), fromGroup, msgId)
         } catch { /* ignore */ }
     }
 }
