@@ -328,42 +328,88 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         return $('.mec-single-title').text().trim();
     }
 
-    extractStartAt(html: string) {
+    extractStartAt(html: string): string | undefined {
         const $ = cheerio.load(html);
         const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
-        const [startTime] = timeText.split("-").map(time => time.trim());
-        const [hours, minutes] = startTime.split(':').map(Number);
+        if (!timeText || !timeText.includes('-')) {
+            console.warn(`Invalid or missing time text for start time: "${timeText}"`);
+            return undefined;
+        }
+        const timeParts = timeText.split("-").map(time => time.trim());
+        if (timeParts.length < 1 || !timeParts[0]) {
+            console.warn(`Could not extract start time from: "${timeText}"`);
+            return undefined;
+        }
+        const startTime = timeParts[0];
+        const hourMinParts = startTime.split(':').map(Number);
+        if (hourMinParts.length < 2 || isNaN(hourMinParts[0]) || isNaN(hourMinParts[1])) {
+            console.warn(`Invalid start time format: "${startTime}"`);
+            return undefined;
+        }
+        const [hours, minutes] = hourMinParts;
 
-        const ldEvent = extractLDJsonEvent(html);
-        const startDate = new Date(ldEvent.startDate);
-        return dateToIsoStr(
-            startDate.getFullYear(),
-            startDate.getMonth(),
-            startDate.getDate(),
-            hours,
-            minutes,
-            'Europe/Berlin',
-            true
-        );
+        try {
+            const ldEvent = extractLDJsonEvent(html);
+            const startDate = new Date(ldEvent.startDate);
+            if (isNaN(startDate.getTime())) {
+                console.warn(`Invalid start date from LD+JSON`);
+                return undefined;
+            }
+            return dateToIsoStr(
+                startDate.getFullYear(),
+                startDate.getMonth(),
+                startDate.getDate(),
+                hours,
+                minutes,
+                'Europe/Berlin',
+                true
+            );
+        } catch (error) {
+            console.warn(`Could not extract LD+JSON event data for start time: ${error}`);
+            return undefined;
+        }
     }
 
-    extractEndAt(html: string) {
+    extractEndAt(html: string): string | undefined {
         const $ = cheerio.load(html);
         const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
-        const [, endTime] = timeText.split("-").map(time => time.trim());
-        const [hours, minutes] = endTime.split(':').map(Number);
+        if (!timeText || !timeText.includes('-')) {
+            console.warn(`Invalid or missing time text for end time: "${timeText}"`);
+            return undefined;
+        }
+        const timeParts = timeText.split("-").map(time => time.trim());
+        if (timeParts.length < 2 || !timeParts[1]) {
+            console.warn(`Could not extract end time from: "${timeText}"`);
+            return undefined;
+        }
+        const endTime = timeParts[1];
+        const hourMinParts = endTime.split(':').map(Number);
+        if (hourMinParts.length < 2 || isNaN(hourMinParts[0]) || isNaN(hourMinParts[1])) {
+            console.warn(`Invalid end time format: "${endTime}"`);
+            return undefined;
+        }
+        const [hours, minutes] = hourMinParts;
 
-        const ldEvent = extractLDJsonEvent(html);
-        const endDate = new Date(ldEvent.endDate);
-        return dateToIsoStr(
-            endDate.getFullYear(),
-            endDate.getMonth(),
-            endDate.getDate(),
-            hours,
-            minutes,
-            'Europe/Berlin',
-            true
-        );
+        try {
+            const ldEvent = extractLDJsonEvent(html);
+            const endDate = new Date(ldEvent.endDate);
+            if (isNaN(endDate.getTime())) {
+                console.warn(`Invalid end date from LD+JSON`);
+                return undefined;
+            }
+            return dateToIsoStr(
+                endDate.getFullYear(),
+                endDate.getMonth(),
+                endDate.getDate(),
+                hours,
+                minutes,
+                'Europe/Berlin',
+                true
+            );
+        } catch (error) {
+            console.warn(`Could not extract LD+JSON event data for end time: ${error}`);
+            return undefined;
+        }
     }
 
     extractAddress(html: string): string[] {

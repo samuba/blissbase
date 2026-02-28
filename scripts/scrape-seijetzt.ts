@@ -100,42 +100,78 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         return undefined;
     }
 
-    extractStartAt(html: string) {
-        const $ = cheerio.load(html);
+    extractStartAt(html: string): string | undefined {
+        try {
+            const $ = cheerio.load(html);
 
-        const dateElement = $('[x-data]')
-            .toArray()
-            .find(el => $(el).attr('x-data')?.includes('new Date'));
-        if (!dateElement) throw new Error('No startAt elements found in HTML');
+            const dateElement = $('[x-data]')
+                .toArray()
+                .find(el => $(el).attr('x-data')?.includes('new Date'));
+            if (!dateElement) {
+                console.warn('No startAt elements found in HTML');
+                return undefined;
+            }
 
-        return this._extractDateFromXDataElement($, dateElement);
+            return this._extractDateFromXDataElement($, dateElement);
+        } catch (error) {
+            console.warn(`Error extracting start time: ${error}`);
+            return undefined;
+        }
     }
 
-    extractEndAt(html: string) {
-        const $ = cheerio.load(html);
+    extractEndAt(html: string): string | undefined {
+        try {
+            const $ = cheerio.load(html);
 
-        const dateElement = $('[x-data]')
-            .toArray()
-            .filter(el => $(el).attr('x-data')?.includes('new Date'))[1];
-        if (!dateElement) return undefined;
+            const dateElements = $('[x-data]')
+                .toArray()
+                .filter(el => $(el).attr('x-data')?.includes('new Date'));
+            if (dateElements.length < 2) return undefined;
 
-        return this._extractDateFromXDataElement($, dateElement);
+            return this._extractDateFromXDataElement($, dateElements[1]);
+        } catch (error) {
+            console.warn(`Error extracting end time: ${error}`);
+            return undefined;
+        }
     }
 
-    private _extractDateFromXDataElement($: cheerio.Root, dateElement: cheerio.Element) {
-        const xDataAttr = $(dateElement).attr('x-data');
-        if (!xDataAttr) throw new Error('No x-data attribute found in HTML');
+    private _extractDateFromXDataElement($: cheerio.Root, dateElement: cheerio.Element): string | undefined {
+        try {
+            const xDataAttr = $(dateElement).attr('x-data');
+            if (!xDataAttr) {
+                console.warn('No x-data attribute found in HTML');
+                return undefined;
+            }
 
-        const dateMatch = xDataAttr.match(/new Date\((.*?)\)/);
-        if (!dateMatch || !dateMatch[1]) throw new Error('No date match found in x-data attribute');
+            const dateMatch = xDataAttr.match(/new Date\((.*?)\)/);
+            if (!dateMatch || !dateMatch[1]) {
+                console.warn('No date match found in x-data attribute');
+                return undefined;
+            }
 
-        const [dateStr, timeStr] = dateMatch[1].replace(/['"]/g, '').split('T');
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const [hour, minute] = timeStr.split(':').map(Number);
-        if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Invalid time parameters');
-        if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900 || year > 2100) throw new Error('Invalid date parameters');
+            const [dateStr, timeStr] = dateMatch[1].replace(/['"]/g, '').split('T');
+            if (!dateStr || !timeStr) {
+                console.warn(`Invalid date/time format in x-data: ${dateMatch[1]}`);
+                return undefined;
+            }
 
-        return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const [hour, minute] = timeStr.split(':').map(Number);
+
+            if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+                console.warn(`Invalid time parameters: hour=${hour}, minute=${minute}`);
+                return undefined;
+            }
+            if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900 || year > 2100) {
+                console.warn(`Invalid date parameters: year=${year}, month=${month}, day=${day}`);
+                return undefined;
+            }
+
+            return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
+        } catch (error) {
+            console.warn(`Error extracting date from x-data: ${error}`);
+            return undefined;
+        }
     }
 
     extractAddress(html: string): string[] | undefined {

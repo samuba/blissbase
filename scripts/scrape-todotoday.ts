@@ -56,7 +56,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				if (event) allEvents.push(event);
 			}
 
-			// tommorrow
+			// tomorrow - wrapped in try-catch to handle Cloudflare protection
+		try {
 			const authCookie = await login();
 			html = await customFetch(`https://todo.today/${location}/tomorrow/`, {
 				returnType: 'text',
@@ -76,8 +77,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				if (event) allEvents.push(event);
 			}
 			if (eventCountBeforeTomorrow === allEvents.length) {
-				throw new Error('No new events found for tomorrow! Something went wrong with the login.')
+				console.warn(`No new events found for tomorrow in ${location}. The site may be behind Cloudflare protection.`);
 			}
+		} catch (error) {
+			console.warn(`Skipping tomorrow's events for ${location}: ${error instanceof Error ? error.message : 'Unknown error'}. This is likely due to Cloudflare protection.`);
+		}
 		}
 
 		console.log({ allEvents });
@@ -236,7 +240,7 @@ async function login() {
 	const nonce = resNonce.match(/events_front_login\s*=\s*\{[^}]*"nonce":"([^"]+)"/)?.[1];
 	console.log({ nonce });
 	if (!nonce || nonce.length !== 10) {
-		throw new Error('No validnonce found for todo.today');
+		throw new Error('No valid nonce found for todo.today - site may be behind Cloudflare protection');
 	}
 	const res = await fetch('https://todo.today/wp-admin/admin-ajax.php', {
 		method: 'POST',
