@@ -331,8 +331,21 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     extractStartAt(html: string) {
         const $ = cheerio.load(html);
         const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
+        
+        // Some events (like multi-day retreats) don't have specific times
+        if (!timeText || !timeText.includes('-')) {
+            console.error(`No time range found for event, skipping time extraction`);
+            return undefined;
+        }
+        
         const [startTime] = timeText.split("-").map(time => time.trim());
         const [hours, minutes] = startTime.split(':').map(Number);
+        
+        // Validate time values
+        if (isNaN(hours) || isNaN(minutes)) {
+            console.error(`Invalid time values: hours=${hours}, minutes=${minutes}`);
+            return undefined;
+        }
 
         const ldEvent = extractLDJsonEvent(html);
         const startDate = new Date(ldEvent.startDate);
@@ -350,8 +363,21 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     extractEndAt(html: string) {
         const $ = cheerio.load(html);
         const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
+        
+        // Some events (like multi-day retreats) don't have specific times
+        if (!timeText || !timeText.includes('-')) {
+            console.error(`No time range found for event, skipping time extraction`);
+            return undefined;
+        }
+        
         const [, endTime] = timeText.split("-").map(time => time.trim());
         const [hours, minutes] = endTime.split(':').map(Number);
+        
+        // Validate time values
+        if (isNaN(hours) || isNaN(minutes)) {
+            console.error(`Invalid time values: hours=${hours}, minutes=${minutes}`);
+            return undefined;
+        }
 
         const ldEvent = extractLDJsonEvent(html);
         const endDate = new Date(ldEvent.endDate);

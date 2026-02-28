@@ -129,11 +129,24 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const dateMatch = xDataAttr.match(/new Date\((.*?)\)/);
         if (!dateMatch || !dateMatch[1]) throw new Error('No date match found in x-data attribute');
 
-        const [dateStr, timeStr] = dateMatch[1].replace(/['"]/g, '').split('T');
+        const dateTimeStr = dateMatch[1].replace(/['"]/g, '');
+        const [dateStr, timeStr] = dateTimeStr.split('T');
+        
+        // Validate date and time parts exist
+        if (!dateStr || !timeStr) {
+            throw new Error(`Invalid date-time format: ${dateTimeStr}`);
+        }
+        
         const [year, month, day] = dateStr.split('-').map(Number);
         const [hour, minute] = timeStr.split(':').map(Number);
-        if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Invalid time parameters');
-        if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900 || year > 2100) throw new Error('Invalid date parameters');
+        
+        // Validate all date/time values are valid numbers
+        if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            throw new Error(`Invalid time parameters: hour=${hour}, minute=${minute} from "${timeStr}"`);
+        }
+        if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900 || year > 2100) {
+            throw new Error(`Invalid date parameters: year=${year}, month=${month}, day=${day} from "${dateStr}"`);
+        }
 
         return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
     }
