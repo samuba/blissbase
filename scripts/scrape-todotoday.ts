@@ -321,6 +321,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 	/**
 	 * Launches a completely fresh Playwright browser and navigates to the listing page.
+	 * Uses stealth measures to bypass Cloudflare detection.
 	 * Example: const { browser, page } = await scraper.launchFreshBrowser({ location: `ubud`, day: `today` })
 	 */
 	private async launchFreshBrowser(args: { location: string; day: string }): Promise<{
@@ -329,23 +330,101 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		page: Page;
 	}> {
 		const { location, day } = args;
-		console.log(`[${location}/${day}] chromium.launch`);
-		const browser = await chromium.launch({ headless: true });
+		console.log(`[${location}/${day}] chromium.launch with stealth args`);
+		const browser = await chromium.launch({
+			headless: true,
+			args: [
+				'--disable-blink-features=AutomationControlled',
+				'--disable-features=IsolateOrigins,site-per-process',
+				'--disable-site-isolation-trials',
+				'--disable-dev-shm-usage',
+				'--no-sandbox',
+				'--disable-setuid-sandbox',
+				'--disable-gpu',
+				'--disable-accelerated-2d-canvas',
+				'--disable-background-networking',
+				'--disable-background-timer-throttling',
+				'--disable-breakpad',
+				'--disable-client-side-phishing-detection',
+				'--disable-default-apps',
+				'--disable-extensions',
+				'--disable-features=TranslateUI',
+				'--disable-hang-monitor',
+				'--disable-ipc-flooding-protection',
+				'--disable-popup-blocking',
+				'--disable-prompt-on-repost',
+				'--disable-renderer-backgrounding',
+				'--disable-sync',
+				'--force-color-profile=srgb',
+				'--metrics-recording-only',
+				'--safebrowsing-disable-auto-update',
+				'--password-store=basic',
+				'--use-mock-keychain'
+			]
+		});
 		console.log(`[${location}/${day}] browser.newContext`);
 		const context = await browser.newContext({
-			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
+			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`,
+			viewport: { width: 1920, height: 1080 },
+			locale: 'en-US',
+			timezoneId: 'America/New_York',
+			permissions: ['geolocation'],
+			geolocation: { latitude: 40.7128, longitude: -74.0060 }
 		});
+
+		// Remove webdriver property to avoid detection
+		await context.addInitScript(() => {
+			Object.defineProperty(navigator, 'webdriver', {
+				get: () => undefined
+			});
+			Object.defineProperty(navigator, 'plugins', {
+				get: () => [1, 2, 3, 4, 5]
+			});
+			Object.defineProperty(navigator, 'languages', {
+				get: () => ['en-US', 'en']
+			});
+			// @ts-expect-error - removing automation indicator
+			delete window.chrome?.runtime?.OnInstalledReason;
+			// @ts-expect-error - removing automation indicator
+			delete window.chrome?.runtime?.OnRestartRequiredReason;
+		});
+
 		console.log(`[${location}/${day}] context.newPage`);
 		const page = await context.newPage();
+
+		// Add extra headers to appear more like a real browser
+		await page.setExtraHTTPHeaders({
+			'Accept-Language': 'en-US,en;q=0.9',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Cache-Control': 'max-age=0',
+			'Upgrade-Insecure-Requests': '1'
+		});
+
 		console.log(`[${location}/${day}] Opening page in fresh browser...`);
 		console.log(`[${location}/${day}] page.goto listing URL`);
+
+		// Add a random delay to seem more human-like
+		await this.randomDelay(500, 1500);
+
 		await page.goto(`https://todo.today/${location}/${day}/`, {
 			waitUntil: `domcontentloaded`,
 			timeout: 60000
 		});
+
+		// Wait a bit for any Cloudflare challenge to complete
+		await this.randomDelay(2000, 4000);
+
 		console.log(`[${location}/${day}] page.waitForSelector #tt-app`);
 		await page.waitForSelector(`#tt-app`, { timeout: 60000 });
 		return { browser, context, page };
+	}
+
+	/**
+	 * Random delay to mimic human behavior
+	 */
+	private async randomDelay(min: number, max: number): Promise<void> {
+		const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+		await new Promise(resolve => setTimeout(resolve, delay));
 	}
 
 	/**
