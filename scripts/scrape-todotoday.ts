@@ -335,7 +335,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			headless: true,
 			args: [
 				'--disable-blink-features=AutomationControlled',
-				'--disable-features=IsolateOrigins,site-per-process',
+				'--disable-features=IsolateOrigins,site-per-process,TranslateUI',
 				'--disable-site-isolation-trials',
 				'--disable-dev-shm-usage',
 				'--no-sandbox',
@@ -348,7 +348,6 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				'--disable-client-side-phishing-detection',
 				'--disable-default-apps',
 				'--disable-extensions',
-				'--disable-features=TranslateUI',
 				'--disable-hang-monitor',
 				'--disable-ipc-flooding-protection',
 				'--disable-popup-blocking',
