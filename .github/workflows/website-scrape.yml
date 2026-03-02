@@ -29,6 +29,9 @@ jobs:
         # or vendored, you might be able to skip this step.
         # However, it's good practice if your scrapers or common.ts might add some.
 
+      - name: Install Playwright dependencies
+        run: bunx playwright install --with-deps chromium
+
       - name: scrape
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
