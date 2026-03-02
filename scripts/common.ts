@@ -328,7 +328,7 @@ export function linkify(html: string): string {
     return getHtmlBody($);
 }
 
-type TimeZoneString = 'Asia/Ho_Chi_Minh' 
+export type TimeZoneString = 'Asia/Ho_Chi_Minh' 
 | 'Asia/Makassar' 
 | 'Asia/Bangkok'
 | 'Europe/Berlin';

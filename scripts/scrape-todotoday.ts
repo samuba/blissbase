@@ -23,40 +23,78 @@ import { geocodeAddressCached } from '../src/lib/server/google.ts';
 import { chromium, type Page } from '@playwright/test';
 
 const LOCATIONS = [`ubud`, `canggu`, `koh-phangan`, `pai`] as const;
+const MAX_EVENT_RETRIES = 2;
+const TIMEOUT_MS = {
+	perLocationDay: 6 * 60_000,
+	browserLaunch: 90_000,
+	listingFetch: 45_000,
+	singleEventFetch: 45_000,
+	eventTransform: 60_000,
+	closeResource: 10_000
+} as const;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
+	private runStats = {
+		retriedEvents: 0,
+		skippedAfterRetries: 0,
+		timeoutErrors: 0
+	};
+
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
 		let locationsWithEvents = 0;
+		let currentPhase = `initializing`;
+		this.runStats = { retriedEvents: 0, skippedAfterRetries: 0, timeoutErrors: 0 };
+		const startedAt = Date.now();
+		const heartbeatId = setInterval(() => {
+			const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+			console.warn(
+				`[heartbeat] running ${elapsedSeconds}s | phase=${currentPhase} | collected=${allEvents.length} | ` +
+				`retried=${this.runStats.retriedEvents} | skipped=${this.runStats.skippedAfterRetries} | timeouts=${this.runStats.timeoutErrors}`
+			);
+		}, 30_000);
 
-		for (const location of LOCATIONS) {
-			console.log(`Scraping events for ${location}...`);
+		try {
+			for (const location of LOCATIONS) {
+				console.log(`Scraping events for ${location}...`);
 
-			for (const day of [`today`, `tomorrow`] as const) {
-				try {
-					console.log(`[${location}/${day}] Starting scrapeEventsViaBrowser`);
-					const events = await this.scrapeEventsViaBrowser({ location, day });
-					if (!events.length) {
-						console.warn(`No ${day} events found via API for ${location}. Continuing...`);
+				for (const day of [`today`, `tomorrow`] as const) {
+					try {
+						currentPhase = `${location}/${day}`;
+						console.log(`[${location}/${day}] Starting scrapeEventsViaBrowser`);
+						const events = await withTimeout({
+							label: `scrapeEventsViaBrowser ${location}/${day}`,
+							timeoutMs: TIMEOUT_MS.perLocationDay,
+							task: async () => this.scrapeEventsViaBrowser({ location, day })
+						});
+						if (!events.length) {
+							console.warn(`No ${day} events found via API for ${location}. Continuing...`);
+							continue;
+						}
+						locationsWithEvents += 1;
+						allEvents.push(...events);
+						console.log(`Collected ${events.length} ${day} events for ${location}`);
+					} catch (error) {
+						console.error(`Failed to scrape ${day} events for ${location}`, error);
 						continue;
 					}
-					locationsWithEvents += 1;
-					allEvents.push(...events);
-					console.log(`Collected ${events.length} ${day} events for ${location}`);
-				} catch (error) {
-					console.error(`Failed to scrape ${day} events for ${location}`, error);
-					continue;
 				}
 			}
-		}
 
-		if (locationsWithEvents === 0) {
-			throw new Error(`No events found! Failed to fetch API data for all locations.`);
-		}
+			if (locationsWithEvents === 0) {
+				throw new Error(`No events found! Failed to fetch API data for all locations.`);
+			}
 
-		console.log({ allEvents });
-		console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
-		return allEvents;
+			console.warn(
+				`[retry-summary] Skipped ${this.runStats.skippedAfterRetries} event(s) after retry limit (${MAX_EVENT_RETRIES} retries per event). ` +
+				`Retried events: ${this.runStats.retriedEvents}. Timeout errors observed: ${this.runStats.timeoutErrors}.`
+			);
+			console.log({ allEvents });
+			console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
+			return allEvents;
+		} finally {
+			clearInterval(heartbeatId);
+		}
 	}
 
 	scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]> {
@@ -171,58 +209,113 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	private async scrapeEventsViaBrowser(args: { location: string; day: string }): Promise<ScrapedEvent[]> {
 		const { location, day } = args;
 		console.log(`[${location}/${day}] Launching fresh browser`);
-		let { browser, page } = await this.launchFreshBrowser({ location, day });
+		let { browser, context, page } = await withTimeout({
+			label: `launchFreshBrowser ${location}/${day}`,
+			timeoutMs: TIMEOUT_MS.browserLaunch,
+			task: async () => this.launchFreshBrowser({ location, day })
+		});
 
 		try {
 			console.log(`[${location}/${day}] Fetching event URLs from listing API`);
-			const eventUrls = await this.fetchEventUrlsFromPage(page, location);
+			const eventUrls = await withTimeout({
+				label: `fetchEventUrlsFromPage ${location}/${day}`,
+				timeoutMs: TIMEOUT_MS.listingFetch,
+				task: async () => this.fetchEventUrlsFromPage(page, location)
+			});
 			if (!eventUrls.length) return [];
 			console.log(`[${location}/${day}] Found ${eventUrls.length} event URLs`);
 
 			const events: ScrapedEvent[] = [];
 			for (const eventUrl of eventUrls) {
-				try {
-					const parsed = parseEventUrl(eventUrl);
-					if (!parsed) {
-						console.warn(`[${location}/${day}] Could not parse event URL: ${eventUrl}`);
-						continue;
-					}
+				const parsed = parseEventUrl(eventUrl);
+				if (!parsed) {
+					console.warn(`[${location}/${day}] Could not parse event URL: ${eventUrl}`);
+					continue;
+				}
 
-					console.log(`[${location}/${day}] Fetching single event payload for ${eventUrl}`);
-					const eventData = await this.fetchSingleEventFromPage(page, parsed);
-					if (!eventData) {
-						console.warn(`[${location}/${day}] No data returned for ${eventUrl}`);
-						continue;
-					}
+				let didProcessEvent = false;
+				for (let attempt = 1; attempt <= MAX_EVENT_RETRIES + 1; attempt++) {
+					try {
+						console.log(`[${location}/${day}] Processing ${eventUrl} attempt ${attempt}/${MAX_EVENT_RETRIES + 1}`);
+						console.log(`[${location}/${day}] Fetching single event payload for ${eventUrl}`);
+						const eventData = await withTimeout({
+							label: `fetchSingleEventFromPage ${location}/${day} ${parsed.slug}`,
+							timeoutMs: TIMEOUT_MS.singleEventFetch,
+							task: async () => this.fetchSingleEventFromPage(page, parsed)
+						});
+						if (!eventData) {
+							console.warn(`[${location}/${day}] No data returned for ${eventUrl}`);
+							didProcessEvent = true;
+							break;
+						}
 
-					console.log(`[${location}/${day}] Transforming payload into ScrapedEvent for ${eventUrl}`);
-					const event = await this.extractEventDataFromApi({
-						data: eventData,
-						url: eventUrl,
-						location,
-						page
-					});
-					if (event) {
-						events.push(event);
-						console.log("extracted event", event);
+						console.log(`[${location}/${day}] Transforming payload into ScrapedEvent for ${eventUrl}`);
+						const event = await withTimeout({
+							label: `extractEventDataFromApi ${location}/${day} ${parsed.slug}`,
+							timeoutMs: TIMEOUT_MS.eventTransform,
+							task: async () => this.extractEventDataFromApi({
+								data: eventData,
+								url: eventUrl,
+								location,
+								page
+							})
+						});
+						if (event) {
+							events.push(event);
+							console.log("extracted event", event);
+						}
+						didProcessEvent = true;
+						break;
+					} catch (error) {
+						if (isTimeoutError(error)) this.runStats.timeoutErrors += 1;
+						if (attempt <= MAX_EVENT_RETRIES) {
+							this.runStats.retriedEvents += 1;
+							console.warn(
+								`[${location}/${day}] Attempt ${attempt}/${MAX_EVENT_RETRIES + 1} failed for ${eventUrl}. Retrying...`,
+								error
+							);
+						} else {
+							this.runStats.skippedAfterRetries += 1;
+							console.warn(
+								`[${location}/${day}] Skipping ${eventUrl} after ${MAX_EVENT_RETRIES + 1} failed attempts.`,
+								error
+							);
+						}
+
+						console.log(`[${location}/${day}] Closing current page for recovery`);
+						await closeWithTimeout({ label: `${location}/${day} recovery page.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => page.close() });
+						console.log(`[${location}/${day}] Closing current context for recovery`);
+						await closeWithTimeout({ label: `${location}/${day} recovery context.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => context.close() });
+						console.log(`[${location}/${day}] Closing current browser for recovery`);
+						await closeWithTimeout({ label: `${location}/${day} recovery browser.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => browser.close() });
+
+						if (attempt > MAX_EVENT_RETRIES) {
+							break;
+						}
+
+						console.log(`[${location}/${day}] Relaunching fresh browser after recovery`);
+						({ browser, context, page } = await withTimeout({
+							label: `recovery launchFreshBrowser ${location}/${day}`,
+							timeoutMs: TIMEOUT_MS.browserLaunch,
+							task: async () => this.launchFreshBrowser({ location, day })
+						}));
 					}
-				} catch (error) {
-					console.error(`[${location}/${day}] Failed to process ${eventUrl}, recovering with fresh browser...`, error);
-					console.log(`[${location}/${day}] Closing current page for recovery`);
-					try { await page.close(); } catch { /* already dead */ }
-					console.log(`[${location}/${day}] Closing current browser for recovery`);
-					try { await browser.close(); } catch { /* already dead */ }
-					console.log(`[${location}/${day}] Relaunching fresh browser after recovery`);
-					({ browser, page } = await this.launchFreshBrowser({ location, day }));
+				}
+
+				if (!didProcessEvent) {
+					console.warn(`[${location}/${day}] Event was not processed after retries: ${eventUrl}`);
+					continue;
 				}
 			}
 
 			return events;
 		} finally {
 			console.log(`[${location}/${day}] Closing page in finally`);
-			try { await page.close(); } catch { /* already dead */ }
+			await closeWithTimeout({ label: `${location}/${day} finally page.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => page.close() });
+			console.log(`[${location}/${day}] Closing context in finally`);
+			await closeWithTimeout({ label: `${location}/${day} finally context.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => context.close() });
 			console.log(`[${location}/${day}] Closing browser in finally`);
-			try { await browser.close(); } catch { /* already dead */ }
+			await closeWithTimeout({ label: `${location}/${day} finally browser.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => browser.close() });
 		}
 	}
 
@@ -230,14 +323,20 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	 * Launches a completely fresh Playwright browser and navigates to the listing page.
 	 * Example: const { browser, page } = await scraper.launchFreshBrowser({ location: `ubud`, day: `today` })
 	 */
-	private async launchFreshBrowser(args: { location: string; day: string }): Promise<{ browser: Awaited<ReturnType<typeof chromium.launch>>; page: Page }> {
+	private async launchFreshBrowser(args: { location: string; day: string }): Promise<{
+		browser: Awaited<ReturnType<typeof chromium.launch>>;
+		context: Awaited<ReturnType<Awaited<ReturnType<typeof chromium.launch>>[`newContext`]>>;
+		page: Page;
+	}> {
 		const { location, day } = args;
 		console.log(`[${location}/${day}] chromium.launch`);
 		const browser = await chromium.launch({ headless: true });
-		console.log(`[${location}/${day}] browser.newPage`);
-		const page = await browser.newPage({
+		console.log(`[${location}/${day}] browser.newContext`);
+		const context = await browser.newContext({
 			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
 		});
+		console.log(`[${location}/${day}] context.newPage`);
+		const page = await context.newPage();
 		console.log(`[${location}/${day}] Opening page in fresh browser...`);
 		console.log(`[${location}/${day}] page.goto listing URL`);
 		await page.goto(`https://todo.today/${location}/${day}/`, {
@@ -246,7 +345,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		});
 		console.log(`[${location}/${day}] page.waitForSelector #tt-app`);
 		await page.waitForSelector(`#tt-app`, { timeout: 60000 });
-		return { browser, page };
+		return { browser, context, page };
 	}
 
 	/**
@@ -353,30 +452,49 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		if (!args.bookLink) return args.fallbackUrl;
 		const sanitizedBookLink = args.bookLink.replace('TODOTODAY', '').trim();
 		if (!sanitizedBookLink) return args.fallbackUrl;
-
-		const browser = args.page.context().browser();
-		if (!browser) return sanitizedBookLink;
-		console.log(`Creating resolver browser context for ${sanitizedBookLink}`);
-		const resolverContext = await browser.newContext({
-			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
-		});
+		const context = args.page.context();
+		console.log(`Creating resolver page in existing browser context for ${sanitizedBookLink}`);
 		console.log(`Creating resolver page for ${sanitizedBookLink}`);
-		const resolverPage = await resolverContext.newPage();
+		const resolverPage = await context.newPage();
 		try {
+			console.log(`Installing request filter on resolver page for ${sanitizedBookLink}`);
+			await resolverPage.route(`**/*`, (route) => {
+				const resourceType = route.request().resourceType();
+				if (resourceType === `image` || resourceType === `media` || resourceType === `font` || resourceType === `stylesheet`) {
+					void route.abort();
+					return;
+				}
+				void route.continue();
+			});
 			console.log(`Navigating resolver page to ${sanitizedBookLink}`);
 			await resolverPage.goto(sanitizedBookLink, {
-				waitUntil: `domcontentloaded`,
-				timeout: 60000
+				waitUntil: `commit`,
+				timeout: 15000
 			});
-			return resolverPage.url();
+
+			// The first commit can still be the /go URL before client-side redirect settles.
+			if (resolverPage.url().includes(`todo.today/go/`)) {
+				console.log(`Waiting for redirect away from todo.today/go for ${sanitizedBookLink}`);
+				try {
+					await resolverPage.waitForURL((url) => !url.href.includes(`todo.today/go/`), { timeout: 10000 });
+				} catch {
+					console.warn(`Redirect did not leave todo.today/go in time for ${sanitizedBookLink}`);
+				}
+			}
+
+			const resolvedUrl = resolverPage.url();
+			console.log(`Resolved via browser: ${sanitizedBookLink} -> ${resolvedUrl}`);
+			return resolvedUrl;
 		} catch (error) {
 			console.error(`Failed resolving book_link ${sanitizedBookLink}`, error);
 			return sanitizedBookLink;
 		} finally {
 			console.log(`Closing resolver page for ${sanitizedBookLink}`);
-			try { await resolverPage.close(); } catch { /* already dead */ }
-			console.log(`Closing resolver context for ${sanitizedBookLink}`);
-			try { await resolverContext.close(); } catch { /* already dead */ }
+			await closeWithTimeout({
+				label: `resolver page.close ${sanitizedBookLink}`,
+				timeoutMs: TIMEOUT_MS.closeResource,
+				task: async () => resolverPage.close()
+			});
 		}
 	}
 
@@ -418,6 +536,8 @@ if (import.meta.main) {
 		const scraper = new WebsiteScraper();
 		console.log(`Starting website scrape`);
 		await scraper.scrapeWebsite();
+		console.log(`Main execution finished, exiting with code 0`);
+		process.exit(0);
 	} catch (error) {
 		console.error('Unhandled error in main execution:', error);
 		process.exit(1);
@@ -504,6 +624,58 @@ function formatLocationName(location: string): string {
 		.split(' ')
 		.map(word => word.charAt(0).toUpperCase() + word.slice(1))
 		.join(' ');
+}
+
+/**
+ * Runs an async task with a hard timeout and throws if the limit is exceeded.
+ * Example: await withTimeout({ label: `fetch listing`, timeoutMs: 45_000, task: async () => fetchSomething() })
+ */
+async function withTimeout<T>(args: {
+	label: string;
+	timeoutMs: number;
+	task: () => Promise<T>;
+}): Promise<T> {
+	const startedAt = Date.now();
+	console.log(`[timeout] start ${args.label} (${args.timeoutMs}ms)`);
+	let timeoutId: ReturnType<typeof setTimeout> | undefined;
+	try {
+		const timeoutPromise = new Promise<never>((_resolve, reject) => {
+			timeoutId = setTimeout(() => {
+				reject(new Error(`Timed out after ${args.timeoutMs}ms: ${args.label}`));
+			}, args.timeoutMs);
+		});
+		const result = await Promise.race([args.task(), timeoutPromise]);
+		const elapsed = Date.now() - startedAt;
+		console.log(`[timeout] done ${args.label} (${elapsed}ms)`);
+		return result;
+	} finally {
+		if (timeoutId) clearTimeout(timeoutId);
+	}
+}
+
+/**
+ * Closes a Playwright resource with timeout and never throws.
+ * Example: await closeWithTimeout({ label: `finally page.close`, timeoutMs: 10_000, task: async () => page.close() })
+ */
+async function closeWithTimeout(args: {
+	label: string;
+	timeoutMs: number;
+	task: () => Promise<void>;
+}): Promise<void> {
+	try {
+		await withTimeout({
+			label: args.label,
+			timeoutMs: args.timeoutMs,
+			task: args.task
+		});
+	} catch (error) {
+		console.warn(`[close-timeout] ${args.label}`, error);
+	}
+}
+
+function isTimeoutError(error: unknown): boolean {
+	if (!(error instanceof Error)) return false;
+	return error.message.startsWith(`Timed out after`);
 }
 
 type ParsedEventUrl = {
