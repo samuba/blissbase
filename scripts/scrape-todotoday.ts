@@ -98,7 +98,19 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			timeZone
 		});
 
-		const description = cleanProseHtml(data.description ?? null);
+		const $ = cheerio.load(data.description ?? '');
+		// Remove todo.today links and their parent <p> tags if applicable
+		$('a[href*="https://todo.today/"]').each(function () {
+			const $link = $(this);
+			const $parent = $link.parent();
+			if ($parent.is('p')) {
+				$parent.remove();
+			} else {
+				$link.remove();
+			}
+		});
+		
+		const description = cleanProseHtml($.html() ?? null);
 
 		const venueName = data.venue?.name ?? ``;
 		const venueArea = data.venue?.area ?? ``;
