@@ -34,6 +34,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 			for (const day of [`today`, `tomorrow`] as const) {
 				try {
+					console.log(`[${location}/${day}] Starting scrapeEventsViaBrowser`);
 					const events = await this.scrapeEventsViaBrowser({ location, day });
 					if (!events.length) {
 						console.warn(`No ${day} events found via API for ${location}. Continuing...`);
@@ -63,7 +64,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	extractEventData(html: string, url: string): Promise<ScrapedEvent> {
-		throw new Error('Method not implemented.' + html);
+		throw new Error('Method not implemented.' + html + url);
 	}
 
 	/**
@@ -104,16 +105,24 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 		const venueName = data.venue?.name?.trim();
 		const venueArea = data.venue?.area?.trim();
-		const address = [venueName?.trim(), formatLocationName(location)].filter(Boolean);
+		const address = [venueName?.trim(), formatLocationName(location)].filter(Boolean) as string[];
 
 		const host = data.creator?.name && data.creator.name.toLowerCase() !== 'todo.today'
 			? data.creator.name
 			: undefined;
 
-		const coordinates = data.venue?.lat && data.venue?.lng
-			? { lat: parseFloat(data.venue.lat), lng: parseFloat(data.venue.lng) }
-			: await geocodeAddressCached([venueName, venueArea, formatLocationName(location)].filter(x => x) as string[], process.env.GOOGLE_MAPS_API_KEY || '');
+		let coordinates: { lat: number; lng: number } | null | undefined;
+		if (data.venue?.lat && data.venue?.lng) {
+			coordinates = { lat: parseFloat(data.venue.lat), lng: parseFloat(data.venue.lng) };
+		} else {
+			console.log(`[${location}] Geocoding venue address`);
+			coordinates = await geocodeAddressCached(
+				[venueName, venueArea, formatLocationName(location)].filter(x => x) as string[],
+				process.env.GOOGLE_MAPS_API_KEY || ''
+			);
+		}
 
+		console.log(`[${location}] Resolving booking link for ${url}`);
 		let resolvedBookLink = await this.resolveBookLinkInBrowser({
 			page,
 			bookLink: data.book_link,
@@ -161,9 +170,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	 */
 	private async scrapeEventsViaBrowser(args: { location: string; day: string }): Promise<ScrapedEvent[]> {
 		const { location, day } = args;
+		console.log(`[${location}/${day}] Launching fresh browser`);
 		let { browser, page } = await this.launchFreshBrowser({ location, day });
 
 		try {
+			console.log(`[${location}/${day}] Fetching event URLs from listing API`);
 			const eventUrls = await this.fetchEventUrlsFromPage(page, location);
 			if (!eventUrls.length) return [];
 			console.log(`[${location}/${day}] Found ${eventUrls.length} event URLs`);
@@ -177,12 +188,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 						continue;
 					}
 
+					console.log(`[${location}/${day}] Fetching single event payload for ${eventUrl}`);
 					const eventData = await this.fetchSingleEventFromPage(page, parsed);
 					if (!eventData) {
 						console.warn(`[${location}/${day}] No data returned for ${eventUrl}`);
 						continue;
 					}
 
+					console.log(`[${location}/${day}] Transforming payload into ScrapedEvent for ${eventUrl}`);
 					const event = await this.extractEventDataFromApi({
 						data: eventData,
 						url: eventUrl,
@@ -195,15 +208,20 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 					}
 				} catch (error) {
 					console.error(`[${location}/${day}] Failed to process ${eventUrl}, recovering with fresh browser...`, error);
+					console.log(`[${location}/${day}] Closing current page for recovery`);
 					try { await page.close(); } catch { /* already dead */ }
+					console.log(`[${location}/${day}] Closing current browser for recovery`);
 					try { await browser.close(); } catch { /* already dead */ }
+					console.log(`[${location}/${day}] Relaunching fresh browser after recovery`);
 					({ browser, page } = await this.launchFreshBrowser({ location, day }));
 				}
 			}
 
 			return events;
 		} finally {
+			console.log(`[${location}/${day}] Closing page in finally`);
 			try { await page.close(); } catch { /* already dead */ }
+			console.log(`[${location}/${day}] Closing browser in finally`);
 			try { await browser.close(); } catch { /* already dead */ }
 		}
 	}
@@ -214,15 +232,19 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	 */
 	private async launchFreshBrowser(args: { location: string; day: string }): Promise<{ browser: Awaited<ReturnType<typeof chromium.launch>>; page: Page }> {
 		const { location, day } = args;
+		console.log(`[${location}/${day}] chromium.launch`);
 		const browser = await chromium.launch({ headless: true });
+		console.log(`[${location}/${day}] browser.newPage`);
 		const page = await browser.newPage({
 			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
 		});
 		console.log(`[${location}/${day}] Opening page in fresh browser...`);
+		console.log(`[${location}/${day}] page.goto listing URL`);
 		await page.goto(`https://todo.today/${location}/${day}/`, {
 			waitUntil: `domcontentloaded`,
 			timeout: 60000
 		});
+		console.log(`[${location}/${day}] page.waitForSelector #tt-app`);
 		await page.waitForSelector(`#tt-app`, { timeout: 60000 });
 		return { browser, page };
 	}
@@ -232,6 +254,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	 * Example: await scraper.fetchEventUrlsFromPage(page, `ubud`)
 	 */
 	private async fetchEventUrlsFromPage(page: Page, location: string): Promise<string[]> {
+		console.log(`[${location}] Reading #tt-app config via page.evaluate`);
 		const appConfig = await page.evaluate(() => {
 			const app = document.querySelector(`#tt-app`);
 			if (!app) return null;
@@ -254,6 +277,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			eventDate: appConfig.eventDate
 		};
 
+		console.log(`[${location}] Calling todo.today REST listing API via page.evaluate`);
 		const apiResponse = await page.evaluate(async ({ config }) => {
 			const params = new URLSearchParams({
 				channel: config.channel,
@@ -292,6 +316,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	 * Example: await scraper.fetchSingleEventFromPage(page, { location: `ubud`, year: `2026`, month: `03`, day: `03`, slug: `mat-flex-22` })
 	 */
 	private async fetchSingleEventFromPage(page: Page, params: ParsedEventUrl): Promise<TtSingleEventData | null> {
+		console.log(`[${params.location}] Calling tt_get_single_event for ${params.slug}`);
 		const result = await page.evaluate(async ({ params }) => {
 			const formData = new FormData();
 			formData.append('action', 'tt_get_single_event');
@@ -331,11 +356,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 		const browser = args.page.context().browser();
 		if (!browser) return sanitizedBookLink;
+		console.log(`Creating resolver browser context for ${sanitizedBookLink}`);
 		const resolverContext = await browser.newContext({
 			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
 		});
+		console.log(`Creating resolver page for ${sanitizedBookLink}`);
 		const resolverPage = await resolverContext.newPage();
 		try {
+			console.log(`Navigating resolver page to ${sanitizedBookLink}`);
 			await resolverPage.goto(sanitizedBookLink, {
 				waitUntil: `domcontentloaded`,
 				timeout: 60000
@@ -345,7 +373,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			console.error(`Failed resolving book_link ${sanitizedBookLink}`, error);
 			return sanitizedBookLink;
 		} finally {
+			console.log(`Closing resolver page for ${sanitizedBookLink}`);
 			try { await resolverPage.close(); } catch { /* already dead */ }
+			console.log(`Closing resolver context for ${sanitizedBookLink}`);
 			try { await resolverContext.close(); } catch { /* already dead */ }
 		}
 	}
@@ -386,6 +416,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 if (import.meta.main) {
 	try {
 		const scraper = new WebsiteScraper();
+		console.log(`Starting website scrape`);
 		await scraper.scrapeWebsite();
 	} catch (error) {
 		console.error('Unhandled error in main execution:', error);
@@ -401,12 +432,14 @@ async function login() {
 		throw new Error('TODOTODAY_EMAIL and TODOTODAY_PASSWORD environment variables must be set');
 	}
 
+	console.log(`Fetching login nonce page`);
 	const resNonce = await customFetch('https://todo.today/my-account', { returnType: 'text' });
 	const nonce = resNonce.match(/events_front_login\s*=\s*\{[^}]*"nonce":"([^"]+)"/)?.[1];
 	console.log({ nonce });
 	if (!nonce || nonce.length !== 10) {
 		throw new Error('No valid nonce found for todo.today');
 	}
+	console.log(`Submitting ajax_login request`);
 	const res = await fetch('https://todo.today/wp-admin/admin-ajax.php', {
 		method: 'POST',
 		headers: {
