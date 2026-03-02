@@ -259,7 +259,13 @@ async function main() {
     async function cacheImages(events: typeof eventsToInsert) {
         console.log('Starting image caching...');
         const startTime = Date.now();
-        const alreadyCachedImages = await db.select().from(s.imageCacheMap)
+        const alreadyCachedImages = await db
+            .select({
+                originalUrl: s.imageCacheMap.originalUrl,
+                eventSlug: s.imageCacheMap.eventSlug,
+                url: s.imageCacheMap.url,
+            })
+            .from(s.imageCacheMap);
         console.log("images in imageCacheMap table", alreadyCachedImages.length);
         const totalImageCount = events.reduce((sum, event) => sum + (event.imageUrls?.length ?? 0), 0);
         let processedImageCount = 0;
@@ -285,7 +291,9 @@ async function main() {
                     const { buffer, phash } = await resizeCoverImage(bytes)
                     const imageUrl = await assets.uploadImage(buffer, event.slug, phash, assets.loadCreds());
                     cachedEventImageUrls.push(imageUrl);
-                    newlyCachedImages.push({ originalUrl: url, eventSlug: event.slug, url: imageUrl });
+                    const newCacheEntry = { originalUrl: url, eventSlug: event.slug, url: imageUrl };
+                    newlyCachedImages.push(newCacheEntry);
+                    alreadyCachedImages.push(newCacheEntry);
                     // warm up the image url
                     await customFetch(imageUrl, { returnType: 'bytes' });
                 } catch (error) {
