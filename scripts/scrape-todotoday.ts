@@ -15,9 +15,8 @@ import {
 	customFetch,
 	WebsiteScraperInterface,
 	cleanProseHtml,
-	superTrim,
 	dateToIsoStr,
-	extractIcalStartAndEndTimes,
+TimeZoneString,
 } from './common.ts';
 import * as cheerio from 'cheerio';
 import { geocodeAddressCached } from '../src/lib/server/google.ts';
@@ -100,21 +99,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 		const $ = cheerio.load(data.description ?? '');
 		// Remove todo.today links and their parent <p> tags if applicable
-		$('a[href*="https://todo.today/"]').each(function () {
-			const $link = $(this);
-			const $parent = $link.parent();
-			if ($parent.is('p')) {
-				$parent.remove();
-			} else {
-				$link.remove();
-			}
-		});
-		
+		$('.tt-hidden').remove();		
 		const description = cleanProseHtml($.html() ?? null);
 
-		const venueName = data.venue?.name ?? ``;
-		const venueArea = data.venue?.area ?? ``;
-		const address = [venueName, formatLocationName(location)].filter(Boolean);
+		const venueName = data.venue?.name?.trim();
+		const venueArea = data.venue?.area?.trim();
+		const address = [venueName?.trim(), formatLocationName(location)].filter(Boolean);
 
 		const host = data.creator?.name && data.creator.name.toLowerCase() !== 'todo.today'
 			? data.creator.name
@@ -122,7 +112,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 		const coordinates = data.venue?.lat && data.venue?.lng
 			? { lat: parseFloat(data.venue.lat), lng: parseFloat(data.venue.lng) }
-			: await geocodeAddressCached([venueName, venueArea, formatLocationName(location)], process.env.GOOGLE_MAPS_API_KEY || '');
+			: await geocodeAddressCached([venueName, venueArea, formatLocationName(location)].filter(x => x) as string[], process.env.GOOGLE_MAPS_API_KEY || '');
 
 		let resolvedBookLink = await this.resolveBookLinkInBrowser({
 			page,
@@ -463,36 +453,16 @@ function parseEventUrl(url: string): ParsedEventUrl | null {
  * Builds an ISO date string from the API's start_date (YYYY-MM-DD) and time (HH:mm or h:mm AM/PM).
  * Example: buildIsoFromApiDate({ dateStr: `2026-03-03`, timeStr: `9:00 AM`, timeZone: `Asia/Makassar` })
  */
-function buildIsoFromApiDate(args: { dateStr?: string; timeStr?: string; timeZone: string }): string | undefined {
+function buildIsoFromApiDate(args: { dateStr?: string; timeStr?: string; timeZone: TimeZoneString }): string | undefined {
 	if (!args.dateStr) return undefined;
 
-	const dateParts = args.dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-	if (!dateParts) return undefined;
+	const [year, month, day] = args.dateStr.split('-').map(Number);
+	if (isNaN(year) || isNaN(month) || isNaN(day)) throw new Error('Invalid date string: ' + args.dateStr);
 
-	const year = parseInt(dateParts[1]);
-	const month = parseInt(dateParts[2]);
-	const day = parseInt(dateParts[3]);
+	const [hour, minute] = args.timeStr?.split(':').map(Number) ?? [];
+	if (isNaN(hour) || isNaN(minute)) throw new Error('Invalid time string: ' + args.timeStr);
 
-	let hour = 0;
-	let minute = 0;
-
-	if (args.timeStr) {
-		const time24 = args.timeStr.match(/^(\d{1,2}):(\d{2})$/);
-		const time12 = args.timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-
-		if (time24) {
-			hour = parseInt(time24[1]);
-			minute = parseInt(time24[2]);
-		} else if (time12) {
-			hour = parseInt(time12[1]);
-			minute = parseInt(time12[2]);
-			const isPM = time12[3].toUpperCase() === 'PM';
-			if (isPM && hour !== 12) hour += 12;
-			if (!isPM && hour === 12) hour = 0;
-		}
-	}
-
-	return dateToIsoStr(year, month, day, hour, minute, args.timeZone as Parameters<typeof dateToIsoStr>[5], false);
+	return dateToIsoStr(year, month, day, hour, minute, args.timeZone, false);
 }
 
 function formatLocationName(location: string): string {
