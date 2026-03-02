@@ -1646,7 +1646,7 @@
 	{
 		"word": "empowerment",
 		"synonyms": {
-			"de": ["Ermächtigung", "Selbstermächtigung", "Shiva", "Shakti", "Göttin", "Göttinnen"],
+			"de": ["Ermächtigung", "Selbstermächtigung", "Shiva", "Shakti", "Göttin", "Göttinnen", "Gottheit", "Gott"],
 			"en": ["empowerment", "goddess", "goddesses"],
 			"es": ["empoderamiento", "diosa", "diosas"],
 			"fr": ["autonomisation", "déesse", "déesses"],
@@ -1794,7 +1794,7 @@
 		"word": "singing circle",
 		"synonyms": {
 			"de": ["Singkreis", "Gesangsrunde"],
-			"en": ["song circle", "vocal circle", "singing circle", "circle song"],
+			"en": ["song circle", "vocal circle", "singing circle", "circle song", "shant", "shanting"],
 			"es": ["círculo de canto", "ronda de canto"],
 			"fr": ["cercle de chant", "ronde de chant"],
 			"it": ["circolo di canto", "cerchio canoro"],
@@ -1822,7 +1822,7 @@
 		"word": "somatic",
 		"synonyms": {
 			"de": ["somatisch", "körperlich"],
-			"en": ["bodily", "physical"],
+			"en": ["bodily", "physical", "vagus"],
 			"es": ["somático", "corporal"],
 			"fr": ["somatique", "corporel"],
 			"it": ["somatico", "corporeo"],
@@ -3071,6 +3071,29 @@
 				"अंतर्यात्राएं",
 				"आत्म खोज",
 				"आत्मानुभूति"
+			]
+		}
+	},
+	{
+		"word": "nidra",
+		"synonyms": {
+			"de": [
+			],
+			"en": [
+			],
+			"es": [
+			],
+			"fr": [
+			],
+			"it": [
+			],
+			"pt": [
+			],
+			"ru": [
+			],
+			"tr": [
+			],
+			"hi": [
 			]
 		}
 	}

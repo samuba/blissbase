@@ -6,12 +6,10 @@ import {
 dateToIsoStr,
 } from './common.ts';
 import * as cheerio from 'cheerio';
-import { matchesWhiteListWords } from '../src/whitelistWords.ts';
-import { geocodeAddressCached } from '../src/lib/server/google.ts';
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
-		let allEvents: ScrapedEvent[] = [];
+		const allEvents: ScrapedEvent[] = [];
 		
 		const html = await customFetch('https://www.whatsupdanang.com/events?view=list', { returnType: 'text' });
 		
@@ -44,9 +42,6 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			);
 			allEvents.push(...batchEvents.filter((result): result is PromiseFulfilledResult<ScrapedEvent> => result.status === 'fulfilled').map(result => result.value));
 		}
-		console.log(`found ${allEvents.length} events`);
-		allEvents = allEvents.filter(event => matchesWhiteListWords(event.name));
-		console.log(`after filtering ${allEvents.length} events`);
 		console.log(allEvents.map(event => event.name));
 
 		console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);

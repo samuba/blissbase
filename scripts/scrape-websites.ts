@@ -26,6 +26,7 @@ import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/d
 import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES } from '../src/lib/commonWithScripts.ts';
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
+import { matchesBlackListWords, matchesWhiteListWords } from '../src/whitelistWords.ts';
 
 /**
  * Dynamically scrapes a single source using its corresponding scraper
@@ -394,55 +395,8 @@ async function main() {
     }
 
     function shouldBeListed({ name }: { name: string }): boolean {
-        const nameBlacklist = [
-            // yoga classes are too boring to list
-            'hatha yoga',
-            'hatha-yoga',
-            'yin yoga',
-            'yin-yoga',
-            'yoga im ',
-            'yoga für ',
-            'vinyasa',
-            'ashtanga',
-            'gentle flow',
-            'slow flow',
-            'pilates',
-            'beginner yoga',
-            // no crypto 
-            'bitcoin', 
-            'crypto',
-            'blockchain',
-            'ethereum',
-            // no low frequency
-            'pub crawl',
-            'business',
-            'entrepreneur',
-            'muay thai'
-        ];
-        // names that match blacklist AND whitelist are allowed
-        const whitelist = [
-            'cacao',
-            'kakao',
-            'sound',
-            'klang',
-            'meditation',
-            'chakra',
-            'tantra',
-            'tantric',
-            'mantra',
-            'sing',
-            'shant',
-            'nidra',
-            'vagus',
-            'dance',
-            'somatic'
-        ]
-        const lowerName = name.toLowerCase();
-        const hasWhitelistMatch = whitelist.some(x => lowerName.includes(x));
-        if (hasWhitelistMatch) return true;
-
-        const hasBlacklistMatch = nameBlacklist.some(x => lowerName.includes(x));
-        return !hasBlacklistMatch;
+        if (matchesBlackListWords(name)) return false;
+        return matchesWhiteListWords(name);
     }
 
     /**

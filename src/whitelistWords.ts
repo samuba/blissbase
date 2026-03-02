@@ -7,6 +7,29 @@ const blackListWords = [
     "escape room",
     "escape rooms",
     "machine learning",
+    'hatha yoga',
+    'hatha-yoga',
+    'yin yoga',
+    'yin-yoga',
+    'yoga im ',
+    'yoga für ',
+    'vinyasa',
+    'ashtanga',
+    'gentle flow',
+    'slow flow',
+    'pilates',
+    'beginner yoga',
+    // no crypto 
+    'bitcoin', 
+    'crypto',
+    'blockchain',
+    'ethereum',
+    // no low frequency
+    'pub crawl',
+    'business',
+    'entrepreneur',
+    'muay thai',
+    'crossfit'
 ]
 
 const flatWhiteListWords = whitelistWords.reduce((acc, cur) => {
@@ -22,6 +45,10 @@ const whiteListWordsRegex = flatWhiteListWords.map(x => {
 
 export function matchesWhiteListWords(text: string) {
     if (!text) return false;
-    if (blackListWords.some(x => text.toLowerCase().includes(x))) return false;
     return whiteListWordsRegex.some(regex => regex.test(text))
+}
+
+export function matchesBlackListWords(text: string) {
+    if (!text) return false;
+    return blackListWords.some(x => text.toLowerCase().includes(x));
 }

@@ -328,7 +328,12 @@ export function linkify(html: string): string {
     return getHtmlBody($);
 }
 
-export function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: string, countMonthFromZero: boolean) {
+type TimeZoneString = 'Asia/Ho_Chi_Minh' 
+| 'Asia/Makassar' 
+| 'Asia/Bangkok'
+| 'Europe/Berlin';
+
+export function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: TimeZoneString, countMonthFromZero: boolean) {
     const yearStr = year.toString().padStart(4, '0')
     const monthStr = (countMonthFromZero ? (month + 1) : month).toString().padStart(2, '0')
     const dayStr = day.toString().padStart(2, '0')

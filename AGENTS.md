@@ -31,14 +31,13 @@ Always use class based stores for reactivity and state management instead of fun
 
 ## DB
 Assume drizzle is being used for all database operations and schemas.
-Never run "drizzle push" command yourself.
+NEVER EVER run db migrations. So never execute this commands: drizzle push, drizzle migrate, db:push, db:migrate
 
 ## Sveltekit
 Prefer remote functions when calling server.
 Always use `src/libs/routes.ts` when referencing routes. 
 
 ## UI & CSS
-Assume Tailwind use.
 Use Bits-UI for component primitives.
 Use Daisy UI
 
