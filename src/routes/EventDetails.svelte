@@ -53,7 +53,7 @@
 		if (str?.startsWith('tg://') || str?.startsWith('t.me/') || str?.startsWith('https://t.me/')) {
 			return 'Telegram';
 		}
-		if (str?.startsWith('https://wa.me/')) {
+		if (str?.startsWith('https://wa.me/') || str?.startsWith('wa.me/') || str.startsWith('https://api.whatsapp.com') || str.startsWith('api.whatsapp.com')) {
 			return 'WhatsApp';
 		}
 		if (str?.startsWith('tel:')) {
@@ -99,7 +99,6 @@
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
-	let dontShowSourceUrl = $derived((event.sourceUrl?.includes('todo.today') ?? false));
 	let dontShowSource = $derived(['megatix_indonesia'].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
@@ -288,54 +287,52 @@
 
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 
-			{#if !dontShowSourceUrl}
-				{#if showQuelleInsteadOfAnmelden}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
-						Quelle
-						<i class="icon-[ph--arrow-square-out] size-5"></i>
-					</a>
-				{:else if sourceUrl}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
-						Anmelden
-						<i class="icon-[ph--arrow-square-out] size-5"></i>
-					</a>
-				{:else if singleContact?.method === 'Website'}
-					<a
-						href={singleContact.url}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="btn-primary btn"
-					>
-						Anmelden
-						<i class="icon-[ph--arrow-square-out] size-5"></i>
-					</a>
-				{:else}
-					<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
-						{#snippet trigger()}
-							<button class="btn btn-primary"> Anmelden </button>
-						{/snippet}
-						{#snippet content()}
-							{#if singleContact?.method && singleContact?.url}
-								<span class="word-wrap">
-									Anmeldung per <b> {singleContact.method}</b>.
-								</span>
+			{#if showQuelleInsteadOfAnmelden}
+				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
+					Quelle
+					<i class="icon-[ph--arrow-square-out] size-5"></i>
+				</a>
+			{:else if sourceUrl && !sourceUrl.includes("todo.today")}
+				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
+					Anmelden
+					<i class="icon-[ph--arrow-square-out] size-5"></i>
+				</a>
+			{:else if singleContact?.method === 'Website'}
+				<a
+					href={singleContact.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="btn-primary btn"
+				>
+					Anmelden
+					<i class="icon-[ph--arrow-square-out] size-5"></i>
+				</a>
+			{:else}
+				<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
+					{#snippet trigger()}
+						<button class="btn btn-primary"> Anmelden </button>
+					{/snippet}
+					{#snippet content()}
+						{#if singleContact?.method && singleContact?.url}
+							<span class="word-wrap">
+								Anmeldung per <b> {singleContact.method}</b>.
+							</span>
 
-								<div class="mt-3 flex flex-col gap-3 justify-center">
-									{@render contactButton(singleContact.method, singleContact.url!)}
-								</div>
-							{:else if event.contact?.length}
-								<span class="word-wrap">
-									Anmeldung über diese Kanäle:
-								</span>
-								<div class="mt-3 flex flex-col gap-3">
-									{#each event.contact as contact}
-										{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
-									{/each}
-								</div>
-							{/if}
-						{/snippet}
-					</PopOver>
-				{/if}
+							<div class="mt-3 flex flex-col gap-3 justify-center">
+								{@render contactButton(singleContact.method, singleContact.url!)}
+							</div>
+						{:else if event.contact?.length}
+							<span class="word-wrap">
+								Anmeldung über diese Kanäle:
+							</span>
+							<div class="mt-3 flex flex-col gap-3">
+								{#each event.contact as contact}
+									{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
+								{/each}
+							</div>
+						{/if}
+					{/snippet}
+				</PopOver>
 			{/if}
 		</div>
 
