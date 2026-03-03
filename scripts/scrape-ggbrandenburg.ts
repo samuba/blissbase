@@ -90,6 +90,13 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         let dateTimeElement = $('h5').first().text();
         // Clean up invisible characters like zero-width space
         dateTimeElement = dateTimeElement.replace(/[\u200B-\u200D\uFEFF]/g, '');
+        
+        // Skip if no date/time element found
+        if (!dateTimeElement || dateTimeElement.trim() === '') {
+            console.error('No date/time element found in h5');
+            return undefined;
+        }
+        
         // Parse multi-day patterns first: "05.09.2025 bis 07.09.2025 von 17:00 – 00:00 Uhr"
         const multiDayMatch = dateTimeElement.match(/(\d{2})\.(\d{2})\.(\d{4})\s+bis\s+\d{2}\.\d{2}\.\d{4}\s+von\s+(\d{1,2}):(\d{2})/);
         if (multiDayMatch) {
