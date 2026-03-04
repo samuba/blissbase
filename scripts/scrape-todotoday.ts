@@ -172,6 +172,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			waitUntil: `domcontentloaded`,
 			timeout: 60000
 		});
+		
+		// Check for Cloudflare challenge page
+		const title = await page.title().catch(() => '');
+		const pageContent = await page.content().catch(() => '');
+		if (title.includes('Just a moment') || pageContent.includes('cf-browser-verification') || pageContent.includes('challenge')) {
+			throw new Error(
+				`CLOUDFLARE_BLOCKED: todo.today is now protected by Cloudflare CAPTCHA. ` +
+				`The page loaded a Cloudflare challenge instead of the event listing. ` +
+				`Screenshots saved to screenshots/ showing the Cloudflare challenge.`
+			);
+		}
+		
 		await page.waitForSelector(`#tt-app`, { timeout: 60000 });
 		return { browser, context, page };
 	}
@@ -224,7 +236,16 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		}, { config: safeConfig });
 
 		if (!apiResponse.ok) {
-			throw new Error(`REST API returned ${apiResponse.status} for ${location}: ${apiResponse.body?.slice(0, 200)}`);
+			const body = apiResponse.body || '';
+			// Detect Cloudflare challenge/blocking
+			if (body.includes('Just a moment') || body.includes('Verify you are human') || body.includes('cloudflare')) {
+				throw new Error(
+					`CLOUDFLARE_BLOCKED: The site todo.today is now protected by Cloudflare CAPTCHA. ` +
+					`The REST API returned ${apiResponse.status} with a Cloudflare challenge page. ` +
+					`Manual intervention or a different scraping approach (e.g., residential proxies) is required.`
+				);
+			}
+			throw new Error(`REST API returned ${apiResponse.status} for ${location}: ${body.slice(0, 200)}`);
 		}
 
 		const sections = apiResponse.payload?.sections;
