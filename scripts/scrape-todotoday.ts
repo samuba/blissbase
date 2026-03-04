@@ -1,9 +1,11 @@
 /**
  * Scrapes events from todo.today for multiple locations (today + tomorrow).
  *
- * Today: fetches listing page HTML, extracts event URLs from DOM (currently commented out).
- * Tomorrow: uses Playwright to bypass Cloudflare, calls the REST listing API to discover
- *   event URLs, then calls tt_get_single_event AJAX for each event's detail JSON.
+ * Two-pass approach:
+ * 1. Uses Playwright to bypass Cloudflare, calls the REST listing API for event metadata.
+ * 2. Fetches descriptions by launching fresh browsers per event (Cloudflare rate-limits
+ *    to ~1 page fetch per session, so each event needs its own browser instance).
+ *    Browsers run in parallel batches for speed.
  *
  * Requires Bun (https://bun.sh/) and Playwright browsers installed.
  *
@@ -12,46 +14,39 @@
  */
 import { ScrapedEvent } from '../src/lib/types.ts';
 import {
-	customFetch,
 	WebsiteScraperInterface,
 	cleanProseHtml,
 	dateToIsoStr,
-TimeZoneString,
+	TimeZoneString,
 } from './common.ts';
-import * as cheerio from 'cheerio';
 import { geocodeAddressCached } from '../src/lib/server/google.ts';
 import { chromium, type Page } from '@playwright/test';
+import * as cheerio from 'cheerio';
 
-const LOCATIONS = [`ubud`, `canggu`, `koh-phangan`, `pai`] as const;
-const MAX_EVENT_RETRIES = 2;
+const DEFAULT_LOCATIONS = [`ubud`, `canggu`, `koh-phangan`, `pai`] as const;
+const LOCATIONS = process.env.TODOTODAY_LOCATIONS
+	? process.env.TODOTODAY_LOCATIONS.split(`,`).map((location) => location.trim()).filter(Boolean)
+	: [...DEFAULT_LOCATIONS];
+const DESC_PARALLEL_BROWSERS = 1;
+const DESC_MAX_RETRIES = 3;
+const DESC_TIMEOUT_MS = 20_000;
+const CONTACT_RESOLVE_MAX_RETRIES = 3;
 const TIMEOUT_MS = {
-	perLocationDay: 6 * 60_000,
+	perLocationDay: 3 * 60_000,
 	browserLaunch: 90_000,
 	listingFetch: 45_000,
-	singleEventFetch: 45_000,
-	eventTransform: 60_000,
 	closeResource: 10_000
 } as const;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
-	private runStats = {
-		retriedEvents: 0,
-		skippedAfterRetries: 0,
-		timeoutErrors: 0
-	};
-
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
 		let locationsWithEvents = 0;
 		let currentPhase = `initializing`;
-		this.runStats = { retriedEvents: 0, skippedAfterRetries: 0, timeoutErrors: 0 };
 		const startedAt = Date.now();
 		const heartbeatId = setInterval(() => {
 			const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-			console.warn(
-				`[heartbeat] running ${elapsedSeconds}s | phase=${currentPhase} | collected=${allEvents.length} | ` +
-				`retried=${this.runStats.retriedEvents} | skipped=${this.runStats.skippedAfterRetries} | timeouts=${this.runStats.timeoutErrors}`
-			);
+			console.warn(`[heartbeat] running ${elapsedSeconds}s | phase=${currentPhase} | collected=${allEvents.length}`);
 		}, 30_000);
 
 		try {
@@ -85,10 +80,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				throw new Error(`No events found! Failed to fetch API data for all locations.`);
 			}
 
-			console.warn(
-				`[retry-summary] Skipped ${this.runStats.skippedAfterRetries} event(s) after retry limit (${MAX_EVENT_RETRIES} retries per event). ` +
-				`Retried events: ${this.runStats.retriedEvents}. Timeout errors observed: ${this.runStats.timeoutErrors}.`
-			);
+			currentPhase = `descriptions`;
+			console.log(`--- Enriching ${allEvents.length} events with descriptions (${DESC_PARALLEL_BROWSERS} parallel browsers) ---`);
+			await this.enrichDescriptions(allEvents);
+			const withDesc = allEvents.filter(e => e.description).length;
+			console.log(`--- Descriptions: ${withDesc}/${allEvents.length} events enriched ---`);
+
 			console.log({ allEvents });
 			console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
 			return allEvents;
@@ -106,215 +103,52 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	/**
-	 * Converts a tt_get_single_event JSON response into a ScrapedEvent.
-	 * Example: extractEventDataFromApi({ data: apiJson, url: `https://...`, location: `ubud` })
-	 */
-	private async extractEventDataFromApi(args: {
-		data: TtSingleEventData;
-		url: string;
-		location: string;
-		page: Page;
-	}): Promise<ScrapedEvent | undefined> {
-		const { data, url, location, page } = args;
-		if (!data.name) return undefined;
-
-		const timeZone = location === 'ubud' || location === 'canggu' ? 'Asia/Makassar' : 'Asia/Bangkok';
-
-		const startAt = buildIsoFromApiDate({
-			dateStr: data.start_date,
-			timeStr: data.start_time,
-			timeZone
-		});
-		if (!startAt) {
-			console.error(`Missing start_date/start_time for ${url}`);
-			return undefined;
-		}
-
-		const endAt = buildIsoFromApiDate({
-			dateStr: data.start_date,
-			timeStr: data.end_time,
-			timeZone
-		});
-
-		const $ = cheerio.load(data.description ?? '');
-		// Remove todo.today links and their parent <p> tags if applicable
-		$('.tt-hidden').remove();		
-		const description = cleanProseHtml($.html() ?? null);
-
-		const venueName = data.venue?.name?.trim();
-		const venueArea = data.venue?.area?.trim();
-		const address = [venueName?.trim(), formatLocationName(location)].filter(Boolean) as string[];
-
-		const host = data.creator?.name && data.creator.name.toLowerCase() !== 'todo.today'
-			? data.creator.name
-			: undefined;
-
-		let coordinates: { lat: number; lng: number } | null | undefined;
-		if (data.venue?.lat && data.venue?.lng) {
-			coordinates = { lat: parseFloat(data.venue.lat), lng: parseFloat(data.venue.lng) };
-		} else {
-			console.log(`[${location}] Geocoding venue address`);
-			coordinates = await geocodeAddressCached(
-				[venueName, venueArea, formatLocationName(location)].filter(x => x) as string[],
-				process.env.GOOGLE_MAPS_API_KEY || ''
-			);
-		}
-
-		console.log(`[${location}] Resolving booking link for ${url}`);
-		let resolvedBookLink = await this.resolveBookLinkInBrowser({
-			page,
-			bookLink: data.book_link,
-			fallbackUrl: url
-		});
-
-		const contact = [];
-		if (!resolvedBookLink.startsWith('https://todo.today') && !resolvedBookLink.startsWith('todo.today')) {
-			if (resolvedBookLink.includes('api.whatsapp.com')) {
-				const phoneNumber = resolvedBookLink.match(/phone=(\d+)/)?.[1];
-				resolvedBookLink = `https://wa.me/${phoneNumber}`;
-			}
-			contact.push(resolvedBookLink);
-		}
-
-		const tags = (data.categories ?? [])
-			.map(cat => cat.name?.replace(/[^\w\s\-&]/g, '').trim())
-			.filter(Boolean) as string[];
-
-		return {
-			name: data.name,
-			description,
-			imageUrls: data.images ?? [],
-			startAt,
-			endAt,
-			address,
-			price: data.price_label || undefined,
-			priceIsHtml: false,
-			host,
-			hostLink: data.creator?.url ||  undefined,
-			contact,
-			latitude: coordinates?.lat,
-			longitude: coordinates?.lng,
-			tags,
-			sourceUrl: url,
-			source: 'todotoday' as const
-		} satisfies ScrapedEvent;
-	}
-
-	/**
-	 * Launches a fresh Playwright browser, discovers event URLs via REST API,
-	 * then fetches each event's detail JSON via tt_get_single_event AJAX.
-	 * Creates a completely new browser instance per location+day (and on recovery).
+	 * Launches a fresh Playwright browser, fetches all events from the REST listing API,
+	 * and converts them to ScrapedEvents.
 	 * Example: await scraper.scrapeEventsViaBrowser({ location: `koh-phangan`, day: `tomorrow` })
 	 */
 	private async scrapeEventsViaBrowser(args: { location: string; day: string }): Promise<ScrapedEvent[]> {
 		const { location, day } = args;
 		console.log(`[${location}/${day}] Launching fresh browser`);
-		let { browser, context, page } = await withTimeout({
+		const { browser, context, page } = await withTimeout({
 			label: `launchFreshBrowser ${location}/${day}`,
 			timeoutMs: TIMEOUT_MS.browserLaunch,
 			task: async () => this.launchFreshBrowser({ location, day })
 		});
 
 		try {
-			console.log(`[${location}/${day}] Fetching event URLs from listing API`);
-			const eventUrls = await withTimeout({
-				label: `fetchEventUrlsFromPage ${location}/${day}`,
+			console.log(`[${location}/${day}] Fetching events from listing API`);
+			const listingEvents = await withTimeout({
+				label: `fetchListingEventsFromPage ${location}/${day}`,
 				timeoutMs: TIMEOUT_MS.listingFetch,
-				task: async () => this.fetchEventUrlsFromPage(page, location)
+				task: async () => this.fetchListingEventsFromPage({ page, location })
 			});
-			if (!eventUrls.length) return [];
-			console.log(`[${location}/${day}] Found ${eventUrls.length} event URLs`);
+			if (!listingEvents.length) return [];
+			console.log(`[${location}/${day}] Found ${listingEvents.length} events`);
 
+			const timeZone: TimeZoneString = location === 'ubud' || location === 'canggu' ? 'Asia/Makassar' : 'Asia/Bangkok';
 			const events: ScrapedEvent[] = [];
-			for (const eventUrl of eventUrls) {
-				const parsed = parseEventUrl(eventUrl);
-				if (!parsed) {
-					console.warn(`[${location}/${day}] Could not parse event URL: ${eventUrl}`);
-					continue;
-				}
-
-				let didProcessEvent = false;
-				for (let attempt = 1; attempt <= MAX_EVENT_RETRIES + 1; attempt++) {
-					try {
-						console.log(`[${location}/${day}] Processing ${eventUrl} attempt ${attempt}/${MAX_EVENT_RETRIES + 1}`);
-						console.log(`[${location}/${day}] Fetching single event payload for ${eventUrl}`);
-						const eventData = await withTimeout({
-							label: `fetchSingleEventFromPage ${location}/${day} ${parsed.slug}`,
-							timeoutMs: TIMEOUT_MS.singleEventFetch,
-							task: async () => this.fetchSingleEventFromPage(page, parsed)
-						});
-						if (!eventData) {
-							console.warn(`[${location}/${day}] No data returned for ${eventUrl}`);
-							didProcessEvent = true;
-							break;
-						}
-
-						console.log(`[${location}/${day}] Transforming payload into ScrapedEvent for ${eventUrl}`);
-						const event = await withTimeout({
-							label: `extractEventDataFromApi ${location}/${day} ${parsed.slug}`,
-							timeoutMs: TIMEOUT_MS.eventTransform,
-							task: async () => this.extractEventDataFromApi({
-								data: eventData,
-								url: eventUrl,
-								location,
-								page
-							})
-						});
-						if (event) {
-							events.push(event);
-							console.log("extracted event", event);
-						}
-						didProcessEvent = true;
-						break;
-					} catch (error) {
-						if (isTimeoutError(error)) this.runStats.timeoutErrors += 1;
-						if (attempt <= MAX_EVENT_RETRIES) {
-							this.runStats.retriedEvents += 1;
-							console.warn(
-								`[${location}/${day}] Attempt ${attempt}/${MAX_EVENT_RETRIES + 1} failed for ${eventUrl}. Retrying...`,
-								error
-							);
-						} else {
-							this.runStats.skippedAfterRetries += 1;
-							console.warn(
-								`[${location}/${day}] Skipping ${eventUrl} after ${MAX_EVENT_RETRIES + 1} failed attempts.`,
-								error
-							);
-						}
-
-						console.log(`[${location}/${day}] Closing current page for recovery`);
-						await closeWithTimeout({ label: `${location}/${day} recovery page.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => page.close() });
-						console.log(`[${location}/${day}] Closing current context for recovery`);
-						await closeWithTimeout({ label: `${location}/${day} recovery context.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => context.close() });
-						console.log(`[${location}/${day}] Closing current browser for recovery`);
-						await closeWithTimeout({ label: `${location}/${day} recovery browser.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => browser.close() });
-
-						if (attempt > MAX_EVENT_RETRIES) {
-							break;
-						}
-
-						console.log(`[${location}/${day}] Relaunching fresh browser after recovery`);
-						({ browser, context, page } = await withTimeout({
-							label: `recovery launchFreshBrowser ${location}/${day}`,
-							timeoutMs: TIMEOUT_MS.browserLaunch,
-							task: async () => this.launchFreshBrowser({ location, day })
-						}));
+			for (const listingEvent of listingEvents) {
+				try {
+					const event = await this.extractEventFromListing({
+						event: listingEvent,
+						location,
+						timeZone,
+						page
+					});
+					if (event) {
+						events.push(event);
 					}
-				}
-
-				if (!didProcessEvent) {
-					console.warn(`[${location}/${day}] Event was not processed after retries: ${eventUrl}`);
-					continue;
+				} catch (error) {
+					console.error(`[${location}/${day}] Failed to extract event ${listingEvent.slug}`, error);
 				}
 			}
 
+			console.log(`[${location}/${day}] Extracted ${events.length}/${listingEvents.length} events`);
 			return events;
 		} finally {
-			console.log(`[${location}/${day}] Closing page in finally`);
 			await closeWithTimeout({ label: `${location}/${day} finally page.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => page.close() });
-			console.log(`[${location}/${day}] Closing context in finally`);
 			await closeWithTimeout({ label: `${location}/${day} finally context.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => context.close() });
-			console.log(`[${location}/${day}] Closing browser in finally`);
 			await closeWithTimeout({ label: `${location}/${day} finally browser.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => browser.close() });
 		}
 	}
@@ -329,31 +163,28 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		page: Page;
 	}> {
 		const { location, day } = args;
-		console.log(`[${location}/${day}] chromium.launch`);
 		const browser = await chromium.launch({ headless: true });
-		console.log(`[${location}/${day}] browser.newContext`);
 		const context = await browser.newContext({
 			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
 		});
-		console.log(`[${location}/${day}] context.newPage`);
 		const page = await context.newPage();
-		console.log(`[${location}/${day}] Opening page in fresh browser...`);
-		console.log(`[${location}/${day}] page.goto listing URL`);
 		await page.goto(`https://todo.today/${location}/${day}/`, {
 			waitUntil: `domcontentloaded`,
 			timeout: 60000
 		});
-		console.log(`[${location}/${day}] page.waitForSelector #tt-app`);
 		await page.waitForSelector(`#tt-app`, { timeout: 60000 });
 		return { browser, context, page };
 	}
 
 	/**
 	 * Calls the REST listing API from within a Playwright page context.
-	 * Example: await scraper.fetchEventUrlsFromPage(page, `ubud`)
+	 * Example: await scraper.fetchListingEventsFromPage({ page, location: `ubud` })
 	 */
-	private async fetchEventUrlsFromPage(page: Page, location: string): Promise<string[]> {
-		console.log(`[${location}] Reading #tt-app config via page.evaluate`);
+	private async fetchListingEventsFromPage(args: {
+		page: Page;
+		location: string;
+	}): Promise<TtListingEvent[]> {
+		const { page, location } = args;
 		const appConfig = await page.evaluate(() => {
 			const app = document.querySelector(`#tt-app`);
 			if (!app) return null;
@@ -376,7 +207,6 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			eventDate: appConfig.eventDate
 		};
 
-		console.log(`[${location}] Calling todo.today REST listing API via page.evaluate`);
 		const apiResponse = await page.evaluate(async ({ config }) => {
 			const params = new URLSearchParams({
 				channel: config.channel,
@@ -400,39 +230,46 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const sections = apiResponse.payload?.sections;
 		if (!sections?.length) return [];
 
-		const urls = new Set<string>();
+		const events: TtListingEvent[] = [];
+		const seenLinks = new Set<string>();
 		for (const section of sections) {
 			if (!section?.events?.length) continue;
 			for (const ev of section.events) {
-				if (ev?.link) urls.add(ev.link);
+				if (!ev?.link || seenLinks.has(ev.link)) continue;
+				seenLinks.add(ev.link);
+				events.push(ev);
 			}
 		}
-		return [...urls];
+		return events;
 	}
 
 	/**
-	 * Calls tt_get_single_event AJAX from within a Playwright page context.
-	 * Example: await scraper.fetchSingleEventFromPage(page, { location: `ubud`, year: `2026`, month: `03`, day: `03`, slug: `mat-flex-22` })
+	 * Calls tt_get_single_event from within the listing page context to fetch full event details.
+	 * Example: await scraper.fetchSingleEventFromPage({ page, params: parsedUrl })
 	 */
-	private async fetchSingleEventFromPage(page: Page, params: ParsedEventUrl): Promise<TtSingleEventData | null> {
-		console.log(`[${params.location}] Calling tt_get_single_event for ${params.slug}`);
+	private async fetchSingleEventFromPage(args: {
+		page: Page;
+		params: ParsedEventUrl;
+	}): Promise<TtSingleEventData | null> {
+		const { page, params } = args;
 		const result = await page.evaluate(async ({ params }) => {
 			const formData = new FormData();
-			formData.append('action', 'tt_get_single_event');
-			formData.append('location', params.location);
-			formData.append('year', params.year);
-			formData.append('month', params.month);
-			formData.append('day', params.day);
-			formData.append('slug', params.slug);
+			formData.append(`action`, `tt_get_single_event`);
+			formData.append(`location`, params.location);
+			formData.append(`year`, params.year);
+			formData.append(`month`, params.month);
+			formData.append(`day`, params.day);
+			formData.append(`slug`, params.slug);
 
-			const res = await fetch('/wp-admin/admin-ajax.php', {
-				method: 'POST',
+			const res = await fetch(`/wp-admin/admin-ajax.php`, {
+				method: `POST`,
 				body: formData,
-				credentials: 'same-origin'
+				credentials: `same-origin`
 			});
-			if (!res.ok) return { ok: false as const, status: res.status };
+			if (!res.ok) return { ok: false as const };
 			const json = await res.json();
-			if (!json.success || !json.data) return { ok: false as const, status: res.status };
+			console.log({ json });
+			if (!json.success || !json.data) return { ok: false as const };
 			return { ok: true as const, data: json.data };
 		}, { params });
 
@@ -441,23 +278,19 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	/**
-	 * Resolves a booking link by navigating to it in a temporary browser page and returns the final URL.
-	 * Example: await scraper.resolveBookLinkInBrowser({ page, bookLink: `https://example.com/r`, fallbackUrl: `https://todo.today/...` })
+	 * Resolves book links that redirect through todo.today and normalizes known contact links.
+	 * Example: await scraper.resolveBookLinkInBrowser({ page, bookLink: data.book_link, fallbackUrl: url })
 	 */
 	private async resolveBookLinkInBrowser(args: {
 		page: Page;
 		bookLink?: string;
-		fallbackUrl: string;
-	}): Promise<string> {
-		if (!args.bookLink) return args.fallbackUrl;
-		const sanitizedBookLink = args.bookLink.replace('TODOTODAY', '').trim();
-		if (!sanitizedBookLink) return args.fallbackUrl;
-		const context = args.page.context();
-		console.log(`Creating resolver page in existing browser context for ${sanitizedBookLink}`);
-		console.log(`Creating resolver page for ${sanitizedBookLink}`);
+	}): Promise<string | undefined> {
+		const { page, bookLink } = args;
+		if (!bookLink) return undefined;
+
+		const context = page.context();
 		const resolverPage = await context.newPage();
 		try {
-			console.log(`Installing request filter on resolver page for ${sanitizedBookLink}`);
 			await resolverPage.route(`**/*`, (route) => {
 				const resourceType = route.request().resourceType();
 				if (resourceType === `image` || resourceType === `media` || resourceType === `font` || resourceType === `stylesheet`) {
@@ -466,36 +299,206 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				}
 				void route.continue();
 			});
-			console.log(`Navigating resolver page to ${sanitizedBookLink}`);
-			await resolverPage.goto(sanitizedBookLink, {
+
+			await resolverPage.goto(bookLink, {
 				waitUntil: `commit`,
-				timeout: 15000
+				timeout: 15_000
 			});
 
-			// The first commit can still be the /go URL before client-side redirect settles.
 			if (resolverPage.url().includes(`todo.today/go/`)) {
-				console.log(`Waiting for redirect away from todo.today/go for ${sanitizedBookLink}`);
 				try {
-					await resolverPage.waitForURL((url) => !url.href.includes(`todo.today/go/`), { timeout: 10000 });
+					await resolverPage.waitForURL((url) => !url.href.includes(`todo.today/go/`), { timeout: 10_000 });
 				} catch {
-					console.warn(`Redirect did not leave todo.today/go in time for ${sanitizedBookLink}`);
+					// Keep unresolved URL fallback behavior.
 				}
 			}
 
-			const resolvedUrl = resolverPage.url();
-			console.log(`Resolved via browser: ${sanitizedBookLink} -> ${resolvedUrl}`);
-			return resolvedUrl;
-		} catch (error) {
-			console.error(`Failed resolving book_link ${sanitizedBookLink}`, error);
-			return sanitizedBookLink;
+			return resolverPage.url() || bookLink;
+		} catch {
+			return bookLink;
 		} finally {
-			console.log(`Closing resolver page for ${sanitizedBookLink}`);
 			await closeWithTimeout({
-				label: `resolver page.close ${sanitizedBookLink}`,
+				label: `resolver page.close ${bookLink}`,
 				timeoutMs: TIMEOUT_MS.closeResource,
 				task: async () => resolverPage.close()
 			});
 		}
+	}
+
+	/**
+	 * Converts a REST listing API event into a ScrapedEvent.
+	 * Example: await scraper.extractEventFromListing({ event: listingEvent, location: `ubud`, timeZone: `Asia/Makassar` })
+	 */
+	private async extractEventFromListing(args: {
+		event: TtListingEvent;
+		location: string;
+		timeZone: TimeZoneString;
+		page: Page;
+	}): Promise<ScrapedEvent | undefined> {
+		const { event, location, timeZone, page } = args;
+		if (!event.name || !event.link) return undefined;
+
+		const parsed = parseEventUrl(event.link);
+		if (!parsed) return undefined;
+
+		const dateStr = `${parsed.year}-${parsed.month}-${parsed.day}`;
+		const startAt = buildIsoFromApiDate({ dateStr, timeStr: event.start_time ?? undefined, timeZone });
+		if (!startAt) return undefined;
+
+		const endAt = buildIsoFromApiDate({ dateStr, timeStr: event.end_time ?? undefined, timeZone });
+
+		let detailData: TtSingleEventData | null = null;
+		try {
+			detailData = await this.fetchSingleEventFromPage({ page, params: parsed });
+		} catch (error) {
+			console.warn(`[detail] failed to fetch single event payload for ${event.link}`, error);
+		}
+
+		const venueName = detailData?.venue?.name?.trim() || event.venue?.trim();
+		const venueArea = detailData?.venue?.area?.trim() || event.area?.trim();
+		const address = [venueName, formatLocationName(location)].filter(Boolean) as string[];
+
+		let coordinates: { lat: number; lng: number } | null | undefined;
+		const venueLat = detailData?.venue?.lat ? Number.parseFloat(detailData.venue.lat) : undefined;
+		const venueLng = detailData?.venue?.lng ? Number.parseFloat(detailData.venue.lng) : undefined;
+		if (venueLat !== undefined && venueLng !== undefined && !Number.isNaN(venueLat) && !Number.isNaN(venueLng)) {
+			coordinates = { lat: venueLat, lng: venueLng };
+		} else if (event.google_map || venueName || venueArea) {
+			coordinates = await geocodeAddressCached(
+				[venueName, venueArea, formatLocationName(location)].filter(Boolean) as string[],
+				process.env.GOOGLE_MAPS_API_KEY || ''
+			);
+		}
+
+		const creatorName = detailData?.creator?.name || event.creator_name;
+		const host = creatorName && creatorName.toLowerCase() !== `todo.today`
+			? creatorName
+			: undefined;
+		const hostLink = detailData?.creator?.url?.trim() || undefined;
+
+		let contact: string[] = [];
+		if (detailData?.book_link) {
+			let resolvedBookLink = await this.resolveBookLinkInBrowser({
+				page,
+				bookLink: detailData.book_link,
+			});
+			const isTodoTodayLink = resolvedBookLink?.startsWith(`https://todo.today`) || resolvedBookLink?.startsWith(`todo.today`);
+			if (!isTodoTodayLink && resolvedBookLink) {
+				if (resolvedBookLink?.includes(`api.whatsapp.com`)) {
+					const phoneNumber = resolvedBookLink.match(/phone=(\d+)/)?.[1];
+					if (phoneNumber) {
+						resolvedBookLink = `https://wa.me/${phoneNumber}`;
+					}
+				}
+				contact = [resolvedBookLink];
+			}
+		}
+
+		const imageUrls = detailData?.images?.length ? detailData.images : event.image ? [event.image] : [];
+		const tags = (detailData?.categories ?? [])
+			.map(cat => cat.name?.replace(/[^\w\s\-&]/g, ``).trim())
+			.filter((tag): tag is string => Boolean(tag));
+
+		return {
+			name: detailData?.name || event.name,
+			description: null,
+			imageUrls,
+			startAt,
+			endAt,
+			address,
+			price: detailData?.price_label || event.price_label || undefined,
+			priceIsHtml: false,
+			host,
+			hostLink,
+			contact,
+			latitude: coordinates?.lat,
+			longitude: coordinates?.lng,
+			tags,
+			sourceUrl: event.link,
+			source: 'todotoday'
+		};
+	}
+
+	/**
+	 * Enriches events with descriptions by launching fresh browsers in parallel batches.
+	 * Events that fail (timeout, browser crash, etc.) are collected and retried up to
+	 * DESC_MAX_RETRIES times with reduced parallelism on each retry round.
+	 * Example: await scraper.enrichDescriptions(events)
+	 */
+	private async enrichDescriptions(events: ScrapedEvent[]): Promise<void> {
+		let pending = events;
+
+		for (let attempt = 0; attempt <= DESC_MAX_RETRIES; attempt++) {
+			if (!pending.length) break;
+
+			const parallelism = attempt === 0 ? DESC_PARALLEL_BROWSERS : Math.max(1, DESC_PARALLEL_BROWSERS - attempt);
+			const label = attempt === 0 ? `` : ` (retry ${attempt}/${DESC_MAX_RETRIES})`;
+			console.log(`[desc]${label} ${pending.length} events to enrich, parallelism=${parallelism}`);
+
+			const failed = await this.runDescriptionBatches({ events: pending, parallelism });
+
+			if (!failed.length) break;
+			pending = failed;
+			console.log(`[desc]${label} ${failed.length} events failed, will retry`);
+		}
+	}
+
+	/**
+	 * Runs description fetching in batches and returns events that were not enriched.
+	 * Tracks all browser instances so timed-out batches can be force-killed to prevent
+	 * zombie processes from exhausting OS resources.
+	 * Example: const failed = await scraper.runDescriptionBatches({ events, parallelism: 3 })
+	 */
+	private async runDescriptionBatches(args: {
+		events: ScrapedEvent[];
+		parallelism: number;
+	}): Promise<ScrapedEvent[]> {
+		const { events, parallelism } = args;
+		const batchTimeoutMs = (DESC_TIMEOUT_MS + 10_000) * 1.5;
+		const failed: ScrapedEvent[] = [];
+
+		for (let i = 0; i < events.length; i += parallelism) {
+			const batch = events.slice(i, i + parallelism);
+			const batchNum = Math.floor(i / parallelism) + 1;
+			const totalBatches = Math.ceil(events.length / parallelism);
+			console.log(`[desc] Batch ${batchNum}/${totalBatches} (${batch.length} events)`);
+
+			const browsers: BrowserHandle[] = [];
+			const batchPromise = Promise.allSettled(
+				batch.map(event => fetchEventPageDetails2({ eventUrl: event.sourceUrl, browsers }))
+			);
+			const timeoutPromise = new Promise<null>(resolve => setTimeout(() => resolve(null), batchTimeoutMs));
+			const results = await Promise.race([batchPromise, timeoutPromise]);
+
+			if (!results) {
+				console.warn(`[desc] Batch ${batchNum} timed out, killing ${browsers.length} browsers`);
+				await killBrowsers(browsers);
+				failed.push(...batch);
+				continue;
+			}
+
+			for (let j = 0; j < batch.length; j++) {
+				const result = results[j];
+				if (result.status !== 'fulfilled') {
+					if (isUnresolvedContactError(result.reason)) {
+						throw result.reason;
+					}
+					failed.push(batch[j]);
+					continue;
+				}
+				const value = result.value;
+				if (!value.ok) {
+					failed.push(batch[j]);
+					continue;
+				}
+				if (value.description) batch[j].description = value.description;
+				if (value.tags?.length) batch[j].tags = value.tags;
+				if (value.contact?.length) batch[j].contact = value.contact;
+				if (value.hostLink) batch[j].hostLink = value.hostLink;
+			}
+		}
+
+		return failed;
 	}
 
 	extractName(html: string): string | undefined {
@@ -530,7 +533,6 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 }
 
-// Execute the main function only when run directly
 if (import.meta.main) {
 	try {
 		const scraper = new WebsiteScraper();
@@ -544,51 +546,9 @@ if (import.meta.main) {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function login() {
-	const username = process.env.TODOTODAY_EMAIL!;
-	const password = process.env.TODOTODAY_PASSWORD!;
-	if (!username || !password) {
-		throw new Error('TODOTODAY_EMAIL and TODOTODAY_PASSWORD environment variables must be set');
-	}
-
-	console.log(`Fetching login nonce page`);
-	const resNonce = await customFetch('https://todo.today/my-account', { returnType: 'text' });
-	const nonce = resNonce.match(/events_front_login\s*=\s*\{[^}]*"nonce":"([^"]+)"/)?.[1];
-	console.log({ nonce });
-	if (!nonce || nonce.length !== 10) {
-		throw new Error('No valid nonce found for todo.today');
-	}
-	console.log(`Submitting ajax_login request`);
-	const res = await fetch('https://todo.today/wp-admin/admin-ajax.php', {
-		method: 'POST',
-		headers: {
-			accept: 'application/json, text/javascript, */*; q=0.01',
-			'cache-control': 'no-cache',
-			'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
-		},
-		body: new URLSearchParams({
-			action: 'ajax_login',
-			username,
-			password,
-			security: nonce
-		})
-	});
-	const authCookie =
-		res.headers
-			.getAll('set-cookie')
-			?.find((cookie) => {
-				const [key] = cookie.split('=');
-				return key.trim().startsWith('wordpress_logged_in_');
-			})
-			?.split(';')[0] ?? '';
-	console.log({ authCookie });
-	return authCookie;
-}
-
 /**
  * Parses a todo.today event URL into its path components.
- * Example: parseEventUrl(`https://todo.today/ubud/2026/03/03/mat-flex-22`) // { location: `ubud`, year: `2026`, month: `03`, day: `03`, slug: `mat-flex-22` }
+ * Example: parseEventUrl(`https://todo.today/ubud/2026/03/03/mat-flex-22`) // { location: `ubud`, year: `2026`, ... }
  */
 function parseEventUrl(url: string): ParsedEventUrl | null {
 	const match = url.match(/todo\.today\/([^/]+)\/(\d{4})\/(\d{2})\/(\d{2})\/([^/?#]+)/);
@@ -603,19 +563,43 @@ function parseEventUrl(url: string): ParsedEventUrl | null {
 }
 
 /**
- * Builds an ISO date string from the API's start_date (YYYY-MM-DD) and time (HH:mm or h:mm AM/PM).
+ * Builds an ISO date string from a date (YYYY-MM-DD) and time (HH:mm, HH:mm:ss, or h:mm AM/PM).
  * Example: buildIsoFromApiDate({ dateStr: `2026-03-03`, timeStr: `9:00 AM`, timeZone: `Asia/Makassar` })
  */
 function buildIsoFromApiDate(args: { dateStr?: string; timeStr?: string; timeZone: TimeZoneString }): string | undefined {
 	if (!args.dateStr) return undefined;
 
 	const [year, month, day] = args.dateStr.split('-').map(Number);
-	if (isNaN(year) || isNaN(month) || isNaN(day)) throw new Error('Invalid date string: ' + args.dateStr);
+	if (isNaN(year) || isNaN(month) || isNaN(day)) return undefined;
 
-	const [hour, minute] = args.timeStr?.split(':').map(Number) ?? [];
-	if (isNaN(hour) || isNaN(minute)) throw new Error('Invalid time string: ' + args.timeStr);
+	const parsedTime = parseTimeTo24h(args.timeStr);
+	if (!parsedTime) return undefined;
 
-	return dateToIsoStr(year, month, day, hour, minute, args.timeZone, false);
+	return dateToIsoStr(year, month, day, parsedTime.hour, parsedTime.minute, args.timeZone, false);
+}
+
+function parseTimeTo24h(timeStr?: string): { hour: number; minute: number } | undefined {
+	if (!timeStr) return undefined;
+	const trimmed = timeStr.trim();
+	const amPmMatch = trimmed.match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i);
+	if (amPmMatch) {
+		const rawHour = Number(amPmMatch[1]);
+		const minute = Number(amPmMatch[2]);
+		const period = amPmMatch[3].toUpperCase();
+		if (isNaN(rawHour) || isNaN(minute)) return undefined;
+		let hour = rawHour % 12;
+		if (period === 'PM') {
+			hour += 12;
+		}
+		return { hour, minute };
+	}
+
+	const twentyFourHourMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+	if (!twentyFourHourMatch) return undefined;
+	const hour = Number(twentyFourHourMatch[1]);
+	const minute = Number(twentyFourHourMatch[2]);
+	if (isNaN(hour) || isNaN(minute)) return undefined;
+	return { hour, minute };
 }
 
 function formatLocationName(location: string): string {
@@ -673,10 +657,278 @@ async function closeWithTimeout(args: {
 	}
 }
 
-function isTimeoutError(error: unknown): boolean {
-	if (!(error instanceof Error)) return false;
-	return error.message.startsWith(`Timed out after`);
+/**
+ * Fetches event details via tt_get_single_event and returns description metadata.
+ * Example: await fetchEventPageDetails2({ eventUrl: `https://todo.today/pai/2026/03/03/full-moon-cacao-ceremony-12`, browsers })
+ */
+async function fetchEventPageDetails2(args: {
+	eventUrl: string;
+	browsers: BrowserHandle[];
+}): Promise<EventPageResult> {
+	const { eventUrl, browsers } = args;
+	const parsedEventUrl = parseEventUrl(eventUrl);
+	if (!parsedEventUrl) return { ok: false };
+
+	let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+	const handle: BrowserHandle = { instance: undefined };
+	browsers.push(handle);
+
+	try {
+		browser = await chromium.launch({ headless: true, timeout: 15_000 });
+		handle.instance = browser;
+		const context = await browser.newContext({
+			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
+		});
+		const page = await context.newPage();
+		await page.goto(eventUrl, { waitUntil: `domcontentloaded`, timeout: DESC_TIMEOUT_MS });
+
+		const title = await page.title();
+		if (title.includes(`Just a moment`)) {
+			await page.waitForFunction(() => !document.title.includes(`Just a moment`), { timeout: 8000 }).catch(() => {});
+			if ((await page.title()).includes(`Just a moment`)) return { ok: false };
+		}
+
+		const detailResponse = await page.evaluate(async ({ parsedEventUrl }) => {
+			const formData = new FormData();
+			formData.append(`action`, `tt_get_single_event`);
+			formData.append(`location`, parsedEventUrl.location);
+			formData.append(`year`, parsedEventUrl.year);
+			formData.append(`month`, parsedEventUrl.month);
+			formData.append(`day`, parsedEventUrl.day);
+			formData.append(`slug`, parsedEventUrl.slug);
+
+			const response = await fetch(`/wp-admin/admin-ajax.php`, {
+				method: `POST`,
+				body: formData,
+				credentials: `same-origin`,
+				headers: {
+					Accept: `*/*`
+				}
+			});
+
+			if (!response.ok) {
+				return {
+					ok: false as const,
+					status: response.status
+				};
+			}
+
+			const json = await response.json();
+			if (!json?.success || !json?.data) {
+				return {
+					ok: false as const,
+					status: 200
+				};
+			}
+
+			return {
+				ok: true as const,
+				data: json.data
+			};
+		}, { parsedEventUrl });
+
+		if (!detailResponse.ok) {
+			console.warn(`[desc2] tt_get_single_event failed for ${eventUrl} with status=${detailResponse.status}`);
+			return { ok: false };
+		}
+
+		const detailData = detailResponse.data as TtSingleEventData;
+		const $ = cheerio.load(detailData.description ?? '');
+		$('.tt-hidden').remove(); // remove todotoday advertising
+		const description = cleanProseHtml($.html());
+		const tags = (detailData.categories ?? [])
+			.map((category: { name?: string }) => category.name?.replace(/[^\w\s\-&]/g, ``).trim())
+			.filter((tag): tag is string => Boolean(tag));
+
+		const reserveLink = detailData.book_link?.trim() || null;
+		const resolverPage = await context.newPage();
+		try {
+			const warmupUrl = `https://todo.today/${parsedEventUrl.location}/today/`;
+			await resolverPage.goto(warmupUrl, { waitUntil: `domcontentloaded`, timeout: DESC_TIMEOUT_MS });
+			await resolverPage.waitForSelector(`#tt-app`, { timeout: 10_000 }).catch(() => {});
+			const contact = await normalizeContactLinks({
+				page: resolverPage,
+				reserveLink
+			});
+
+			const hostLinkRaw = detailData.creator?.url?.trim() || undefined;
+			const hostLink = hostLinkRaw
+				? await resolveRedirectInPage({ page: resolverPage, url: hostLinkRaw })
+				: undefined;
+
+			return { ok: true, description, tags, contact, hostLink };
+		} finally {
+			await closeWithTimeout({
+				label: `resolver page.close ${eventUrl}`,
+				timeoutMs: TIMEOUT_MS.closeResource,
+				task: async () => resolverPage.close()
+			});
+		}
+	} catch (error) {
+		if (isUnresolvedContactError(error)) {
+			throw error;
+		}
+		console.warn(`[desc2] Failed for ${eventUrl}`, error);
+		return { ok: false };
+	} finally {
+		const browserToClose = browser;
+		if (!browserToClose) {
+			// Browser may fail to launch; nothing to close.
+		} else {
+			await closeWithTimeout({
+				label: `desc2 finally browser.close ${eventUrl}`,
+				timeoutMs: TIMEOUT_MS.closeResource,
+				task: async () => browserToClose.close()
+			});
+		}
+	}
 }
+
+/**
+ * Force-closes all tracked browser instances and waits briefly for cleanup.
+ * Example: await killBrowsers(handles)
+ */
+async function killBrowsers(handles: BrowserHandle[]): Promise<void> {
+	await Promise.allSettled(
+		handles.map(async (handle, index) => {
+			const browser = handle.instance;
+			if (!browser) return;
+			await closeWithTimeout({
+				label: `killBrowsers[${index}]`,
+				timeoutMs: TIMEOUT_MS.closeResource,
+				task: async () => browser.close()
+			});
+		})
+	);
+	await new Promise(resolve => setTimeout(resolve, 2000));
+}
+
+/**
+ * Combines reserve/contact links and resolves redirects to produce normalized contact URLs.
+ * Example: await normalizeContactLinks({ page, reserveLink, firstContactLink })
+ */
+async function normalizeContactLinks(args: {
+	page: Page;
+	reserveLink: string | null;
+	firstContactLink?: string;
+}): Promise<string[]> {
+	const rawLinks = [args.reserveLink, args.firstContactLink]
+		.filter((link): link is string => Boolean(link?.trim()));
+	if (!rawLinks.length) return [];
+
+	const resolvedLinks: string[] = [];
+	for (const rawLink of rawLinks) {
+		let normalized = rawLink;
+		let isResolved = false;
+		for (let attempt = 1; attempt <= CONTACT_RESOLVE_MAX_RETRIES; attempt++) {
+			normalized = await resolveRedirectInPage({ page: args.page, url: rawLink });
+			if (normalized.includes(`api.whatsapp.com`)) {
+				const phoneNumber = normalized.match(/phone=(\d+)/)?.[1];
+				if (phoneNumber) normalized = `https://wa.me/${phoneNumber}`;
+			}
+			const unresolved = isUnresolvedContactLink({ rawLink, resolvedLink: normalized });
+			if (!unresolved) {
+				isResolved = true;
+				break;
+			}
+			console.warn(`[contact] unresolved link attempt ${attempt}/${CONTACT_RESOLVE_MAX_RETRIES}: ${rawLink} -> ${normalized}`);
+		}
+		if (!isResolved) {
+			throw new Error(`[UNRESOLVED_CONTACT_LINK] Failed to resolve after ${CONTACT_RESOLVE_MAX_RETRIES} retries: ${rawLink}`);
+		}
+		resolvedLinks.push(normalized);
+	}
+
+	return [...new Set(resolvedLinks)];
+}
+
+/**
+ * Resolves redirects by navigating the page to the URL and reading the final URL.
+ * Uses Playwright page.goto so Cloudflare clearance is inherited from the browser context.
+ * Example: await resolveRedirectInPage({ page, url: `https://todo.today/go/abcde` })
+ */
+async function resolveRedirectInPage(args: {
+	page: Page;
+	url: string;
+}): Promise<string> {
+	const sanitizedUrl = args.url.trim();
+	const shouldResolveRedirect = sanitizedUrl.toLowerCase().includes(`todo.today/go/`);
+	if (!shouldResolveRedirect) return sanitizedUrl;
+
+	try {
+		const response = await args.page.goto(sanitizedUrl, {
+			waitUntil: `domcontentloaded`,
+			timeout: 15_000
+		});
+
+		if (args.page.url().includes(`todo.today/go/`)) {
+			await args.page.waitForURL((url) => !url.href.includes(`todo.today/go/`), { timeout: 10_000 }).catch(() => {});
+		}
+
+		let resolvedUrl = (response?.url() || args.page.url()).trim() || sanitizedUrl;
+		if (resolvedUrl.toLowerCase().includes(`todo.today/go/`)) {
+			const fallbackResolvedUrl = await resolveRedirectViaFetch({ url: sanitizedUrl });
+			resolvedUrl = fallbackResolvedUrl;
+		}
+		console.log(`resolved ${sanitizedUrl} to ${resolvedUrl}`);
+		return resolvedUrl;
+	} catch {
+		return resolveRedirectViaFetch({ url: sanitizedUrl });
+	}
+}
+
+/**
+ * Resolves redirects through Bun fetch as a fallback when browser navigation stays on /go/.
+ * Example: await resolveRedirectViaFetch({ url: `https://todo.today/go/abcde` })
+ */
+async function resolveRedirectViaFetch(args: { url: string }): Promise<string> {
+	try {
+		const response = await fetch(args.url, {
+			method: `GET`,
+			redirect: `follow`,
+			headers: {
+				Accept: `*/*`
+			}
+		});
+		const resolvedUrl = response.url?.trim();
+		if (!resolvedUrl) return args.url;
+		return resolvedUrl;
+	} catch {
+		return args.url;
+	}
+}
+
+/**
+ * Checks whether the resolved contact URL still points to unresolved todo.today redirects.
+ * Example: isUnresolvedContactLink({ rawLink: `https://todo.today/go/abc`, resolvedLink: `https://todo.today/go/abc` })
+ */
+function isUnresolvedContactLink(args: { rawLink: string; resolvedLink: string }): boolean {
+	const rawLower = args.rawLink.trim().toLowerCase();
+	const resolvedLower = args.resolvedLink.trim().toLowerCase();
+	const rawIsTodoToday = rawLower.includes(`todo.today`);
+	const resolvedIsTodoToday = resolvedLower.includes(`todo.today`);
+	const isShortRedirect = resolvedLower.includes(`todo.today/go/`);
+	if (isShortRedirect) return true;
+	if (rawIsTodoToday && resolvedIsTodoToday) return true;
+	return false;
+}
+
+/**
+ * Detects unresolved contact link errors so they can fail the scrape.
+ * Example: isUnresolvedContactError(new Error(`[UNRESOLVED_CONTACT_LINK] ...`))
+ */
+function isUnresolvedContactError(error: unknown): boolean {
+	const message = error instanceof Error ? error.message : `${error ?? ``}`;
+	return message.includes(`[UNRESOLVED_CONTACT_LINK]`);
+}
+
+type BrowserHandle = {
+	instance: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+};
+
+type EventPageResult =
+	| { ok: true; description: string | null; tags: string[]; contact: string[]; hostLink?: string }
+	| { ok: false };
 
 type ParsedEventUrl = {
 	location: string;
@@ -686,35 +938,48 @@ type ParsedEventUrl = {
 	slug: string;
 };
 
+type TtListingEvent = {
+	id?: number;
+	name?: string;
+	short_name?: string;
+	creator_name?: string;
+	slug?: string;
+	image?: string;
+	link?: string;
+	share_link?: string;
+	display_date?: string;
+	start_time?: string;
+	end_time?: string;
+	duration?: string;
+	venue?: string;
+	area?: string;
+	venue_type?: string;
+	google_map?: string;
+	label?: string | null;
+	join_label?: string;
+	price_label?: string;
+	ticket_type?: string;
+	join_method?: string;
+	status?: string;
+	category_id?: number;
+	type_id?: number;
+};
+
 type TtSingleEventData = {
 	name?: string;
 	description?: string;
 	images?: string[];
-	start_date?: string;
-	start_time?: string;
-	end_time?: string;
-	display_date_time?: string;
-	display_date_long?: string;
-	formatted_date?: string;
+	price_label?: string;
+	book_link?: string;
 	venue?: {
 		name?: string;
-		type?: string;
 		area?: string;
 		lat?: string;
 		lng?: string;
-		google_map_link?: string;
 	};
-	price_label?: string;
 	creator?: {
 		name?: string;
 		url?: string;
 	};
-	book_link?: string;
-	book_label?: string;
-	categories?: Array<{ name?: string; emoji?: string }>;
-	featured_label?: { text?: string; color?: string; font_color?: string };
-	status?: string;
-	is_past?: boolean;
-	recurring?: string;
-	related_events?: unknown[];
+	categories?: Array<{ name?: string }>;
 };
