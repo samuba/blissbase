@@ -392,7 +392,7 @@
 			</div>
 		{/if}
 
-		{#if event.source !== 'telegram' && !dontShowSource}
+		{#if event.source !== 'telegram' && event.source !== 'website-form' && !dontShowSource}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 			>
@@ -403,7 +403,7 @@
 					rel="noopener noreferrer"
 					class="cursor-pointer underline"
 				>
-					{WEBSITE_SCRAPER_CONFIG[event.source as keyof typeof WEBSITE_SCRAPER_CONFIG].label}
+					{WEBSITE_SCRAPER_CONFIG[event.source as keyof typeof WEBSITE_SCRAPER_CONFIG]?.label}
 				</a>
 			</div>
 		{/if}
