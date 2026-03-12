@@ -40,7 +40,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 					}
 				})
 			);
-			allEvents.push(...batchEvents.filter((result): result is PromiseFulfilledResult<ScrapedEvent> => result.status === 'fulfilled').map(result => result.value));
+			allEvents.push(...batchEvents
+				.filter((result): result is PromiseFulfilledResult<ScrapedEvent> => result.status === 'fulfilled')
+				.map(result => result.value)
+				.filter(event => event));
 		}
 		console.log(allEvents.map(event => event.name));
 
@@ -53,9 +56,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 	async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
 		const $ = await cheerio.load(html);
-
-		const schemaJsonRegex = /({\\\\\\"@context\\\\\\":\\\\\\"https:\/\/schema\.org\\\\\\".*?"}}])/
-		const schemaTxt = html.match(schemaJsonRegex)?.[0]?.replaceAll('\\', '')?.replace('}"}}]', '}')
+		const schemaTxt = $('#event-jsonld').text();
 		const schemaJson = JSON.parse(schemaTxt);
 		// console.log(schemaJson);
 
