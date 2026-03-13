@@ -31,6 +31,8 @@ const DESC_PARALLEL_BROWSERS = 1;
 const DESC_MAX_RETRIES = 3;
 const DESC_TIMEOUT_MS = 20_000;
 const CONTACT_RESOLVE_MAX_RETRIES = 3;
+const USER_AGENT = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`;
+const REDIRECT_FETCH_TIMEOUT_MS = 15_000;
 const TIMEOUT_MS = {
 	perLocationDay: 3 * 60_000,
 	browserLaunch: 90_000,
@@ -147,9 +149,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			console.log(`[${location}/${day}] Extracted ${events.length}/${listingEvents.length} events`);
 			return events;
 		} finally {
-			await closeWithTimeout({ label: `${location}/${day} finally page.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => page.close() });
-			await closeWithTimeout({ label: `${location}/${day} finally context.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => context.close() });
-			await closeWithTimeout({ label: `${location}/${day} finally browser.close`, timeoutMs: TIMEOUT_MS.closeResource, task: async () => browser.close() });
+			await closeBrowserSession({
+				labelPrefix: `${location}/${day}`,
+				session: { browser, context, page }
+			});
 		}
 	}
 
@@ -157,23 +160,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	 * Launches a completely fresh Playwright browser and navigates to the listing page.
 	 * Example: const { browser, page } = await scraper.launchFreshBrowser({ location: `ubud`, day: `today` })
 	 */
-	private async launchFreshBrowser(args: { location: string; day: string }): Promise<{
-		browser: Awaited<ReturnType<typeof chromium.launch>>;
-		context: Awaited<ReturnType<Awaited<ReturnType<typeof chromium.launch>>[`newContext`]>>;
-		page: Page;
-	}> {
+	private async launchFreshBrowser(args: { location: string; day: string }): Promise<BrowserSession> {
 		const { location, day } = args;
-		const browser = await chromium.launch({ headless: true });
-		const context = await browser.newContext({
-			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
+		return createBrowserSession({
+			url: `https://todo.today/${location}/${day}/`,
+			waitForSelector: `#tt-app`,
+			gotoTimeoutMs: 60_000,
+			selectorTimeoutMs: 60_000
 		});
-		const page = await context.newPage();
-		await page.goto(`https://todo.today/${location}/${day}/`, {
-			waitUntil: `domcontentloaded`,
-			timeout: 60000
-		});
-		await page.waitForSelector(`#tt-app`, { timeout: 60000 });
-		return { browser, context, page };
 	}
 
 	/**
@@ -456,46 +450,62 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const { events, parallelism } = args;
 		const batchTimeoutMs = (DESC_TIMEOUT_MS + 10_000) * 1.5;
 		const failed: ScrapedEvent[] = [];
+		const browsers: BrowserHandle[] = [];
+		let batchBrowser: BrowserInstance | undefined;
 
-		for (let i = 0; i < events.length; i += parallelism) {
-			const batch = events.slice(i, i + parallelism);
-			const batchNum = Math.floor(i / parallelism) + 1;
-			const totalBatches = Math.ceil(events.length / parallelism);
-			console.log(`[desc] Batch ${batchNum}/${totalBatches} (${batch.length} events)`);
+		try {
+			batchBrowser = await createTrackedBrowser({ browsers });
+			for (let i = 0; i < events.length; i += parallelism) {
+				const batch = events.slice(i, i + parallelism);
+				const batchNum = Math.floor(i / parallelism) + 1;
+				const totalBatches = Math.ceil(events.length / parallelism);
+				console.log(`[desc] Batch ${batchNum}/${totalBatches} (${batch.length} events)`);
 
-			const browsers: BrowserHandle[] = [];
-			const batchPromise = Promise.allSettled(
-				batch.map(event => fetchEventPageDetails2({ eventUrl: event.sourceUrl, browsers }))
-			);
-			const timeoutPromise = new Promise<null>(resolve => setTimeout(() => resolve(null), batchTimeoutMs));
-			const results = await Promise.race([batchPromise, timeoutPromise]);
+				const batchPromise = Promise.allSettled(
+					batch.map((event) =>
+						fetchEventPageDetails2({
+							eventUrl: event.sourceUrl,
+							browsers,
+							sharedBrowser: batchBrowser
+						})
+					)
+				);
+				const timedResult = await raceWithTimeout({
+					label: `desc batch ${batchNum}/${totalBatches}`,
+					timeoutMs: batchTimeoutMs,
+					task: async () => batchPromise
+				});
 
-			if (!results) {
-				console.warn(`[desc] Batch ${batchNum} timed out, killing ${browsers.length} browsers`);
-				await killBrowsers(browsers);
-				failed.push(...batch);
-				continue;
-			}
+				if (timedResult.timedOut || !timedResult.value) {
+					console.warn(`[desc] Batch ${batchNum} timed out, killing ${browsers.length} browsers`);
+					await killBrowsers(browsers);
+					batchBrowser = await createTrackedBrowser({ browsers });
+					failed.push(...batch);
+					continue;
+				}
 
-			for (let j = 0; j < batch.length; j++) {
-				const result = results[j];
-				if (result.status !== 'fulfilled') {
-					if (isUnresolvedContactError(result.reason)) {
-						throw result.reason;
+				for (let j = 0; j < batch.length; j++) {
+					const result = timedResult.value[j];
+					if (result.status !== `fulfilled`) {
+						if (isUnresolvedContactError(result.reason)) {
+							throw result.reason;
+						}
+						failed.push(batch[j]);
+						continue;
 					}
-					failed.push(batch[j]);
-					continue;
+					const value = result.value;
+					if (!value.ok) {
+						failed.push(batch[j]);
+						continue;
+					}
+					if (value.description) batch[j].description = value.description;
+					if (value.tags?.length) batch[j].tags = value.tags;
+					if (value.contact?.length) batch[j].contact = value.contact;
+					if (value.hostLink) batch[j].hostLink = value.hostLink;
 				}
-				const value = result.value;
-				if (!value.ok) {
-					failed.push(batch[j]);
-					continue;
-				}
-				if (value.description) batch[j].description = value.description;
-				if (value.tags?.length) batch[j].tags = value.tags;
-				if (value.contact?.length) batch[j].contact = value.contact;
-				if (value.hostLink) batch[j].hostLink = value.hostLink;
 			}
+		} finally {
+			await killBrowsers(browsers);
 		}
 
 		return failed;
@@ -658,28 +668,158 @@ async function closeWithTimeout(args: {
 }
 
 /**
+ * Creates a browser session (browser + context + page) and optionally performs warmup navigation.
+ * Example: const session = await createBrowserSession({ url: `https://todo.today/ubud/today/`, waitForSelector: `#tt-app` })
+ */
+async function createBrowserSession(args: {
+	url?: string;
+	waitForSelector?: string;
+	gotoTimeoutMs?: number;
+	selectorTimeoutMs?: number;
+}): Promise<BrowserSession> {
+	const browser = await chromium.launch({ headless: true });
+	const context = await browser.newContext({ userAgent: USER_AGENT });
+	const page = await context.newPage();
+
+	if (args.url) {
+		await page.goto(args.url, {
+			waitUntil: `domcontentloaded`,
+			timeout: args.gotoTimeoutMs ?? 60_000
+		});
+	}
+	if (args.waitForSelector) {
+		await page.waitForSelector(args.waitForSelector, {
+			timeout: args.selectorTimeoutMs ?? 60_000
+		});
+	}
+
+	return { browser, context, page };
+}
+
+/**
+ * Closes a browser session in safe order and never throws.
+ * Example: await closeBrowserSession({ labelPrefix: `ubud/today`, session })
+ */
+async function closeBrowserSession(args: {
+	labelPrefix: string;
+	session: BrowserSession;
+}): Promise<void> {
+	await closeWithTimeout({
+		label: `${args.labelPrefix} finally page.close`,
+		timeoutMs: TIMEOUT_MS.closeResource,
+		task: async () => args.session.page.close()
+	});
+	await closeWithTimeout({
+		label: `${args.labelPrefix} finally context.close`,
+		timeoutMs: TIMEOUT_MS.closeResource,
+		task: async () => args.session.context.close()
+	});
+	await closeWithTimeout({
+		label: `${args.labelPrefix} finally browser.close`,
+		timeoutMs: TIMEOUT_MS.closeResource,
+		task: async () => args.session.browser.close()
+	});
+}
+
+/**
+ * Races a task against a timeout and returns structured timeout status.
+ * Example: const result = await raceWithTimeout({ label: `desc batch`, timeoutMs: 30_000, task: async () => doWork() })
+ */
+async function raceWithTimeout<T>(args: {
+	label: string;
+	timeoutMs: number;
+	task: () => Promise<T>;
+}): Promise<{ timedOut: true; value: null } | { timedOut: false; value: T }> {
+	let timeoutId: ReturnType<typeof setTimeout> | undefined;
+	const timeoutResult = Symbol(`timeout`);
+	try {
+		const timeoutPromise = new Promise<typeof timeoutResult>((resolve) => {
+			timeoutId = setTimeout(() => resolve(timeoutResult), args.timeoutMs);
+		});
+		const result = await Promise.race([args.task(), timeoutPromise]);
+		if (result === timeoutResult) {
+			console.warn(`[timeout-race] Timed out after ${args.timeoutMs}ms: ${args.label}`);
+			return { timedOut: true, value: null };
+		}
+		return { timedOut: false, value: result };
+	} finally {
+		if (timeoutId) clearTimeout(timeoutId);
+	}
+}
+
+/**
+ * Retries an async task with bounded backoff and optional jitter.
+ * Example: await withRetry({ attempts: 3, task: async () => resolveSomething() })
+ */
+async function withRetry<T>(args: {
+	attempts: number;
+	baseDelayMs?: number;
+	maxDelayMs?: number;
+	jitterMs?: number;
+	task: (attempt: number) => Promise<T>;
+	shouldRetry?: (error: unknown) => boolean;
+}): Promise<T> {
+	const baseDelayMs = args.baseDelayMs ?? 250;
+	const maxDelayMs = args.maxDelayMs ?? 1500;
+	const jitterMs = args.jitterMs ?? 120;
+	let lastError: unknown;
+
+	for (let attempt = 1; attempt <= args.attempts; attempt++) {
+		try {
+			return await args.task(attempt);
+		} catch (error) {
+			lastError = error;
+			if (attempt >= args.attempts) break;
+			if (args.shouldRetry && !args.shouldRetry(error)) break;
+			const delayNoJitter = Math.min(baseDelayMs * 2 ** (attempt - 1), maxDelayMs);
+			const jitter = Math.floor(Math.random() * (jitterMs + 1));
+			await Bun.sleep(delayNoJitter + jitter);
+		}
+	}
+
+	throw lastError instanceof Error ? lastError : new Error(`${lastError ?? `Unknown retry error`}`);
+}
+
+/**
+ * Launches Chromium and tracks it for emergency batch cleanup.
+ * Example: const browser = await createTrackedBrowser({ browsers })
+ */
+async function createTrackedBrowser(args: {
+	browsers: BrowserHandle[];
+}): Promise<BrowserInstance> {
+	const browser = await chromium.launch({ headless: true, timeout: 15_000 });
+	args.browsers.push({ instance: browser });
+	return browser;
+}
+
+/**
  * Fetches event details via tt_get_single_event and returns description metadata.
  * Example: await fetchEventPageDetails2({ eventUrl: `https://todo.today/pai/2026/03/03/full-moon-cacao-ceremony-12`, browsers })
  */
 async function fetchEventPageDetails2(args: {
 	eventUrl: string;
 	browsers: BrowserHandle[];
+	sharedBrowser?: BrowserInstance;
 }): Promise<EventPageResult> {
-	const { eventUrl, browsers } = args;
+	const { eventUrl, browsers, sharedBrowser } = args;
 	const parsedEventUrl = parseEventUrl(eventUrl);
 	if (!parsedEventUrl) return { ok: false };
 
-	let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
-	const handle: BrowserHandle = { instance: undefined };
-	browsers.push(handle);
+	let browser = sharedBrowser;
+	let ownsBrowser = false;
+	let context: Awaited<ReturnType<Awaited<ReturnType<typeof chromium.launch>>[`newContext`]>> | undefined;
+	let page: Page | undefined;
+	let resolverPage: Page | undefined;
 
 	try {
-		browser = await chromium.launch({ headless: true, timeout: 15_000 });
-		handle.instance = browser;
-		const context = await browser.newContext({
-			userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`
+		if (!browser) {
+			browser = await createTrackedBrowser({ browsers });
+			ownsBrowser = true;
+		}
+		context = await browser.newContext({
+			userAgent: USER_AGENT
 		});
-		const page = await context.newPage();
+		page = await context.newPage();
 		await page.goto(eventUrl, { waitUntil: `domcontentloaded`, timeout: DESC_TIMEOUT_MS });
 
 		const title = await page.title();
@@ -741,29 +881,21 @@ async function fetchEventPageDetails2(args: {
 			.filter((tag): tag is string => Boolean(tag));
 
 		const reserveLink = detailData.book_link?.trim() || null;
-		const resolverPage = await context.newPage();
-		try {
-			const warmupUrl = `https://todo.today/${parsedEventUrl.location}/today/`;
-			await resolverPage.goto(warmupUrl, { waitUntil: `domcontentloaded`, timeout: DESC_TIMEOUT_MS });
-			await resolverPage.waitForSelector(`#tt-app`, { timeout: 10_000 }).catch(() => {});
-			const contact = await normalizeContactLinks({
-				page: resolverPage,
-				reserveLink
-			});
+		resolverPage = await context.newPage();
+		const warmupUrl = `https://todo.today/${parsedEventUrl.location}/today/`;
+		await resolverPage.goto(warmupUrl, { waitUntil: `domcontentloaded`, timeout: DESC_TIMEOUT_MS });
+		await resolverPage.waitForSelector(`#tt-app`, { timeout: 10_000 }).catch(() => {});
+		const contact = await normalizeContactLinks({
+			page: resolverPage,
+			reserveLink
+		});
 
-			const hostLinkRaw = detailData.creator?.url?.trim() || undefined;
-			const hostLink = hostLinkRaw
-				? await resolveRedirectInPage({ page: resolverPage, url: hostLinkRaw })
-				: undefined;
+		const hostLinkRaw = detailData.creator?.url?.trim() || undefined;
+		const hostLink = hostLinkRaw
+			? await resolveRedirectInPage({ page: resolverPage, url: hostLinkRaw })
+			: undefined;
 
-			return { ok: true, description, tags, contact, hostLink };
-		} finally {
-			await closeWithTimeout({
-				label: `resolver page.close ${eventUrl}`,
-				timeoutMs: TIMEOUT_MS.closeResource,
-				task: async () => resolverPage.close()
-			});
-		}
+		return { ok: true, description, tags, contact, hostLink };
 	} catch (error) {
 		if (isUnresolvedContactError(error)) {
 			throw error;
@@ -771,10 +903,32 @@ async function fetchEventPageDetails2(args: {
 		console.warn(`[desc2] Failed for ${eventUrl}`, error);
 		return { ok: false };
 	} finally {
-		const browserToClose = browser;
-		if (!browserToClose) {
-			// Browser may fail to launch; nothing to close.
-		} else {
+		if (resolverPage) {
+			const resolverPageToClose = resolverPage;
+			await closeWithTimeout({
+				label: `resolver page.close ${eventUrl}`,
+				timeoutMs: TIMEOUT_MS.closeResource,
+				task: async () => resolverPageToClose.close()
+			});
+		}
+		if (page) {
+			const pageToClose = page;
+			await closeWithTimeout({
+				label: `desc2 finally page.close ${eventUrl}`,
+				timeoutMs: TIMEOUT_MS.closeResource,
+				task: async () => pageToClose.close()
+			});
+		}
+		if (context) {
+			const contextToClose = context;
+			await closeWithTimeout({
+				label: `desc2 finally context.close ${eventUrl}`,
+				timeoutMs: TIMEOUT_MS.closeResource,
+				task: async () => contextToClose.close()
+			});
+		}
+		if (ownsBrowser && browser) {
+			const browserToClose = browser;
 			await closeWithTimeout({
 				label: `desc2 finally browser.close ${eventUrl}`,
 				timeoutMs: TIMEOUT_MS.closeResource,
@@ -798,6 +952,7 @@ async function killBrowsers(handles: BrowserHandle[]): Promise<void> {
 				timeoutMs: TIMEOUT_MS.closeResource,
 				task: async () => browser.close()
 			});
+			handle.instance = undefined;
 		})
 	);
 	await new Promise(resolve => setTimeout(resolve, 2000));
@@ -819,21 +974,23 @@ async function normalizeContactLinks(args: {
 	const resolvedLinks: string[] = [];
 	for (const rawLink of rawLinks) {
 		let normalized = rawLink;
-		let isResolved = false;
-		for (let attempt = 1; attempt <= CONTACT_RESOLVE_MAX_RETRIES; attempt++) {
-			normalized = await resolveRedirectInPage({ page: args.page, url: rawLink });
-			if (normalized.includes(`api.whatsapp.com`)) {
-				const phoneNumber = normalized.match(/phone=(\d+)/)?.[1];
-				if (phoneNumber) normalized = `https://wa.me/${phoneNumber}`;
-			}
-			const unresolved = isUnresolvedContactLink({ rawLink, resolvedLink: normalized });
-			if (!unresolved) {
-				isResolved = true;
-				break;
-			}
-			console.warn(`[contact] unresolved link attempt ${attempt}/${CONTACT_RESOLVE_MAX_RETRIES}: ${rawLink} -> ${normalized}`);
-		}
-		if (!isResolved) {
+		try {
+			normalized = await withRetry({
+				attempts: CONTACT_RESOLVE_MAX_RETRIES,
+				task: async (attempt) => {
+					let resolved = await resolveRedirectInPage({ page: args.page, url: rawLink });
+					if (resolved.includes(`api.whatsapp.com`)) {
+						const phoneNumber = resolved.match(/phone=(\d+)/)?.[1];
+						if (phoneNumber) resolved = `https://wa.me/${phoneNumber}`;
+					}
+					const unresolved = isUnresolvedContactLink({ rawLink, resolvedLink: resolved });
+					if (!unresolved) return resolved;
+					console.warn(`[contact] unresolved link attempt ${attempt}/${CONTACT_RESOLVE_MAX_RETRIES}: ${rawLink} -> ${resolved}`);
+					throw new Error(`Unresolved contact link`);
+				},
+				shouldRetry: () => true
+			});
+		} catch {
 			throw new Error(`[UNRESOLVED_CONTACT_LINK] Failed to resolve after ${CONTACT_RESOLVE_MAX_RETRIES} retries: ${rawLink}`);
 		}
 		resolvedLinks.push(normalized);
@@ -882,19 +1039,24 @@ async function resolveRedirectInPage(args: {
  * Example: await resolveRedirectViaFetch({ url: `https://todo.today/go/abcde` })
  */
 async function resolveRedirectViaFetch(args: { url: string }): Promise<string> {
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), REDIRECT_FETCH_TIMEOUT_MS);
 	try {
 		const response = await fetch(args.url, {
 			method: `GET`,
 			redirect: `follow`,
 			headers: {
 				Accept: `*/*`
-			}
+			},
+			signal: controller.signal
 		});
 		const resolvedUrl = response.url?.trim();
 		if (!resolvedUrl) return args.url;
 		return resolvedUrl;
 	} catch {
 		return args.url;
+	} finally {
+		clearTimeout(timeoutId);
 	}
 }
 
@@ -923,12 +1085,20 @@ function isUnresolvedContactError(error: unknown): boolean {
 }
 
 type BrowserHandle = {
-	instance: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+	instance: BrowserInstance | undefined;
 };
 
 type EventPageResult =
 	| { ok: true; description: string | null; tags: string[]; contact: string[]; hostLink?: string }
 	| { ok: false };
+
+type BrowserSession = {
+	browser: BrowserInstance;
+	context: Awaited<ReturnType<BrowserInstance[`newContext`]>>;
+	page: Page;
+};
+
+type BrowserInstance = Awaited<ReturnType<typeof chromium.launch>>;
 
 type ParsedEventUrl = {
 	location: string;

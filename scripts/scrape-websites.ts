@@ -61,7 +61,7 @@ async function scrapeSource(source: string): Promise<ScrapedEvent[]> {
 }
 
 async function main() {
-    console.log('--- Starting Germany Event Scraper ---');
+    console.log('--- Starting Website Event Scraper ---');
 
     // --- Process Arguments ---
     const { values, positionals } = parseArgs({
@@ -239,7 +239,7 @@ async function main() {
     }
 
     console.log(` -> Successfully inserted/updated ${successCount} out of ${eventsToInsert.length} events.`);
-    console.log('--- Germany Event Scraper Finished ---');
+    console.log('--- Website Event Scraper Finished ---');
     
     // Throw error at the end if any sources failed
     if (failedSources.length > 0) {
