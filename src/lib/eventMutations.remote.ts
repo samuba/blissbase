@@ -17,7 +17,8 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	const formData = formDataToDbData(data);
 	const [coords, uploadedImageUrls] = await Promise.all([
 		geocodeAddressCached(formData.address, GOOGLE_MAPS_API_KEY),
-		uploadImages({ files: data.images, slug: eventFromDb.slug })
+		// uploadImages({ files: data.images, slug: eventFromDb.slug })
+		Promise.resolve([])
 	]);
 
 	if (formData.address.length && !coords) {
@@ -64,7 +65,8 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	const event = formDataToDbData(data);
 	const [coords, imageUrls] = await Promise.all([
 		geocodeAddressCached(event.address, GOOGLE_MAPS_API_KEY),
-		uploadImages({ files: data.images, slug: event.slug })
+		// uploadImages({ files: data.images, slug: event.slug })
+		Promise.resolve([])
 	]);
 
 	if (event.address.length && !coords) {
@@ -150,7 +152,6 @@ async function uploadImages(args: UploadImagesArgs) {
 	console.time(`uploadImages`);
 
 	const processedCreateEventImages = new Map<string, Promise<string>>();
-	const { resizeCoverImage } = await import('$lib/imageProcessing');
 	const imageUrls: string[] = [];
 
 	for (const file of args.files) {
