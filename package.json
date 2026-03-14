@@ -29,6 +29,7 @@
 		"deduplicateImages": "bun run scripts/deduplicate-images.ts",
 		"cleanupUnusedImages": "bun run scripts/cleanup-unused-images.ts",
 		"cleanupUnusedImages:dry": "bun run scripts/cleanup-unused-images.ts --dry-run",
+		"analyze:vercel-functions": "node scripts/analyze-vercel-functions.mjs",
 		"deploy:cf": "npx wrangler deploy --cwd blissbase-telegram-entry",
 		"wuchale:clean": "wuchale --clean"
 	},

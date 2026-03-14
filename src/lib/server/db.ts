@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { E2E_TEST } from '$env/static/private';
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { getTableColumns, sql, type SQL } from 'drizzle-orm';
 import postgres from 'postgres'
@@ -11,7 +12,7 @@ export * from 'drizzle-orm';
 export const s = schema;
 
 type DB = ReturnType<typeof createPostgresDrizzle>; // not adding `| ReturnType<typeof createPgliteDrizzle>`  because it has weird type errors when using .returning(...) 
-export const db: DB = process.env.E2E_TEST === 'true' ? 
+export const db: DB = E2E_TEST === `true` ? 
 	await createPgliteDrizzle() as unknown as DB : 
 	createPostgresDrizzle();
 

@@ -1,0 +1,9 @@
+export const ADMIN_SECRET = process.env.ADMIN_SECRET ?? `test-admin-secret`;
+export const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID ?? `test-cloudflare-account-id`;
+export const E2E_TEST = process.env.E2E_TEST ?? `true`;
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? `test-google-maps-api-key`;
+export const RESEND_API_KEY = process.env.RESEND_API_KEY ?? `test-resend-api-key`;
+export const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID ?? `test-s3-access-key-id`;
+export const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME ?? `test-s3-bucket-name`;
+export const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY ?? `test-s3-secret-access-key`;
+export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? `test-telegram-bot-token`;
