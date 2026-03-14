@@ -1,3 +1,6 @@
+repair /edit
+new layout with tabs at the bottom: profile, discover, impressum?
+
 check whatsup danang times correct
 
 edit registration links for event in /edit

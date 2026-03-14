@@ -20,12 +20,14 @@
 	// On client, only initialize if store is empty (preserves navigation state)
 	if (!browser || eventsStore.events.length === 0) {
 		console.log('Initializing events store from server data');
+		// svelte-ignore state_referenced_locally
+		const d = data
 		eventsStore.initialize({
-			events: data.events,
+			events: d.events,
 			pagination: {
-				...data.pagination,
-				startDate: data.pagination.startDate ?? null,
-				endDate: data.pagination.endDate ?? null
+				...d.pagination,
+				startDate: d.pagination.startDate ?? null,
+				endDate: d.pagination.endDate ?? null
 			}
 		});
 	}
