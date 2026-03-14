@@ -13,6 +13,7 @@ export const routes = {
     },
     sources: () => '/sources',
     newEvent: () => '/new',
+    newEventExplained: () => '/new-explained',
     editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
         const url = new URL(`/edit/${id}`, BASE_URL);
         if (hostSecret) {

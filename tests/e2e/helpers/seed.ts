@@ -101,6 +101,28 @@ export async function clearAllEvents(page: Page) {
 	}
 }
 
+/**
+ * Loads a seeded event by id through the test seed API.
+ *
+ * @example
+ * await getEventById(page, 1);
+ */
+export async function getEventById(page: Page, id: number) {
+	const response = await page.request.post('/api/test/seed', {
+		data: {
+			action: 'getEventById',
+			data: { id }
+		}
+	});
+
+	if (!response.ok()) {
+		const error = await response.text();
+		throw new Error(`Failed to get event: ${error}`);
+	}
+
+	return response.json();
+}
+
 export function createMeditationEvent(overrides: TestEvent = {}): TestEvent {
 	return {
 		name: 'Meditation Workshop',

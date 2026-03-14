@@ -1,119 +1,27 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { deleteEvent, updateEvent } from '$lib/events.remote';
-	import { isHttpError } from '@sveltejs/kit';
-	import type { PageProps } from './$types';
 	import { page } from '$app/state';
+	import { deleteEvent, updateEvent } from '$lib/events.remote';
+	import EventForm from '$lib/components/EventForm.svelte';
+	import { updateEventSchema } from '$lib/events.remote.common';
 	import { routes } from '$lib/routes';
-	import TagsInput from '$lib/components/TagsInput.svelte';
-	import EditorJs from '$lib/components/EditorJs.svelte';
-	import { getTags, type UiTag } from '$lib/components/TagSelection.remote';
-	import { localeStore } from '$lib/../locales/localeStore.svelte';
+	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
-	let { event } = data;
+	let event = $derived(data.event);
 
 	let isDeletingEvent = $state(false);
-	const { allTags } = await getTags();
+	let isSubmitting = $derived(!!updateEvent.pending);
+	let didInitializeForm = $state(false);
 
-	// Form state
-	let formData = $state({
-		name: event.name,
-		startAt: formatDateForLocalInput(event.startAt), // Format for datetime-local input
-		endAt: event.endAt ? formatDateForLocalInput(event.endAt) : '',
-		address: (event.address || []).join(', '),
-		price: event.price || '',
-		priceIsHtml: event.priceIsHtml,
-		description: event.description || '',
-		imageUrls: (event.imageUrls || []).join('\n'),
-		host: event.host || '',
-		hostLink: event.hostLink || '',
-		sourceUrl: event.sourceUrl || '',
-		contact: event.contact || '',
-		latitude: event.latitude?.toString() || '',
-		longitude: event.longitude?.toString() || '',
-		tags: event.tags || [],
-		soldOut: event.soldOut,
-		listed: event.listed
+	$effect(() => {
+		if (didInitializeForm) return;
+		updateEvent.fields.set(data.editFormValues);
+		didInitializeForm = true;
 	});
 
-	// Helper function to format date for datetime-local input in local timezone
-	function formatDateForLocalInput(date: Date): string {
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const day = String(date.getDate()).padStart(2, '0');
-		const hours = String(date.getHours()).padStart(2, '0');
-		const minutes = String(date.getMinutes()).padStart(2, '0');
-
-		return `${year}-${month}-${day}T${hours}:${minutes}`;
-	}
-
-	let isSubmitting = $state(false);
-	let errorMessage = $state('');
-	let successMessage = $state('');
-
-	// Handle tag selection
-	function toggleTag(tag: UiTag) {
-		if (formData.tags.includes(tag.en ?? tag.slug)) {
-			formData.tags = formData.tags.filter((t) => t !== tag.en);
-		} else {
-			formData.tags = [...formData.tags, tag.en ?? tag.slug];
-		}
-	}
-
-	// Handle form submission
-	async function handleSubmit() {
-		isSubmitting = true;
-		errorMessage = '';
-		successMessage = '';
-
-		try {
-			const startDate = new Date(formData.startAt);
-			let endDate: Date | undefined = undefined;
-			if (formData.endAt) {
-				endDate = new Date(formData.endAt);
-			}
-
-			await updateEvent({
-				event: {
-					id: event.id,
-					name: formData.name,
-					startAt: startDate,
-					endAt: endDate,
-					price: formData.price,
-					listed: formData.listed,
-					soldOut: formData.soldOut,
-					address: formData.address,
-					description: formData.description,
-					host: formData.host,
-					hostLink: formData.hostLink,
-					sourceUrl: formData.sourceUrl,
-					tags: formData.tags
-				},
-				hostSecret: page.url.searchParams.get('hostSecret') ?? ''
-			});
-
-			successMessage = 'Event updated successfully!';
-
-			goto(routes.eventDetails(event.slug));
-		} catch (error) {
-			console.error('Error updating event:', error);
-			if (isHttpError(error)) {
-				errorMessage = 'Error updating event: (' + error.status + ') ' + error.body.message;
-			} else {
-				errorMessage =
-					error instanceof Error
-						? error.message
-						: 'Failed to update event. ' + JSON.stringify(error);
-			}
-		} finally {
-			isSubmitting = false;
-		}
-	}
-
-	// Handle cancel
 	function handleCancel() {
-		goto(`/${event.slug}`);
+		goto(routes.eventDetails(event.slug));
 	}
 
 	async function handleDeleteEvent() {
@@ -131,12 +39,10 @@
 				eventId: event.id,
 				hostSecret: page.url.searchParams.get('hostSecret') ?? ''
 			});
-			alert(`Event wurde gelöscht`);
-
 			goto(routes.eventList());
 		} catch (error) {
-			console.error('Failed to delete event:', error);
-			alert('Failed to delete event. Please try again.');
+			console.error(`Failed to delete event:`, error);
+			alert(`Failed to delete event. Please try again.`);
 		} finally {
 			isDeletingEvent = false;
 		}
@@ -144,11 +50,12 @@
 </script>
 
 <div class="container mx-auto max-w-4xl sm:p-4">
-	<!-- Breadcrumb Navigation -->
 	<div class="breadcrumbs px-4 text-sm sm:mb-4 sm:px-0">
 		<ul>
 			<li>
-				<a href={routes.eventList()}> <img src="/logo.svg" alt="Logo" class="h-8 min-w-6" /> </a>
+				<a href={routes.eventList()}>
+					<img src="/logo.svg" alt="Logo" class="h-8 min-w-6" />
+				</a>
 			</li>
 			<li><a href={routes.eventDetails(event.slug)}>{event.name}</a></li>
 			<li>Bearbeiten</li>
@@ -156,173 +63,58 @@
 	</div>
 
 	<div class="sm:rounded-box bg-base-100 shadow">
-		<div class="card-body">
-			<h1 class="card-title mb-6 text-2xl">Event bearbeiten</h1>
+		<div class="card-body gap-6">
+			<h1 class="card-title text-2xl">Event bearbeiten</h1>
 
-			<form
-				onsubmit={(e) => {
-					e.preventDefault();
-					handleSubmit();
-				}}
-				class="space-y-6"
-			>
-				<!-- Basic Information -->
-				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">Event Name *</legend>
-						<input
-							type="text"
-							bind:value={formData.name}
-							required
-							class="input w-full"
-							placeholder="Event Name"
-						/>
-					</fieldset>
+			<EventForm
+				remoteForm={updateEvent}
+				preflightSchema={updateEventSchema}
+				initialExistingImageUrls={data.editFormValues.existingImageUrls}
+			/>
 
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">Preis</legend>
-						<input
-							type="text"
-							bind:value={formData.price}
-							class="input w-full"
-							placeholder="z.B. 50€ oder Kostenlos"
-						/>
-					</fieldset>
+			<div class="flex flex-col-reverse sm:flex-row gap-6">
 
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">Start Zeit *</legend>
-						<input
-							type="datetime-local"
-							bind:value={formData.startAt}
-							required
-							class="input w-full"
-						/>
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">End Zeit</legend>
-						<input type="datetime-local" bind:value={formData.endAt} class="input w-full" />
-					</fieldset>
-				</div>
-
-				<!-- Address -->
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">Adresse *</legend>
-					<textarea
-						bind:value={formData.address}
-						required
-						class="textarea w-full"
-						rows="2"
-						placeholder="Adresse (eine Zeile pro Adresszeile)"
-					></textarea>
-				</fieldset>
-
-				<!-- Description -->
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">Beschreibung</legend>
-					<EditorJs bind:value={formData.description} />
-				</fieldset>
-
-				<!-- Host Information -->
-				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">Veranstalter Name</legend>
-						<input
-							type="text"
-							bind:value={formData.host}
-							class="input w-full"
-							placeholder="Veranstalter Name"
-						/>
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">Veranstalter Link</legend>
-						<input
-							type="url"
-							bind:value={formData.hostLink}
-							class="input w-full"
-							placeholder="https://..."
-						/>
-						<p class="label">z.B. Email, Website, Telegram Link, etc.</p>
-					</fieldset>
-				</div>
-
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">Tags</legend>
-					<div class="mb-1 flex flex-wrap gap-2">
-						{#each formData.tags as tag}
-							<div class="badge badge-ghost break-keep">
-								{allTags.find((t) => t[localeStore.locale] === tag)?.[localeStore.locale] ?? tag}
-								<i
-									class="icon-[ph--x] size-4 cursor-pointer"
-									title="Entfernen"
-									onclick={() => toggleTag(allTags.find((t) => t[localeStore.locale] === tag))}
-								/>
-							</div>
-						{/each}
-					</div>
-					<TagsInput bind:selectedTags={formData.tags} />
-				</fieldset>
-
-				<!-- Options -->
-				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-					<label class="label text-black">
-						<input type="checkbox" bind:checked={formData.soldOut} class="checkbox" />
-						Ausgebucht
-					</label>
-
-					<label class="label text-black">
-						<input type="checkbox" bind:checked={formData.listed} class="checkbox" />
-						In Suche anzeigen
-					</label>
-				</div>
-
-				<!-- Form Actions -->
-				<div class="flex justify-between gap-4 pt-6">
+				<div class="flex flex-row sm:flex-row gap-6 w-full">
 					<button
 						onclick={handleDeleteEvent}
-						disabled={isDeletingEvent}
+						disabled={isDeletingEvent || isSubmitting}
 						type="button"
-						class="btn btn-warning"
+						class="btn btn-warning disabled:bg-warning disabled:text-warning-content"
 					>
 						{#if isDeletingEvent}
 							<span class="loading loading-spinner loading-sm"></span>
-							<span class="hidden sm:inline">Lösche...</span>
+							<span class="">Lösche...</span>
 						{:else}
 							<i class="icon-[ph--trash] mr-1 size-4"></i>
-							<span class="hidden sm:inline">Event löschen</span>
+							<span class="">Event löschen</span>
 						{/if}
 					</button>
-
-					<div class="flex flex-wrap justify-end gap-4">
-						<button type="button" onclick={handleCancel} class="btn" disabled={isSubmitting}>
-							Abbrechen
-						</button>
-						<button type="submit" class="btn btn-primary" disabled={isSubmitting}>
-							{#if isSubmitting}
-								<span class="loading loading-spinner loading-sm"></span>
-								Speichern...
-							{:else}
-								Speichern
-							{/if}
-						</button>
-					</div>
+	
+					<div class="grow"></div>
+	
+					<button 
+						type="button" 
+						onclick={handleCancel} 
+						class="btn disabled:bg-base-300 disabled:text-base-content" 
+						disabled={isSubmitting || isDeletingEvent}>
+						Abbrechen
+					</button>
 				</div>
-			</form>
 
-			{#if errorMessage}
-				<div class="alert alert-error mb-4">
-					<i class="icon-[ph--warning] size-6"></i>
-					<span>{errorMessage}</span>
-				</div>
-			{/if}
-
-			{#if successMessage}
-				<div class="alert alert-success mb-4">
-					<i class="icon-[ph--check-circle] size-6"></i>
-					<span>{successMessage}</span>
-				</div>
-			{/if}
+				<button 
+					type="submit" 
+					class="btn btn-primary disabled:bg-primary disabled:text-primary-content" 
+					form="event-form" 
+					disabled={isSubmitting || isDeletingEvent}
+					>
+					{#if !isSubmitting}
+						Speichern
+					{:else}
+						<span class="loading loading-spinner loading-sm"></span>
+						Speichere...
+					{/if}
+				</button>
+			</div>
 		</div>
 	</div>
 </div>

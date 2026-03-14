@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { routes } from '$lib/routes';
 	import { Dialog } from '$lib/components/dialog';
 	import LoginDialog from './LoginDialog.svelte';
 	import { createSupabaseBrowserClient } from '$lib/supabase';
 	import ShareButton from './ShareButton.svelte';
 	import { isPwa } from '$lib/isPwa.svelte';
 	import { estimateEventCount } from '$lib/events.remote';
+	import { resolve } from '$app/paths';
 
 	interface Props {
 		children?: any;
@@ -76,13 +76,13 @@
 				</p>
 
 				<div class="flex flex-wrap gap-4">
-					<a href={routes.newEvent()} class="btn btn-primary w-fit">
+					<a href={resolve('/new-explained')} class="btn btn-primary w-fit">
 						<i class="icon-[ph--plus] size-5"></i>
 						Neuen Event erstellen
 					</a>
 
 					{#if userId}
-						<a href={routes.favorites()} class="btn w-fit">
+						<a href={resolve('/profile/favorites')} class="btn w-fit">
 							<i class="icon-[ph--heart] size-5"></i>
 							Favoriten
 						</a>

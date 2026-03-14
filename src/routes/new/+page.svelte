@@ -1,76 +1,75 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
-import { routes } from '$lib/routes';
-	import type { PageProps } from './$types';
+	import LoginDialog from '$lib/components/LoginDialog.svelte';
+	import EventForm from '$lib/components/EventForm.svelte';
+	import { createEvent } from '$lib/events.remote';
+	import { createEventSchema } from '$lib/events.remote.common';
+	import { routes } from '$lib/routes';
 
-	let { data }: PageProps = $props();
+	const userId = $derived(page.data.userId as string | undefined);
+	let loginDialogOpen = $state(false);
+
+	onMount(() => {
+		if (userId) return;
+		loginDialogOpen = true;
+	});
+
 </script>
 
-<PageHeader backRoute="/" />
+<PageHeader backRoute={routes.root()} />
 
-<div class=" flex items-center justify-center">
-	<div>
-		<div class="card bg-base-100 sm:rounded-box w-full max-w-2xl rounded-none">
-			<div class="card-body gap-4">
+<div class="mx-auto w-full max-w-3xl px-0 pb-10 sm:px-4">
+	<div class="card bg-base-100 sm:rounded-box w-full rounded-none">
+		<div class="card-body gap-6 p-4 sm:p-6">
+			<div class="flex items-start justify-between gap-3">
 				<div>
 					<h1 class="text-2xl font-bold">Event erstellen</h1>
 				</div>
-
-				<div class="flex flex-col gap-4">
-					<!-- @wc-context: split --> 
-					Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:
-
-					<div class="card bg-info/15">
-						<div class="card-body">
-							<h3 class="card-title flex gap-2.5">
-								<i class="icon-[ph--telegram-logo] size-7"></i>
-								Telegram-Bot
-							</h3>
-
-							<div>
-								Sende deinen Event an meinen Telegram-Bot.
-								<br /><b> Achtung:</b>
-								Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!
-							</div>
-
-							<div class="card-actions">
-								<a
-									href="https://t.me/blissbase_bot"
-									target="_blank"
-									rel="noopener noreferrer"
-									class="btn btn-info bg-info/70 hover:bg-info"
-									>Event an Telegram-Bot senden
-									<i class="icon-[ph--arrow-right] size-5"></i>
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<div class="card bg-accent/30">
-						<div class="card-body">
-							<h3 class="card-title flex gap-2.5">
-								<i class="icon-[ph--book-open] size-7"></i>
-								Event Quellen
-							</h3>
-							Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus
-							diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen.
-
-							<div class="card-actions">
-								<a href={routes.sources()} class="btn btn-accent"
-									>Event Quellen anzeigen <i class="icon-[ph--arrow-right] size-5"></i></a
-								>
-							</div>
-						</div>
-					</div>
-				</div>
 			</div>
-		</div>
 
-		<div class="flex justify-center p-4">
-			<a href="/" class="btn-sm btn">
-				<i class="icon-[ph--arrow-left] size-5"></i>
-				Zurück
-			</a>
+			{#if !userId}
+				<div class="alert">
+					<i class="icon-[ph--user] size-5"></i>
+					<span>Bitte melde dich an, um einen Event zu erstellen.</span>
+				</div>
+				<div class="flex flex-wrap gap-3">
+					<button class="btn btn-primary" onclick={() => (loginDialogOpen = true)}>Anmelden</button>
+					<a href={resolve('/new-explained')} class="btn">Andere Optionen</a>
+				</div>
+			{:else}
+				<EventForm
+					remoteForm={createEvent}
+					preflightSchema={createEventSchema}
+				/>
+
+				<div class="flex flex-col-reverse sm:flex-row gap-6 justify-end">
+					<button 
+						type="button" 
+						onclick={() => window.history.back()} 
+						class="btn disabled:bg-base-300 disabled:text-base-content" 
+						disabled={createEvent.pending > 0}>
+						Abbrechen
+					</button>
+
+					<button 
+						type="submit" 
+						class="btn btn-primary disabled:bg-primary disabled:text-primary-content" 
+						form="event-form" 
+						disabled={createEvent.pending > 0}>
+						{#if createEvent.pending === 0}
+							Speichern
+						{:else}
+							<span class="loading loading-spinner loading-sm"></span>
+							Speichere...
+						{/if}
+					</button>
+				</div>
+			{/if}
 		</div>
 	</div>
 </div>
+
+<LoginDialog bind:open={loginDialogOpen} />

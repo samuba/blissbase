@@ -8,11 +8,12 @@
 		contentClass?: string;
 		contentProps?: Popover.ContentProps;
 		triggerClass?: string;
+		arrowProps?: Popover.ArrowProps;
 		open?: boolean;
 		onOpenChange?: (open: boolean) => void;
 	};
 
-	let { trigger, content, contentClass, contentProps, triggerClass, open = $bindable(false), onOpenChange }: Props = $props();
+	let { trigger, content, contentClass, contentProps, triggerClass, open = $bindable(false), onOpenChange, arrowProps }: Props = $props();
 </script>
 
 <Popover.Root bind:open={open} onOpenChange={onOpenChange}>
@@ -37,7 +38,7 @@
 	>
 		{@render content()}
 		<Popover.Close />
-		<Popover.Arrow />
+		<Popover.Arrow {...arrowProps} />
 	</Popover.Content>
 </Popover.Root>
 

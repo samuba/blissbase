@@ -3,7 +3,7 @@
 	import { routes } from '$lib/routes';
 </script>
 
-<PageHeader backRoute={routes.newEvent()} />
+<PageHeader backRoute={routes.newEventExplained()} />
 
 <div class=" flex items-center justify-center">
 	<div>
@@ -55,7 +55,7 @@
 		</div>
 
 		<div class="flex justify-center p-4">
-			<a href={routes.newEvent()} class="btn-sm btn">
+			<a href={routes.newEventExplained()} class="btn-sm btn">
 				<i class="icon-[ph--arrow-left] size-5"></i>
 				Zurück
 			</a>

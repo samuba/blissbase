@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { db, s } from '$lib/server/db';
+import { db, eq, s } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { E2E_TEST } from '$env/static/private';
@@ -56,6 +56,13 @@ export const POST: RequestHandler = async ({ request }) => {
 			case 'clearAllEvents':
 				await db.delete(s.events);
 				return json({ success: true });
+
+			case 'getEventById': {
+				const event = await db.query.events.findFirst({
+					where: eq(s.events.id, data.id)
+				});
+				return json({ success: true, event });
+			}
 
 			default:
 				return json({ error: 'Unknown action' }, { status: 400 });

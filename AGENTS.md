@@ -52,8 +52,13 @@ Each scrape script should get the entire html and pass it down to the individual
 Always use early returns, early continues and early breaks. 
 Always use backticks for strings except for: imports, nested strings, console.log, console.error.
 Always use string interpolation when possible instead of concatenating strings. Do this: `${foo} ${bar}` Instead of this: foo + " " + bar
-Always use an object named 'args' instead of individual arguments for functions when the function exceeds 2 arguments
+When a function has 3 parameters or more use an object named 'args' instead of individual parameters.
 Always place type definitions at the bottom of the file unless the type is only used inside a function/context then leave it there.  
 Never type a variable if typescript can infer the type correctly on its own.
 Always check if an array is defined and has values like this: `arr?.length` not `arr && arr.length > 0`
 Always create short, descriptive doc comments for function that include at least one example.
+
+## i18n
+Wuchale is used for i18n.
+Never write *.po files inside src/locales.
+Use german Umlaute (ä,ö,ü etc) in all german texts.

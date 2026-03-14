@@ -33,7 +33,10 @@ export const events = pgTable('events', {
     telegramRoomIds: text().array(),
     hostSecret: text(),
     attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
+    authorId: uuid().references(() => profiles.id, { onDelete: 'cascade' }),
 });
+
+export type SelectEvent = typeof events.$inferSelect;
 
 export const eventsRelations = relations(events, ({ many }) => ({
     eventTags: many(eventTags),

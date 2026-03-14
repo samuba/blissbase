@@ -37,6 +37,8 @@ msgstr "Loading Blissbase"
 msgid "Lade..."
 msgstr "Lade..."
 
+#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventForm.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/sources/+page.svelte
@@ -115,6 +117,7 @@ msgstr "Anmelden <0/>"
 
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/EventDetails.svelte
+#: src/routes/new/+page.svelte
 msgid "Anmelden"
 msgstr "Anmelden"
 
@@ -126,8 +129,8 @@ msgstr "Preise"
 msgid "Original Message"
 msgstr "Original Message"
 
+#: src/lib/components/EventForm.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/edit/[id]/+page.svelte
 msgid "Tags"
 msgstr "Tags"
 
@@ -285,10 +288,6 @@ msgstr "Are you sure you want to delete this event?"
 msgid "Delete"
 msgstr "Delete"
 
-#: src/lib/components/EditorJs.svelte
-msgid "Beschreibung deines Events"
-msgstr "Beschreibung deines Events"
-
 #: src/lib/components/EventCard.svelte
 msgid "Vorbei"
 msgstr "Vorbei"
@@ -363,19 +362,10 @@ msgid "<0/> Login-Link senden"
 msgstr "<0/> Login-Link senden"
 
 #: src/lib/components/PageHeader.svelte
-#: src/routes/new/+page.svelte
 #: src/routes/profile/favorites/+page.svelte
 #: src/routes/sources/+page.svelte
 msgid "<0/> Zurück"
 msgstr "<0/> Zurück"
-
-#: src/lib/components/Select.svelte
-msgid "up"
-msgstr "up"
-
-#: src/lib/components/Select.svelte
-msgid "down"
-msgstr "down"
 
 #. placeholder {0}: selectedHueRotation
 #. placeholder {1}: rotationAngle
@@ -415,11 +405,6 @@ msgstr "Mac"
 #: src/lib/components/ShareButton.svelte
 msgid "Link kopiert"
 msgstr "Link kopiert"
-
-#: src/lib/components/TagsInput.svelte
-#: src/lib/components/TagsInput.svelte
-msgid "Suche nach einem Tag"
-msgstr "Suche nach einem Tag"
 
 #: src/lib/components/TagsInput.svelte
 msgid "Keine Tags gefunden"
@@ -498,62 +483,17 @@ msgstr "Bearbeiten"
 msgid "Event bearbeiten"
 msgstr "Event bearbeiten"
 
-#: src/routes/edit/[id]/+page.svelte
-msgid "Event Name *"
-msgstr "Event Name *"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Event Name"
-msgstr "Event Name"
-
-#: src/routes/edit/[id]/+page.svelte
+#: src/lib/components/EventForm.svelte
 msgid "Preis"
 msgstr "Preis"
 
-#: src/routes/edit/[id]/+page.svelte
-msgid "Start Zeit *"
-msgstr "Start Zeit *"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "End Zeit"
-msgstr "End Zeit"
-
-#: src/routes/edit/[id]/+page.svelte
+#: src/lib/components/EventForm.svelte
 msgid "Adresse *"
 msgstr "Adresse *"
 
-#: src/routes/edit/[id]/+page.svelte
-msgid "Adresse (eine Zeile pro Adresszeile)"
-msgstr "Adresse (eine Zeile pro Adresszeile)"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Beschreibung"
-msgstr "Beschreibung"
-
-#: src/routes/edit/[id]/+page.svelte
-#: src/routes/edit/[id]/+page.svelte
-msgid "Veranstalter Name"
-msgstr "Veranstalter Name"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Veranstalter Link"
-msgstr "Veranstalter Link"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "z.B. Email, Website, Telegram Link, etc."
-msgstr "z.B. Email, Website, Telegram Link, etc."
-
-#: src/routes/edit/[id]/+page.svelte
+#: src/lib/components/TagsInput.svelte
 msgid "Entfernen"
 msgstr "Entfernen"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "<0/> Ausgebucht"
-msgstr "<0/> Ausgebucht"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "<0/> In Suche anzeigen"
-msgstr "<0/> In Suche anzeigen"
 
 #: src/routes/edit/[id]/+page.svelte
 msgid "Lösche..."
@@ -564,14 +504,12 @@ msgid "Event löschen"
 msgstr "Event löschen"
 
 #: src/routes/edit/[id]/+page.svelte
+#: src/routes/new/+page.svelte
 msgid "Abbrechen"
 msgstr "Abbrechen"
 
 #: src/routes/edit/[id]/+page.svelte
-msgid "<0/> Speichern..."
-msgstr "<0/> Speichern..."
-
-#: src/routes/edit/[id]/+page.svelte
+#: src/routes/new/+page.svelte
 msgid "Speichern"
 msgstr "Speichern"
 
@@ -639,35 +577,6 @@ msgstr "App link teilen"
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
 msgstr "Stadt / PLZ"
-
-#: src/routes/new/+page.svelte
-msgctxt "split"
-msgid "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
-msgstr "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
-
-#: src/routes/new/+page.svelte
-msgctxt "split"
-msgid "<0/> Telegram-Bot"
-msgstr "<0/> Telegram-Bot"
-
-#: src/routes/new/+page.svelte
-msgctxt "split"
-msgid "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!"
-msgstr "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!"
-
-#: src/routes/new/+page.svelte
-msgctxt "split"
-msgid "Event an Telegram-Bot senden <0/>"
-msgstr "Event an Telegram-Bot senden <0/>"
-
-#: src/routes/new/+page.svelte
-msgctxt "split"
-msgid ""
-"<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
-"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
-msgstr ""
-"<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
-"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
 
 #: src/lib/components/TagSelection.svelte
 msgid "<0/> Suchen"
@@ -746,22 +655,6 @@ msgstr "Unordered"
 #: src/lib/components/EditorJs.svelte
 msgid "Ordered"
 msgstr "Ordered"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Event updated successfully!"
-msgstr "Event updated successfully!"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Error updating event: ("
-msgstr "Error updating event: ("
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Failed to update event."
-msgstr "Failed to update event."
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Event wurde gelöscht"
-msgstr "Event wurde gelöscht"
 
 #: src/routes/edit/[id]/+page.svelte
 msgid "Failed to delete event. Please try again."
@@ -851,15 +744,168 @@ msgstr "Anmeldung über diese Kanäle:"
 msgid "Hallo, ich habe deinen Event '{0}' am {1} auf Blissbase.app gefunden und möchte gerne teilnehmen."
 msgstr "Hallo, ich habe deinen Event '{0}' am {1} auf Blissbase.app gefunden und möchte gerne teilnehmen."
 
-#~ msgid "Zur Startseite"
-#~ msgstr "Zur Startseite"
-
-#~ msgid "Zurück zur Startseite"
-#~ msgstr "Zurück zur Startseite"
-
-#~ msgid "<0/> Zurück zur Startseite"
-#~ msgstr "<0/> Zurück zur Startseite"
-
 #: src/routes/+error.svelte
 msgid "<0/> Zur Startseite"
 msgstr "<0/> Zur Startseite"
+
+#: src/routes/new/+page.svelte
+msgid "Andere Optionen"
+msgstr "Andere Optionen"
+
+#: src/lib/components/EventForm.svelte
+msgid "Name *"
+msgstr "Name *"
+
+#: src/lib/components/EventForm.svelte
+msgid "Beschreibung *"
+msgstr "Beschreibung *"
+
+#: src/lib/components/EventForm.svelte
+msgid "Online Event"
+msgstr "Online Event"
+
+#: src/lib/components/EventForm.svelte
+msgid "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+msgstr "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+
+#: src/routes/new-explained/+page.svelte
+msgid "How do you want to create your event?"
+msgstr "How do you want to create your event?"
+
+#: src/routes/new-explained/+page.svelte
+msgid "Choose the option that fits your workflow."
+msgstr "Choose the option that fits your workflow."
+
+#: src/routes/new-explained/+page.svelte
+msgid "<0/> Telegram bot"
+msgstr "<0/> Telegram bot"
+
+#: src/routes/new-explained/+page.svelte
+msgid "Send your event to the bot in one message including description, location, date and image."
+msgstr "Send your event to the bot in one message including description, location, date and image."
+
+#: src/routes/new-explained/+page.svelte
+msgid "Send to Telegram bot <0/>"
+msgstr "Send to Telegram bot <0/>"
+
+#: src/routes/new-explained/+page.svelte
+msgid "<0/> Event sources"
+msgstr "<0/> Event sources"
+
+#: src/routes/new-explained/+page.svelte
+msgid ""
+"Add your event to one of the tracked sources. It usually appears on Blissbase within half a\n"
+"day."
+msgstr ""
+"Add your event to one of the tracked sources. It usually appears on Blissbase within half a\n"
+"day."
+
+#: src/routes/new-explained/+page.svelte
+msgid "Show event sources <0/>"
+msgstr "Show event sources <0/>"
+
+#: src/routes/new/+page.svelte
+msgid "Bitte melde dich an, um einen Event zu erstellen."
+msgstr "Bitte melde dich an, um einen Event zu erstellen."
+
+#: src/lib/components/TagsInput.svelte
+msgid "ArrowDown"
+msgstr "ArrowDown"
+
+#: src/lib/components/TagsInput.svelte
+msgid "ArrowUp"
+msgstr "ArrowUp"
+
+#: src/lib/components/EventForm.svelte
+msgid "Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Telegram, etc."
+msgstr "Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Telegram, etc."
+
+#: src/lib/components/EventForm.svelte
+msgid "Anmeldung über"
+msgstr "Anmeldung über"
+
+#: src/lib/components/EventForm.svelte
+msgid "Anmelde Methode auswählen"
+msgstr "Anmelde Methode auswählen"
+
+#. placeholder {0}: preview.name
+#: src/lib/components/ImageInput.svelte
+msgid "Bild {0} entfernen"
+msgstr "Bild {0} entfernen"
+
+#: src/lib/components/TagsInput.svelte
+#: src/lib/components/TagsInput.svelte
+msgid "Suche nach Tags"
+msgstr "Suche nach Tags"
+
+#: src/lib/components/EventForm.svelte
+msgid "Startzeit *"
+msgstr "Startzeit *"
+
+#: src/lib/components/EventForm.svelte
+msgid "Endzeit"
+msgstr "Endzeit"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Bilder auswählen <0>oder ablegen</0>"
+msgstr "Bilder auswählen <0>oder ablegen</0>"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Cover Bild"
+msgstr "Cover Bild"
+
+#. placeholder {0}: i + 1
+#: src/lib/components/ImageInput.svelte
+msgid "Bild #{0}"
+msgstr "Bild #{0}"
+
+#. placeholder {0}: preview.name
+#: src/lib/components/ImageInput.svelte
+msgid "Vollbildansicht von {0} öffnen"
+msgstr "Vollbildansicht von {0} öffnen"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Vollbildansicht schließen"
+msgstr "Vollbildansicht schließen"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Vollbildansicht"
+msgstr "Vollbildansicht"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Ausgewählte Bilder sortieren"
+msgstr "Ausgewählte Bilder sortieren"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
+msgstr "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
+
+#: src/lib/components/ImageInput.svelte
+msgid "Nach links"
+msgstr "Nach links"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Nach rechts"
+msgstr "Nach rechts"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Bilder können geordnet, entfernt und mit neuen Uploads ergänzt werden."
+msgstr "Bilder können geordnet, entfernt und mit neuen Uploads ergänzt werden."
+
+#. placeholder {0}: preview.name
+#: src/lib/components/ImageInput.svelte
+msgid "Vorschau für {0}"
+msgstr "Vorschau für {0}"
+
+#: src/routes/edit/[id]/+page.svelte
+#: src/routes/new/+page.svelte
+msgid "<0/> Speichere..."
+msgstr "<0/> Speichere..."
+
+#: src/lib/components/ImageInput.svelte
+msgid "Bilder auswählen oder ablegen"
+msgstr "Bilder auswählen oder ablegen"
+
+#: src/lib/components/EventForm.svelte
+msgid "Event <0>nicht</0> in Suche anzeigen"
+msgstr "Event <0>nicht</0> in Suche anzeigen"

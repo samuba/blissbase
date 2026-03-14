@@ -2,11 +2,17 @@
 	import { onMount } from 'svelte';
 	import type EditorJS from '@editorjs/editorjs';
 	import { debounce, sleep } from '$lib/common';
+	import type { RemoteFormField } from '@sveltejs/kit';
+	import { localeStore } from '$lib/../locales/localeStore.svelte';
 
-	let { value = $bindable('Beschreibung deines Events') } = $props();
+	let { field }: {
+		field: RemoteFormField<string>;
+	} = $props();
 
 	let editor: EditorJS | undefined = $state(undefined);
 	let editorEl: HTMLElement | undefined = $state(undefined);
+
+	let editorValue = $derived(field.value() || '');
 
 	onMount(async () => {
 		try {
@@ -15,7 +21,6 @@
 			const { default: List } = await import('@editorjs/list');
 			const { default: Marker } = await import('@editorjs/marker');
 			const { default: EditorJsHtml } = await import('editorjs-html');
-
 			class CustomList extends List {
 				override renderSettings() {
 					return super.renderSettings().filter(
@@ -51,16 +56,12 @@
 							defaultStyle: 'unordered'
 						},
 						toolbox: [
-							{
-								data: { style: 'ordered' }
-							},
-							{
-								data: { style: 'unordered' }
-							}
+							{ data: { style: 'unordered' } },
+							{ data: { style: 'ordered' } }
 						]
-					}
+					},
 				},
-				i18n: {
+				i18n: localeStore.locale === 'de' ? {
 					messages: {
 						ui: {
 							blockTunes: {
@@ -137,23 +138,22 @@
 							}
 						}
 					}
-				},
+				} : undefined,
 				onReady: async () => {
 					// removed br tags: https://github.com/codex-team/editor.js/issues/2800
-					await editor?.blocks.renderFromHTML(value.replaceAll('<br>', '##br##'));
+					await editor?.blocks.renderFromHTML(editorValue.replaceAll('<br>', '##br##'));
 					await sleep(300);
-					const temp = await editor?.save()!;
+					const temp = await editor!.save();
 					for (const block of temp.blocks) {
 						if (block.type === 'paragraph') {
 							block.data.text = block.data.text.replaceAll('##br##', '<br>');
 						}
 					}
 					editor?.blocks.render(temp);
-					// todo: replace br tags with <brrr> tags, render html, save as json, replace <brrr> tags with <br> tags in json, render json
 				},
 				onChange: debounce(async () => {
-					console.log(await editor?.save());
-					value = editorJsHtml.parse(await editor?.save()!);
+					const blocks = await editor!.save();
+					editorValue = editorJsHtml.parse(blocks);
 				}, 1000)
 			});
 		} catch (error) {
@@ -163,7 +163,9 @@
 	});
 </script>
 
-<div bind:this={editorEl} class="prose-sm textarea z-10 w-full pl-4 md:pl-0"></div>
+<div bind:this={editorEl} class="prose-sm textarea sm:pl-0 z-10 w-full"></div>
+
+<textarea {...field.as('text')} class="hidden peer" aria-hidden="true" value={editorValue}></textarea>
 
 <style>
 	@reference '../../app.css';

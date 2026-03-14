@@ -62,7 +62,7 @@ export async function uploadImage(buffer: Buffer, eventSlug: string, phash: stri
 
 /**
  * Deletes multiple images from R2 storage.
- * @param objectKeys - Array of image keys to delete
+ * @param objectKeys - Array of image keys to delete or URLs
  * @param creds - R2 credentials
  * @returns Promise with deletion results
  */
@@ -71,7 +71,14 @@ export async function deleteImages(objectKeys: string[], creds: S3Creds) {
         console.log(`No public IDs provided for deletion`);
         return [];
     }
-    console.log(`Deleting ${objectKeys.length} images from R2`);
+
+    objectKeys = objectKeys.map(x => {
+        if (x.startsWith("https://assets.blissbase.app")) {
+            return x.split("https://assets.blissbase.app/").pop()?.trim() || "";
+        }
+        return x;
+    });
+    console.log(`Deleting from R2: ${objectKeys}`);
 
     try {
         const s3 = new S3Client(creds);

@@ -11,6 +11,7 @@ import * as js from './locales/js.loader.server.js'
 import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
 import { locales } from './locales/data.js'
 import { localeStore } from './locales/localeStore.svelte.js';
+import { E2E_TEST } from '$env/static/private';
 
 // load at server startup
 loadLocales(main.key, main.loadIDs, main.loadCatalog, locales)
@@ -92,6 +93,18 @@ const supabaseAuth: Handle = async ({ event, resolve }) => {
     event.locals.jwtClaims = data?.claims as BlissabaseClaims;
     event.locals.userId = event.locals.jwtClaims?.sub;
 
+    if (E2E_TEST === `true` && dev) {
+        const e2eUserId = event.cookies.get(`e2e_user_id`);
+        const e2eUserEmail = event.cookies.get(`e2e_user_email`);
+        if (e2eUserId && e2eUserEmail) {
+            event.locals.userId = e2eUserId;
+            event.locals.jwtClaims = buildE2EClaims({
+                userId: e2eUserId,
+                email: e2eUserEmail
+            });
+        }
+    }
+
     return resolve(event, {
         filterSerializedResponseHeaders(name) {
             /**
@@ -125,4 +138,38 @@ export const handle: Handle = async ({ event, resolve }) => {
     } finally {
         if (!dev) waitUntil(posthog.shutdown())
     }
+}
+
+/**
+ * Creates a minimal JWT claims object for E2E auth bypass.
+ *
+ * @example
+ * buildE2EClaims({ userId: `e2e-user`, email: `e2e@example.com` })
+ */
+function buildE2EClaims(args: { userId: string; email: string }): BlissabaseClaims {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    return {
+        iss: `https://e2e.local`,
+        sub: args.userId,
+        aud: `authenticated`,
+        exp: nowSeconds + 60 * 60,
+        iat: nowSeconds,
+        email: args.email,
+        phone: ``,
+        app_metadata: {
+            provider: `email`,
+            providers: [`email`]
+        },
+        user_metadata: {
+            email: args.email,
+            email_verified: true,
+            phone_verified: false,
+            sub: args.userId
+        },
+        role: `authenticated`,
+        aal: `aal1`,
+        amr: [{ method: `email`, timestamp: nowSeconds }],
+        session_id: `e2e-session`,
+        is_anonymous: false
+    };
 }
