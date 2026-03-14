@@ -4,7 +4,7 @@
 	import { createSupabaseBrowserClient } from '$lib/supabase';
 	import ShareButton from './ShareButton.svelte';
 	import { isPwa } from '$lib/isPwa.svelte';
-	import { estimateEventCount } from '$lib/events.remote';
+	import { estimateEventCount } from '$lib/eventCount.remote';
 	import { resolve } from '$app/paths';
 
 	interface Props {

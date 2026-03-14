@@ -21,7 +21,7 @@
 		preflightSchema,
 		initialExistingImageUrls = []
 	}: {
-		remoteForm: RemoteForm<EventFormInput, unknown>;
+		remoteForm: RemoteForm<EventFormInput & Partial<v.InferInput<UpdateEventSchema>>, unknown>;
 		preflightSchema: CreateEventSchema | UpdateEventSchema;
 		initialExistingImageUrls?: string[];
 	} = $props();

@@ -5,7 +5,7 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
 	import EventForm from '$lib/components/EventForm.svelte';
-	import { createEvent } from '$lib/events.remote';
+	import { createEvent } from '$lib/eventMutations.remote';
 	import { createEventSchema } from '$lib/events.remote.common';
 	import { routes } from '$lib/routes';
 

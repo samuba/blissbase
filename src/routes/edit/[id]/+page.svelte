@@ -1,27 +1,32 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { deleteEvent, updateEvent } from '$lib/events.remote';
+	import { deleteEvent } from '$lib/eventDelete.remote';
+	import { updateEvent } from '$lib/eventMutations.remote';
 	import EventForm from '$lib/components/EventForm.svelte';
-	import { updateEventSchema } from '$lib/events.remote.common';
-	import { routes } from '$lib/routes';
+	import { type CreateEventSchema, type UpdateEventSchema, updateEventSchema } from '$lib/events.remote.common';
+	import type { RemoteForm } from '@sveltejs/kit';
 	import type { PageProps } from './$types';
+	import * as v from 'valibot';
 
 	let { data }: PageProps = $props();
 	let event = $derived(data.event);
+	const editFormValues = getInitialEditFormValues();
+	const editRemoteForm =
+		updateEvent as unknown as RemoteForm<EventFormInput & Partial<v.InferInput<UpdateEventSchema>>, unknown>;
 
 	let isDeletingEvent = $state(false);
 	let isSubmitting = $derived(!!updateEvent.pending);
-	let didInitializeForm = $state(false);
 
-	$effect(() => {
-		if (didInitializeForm) return;
-		updateEvent.fields.set(data.editFormValues);
-		didInitializeForm = true;
-	});
+	updateEvent.fields.set(editFormValues);
 
 	function handleCancel() {
-		goto(routes.eventDetails(event.slug));
+		goto(resolve('/[slug]', { slug: event.slug }));
+	}
+
+	function getInitialEditFormValues() {
+		return data.editFormValues;
 	}
 
 	async function handleDeleteEvent() {
@@ -39,7 +44,7 @@
 				eventId: event.id,
 				hostSecret: page.url.searchParams.get('hostSecret') ?? ''
 			});
-			goto(routes.eventList());
+			goto(resolve('/'));
 		} catch (error) {
 			console.error(`Failed to delete event:`, error);
 			alert(`Failed to delete event. Please try again.`);
@@ -47,17 +52,19 @@
 			isDeletingEvent = false;
 		}
 	}
+
+	type EventFormInput = v.InferInput<CreateEventSchema | UpdateEventSchema>;
 </script>
 
 <div class="container mx-auto max-w-4xl sm:p-4">
 	<div class="breadcrumbs px-4 text-sm sm:mb-4 sm:px-0">
 		<ul>
 			<li>
-				<a href={routes.eventList()}>
+				<a href={resolve('/')}>
 					<img src="/logo.svg" alt="Logo" class="h-8 min-w-6" />
 				</a>
 			</li>
-			<li><a href={routes.eventDetails(event.slug)}>{event.name}</a></li>
+			<li><a href={resolve('/[slug]', { slug: event.slug })}>{event.name}</a></li>
 			<li>Bearbeiten</li>
 		</ul>
 	</div>
@@ -67,9 +74,9 @@
 			<h1 class="card-title text-2xl">Event bearbeiten</h1>
 
 			<EventForm
-				remoteForm={updateEvent}
+				remoteForm={editRemoteForm}
 				preflightSchema={updateEventSchema}
-				initialExistingImageUrls={data.editFormValues.existingImageUrls}
+				initialExistingImageUrls={editFormValues.existingImageUrls}
 			/>
 
 			<div class="flex flex-col-reverse sm:flex-row gap-6">

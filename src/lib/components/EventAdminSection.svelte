@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { UiEvent } from '$lib/server/events';
 	import { getIsAdminSession } from '$lib/admin.remote';
-	import { deleteEvent } from '$lib/events.remote';
+	import { deleteEvent } from '$lib/eventDelete.remote';
 	import { resolve } from '$app/paths';
 
 	let { event }: { event: UiEvent } = $props();

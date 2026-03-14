@@ -1,10 +1,9 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js'
-import { getTableColumns, sql, SQL } from 'drizzle-orm';
+import { getTableColumns, sql, type SQL } from 'drizzle-orm';
 import postgres from 'postgres'
 import * as schema from './schema';
 import type { PgTable } from 'drizzle-orm/pg-core';
-import type { PGlite } from '@electric-sql/pglite';
 
 const casing = 'snake_case';
 
@@ -26,40 +25,16 @@ function createPostgresDrizzle() {
 	});
 };
 
-// Only used for E2E tests
+/**
+ * Lazily loads the PGlite-backed Drizzle client for E2E runs.
+ *
+ * @example
+ * await createPgliteDrizzle()
+ */
 async function createPgliteDrizzle() {
-	const { PGlite } = await import('@electric-sql/pglite');
-	const { drizzle: pgliteDrizzle } = await import('drizzle-orm/pglite');
-	const { cube } = await import('@electric-sql/pglite/contrib/cube');
-	const { earthdistance } = await import('@electric-sql/pglite/contrib/earthdistance');
-	const { pg_trgm } = await import('@electric-sql/pglite/contrib/pg_trgm');
-
-	const client = new PGlite({
-		extensions: { cube, earthdistance, pg_trgm }
-	});
-
-	await migratePglite(client);
-	console.log('E2E test database migrated');
-
-	return pgliteDrizzle(client, { 
-		schema, 
-		casing
-	});
-};
-
-async function migratePglite(client: PGlite) {
-	const { createRequire } = await import('node:module');
-	const require = createRequire(import.meta.url);
-	const { generateDrizzleJson, generateMigration } = require('drizzle-kit/api') as typeof import('drizzle-kit/api');
-
-	const prevJson = generateDrizzleJson({});
-	const curJson = generateDrizzleJson(schema, prevJson.id, undefined, 'snake_case');
-	const statements = await generateMigration(prevJson, curJson);
-
-	for (const statement of statements) {
-		await client.exec(statement);
-	}
-};
+	const { createPgliteDrizzle } = await import('./db.pglite');
+	return await createPgliteDrizzle();
+}
 
 /**
  * Builds a set of columns to update when using the `onConflictDoUpdate` method.
