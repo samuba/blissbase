@@ -11,6 +11,7 @@ const config = {
 		adapter: adapter({
 			// vercel does not support nodejs23.x
 			runtime: process.env.VERCEL ? 'nodejs24.x' : 'nodejs23.x',
+			split: false
 		}),
 		version: {
 			pollInterval: 60_000 * 1
