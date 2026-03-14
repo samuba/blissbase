@@ -3,6 +3,11 @@ import { db, s } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isAdminSession } from '$lib/server/admin';
 import { getEditEventInitialValues } from '$lib/events.remote.common';
+import type { Config } from '@sveltejs/adapter-vercel';
+
+export const config: Config = {
+	split: true
+};
 
 export async function load({ url, params: { id } }) {
     if (!id || isNaN(Number(id))) error(400, 'Invalid event ID');
