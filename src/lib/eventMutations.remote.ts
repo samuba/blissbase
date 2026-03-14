@@ -11,6 +11,7 @@ import { geocodeAddressCached } from '$lib/server/google';
 import type { SelectEvent } from '$lib/server/schema';
 import type { InsertEvent } from '$lib/types';
 import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import { resizeCoverImage } from '$lib/imageProcessing';
 
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
@@ -150,7 +151,6 @@ async function uploadImages(args: UploadImagesArgs) {
 	console.time(`uploadImages`);
 
 	const processedCreateEventImages = new Map<string, Promise<string>>();
-	const { resizeCoverImage } = await import('$lib/imageProcessing');
 	const imageUrls: string[] = [];
 
 	for (const file of args.files) {
