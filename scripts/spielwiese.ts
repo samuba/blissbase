@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { db, s } from '../src/lib/server/db';
+import { db, s } from '../src/lib/server/db.script.ts';
 import { eq } from 'drizzle-orm';
 import { allTags } from '../src/lib/tags';
 import { slugify } from '../src/lib/common';

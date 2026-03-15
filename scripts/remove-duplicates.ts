@@ -2,7 +2,7 @@ import { alias } from 'drizzle-orm/pg-core';
 import {
     db, s, sql, and, lt, eq, isNotNull, gte,
     inArray
-} from '../src/lib/server/db';
+} from '../src/lib/server/db.script.ts';
 import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts';
 import { calculateHammingDistance } from '../src/lib/imageProcessing';
 

@@ -28,7 +28,7 @@ import {
     REQUEST_DELAY_MS,
     cleanProseHtml
 } from './common.ts';
-import { geocodeAddressCached } from '../src/lib/server/google.ts';
+import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 export class WebsiteScraper implements WebsiteScraperInterface {
 
     async scrapeWebsite(): Promise<ScrapedEvent[]> {

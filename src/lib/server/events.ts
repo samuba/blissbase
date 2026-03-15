@@ -1,4 +1,4 @@
-import { buildConflictUpdateColumns, db, s } from '$lib/server/db';
+import { db, s } from '$lib/server/db';
 import {
 	asc,
 	count,
@@ -19,10 +19,11 @@ import {
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
 import type { InsertEvent } from '$lib/types';
-import { generateSlug, type Modify } from '$lib/common';
+import { type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
 import { attendanceModeEnum, type AttendanceMode } from './schema';
+import { insertEventsWithDb } from './events.shared';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
@@ -363,48 +364,7 @@ export function prepareEventsResultForUi(result: FetchEventsResult) {
 }
 
 export async function insertEvents(events: InsertEvent[]) {
-	const processedEvents = events.map((event) => {
-		// trim all strings
-		type EventKey = keyof InsertEvent;
-		for (const key in event) {
-			if (
-				Object.prototype.hasOwnProperty.call(event, key) &&
-				typeof event[key as EventKey] === 'string'
-			) {
-				(event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
-			}
-		}
-
-		event.slug = generateSlug({
-			name: event.name,
-			startAt: event.startAt,
-			endAt: event.endAt ?? undefined
-		});
-
-		// Validate and clean up latitude/longitude values
-		if (event.latitude !== undefined && event.latitude !== null) {
-			if (isNaN(event.latitude) || event.latitude < -90 || event.latitude > 90) {
-				event.latitude = undefined;
-			}
-		}
-		if (event.longitude !== undefined && event.longitude !== null) {
-			if (isNaN(event.longitude) || event.longitude < -180 || event.longitude > 180) {
-				event.longitude = undefined;
-			}
-		}
-		return event;
-	});
-
-	const result = await db
-		.insert(s.events)
-		.values(processedEvents)
-		.onConflictDoUpdate({
-			target: s.events.slug,
-			set: buildConflictUpdateColumns(s.events, ['slug', 'id', 'createdAt'])
-		})
-		.returning();
-
-	return result;
+	return await insertEventsWithDb(db, events);
 }
 
 export const loadEventsParamsSchema = v.partial(

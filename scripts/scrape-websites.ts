@@ -16,8 +16,8 @@
  */
 
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
-import { db, s } from "../src/lib/server/db.ts";
-import { insertEvents } from '../src/lib/server/events.ts';
+import { db, s } from '../src/lib/server/db.script.ts';
+import { insertEvents } from '../src/lib/server/events.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
 import { and, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { db, s, sql, eq, and, inArray } from '../src/lib/server/db.ts';
+import { db, s, sql, eq, and, inArray } from '../src/lib/server/db.script.ts';
 
 /**
  * Migrates tags from events.tags (text array) to event_tags junction table.

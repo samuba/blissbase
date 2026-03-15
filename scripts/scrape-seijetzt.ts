@@ -28,7 +28,7 @@ import {
     superTrim
 } from "./common.ts";
 import { sleep } from "bun";
-import { geocodeAddressCached } from "../src/lib/server/google.ts";
+import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
 const BASE_URL = "https://sei.jetzt";
 const START_PATH = "/"; // Main page seems to list events

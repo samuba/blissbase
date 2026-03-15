@@ -19,7 +19,7 @@ import {
 	dateToIsoStr,
 	TimeZoneString,
 } from './common.ts';
-import { geocodeAddressCached } from '../src/lib/server/google.ts';
+import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 import { chromium, type Page } from '@playwright/test';
 import * as cheerio from 'cheerio';
 

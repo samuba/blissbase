@@ -28,7 +28,7 @@ import {
     dateToIsoStr
 } from "./common.ts";
 import { sleep } from "bun";
-import { geocodeAddressCached } from "../src/lib/server/google.ts";
+import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
 const BASE_URL = "https://www.ganzheitlich-gesund-brandenburg.de";
 const START_PATH = "/veranstaltungen/index.php";

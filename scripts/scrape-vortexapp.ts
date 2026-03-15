@@ -30,7 +30,7 @@ import {
     extractIcalStartAndEndTimes,
 } from "./common.ts";
 import * as cheerio from 'cheerio';
-import { geocodeAddressCached } from "../src/lib/server/google.ts";
+import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
 const baseUrl = 'https://xwdd-3kmq-rzh2.n7e.xano.io/api:iV56BXYl';
 

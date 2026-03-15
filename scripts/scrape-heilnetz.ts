@@ -30,7 +30,7 @@ import {
     cleanProseHtml,
     dateToIsoStr
 } from "./common.ts";
-import { geocodeAddressCached } from "../src/lib/server/google.ts";
+import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
 const BASE_URL = 'https://www.heilnetz.de';
 
