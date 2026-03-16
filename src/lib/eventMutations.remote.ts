@@ -14,6 +14,7 @@ import { E2E_TEST, GOOGLE_MAPS_API_KEY, ENDPOINT_SECRET } from '$env/static/priv
 import { resolve } from '$app/paths';
 
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
+	console.time('updateEvent');
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
 	const formData = formDataToDbData(data);
 	const [coords, uploadedImageUrls] = await Promise.all([
@@ -51,10 +52,12 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 		await assets.deleteImages(deletedImageUrls, eventAssetsCreds);
 	}
 
+	console.timeEnd('updateEvent');
 	redirect(303, routes.eventDetails(eventFromDb.slug));
 });
 
 export const createEvent = form(createEventSchema, async (data, issue) => {
+	console.time('createEvent');
 	const { locals } = getRequestEvent();
 	const userId = locals.userId;
 	const userEmail = locals.jwtClaims?.email;
@@ -104,6 +107,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		isOnline: createdEvent!.attendanceMode === `online`,
 	});
 
+	console.timeEnd('createEvent');
 	redirect(303, routes.eventDetails(createdEvent!.slug));
 });
 
