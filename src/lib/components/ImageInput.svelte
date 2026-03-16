@@ -1,11 +1,19 @@
 <script lang="ts">
 	import type { RemoteFormField } from '@sveltejs/kit';
+	import imageCompression from 'browser-image-compression';
 	import { flip } from 'svelte/animate';
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { dragHandle, dragHandleZone } from 'svelte-dnd-action';
-	import PopOver from './PopOver.svelte';
 	import { fade } from 'svelte/transition';
+	import {
+		EVENT_IMAGE_MAX_DIMENSION,
+		EVENT_IMAGE_OUTPUT_MIME_TYPE,
+		EVENT_IMAGE_OUTPUT_QUALITY,
+		getProcessedImageFileName,
+		getPerceptualHash
+	} from '$lib/eventImageProcessing.shared';
+	import PopOver from './PopOver.svelte';
 
 	let {
 		field,
@@ -26,6 +34,7 @@
 	let previewFlipDurationMs = 220;
 	let objectUrlsByPreviewId = new SvelteMap<string, string>();
 	let newImageOccurrenceByFingerprint = new SvelteMap<string, number>();
+	let hasProcessingInFlight = $derived(previewItems.some((x) => x.processingState === `processing`));
 
 	onMount(() => {
 		const mediaQuery = window.matchMedia(`(min-width: 640px) and (hover: hover) and (pointer: fine)`);
@@ -59,12 +68,14 @@
 				sizeLabel: `-`,
 				url,
 				source: `existing`,
-				token: url
+				token: url,
+				processingState: `ready`,
+				processingProgress: 100
 			} satisfies ImagePreviewItem;
 		});
 
 		const newFiles = field.value() ?? [];
-		const newPreviews = newFiles.map((file) => createNewImagePreview({ file }));
+		const newPreviews = newFiles.map((file) => createReadyImagePreview({ file }));
 		previewItems = [...existingPreviews, ...newPreviews];
 		syncFieldsFromPreviews();
 	}
@@ -91,17 +102,41 @@
 	}
 
 	/**
-	 * Creates a preview entry for a newly selected file.
+	 * Replaces the object URL for one preview item.
 	 * @example
-	 * createNewImagePreview({ file });
+	 * setObjectUrlForPreview({ previewId: `new:demo`, file });
 	 */
-	function createNewImagePreview(args: { file: File }) {
-		const fingerprint = getFileFingerprint(args.file);
+	function setObjectUrlForPreview(args: { previewId: string; file: File }) {
+		const previousUrl = objectUrlsByPreviewId.get(args.previewId);
+		if (previousUrl) {
+			URL.revokeObjectURL(previousUrl);
+		}
+
+		const nextUrl = URL.createObjectURL(args.file);
+		objectUrlsByPreviewId.set(args.previewId, nextUrl);
+		return nextUrl;
+	}
+
+	/**
+	 * Creates a stable token for a newly selected image.
+	 * @example
+	 * const token = createNewImageToken(file);
+	 */
+	function createNewImageToken(file: File) {
+		const fingerprint = getFileFingerprint(file);
 		const nextOccurrence = (newImageOccurrenceByFingerprint.get(fingerprint) ?? 0) + 1;
 		newImageOccurrenceByFingerprint.set(fingerprint, nextOccurrence);
-		const token = `new:${fingerprint}-${nextOccurrence}`;
-		const previewUrl = URL.createObjectURL(args.file);
-		objectUrlsByPreviewId.set(token, previewUrl);
+		return `new:${fingerprint}-${nextOccurrence}`;
+	}
+
+	/**
+	 * Creates a preview entry for an already processed new file.
+	 * @example
+	 * createReadyImagePreview({ file });
+	 */
+	function createReadyImagePreview(args: { file: File }) {
+		const token = createNewImageToken(args.file);
+		const previewUrl = setObjectUrlForPreview({ previewId: token, file: args.file });
 
 		return {
 			id: token,
@@ -110,8 +145,45 @@
 			url: previewUrl,
 			source: `new`,
 			token,
-			file: args.file
+			file: args.file,
+			fingerprint: getFileFingerprint(args.file),
+			processingState: `ready`,
+			processingProgress: 100
 		} satisfies ImagePreviewItem;
+	}
+
+	/**
+	 * Creates a placeholder preview while an image is being processed.
+	 * @example
+	 * createPendingImagePreview({ file });
+	 */
+	function createPendingImagePreview(args: { file: File }) {
+		const token = createNewImageToken(args.file);
+		const previewUrl = setObjectUrlForPreview({ previewId: token, file: args.file });
+
+		return {
+			id: token,
+			name: args.file.name,
+			sizeLabel: formatFileSize(args.file.size),
+			url: previewUrl,
+			source: `new`,
+			token,
+			fingerprint: getFileFingerprint(args.file),
+			processingState: `processing`,
+			processingProgress: 0
+		} satisfies ImagePreviewItem;
+	}
+
+	/**
+	 * Returns only previews that should be submitted with the form.
+	 * @example
+	 * const submittedItems = getSubmittedPreviewItems();
+	 */
+	function getSubmittedPreviewItems() {
+		return previewItems.filter((preview) => {
+			if (preview.source === `existing`) return true;
+			return preview.processingState === `ready` && !!preview.file;
+		});
 	}
 
 	/**
@@ -120,7 +192,10 @@
 	 * syncFieldsFromPreviews();
 	 */
 	function syncFieldsFromPreviews() {
-		const orderedNewFiles = previewItems.filter((x) => x.source === `new`).map((x) => x.file).filter((x) => !!x);
+		const orderedNewFiles = getSubmittedPreviewItems()
+			.filter((x) => x.source === `new`)
+			.map((x) => x.file)
+			.filter((x) => !!x);
 		field.set(orderedNewFiles);
 
 		const dt = new DataTransfer();
@@ -130,25 +205,24 @@
 		if (imageInputElement) imageInputElement.files = dt.files;
 
 		if (!existingImageUrlsField) return;
-		existingImageUrlsField.set(previewItems.map((x) => x.token));
+		existingImageUrlsField.set(getSubmittedPreviewItems().map((x) => x.token));
 	}
 
 	/**
 	 * Merges newly selected image files into the current preview list.
 	 * @example
-	 * addSelectedImages({ files: event.currentTarget.files ?? undefined });
+	 * await addSelectedImages({ files: event.currentTarget.files ?? undefined });
 	 */
-	function addSelectedImages(args: { files: FileList | undefined }) {
-		if (!args.files?.length) return;
+	async function addSelectedImages(args: { files: FileList | undefined }) {
+		if (!args.files?.length || hasProcessingInFlight) return;
 
 		const imageFiles = Array.from(args.files).filter((file) => file.type.startsWith(`image/`));
 		if (!imageFiles.length) return;
 
 		const existingCountByFingerprint = new SvelteMap<string, number>();
 		for (const preview of previewItems) {
-			if (preview.source !== `new` || !preview.file) continue;
-			const fingerprint = getFileFingerprint(preview.file);
-			existingCountByFingerprint.set(fingerprint, (existingCountByFingerprint.get(fingerprint) ?? 0) + 1);
+			if (preview.source !== `new` || !preview.fingerprint) continue;
+			existingCountByFingerprint.set(preview.fingerprint, (existingCountByFingerprint.get(preview.fingerprint) ?? 0) + 1);
 		}
 
 		const selectedCountByFingerprint = new SvelteMap<string, number>();
@@ -160,8 +234,198 @@
 		});
 		if (!filesToAppend.length) return;
 
-		previewItems = [...previewItems, ...filesToAppend.map((file) => createNewImagePreview({ file }))];
+		const pendingPreviews = filesToAppend.map((file) => ({
+			file,
+			preview: createPendingImagePreview({ file })
+		}));
+		previewItems = [...previewItems, ...pendingPreviews.map((x) => x.preview)];
 		syncFieldsFromPreviews();
+
+		for (const pendingPreview of pendingPreviews) {
+			await processSelectedImage({
+				previewId: pendingPreview.preview.id,
+				file: pendingPreview.file
+			});
+		}
+	}
+
+	/**
+	 * Processes one selected image into a normalized WebP upload file.
+	 * @example
+	 * await processSelectedImage({ previewId: `new:demo`, file });
+	 */
+	async function processSelectedImage(args: { previewId: string; file: File }) {
+		updatePreviewProcessingState({
+			previewId: args.previewId,
+			processingState: `processing`,
+			processingProgress: 5,
+			processingError: undefined
+		});
+
+		try {
+			const processedResult = await processImageFile({
+				file: args.file,
+				onProgress: (progress) => {
+					updatePreviewProcessingState({
+						previewId: args.previewId,
+						processingState: `processing`,
+						processingProgress: progress,
+						processingError: undefined
+					});
+				}
+			});
+			const preview = previewItems.find((x) => x.id === args.previewId);
+			if (!preview) return;
+
+			const previewUrl = setObjectUrlForPreview({
+				previewId: args.previewId,
+				file: processedResult.file
+			});
+
+			previewItems = previewItems.map((item) => {
+				if (item.id !== args.previewId) return item;
+				return {
+					...item,
+					name: args.file.name,
+					sizeLabel: formatFileSize(processedResult.file.size),
+					url: previewUrl,
+					file: processedResult.file,
+					processingState: `ready`,
+					processingProgress: 100,
+					processingError: undefined
+				};
+			});
+			syncFieldsFromPreviews();
+		} catch (error) {
+			updatePreviewProcessingState({
+				previewId: args.previewId,
+				processingState: `error`,
+				processingProgress: 0,
+				processingError: error instanceof Error ? error.message : `Bild konnte nicht verarbeitet werden`
+			});
+			syncFieldsFromPreviews();
+		}
+	}
+
+	/**
+	 * Updates the processing state for one preview tile.
+	 * @example
+	 * updatePreviewProcessingState({ previewId: `new:demo`, processingState: `processing`, processingProgress: 50 });
+	 */
+	function updatePreviewProcessingState(args: UpdatePreviewProcessingStateArgs) {
+		previewItems = previewItems.map((item) => {
+			if (item.id !== args.previewId) return item;
+			return {
+				...item,
+				processingState: args.processingState,
+				processingProgress: args.processingProgress,
+				processingError: args.processingError
+			};
+		});
+	}
+
+	/**
+	 * Converts one selected image into the normalized upload file.
+	 * @example
+	 * const result = await processImageFile({ file });
+	 */
+	async function processImageFile(args: ProcessImageFileArgs) {
+		args.onProgress?.(10);
+		const compressedFile = await imageCompression(args.file, {
+			maxWidthOrHeight: EVENT_IMAGE_MAX_DIMENSION,
+			useWebWorker: true,
+			fileType: EVENT_IMAGE_OUTPUT_MIME_TYPE,
+			initialQuality: EVENT_IMAGE_OUTPUT_QUALITY,
+			onProgress: (progress: number) => {
+				args.onProgress?.(Math.min(75, Math.max(10, progress * 0.75)));
+			}
+		});
+		args.onProgress?.(80);
+
+		const imageData = await createImageDataFromFile({ file: compressedFile });
+		args.onProgress?.(92);
+
+		const hash = getPerceptualHash({ imageData });
+		const fileName = getProcessedImageFileName({
+			hash,
+			originalFileName: args.file.name
+		});
+		const processedFile = new File([compressedFile], fileName, {
+			type: EVENT_IMAGE_OUTPUT_MIME_TYPE,
+			lastModified: args.file.lastModified
+		});
+
+		args.onProgress?.(100);
+		return {
+			file: processedFile,
+			hash
+		} satisfies ProcessedImageResult;
+	}
+
+	/**
+	 * Loads a browser image element from a selected file.
+	 * @example
+	 * const image = await loadImageFromFile({ file });
+	 */
+	function loadImageFromFile(args: { file: File }) {
+		return new Promise<HTMLImageElement>((resolve, reject) => {
+			const image = new Image();
+			const objectUrl = URL.createObjectURL(args.file);
+
+			image.onload = () => {
+				URL.revokeObjectURL(objectUrl);
+				resolve(image);
+			};
+			image.onerror = () => {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error(`Bild konnte nicht geladen werden`));
+			};
+			image.src = objectUrl;
+		});
+	}
+
+	/**
+	 * Calculates the final contain-fit size for one image.
+	 * @example
+	 * const size = getContainedImageSize({ width: 1600, height: 900 });
+	 */
+	function getContainedImageSize(args: { width: number; height: number }) {
+		if (!args.width || !args.height) {
+			throw new Error(`Bildabmessungen sind ungültig`);
+		}
+
+		const scale = Math.min(1, EVENT_IMAGE_MAX_DIMENSION / args.width, EVENT_IMAGE_MAX_DIMENSION / args.height);
+		return {
+			width: Math.max(1, Math.round(args.width * scale)),
+			height: Math.max(1, Math.round(args.height * scale))
+		};
+	}
+
+	/**
+	 * Creates image data from a processed file for perceptual hashing.
+	 * @example
+	 * const imageData = await createImageDataFromFile({ file });
+	 */
+	async function createImageDataFromFile(args: { file: File }) {
+		const image = await loadImageFromFile({ file: args.file });
+
+		try {
+			const size = getContainedImageSize({
+				width: image.naturalWidth,
+				height: image.naturalHeight
+			});
+			const canvas = document.createElement(`canvas`);
+			canvas.width = size.width;
+			canvas.height = size.height;
+
+			const context = canvas.getContext(`2d`);
+			if (!context) throw new Error(`Canvas Kontext konnte nicht erstellt werden`);
+
+			context.drawImage(image, 0, 0, size.width, size.height);
+			return context.getImageData(0, 0, size.width, size.height);
+		} finally {
+			image.remove();
+		}
 	}
 
 	/**
@@ -170,6 +434,7 @@
 	 * movePreview({ previewId: `existing:0:url`, direction: 1 });
 	 */
 	function movePreview(args: { previewId: string; direction: -1 | 1 }) {
+		if (hasProcessingInFlight) return;
 		const currentIndex = previewItems.findIndex((x) => x.id === args.previewId);
 		if (currentIndex < 0) return;
 
@@ -191,13 +456,10 @@
 	 * removeSelectedImage({ previewId: `new:cover.webp-123-0` });
 	 */
 	function removeSelectedImage(args: { previewId: string }) {
-		const preview = previewItems.find((x) => x.id === args.previewId);
-		if (preview?.source === `new`) {
-			const objectUrl = objectUrlsByPreviewId.get(preview.id);
-			if (objectUrl) {
-				URL.revokeObjectURL(objectUrl);
-				objectUrlsByPreviewId.delete(preview.id);
-			}
+		const objectUrl = objectUrlsByPreviewId.get(args.previewId);
+		if (objectUrl) {
+			URL.revokeObjectURL(objectUrl);
+			objectUrlsByPreviewId.delete(args.previewId);
 		}
 
 		previewItems = previewItems.filter((x) => x.id !== args.previewId);
@@ -224,6 +486,7 @@
 	 * openImagePicker();
 	 */
 	function openImagePicker() {
+		if (hasProcessingInFlight) return;
 		imageInputElement?.click();
 	}
 
@@ -233,7 +496,7 @@
 	 * handleDragEnter();
 	 */
 	function handleDragEnter() {
-		if (!isDesktop) return;
+		if (!isDesktop || hasProcessingInFlight) return;
 		dragDepth += 1;
 	}
 
@@ -250,22 +513,37 @@
 	/**
 	 * Handles dropped files and appends image files only.
 	 * @example
-	 * handleDrop({ files: event.dataTransfer?.files });
+	 * await handleDrop({ files: event.dataTransfer?.files });
 	 */
-	function handleDrop(args: { files: FileList | undefined }) {
+	async function handleDrop(args: { files: FileList | undefined }) {
 		dragDepth = 0;
-		if (!isDesktop) return;
-		addSelectedImages({ files: args.files });
+		if (!isDesktop || hasProcessingInFlight) return;
+		await addSelectedImages({ files: args.files });
 	}
 
+	/**
+	 * Opens the full-screen preview modal.
+	 * @example
+	 * openFullscreenPreview(`https://example.com/image.webp`);
+	 */
 	function openFullscreenPreview(url: string) {
 		fullscreenImageUrl = url;
 	}
 
+	/**
+	 * Closes the full-screen preview modal.
+	 * @example
+	 * closeFullscreenPreview();
+	 */
 	function closeFullscreenPreview() {
 		fullscreenImageUrl = null;
 	}
 
+	/**
+	 * Formats a byte size for the preview metadata.
+	 * @example
+	 * formatFileSize(1536);
+	 */
 	function formatFileSize(size: number) {
 		if (size < 1024) return `${size} B`;
 		if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
@@ -280,7 +558,30 @@
 		source: `new` | `existing`;
 		token: string;
 		file?: File;
+		fingerprint?: string;
+		processingState: ProcessingState;
+		processingProgress: number;
+		processingError?: string;
 	};
+
+	type UpdatePreviewProcessingStateArgs = {
+		previewId: string;
+		processingState: ProcessingState;
+		processingProgress: number;
+		processingError?: string;
+	};
+
+	type ProcessImageFileArgs = {
+		file: File;
+		onProgress?: (progress: number) => void;
+	};
+
+	type ProcessedImageResult = {
+		file: File;
+		hash: string;
+	};
+
+	type ProcessingState = `ready` | `processing` | `error`;
 </script>
 
 <fieldset class="fieldset w-full min-w-0 gap-3">
@@ -289,13 +590,13 @@
 		aria-label="Bilder auswählen oder ablegen"
 		ondragenter={handleDragEnter}
 		ondragover={(event) => {
-			if (!isDesktop) return;
+			if (!isDesktop || hasProcessingInFlight) return;
 			event.preventDefault();
 		}}
 		ondragleave={handleDragLeave}
-		ondrop={(event) => {
+		ondrop={async (event) => {
 			event.preventDefault();
-			handleDrop({ files: event.dataTransfer?.files });
+			await handleDrop({ files: event.dataTransfer?.files });
 		}}
 	>
 		<input
@@ -305,7 +606,10 @@
 			{...field.as('file multiple')}
 			accept="image/*"
 			multiple
-			onchange={(event) => addSelectedImages({ files: event.currentTarget.files ?? undefined })}
+			disabled={hasProcessingInFlight}
+			onchange={async (event) => {
+				await addSelectedImages({ files: event.currentTarget.files ?? undefined });
+			}}
 		/>
 
 		<div class="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -313,6 +617,7 @@
 				<button
 					onclick={openImagePicker}
 					type="button"
+					disabled={hasProcessingInFlight}
 					class={[
 						'btn  flex sm:px-6 sm:py-8 shrink-0 items-center justify-center sm:rounded-xl sm:border-dashed sm:border-primary sm:border-2',
 						field.issues()?.length ? 'bg-error/10 text-error' : isDragging ? 'bg-primary' : 'sm:bg-primary/10'
@@ -332,6 +637,9 @@
 
 	<p class="label pt-0 wrap-break-words whitespace-pre-line">
 		Lade Bilder hoch die deinen Event illustrieren.
+		{#if hasProcessingInFlight}
+			\nBilder werden vor dem Upload lokal verarbeitet.
+		{/if}
 	</p>
 
 	<div
@@ -344,12 +652,15 @@
 			items: previewItems,
 			flipDurationMs: previewFlipDurationMs,
 			delayTouchStart: true,
+			dragDisabled: hasProcessingInFlight,
 			dropTargetStyle: { outline: `none` }
 		}}
 		onconsider={(event) => {
+			if (hasProcessingInFlight) return;
 			previewItems = event.detail.items;
 		}}
 		onfinalize={(event) => {
+			if (hasProcessingInFlight) return;
 			previewItems = event.detail.items;
 			syncFieldsFromPreviews();
 		}}
@@ -379,6 +690,7 @@
 										type="button"
 										class=" btn btn-sm rounded-lg p-1  hover:cursor-grab active:cursor-grabbing"
 										aria-label={`${preview.name} verschieben`}
+										disabled={hasProcessingInFlight}
 									>
 										<i class="icon-[ph--dots-nine] size-5 drop-shadow-md"></i>
 									</button>
@@ -398,7 +710,30 @@
 						aria-label={`Vollbildansicht von ${preview.name} öffnen`}
 					>
 						<img src={preview.url} alt={`Vorschau für ${preview.name}`} class="h-full w-full object-cover" draggable="false" />
-					</button>
+					</button>1
+					{#if preview.processingState !== `ready`}
+						<div class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 p-3 text-center backdrop-brightness-75 text-white backdrop-blur-[2px]">
+							{#if preview.processingState === `error`}
+								<div class="">
+									<i class="icon-[ph--warning-circle] size-8 text-error"></i>
+									<p class="text-xs font-medium">Verarbeitung fehlgeschlagen</p>
+									<p class="text-[11px] opacity-80">{preview.processingError}</p>
+								</div>
+							{:else}
+								<div class="">
+									<i class="loading loading-spinner loading-xl"></i>
+									<p class="text-xs font-medium">Wird verarbeitet</p>
+									<p class="text-[11px] opacity-80">{Math.round(preview.processingProgress)}%</p>
+								</div>
+							{/if}
+						</div>
+						{#if preview.processingState === `processing`}
+							<div
+								class="absolute bottom-0 left-0 z-10 h-1.5 bg-primary transition-all duration-300"
+								style:width={`${preview.processingProgress}%`}
+							></div>
+						{/if}
+					{/if}
 				</div>
 
 				<div class="flex items-start justify-between gap-2 p-3">
@@ -413,7 +748,7 @@
 							type="button"
 							class="sr-only"
 							aria-label={`${preview.name} nach links verschieben`}
-							disabled={i === 0}
+							disabled={i === 0 || hasProcessingInFlight}
 							onclick={() => movePreview({ previewId: preview.id, direction: -1 })}
 						>
 							Nach links
@@ -423,7 +758,7 @@
 							type="button"
 							class="sr-only"
 							aria-label={`${preview.name} nach rechts verschieben`}
-							disabled={i === previewItems.length - 1}
+							disabled={i === previewItems.length - 1 || hasProcessingInFlight}
 							onclick={() => movePreview({ previewId: preview.id, direction: 1 })}
 						>
 							Nach rechts

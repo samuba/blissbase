@@ -4,14 +4,19 @@ import * as assets from '$lib/assets';
 import { generateSlug, randomString } from '$lib/common';
 import { createEventSchema, updateEventSchema, type CreateEventData } from '$lib/events.remote.common';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
+import {
+	EVENT_IMAGE_HASH_LENGTH,
+	EVENT_IMAGE_OUTPUT_MIME_TYPE,
+	getStableContentHash,
+	getProcessedImageHashFromFileName
+} from '$lib/eventImageProcessing.shared';
 import { routes } from '$lib/routes';
 import { db, eq, s, sql } from '$lib/server/db';
 import { sendEventCreatedEmail } from '$lib/server/email';
 import { geocodeAddressCached } from '$lib/server/google';
 import type { SelectEvent } from '$lib/server/schema';
 import type { InsertEvent } from '$lib/types';
-import { E2E_TEST, GOOGLE_MAPS_API_KEY, ENDPOINT_SECRET } from '$env/static/private';
-import { resolve } from '$app/paths';
+import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	console.time('updateEvent');
@@ -141,7 +146,7 @@ function formDataToDbData(data: CreateEventData) {
 }
 
 /**
- * Uploads event images through the dedicated API endpoint.
+ * Uploads already processed event images directly to storage.
  *
  * @example
  * await uploadImages({ files: [], slug: `demo-event` })
@@ -151,42 +156,59 @@ async function uploadImages(args: UploadImagesArgs) {
 	const validFiles = args.files.filter((file) => !!file && file.size > 0);
 	if (!validFiles.length) return [];
 
-	const { fetch } = getRequestEvent();
-	const formData = new FormData();
-	formData.set(`secret`, ENDPOINT_SECRET);
-	formData.set(`slug`, args.slug);
+	if (E2E_TEST === `true`) {
+		return getE2EImageUrls({ files: validFiles, slug: args.slug });
+	}
+
+	const uploadedImages = new Map<string, Promise<string>>();
+	const imageUrls: string[] = [];
 
 	for (const file of validFiles) {
-		formData.append(`images`, file);
+		let imageHash: string | undefined = undefined;
+
+		try {
+			if (file.type !== EVENT_IMAGE_OUTPUT_MIME_TYPE) {
+				throw new Error(`Expected processed WebP uploads, received ${file.type || `unknown`}`);
+			}
+
+			const bytes = new Uint8Array(await file.arrayBuffer());
+			imageHash = getProcessedImageHashFromFileName({ fileName: file.name }) ?? await getStableContentHash({ bytes });
+			if (!imageHash || imageHash.length !== EVENT_IMAGE_HASH_LENGTH) {
+				throw new Error(`Missing processed image hash`);
+			}
+
+			let imageUrlPromise = uploadedImages.get(imageHash);
+			if (!imageUrlPromise) {
+				imageUrlPromise = assets.uploadImage(Buffer.from(bytes), args.slug, imageHash, eventAssetsCreds);
+				uploadedImages.set(imageHash, imageUrlPromise);
+			}
+
+			imageUrls.push(await imageUrlPromise);
+		} catch (err) {
+			if (imageHash) uploadedImages.delete(imageHash);
+			const message = err instanceof Error ? err.message : String(err);
+			console.error(`Error uploading processed event image "${file.name}". Skipping it:`, message);
+		}
 	}
 
-	const response = await fetch(resolve('/api/events/images'), {
-		method: `POST`,
-		body: formData
-	});
-	if (!response.ok) {
-		throw error(response.status, await getImageUploadErrorMessage(response));
-	}
-
-	const result = await response.json() as { imageUrls?: string[] };
-	return result.imageUrls ?? [];
+	return imageUrls;
 }
 
 /**
- * Reads an endpoint error response and normalizes it into a message.
+ * Builds deterministic mock image URLs for E2E without touching external storage.
  *
  * @example
- * await getImageUploadErrorMessage(new Response());
+ * getE2EImageUrls({ files: [], slug: `demo-event` });
  */
-async function getImageUploadErrorMessage(response: Response) {
-	try {
-		const result = await response.json() as { error?: string };
-		if (result.error) return result.error;
-	} catch {
-		// Ignore JSON parsing errors and fall back to a generic message.
-	}
+function getE2EImageUrls(args: UploadImagesArgs) {
+	if (!args.files?.length) return [];
 
-	return `Failed to upload event images`;
+	return args.files.map((file, index) => {
+		const safeFileName = file.name
+			.replace(new RegExp(`^[A-Za-z0-9_-]{${EVENT_IMAGE_HASH_LENGTH}}-`), ``)
+			.replace(/[^a-zA-Z0-9.\-_]/g, `-`);
+		return `https://assets.blissbase.app/e2e/${args.slug}/${index}-${safeFileName}`;
+	});
 }
 
 /**

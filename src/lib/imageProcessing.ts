@@ -1,28 +1,31 @@
-import sharp from "sharp"; // blows bundle size by 15MB!!!!
-import phash from "sharp-phash";
-import distance from "sharp-phash/distance";
+import sharp from 'sharp'; // blows bundle size by 15MB!!!!
+import {
+	EVENT_IMAGE_MAX_DIMENSION,
+	EVENT_IMAGE_OUTPUT_QUALITY,
+	getPerceptualHash
+} from './eventImageProcessing.shared';
 
 export async function resizeCoverImage(input: sharp.SharpInput | Array<sharp.SharpInput>): Promise<{ buffer: Buffer, phash: string }> {
-    if (!input) throw new Error('Input cannot be null or undefined');
+	if (!input) throw new Error(`Input cannot be null or undefined`);
 
-    try {
-        const result = await sharp(input)
-            .resize(850, 850, {
-                fit: 'inside',
-                withoutEnlargement: true
-            })
-            .webp({ quality: 95 })
-            .toBuffer();
+	try {
+		const result = await sharp(input)
+			.resize(EVENT_IMAGE_MAX_DIMENSION, EVENT_IMAGE_MAX_DIMENSION, {
+				fit: `inside`,
+				withoutEnlargement: true
+			})
+			.webp({ quality: Math.round(EVENT_IMAGE_OUTPUT_QUALITY * 100) })
+			.toBuffer();
 
-        if (!result || result.length === 0) {
-            throw new Error('Resize operation returned empty buffer');
-        }
+		if (!result || result.length === 0) {
+			throw new Error(`Resize operation returned empty buffer`);
+		}
 
-        return { buffer: result, phash: await calculatePhash(result) };
-    } catch (error) {
-        console.error('Error resizing image:', error);
-        throw new Error(`Failed to resize image: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+		return { buffer: result, phash: await calculatePhash(result) };
+	} catch (error) {
+		console.error(`Error resizing image:`, error);
+		throw new Error(`Failed to resize image: ${error instanceof Error ? error.message : `Unknown error`}`);
+	}
 }
 
 /**
@@ -100,26 +103,44 @@ export function alphabetToBinary(alphabetString: string): string {
     }
 }
 
-export async function calculatePhash(buffer: Buffer, options?: Parameters<typeof phash>[1]): Promise<string> {
-    if (!buffer || buffer.length === 0) {
-        throw new Error('Cannot calculate phash for empty buffer');
-    }
+export async function calculatePhash(buffer: Buffer): Promise<string> {
+	if (!buffer || buffer.length === 0) {
+		throw new Error(`Cannot calculate phash for empty buffer`);
+	}
 
-    try {
-        const hash = await phash(buffer, options);
-        if (!hash || typeof hash !== 'string') {
-            throw new Error('Invalid hash returned from phash function');
-        }
-        return binaryToAlphabet(hash);
-    } catch (error) {
-        console.error('Error calculating phash:', error);
-        throw new Error(`Failed to calculate phash: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+	try {
+		const { data, info } = await sharp(buffer)
+			.ensureAlpha()
+			.raw()
+			.toBuffer({ resolveWithObject: true });
+
+		if (!info.width || !info.height) {
+			throw new Error(`Invalid image dimensions for phash`);
+		}
+
+		return getPerceptualHash({
+			imageData: {
+				width: info.width,
+				height: info.height,
+				data: new Uint8ClampedArray(data)
+			}
+		});
+	} catch (error) {
+		console.error(`Error calculating phash:`, error);
+		throw new Error(`Failed to calculate phash: ${error instanceof Error ? error.message : `Unknown error`}`);
+	}
 }
 
 export function calculateHammingDistance(hash1: string, hash2: string): number {
-    if (!hash1 || !hash2) throw new Error('Invalid hash input');
+	if (!hash1 || !hash2) throw new Error(`Invalid hash input`);
 
-    return distance(alphabetToBinary(hash1), alphabetToBinary(hash2));
+	const binaryHash1 = alphabetToBinary(hash1);
+	const binaryHash2 = alphabetToBinary(hash2);
+	let distance = 0;
 
+	for (let i = 0; i < Math.min(binaryHash1.length, binaryHash2.length); i++) {
+		if (binaryHash1[i] !== binaryHash2[i]) distance += 1;
+	}
+
+	return distance + Math.abs(binaryHash1.length - binaryHash2.length);
 }

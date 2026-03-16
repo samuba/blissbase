@@ -60,7 +60,7 @@ test.describe('Edit event images', () => {
 				return result.event?.imageUrls ?? [];
 			})
 			.toEqual([
-				`https://assets.blissbase.app/e2e/${event.slug}/0-added-image.png.webp`,
+				`https://assets.blissbase.app/e2e/${event.slug}/0-added-image.webp`,
 				existingImageUrls[0],
 				existingImageUrls[2]
 			]);

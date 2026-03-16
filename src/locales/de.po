@@ -907,5 +907,25 @@ msgid "Event <0>nicht</0> in Suche anzeigen"
 msgstr "Event <0>nicht</0> in Suche anzeigen"
 
 #: src/lib/components/ImageInput.svelte
-msgid "Lade Bilder hoch die deinen Event illustrieren."
-msgstr "Lade Bilder hoch die deinen Event illustrieren."
+msgid "Bild konnte nicht verarbeitet werden"
+msgstr "Bild konnte nicht verarbeitet werden"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Bild konnte nicht geladen werden"
+msgstr "Bild konnte nicht geladen werden"
+
+#: src/lib/components/ImageInput.svelte
+msgid "\\nBilder werden vor dem Upload lokal verarbeitet."
+msgstr "\\nBilder werden vor dem Upload lokal verarbeitet."
+
+#: src/lib/components/ImageInput.svelte
+msgid "Lade Bilder hoch die deinen Event illustrieren. <0/>"
+msgstr "Lade Bilder hoch die deinen Event illustrieren. <0/>"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Verarbeitung fehlgeschlagen"
+msgstr "Verarbeitung fehlgeschlagen"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Wird verarbeitet"
+msgstr "Wird verarbeitet"
