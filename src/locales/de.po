@@ -929,3 +929,7 @@ msgstr "Verarbeitung fehlgeschlagen"
 #: src/lib/components/ImageInput.svelte
 msgid "Wird verarbeitet"
 msgstr "Wird verarbeitet"
+
+#: src/routes/EventDetails.svelte
+msgid "<0/> Bearbeiten"
+msgstr "<0/> Bearbeiten"

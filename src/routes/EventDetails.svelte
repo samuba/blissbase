@@ -12,9 +12,13 @@
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { localeStore } from '../locales/localeStore.svelte';
 	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
+	import { user } from '$lib/user.svelte';
+	import { resolve } from '$app/paths';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
+
+	const isAuthor = $derived(user.id && event.authorId && user.id === event.authorId);
 
 	let showOriginal = $state(false);
 
@@ -286,6 +290,13 @@
 			{/if}
 
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
+
+			{#if isAuthor}
+				<a href={resolve(`/edit/${event.id}`)} class="btn btn-warning">
+					<i class="icon-[ph--pencil] mr-1 size-4"></i>
+					Bearbeiten
+				</a>
+			{/if}
 
 			{#if showQuelleInsteadOfAnmelden}
 				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">

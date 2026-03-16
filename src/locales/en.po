@@ -929,3 +929,7 @@ msgstr "Processing failed"
 #: src/lib/components/ImageInput.svelte
 msgid "Wird verarbeitet"
 msgstr "Processing"
+
+#: src/routes/EventDetails.svelte
+msgid "<0/> Bearbeiten"
+msgstr "<0/> Edit"
