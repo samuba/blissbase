@@ -28,7 +28,7 @@ export async function load({ url, params: { id } }) {
     const { locals: { userId } } = await getRequestEvent();
     if (!await isAdminSession()) {
         const hostSecret = url.searchParams.get('hostSecret');
-        if (event.hostSecret && event.hostSecret !== hostSecret) error(403, 'Invalid host secret');
+        if (hostSecret && event.hostSecret !== hostSecret) error(403, 'Invalid host secret');
         if (event.authorId !== userId) error(403, 'You are not allowed to edit this event');
     }
 
