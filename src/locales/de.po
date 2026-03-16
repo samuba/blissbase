@@ -553,9 +553,8 @@ msgstr "Event not found"
 #~ msgid "Host secret is required"
 #~ msgstr "Host secret is required"
 
-#: src/routes/edit/[id]/+page.server.ts
-msgid "Invalid host secret"
-msgstr "Invalid host secret"
+#~ msgid "Invalid host secret"
+#~ msgstr "Invalid host secret"
 
 #: src/lib/components/BurgerMenu.svelte
 msgid "App teilen"

@@ -25,18 +25,20 @@ export async function load({ url, params: { id } }) {
     });
     if (!event) error(404, 'Event not found');
 
+    const hostSecret = url.searchParams.get('hostSecret');
+    const hostSecretCorrect = hostSecret && event.hostSecret === hostSecret;
     const { locals: { userId } } = await getRequestEvent();
-    if (!await isAdminSession()) {
-        const hostSecret = url.searchParams.get('hostSecret');
-        if (hostSecret && event.hostSecret !== hostSecret) error(403, 'Invalid host secret');
-        if (event.authorId !== userId) error(403, 'You are not allowed to edit this event');
+    const userIsAuthor = event.authorId === userId;
+    
+    if (hostSecretCorrect || userIsAuthor || await isAdminSession()) {
+        return {
+            event,
+            editFormValues: getEditEventInitialValues({
+                event,
+                tagIds: event.eventTags.map((x) => x.tagId)
+            })
+        };
     }
 
-    return {
-        event,
-        editFormValues: getEditEventInitialValues({
-            event,
-            tagIds: event.eventTags.map((x) => x.tagId)
-        })
-    };
+    error(403, 'You are not allowed to edit this event');
 }
