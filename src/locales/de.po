@@ -550,9 +550,8 @@ msgstr "Invalid event ID"
 msgid "Event not found"
 msgstr "Event not found"
 
-#: src/routes/edit/[id]/+page.server.ts
-msgid "Host secret is required"
-msgstr "Host secret is required"
+#~ msgid "Host secret is required"
+#~ msgstr "Host secret is required"
 
 #: src/routes/edit/[id]/+page.server.ts
 msgid "Invalid host secret"
@@ -933,3 +932,7 @@ msgstr "Wird verarbeitet"
 #: src/routes/EventDetails.svelte
 msgid "<0/> Bearbeiten"
 msgstr "<0/> Bearbeiten"
+
+#: src/routes/edit/[id]/+page.server.ts
+msgid "You are not allowed to edit this event"
+msgstr "You are not allowed to edit this event"
