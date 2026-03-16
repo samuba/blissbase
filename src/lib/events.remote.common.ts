@@ -1,26 +1,28 @@
 import * as v from 'valibot';
 
+const eventSchemaEntries = {
+	name: v.pipe(v.string(), v.trim(), v.nonEmpty(`Event Name muss ausgefüllt werden`)),
+	description: v.pipe(
+		v.string(),
+		v.trim(),
+		v.nonEmpty(`Beschreibung muss ausgefüllt werden`),
+		v.maxLength(100_000, `Beschreibung ist zu lang`)
+	),
+	tagIds: v.optional(v.pipe(v.array(v.string()), v.transform((x) => x.map((y) => parseInt(y)))), []),
+	price: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
+	address: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
+	startAt: v.pipe(v.string(), v.isoDateTime(`Startdatum ist ungültig.`)),
+	endAt: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.isoDateTime(`Enddatum ist ungültig.`)))),
+	timeZone: v.optional(emptyStringIsUndefined(v.pipe(v.string()))),
+	isOnline: v.optional(v.boolean(), false),
+	isNotListed: v.optional(v.boolean(), false),
+	contact: v.optional(v.string()),
+	contactMethod: v.optional(v.string()),
+	images: v.optional(v.array(v.pipe(v.file(), v.maxSize(30 * 1024 * 1024, `Bilder dürfen maximal 30MB groß sein`))), [])
+} satisfies v.ObjectEntries;
+
 export const createEventSchema = v.pipe(
-	v.object({
-		name: v.pipe(v.string(), v.trim(), v.nonEmpty(`Event Name muss ausgefüllt werden`)),
-		description: v.pipe(
-			v.string(),
-			v.trim(),
-			v.nonEmpty(`Beschreibung muss ausgefüllt werden`),
-			v.maxLength(100_000, `Beschreibung ist zu lang`)
-		),
-		tagIds: v.optional(v.pipe(v.array(v.string()), v.transform((x) => x.map((y) => parseInt(y)))), []),
-		price: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
-		address: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
-		startAt: v.pipe(v.string(), v.isoDateTime(`Startdatum ist ungültig.`)),
-		endAt: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.isoDateTime(`Enddatum ist ungültig.`)))),
-		timeZone: v.optional(emptyStringIsUndefined(v.pipe(v.string()))),
-		isOnline: v.optional(v.boolean(), false),
-		isNotListed: v.optional(v.boolean(), false),
-		contact: v.optional(v.string()),
-		contactMethod: v.optional(v.string()),
-		images: v.optional(v.array(v.pipe(v.file(), v.maxSize(30 * 1024 * 1024, `Bilder dürfen maximal 30MB groß sein`))), [])
-	}),
+	v.object(eventSchemaEntries),
 	v.forward(
 		v.partialCheck(
 			[['startAt']],
@@ -68,14 +70,51 @@ export const createEventSchema = v.pipe(
 	)
 );
 
-const createEventPipeItems = createEventSchema.pipe.filter((_, index) => index != 0);
-
-export const updateEventSchema = v.pipe(v.object({
-	...createEventSchema.entries,
-	eventId: v.number(),
-	hostSecret: v.optional(v.string(), ``),
-	existingImageUrls: v.optional(v.array(v.string()), []),
-}), ...createEventPipeItems as any[]);
+export const updateEventSchema = v.pipe(
+	v.object({
+		...eventSchemaEntries,
+		eventId: v.number(),
+		hostSecret: v.optional(v.string(), ``),
+		existingImageUrls: v.optional(v.array(v.string()), []),
+	}),
+	v.forward(
+		v.partialCheck(
+			[['startAt'], ['endAt']],
+			(input) => {
+				if (!input.endAt) return true;
+				return new Date(input.endAt).getTime() > new Date(input.startAt).getTime();
+			},
+			`Enddatum muss nach dem Startdatum liegen`
+		),
+		['endAt']
+	),
+	v.forward(
+		v.partialCheck(
+			[['isOnline'], ['address']],
+			(input) => {
+				if (input.isOnline) return true;
+				return !!input.address;
+			},
+			`Adresse muss ausgefüllt werden`
+		),
+		['address']
+	),
+	v.forward(
+		v.partialCheck(
+			[['contactMethod'], ['contact']],
+			({ contactMethod, contact }) => {
+				if (contactMethod === `email`) return !!contact?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+				if (contactMethod === `phone`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
+				if (contactMethod === `website`) return !!contact?.match(/^https?:\/\/[^\s]+$/);
+				if (contactMethod === `whatsapp`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
+				if (contactMethod === `Telegram`) return !!contact?.match(/^@[^\s]+$/);
+				return true;
+			},
+			`Kontakt-Methode ist ungültig`
+		),
+		['contact']
+	)
+);
 
 /**
  * Converts persisted event data into the shared edit form values.

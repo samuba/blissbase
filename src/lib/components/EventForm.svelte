@@ -53,7 +53,6 @@
 			<input
 				class="input w-full peer"
 				{...remoteForm.fields.startAt.as('datetime-local')}
-				min={`${new Date().toISOString().split(':')[0]}:${new Date().toISOString().split(':')[1]}`}
 				required
 			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Startzeit *</legend>
