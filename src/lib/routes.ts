@@ -2,6 +2,7 @@ export const BASE_URL = "https://blissbase.app" as const
 
 export const routes = {
     root: () => '/',
+    apiEventImages: () => `/api/events/images`,
     eventList: (args: { searchTerm?: string | null } = {}) => {
         const url = new URL('/', BASE_URL);
         if (args.searchTerm) url.searchParams.set('searchTerm', args.searchTerm);

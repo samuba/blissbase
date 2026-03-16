@@ -331,7 +331,7 @@
 	</div>
 
 	<p class="label pt-0 wrap-break-words whitespace-pre-line">
-		Bilder können geordnet, entfernt und mit neuen Uploads ergänzt werden.
+		Lade Bilder hoch die deinen Event illustrieren.
 	</p>
 
 	<div

@@ -888,10 +888,6 @@ msgstr "To the left"
 msgid "Nach rechts"
 msgstr "To the right"
 
-#: src/lib/components/ImageInput.svelte
-msgid "Bilder können geordnet, entfernt und mit neuen Uploads ergänzt werden."
-msgstr "Images can be reordered, removed, and supplemented with new uploads."
-
 #. placeholder {0}: preview.name
 #: src/lib/components/ImageInput.svelte
 msgid "Vorschau für {0}"
@@ -909,3 +905,7 @@ msgstr "Select or drop images"
 #: src/lib/components/EventForm.svelte
 msgid "Event <0>nicht</0> in Suche anzeigen"
 msgstr "Do <0>not</0> show event in search"
+
+#: src/lib/components/ImageInput.svelte
+msgid "Lade Bilder hoch die deinen Event illustrieren."
+msgstr "Upload images that illustrate your event."

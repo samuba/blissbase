@@ -10,8 +10,8 @@ import { sendEventCreatedEmail } from '$lib/server/email';
 import { geocodeAddressCached } from '$lib/server/google';
 import type { SelectEvent } from '$lib/server/schema';
 import type { InsertEvent } from '$lib/types';
-import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { resizeCoverImage } from '$lib/imageProcessing';
+import { E2E_TEST, GOOGLE_MAPS_API_KEY, ENDPOINT_SECRET } from '$env/static/private';
+import { resolve } from '$app/paths';
 
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
@@ -137,63 +137,52 @@ function formDataToDbData(data: CreateEventData) {
 }
 
 /**
- * Processes uploaded event images and reuses uploads cached during this server run.
+ * Uploads event images through the dedicated API endpoint.
  *
  * @example
  * await uploadImages({ files: [], slug: `demo-event` })
  */
 async function uploadImages(args: UploadImagesArgs) {
 	if (!args.files?.length) return [];
-	if (E2E_TEST === `true`) {
-		return getE2EImageUrls(args);
+	const validFiles = args.files.filter((file) => !!file && file.size > 0);
+	if (!validFiles.length) return [];
+
+	const { fetch } = getRequestEvent();
+	const formData = new FormData();
+	formData.set(`secret`, ENDPOINT_SECRET);
+	formData.set(`slug`, args.slug);
+
+	for (const file of validFiles) {
+		formData.append(`images`, file);
 	}
 
-	console.time(`uploadImages`);
-
-	const processedCreateEventImages = new Map<string, Promise<string>>();
-	const imageUrls: string[] = [];
-
-	for (const file of args.files) {
-		if (!file || file.size <= 0) continue;
-
-		let cacheKey: string | undefined = undefined;
-
-		try {
-			const bytes = Buffer.from(await file.arrayBuffer());
-			const { buffer, phash } = await resizeCoverImage(bytes);
-			cacheKey = `${args.slug}:${phash}`;
-
-			let imageUrlPromise = processedCreateEventImages.get(cacheKey);
-			if (!imageUrlPromise) {
-				imageUrlPromise = assets.uploadImage(buffer, args.slug, phash, eventAssetsCreds);
-				processedCreateEventImages.set(cacheKey, imageUrlPromise);
-			}
-
-			imageUrls.push(await imageUrlPromise);
-		} catch (err) {
-			if (cacheKey) processedCreateEventImages.delete(cacheKey);
-			const message = err instanceof Error ? err.message : String(err);
-			console.error(`Error processing event image "${file.name}". Skipping it:`, message);
-		}
+	const response = await fetch(resolve('/api/events/images'), {
+		method: `POST`,
+		body: formData
+	});
+	if (!response.ok) {
+		throw error(response.status, await getImageUploadErrorMessage(response));
 	}
 
-	console.timeEnd(`uploadImages`);
-	return imageUrls;
+	const result = await response.json() as { imageUrls?: string[] };
+	return result.imageUrls ?? [];
 }
 
 /**
- * Builds deterministic mock image URLs for E2E without touching external storage.
+ * Reads an endpoint error response and normalizes it into a message.
  *
  * @example
- * getE2EImageUrls({ files: [], slug: `demo-event` })
+ * await getImageUploadErrorMessage(new Response());
  */
-function getE2EImageUrls(args: UploadImagesArgs) {
-	if (!args.files?.length) return [];
+async function getImageUploadErrorMessage(response: Response) {
+	try {
+		const result = await response.json() as { error?: string };
+		if (result.error) return result.error;
+	} catch {
+		// Ignore JSON parsing errors and fall back to a generic message.
+	}
 
-	return args.files.map((file, index) => {
-		const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, `-`);
-		return `https://assets.blissbase.app/e2e/${args.slug}/${index}-${safeFileName}.webp`;
-	});
+	return `Failed to upload event images`;
 }
 
 /**
