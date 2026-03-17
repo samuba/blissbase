@@ -31,7 +31,7 @@ export const load = (async ({ cookies, locals }) => {
         }
         if (decodedCity) {
             autoDetectedCity = decodedCity;
-            params = { ...params, plzCity: decodedCity, distance: '50' };
+            params = { ...params, plzCity: decodedCity, distance: '100' };
             saveFiltersToCookie(cookies, {
                 ...(savedFilters ?? {}),
                 plzCity: decodedCity,
