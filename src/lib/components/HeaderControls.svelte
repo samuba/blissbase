@@ -3,15 +3,10 @@
 	import LocationDistanceInput from './LocationDistanceInput.svelte';
 	import { parseDate } from '@internationalized/date';
 	import { eventsStore } from '$lib/eventsStore.svelte';
-	import BurgerMenu from './BurgerMenu.svelte';
 	import TagSelection from './TagSelection.svelte';
 	import { Dialog } from '$lib/components/dialog';
 	import ToggleButton from './ToggleButton.svelte';
-	interface Props {
-		userId: string | undefined;
-	}
-
-	let { userId }: Props = $props();
+	import TabsNavDesktop from './TabsNavDesktop.svelte';
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
@@ -48,7 +43,7 @@
 
 <header
 	bind:this={headerElement}
-	class={[ 'z-10 w-full flex flex-col gap-3 bg-base-200 sticky top-0  max-w-161 py-3 mt-3' ]}
+	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  py-3 mt-3 max-w-3xl' ]}
 	id="header-controls"
 >		
 	<!-- shadow -->
@@ -58,12 +53,10 @@
 			style="top: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, transparent 100%);"
 		></div>
 	{/if}
-	<div class="flex w-full items-center justify-center gap-3 px-4 sm:px-0">
-		<BurgerMenu {userId} class="hidden md:block">
-			<div class="py-2 flex items-center justify-center text-sm font-medium">
-				<i class="icon-[ph--list] size-5"></i>
-			</div>
-		</BurgerMenu>
+	
+	<TabsNavDesktop />
+
+	<div class="flex w-full items-center justify-center gap-3 px-4 sm:px-0 max-w-2xl mx-auto">
 		<div class="w-full min-w-0 flex-1 md:w-auto">
 			<LocationDistanceInput
 				initialLocation={initialLocation}
@@ -80,15 +73,7 @@
 	</div>
 
 
-	<div class="flex w-full items-center gap-4 px-4 sm:px-0">
-		<BurgerMenu {userId} class="block md:hidden">
-			<div class="py-2 flex items-center justify-center text-sm font-medium">
-				<i class="icon-[ph--list] size-5"></i>
-				<!-- <img src="/logo.svg" alt="Menü" class="mr-2 size-6" />
-				Menu -->
-			</div>
-		</BurgerMenu>
-
+	<div class="flex w-full items-center gap-4 px-4 sm:px-0 max-w-2xl mx-auto">
 		<TagSelection />
 	</div>
 </header>

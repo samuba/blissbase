@@ -1,4 +1,4 @@
-vercel function ist jetzt 66MB gross! weil image sharp stuff in remote function ist?
+
 new layout with tabs at the bottom: profile, discover, impressum?
 
 check whatsup danang times correct

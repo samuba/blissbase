@@ -1,7 +1,7 @@
 export const BASE_URL = "https://blissbase.app" as const
 
 export const routes = {
-    root: () => '/',
+    root: () => `/` as const,
     eventList: (args: { searchTerm?: string | null } = {}) => {
         const url = new URL('/', BASE_URL);
         if (args.searchTerm) url.searchParams.set('searchTerm', args.searchTerm);
@@ -11,9 +11,9 @@ export const routes = {
         const url = new URL(`/${slug}`, BASE_URL);
         return absolute ? url.toString() : url.toString().replace(url.origin, '');
     },
-    sources: () => '/sources',
-    newEvent: () => '/new',
-    newEventExplained: () => '/new-explained',
+    sources: () => `/sources` as const,
+    newEvent: () => `/new` as const,
+    profile: () => `/profile` as const,
     editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
         const url = new URL(`/edit/${id}`, BASE_URL);
         if (hostSecret) {
@@ -22,5 +22,5 @@ export const routes = {
         }
         return absolute ? url.toString() : url.toString().replace(url.origin, '');
     },
-    favorites: () => '/profile/favorites'
+    favorites: () => `/profile/favorites` as const
 }

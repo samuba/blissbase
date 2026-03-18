@@ -1,5 +1,5 @@
 // @ts-check
-import { adapter as svelte } from "@wuchale/svelte"
+import { adapter as svelte, svelteDefaultHeuristicDerivedReq } from "@wuchale/svelte"
 import { adapter as js } from 'wuchale/adapter-vanilla'
 import { defineConfig } from "wuchale"
 import { generateText } from 'ai';
@@ -15,12 +15,13 @@ export default defineConfig({
     sourceLocale: 'de',
     otherLocales: ['en'],
     adapters: {
-        main: svelte({ loader: 'sveltekit' }),
+        main: svelte({ loader: 'sveltekit', heuristic: svelteDefaultHeuristicDerivedReq }),
         js: js({
             loader: 'vite',
             files: [
                 'src/**/+{page,layout}.{js,ts}',
                 'src/**/+{page,layout}.server.{js,ts}',
+                'src/lib/components/tabsNav.ts'
             ],
         })
     },

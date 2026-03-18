@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { addFavorite, getFavoriteEventIds, removeFavorite } from '$lib/favorites.remote';
 	import { user } from '$lib/user.svelte';
-	import LoginDialog from './LoginDialog.svelte';
+	import { showLoginDialog } from './LoginDialog.svelte';
 
 	let {
 		class: className,
@@ -17,17 +17,16 @@
 
 	const name = crypto.randomUUID();
 	const favoriteIdsQuery = getFavoriteEventIds();
-	let favorites = $derived(await favoriteIdsQuery);
+	let favorites = await favoriteIdsQuery;
 	let isFavorite = $derived(favorites.includes(eventId));
 	let animate = $state(false);
-	let loginDialogOpen = $state(false);
 
 	function handleChange(event: Event) {
 		event.preventDefault();
 		event.stopPropagation();
 
 		if (!user.id) {
-			loginDialogOpen = true;
+			showLoginDialog();
 			(event.target as HTMLInputElement).checked = false;
 			return;
 		}
@@ -106,8 +105,6 @@
 		</svg>
 	</label>
 </div>
-
-<LoginDialog bind:open={loginDialogOpen} />
 
 <style>
 	svg {

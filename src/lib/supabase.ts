@@ -3,9 +3,9 @@ import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/stati
 import { browser } from '$app/environment';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export function createSupabaseBrowserClient() {
+export function getSupabaseBrowserClient() {
 	if (!browser) {
-		throw new Error(`createSupabaseBrowserClient can only be called in the browser`);
+		throw new Error(`getSupabaseBrowserClient can only be called in the browser`);
 	}
 
 	if (globalThis.__supabaseClient) {

@@ -179,8 +179,6 @@
 	}
 </script>
 
-<LoginDialog bind:open={showLoginDialog} />
-
 <svelte:head>
 	{#if event.sourceUrl}
 		<link rel="canonical" href={event.sourceUrl} />

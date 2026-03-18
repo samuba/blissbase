@@ -14,7 +14,8 @@ msgstr ""
 
 #: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/PageHeader.svelte
-#: src/lib/components/PageHeader.svelte
+#: src/lib/components/TabsNavDesktop.svelte
+#: src/lib/components/TabsNavDesktop.svelte
 #: src/routes/+error.svelte
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
@@ -117,7 +118,7 @@ msgstr "Anmelden <0/>"
 
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/new/+page.svelte
+#: src/routes/auth/login/+page.svelte
 msgid "Anmelden"
 msgstr "Anmelden"
 
@@ -203,22 +204,6 @@ msgid "Nächste 30 Tage"
 msgstr "Nächste 30 Tage"
 
 #: src/lib/components/AddToCalendarButton.svelte
-msgid "Google"
-msgstr "Google"
-
-#: src/lib/components/AddToCalendarButton.svelte
-msgid "Apple"
-msgstr "Apple"
-
-#: src/lib/components/AddToCalendarButton.svelte
-msgid "Outlook Online"
-msgstr "Outlook Online"
-
-#: src/lib/components/AddToCalendarButton.svelte
-msgid "Yahoo"
-msgstr "Yahoo"
-
-#: src/lib/components/AddToCalendarButton.svelte
 #: src/lib/components/AddToCalendarButton.svelte
 msgid "Zum Kalender hinzufügen"
 msgstr "Zum Kalender hinzufügen"
@@ -229,14 +214,18 @@ msgstr "<0/> Willkommen bei Blissbase"
 
 #: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/BurgerMenu.svelte
+#: src/routes/about/+page.svelte
+#: src/routes/about/+page.svelte
 msgid "Samuel"
 msgstr "Samuel"
 
 #: src/lib/components/BurgerMenu.svelte
+#: src/routes/about/+page.svelte
 msgid "Peace, Love & Light 🌻"
 msgstr "Peace, Love & Light 🌻"
 
 #: src/lib/components/BurgerMenu.svelte
+#: src/routes/about/+page.svelte
 msgid ""
 "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich\n"
 "entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
@@ -253,10 +242,12 @@ msgid "<0/> Favoriten"
 msgstr "<0/> Favoriten"
 
 #: src/lib/components/BurgerMenu.svelte
+#: src/routes/profile/+page.svelte
 msgid "<0/> Wird abgemeldet..."
 msgstr "<0/> Wird abgemeldet..."
 
 #: src/lib/components/BurgerMenu.svelte
+#: src/routes/profile/+page.svelte
 msgid "<0/> Abmelden"
 msgstr "<0/> Abmelden"
 
@@ -349,20 +340,19 @@ msgstr "Standort"
 msgid "Überall"
 msgstr "Überall"
 
-#: src/lib/components/LoginDialog.svelte
+#: src/lib/components/Login.svelte
 msgid "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
 msgstr "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
 
-#: src/lib/components/LoginDialog.svelte
+#: src/lib/components/Login.svelte
 msgid "<0/> Wird gesendet..."
 msgstr "<0/> Wird gesendet..."
 
-#: src/lib/components/LoginDialog.svelte
+#: src/lib/components/Login.svelte
 msgid "<0/> Login-Link senden"
 msgstr "<0/> Login-Link senden"
 
 #: src/lib/components/PageHeader.svelte
-#: src/routes/profile/favorites/+page.svelte
 #: src/routes/sources/+page.svelte
 msgid "<0/> Zurück"
 msgstr "<0/> Zurück"
@@ -519,16 +509,11 @@ msgid "<0/> Alle Events"
 msgstr "<0/> Alle Events"
 
 #: src/routes/profile/favorites/+page.svelte
-msgid "Favoriten"
-msgstr "Favoriten"
-
-#: src/routes/profile/favorites/+page.svelte
 msgid "Keine Events in deinen Favoriten."
 msgstr "Keine Events in deinen Favoriten."
 
-#: src/routes/profile/favorites/+page.svelte
-msgid "Vergangene Favoriten"
-msgstr "Vergangene Favoriten"
+#~ msgid "Vergangene Favoriten"
+#~ msgstr "Vergangene Favoriten"
 
 #: src/routes/new/+page.svelte
 msgid "Event erstellen"
@@ -549,12 +534,6 @@ msgstr "Invalid event ID"
 #: src/routes/edit/[id]/+page.server.ts
 msgid "Event not found"
 msgstr "Event not found"
-
-#~ msgid "Host secret is required"
-#~ msgstr "Host secret is required"
-
-#~ msgid "Invalid host secret"
-#~ msgstr "Invalid host secret"
 
 #: src/lib/components/BurgerMenu.svelte
 msgid "App teilen"
@@ -584,12 +563,7 @@ msgstr "<0/> Suchen"
 msgid "Fehler beim Laden der Events:"
 msgstr "Fehler beim Laden der Events:"
 
-#. placeholder {0}: email
-#: src/lib/components/LoginDialog.svelte
-msgid "Login-Link wurde an <b>{0}</b> gesendet. Bitte überprüfe dein Postfach."
-msgstr "Login-Link wurde an <b>{0}</b> gesendet. Bitte überprüfe dein Postfach."
-
-#: src/lib/components/LoginDialog.svelte
+#: src/lib/components/Login.svelte
 msgid "Ein Fehler ist aufgetreten"
 msgstr "Ein Fehler ist aufgetreten"
 
@@ -746,10 +720,6 @@ msgstr "Hallo, ich habe deinen Event '{0}' am {1} auf Blissbase.app gefunden und
 msgid "<0/> Zur Startseite"
 msgstr "<0/> Zur Startseite"
 
-#: src/routes/new/+page.svelte
-msgid "Andere Optionen"
-msgstr "Andere Optionen"
-
 #: src/lib/components/EventForm.svelte
 msgid "Name *"
 msgstr "Name *"
@@ -765,46 +735,6 @@ msgstr "Online Event"
 #: src/lib/components/EventForm.svelte
 msgid "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 msgstr "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-
-#: src/routes/new-explained/+page.svelte
-msgid "How do you want to create your event?"
-msgstr "How do you want to create your event?"
-
-#: src/routes/new-explained/+page.svelte
-msgid "Choose the option that fits your workflow."
-msgstr "Choose the option that fits your workflow."
-
-#: src/routes/new-explained/+page.svelte
-msgid "<0/> Telegram bot"
-msgstr "<0/> Telegram bot"
-
-#: src/routes/new-explained/+page.svelte
-msgid "Send your event to the bot in one message including description, location, date and image."
-msgstr "Send your event to the bot in one message including description, location, date and image."
-
-#: src/routes/new-explained/+page.svelte
-msgid "Send to Telegram bot <0/>"
-msgstr "Send to Telegram bot <0/>"
-
-#: src/routes/new-explained/+page.svelte
-msgid "<0/> Event sources"
-msgstr "<0/> Event sources"
-
-#: src/routes/new-explained/+page.svelte
-msgid ""
-"Add your event to one of the tracked sources. It usually appears on Blissbase within half a\n"
-"day."
-msgstr ""
-"Add your event to one of the tracked sources. It usually appears on Blissbase within half a\n"
-"day."
-
-#: src/routes/new-explained/+page.svelte
-msgid "Show event sources <0/>"
-msgstr "Show event sources <0/>"
-
-#: src/routes/new/+page.svelte
-msgid "Bitte melde dich an, um einen Event zu erstellen."
-msgstr "Bitte melde dich an, um einen Event zu erstellen."
 
 #: src/lib/components/TagsInput.svelte
 msgid "ArrowDown"
@@ -935,3 +865,105 @@ msgstr "<0/> Bearbeiten"
 #: src/routes/edit/[id]/+page.server.ts
 msgid "You are not allowed to edit this event"
 msgstr "You are not allowed to edit this event"
+
+#: src/routes/profile/+page.svelte
+msgid "Meine Bereiche"
+msgstr "Meine Bereiche"
+
+#: src/routes/profile/+page.svelte
+msgid "Hier findest du deine persönlichen Bereiche und schnelle Wege zu deinen wichtigsten Aktionen."
+msgstr "Hier findest du deine persönlichen Bereiche und schnelle Wege zu deinen wichtigsten Aktionen."
+
+#: src/routes/profile/+page.svelte
+msgid "Du bist eingeloggt als <0/>"
+msgstr "Du bist eingeloggt als <0/>"
+
+#: src/lib/components/Login.svelte
+msgid "Login-Link wurde an <0/> gesendet. Bitte überprüfe dein Postfach."
+msgstr "Login-Link wurde an <0/> gesendet. Bitte überprüfe dein Postfach."
+
+#: src/lib/components/TabsNavMobile.svelte
+msgid "Hauptnavigation mobil"
+msgstr "Hauptnavigation mobil"
+
+#: src/lib/components/TabsNavMobile.svelte
+#: src/lib/components/tabsNav.ts
+msgid "Erstellen"
+msgstr "Erstellen"
+
+#: src/lib/components/TabsNavDesktop.svelte
+msgid "Hauptnavigation"
+msgstr "Hauptnavigation"
+
+#: src/routes/new/+page.svelte
+msgid "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
+msgstr "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
+
+#: src/routes/new/+page.svelte
+msgid "<0/> Direkt hier auf Blissbase"
+msgstr "<0/> Direkt hier auf Blissbase"
+
+#: src/routes/new/+page.svelte
+msgid "Erstelle deinen Event direkt hier auf Blissbase."
+msgstr "Erstelle deinen Event direkt hier auf Blissbase."
+
+#: src/routes/new/+page.svelte
+msgid "Event erstellen <0/>"
+msgstr "Event erstellen <0/>"
+
+#: src/routes/new/+page.svelte
+msgid "<0/> Telegram-Bot"
+msgstr "<0/> Telegram-Bot"
+
+#: src/routes/new/+page.svelte
+msgid "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!"
+msgstr "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!"
+
+#: src/routes/new/+page.svelte
+msgid "Event an Telegram-Bot senden <0/>"
+msgstr "Event an Telegram-Bot senden <0/>"
+
+#: src/routes/new/+page.svelte
+msgid ""
+"<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
+"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
+msgstr ""
+"<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
+"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
+
+#: src/lib/components/tabsNav.ts
+msgid "Entdecken"
+msgstr "Entdecken"
+
+#~ msgid "Gemerkt"
+#~ msgstr "Gemerkt"
+
+#: src/lib/components/tabsNav.ts
+msgid "Profil"
+msgstr "Profil"
+
+#~ msgid "Vergangene"
+#~ msgstr "Vergangene"
+
+#: src/lib/components/tabsNav.ts
+msgid "Favoriten"
+msgstr "Favoriten"
+
+#: src/routes/about/+page.svelte
+msgid ""
+"Ich will die achtsamen Communities Deutschlands zusammen bringen.\n"
+"Dafür sammel ich Events (über <0/>)\n"
+"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
+"an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+msgstr ""
+"Ich will die achtsamen Communities Deutschlands zusammen bringen.\n"
+"Dafür sammel ich Events (über <0/>)\n"
+"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
+"an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+
+#~ msgid "Info"
+#~ msgstr "Info"
+
+#: src/lib/components/tabsNav.ts
+msgid "Über"
+msgstr "Über"

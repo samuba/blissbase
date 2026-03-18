@@ -73,88 +73,93 @@
 </div>
 	
 <div class="container mx-auto flex flex-col items-center justify-center pb-4 sm:w-2xl">
-	
-	{#if showAutoLocationHint}
-		<div class="px-4 w-full mt-4">
-			<div class="alert bg-base-100 mb-2 relative alert-horizontal">
-				<i class="icon-[ph--info] size-6 shrink-0"></i>
-				<span class="w-full">
-					Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
-					Wenn das nicht dein Standort ist, ändere ihn unten.
-				</span>
-				<button
-					class="btn btn-circle btn-ghost btn-sm p-0.25"
-					aria-label="Hinweis schließen"
-					onclick={() => {
-						dismissedAutoLocationHint = true;
-						setLocationInteractedCookie();
-					}}
-				>
-					<i class="icon-[ph--x] size-4"></i>
-				</button>
-			</div>
-		</div>
-	{/if}
 
-	<HeaderControls {userId} />
-
-	<svelte:boundary>
-		<div class="px-4">
-			{#if eventsStore.isLoading}
-				{@render loading(true)}
-			{:else if (eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat)}
-				<div class={noResultsContainerClasses}>
-					<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
-						<i class="icon-[ph--gps-slash] size-10  block"></i>
-						<span>
-
-							Ort <b>"{eventsStore.pagination.plzCity}"</b> nicht gefunden
+	<div class="contents md:flex gap-4">
+		<div class="contents md:block">
+			{#if showAutoLocationHint}
+				<div class="px-4 w-full mt-4">
+					<div class="alert bg-base-100 mb-2 relative alert-horizontal">
+						<i class="icon-[ph--info] size-6 shrink-0"></i>
+						<span class="w-full">
+							Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
+							Wenn das nicht dein Standort ist, ändere ihn unten.
 						</span>
-					</div>
-				</div>
-			{:else if eventsStore.hasEvents}
-				<div class="fade-in flex w-full flex-col items-center gap-6">
-					{#each eventsStore.events as event, i (event.id)}
-						<EventCard {event} hidePastEvent />
-					{/each}
-	
-					<div
-						{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
-						class="-translate-y-72"
-					/>
-	
-					{#if eventsStore.isLoadingMore}
-						{@render loading(false)}
-					{/if}
-				</div>
-			{:else}
-			<div class={noResultsContainerClasses}>
-					<div class="text-gray-500 text-center">
-						Keine Events gefunden
-						{#if eventsStore.hasSearchFilter}
-							mit <br /> {@html eventsStore.searchFilter?.split(' ').map(x => `<b>${x}</b>`).join(' & ')}<br />
-						{/if}
-						{#if eventsStore.hasLocationFilter}
-							in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km radius)</span><br />
-						{/if}
-						{#if eventsStore.hasDateFilter}
-							vom <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />
-						{/if}
+						<button
+							class="btn btn-circle btn-ghost btn-sm p-0.25"
+							aria-label="Hinweis schließen"
+							onclick={() => {
+								dismissedAutoLocationHint = true;
+								setLocationInteractedCookie();
+							}}
+						>
+							<i class="icon-[ph--x] size-4"></i>
+						</button>
 					</div>
 				</div>
 			{/if}
+		
+			<HeaderControls {userId} />
+		
+			<svelte:boundary>
+				<div class="px-4 md:px-0 max-w-2xl mx-auto">
+					{#if eventsStore.isLoading}
+						{@render loading(true)}
+					{:else if (eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat)}
+						<div class={noResultsContainerClasses}>
+							<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
+								<i class="icon-[ph--gps-slash] size-10  block"></i>
+								<span>
+		
+									Ort <b>"{eventsStore.pagination.plzCity}"</b> nicht gefunden
+								</span>
+							</div>
+						</div>
+					{:else if eventsStore.hasEvents}
+						<div class="fade-in flex w-full flex-col items-center gap-6">
+							{#each eventsStore.events as event, i (event.id)}
+								<EventCard {event} hidePastEvent />
+							{/each}
+			
+							<div
+								{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
+								class="-translate-y-72"
+							/>
+			
+							{#if eventsStore.isLoadingMore}
+								{@render loading(false)}
+							{/if}
+						</div>
+					{:else}
+					<div class={noResultsContainerClasses}>
+							<div class="text-gray-500 text-center">
+								Keine Events gefunden
+								{#if eventsStore.hasSearchFilter}
+									mit <br /> {@html eventsStore.searchFilter?.split(' ').map(x => `<b>${x}</b>`).join(' & ')}<br />
+								{/if}
+								{#if eventsStore.hasLocationFilter}
+									in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km radius)</span><br />
+								{/if}
+								{#if eventsStore.hasDateFilter}
+									vom <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />
+								{/if}
+							</div>
+						</div>
+					{/if}
+				</div>
+		
+				{#snippet failed(error, reset)}
+					<div role="alert" class="alert alert-error">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						<b>Fehler beim Laden der Events:</b>
+						{error instanceof Error ? error.message : String(error)}
+					</div>
+				{/snippet}
+			</svelte:boundary>
 		</div>
-
-		{#snippet failed(error, reset)}
-			<div role="alert" class="alert alert-error">
-				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-				</svg>
-				<b>Fehler beim Laden der Events:</b>
-				{error instanceof Error ? error.message : String(error)}
-			</div>
-		{/snippet}
-	</svelte:boundary>
+	</div>
+	
 </div>
 
 {#snippet loading(reserveVerticalSpace: boolean)}

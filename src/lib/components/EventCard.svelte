@@ -4,7 +4,6 @@
 	import { pushState } from '$app/navigation';
 	import { routes } from '$lib/routes';
 	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
-	import LoginDialog from './LoginDialog.svelte';
 	import FavoriteButton from './FavoriteButton.svelte';
 	import { now } from '$lib/now.svelte';
 	import { localeStore } from '../../locales/localeStore.svelte';
@@ -52,11 +51,7 @@
 		});
 		return Array.from(tags);
 	});
-
-	let showLoginDialog = $state(false);
 </script>
-
-<LoginDialog bind:open={showLoginDialog} />
 
 {#if !hideEvent}
 	<a

@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import type { HandleServerError } from '@sveltejs/kit';
 import { PostHog } from 'posthog-node';
@@ -12,6 +12,7 @@ import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
 import { locales } from './locales/data.js'
 import { localeStore } from './locales/localeStore.svelte.js';
 import { E2E_TEST } from '$env/static/private';
+import { resolve as resolveRoute } from '$app/paths';
 
 // load at server startup
 loadLocales(main.key, main.loadIDs, main.loadCatalog, locales)
@@ -116,6 +117,16 @@ const supabaseAuth: Handle = async ({ event, resolve }) => {
     });
 };
 
+const guardRoutesWithLogin: Handle = async ({ event, resolve }) => {
+    const { userId } = event.locals;
+    ["/new", "/profile"].forEach(route => {
+        if (event.url.pathname.startsWith(route) && !userId) {
+            redirect(302, resolveRoute('/auth/login'));
+        }
+    });
+    return resolve(event);
+}
+
 export const handleError: HandleServerError = async ({ error, status }) => {
     if (status === 404) return; // ignore 404 errors
     console.error(error);
@@ -134,6 +145,7 @@ export const handle: Handle = async ({ event, resolve }) => {
             extractVercelHeader,
             insertPosthog,
             supabaseAuth,
+            guardRoutesWithLogin,
         )({ event, resolve });
     } finally {
         if (!dev) waitUntil(posthog.shutdown())
