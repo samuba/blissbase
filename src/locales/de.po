@@ -980,3 +980,6 @@ msgstr "Suche öffnen"
 #: src/lib/components/TagSelection.svelte
 msgid "<0/> <1/> suchen"
 msgstr "<0/> <1/> suchen"
+
+#~ msgid "<0><0/> <1/> suchen</0> div <1/>"
+#~ msgstr "<0><0/> <1/> suchen</0> div <1/>"

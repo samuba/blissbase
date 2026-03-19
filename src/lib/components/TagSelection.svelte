@@ -7,7 +7,7 @@
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
 
-	const { allTags, previewTags } = await getTags();
+	const { allTags } = await getTags();
 	type Tag = (typeof allTags)[number];
 
 	/** Parses search term and returns matched tags */
@@ -68,6 +68,8 @@
 	let locale = $derived(localeStore.locale as 'en' | 'de');
 	let popoverOpen = $state(false);
 	let allowPopoverOpen = $state(false);
+	let showLeftShadow = $state(false);
+	let showRightShadow = $state(false);
 
 	eventsStore.showTextSearch = initialState.showTextSearch;
 
@@ -174,16 +176,42 @@
 		args.element.scrollBy({ left: args.event.deltaY });
 	}
 
+	function updateTagRailShadows(element: HTMLDivElement) {
+		const tolerance = 2;
+		const hasOverflow = element.scrollWidth - element.clientWidth > tolerance;
+		if (!hasOverflow) {
+			showLeftShadow = false;
+			showRightShadow = false;
+			return;
+		}
+
+		const isAtStart = element.scrollLeft <= tolerance;
+		const isAtEnd = element.scrollLeft + element.clientWidth >= element.scrollWidth - tolerance;
+
+		showLeftShadow = !isAtStart;
+		showRightShadow = !isAtEnd;
+	}
+
+	function trackTagRail(node: HTMLDivElement) {
+		const update = () => updateTagRailShadows(node);
+		const resizeObserver = new ResizeObserver(update);
+		resizeObserver.observe(node);
+		requestAnimationFrame(update);
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	}
+
 	const debouncedSearch = debounce<string | undefined>(
 		(term) => eventsStore.handleSearchTermChange(term?.trim() || ''),
 		400
 	);
 </script>
 
-<div class="flex w-full max-w-full min-w-0 items-center overflow-hidden" in:fade={{ duration: 280 }}>
+<div class="flex w-full max-w-full min-w-0 items-center " in:fade={{ duration: 280 }}>
 	<div
-		class="tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto pb-1"
-		onwheel={(event) => handleTagRailWheel({ event, element: event.currentTarget })}
+		class="flex w-full min-w-0 flex-nowrap items-center gap-2 pb-1 overflow-hidden relative"
 	>
 		<PopOver
 			bind:open={popoverOpen}
@@ -207,7 +235,7 @@
 			{#snippet trigger()}
 				<div
 					class={[
-						'shrink-0 overflow-hidden transition-all duration-300 ease-out',
+						'tag-trigger shrink-0 overflow-hidden transition-all duration-300 ease-out',
 						searchExpanded || showTextSearch && 'w-42'
 					]}
 				>
@@ -301,26 +329,54 @@
 			{/snippet}
 		</PopOver>
 
-		{#each selectedTags as tag (tag.id)}
-			<button
-				class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap"
-				onclick={() => removeTag(tag)}
-				in:fade={{ duration: 280 }}
-				animate:flip={{ duration: 280 }}
+		<div class="relative w-full overflow-hidden">		
+			<div 
+				class="overflow-x-auto flex w-full min-w-0 flex-nowrap items-center gap-2  tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent "
+				{@attach trackTagRail}
+				onscroll={(event) => updateTagRailShadows(event.currentTarget)}
+				onwheel={(event) => handleTagRailWheel({ event, element: event.currentTarget })}
 			>
-				{tag[locale]}
-				<i class="icon-[ph--x] size-5"></i>
-			</button>
-		{/each}
-
-		{#each railTags as tag (tag.id)}
-			<button
-				class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap"
-				onclick={() => selectTag(tag)}
-			>
-				{tag[locale] ?? tag.slug}
-			</button>
-		{/each}
+				<div 
+					class="flex w-full min-w-0 flex-nowrap items-center gap-2"
+				>
+					{#each selectedTags as tag (tag.id)}
+						<button
+							class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap"
+							onclick={() => removeTag(tag)}
+							in:fade={{ duration: 280 }}
+							animate:flip={{ duration: 280 }}
+						>
+							{tag[locale]}
+							<i class="icon-[ph--x] size-5"></i>
+						</button>
+					{/each}
+	
+					{#each railTags as tag (tag.id)}
+						<button
+							class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap"
+							onclick={() => selectTag(tag)}
+						>
+							{tag[locale] ?? tag.slug}
+						</button>
+					{/each}
+				</div>
+				<!-- shadow right -->
+				<div
+					class={[
+						'flex items-center justify-center from-base-200 via-base-200/80 pointer-events-none absolute top-0 right-0 bottom-0 w-20 bg-linear-to-l to-transparent transition-opacity duration-300 ease-out',
+						showRightShadow ? 'opacity-100' : 'opacity-0'
+					]}
+				>
+				</div>
+				<!-- shadow left -->
+				<div
+					class={[
+						'from-base-200 via-base-200/80 pointer-events-none absolute top-0 left-0 bottom-0 w-10 bg-linear-to-r to-transparent transition-opacity duration-300 ease-out',
+						showLeftShadow ? 'opacity-100' : 'opacity-0'
+					]}
+				></div>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -329,6 +385,10 @@
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		scrollbar-gutter: stable;
+	}
+
+	.tag-trigger {
+		padding-bottom: 0;
 	}
 
 	.tag-rail-scrollbar::-webkit-scrollbar {
@@ -353,6 +413,12 @@
 	@media (max-width: 640px) {
 		.tag-rail-scrollbar::-webkit-scrollbar {
 			height: 4px;
+		}
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.tag-trigger {
+			padding-bottom: 10px;
 		}
 	}
 </style>
