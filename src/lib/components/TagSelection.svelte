@@ -365,15 +365,15 @@
 				<!-- shadow right -->
 				<div
 					class={[
-						'flex items-center justify-center from-base-200 via-base-200/80 pointer-events-none absolute top-0 right-0 bottom-0 w-25 bg-linear-to-l to-transparent transition-opacity duration-300 ease-out',
-						showRightShadow ? 'opacity-100' : 'opacity-0'
+						'flex items-center justify-center from-base-200 via-base-200/70 pointer-events-none absolute top-0 right-0 bottom-0 bg-linear-to-l to-transparent transition-all duration-300 ease-out',
+						showRightShadow ? 'opacity-100' : 'opacity-0', showLeftShadow ? 'w-10' : 'w-25'
 					]}
 				>
 				</div>
 				<!-- shadow left -->
 				<div
 					class={[
-						'from-base-200 via-base-200/80 pointer-events-none absolute top-0 left-0 bottom-0 w-10 bg-linear-to-r to-transparent transition-opacity duration-300 ease-out',
+						'from-base-200 via-base-200/70 pointer-events-none absolute top-0 left-0 bottom-0 w-10 bg-linear-to-r to-transparent transition-opacity duration-300 ease-out',
 						showLeftShadow ? 'opacity-100' : 'opacity-0'
 					]}
 				></div>
