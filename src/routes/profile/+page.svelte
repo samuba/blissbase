@@ -73,23 +73,22 @@
 					</p>
 				</div>
 			</div>
+		</div>
+	</div>
 
-			<div class="alert alert-soft">
-				<i class="icon-[ph--check-circle] size-5"></i>
-				<span>Du bist eingeloggt als <strong>{session.email}</strong></span>
-			</div>
-
-			<div class="flex flex-wrap gap-3">
-				<button class="btn" onclick={handleLogout} disabled={isLoggingOut}>
-					{#if isLoggingOut}
-						<span class="loading loading-spinner loading-sm"></span>
-						Wird abgemeldet...
-					{:else}
-						<i class="icon-[ph--sign-out] size-5"></i>
-						Abmelden
-					{/if}
-				</button>
-			</div>
+	<div class="card shadow bg-base-100 mt-4">
+		<!-- <i class="icon-[ph--check-circle] size-5"></i> -->
+		<div class="flex flex-col gap-3 card-body">
+			<span>Du bist eingeloggt als <strong>{session.email}</strong></span>
+			<button class="btn btn-warning w-fit" onclick={handleLogout} disabled={isLoggingOut}>
+				{#if isLoggingOut}
+					<span class="loading loading-spinner loading-sm"></span>
+					Wird abgemeldet...
+				{:else}
+					<i class="icon-[ph--sign-out] size-5"></i>
+					Abmelden
+				{/if}
+			</button>
 		</div>
 	</div>
 
