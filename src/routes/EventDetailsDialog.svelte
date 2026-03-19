@@ -2,23 +2,17 @@
 	import type { UiEvent } from '$lib/server/events';
 	import { Dialog } from '$lib/components/dialog';
 	import EventDetails from './EventDetails.svelte';
-	import { page } from '$app/state';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 
-	let { event: eventParam }: { event: UiEvent | undefined } = $props();
-	let event = $state<UiEvent | undefined>(eventParam);
+	let { event }: { event: UiEvent | undefined } = $props();
 	let isHandlingClose = $state(false);
 
-	// Derive open state from page state
-	const isOpen = $derived(page.state.selectedEventId !== undefined);
+	const isOpen = $derived(event !== undefined);
 
-	$effect(() => {
-		// Keep the event for smooth content display
-		if (eventParam) {
-			event = eventParam;
-		}
-	});
+	// $inspect("event", event)
+	// $inspect("isOpen", isOpen)
+	// $inspect("eventParam", eventParam)
 
 	function handleClose() {
 		if (isHandlingClose) return;
