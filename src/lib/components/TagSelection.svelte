@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getTags } from './TagSelection.remote';
+	import { getTags } from '$lib/rpc/TagSelection.remote';
 	import PopOver from './PopOver.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { debounce } from '$lib/common';

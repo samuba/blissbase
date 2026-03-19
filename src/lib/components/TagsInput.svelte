@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Combobox } from 'bits-ui';
 	import { tick } from 'svelte';
-	import { getTags } from './TagSelection.remote';
+	import { getTags } from '$lib/rpc/TagSelection.remote';
 	import { localeStore } from '../../locales/localeStore.svelte';
 	import type { RemoteFormField } from '@sveltejs/kit';
 

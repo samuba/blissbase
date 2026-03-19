@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { events, favorites } from '$lib/server/schema';
 import { eq, and, inArray, asc } from 'drizzle-orm';
-import { eventWith, prepareEventsForUi } from './server/events';
+import { eventWith, prepareEventsForUi } from '$lib/server/events';
 
 export const getFavoriteEventIds = query(async () => {
 	const userId = getRequestEvent().locals.userId;

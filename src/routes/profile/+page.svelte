@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getUserSession } from '$lib/auth.remote';
+	import { getUserSession } from '$lib/rpc/auth.remote';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { routes } from '$lib/routes';
 	import { getSupabaseBrowserClient } from '$lib/supabase';

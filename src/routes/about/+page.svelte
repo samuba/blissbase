@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { estimateEventCount } from '$lib/eventCount.remote';
+    import { estimateEventCount } from '$lib/rpc/eventCount.remote';
 
     const eventCount = await estimateEventCount().then((count) => Math.floor(count / 1000) * 1000);
 </script>

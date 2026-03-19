@@ -62,3 +62,7 @@ Always create short, descriptive doc comments for function that include at least
 Wuchale is used for i18n.
 Never write *.po files inside src/locales.
 Use german Umlaute (ä,ö,ü etc) in all german texts.
+
+## server communication
+Prefer rpc calls via svelte remote functions.
+All remote function files are placed in src/lib/rpc

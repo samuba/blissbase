@@ -2,8 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { deleteEvent } from '$lib/eventDelete.remote';
-	import { updateEvent } from '$lib/eventMutations.remote';
+	import { deleteEvent } from '$lib/rpc/eventDelete.remote';
+	import { updateEvent } from '$lib/rpc/eventMutations.remote';
 	import EventForm from '$lib/components/EventForm.svelte';
 	import { type CreateEventSchema, type UpdateEventSchema, updateEventSchema } from '$lib/events.remote.common';
 	import type { RemoteForm } from '@sveltejs/kit';

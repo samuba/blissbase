@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import EventForm from '$lib/components/EventForm.svelte';
-	import { createEvent } from '$lib/eventMutations.remote';
+	import { createEvent } from '$lib/rpc/eventMutations.remote';
 	import { createEventSchema } from '$lib/events.remote.common';
 	import { resolve } from '$app/paths';
 	import { fade } from 'svelte/transition';

@@ -4,7 +4,7 @@ import * as v from 'valibot';
 import * as assets from '$lib/assets';
 import { db, eq, s } from '$lib/server/db';
 import { E2E_TEST } from '$env/static/private';
-import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from './events.remote.shared';
+import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 
 const deleteEventSchema = v.object({
 	eventId: v.number(),

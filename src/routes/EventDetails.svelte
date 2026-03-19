@@ -7,7 +7,7 @@
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import ImageDialog from '$lib/components/ImageDialog.svelte';
 	import EventAdminSection from '$lib/components/EventAdminSection.svelte';
-	import { getFavoriteEventIds, addFavorite, removeFavorite } from '$lib/favorites.remote';
+	import { getFavoriteEventIds, addFavorite, removeFavorite } from '$lib/rpc/favorites.remote';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { localeStore } from '../locales/localeStore.svelte';

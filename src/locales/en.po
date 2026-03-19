@@ -938,9 +938,8 @@ msgstr "Discover"
 #~ msgid "Gemerkt"
 #~ msgstr "Saved"
 
-#: src/lib/components/tabsNav.ts
-msgid "Profil"
-msgstr "Profile"
+#~ msgid "Profil"
+#~ msgstr "Profile"
 
 #~ msgid "Vergangene"
 #~ msgstr "Past"
@@ -967,3 +966,7 @@ msgstr ""
 #: src/lib/components/tabsNav.ts
 msgid "Über"
 msgstr "About"
+
+#: src/lib/components/tabsNav.ts
+msgid "Meins"
+msgstr "My"

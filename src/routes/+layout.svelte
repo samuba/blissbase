@@ -8,7 +8,7 @@
 	import { onMount } from 'svelte';
 	import { setupAutoRefresh } from '$lib/auto-refresh';
 	import { user } from '$lib/user.svelte';
-	import { getFavoriteEventIds } from '$lib/favorites.remote';
+	import { getFavoriteEventIds } from '$lib/rpc/favorites.remote';
 	import { invalidateAll } from '$app/navigation';
 	import { navigationIsDelayed } from '$lib/components/navigationIsDelayed.svelte';
 	import { fade } from 'svelte/transition';

@@ -2,7 +2,7 @@ import { fetchEvents, prepareEventsResultForUi } from "$lib/server/events";
 import type { PageServerLoad } from "./$types";
 import { loadFiltersFromCookie, LOCATION_INTERACTED_COOKIE_NAME, saveFiltersToCookie } from "$lib/cookie-utils";
 import { posthogCapture } from "$lib/server/common";
-import { getTags } from "$lib/components/TagSelection.remote";
+import { getTags } from "$lib/rpc/TagSelection.remote";
 
 export const load = (async ({ cookies, locals }) => {
     // Load saved filters from cookie

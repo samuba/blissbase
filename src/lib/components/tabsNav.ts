@@ -25,7 +25,7 @@ export function getAppTabs() {
 			requireLogin: true
 		},
 		{
-			label: "Profil",
+			label: "Meins",
 			href: resolve("/profile"),
 			icon: "icon-[ph--user-circle]",
 			iconActive: "icon-[ph--user-circle-fill]",

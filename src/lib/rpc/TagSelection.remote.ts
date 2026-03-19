@@ -2,13 +2,13 @@ import { dev } from "$app/environment";
 import { prerender } from "$app/server";
 import { db, s } from "$lib/server/db";
 import { desc, count, eq } from "drizzle-orm";
-import type { AllTags } from "./TagSelection.devData";
+import type { AllTags } from "$lib/components/TagSelection.devData";
 
 export const getTags = prerender(async () => {
     const previewTagSlugs = ['meditation', 'breathwork', 'tantra', 'conscious-dance', 'cacao-ceremony', 'kirtan']
     const allTags: AllTags = dev ?
         // prerender is run every load in dev and takes too long, so we just return a dummy result for dev
-        (await import('./TagSelection.devData')).devDummyData :
+        (await import('$lib/components/TagSelection.devData')).devDummyData :
         await db.query.tags.findMany({
             with: {
                 translations: true,

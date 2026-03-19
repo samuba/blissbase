@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { addFavorite, getFavoriteEventIds, removeFavorite } from '$lib/favorites.remote';
+	import { addFavorite, getFavoriteEventIds, removeFavorite } from '$lib/rpc/favorites.remote';
 	import { user } from '$lib/user.svelte';
 	import { showLoginDialog } from './LoginDialog.svelte';
 

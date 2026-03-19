@@ -1,6 +1,6 @@
 <script lang="ts">
 	import EventCard from '$lib/components/EventCard.svelte';
-	import { getFavoriteEvents, removeFavorite } from '$lib/favorites.remote';
+	import { getFavoriteEvents, removeFavorite } from '$lib/rpc/favorites.remote';
 	import { page } from '$app/state';
 	import EventDetailsDialog from '../../EventDetailsDialog.svelte';
 	import { flip } from 'svelte/animate';
