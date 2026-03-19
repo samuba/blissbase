@@ -40,8 +40,9 @@
 	}
 
 	function getInitialState() {
-		const searchTerm = eventsStore.searchFilter || '';
+		let searchTerm = eventsStore.searchFilter || '';
 		const matchedTags = parseSearchTermToTags(searchTerm);
+		if (matchedTags.length > 0) searchTerm = "";
 		return {
 			filterQuery: searchTerm,
 			selectedTags: matchedTags,
@@ -64,7 +65,7 @@
 	let selectedTags = $state<Tag[]>(initialState.selectedTags);
 	let searchExpanded = $state(initialState.searchExpanded);
 	let showTextSearch = $state(initialState.showTextSearch);
-	let keywordSearched = $state(false);
+	let keywordSearched = $state(initialState.showTextSearch);
 	let locale = $derived(localeStore.locale as 'en' | 'de');
 	let popoverOpen = $state(false);
 	let allowPopoverOpen = $state(false);
