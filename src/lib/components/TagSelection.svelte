@@ -329,6 +329,20 @@
 			{/snippet}
 		</PopOver>
 
+		<div class="flex flex-no-wrap gap-2 tag-trigger">
+			{#each selectedTags as tag (tag.id)}
+				<button
+					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap"
+					onclick={() => removeTag(tag)}
+					in:fade={{ duration: 280 }}
+					animate:flip={{ duration: 280 }}
+				>
+					{tag[locale]}
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
+			{/each}
+		</div>
+
 		<div class="relative w-full overflow-hidden">		
 			<div 
 				class="overflow-x-auto flex w-full min-w-0 flex-nowrap items-center gap-2  tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent "
@@ -338,19 +352,7 @@
 			>
 				<div 
 					class="flex w-full min-w-0 flex-nowrap items-center gap-2"
-				>
-					{#each selectedTags as tag (tag.id)}
-						<button
-							class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap"
-							onclick={() => removeTag(tag)}
-							in:fade={{ duration: 280 }}
-							animate:flip={{ duration: 280 }}
-						>
-							{tag[locale]}
-							<i class="icon-[ph--x] size-5"></i>
-						</button>
-					{/each}
-	
+				>	
 					{#each railTags as tag (tag.id)}
 						<button
 							class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap"
@@ -363,7 +365,7 @@
 				<!-- shadow right -->
 				<div
 					class={[
-						'flex items-center justify-center from-base-200 via-base-200/80 pointer-events-none absolute top-0 right-0 bottom-0 w-20 bg-linear-to-l to-transparent transition-opacity duration-300 ease-out',
+						'flex items-center justify-center from-base-200 via-base-200/80 pointer-events-none absolute top-0 right-0 bottom-0 w-25 bg-linear-to-l to-transparent transition-opacity duration-300 ease-out',
 						showRightShadow ? 'opacity-100' : 'opacity-0'
 					]}
 				>
