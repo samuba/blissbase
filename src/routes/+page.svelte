@@ -38,7 +38,7 @@
 		}
 	});
 
-	const noResultsContainerClasses = `flex flex-col items-center justify-center gap-3 h-[calc(100vh-8rem)]`
+	const noResultsContainerClasses = `flex flex-col justify-center gap-3 pt-4`
 </script>
 
 
