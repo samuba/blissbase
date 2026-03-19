@@ -970,3 +970,29 @@ msgstr "Über"
 #: src/lib/components/tabsNav.ts
 msgid "Meins"
 msgstr "Meins"
+
+#~ msgid "Meine Events"
+#~ msgstr "Meine Events"
+
+#~ msgid "Du hast noch keine Events erstellt."
+#~ msgstr "Du hast noch keine Events erstellt."
+
+#: src/routes/profile/+page.svelte
+msgid "Aktuelle Events"
+msgstr "Aktuelle Events"
+
+#: src/routes/profile/+page.svelte
+msgid "Vergangene Events"
+msgstr "Vergangene Events"
+
+#: src/routes/profile/+page.svelte
+msgid "Du hast aktuell keine Events."
+msgstr "Du hast aktuell keine Events."
+
+#: src/routes/profile/+page.svelte
+msgid "Du hast noch keine vergangenen Events."
+msgstr "Du hast noch keine vergangenen Events."
+
+#: src/routes/profile/+page.svelte
+msgid "Meine erstellten Events"
+msgstr "Meine erstellten Events"

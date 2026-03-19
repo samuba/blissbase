@@ -1,11 +1,46 @@
 <script lang="ts">
 	import { getUserSession } from '$lib/rpc/auth.remote';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { routes } from '$lib/routes';
 	import { getSupabaseBrowserClient } from '$lib/supabase';
+	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
+	import EventCard from '$lib/components/EventCard.svelte';
+	import EventDetailsDialog from '../EventDetailsDialog.svelte';
+	import { page } from '$app/state';
 
 	let isLoggingOut = $state(false);
 	const session = await getUserSession();
+	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
+
+	const upcomingEvents = await getMyAuthoredUpcomingEvents();
+
+	let pastEventsQuery = getMyAuthoredPastEvents;
+	let pastEvents = $state<typeof upcomingEvents>([]);
+	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
+
+	const selectedEvent = $derived.by(() => {
+		const selectedEventId = page.state.selectedEventId;
+		if (!selectedEventId) return undefined;
+
+		const event = upcomingEvents.find((x) => x.id === selectedEventId);
+		if (event) return event;
+
+		return pastEvents.find((x) => x.id === selectedEventId);
+	});
+
+	async function fetchPastEvents() {
+		if (pastEventsStatus !== `idle`) return;
+
+		pastEventsStatus = `loading`;
+		pastEvents = await getMyAuthoredPastEvents();
+		pastEventsStatus = `loaded`;
+	}
+
+	async function selectTab(tab: `upcoming` | `past`) {
+		if (selectedTab === tab) return;
+		selectedTab = tab;
+
+		if (tab !== `past`) return;
+		await fetchPastEvents();
+	}
 
 	async function handleLogout() {
 		if (isLoggingOut) return;
@@ -57,4 +92,65 @@
 			</div>
 		</div>
 	</div>
+
+	<div class="mt-8">
+		<h3 class="text-lg font-semibold">Meine erstellten Events</h3>
+
+		<div role="tablist" class="tabs tabs-box mt-3 bg-base-300 flex justify-center flex-row">
+			<button
+				role="tab"
+				class="tab grow"
+				class:tab-active={selectedTab === `upcoming`}
+				onclick={() => selectTab(`upcoming`)}
+			>
+				Aktuelle Events
+			</button>
+
+			<button
+				role="tab"
+				class="tab grow"
+				class:tab-active={selectedTab === `past`}
+				onclick={() => selectTab(`past`)}
+				onpointerdown={fetchPastEvents}
+				onmouseenter={fetchPastEvents}
+				onfocus={fetchPastEvents}
+			>
+				Vergangene Events
+			</button>
+		</div>
+
+		<div class:hidden={selectedTab !== `upcoming`}>
+			{#if upcomingEvents.length}
+				<div class="mt-4 flex w-full flex-col gap-6">
+					{#each upcomingEvents as event (event.id)}
+						<EventCard {event} />
+					{/each}
+				</div>
+			{:else}
+				<div class="mt-12 text-center text-base-content/60">
+					Du hast aktuell keine Events.
+				</div>
+			{/if}
+		</div>
+
+		<div class:hidden={selectedTab !== `past`}>
+			{#if pastEventsStatus === `loading`}
+				<div class="mt-12 flex justify-center">
+					<span class="loading loading-spinner"></span>
+				</div>
+			{:else if pastEvents.length}
+				<div class="mt-4 flex w-full flex-col gap-6">
+					{#each pastEvents as event (event.id)}
+						<EventCard {event} />
+					{/each}
+				</div>
+			{:else}
+				<div class="mt-12 text-center text-base-content/60">
+					Du hast noch keine vergangenen Events.
+				</div>
+			{/if}
+		</div>
+	</div>
 </div>
+
+<EventDetailsDialog event={selectedEvent} />

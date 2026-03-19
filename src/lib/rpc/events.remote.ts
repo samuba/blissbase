@@ -2,6 +2,10 @@ import { fetchEvents, loadEventsParamsSchema, prepareEventsResultForUi } from "$
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
 import { getRequestEvent, command, query } from '$app/server';
 import { posthogCapture } from "$lib/server/common";
+import { db, s } from '$lib/server/db';
+import { and, asc, desc, eq, lt, gte, sql } from 'drizzle-orm';
+import { eventWith, prepareEventsForUi } from '$lib/server/events';
+import { error } from '@sveltejs/kit';
 
 // using `command` instead of `query` cuz query does not allow setting cookies
 export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, async (params) => {
@@ -76,3 +80,41 @@ export const nothing = query(async () => {
     // no-op to be used with `command.updates(nothing)` to force svelte to not reload queries
     // can be removed when this is implemented: https://github.com/sveltejs/kit/issues/14079
 })
+
+export const getMyAuthoredUpcomingEvents = query(async () => {
+	const { locals } = getRequestEvent();
+	const userId = locals.userId;
+	if (!userId) throw error(401, `Unauthorized`);
+
+	const endsAtOrDefault = sql<Date>`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
+
+	const events = await db.query.events.findMany({
+		where: and(
+			eq(s.events.authorId, userId),
+			gte(endsAtOrDefault, sql`NOW()`)
+		),
+		with: eventWith,
+		orderBy: [asc(s.events.startAt), asc(s.events.id)],
+	});
+
+	return prepareEventsForUi(events);
+});
+
+export const getMyAuthoredPastEvents = query(async () => {
+	const { locals } = getRequestEvent();
+	const userId = locals.userId;
+	if (!userId) throw error(401, `Unauthorized`);
+
+	const endsAtOrDefault = sql<Date>`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
+
+	const events = await db.query.events.findMany({
+		where: and(
+			eq(s.events.authorId, userId),
+			lt(endsAtOrDefault, sql`NOW()`)
+		),
+		with: eventWith,
+		orderBy: [desc(s.events.startAt), desc(s.events.id)],
+	});
+
+	return prepareEventsForUi(events);
+});

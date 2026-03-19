@@ -1,5 +1,6 @@
 
 new layout with tabs at the bottom: profile, discover, impressum?
+hydration errors
 
 check whatsup danang times correct
 
