@@ -325,11 +325,32 @@
 </div>
 
 <style>
-	@media (max-width: 640px) {
-		.tag-rail-scrollbar {
-			scrollbar-width: thin;
-		}
+	.tag-rail-scrollbar {
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+		scrollbar-gutter: stable;
+	}
 
+	.tag-rail-scrollbar::-webkit-scrollbar {
+		height: 6px;
+	}
+
+	.tag-rail-scrollbar:hover,
+	.tag-rail-scrollbar:focus-within {
+		scrollbar-color: hsl(var(--b3)) transparent;
+	}
+
+	.tag-rail-scrollbar::-webkit-scrollbar-thumb {
+		background: transparent;
+		border-radius: 999px;
+	}
+
+	.tag-rail-scrollbar:hover::-webkit-scrollbar-thumb,
+	.tag-rail-scrollbar:focus-within::-webkit-scrollbar-thumb {
+		background: hsl(var(--b3));
+	}
+
+	@media (max-width: 640px) {
 		.tag-rail-scrollbar::-webkit-scrollbar {
 			height: 4px;
 		}
