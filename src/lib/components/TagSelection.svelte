@@ -6,7 +6,6 @@
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
-	import { browser } from '$app/environment';
 
 	const { allTags, previewTags } = await getTags();
 	type Tag = (typeof allTags)[number];
@@ -28,293 +27,311 @@
 		);
 	}
 
-	// Initialize with empty/default state to ensure SSR/hydration consistency
-	// (eventsStore and localeStore are singletons on client but fresh on server)
-	let showDropdown = $state(false);
-	let filterQuery = $state('');
-	let filterQueryInPopup = $state('');
-	let selectedTags = $state<Tag[]>([]);
-	let filterInputRef = $state<HTMLInputElement | null>(null);
-	let textSearchInputRef = $state<HTMLInputElement | null>(null);
-	let showTextSearch = $state(false);
-	let locale = $state<'en' | 'de'>('en'); // Start with server default
-	let hydrated = $state(false);
-
-	// After hydration, sync with actual store state
-	$effect(() => {
-		if (browser && !hydrated) {
-			hydrated = true;
-			// Sync locale from store
-			locale = localeStore.locale;
-			
-			// Sync search state from store
-			const searchTerm = eventsStore.searchFilter || '';
-			const matchedTags = parseSearchTermToTags(searchTerm);
-			
-			if (searchTerm.trim()) {
-				if (matchedTags.length > 0) {
-					selectedTags = matchedTags;
-					filterQuery = searchTerm;
-				} else {
-					showTextSearch = true;
-					filterQuery = searchTerm;
-				}
-			}
-		}
-	});
-	
-	// Keep locale in sync with store after hydration
-	$effect(() => {
-		if (hydrated) {
-			locale = localeStore.locale;
-		}
-	});
-
-	// Sync local showTextSearch state with store
-	$effect(() => {
-		eventsStore.showTextSearch = showTextSearch;
-	});
-
-
-	const selectedTagIds = $derived(new Set(selectedTags.map((t) => t.id)));
-	const hiddenTags = $derived(allTags.filter((x) => !previewTags.includes(x)));
-	const dropdownTags = $derived.by(() => {
-		const normalizedQuery = filterQueryInPopup.trim().toLowerCase();
-		// Filter out already selected tags
-		const availableTags = allTags.filter((tag) => !selectedTagIds.has(tag.id));
-
-		// When tags are selected, show all available tags
-		if (selectedTags.length > 0) {
-			if (!normalizedQuery) {
-				return availableTags;
-			}
-			return availableTags.filter(
-				(tag) =>
-					tag.en?.toLowerCase().includes(normalizedQuery) ||
-					tag.de?.toLowerCase().includes(normalizedQuery) ||
-					tag.nl?.toLowerCase().includes(normalizedQuery)
-			);
-		}
-		// When no tags are selected, show hidden tags or filtered results
-		if (!normalizedQuery) {
-			return hiddenTags;
-		}
-		return availableTags.filter(
-			(tag) =>
-				tag.en?.toLowerCase().includes(normalizedQuery) ||
-				tag.de?.toLowerCase().includes(normalizedQuery) ||
-				tag.nl?.toLowerCase().includes(normalizedQuery)
+	function matchesTagQuery(args: { tag: Tag; query: string }) {
+		return (
+			args.tag.en?.toLowerCase().includes(args.query) ||
+			args.tag.de?.toLowerCase().includes(args.query) ||
+			args.tag.nl?.toLowerCase().includes(args.query)
 		);
-	});
-	const hasMoreTags = $derived(hiddenTags.length > 0 || selectedTags.length > 0);
+	}
 
-	function handleOpenChange(open: boolean) {
-		if (!open) filterQuery = '';
+	function buildSelectedTagSearchTerm() {
+		return selectedTags.map((tag) => tag[locale]).join(' ');
+	}
+
+	function getInitialState() {
+		const searchTerm = eventsStore.searchFilter || '';
+		const matchedTags = parseSearchTermToTags(searchTerm);
+		return {
+			filterQuery: searchTerm,
+			selectedTags: matchedTags,
+			searchExpanded: Boolean(searchTerm.trim()),
+			showTextSearch: Boolean(searchTerm.trim()) && matchedTags.length === 0
+		};
+	}
+
+	function setShowTextSearch(value: boolean) {
+		showTextSearch = value;
+		eventsStore.showTextSearch = value;
+	}
+
+	function focusOnMount(node: HTMLInputElement) {
+		requestAnimationFrame(() => node.focus());
+	}
+
+	const initialState = getInitialState();
+	let filterQuery = $state(initialState.filterQuery);
+	let selectedTags = $state<Tag[]>(initialState.selectedTags);
+	let searchExpanded = $state(initialState.searchExpanded);
+	let showTextSearch = $state(initialState.showTextSearch);
+	let keywordSearched = $state(false);
+	let locale = $derived(localeStore.locale as 'en' | 'de');
+	let popoverOpen = $state(false);
+	let allowPopoverOpen = $state(false);
+
+	eventsStore.showTextSearch = initialState.showTextSearch;
+
+	let normalizedQuery = $derived(
+		searchExpanded || showTextSearch ? filterQuery.trim().toLowerCase() : ''
+	);
+	let popoverTags = $derived.by(() => {
+		const selectedTagIdSet = new Set(selectedTags.map((tag) => tag.id));
+		const availableTags = allTags.filter((tag) => !selectedTagIdSet.has(tag.id));
+		if (!normalizedQuery) return availableTags;
+		return availableTags.filter((tag) => matchesTagQuery({ tag, query: normalizedQuery }));
+	});
+	let railTags = $derived.by(() => {
+		const selectedTagIdSet = new Set(selectedTags.map((tag) => tag.id));
+		return allTags.filter((tag) => !selectedTagIdSet.has(tag.id));
+	});
+
+	function openSearch() {
+		searchExpanded = true;
+		popoverOpen = false;
+		allowPopoverOpen = false;
 	}
 
 	function selectTag(tag: Tag) {
-		selectedTags.push(tag);
+		selectedTags = [...selectedTags, tag];
 		filterQuery = '';
-		showDropdown = false;
-		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[locale]).join(' '));
-		showTextSearch = false;
+		searchExpanded = false;
+		popoverOpen = false;
+		setShowTextSearch(false);
+		eventsStore.handleSearchTermChange(buildSelectedTagSearchTerm());
 	}
 
 	function removeTag(tag: Tag) {
-		selectedTags = selectedTags.filter((t) => t.id !== tag.id);
-		eventsStore.handleSearchTermChange(selectedTags.map((t) => t[locale]).join(' '));
+		selectedTags = selectedTags.filter((selectedTag) => selectedTag.id !== tag.id);
+		eventsStore.handleSearchTermChange(buildSelectedTagSearchTerm());
 	}
 
 	function runTextSearch(value?: string) {
 		selectedTags = [];
-		showDropdown = false;
+		searchExpanded = true;
 		filterQuery = value ?? '';
-		filterQueryInPopup = '';
-		showTextSearch = true;
+		popoverOpen = false;
+		allowPopoverOpen = false;
+		setShowTextSearch(true);
+		keywordSearched = Boolean((value ?? '').trim());
 		debouncedSearch(value);
 	}
 
-	function closeTextSearch() {
+	function handleSearchInput(value: string) {
+		filterQuery = value;
+		keywordSearched = false;
+		const hasQuery = Boolean(value.trim());
+		allowPopoverOpen = hasQuery;
+		popoverOpen = hasQuery;
+	}
+
+	function handleSearchBlur(e: FocusEvent & { currentTarget: HTMLElement }) {
+		if (filterQuery.trim()) return;
+
+		const nextFocusedEl = e.relatedTarget;
+		if (nextFocusedEl instanceof HTMLElement) {
+			const container = e.currentTarget.closest('label');
+			if (container && nextFocusedEl.closest('label') === container) return;
+		}
+
+		closeSearch();
+	}
+
+	function clearSearchQuery() {
+		keywordSearched = false;
+		if (showTextSearch) {
+			runTextSearch('');
+			closeSearch();
+			return;
+		}
+
 		filterQuery = '';
-		showTextSearch = false;
-		eventsStore.handleSearchTermChange('');
+		popoverOpen = false;
+		allowPopoverOpen = false;
+		closeSearch();
+	}
+
+	function closeSearch() {
+		keywordSearched = false;
+		if (showTextSearch) {
+			filterQuery = '';
+			setShowTextSearch(false);
+			eventsStore.handleSearchTermChange('');
+		} else {
+			filterQuery = '';
+		}
+
+		searchExpanded = false;
+		popoverOpen = false;
+		allowPopoverOpen = false;
+	}
+
+	/** Maps vertical wheel movement to horizontal tag scrolling. */
+	function handleTagRailWheel(args: { event: WheelEvent; element: HTMLDivElement }) {
+		if (args.element.scrollWidth <= args.element.clientWidth) return;
+		if (Math.abs(args.event.deltaX) > Math.abs(args.event.deltaY)) return;
+
+		args.event.preventDefault();
+		args.element.scrollBy({ left: args.event.deltaY });
 	}
 
 	const debouncedSearch = debounce<string | undefined>(
 		(term) => eventsStore.handleSearchTermChange(term?.trim() || ''),
 		400
 	);
-
-	function focusPopupInput() {
-		requestAnimationFrame(() => filterInputRef?.focus());
-	}
-
-	// Auto-focus input when popup opens
-	$effect(() => {
-		if (showDropdown) focusPopupInput();
-	});
-
 </script>
 
-
-{#if showTextSearch}
-	<div class="flex flex-grow items-center gap-2" in:fade={{ duration: 280 }}>
-		<label class="input w-full flex-grow">
-			<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
-			<input
-				class="w-full"
-				bind:value={filterQuery}
-				bind:this={textSearchInputRef}
-				oninput={(e) => runTextSearch(e.currentTarget.value)}
-				type="text"
-				placeholder="Suchbegriff"
-			/>
-			<button
-				onclick={() => {
-					if (filterQuery.trim()) {
-						filterQuery = '';
-						eventsStore.handleSearchTermChange('');
-					} else {
-						textSearchInputRef?.focus();
-					}
-				}}
-				class="btn btn-sm btn-circle btn-ghost"
-				aria-label="Suchbegriff löschen"
-				class:opacity-0={!filterQuery.trim()}
-				class:cursor-text={!filterQuery.trim()}
-			>
-				<i class="icon-[ph--x] text-base-600 size-5"></i>
-			</button>
-		</label>
-		<button class="btn btn-circle" onclick={closeTextSearch} title="Textsuche schließen">
-			<i class="icon-[ph--x] size-5"></i>
-		</button>
-	</div>
-{:else}
-	<!-- Show tags with fade effect and overlay dropdown -->
+<div class="flex w-full max-w-full min-w-0 items-center overflow-hidden" in:fade={{ duration: 280 }}>
 	<div
-		class="relative flex w-full max-w-full min-w-0 items-center overflow-hidden"
-		in:fade={{ duration: 280 }}
+		class="tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto pb-1"
+		onwheel={(event) => handleTagRailWheel({ event, element: event.currentTarget })}
 	>
-		<!-- Tags container - no wrap, overflow hidden -->
-		<div class="flex w-full min-w-0 flex-shrink flex-nowrap gap-2 overflow-hidden pr-12">
-			{#each selectedTags as tag (tag.id)}
-				<button
-					class="btn active min-w-fit gap-2"
-					onclick={() => removeTag(tag)}
-					in:fade={{ duration: 280 }}
-					animate:flip={{ duration: 280 }}
-				>
-					{tag[locale]}
-					<i class="icon-[ph--x] size-5"></i>
-				</button>
-			{/each}
-
-			{#each previewTags.filter((t) => !selectedTags.some((st) => st.id === t.id)) as tag}
-				<button
-					class="btn bg-base-100 flex-shrink-0 font-normal whitespace-nowrap"
-					onclick={() => selectTag(tag)}
-				>
-					{tag[locale]}
-				</button>
-			{/each}
-		</div>
-
-		{#if hasMoreTags}
-			<!-- Fade overlay gradient - gets stronger towards the right -->
-			<div
-				class="from-base-200 via-base-200/80 pointer-events-none absolute top-0 right-0 bottom-0 w-32 bg-gradient-to-l to-transparent"
-			></div>
-
-			<!-- Dropdown button positioned at the right edge, overlaying the tags -->
-			<div class="absolute right-0 flex items-center">
-				{@render moreTagsButton(true)}
-			</div>
-		{/if}
-	</div>
-{/if}
-
-{#snippet moreTagsButton(showTriggerShadow: boolean)}
-	<PopOver
-		contentClass="bg-base-100 shadow-lg border-base-300 w-[250px] z-20"
-		triggerClass={showTriggerShadow ? 'btn btn-circle bg-base-100 btn-sm' : 'btn bg-base-100'}
-		contentProps={{
-			side: 'bottom',
-			align: 'center',
-			collisionPadding: { top: 9999, bottom: 8, left: 8, right: 8 },
-			onOpenAutoFocus: (e) => e.preventDefault() // ugly blue focus on close button in safari otherwise
-		}}
-		onOpenChange={handleOpenChange}
-		bind:open={showDropdown}
-	>
-		{#snippet trigger()}
-			{#if showTriggerShadow}
-				<i
-					class="icon-[ph--caret-right-bold] size-5 transition-transform {showDropdown
-						? 'rotate-90'
-						: ''}"
-				></i>
-			{:else}
-				Mehr
-			{/if}
-		{/snippet}
-
-		{#snippet content()}
-			<div class="border-base-300 bg-base-200 flex flex-col gap-2 border-b-2 p-2 ">
-				<label class="input w-full grow">
-					<input
-						class="w-full sm:w-fit"
-						bind:value={filterQueryInPopup}
-						bind:this={filterInputRef}
-						type="text"
-						placeholder="Suchen..."
-						oninput={focusPopupInput}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' && filterQueryInPopup.trim()) {
-								runTextSearch(filterQueryInPopup);
-							}
-						}}
-					/>
-					<button
-						onclick={() => {
-							if (filterQueryInPopup.trim()) {
-								filterQueryInPopup = '';
-							} else {
-								filterInputRef?.focus();
-							}
-						}}
-						class="btn btn-sm btn-circle btn-ghost"
-						aria-label="Suchbegriff löschen"
-						class:opacity-0={!filterQueryInPopup.trim()}
-						class:cursor-text={!filterQueryInPopup.trim()}
-					>
-						<i class="icon-[ph--x] text-base-600 size-5"></i>
-					</button>
-				</label>
-
-				<button
-					onclick={() => runTextSearch(filterQueryInPopup)}
-					class="btn btn-primary max-h-16 break-words whitespace-normal"
-					disabled={!filterQueryInPopup.trim()}
-				>
-					<i class="icon-[ph--magnifying-glass] size-5"></i>
-					Suchen
-				</button>
-			</div>
-			{#if dropdownTags.length}
+		<PopOver
+			bind:open={popoverOpen}
+			triggerClass="shrink-0"
+			contentClass="bg-base-100 shadow-lg border-base-300 w-[280px] z-20"
+			contentProps={{
+				side: 'bottom',
+				align: 'start',
+				sideOffset: 10,
+				collisionPadding: { top: 8, bottom: 8, left: 8, right: 8 },
+				onOpenAutoFocus: (e) => e.preventDefault()
+			}}
+			onOpenChange={(open) => {
+				if (open && !allowPopoverOpen) {
+					popoverOpen = false;
+					return;
+				}
+				popoverOpen = open;
+			}}
+		>
+			{#snippet trigger()}
 				<div
-					class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2"
+					class={[
+						'shrink-0 overflow-hidden transition-all duration-300 ease-out',
+						searchExpanded || showTextSearch && 'w-42'
+					]}
 				>
-					{#each dropdownTags as tag (tag.id)}
-						<button
-						class="btn mb-1 w-full text-center font-normal last:mb-0"
-						onclick={() => selectTag(tag)}
-					>
-						{tag[locale]}
-						</button>
-					{/each}
+					{#if searchExpanded || showTextSearch}
+						<label
+							class={[
+								'input input-bordered min-w-0 gap-2 pr-1',
+								keywordSearched && 'active'
+							]}
+							onblur={handleSearchBlur}
+						>
+							<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
+							<input
+								id="tag-search-input"
+								class="w-full min-w-0 "
+								bind:value={filterQuery}
+								{@attach focusOnMount}
+								oninput={(e) => handleSearchInput(e.currentTarget.value)}
+								onblur={handleSearchBlur}
+								onkeydown={(e) => {
+									if (e.key === 'Enter' && filterQuery.trim()) {
+										runTextSearch(filterQuery);
+									}
+								}}
+								type="text"
+								placeholder="Tags oder Suchbegriff"
+							/>
+							<button
+								class="btn btn-ghost btn-sm btn-circle" class:opacity-0={!filterQuery.trim()}
+								aria-label="Suchbegriff löschen"
+								disabled={!filterQuery.trim()}
+								tabindex={filterQuery.trim() ? 0 : -1}
+								onclick={() => {
+									if (filterQuery.trim()) {
+										clearSearchQuery();
+										return;
+									}
+									popoverOpen = false;
+								}}
+							>
+								<i class="icon-[ph--x] size-5"></i>
+							</button>
+						</label>
+					{:else}
+						<div
+							class="btn btn-circle bg-base-100 "
+							aria-controls="tag-search-input"
+							aria-expanded={searchExpanded || showTextSearch}
+							role="button"
+							tabindex="0"
+							aria-label="Suche öffnen"
+							onclick={openSearch}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									openSearch();
+								}
+							}}
+						>
+							<i class="icon-[ph--magnifying-glass] size-5"></i>
+						</div>
+					{/if}
 				</div>
-			{/if}
-		{/snippet}
-	</PopOver>
-{/snippet}
+			{/snippet}
+
+			{#snippet content()}
+				<div class="border-base-300 bg-base-200 flex flex-col gap-2 border-b-2 p-2">
+					{#if filterQuery.trim()}
+						<button
+							class="btn btn-primary btn-sm w-full"
+							onclick={() => runTextSearch(filterQuery)}
+						>
+							<i class="icon-[ph--magnifying-glass] size-5"></i>
+							<strong>{filterQuery.trim()}</strong> suchen
+						</button>
+					{/if}
+				</div>
+
+				{#if popoverTags.length > 0}
+					<div class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2">
+						{#each popoverTags as tag (tag.id)}
+							<button
+								class="btn w-full text-center font-normal"
+								onclick={() => selectTag(tag)}
+							>
+								{tag[locale] ?? tag.slug}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			{/snippet}
+		</PopOver>
+
+		{#each selectedTags as tag (tag.id)}
+			<button
+				class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap"
+				onclick={() => removeTag(tag)}
+				in:fade={{ duration: 280 }}
+				animate:flip={{ duration: 280 }}
+			>
+				{tag[locale]}
+				<i class="icon-[ph--x] size-5"></i>
+			</button>
+		{/each}
+
+		{#each railTags as tag (tag.id)}
+			<button
+				class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap"
+				onclick={() => selectTag(tag)}
+			>
+				{tag[locale] ?? tag.slug}
+			</button>
+		{/each}
+	</div>
+</div>
+
+<style>
+	@media (max-width: 640px) {
+		.tag-rail-scrollbar {
+			scrollbar-width: thin;
+		}
+
+		.tag-rail-scrollbar::-webkit-scrollbar {
+			height: 4px;
+		}
+	}
+</style>

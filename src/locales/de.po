@@ -354,27 +354,23 @@ msgstr "<0/> Zurück"
 msgid "Hue: {0}°, Rotation: {1}°"
 msgstr "Hue: {0}°, Rotation: {1}°"
 
-#: src/lib/components/TagSelection.svelte
-msgid "Textsuche schließen"
-msgstr "Textsuche schließen"
+#~ msgid "Textsuche schließen"
+#~ msgstr "Textsuche schließen"
 
-#: src/lib/components/TagSelection.svelte
-msgid "Suchbegriff"
-msgstr "Suchbegriff"
+#~ msgid "Suchbegriff"
+#~ msgstr "Suchbegriff"
 
-#: src/lib/components/TagSelection.svelte
 #: src/lib/components/TagSelection.svelte
 msgid "Suchbegriff löschen"
 msgstr "Suchbegriff löschen"
 
-#: src/lib/components/TagSelection.svelte
-msgid "Mehr"
-msgstr "Mehr"
+#~ msgid "Mehr"
+#~ msgstr "Mehr"
+
+#~ msgid "Suchen..."
+#~ msgstr "Suchen..."
 
 #: src/lib/components/TagSelection.svelte
-msgid "Suchen..."
-msgstr "Suchen..."
-
 #: src/lib/components/TagSelection.svelte
 msgid "Enter"
 msgstr "Enter"
@@ -534,9 +530,8 @@ msgstr "App link teilen"
 msgid "Stadt / PLZ"
 msgstr "Stadt / PLZ"
 
-#: src/lib/components/TagSelection.svelte
-msgid "<0/> Suchen"
-msgstr "<0/> Suchen"
+#~ msgid "<0/> Suchen"
+#~ msgstr "<0/> Suchen"
 
 #: src/routes/+page.svelte
 msgid "Fehler beim Laden der Events:"
@@ -949,3 +944,39 @@ msgstr "<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quelle
 #: src/routes/sources/+page.svelte
 msgid "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
 msgstr "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
+
+#~ msgid "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
+#~ msgstr "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Tags oder Suchbegriff"
+msgstr "Tags oder Suchbegriff"
+
+#~ msgid "Suchbegriff suchen"
+#~ msgstr "Suchbegriff suchen"
+
+#~ msgid "Suche schließen"
+#~ msgstr "Suche schließen"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Suche öffnen"
+msgstr "Suche öffnen"
+
+#~ msgid "<0/> Nach \"{0}\" suchen"
+#~ msgstr "<0/> Nach \"{0}\" suchen"
+
+#~ msgid "<0/> \"{0}\" suchen"
+#~ msgstr "<0/> \"{0}\" suchen"
+
+#~ msgid "<0/> {0}\" suchen"
+#~ msgstr "<0/> {0}\" suchen"
+
+#~ msgid "<0/> {0} suchen"
+#~ msgstr "<0/> {0} suchen"
+
+#~ msgid "<0/> <1/> {0} suchen"
+#~ msgstr "<0/> <1/> {0} suchen"
+
+#: src/lib/components/TagSelection.svelte
+msgid "<0/> <1/> suchen"
+msgstr "<0/> <1/> suchen"
