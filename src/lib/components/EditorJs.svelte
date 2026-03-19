@@ -34,6 +34,7 @@
 			}
 
 			const editorJsHtml = EditorJsHtml();
+			/* @wc-ignore */
 			editor = new EditorJS({
 				holder: editorEl,
 				tools: {

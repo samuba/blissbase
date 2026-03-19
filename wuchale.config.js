@@ -14,6 +14,7 @@ export default defineConfig({
     // sourceLocale is en by default
     sourceLocale: 'de',
     otherLocales: ['en'],
+    locales: ['de', 'en'],
     adapters: {
         main: svelte({ loader: 'sveltekit', heuristic: svelteDefaultHeuristicDerivedReq }),
         js: js({
@@ -27,6 +28,7 @@ export default defineConfig({
     },
     ai: {
         name: "gpt-5-mini",
+        group: {},
         batchSize: 50,
         parallel: 3,
         translate: async (messages, instruction) => {

@@ -1,16 +1,11 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-12T05:38:04.606Z\n"
-"PO-Revision-Date: 2025-11-20T02:42:19.287Z\n"
-"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;\n"
+"Source-Language: de\n"
 "Language: de\n"
-"Language-Team: \n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;\n"
-"MIME-Version: 1.0\n"
 
 #: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/PageHeader.svelte
@@ -25,7 +20,7 @@ msgstr ""
 msgid "Blissbase"
 msgstr "Blissbase"
 
-#. placeholder {0}: page.status
+#. 0: page.status
 #: src/routes/+error.svelte
 msgid "Fehler {0}:"
 msgstr "Fehler {0}:"
@@ -70,10 +65,8 @@ msgstr "Email"
 msgid "Website"
 msgstr "Website"
 
-#. placeholder {0}: event.name
-#. placeholder {1}: event.startAt.toLocaleDateString(localeStore.longLocale)
-#. placeholder {0}: event.name
-#. placeholder {1}: event.startAt.toLocaleDateString(localeStore.longLocale)
+#. 0: event.name; 1: event.startAt.toLocaleDateString(localeStore.longLocale)
+#. 0: event.name; 1: event.startAt.toLocaleDateString(localeStore.longLocale)
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 msgid "Anmeldung für {0} ({1})"
@@ -91,7 +84,7 @@ msgstr "Oe"
 msgid "Ue"
 msgstr "Ue"
 
-#. placeholder {0}: i + 1
+#. 0: i + 1
 #: src/routes/EventDetails.svelte
 msgid "Bild {0}"
 msgstr "Bild {0}"
@@ -225,7 +218,6 @@ msgid "Peace, Love & Light 🌻"
 msgstr "Peace, Love & Light 🌻"
 
 #: src/lib/components/BurgerMenu.svelte
-#: src/routes/about/+page.svelte
 msgid ""
 "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich\n"
 "entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
@@ -287,7 +279,7 @@ msgstr "Vorbei"
 msgid "<0/> Läuft"
 msgstr "<0/> Läuft"
 
-#. placeholder {0}: event.distanceKm
+#. 0: event.distanceKm
 #: src/lib/components/EventCard.svelte
 msgid "{0} km entfernt"
 msgstr "{0} km entfernt"
@@ -357,8 +349,7 @@ msgstr "<0/> Login-Link senden"
 msgid "<0/> Zurück"
 msgstr "<0/> Zurück"
 
-#. placeholder {0}: selectedHueRotation
-#. placeholder {1}: rotationAngle
+#. 0: selectedHueRotation; 1: rotationAngle
 #: src/lib/components/RandomPlaceholderImg.svelte
 msgid "Hue: {0}°, Rotation: {1}°"
 msgstr "Hue: {0}°, Rotation: {1}°"
@@ -405,14 +396,6 @@ msgid "Event Quellen"
 msgstr "Event Quellen"
 
 #: src/routes/sources/+page.svelte
-msgid ""
-"Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen\n"
-"Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
-msgstr ""
-"Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen\n"
-"Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
-
-#: src/routes/sources/+page.svelte
 msgid "Websites"
 msgstr "Websites"
 
@@ -452,7 +435,7 @@ msgstr "ciglobalcalendar.net"
 msgid "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> und noch weitere Gruppen und Kanäle."
 msgstr "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> und noch weitere Gruppen und Kanäle."
 
-#. placeholder {0}: event.name
+#. 0: event.name
 #: src/routes/edit/[id]/+page.svelte
 msgid ""
 "Willst du den Event \"{0}\" wirklich löschen?\n"
@@ -512,9 +495,6 @@ msgstr "<0/> Alle Events"
 msgid "Keine Events in deinen Favoriten."
 msgstr "Keine Events in deinen Favoriten."
 
-#~ msgid "Vergangene Favoriten"
-#~ msgstr "Vergangene Favoriten"
-
 #: src/routes/new/+page.svelte
 msgid "Event erstellen"
 msgstr "Event erstellen"
@@ -571,6 +551,7 @@ msgstr "Ein Fehler ist aufgetreten"
 msgid "AbortError"
 msgstr "AbortError"
 
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Dein Standort"
 msgstr "Dein Standort"
@@ -686,14 +667,6 @@ msgstr ""
 msgid "Hinweis schließen"
 msgstr "Hinweis schließen"
 
-#: src/routes/+page.svelte
-msgid ""
-"Dir werden Events um <0/> angezeigt.\n"
-"Wenn das nicht dein Standort ist, ändere ihn unten."
-msgstr ""
-"Dir werden Events um <0/> angezeigt.\n"
-"Wenn das nicht dein Standort ist, ändere ihn unten."
-
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "So installierst du die App auf deinem iPhone"
 msgstr "So installierst du die App auf deinem iPhone"
@@ -710,8 +683,7 @@ msgstr "Anmeldung per <0/>."
 msgid "Anmeldung über diese Kanäle:"
 msgstr "Anmeldung über diese Kanäle:"
 
-#. placeholder {0}: event.name
-#. placeholder {1}: event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))
+#. 0: event.name; 1: event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))
 #: src/routes/EventDetails.svelte
 msgid "Hallo, ich habe deinen Event '{0}' am {1} auf Blissbase.app gefunden und möchte gerne teilnehmen."
 msgstr "Hallo, ich habe deinen Event '{0}' am {1} auf Blissbase.app gefunden und möchte gerne teilnehmen."
@@ -756,7 +728,7 @@ msgstr "Anmeldung über"
 msgid "Anmelde Methode auswählen"
 msgstr "Anmelde Methode auswählen"
 
-#. placeholder {0}: preview.name
+#. 0: preview.name
 #: src/lib/components/ImageInput.svelte
 msgid "Bild {0} entfernen"
 msgstr "Bild {0} entfernen"
@@ -782,12 +754,12 @@ msgstr "Bilder auswählen <0>oder ablegen</0>"
 msgid "Cover Bild"
 msgstr "Cover Bild"
 
-#. placeholder {0}: i + 1
+#. 0: i + 1
 #: src/lib/components/ImageInput.svelte
 msgid "Bild #{0}"
 msgstr "Bild #{0}"
 
-#. placeholder {0}: preview.name
+#. 0: preview.name
 #: src/lib/components/ImageInput.svelte
 msgid "Vollbildansicht von {0} öffnen"
 msgstr "Vollbildansicht von {0} öffnen"
@@ -816,7 +788,7 @@ msgstr "Nach links"
 msgid "Nach rechts"
 msgstr "Nach rechts"
 
-#. placeholder {0}: preview.name
+#. 0: preview.name
 #: src/lib/components/ImageInput.svelte
 msgid "Vorschau für {0}"
 msgstr "Vorschau für {0}"
@@ -923,45 +895,13 @@ msgstr "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreib
 msgid "Event an Telegram-Bot senden <0/>"
 msgstr "Event an Telegram-Bot senden <0/>"
 
-#: src/routes/new/+page.svelte
-msgid ""
-"<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
-"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
-msgstr ""
-"<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus\n"
-"diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
-
 #: src/lib/components/tabsNav.ts
 msgid "Entdecken"
 msgstr "Entdecken"
 
-#~ msgid "Gemerkt"
-#~ msgstr "Gemerkt"
-
-#~ msgid "Profil"
-#~ msgstr "Profil"
-
-#~ msgid "Vergangene"
-#~ msgstr "Vergangene"
-
 #: src/lib/components/tabsNav.ts
 msgid "Favoriten"
 msgstr "Favoriten"
-
-#: src/routes/about/+page.svelte
-msgid ""
-"Ich will die achtsamen Communities Deutschlands zusammen bringen.\n"
-"Dafür sammel ich Events (über <0/>)\n"
-"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
-"an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
-msgstr ""
-"Ich will die achtsamen Communities Deutschlands zusammen bringen.\n"
-"Dafür sammel ich Events (über <0/>)\n"
-"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
-"an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
-
-#~ msgid "Info"
-#~ msgstr "Info"
 
 #: src/lib/components/tabsNav.ts
 msgid "Über"
@@ -970,12 +910,6 @@ msgstr "Über"
 #: src/lib/components/tabsNav.ts
 msgid "Meins"
 msgstr "Meins"
-
-#~ msgid "Meine Events"
-#~ msgstr "Meine Events"
-
-#~ msgid "Du hast noch keine Events erstellt."
-#~ msgstr "Du hast noch keine Events erstellt."
 
 #: src/routes/profile/+page.svelte
 msgid "Aktuelle Events"
@@ -996,3 +930,23 @@ msgstr "Du hast noch keine vergangenen Events."
 #: src/routes/profile/+page.svelte
 msgid "Meine erstellten Events"
 msgstr "Meine erstellten Events"
+
+#: src/routes/+page.svelte
+msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
+msgstr "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
+
+#: src/routes/about/+page.svelte
+msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+msgstr "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+
+#: src/routes/about/+page.svelte
+msgid "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
+msgstr "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
+
+#: src/routes/new/+page.svelte
+msgid "<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
+msgstr "<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
+
+#: src/routes/sources/+page.svelte
+msgid "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
+msgstr "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
