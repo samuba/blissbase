@@ -63,7 +63,12 @@
 /* disabled selects look ugly */
 .select,
 select {
-	@apply disabled:!border-base-300 disabled:!border-2;
+	@apply disabled:border-base-300! disabled:border-2!; 
+}
+
+/* get rid of ring around inputs */
+.input, .textarea {
+	@apply focus:outline-0! focus-within:outline-0!;
 }
 
 @font-face {
