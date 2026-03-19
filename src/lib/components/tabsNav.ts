@@ -42,6 +42,10 @@ export function getAppTabs() {
 }
 
 export function isActiveAppTab(pathname: string, href: string) {
+	if (href.startsWith('./')) {
+		// happens at SSR
+		href = href.slice(1);
+	}
 	if (href.includes('#')) {
 		return pathname === href.split('#')[0];
 	}
