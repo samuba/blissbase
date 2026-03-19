@@ -77,7 +77,7 @@
 				/>
 			{/if}
 
-			<div class="flex w-full justify-center gap-6 pb-6">
+			<div class="md:hidden flex w-full justify-center gap-6 pb-6">
 				<button onclick={handleClose} class="btn btn-sm">
 					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 					Zurück zur Übersicht

@@ -487,7 +487,6 @@ msgid "Speichern"
 msgstr "Save"
 
 #: src/routes/[slug]/+page.svelte
-#: src/routes/[slug]/+page.svelte
 msgid "<0/> Alle Events"
 msgstr "<0/> All events"
 
