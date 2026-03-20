@@ -710,7 +710,7 @@
 						aria-label={`Vollbildansicht von ${preview.name} öffnen`}
 					>
 						<img src={preview.url} alt={`Vorschau für ${preview.name}`} class="h-full w-full object-cover" draggable="false" />
-					</button>1
+					</button>
 					{#if preview.processingState !== `ready`}
 						<div class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 p-3 text-center backdrop-brightness-75 text-white backdrop-blur-[2px]">
 							{#if preview.processingState === `error`}
@@ -749,7 +749,11 @@
 							class="sr-only"
 							aria-label={`${preview.name} nach links verschieben`}
 							disabled={i === 0 || hasProcessingInFlight}
-							onclick={() => movePreview({ previewId: preview.id, direction: -1 })}
+							onmousedown={(e) => e.stopPropagation()}
+							onclick={(e) => {
+								e.stopPropagation();
+								movePreview({ previewId: preview.id, direction: -1 });
+							}}
 						>
 							Nach links
 						</button>
@@ -759,7 +763,11 @@
 							class="sr-only"
 							aria-label={`${preview.name} nach rechts verschieben`}
 							disabled={i === previewItems.length - 1 || hasProcessingInFlight}
-							onclick={() => movePreview({ previewId: preview.id, direction: 1 })}
+							onmousedown={(e) => e.stopPropagation()}
+							onclick={(e) => {
+								e.stopPropagation();
+								movePreview({ previewId: preview.id, direction: 1 });
+							}}
 						>
 							Nach rechts
 						</button>
@@ -768,7 +776,11 @@
 							type="button"
 							class="btn btn-ghost btn-sm btn-circle shrink-0"
 							aria-label={`Bild ${preview.name} entfernen`}
-							onclick={() => removeSelectedImage({ previewId: preview.id })}
+							onmousedown={(e) => e.stopPropagation()}
+							onclick={(e) => {
+								e.stopPropagation();
+								removeSelectedImage({ previewId: preview.id });
+							}}
 						>
 							<i class="icon-[ph--trash] size-5"></i>
 						</button>

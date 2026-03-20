@@ -29,7 +29,8 @@ test.describe('Event Details Modal', () => {
 		await firstCard.click();
 		await page.waitForTimeout(2000);
 
-		await expect(page.getByText('Free')).toBeVisible();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog.getByText('Free', { exact: true })).toBeVisible();
 	});
 
 	// formatAddress joins address parts with ' · ' (middle dot), not ', '
@@ -122,7 +123,16 @@ test.describe('Navigation Menu', () => {
 	});
 
 	test('event sources page is accessible', async ({ page }) => {
-		await page.goto('/sources');
+		// Occasional net::ERR_ABORTED when a prior navigation has not fully settled
+		for (let attempt = 0; attempt < 3; attempt++) {
+			try {
+				await page.goto('/sources', { waitUntil: 'domcontentloaded' });
+				break;
+			} catch {
+				if (attempt === 2) throw new Error(`Failed to open /sources after 3 attempts`);
+				await page.waitForTimeout(400);
+			}
+		}
 		await expect(page.locator('body')).toBeVisible();
 		await expect(page.locator('h1, h2').first()).toBeVisible();
 	});

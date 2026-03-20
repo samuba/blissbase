@@ -18,8 +18,8 @@ test.describe('Homepage', () => {
 	});
 
 	test('page loads with logo', async ({ page }) => {
-		// Just check the logo image exists
-		await expect(page.locator('img[src*="logo"]')).toBeVisible();
+		// Hero + nav both use /logo.svg; avoid strict-mode violation from multiple matches
+		await expect(page.getByRole('img', { name: 'Blissbase' }).first()).toBeVisible();
 	});
 
 	test('displays search and filter bar', async ({ page }) => {

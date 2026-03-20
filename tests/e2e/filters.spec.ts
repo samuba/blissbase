@@ -18,8 +18,8 @@ test.describe('Filter Modal', () => {
 	});
 
 	test('filter modal opens and closes', async ({ page }) => {
-		// Find and click filter button
-		const filterButton = page.locator('button').filter({ hasText: /Filter/i }).first();
+		// Find and click filter button (avoid matching unrelated buttons on the page)
+		const filterButton = page.getByRole('button', { name: 'Filter', exact: true });
 		await expect(filterButton).toBeVisible();
 		await filterButton.click();
 
@@ -35,12 +35,14 @@ test.describe('Filter Modal', () => {
 	});
 
 	test('show results button applies filters', async ({ page }) => {
-		const filterButton = page.locator('button').filter({ hasText: /Filter/i }).first();
+		const filterButton = page.getByRole('button', { name: 'Filter', exact: true });
 		await filterButton.click();
 		await page.waitForTimeout(1000);
 
-		// Click apply button
-		const applyButton = page.locator('button').filter({ hasText: /Anwenden|Apply|Ergebnisse|Show/i }).first();
+		const filterDialog = page.getByRole('dialog', { name: 'Filter' });
+		const applyButton = filterDialog.getByRole('button', {
+			name: /^(Show results|Ergebnisse anzeigen|Anwenden|Apply)$/i
+		});
 		if (await applyButton.isVisible().catch(() => false)) {
 			await applyButton.click();
 			await page.waitForTimeout(500);
