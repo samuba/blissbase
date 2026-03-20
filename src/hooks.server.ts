@@ -25,8 +25,9 @@ const wuchaleLocalization: Handle = async ({ event, resolve }) => {
         // TODO: remove this if block in the future when we have a settings to switch language
         locale = "de";
     }
-    if (!locale || !locales.includes(locale)) { 
-        locale = browserLang && locales.includes(browserLang) ? browserLang : 'en';
+    const localesList = locales as readonly string[];
+    if (!locale || !localesList.includes(locale)) {
+        locale = browserLang && localesList.includes(browserLang) ? browserLang : 'en';
     }
     event.cookies.set('locale', locale, { path: '/' });
     localeStore.locale = locale as 'en' | 'de';

@@ -1,63 +1,77 @@
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai'; // Ensure OPENAI_API_KEY environment variable is set
-import { allTags } from '../../src/lib/server/tags';
-import { WEBSITE_SCRAPE_SOURCE_URLS } from '../../src/lib/commonWithScripts';
+import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
+import { allTags } from './tags';
+import { WEBSITE_SCRAPE_SOURCE_URLS } from '../commonWithScripts';
 
-export async function aiExtractEventData(message: string, messageDate: Date, timezone: string, authorName?: string, imageUrls: (string | undefined)[] = []): Promise<MsgAnalysisAnswer> {
-    console.log(`🤖 AI extracting event data with ${imageUrls.length} images...`)
-    const { text } = await generateText({
-        model: openai('gpt-5-mini'),
-        system: msgAnalysisSystemPrompt(messageDate, timezone, authorName),
-        messages: [
-            {
-                role: "user",
-                content: [
-                    {
-                        type: "text",
-                        text: message,
-                    },
-                    ...imageUrls.filter(x => !!x).map(url => ({
-                        type: "image" as const,
-                        image: new URL(url!),
-                    })),
-                ],
-            },
+/**
+ * Extracts structured event fields from free text (same pipeline as the Telegram bot).
+ *
+ * @example
+ * await aiExtractEventData(`Yoga Workshop Samstag 10 Uhr Berlin`, new Date(), `Europe/Berlin`);
+ */
+export async function aiExtractEventData(
+	message: string,
+	messageDate: Date,
+	timezone: string,
+	authorName?: string,
+	imageUrls: (string | undefined)[] = []
+): Promise<MsgAnalysisAnswer> {
+	console.time(`🤖 AI extracting event data with ${imageUrls.length} images`);
+	const { text } = await generateText({
+		model: google("gemini-3.1-flash-lite-preview"),
+		system: msgAnalysisSystemPrompt(messageDate, timezone, authorName),
+		messages: [
+			{
+				role: `user`,
+				content: [
+					{
+						type: `text`,
+						text: message
+					},
+					...imageUrls.filter((x) => !!x).map((url) => ({
+						type: `image` as const,
+						image: new URL(url!)
+					}))
+				]
+			}
+		]
+	});
 
-        ],
-    });
-
-    try {
-        const result = JSON.parse(text || '{ "hasEventData": false }') as MsgAnalysisAnswer;
-        if (result.hasEventData) {
-            if (!Array.isArray(result.contact)) result.contact = [];
-            if (!Array.isArray(result.tags)) result.tags = [];
-        }
-        return result;
-    } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        const msg = `Failed to parse OpenAI response as JSON: ${errorMessage}`
-        console.error("AI answer: ", text)
-        throw new Error(msg);
-    }
+	try {
+		const result = JSON.parse(text || `{ "hasEventData": false }`) as MsgAnalysisAnswer;
+		if (result.hasEventData) {
+			if (!Array.isArray(result.contact)) result.contact = [];
+			if (!Array.isArray(result.tags)) result.tags = [];
+		}
+		return result;
+	} catch (e) {
+		const errorMessage = e instanceof Error ? e.message : String(e);
+		const msg = `Failed to parse OpenAI response as JSON: ${errorMessage}`;
+		console.error(`AI answer: `, text);
+		throw new Error(msg);
+	}
+	finally {
+		console.timeEnd(`🤖 AI extracting event data with ${imageUrls.length} images`);
+	}
 }
 
-export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: Timezone, authorName?: string) => `
+export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: string, authorName?: string) => `
 Your purpose is to analyze messenger text messages and images to extract information about events from them. 
 Ignore messages that are not event announcements by setting hasEventData to false. (Be strict about this. E.g. this is not an event announcement: "..Wir haben noch einen Platz frei für den nächsten Tantra event..")
 Answer only in valid, properly escaped, raw JSON. Do not wrap it inside markdown or anything else.
 Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
 Never make up any information. Only use the information provided in the message or image!
-If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. awara.events, sei.jetzt.) and do not include anything else.
 If there was an image attached, consider all text on the image as part of the message. For image-only messages (flyers), extract all visible text and treat it as the message content.
-
+If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. awara.events, sei.jetzt.) and do not include anything else.
 # existing sources:
-${WEBSITE_SCRAPE_SOURCE_URLS.join("\n")}
+${WEBSITE_SCRAPE_SOURCE_URLS.join(`\n`)}
 
 When extracting dates and time, assume ${timezone} time unless you know for sure the location is in another timezone, be sure to take correct daylight saving time into account.
-Today is  ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-But the message was sent on ${messageDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
-${authorName ? `Author's name of this message: ${authorName}` : ''}
+Today is  ${new Date().toLocaleDateString(`en-US`, { year: `numeric`, month: `long`, day: `numeric` })}
+But the message was sent on ${messageDate.toLocaleDateString(`en-US`, { year: `numeric`, month: `long`, day: `numeric` })}.
+${authorName ? `Author's name of this message: ${authorName}` : ``}
 
 Extract these information from the message:
 
@@ -93,27 +107,27 @@ Extract these information from the message:
 
 "emojis": string. Up to 3 emojis that describe the event.
 
-"tags": Array<string>. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map(x => x.en).join(", ")}.
+"tags": Array<string>. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map((x) => x.en).join(`, `)}.
 
-`
+`;
 
 export type MsgAnalysisAnswer = {
-    hasEventData: boolean;
-    contact: string[];
-    tags: string[];
+	hasEventData: boolean;
+	contact: string[];
+	tags: string[];
 } & Partial<{
-    existingSource: string;
-    name: string;
-    description: string;
-    descriptionBrief: string;
-    startDate: string;
-    endDate: string;
-    url: string;
-    contactAuthorForMore: boolean;
-    price: string;
-    venue: string;
-    address: string;
-    attendanceMode: "online" | "offline" | "offline+online";
-    city: string;
-    emojis: string;
-}>
+	existingSource: string;
+	name: string;
+	description: string;
+	descriptionBrief: string;
+	startDate: string;
+	endDate: string;
+	url: string;
+	contactAuthorForMore: boolean;
+	price: string;
+	venue: string;
+	address: string;
+	attendanceMode: 'online' | 'offline' | 'offline+online';
+	city: string;
+	emojis: string;
+}>;

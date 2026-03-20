@@ -70,7 +70,9 @@ export function intersect(options: IntersectionObserverInit & {
         }
 
         const observer = intersectionObservers.get(options) || createObserver(options);
-        intersectionCallbacks.set(element, options.callback);
+        if (options.callback) {
+            intersectionCallbacks.set(element, options.callback);
+        }
 
         // Store onIntersecting callback if provided
         if (options.onIntersecting) {

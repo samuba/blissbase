@@ -13,7 +13,7 @@ class LocaleStore {
                 return { name, value: decodeURIComponent(value) };
             });
             let locale = cookies.find(x => x.name === 'locale')?.value ?? navigator.language?.split('-')[0] ?? 'en';
-            if (!locales.includes(locale)) locale = 'en';
+            if (!(locales as readonly string[]).includes(locale)) locale = 'en';
             this.locale = locale as 'en' | 'de';
             document.cookie = `locale=${this.locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
         }

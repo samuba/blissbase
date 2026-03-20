@@ -28,6 +28,7 @@ Node is used in dev and prod as runtime.
 
 ## Svelte
 Always use class based stores for reactivity and state management instead of functions with getters/setters.
+Always use clsx style (array) when dynamically constructing class names on elements.
 
 ## DB
 Assume drizzle is being used for all database operations and schemas.

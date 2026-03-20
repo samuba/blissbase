@@ -60,7 +60,7 @@
 	function initializeFromFields() {
 		const existingUrls = (
 			existingImageUrlsField?.value()?.length ? existingImageUrlsField.value() : initialExistingImageUrls
-		).filter((x) => !x.startsWith(`new:`));
+		).filter((x): x is string => typeof x === `string` && !x.startsWith(`new:`));
 		const existingPreviews = existingUrls.map((url, index) => {
 			return {
 				id: `existing:${index}:${url}`,
@@ -74,7 +74,7 @@
 			} satisfies ImagePreviewItem;
 		});
 
-		const newFiles = field.value() ?? [];
+		const newFiles = (field.value() ?? []).filter((f): f is File => f != null);
 		const newPreviews = newFiles.map((file) => createReadyImagePreview({ file }));
 		previewItems = [...existingPreviews, ...newPreviews];
 		syncFieldsFromPreviews();
@@ -792,7 +792,7 @@
 
 	{#if existingImageUrlsField}
 		<div class="hidden">
-			{#each existingImageUrlsField.value() ?? [] as token, i (`${token}-${i}`)}
+			{#each (existingImageUrlsField.value() ?? []).filter((t): t is string => Boolean(t)) as token, i (`${token}-${i}`)}
 				<input {...existingImageUrlsField.as('checkbox', token)} checked />
 			{/each}
 		</div>

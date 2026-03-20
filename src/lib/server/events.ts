@@ -389,6 +389,6 @@ export const loadEventsParamsSchema = v.partial(
 	})
 );
 
-type LoadEventsParams = v.InferInput<typeof loadEventsParamsSchema>;
+export type LoadEventsParams = v.InferInput<typeof loadEventsParamsSchema>;
 
 export type UiEvent = ReturnType<typeof prepareEventsForUi>[number];

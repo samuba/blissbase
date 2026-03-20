@@ -314,7 +314,10 @@ describe('Events Module - Happy Flow Tests', () => {
                     latitude: 52.5,
                     longitude: 13.4,
                     messageSenderId: null,
-                    endAt: null
+                    endAt: null,
+                    attendanceMode: 'offline' as const,
+                    authorId: null,
+                    eventTags: []
                 }
             ];
 
@@ -358,7 +361,10 @@ describe('Events Module - Happy Flow Tests', () => {
                     latitude: null,
                     longitude: null,
                     messageSenderId: null,
-                    endAt: null
+                    endAt: null,
+                    attendanceMode: 'offline' as const,
+                    authorId: null,
+                    eventTags: []
                 }
             ];
 
@@ -398,7 +404,10 @@ describe('Events Module - Happy Flow Tests', () => {
                     latitude: null,
                     longitude: null,
                     messageSenderId: null,
-                    endAt: null
+                    endAt: null,
+                    attendanceMode: 'offline' as const,
+                    authorId: null,
+                    eventTags: []
                 }
             ];
 
@@ -442,7 +451,10 @@ describe('Events Module - Happy Flow Tests', () => {
                     latitude: null,
                     longitude: null,
                     messageSenderId: null,
-                    endAt: null
+                    endAt: null,
+                    attendanceMode: 'offline' as const,
+                    authorId: null,
+                    eventTags: []
                 },
                 {
                     id: 2,
@@ -470,7 +482,10 @@ describe('Events Module - Happy Flow Tests', () => {
                     latitude: null,
                     longitude: null,
                     messageSenderId: null,
-                    endAt: null
+                    endAt: null,
+                    attendanceMode: 'offline' as const,
+                    authorId: null,
+                    eventTags: []
                 }
             ];
 

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { aiExtractEventData } from "../blissbase-telegram-entry/src/ai";
+import { aiExtractEventData } from "../src/lib/server/ai";
 
 // Mock the AI function to test the logic
-vi.mock("../blissbase-telegram-entry/src/ai", () => ({
+vi.mock("../src/lib/server/ai", () => ({
     aiExtractEventData: vi.fn()
 }));
 

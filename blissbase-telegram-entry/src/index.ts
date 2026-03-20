@@ -1,6 +1,6 @@
 import { Telegraf, type Context } from "telegraf";
 import type { Update, MessageEntity, PhotoSize } from "telegraf/types";
-import { aiExtractEventData } from './ai';
+import { aiExtractEventData } from '../../src/lib/server/ai';
 import { getTelegramEventOriginalAuthor, msgFilters, type TelegramCloudflareBody } from '../../src/lib/telegramCommon';
 import { detectLanguage, t } from '../../src/lib/telegramBotI18n';
 

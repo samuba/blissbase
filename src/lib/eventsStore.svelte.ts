@@ -63,7 +63,7 @@ export class EventsStore {
     hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
     hasAttendanceModeFilter = $derived(this.pagination.attendanceMode);
     sortFilter = $derived({ sortBy: this.pagination.sortBy, sortOrder: this.pagination.sortOrder });
-    hasAnyFilter = $derived(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter || this.hasOnlineEventsFilter);
+    hasAnyFilter = $derived(Boolean(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter || this.hasAttendanceModeFilter));
     hasFilterBehindButton = $derived(this.hasDateFilter || this.hasAttendanceModeFilter || this.sortFilter.sortBy !== 'time');
     searchFilter = $derived(this.pagination.searchTerm?.trim());
     dateFilter = $derived({ start: this.pagination.startDate, end: this.pagination.endDate });

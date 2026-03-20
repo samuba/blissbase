@@ -9,7 +9,7 @@
 	import { setLocationInteractedCookie } from '$lib/cookie-utils';
 
 	const { data } = $props();
-	const { userId, autoDetectedCity } = $derived(data);
+	const { autoDetectedCity } = $derived(data);
 
 	let contentBeforeMenu = $state<HTMLElement | null>(null);
 	let dismissedAutoLocationHint = $state(false);
@@ -97,7 +97,7 @@
 				</div>
 			{/if}
 		
-			<HeaderControls {userId} />
+			<HeaderControls />
 		
 			<svelte:boundary>
 				<div class="px-4 md:px-0 max-w-2xl mx-auto">

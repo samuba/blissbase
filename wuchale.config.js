@@ -3,11 +3,11 @@ import { adapter as svelte, svelteDefaultHeuristicDerivedReq } from "@wuchale/sv
 import { adapter as js } from 'wuchale/adapter-vanilla'
 import { defineConfig } from "wuchale"
 import { generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import 'dotenv/config';
 
-const openai = createOpenAI({
-    apiKey: process.env.OPENAI_API_KEY_FOR_LOCALIZATION,
+const google = createGoogleGenerativeAI({
+    apiKey: process.env.GEMINI_API_KEY_FOR_LOCALIZATION,
 });
 
 export default defineConfig({
@@ -27,13 +27,13 @@ export default defineConfig({
         })
     },
     ai: {
-        name: "gpt-5-mini",
+        name: "gemini-3.1-flash-lite-preview",
         group: {},
         batchSize: 50,
         parallel: 3,
         translate: async (messages, instruction) => {
             const { text } = await generateText({
-                model: openai('gpt-5-mini'),
+                model: google('gemini-3-flash-preview'),
                 system: instruction,
                 prompt: messages,
             })

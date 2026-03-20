@@ -1,4 +1,4 @@
-import { fetchEvents, prepareEventsResultForUi } from "$lib/server/events";
+import { fetchEvents, prepareEventsResultForUi, type LoadEventsParams } from "$lib/server/events";
 import type { PageServerLoad } from "./$types";
 import { loadFiltersFromCookie, LOCATION_INTERACTED_COOKIE_NAME, saveFiltersToCookie } from "$lib/cookie-utils";
 import { posthogCapture } from "$lib/server/common";
@@ -15,7 +15,7 @@ export const load = (async ({ cookies, locals }) => {
         limit: 8
     };
 
-    let params = savedFilters ? { ...defaultParams, ...savedFilters } : defaultParams;
+    let params: LoadEventsParams = savedFilters ? { ...defaultParams, ...savedFilters } : defaultParams;
     const hasSavedLocation = Boolean(
         savedFilters?.plzCity?.trim() ||
         (savedFilters?.lat != null && savedFilters?.lng != null)

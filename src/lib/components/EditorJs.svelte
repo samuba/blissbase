@@ -42,7 +42,7 @@
 						class: Marker
 					},
 					header: {
-						class: Header,
+						class: Header as unknown as import('@editorjs/editorjs').BlockToolConstructable,
 						inlineToolbar: true,
 						config: {
 							placeholder: 'Überschrift',
