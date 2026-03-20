@@ -164,7 +164,7 @@
 	});
 </script>
 
-<div bind:this={editorEl} class="prose-sm textarea sm:pl-0 z-10 w-full"></div>
+<div bind:this={editorEl} class="prose-sm textarea w-full sm:pl-0"></div>
 
 <textarea {...field.as('text')} class="hidden peer" aria-hidden="true" value={editorValue}></textarea>
 
@@ -173,10 +173,6 @@
 
 	:global(.codex-editor__redactor) {
 		padding-bottom: 0 !important;
-	}
-
-	:global(.ce-toolbar) {
-		@apply z-10; /* in prod input are covering the menu */
 	}
 
 	:global(.ce-toolbar__content) {
@@ -191,7 +187,22 @@
 		@apply sm:mr-0 sm:ml-12;
 	}
 
+	/*
+		Editor.js ships `.codex-editor { z-index: 1 }`, which creates a stacking context so the whole
+		tree (including `position: fixed` mobile popovers) stays below fixed UI like TabsNav (z-50).
+	*/
 	:global(.codex-editor) {
-		/* @apply bg-base-200; */
+		z-index: auto !important;
+	}
+
+	/* Above mobile TabsNav (z-50); !important beats Editor.js bundle order */
+	:global(.ce-toolbar),
+	:global(.ce-toolbox),
+	:global(.ce-popover),
+	:global(.ce-popover__overlay),
+	:global(.ce-popover__container),
+	:global(.ce-popover__items),
+	:global(.ce-inline-toolbar) {
+		z-index: 100 !important;
 	}
 </style>

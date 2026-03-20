@@ -1,7 +1,3 @@
-autofill form
-tags btn static
-editorjs menu on mobile is under tabs bar
-
 new layout with tabs at the bottom: profile, discover, impressum?
 hydration errors
 
