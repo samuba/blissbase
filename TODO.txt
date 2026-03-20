@@ -1,6 +1,5 @@
 autofill form
 tags btn static
-CI tests
 
 new layout with tabs at the bottom: profile, discover, impressum?
 hydration errors

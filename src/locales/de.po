@@ -354,9 +354,6 @@ msgstr "<0/> Zurück"
 msgid "Hue: {0}°, Rotation: {1}°"
 msgstr "Hue: {0}°, Rotation: {1}°"
 
-#~ msgid "Textsuche schließen"
-#~ msgstr "Textsuche schließen"
-
 #: src/lib/components/TagSelection.svelte
 msgid "Suchbegriff"
 msgstr "Suchbegriff"
@@ -364,12 +361,6 @@ msgstr "Suchbegriff"
 #: src/lib/components/TagSelection.svelte
 msgid "Suchbegriff löschen"
 msgstr "Suchbegriff löschen"
-
-#~ msgid "Mehr"
-#~ msgstr "Mehr"
-
-#~ msgid "Suchen..."
-#~ msgstr "Suchen..."
 
 #: src/lib/components/TagSelection.svelte
 #: src/lib/components/TagSelection.svelte
@@ -487,9 +478,6 @@ msgstr "Speichern"
 msgid "<0/> Alle Events"
 msgstr "<0/> Alle Events"
 
-#~ msgid "Keine Events in deinen Favoriten."
-#~ msgstr "Keine Events in deinen Favoriten."
-
 #: src/routes/new/+page.svelte
 msgid "Event erstellen"
 msgstr "Event erstellen"
@@ -530,9 +518,6 @@ msgstr "App link teilen"
 msgid "Stadt / PLZ"
 msgstr "Stadt / PLZ"
 
-#~ msgid "<0/> Suchen"
-#~ msgstr "<0/> Suchen"
-
 #: src/routes/+page.svelte
 msgid "Fehler beim Laden der Events:"
 msgstr "Fehler beim Laden der Events:"
@@ -558,9 +543,6 @@ msgstr "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsere
 #: src/lib/components/HeaderControls.svelte
 msgid "Filter"
 msgstr "Filter"
-
-#~ msgid "<0/> Filter"
-#~ msgstr "<0/> Filter"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Vorort"
@@ -906,12 +888,10 @@ msgid "Meins"
 msgstr "Meins"
 
 #: src/routes/profile/+page.svelte
-#: src/routes/profile/favorites/+page.svelte
 msgid "Aktuelle Events"
 msgstr "Aktuelle Events"
 
 #: src/routes/profile/+page.svelte
-#: src/routes/profile/favorites/+page.svelte
 msgid "Vergangene Events"
 msgstr "Vergangene Events"
 
@@ -947,47 +927,13 @@ msgstr "<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quelle
 msgid "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
 msgstr "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
 
-#~ msgid "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
-#~ msgstr "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
-
-#~ msgid "Tags oder Suchbegriff"
-#~ msgstr "Tags oder Suchbegriff"
-
-#~ msgid "Suchbegriff suchen"
-#~ msgstr "Suchbegriff suchen"
-
-#~ msgid "Suche schließen"
-#~ msgstr "Suche schließen"
-
 #: src/lib/components/TagSelection.svelte
 msgid "Suche öffnen"
 msgstr "Suche öffnen"
 
-#~ msgid "<0/> Nach \"{0}\" suchen"
-#~ msgstr "<0/> Nach \"{0}\" suchen"
-
-#~ msgid "<0/> \"{0}\" suchen"
-#~ msgstr "<0/> \"{0}\" suchen"
-
-#~ msgid "<0/> {0}\" suchen"
-#~ msgstr "<0/> {0}\" suchen"
-
-#~ msgid "<0/> {0} suchen"
-#~ msgstr "<0/> {0} suchen"
-
-#~ msgid "<0/> <1/> {0} suchen"
-#~ msgstr "<0/> <1/> {0} suchen"
-
 #: src/lib/components/TagSelection.svelte
 msgid "<0/> <1/> suchen"
 msgstr "<0/> <1/> suchen"
-
-#~ msgid "<0><0/> <1/> suchen</0> div <1/>"
-#~ msgstr "<0><0/> <1/> suchen</0> div <1/>"
-
-#: src/routes/profile/favorites/+page.svelte
-msgid "Meine Favoriten"
-msgstr "Meine Favoriten"
 
 #: src/routes/profile/favorites/+page.svelte
 msgid "Keine aktuellen Events in deinen Favoriten."
@@ -1000,3 +946,11 @@ msgstr "Keine vergangenen Events in deinen Favoriten."
 #: src/lib/components/Login.svelte
 msgid "Melde dich an um Favoriten zu speichern und eigene Events zu erstellen."
 msgstr "Melde dich an um Favoriten zu speichern und eigene Events zu erstellen."
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Aktuelle Favoriten"
+msgstr "Aktuelle Favoriten"
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Vergangene Favoriten"
+msgstr "Vergangene Favoriten"
