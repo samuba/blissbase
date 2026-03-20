@@ -52,11 +52,9 @@
 </script>
 
 <div class={[className]}>
-	{#if !successEmail}
-		<p class="text-base-content mb-6 text-sm">
-			Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden.
-		</p>
-	{/if}
+	<p class="text-base-content mb-6 text-sm">
+		Melde dich an um Favoriten zu speichern und eigene Events zu erstellen.
+	</p>
 
 	{#if error}
 		<div class="alert alert-error bg-error/60 mb-4">
@@ -86,6 +84,10 @@
 				class="input w-full"
 				disabled={isLoading || !!successEmail}
 			/>
+
+			<p class="text-base-content mb-6 text-sm">
+				Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden.
+			</p>
 
 			<button type="submit" class="btn btn-primary w-full" disabled={isLoading}>
 				{#if isLoading}

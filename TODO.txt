@@ -1,7 +1,4 @@
-favoriten aufteilen nach aktuelle und vergangen
 autofill form
-login text
-shadow for tags 
 tags btn static
 CI tests
 

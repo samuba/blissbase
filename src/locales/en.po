@@ -996,3 +996,7 @@ msgstr "No upcoming events in your favorites."
 #: src/routes/profile/favorites/+page.svelte
 msgid "Keine vergangenen Events in deinen Favoriten."
 msgstr "No past events in your favorites."
+
+#: src/lib/components/Login.svelte
+msgid "Melde dich an um Favoriten zu speichern und eigene Events zu erstellen."
+msgstr "Log in to save favorites and create your own events."
