@@ -11,8 +11,7 @@
 	aria-label="Hauptnavigation mobil"
 	class="fixed inset-x-0 bottom-0 z-50 border-t border-base-300/80 bg-base-100 shadow-[0_-12px_30px_rgba(0,0,0,0.08)] md:hidden"
 >
-	<ul class="grid grid-cols-5 px-2 py-2"
-	// pb-[calc(0.5rem+env(safe-area-inset-bottom))]
+	<ul class="grid grid-cols-5 px-2 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
 	>
 		{#each getAppTabs() as tab (tab.href)}
 			{@const icon = isActiveAppTab(pathname, tab.href) ? tab.iconActive : tab.icon}
