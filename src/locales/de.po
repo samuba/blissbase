@@ -357,8 +357,9 @@ msgstr "Hue: {0}°, Rotation: {1}°"
 #~ msgid "Textsuche schließen"
 #~ msgstr "Textsuche schließen"
 
-#~ msgid "Suchbegriff"
-#~ msgstr "Suchbegriff"
+#: src/lib/components/TagSelection.svelte
+msgid "Suchbegriff"
+msgstr "Suchbegriff"
 
 #: src/lib/components/TagSelection.svelte
 msgid "Suchbegriff löschen"
@@ -948,9 +949,8 @@ msgstr "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>T
 #~ msgid "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
 #~ msgstr "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
 
-#: src/lib/components/TagSelection.svelte
-msgid "Tags oder Suchbegriff"
-msgstr "Tags oder Suchbegriff"
+#~ msgid "Tags oder Suchbegriff"
+#~ msgstr "Tags oder Suchbegriff"
 
 #~ msgid "Suchbegriff suchen"
 #~ msgstr "Suchbegriff suchen"

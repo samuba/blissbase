@@ -212,7 +212,7 @@
 
 <div class="flex w-full max-w-full min-w-0 items-center " in:fade={{ duration: 280 }}>
 	<div
-		class="flex w-full min-w-0 flex-nowrap items-center gap-2 pb-1 overflow-hidden relative"
+		class="flex w-full gap-2 min-w-0 flex-nowrap items-center pb-1 overflow-hidden relative"
 	>
 		<PopOver
 			bind:open={popoverOpen}
@@ -243,7 +243,7 @@
 					{#if searchExpanded || showTextSearch}
 						<label
 							class={[
-								'input input-bordered min-w-0 gap-2 pr-1',
+								'input input-bordered min-w-0 gap-2 pr-1 w-50',
 								keywordSearched && 'active'
 							]}
 							onblur={handleSearchBlur}
@@ -262,10 +262,10 @@
 									}
 								}}
 								type="text"
-								placeholder="Tags oder Suchbegriff"
+								placeholder="Suchbegriff"
 							/>
 							<button
-								class="btn btn-ghost btn-sm btn-circle" class:opacity-0={!filterQuery.trim()}
+								class="btn btn-ghost btn-sm btn-circle"
 								aria-label="Suchbegriff löschen"
 								disabled={!filterQuery.trim()}
 								tabindex={filterQuery.trim() ? 0 : -1}
@@ -330,7 +330,7 @@
 			{/snippet}
 		</PopOver>
 
-		<div class="flex flex-no-wrap gap-2 tag-trigger">
+		<div class="flex flex-no-wrap gap-2 tag-trigger" class:hidden={selectedTags.length === 0}>
 			{#each selectedTags as tag (tag.id)}
 				<button
 					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap"
@@ -346,7 +346,7 @@
 
 		<div class="relative w-full overflow-hidden">		
 			<div 
-				class="overflow-x-auto flex w-full min-w-0 flex-nowrap items-center gap-2  tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent "
+				class="overflow-x-auto flex w-full min-w-0 flex-nowrap items-center tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent "
 				{@attach trackTagRail}
 				onscroll={(event) => updateTagRailShadows(event.currentTarget)}
 				onwheel={(event) => handleTagRailWheel({ event, element: event.currentTarget })}
