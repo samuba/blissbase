@@ -354,9 +354,6 @@ msgstr "<0/> Back"
 msgid "Hue: {0}°, Rotation: {1}°"
 msgstr "Hue: {0}°, Rotation: {1}°"
 
-#~ msgid "Textsuche schließen"
-#~ msgstr "Close text search"
-
 #: src/lib/components/TagSelection.svelte
 msgid "Suchbegriff"
 msgstr "Search term"
@@ -364,12 +361,6 @@ msgstr "Search term"
 #: src/lib/components/TagSelection.svelte
 msgid "Suchbegriff löschen"
 msgstr "Clear search term"
-
-#~ msgid "Mehr"
-#~ msgstr "More"
-
-#~ msgid "Suchen..."
-#~ msgstr "Search..."
 
 #: src/lib/components/TagSelection.svelte
 #: src/lib/components/TagSelection.svelte
@@ -488,9 +479,6 @@ msgstr "Save"
 msgid "<0/> Alle Events"
 msgstr "<0/> All events"
 
-#~ msgid "Keine Events in deinen Favoriten."
-#~ msgstr "No events in your favorites."
-
 #: src/routes/new/+page.svelte
 msgid "Event erstellen"
 msgstr "Create event"
@@ -531,9 +519,6 @@ msgstr "Share app link"
 msgid "Stadt / PLZ"
 msgstr "City / postal code"
 
-#~ msgid "<0/> Suchen"
-#~ msgstr "<0/> Search"
-
 #: src/routes/+page.svelte
 msgid "Fehler beim Laden der Events:"
 msgstr "Error while loading events:"
@@ -559,9 +544,6 @@ msgstr "Location could not be retrieved. Please check your browser settings or e
 #: src/lib/components/HeaderControls.svelte
 msgid "Filter"
 msgstr "Filter"
-
-#~ msgid "<0/> Filter"
-#~ msgstr "<0/> Filter"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Vorort"
@@ -946,46 +928,13 @@ msgstr "<0><0/> Event sources</0> Add your event to one of my event sources. I r
 msgid "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
 msgstr "From these sources I fetch events for you several times a day. <0/>Submit your event to one of them so it will appear on Blissbase a few hours later."
 
-#~ msgid "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
-#~ msgstr "<0/> <1/> >>>>>>> Incoming (Background Agent changes)"
-
-#~ msgid "Tags oder Suchbegriff"
-#~ msgstr "Tags or search term"
-
-#~ msgid "Suchbegriff suchen"
-#~ msgstr "Search for term"
-
-#~ msgid "Suche schließen"
-#~ msgstr "Close search"
-
 #: src/lib/components/TagSelection.svelte
 msgid "Suche öffnen"
 msgstr "Open search"
 
-#~ msgid "<0/> Nach \"{0}\" suchen"
-#~ msgstr "<0/> Search for \"{0}\""
-
-#~ msgid "<0/> \"{0}\" suchen"
-#~ msgstr "<0/> Search for \"{0}\""
-
-#~ msgid "<0/> {0}\" suchen"
-#~ msgstr "<0/> Search for \"{0}\""
-
-#~ msgid "<0/> {0} suchen"
-#~ msgstr "<0/> Search for {0}"
-
-#~ msgid "<0/> <1/> {0} suchen"
-#~ msgstr "<0/> <1/> {0} search"
-
 #: src/lib/components/TagSelection.svelte
 msgid "<0/> <1/> suchen"
 msgstr "<0/> <1/> search"
-
-#~ msgid "<0><0/> <1/> suchen</0> div <1/>"
-#~ msgstr "<0><0/> <1/> search</0> div <1/>"
-
-#~ msgid "Meine Favoriten"
-#~ msgstr "My Favorites"
 
 #: src/routes/profile/favorites/+page.svelte
 msgid "Keine aktuellen Events in deinen Favoriten."
@@ -1007,217 +956,43 @@ msgstr "Current Favorites"
 msgid "Vergangene Favoriten"
 msgstr "Past Favorites"
 
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen ({0}). Bitte prüfe die Angaben und ergänze sie bei Bedarf manuell."
-#~ msgstr "The text appears to come from an existing source ({0}). Please review the information and add to it manually if necessary."
-
 #: src/routes/new/+page.svelte
 msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
 msgstr "No clear event was detected in the text. You can still fill out the form."
-
-#~ msgid "Die KI konnte den Text nicht auswerten: {0}"
-#~ msgstr "The AI could not analyze the text: {0}"
-
-#~ msgid "Optional: Füge hier eine bestehende Beschreibung ein. Die Felder werden per KI vorausgefüllt. Du kannst den Schritt auch überspringen."
-#~ msgstr "Optional: Add an existing description here. The fields will be pre-filled by the AI. You can also skip this step."
-
-#~ msgid "Beschreibung einfügen …"
-#~ msgstr "Insert description …"
-
-#~ msgid "Vorhandene Beschreibung"
-#~ msgstr "Existing description"
-
-#: src/routes/new/+page.svelte
-msgid "<0/> Auswerten …"
-msgstr "<0/> Analyze …"
-
-#~ msgid "Weiter <0/>"
-#~ msgstr "Next <0/>"
-
-#~ msgid "<0/> Zurück zur Texteingabe"
-#~ msgstr "<0/> Back to text input"
-
-#~ msgid "Optional: Du hast schon eine Beschreibung für dein Event? Füge sie hier ein, dann werden wir das Formular automatisch vorausfüllen. Du kannst den Schritt auch überspringen."
-#~ msgstr "Optional: Already have a description for your event? Paste it here and we will automatically pre-fill the form for you. You can also skip this step."
-
-#~ msgid "Vorhandene Beschreibung (optional)"
-#~ msgstr "Existing description (optional)"
-
-#~ msgid "Beschreibung (optional)"
-#~ msgstr "Description (optional)"
-
-#~ msgid "Du hast schon eine Beschreibung für dein Event? Füge sie hier ein, dann werden wir das Formular automatisch vorausfüllen. Du kannst den Schritt auch überspringen."
-#~ msgstr "Already have a description for your event? Paste it here and we will pre-fill the form automatically. You can also skip this step."
-
-#~ msgid "Du hast schon eine Beschreibung für dein Event? Füge sie hier ein, dann werden wir das automatisch vorausfüllen. Du kannst den Schritt auch überspringen."
-#~ msgstr "Already have a description for your event? Paste it here and we will pre-fill it automatically. You can also skip this step."
-
-#~ msgid "Du hast schon eine Beschreibung für dein Event? Füge sie hier ein, dann füllen wir die Felder automatisch vorausfüllen. Du kannst den Schritt auch überspringen."
-#~ msgstr ""
-
-#~ msgid "Du hast schon eine Beschreibung für dein Event? Füge sie hier ein, dann füllen wir die Felder automatisch vorausfüllenaus. Du kannst den Schritt auch überspringen."
-#~ msgstr ""
-
-#~ msgid "Du hast schon eine Beschreibung für dein Event? Füge sie hier ein, dann füllen wir die Felder automatisch aus. Du kannst den Schritt auch überspringen."
-#~ msgstr "Do you already have a description for your event? Paste it here and we will fill in the fields automatically. You can also skip this step."
-
-#~ msgid "Formular ausfüllen"
-#~ msgstr "Fill out form"
-
-#~ msgid "Weiter"
-#~ msgstr "Next"
-
-#~ msgid "Formular Vausfüllen"
-#~ msgstr "Fill out form"
-
-#~ msgid "Formular Vorausfüllen"
-#~ msgstr "Pre-fill form"
-
-#~ msgid "Weiter ()"
-#~ msgstr ""
-
-#~ msgid "Weiter ohne Vorausfüllung"
-#~ msgstr "Continue without pre-filling"
-
-#~ msgid "Weiter ohne Vorausfüllen"
-#~ msgstr "Continue without pre-filling"
-
-#~ msgid "Weiter ohne Vorausfüllen!"
-#~ msgstr "Continue without pre-filling!"
-
-#~ msgid "Du hast schon eine Beschreibung für dein Event? Füge sie hier ein, dann füllen wir die Felder automatisch aus."
-#~ msgstr "Already have a description for your event? Paste it here and we'll fill in the fields automatically."
-
-#~ msgid "Event erstellen - Vorausfüllen"
-#~ msgstr "Create event - Pre-fill"
-
-#~ msgid "Event erstellen ()"
-#~ msgstr "Create event ()"
-
-#~ msgid "Event erstellen (Automatisch Ausfüllen)"
-#~ msgstr "Create Event (Autofill)"
-
-#~ msgid "Event erstellen (Auto. Ausfüllen)"
-#~ msgstr "Create Event (Autofill)"
-
-#~ msgid "Event Importieren (Auto. Ausfüllen)"
-#~ msgstr "Import Event (Autofill)"
 
 #: src/routes/new/+page.svelte
 msgid "Event Importieren"
 msgstr "Import Event"
 
-#~ msgid "Füge eine Beschrei Füge sie hier ein, dann füllen wir die Felder automatisch aus."
-#~ msgstr "Add a description. Paste it here, and we'll automatically fill in the fields."
-
-#~ msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram Füge sie hier ein, dann füllen wir die Felder automatisch aus."
-#~ msgstr "Paste an event description from WhatsApp or Telegram here, and we'll fill in the fields automatically."
-
-#~ msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein Füge sie hier ein, dann füllen wir die Felder automatisch aus."
-#~ msgstr "Paste an event description from WhatsApp, Telegram, etc. Insert it here and we'll fill in the fields automatically."
-
-#~ msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann füllen wir die Felder automatisch aus."
-#~ msgstr "Paste an event description from WhatsApp, Telegram, etc., and we will automatically fill in the fields."
-
-#~ msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann importieren wir die Daten.."
-#~ msgstr "Paste an event description from WhatsApp, Telegram, etc., and we'll import the data.."
-
 #: src/routes/new/+page.svelte
 msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann importieren wir die Daten."
 msgstr "Paste an event description from WhatsApp, Telegram, etc., and we will import the data."
-
-#~ msgid "Event Vorausfüllen"
-#~ msgstr "Prefill event"
-
-#~ msgid "Event Im Vorausfüllen"
-#~ msgstr "Pre-filling event"
-
-#~ msgid "Event Importieren Vorausfüllen"
-#~ msgstr "Pre-fill Event Import"
 
 #: src/routes/new/+page.svelte
 msgid "Event importieren"
 msgstr "Import event"
 
-#~ msgid "Weiter ohne Importieren"
-#~ msgstr "Continue without importing"
-
 #: src/routes/new/+page.svelte
 msgid "Weiter ohne importieren"
-msgstr ""
-
-#~ msgid "WhatsApp, Telegram etc. Beschreibung einfügen …"
-#~ msgstr ""
-
-#~ msgid "WhatsApp, Telegram Beschreibung einfügen …"
-#~ msgstr ""
-
-#~ msgid "WhatsApp/Telegram Beschreibung einfügen …"
-#~ msgstr ""
+msgstr "Continue without importing"
 
 #: src/routes/new/+page.svelte
 msgid "WhatsApp/Telegram Beschreibung einfügen…"
-msgstr ""
+msgstr "Insert WhatsApp/Telegram description…"
 
 #: src/routes/new/+page.svelte
 msgid "Optional"
-msgstr ""
-
-#~ msgid "Fehler beim : {0}"
-#~ msgstr ""
-
-#~ msgid "Fehler beim importieren: {0}"
-#~ msgstr ""
-
-#~ msgid "Fehler beim importieren. A: {0}"
-#~ msgstr ""
-
-#~ msgid "Fehler beim importieren. Du kannst das Formular trotzdem ausfüllen: {0}"
-#~ msgstr ""
+msgstr "Optional"
 
 #: src/routes/new/+page.svelte
 msgid "Fehler beim importieren. Du kannst das Formular trotzdem ausfüllen"
-msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen ({0}). Wir ."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen ({0}). Wir importieren ."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. ({0}). Wir importieren ."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. ({0}). Wir importieren r."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. ({0}). Wir importieren regelmä."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. ({0}). Wir importieren regelmäßig Events ."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. ({0}). Wir importieren regelmäßig Events von ."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. ({0}). Wir importieren regelmäßig Events von {1}."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen.  Wir importieren regelmäßig Events von {0}."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}."
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event "
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelisted"
-#~ msgstr ""
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelisted oder wird es in K"
-#~ msgstr ""
+msgstr "Error importing. You can still fill out the form"
 
 #. 0: result.fields.existingSource
 #: src/routes/new/+page.svelte
-msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelisted oder wird es in Kürze sein."
-msgstr ""
+msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von <b>{0}</b>. Der Event ist also schon bei uns gelistet oder wird es in kürze sein."
+msgstr "The text appears to come from an existing source. We regularly import events from <b>{0}</b>, so the event is already listed with us or will be shortly."
+
+#: src/routes/new/+page.svelte
+msgid "<0/> Analysiere Text …"
+msgstr "<0/> Analyzing text …"

@@ -130,7 +130,7 @@
 						>
 							{#if isPrefilling}
 								<span class="loading loading-spinner loading-sm"></span>
-								Auswerten …
+								Analysiere Text …
 							{:else}
 								{#if pasteText.trim()}
 									Event importieren	
