@@ -56,19 +56,7 @@
 	type EventFormInput = v.InferInput<CreateEventSchema | UpdateEventSchema>;
 </script>
 
-<div class="container mx-auto max-w-4xl sm:p-4">
-	<div class="breadcrumbs px-4 text-sm sm:mb-4 sm:px-0">
-		<ul>
-			<li>
-				<a href={resolve('/')}>
-					<img src="/logo.svg" alt="Logo" class="h-8 min-w-6" />
-				</a>
-			</li>
-			<li><a href={resolve('/[slug]', { slug: event.slug })}>{event.name}</a></li>
-			<li>Bearbeiten</li>
-		</ul>
-	</div>
-
+<div class="container mx-auto max-w-4xl md:pb-6">
 	<div class="sm:rounded-box bg-base-100 shadow">
 		<div class="card-body gap-6">
 			<h1 class="card-title text-2xl">Event bearbeiten</h1>

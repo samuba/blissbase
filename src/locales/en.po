@@ -433,14 +433,6 @@ msgstr ""
 "This action cannot be undone."
 
 #: src/routes/edit/[id]/+page.svelte
-msgid "Logo"
-msgstr "Logo"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Bearbeiten"
-msgstr "Edit"
-
-#: src/routes/edit/[id]/+page.svelte
 msgid "Event bearbeiten"
 msgstr "Edit event"
 

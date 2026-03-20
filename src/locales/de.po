@@ -433,14 +433,6 @@ msgstr ""
 "Die Aktion kann nicht rückgängig gemacht werden."
 
 #: src/routes/edit/[id]/+page.svelte
-msgid "Logo"
-msgstr "Logo"
-
-#: src/routes/edit/[id]/+page.svelte
-msgid "Bearbeiten"
-msgstr "Bearbeiten"
-
-#: src/routes/edit/[id]/+page.svelte
 msgid "Event bearbeiten"
 msgstr "Event bearbeiten"
 
