@@ -4,9 +4,19 @@
 	import EventDetails from './EventDetails.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
+	import { page } from '$app/state';
 
-	let { event }: { event: UiEvent | undefined } = $props();
+	let {  events }: { events: UiEvent[] } = $props();
 	let isHandlingClose = $state(false);
+
+	// Show event from url
+	const event = $derived.by(() => {
+		const eventId = page.state.selectedEventId;
+		if (!eventId) return undefined;
+
+		const event = events.find((x) => x.id === eventId);
+		if (event) return event;
+	});
 
 	const isOpen = $derived(event !== undefined);
 

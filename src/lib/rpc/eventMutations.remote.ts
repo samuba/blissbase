@@ -1,5 +1,6 @@
 import { form, getRequestEvent } from '$app/server';
 import { error, invalid, redirect } from '@sveltejs/kit';
+import { ensureUserId } from '$lib/server/common';
 import * as assets from '$lib/assets';
 import { generateSlug, randomString } from '$lib/common';
 import { createEventSchema, updateEventSchema, type CreateEventData } from '$lib/events.remote.common';
@@ -64,10 +65,8 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 export const createEvent = form(createEventSchema, async (data, issue) => {
 	console.time('createEvent');
 	const { locals } = getRequestEvent();
-	const userId = locals.userId;
+	const userId = ensureUserId({ locals, msg: `You must be signed in to create an event` });
 	const userEmail = locals.jwtClaims?.email;
-
-	if (!userId) throw error(401, `You must be signed in to create an event`);
 	if (!userEmail) throw error(400, `Signed-in user does not have an email`);
 
 	const event = formDataToDbData(data);

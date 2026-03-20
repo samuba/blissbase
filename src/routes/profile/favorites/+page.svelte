@@ -1,58 +1,101 @@
 <script lang="ts">
 	import EventCard from '$lib/components/EventCard.svelte';
-	import { getFavoriteEvents, removeFavorite } from '$lib/rpc/favorites.remote';
-	import { page } from '$app/state';
+	import {
+		getFavoritePastEvents,
+		getFavoriteUpcomingEvents,
+		removeFavorite
+	} from '$lib/rpc/favorites.remote';
 	import EventDetailsDialog from '../../EventDetailsDialog.svelte';
-	import { flip } from 'svelte/animate';
-	import { fade } from 'svelte/transition';
-	import { addHours } from '$lib/common';
-	import { now } from '$lib/now.svelte';
 
-	const favoritesQuery = getFavoriteEvents();
-	const favoriteEvents = await favoritesQuery
-	const selectedEvent = $derived(
-		favoriteEvents.find((event) => event.id === page.state.selectedEventId)
-	);
-	const pastEvents = $derived(
-		favoriteEvents.filter((event) => (event.endAt ?? addHours(event.startAt, 4)) < now.value)
-	);
-	const upcomingEvents = $derived(
-		favoriteEvents.filter((x) => !pastEvents.some((y) => y.id === x.id))
-	);
+	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
+
+	const upcomingEventsQuery = getFavoriteUpcomingEvents();
+	const upcomingEvents = await upcomingEventsQuery;
+
+	let pastEvents = $state<typeof upcomingEvents>([]);
+	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
+
+	async function fetchPastEvents() {
+		if (pastEventsStatus !== `idle`) return;
+
+		pastEventsStatus = `loading`;
+		pastEvents = await getFavoritePastEvents();
+		pastEventsStatus = `loaded`;
+	}
+
+	async function selectTab(tab: `upcoming` | `past`) {
+		if (selectedTab === tab) return;
+		selectedTab = tab;
+
+		if (tab !== `past`) return;
+		await fetchPastEvents();
+	}
 
 	function onRemoveFavorite(eventId: number) {
 		removeFavorite(eventId).updates(
-			favoritesQuery.withOverride((current) => current.filter((x) => x.id !== eventId))
+			upcomingEventsQuery.withOverride((current) => current.filter((x) => x.id !== eventId))
 		);
+		pastEvents = pastEvents.filter((x) => x.id !== eventId);
 	}
 </script>
 
-<div class="flex items-center justify-center">
-	<div class="w-full max-w-2xl px-4 py-4 md:py-0">
-		{#if upcomingEvents.length}
-			<div class="flex w-full flex-col gap-6">
-				{#each upcomingEvents as event (event.id)}
-					<div animate:flip={{ duration: 450 }} out:fade={{ duration: 250 }}>
-						<EventCard {event} {onRemoveFavorite} />
-					</div>		
-				{/each}
-			</div>
-		{/if}
+<div class="mx-auto w-full max-w-2xl px-4 py-4 md:py-0 md:pb-10">
+	<div class="">
+		<div role="tablist" class="tabs tabs-box mt-3 bg-base-300 flex justify-center flex-row">
+			<button
+				role="tab"
+				class="tab grow"
+				class:tab-active={selectedTab === `upcoming`}
+				onclick={() => selectTab(`upcoming`)}
+			>
+				Aktuelle Favoriten
+			</button>
 
-		{#if pastEvents.length}
-			<div class="flex w-full flex-col gap-6" class:mt-6={upcomingEvents.length}>
-				{#each pastEvents as event (event.id)}
-					<div animate:flip={{ duration: 450 }} out:fade={{ duration: 250 }}>
-						<EventCard {event} {onRemoveFavorite} />
-					</div>
-				{/each}
-			</div>
-		{/if}
+			<button
+				role="tab"
+				class="tab grow"
+				class:tab-active={selectedTab === `past`}
+				onclick={() => selectTab(`past`)}
+				onpointerdown={fetchPastEvents}
+				onmouseenter={fetchPastEvents}
+				onfocus={fetchPastEvents}
+			>
+				Vergangene Favoriten
+			</button>
+		</div>
 
-		{#if upcomingEvents.length === 0 && pastEvents.length === 0}
-			<div class="text-center text-gray-500 my-4">Keine Events in deinen Favoriten.</div>
-		{/if}
+		<div class:hidden={selectedTab !== `upcoming`}>
+			{#if upcomingEvents.length}
+				<div class="mt-4 flex w-full flex-col gap-6">
+					{#each upcomingEvents as event (event.id)}
+						<EventCard {event} {onRemoveFavorite} />
+					{/each}
+				</div>
+			{:else}
+				<div class="mt-12 text-center text-base-content/60">
+					Keine aktuellen Events in deinen Favoriten.
+				</div>
+			{/if}
+		</div>
+
+		<div class:hidden={selectedTab !== `past`}>
+			{#if pastEventsStatus === `loading`}
+				<div class="mt-12 flex justify-center">
+					<span class="loading loading-spinner"></span>
+				</div>
+			{:else if pastEvents.length}
+				<div class="mt-4 flex w-full flex-col gap-6">
+					{#each pastEvents as event (event.id)}
+						<EventCard {event} {onRemoveFavorite} />
+					{/each}
+				</div>
+			{:else}
+				<div class="mt-12 text-center text-base-content/60">
+					Keine vergangenen Events in deinen Favoriten.
+				</div>
+			{/if}
+		</div>
 	</div>
 </div>
 
-<EventDetailsDialog event={selectedEvent} />
+<EventDetailsDialog events={[...upcomingEvents, ...pastEvents]} />

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import EventCard from '$lib/components/EventCard.svelte';
-	import { page } from '$app/state';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
@@ -171,4 +170,4 @@
 	</div>
 {/snippet}
 
-<EventDetailsDialog event={eventsStore.getEventById(page.state.selectedEventId ?? null)} />
+<EventDetailsDialog events={eventsStore.events} />

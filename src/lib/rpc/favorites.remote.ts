@@ -2,9 +2,10 @@ import * as v from 'valibot';
 import { query, command } from '$app/server';
 import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { events, favorites } from '$lib/server/schema';
-import { eq, and, inArray, asc } from 'drizzle-orm';
+import { ensureUserId } from '$lib/server/common';
+import { db, s } from '$lib/server/db';
+import { favorites } from '$lib/server/schema';
+import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { eventWith, prepareEventsForUi } from '$lib/server/events';
 
 export const getFavoriteEventIds = query(async () => {
@@ -54,22 +55,36 @@ export const removeFavorite = command(v.number(), async (eventId) => {
 	}
 });
 
-export const getFavoriteEvents = query(async () => {
+export const getFavoriteUpcomingEvents = query(async () => {
 	const userId = ensureUserId();
+	const endsAtOrDefault = sql<Date>`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
+
 	const favoriteEvents = await db.query.events.findMany({
-		where: inArray(events.id, favoriteEventIdsQuery(userId)),
+		where: and(
+			inArray(s.events.id, favoriteEventIdsQuery(userId)),
+			gte(endsAtOrDefault, sql`NOW()`)
+		),
 		with: eventWith,
-		orderBy: [asc(events.startAt)]
+		orderBy: [asc(s.events.startAt), asc(s.events.id)]
+	});
+	return prepareEventsForUi(favoriteEvents);
+});
+
+export const getFavoritePastEvents = query(async () => {
+	const userId = ensureUserId();
+	const endsAtOrDefault = sql<Date>`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
+
+	const favoriteEvents = await db.query.events.findMany({
+		where: and(
+			inArray(s.events.id, favoriteEventIdsQuery(userId)),
+			lt(endsAtOrDefault, sql`NOW()`)
+		),
+		with: eventWith,
+		orderBy: [desc(s.events.startAt), desc(s.events.id)]
 	});
 	return prepareEventsForUi(favoriteEvents);
 });
 
 function favoriteEventIdsQuery(userId: string) {
 	return db.select({ eventId: favorites.eventId }).from(favorites).where(eq(favorites.userId, userId));
-}
-
-function ensureUserId() {
-	const userId = getRequestEvent().locals.jwtClaims?.sub;
-	if (!userId) error(401, `Unauthorized`);
-	return userId;
 }

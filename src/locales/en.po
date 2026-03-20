@@ -487,9 +487,8 @@ msgstr "Save"
 msgid "<0/> Alle Events"
 msgstr "<0/> All events"
 
-#: src/routes/profile/favorites/+page.svelte
-msgid "Keine Events in deinen Favoriten."
-msgstr "No events in your favorites."
+#~ msgid "Keine Events in deinen Favoriten."
+#~ msgstr "No events in your favorites."
 
 #: src/routes/new/+page.svelte
 msgid "Event erstellen"
@@ -907,10 +906,12 @@ msgid "Meins"
 msgstr "My"
 
 #: src/routes/profile/+page.svelte
+#: src/routes/profile/favorites/+page.svelte
 msgid "Aktuelle Events"
 msgstr "Current events"
 
 #: src/routes/profile/+page.svelte
+#: src/routes/profile/favorites/+page.svelte
 msgid "Vergangene Events"
 msgstr "Past events"
 
@@ -983,3 +984,15 @@ msgstr "<0/> <1/> search"
 
 #~ msgid "<0><0/> <1/> suchen</0> div <1/>"
 #~ msgstr "<0><0/> <1/> search</0> div <1/>"
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Meine Favoriten"
+msgstr "My Favorites"
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Keine aktuellen Events in deinen Favoriten."
+msgstr "No upcoming events in your favorites."
+
+#: src/routes/profile/favorites/+page.svelte
+msgid "Keine vergangenen Events in deinen Favoriten."
+msgstr "No past events in your favorites."

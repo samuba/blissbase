@@ -1,11 +1,10 @@
 import { fetchEvents, loadEventsParamsSchema, prepareEventsResultForUi } from "$lib/server/events";
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
 import { getRequestEvent, command, query } from '$app/server';
-import { posthogCapture } from "$lib/server/common";
+import { ensureUserId, posthogCapture } from "$lib/server/common";
 import { db, s } from '$lib/server/db';
 import { and, asc, desc, eq, lt, gte, sql } from 'drizzle-orm';
 import { eventWith, prepareEventsForUi } from '$lib/server/events';
-import { error } from '@sveltejs/kit';
 
 // using `command` instead of `query` cuz query does not allow setting cookies
 export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, async (params) => {
@@ -82,9 +81,7 @@ export const nothing = query(async () => {
 })
 
 export const getMyAuthoredUpcomingEvents = query(async () => {
-	const { locals } = getRequestEvent();
-	const userId = locals.userId;
-	if (!userId) throw error(401, `Unauthorized`);
+	const userId = ensureUserId();
 
 	const endsAtOrDefault = sql<Date>`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
 
@@ -101,9 +98,7 @@ export const getMyAuthoredUpcomingEvents = query(async () => {
 });
 
 export const getMyAuthoredPastEvents = query(async () => {
-	const { locals } = getRequestEvent();
-	const userId = locals.userId;
-	if (!userId) throw error(401, `Unauthorized`);
+	const userId = ensureUserId();
 
 	const endsAtOrDefault = sql<Date>`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
 

@@ -4,7 +4,6 @@
 	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import EventDetailsDialog from '../EventDetailsDialog.svelte';
-	import { page } from '$app/state';
 
 	let isLoggingOut = $state(false);
 	const session = await getUserSession();
@@ -12,19 +11,9 @@
 
 	const upcomingEvents = await getMyAuthoredUpcomingEvents();
 
-	let pastEventsQuery = getMyAuthoredPastEvents;
 	let pastEvents = $state<typeof upcomingEvents>([]);
 	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
 
-	const selectedEvent = $derived.by(() => {
-		const selectedEventId = page.state.selectedEventId;
-		if (!selectedEventId) return undefined;
-
-		const event = upcomingEvents.find((x) => x.id === selectedEventId);
-		if (event) return event;
-
-		return pastEvents.find((x) => x.id === selectedEventId);
-	});
 
 	async function fetchPastEvents() {
 		if (pastEventsStatus !== `idle`) return;
@@ -152,4 +141,4 @@
 	</div>
 </div>
 
-<EventDetailsDialog event={selectedEvent} />
+<EventDetailsDialog events={[...upcomingEvents, ...pastEvents]} />
