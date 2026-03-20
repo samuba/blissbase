@@ -556,12 +556,12 @@ msgid "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browserei
 msgstr "Location could not be retrieved. Please check your browser settings or enter a location manually."
 
 #: src/lib/components/HeaderControls.svelte
+#: src/lib/components/HeaderControls.svelte
 msgid "Filter"
 msgstr "Filter"
 
-#: src/lib/components/HeaderControls.svelte
-msgid "<0/> Filter"
-msgstr "<0/> Filter"
+#~ msgid "<0/> Filter"
+#~ msgstr "<0/> Filter"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Vorort"

@@ -66,9 +66,9 @@
 			/>
 		</div>
 
-		<button class={['btn relative', eventsStore.hasFilterBehindButton && 'active']} onclick={() => isFilterDialogOpen = true}>		
+		<button class={['btn relative  btn-circle sm:w-fit sm:px-4', eventsStore.hasFilterBehindButton && 'active']} onclick={() => isFilterDialogOpen = true}>		
 			<i class="icon-[ph--sliders] size-5"></i>
-			Filter
+			<span class="hidden sm:block">Filter</span>
 		</button>
 	</div>
 
