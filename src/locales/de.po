@@ -169,6 +169,7 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
 #: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
@@ -988,3 +989,57 @@ msgstr "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importiere
 #: src/routes/new/+page.svelte
 msgid "<0/> Analysiere Text …"
 msgstr "<0/> Analysiere Text …"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid "Anmeldung fehlgeschlagen"
+msgstr "Anmeldung fehlgeschlagen"
+
+#~ msgid "Angemeldet"
+#~ msgstr "Angemeldet"
+
+#~ msgid "Du bist erfolgreich angemeldet. Viel Spaß mit Blissbase!"
+#~ msgstr "Du bist erfolgreich angemeldet. Viel Spaß mit Blissbase!"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+msgid "OK"
+msgstr "OK"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid "Du bist jetzt angemeldet. Viel Spaß!"
+msgstr "Du bist jetzt angemeldet. Viel Spaß!"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid ""
+"\n"
+"Lass dir einen neuen Login-Link schicken."
+msgstr "Lass dir einen neuen Login-Link schicken."
+
+#~ msgid ""
+#~ "Der \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+#~ msgstr ""
+#~ "Der \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+
+#~ msgid ""
+#~ "Der Login-Link ist abgelaufen. \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+#~ msgstr ""
+#~ "Der Login-Link ist abgelaufen. \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+
+#~ msgid ""
+#~ "Der Login-Link ist abgelaufen oder ung. \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+#~ msgstr ""
+#~ "Der Login-Link ist abgelaufen oder ung. \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid "Der Login-Link ist abgelaufen."
+msgstr "Der Login-Link ist abgelaufen."

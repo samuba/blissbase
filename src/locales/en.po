@@ -169,6 +169,7 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
 #: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
@@ -988,3 +989,57 @@ msgstr "The text appears to come from an existing source. We regularly import ev
 #: src/routes/new/+page.svelte
 msgid "<0/> Analysiere Text …"
 msgstr "<0/> Analyzing text …"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid "Anmeldung fehlgeschlagen"
+msgstr "Sign in failed"
+
+#~ msgid "Angemeldet"
+#~ msgstr "Signed in"
+
+#~ msgid "Du bist erfolgreich angemeldet. Viel Spaß mit Blissbase!"
+#~ msgstr "You have successfully signed in. Enjoy Blissbase!"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+msgid "OK"
+msgstr "OK"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid "Du bist jetzt angemeldet. Viel Spaß!"
+msgstr "You are now signed in. Have fun!"
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid ""
+"\n"
+"Lass dir einen neuen Login-Link schicken."
+msgstr "Request a new login link."
+
+#~ msgid ""
+#~ "Der \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+#~ msgstr ""
+#~ "The \n"
+#~ "→ Have a new login link sent to you."
+
+#~ msgid ""
+#~ "Der Login-Link ist abgelaufen. \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+#~ msgstr ""
+#~ "The login link has expired. \n"
+#~ "→ Request a new login link."
+
+#~ msgid ""
+#~ "Der Login-Link ist abgelaufen oder ung. \n"
+#~ "→ Lass dir einen neuen Login-Link schicken."
+#~ msgstr ""
+#~ "The login link has expired or is invalid.\n"
+#~ "→ Request a new login link."
+
+#: src/lib/components/AuthCallbackFeedbackDialog.svelte
+#: src/lib/components/AuthCallbackToast.svelte
+msgid "Der Login-Link ist abgelaufen."
+msgstr "The login link has expired."

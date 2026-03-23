@@ -12,7 +12,9 @@
 	import { invalidateAll } from '$app/navigation';
 	import { navigationIsDelayed } from '$lib/components/navigationIsDelayed.svelte';
 	import { fade } from 'svelte/transition';
+	import { registerAuthCallbackFeedbackToast } from '$lib/authCallbackFeedbackToast.svelte';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
+	import { Toaster } from 'svelte-sonner';
 	import { resolve } from '$app/paths';
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
@@ -55,6 +57,8 @@
 		};
 	});
 
+	registerAuthCallbackFeedbackToast();
+
 	const showDesktopNav = $derived(!isActiveAppTab(page.url.pathname, resolve('/')));
 </script>
 
@@ -95,4 +99,9 @@
 	</div>
 {/if}
 
+<Toaster
+	position="top-center"
+	richColors
+	class={[`pointer-events-auto z-200`]}
+/>
 <LoginDialog />
