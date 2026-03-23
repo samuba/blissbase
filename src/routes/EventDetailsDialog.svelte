@@ -20,10 +20,6 @@
 
 	const isOpen = $derived(event !== undefined);
 
-	// $inspect("event", event)
-	// $inspect("isOpen", isOpen)
-	// $inspect("eventParam", eventParam)
-
 	function handleClose() {
 		if (isHandlingClose) return;
 		isHandlingClose = true;

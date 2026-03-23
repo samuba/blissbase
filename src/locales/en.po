@@ -198,7 +198,6 @@ msgid "Nächste 30 Tage"
 msgstr "Next 30 days"
 
 #: src/lib/components/AddToCalendarButton.svelte
-#: src/lib/components/AddToCalendarButton.svelte
 msgid "Zum Kalender hinzufügen"
 msgstr "Add to calendar"
 
@@ -670,9 +669,6 @@ msgstr "Name *"
 msgid "Beschreibung *"
 msgstr "Description *"
 
-#~ msgid "Online Event"
-#~ msgstr "Online event"
-
 #: src/lib/components/EventForm.svelte
 msgid "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 msgstr "One or more lines, e.g. studio name, street, city"
@@ -770,9 +766,6 @@ msgstr "<0/> Saving..."
 #: src/lib/components/ImageInput.svelte
 msgid "Bilder auswählen oder ablegen"
 msgstr "Select or drop images"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen"
-#~ msgstr "Do <0>not</0> show event in search"
 
 #: src/lib/components/ImageInput.svelte
 msgid "Bild konnte nicht verarbeitet werden"
@@ -995,12 +988,6 @@ msgstr "<0/> Analyzing text …"
 msgid "Anmeldung fehlgeschlagen"
 msgstr "Sign in failed"
 
-#~ msgid "Angemeldet"
-#~ msgstr "Signed in"
-
-#~ msgid "Du bist erfolgreich angemeldet. Viel Spaß mit Blissbase!"
-#~ msgstr "You have successfully signed in. Enjoy Blissbase!"
-
 #: src/lib/components/AuthCallbackFeedbackDialog.svelte
 msgid "OK"
 msgstr "OK"
@@ -1019,27 +1006,6 @@ msgid ""
 "Lass dir einen neuen Login-Link schicken."
 msgstr "Request a new login link."
 
-#~ msgid ""
-#~ "Der \n"
-#~ "→ Lass dir einen neuen Login-Link schicken."
-#~ msgstr ""
-#~ "The \n"
-#~ "→ Have a new login link sent to you."
-
-#~ msgid ""
-#~ "Der Login-Link ist abgelaufen. \n"
-#~ "→ Lass dir einen neuen Login-Link schicken."
-#~ msgstr ""
-#~ "The login link has expired. \n"
-#~ "→ Request a new login link."
-
-#~ msgid ""
-#~ "Der Login-Link ist abgelaufen oder ung. \n"
-#~ "→ Lass dir einen neuen Login-Link schicken."
-#~ msgstr ""
-#~ "The login link has expired or is invalid.\n"
-#~ "→ Request a new login link."
-
 #: src/lib/authCallbackFeedbackToast.svelte.ts
 #: src/lib/components/AuthCallbackFeedbackDialog.svelte
 #: src/lib/components/AuthCallbackToast.svelte
@@ -1049,48 +1015,6 @@ msgstr "The login link has expired."
 #: src/lib/components/EventForm.svelte
 msgid "Online Event <0>Event wird über Video-Call angeboten (Zoom etc.)</0>"
 msgstr "Online Event <0>The event is offered via video call (Zoom, etc.)</0>"
-
-#~ msgid "Online Event Failed to hydrate: TypeError: element.getAttribute is not a function at Module.set_attribute (http://localhost:5173/node_modules/.vite/deps/client-RvciAcNg.js?v=b87d102e:2589:35) at http://localhost:5173/src/lib/components/AddToCalendarButton.svelte:93:8"
-#~ msgstr "Online Event Failed to hydrate: TypeError: element.getAttribute is not a function at Module.set_attribute (http://localhost:5173/node_modules/.vite/deps/client-RvciAcNg.js?v=b87d102e:2589:35) at http://localhost:5173/src/lib/components/AddToCalendarButton.svelte:93:8"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Event wird über Video-Call angeboten (Zoom etc.)</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>Event is offered via video call (Zoom etc.)</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Event kann nicht</1>"
-#~ msgstr "Event <0>not</0> displayed in search <1>Event cannot</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1/>"
-#~ msgstr "Do <0>not</0> show event in search <1/>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Nur</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>Only</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Nur Gäste</1>"
-#~ msgstr "Do <0>not</0> display event in search <1>Guests only</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Der Event ist nur</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>The event is only</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Der Event ist nur sichtbar</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>The event is only visible</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Der Event ist nur sichtbar für</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>The event is only visible to</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Der Event ist nur sichtbar für Leute denen du de</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>The event is only visible to people you share the link with</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Der Event ist nur sichtbar für Leute denen du den Link schickst</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>The event is only visible to people you send the link to</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Privater Event. Der Event ist nur sichtbar für Leute denen du den Link schickst</1>"
-#~ msgstr "Do <0>not</0> show this event in search <1>Private event. The event is only visible to people you share the link with</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Privater Event. Nur sichtbar für Leute denen du den Link schickst</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>Private event. Only visible to people you send the link to</1>"
-
-#~ msgid "Event <0>nicht</0> in Suche anzeigen <1>Privater Event. Nur sichtbar für Leute denen du den Link gibst</1>"
-#~ msgstr "Do <0>not</0> show event in search <1>Private event. Only visible to people you share the link with</1>"
 
 #: src/lib/components/EventForm.svelte
 msgid "Event <0>nicht</0> in Suche anzeigen <1>Privater Event. Nur sichtbar für Leute denen du den Link gibst.</1>"

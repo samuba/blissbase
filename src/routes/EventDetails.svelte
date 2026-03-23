@@ -235,57 +235,79 @@
 
 	<div class="card-body text-base-content/90 w-full space-y-4 md:px-10">
 		<div class="relative">
-			<h1 class="card-title block w-full pr-12 text-center text-2xl font-semibold">
+			<h1 class="card-title block w-full text-center text-2xl font-semibold">
 				{event.name}
-
-				{#if event.soldOut}
-					<span class="badge badge-accent ml-1">Ausgebucht</span>
-				{/if}
 			</h1>
 		</div>
+		
+		{#if event.soldOut}
+			<div class="flex justify-center -mt-1">
+				<span class="badge badge-accent badge-xl">Ausgebucht</span>
+			</div>
+		{/if}
+
+		<section class="flex w-full items-center justify-center">
+			<div class="max-w-sm grid grid-cols-[1.5rem_1fr] gap-y-6 gap-x-5 place-items-center justify-items-start">
+
+				<i class="icon-[ph--clock] size-7 inset-0 -mr-2"></i>
+				<div class="flex flex-row gap-0.5">
+					<AddToCalendarButton
+						event={{
+							title: event.name,
+							description: event.description ?? undefined,
+							start: event.startAt.toISOString(),
+							end: event.endAt?.toISOString(),
+							location: event.address?.join(', ')
+						}}
+					>
+						{#snippet children({ props })}
+							<button
+								{...props}
+								type="button"
+								title="Zum Kalender hinzufügen"
+								aria-label="Zum Kalender hinzufügen"
+								class={[
+									`flex cursor-pointer gap-1.5 hover:underline`,
+									props.class
+								]}
+							>
+								<p class="text-md font-medium">
+									{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
+								</p>
+								<i class="icon-[ph--calendar-plus] size-5"></i>
+							</button>
+						{/snippet}
+					</AddToCalendarButton>
+				</div>
+				
+				{#if event.attendanceMode === 'online'}
+					<i class="icon-[ph--globe] size-7 shrink-0"></i>
+					<p class="font-medium">Online</p>
+				{:else if event.address?.length}
+					<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
+					<a
+						href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						class={[
+							`hover:underline flex min-w-0 cursor-pointer items-center gap-1.5 self-center leading-tight font-medium`
+						]}
+					>
+						<div class={[`w-full min-w-0 line-clamp-3`]}>
+							{formatAddress(event.address)}
+						</div>
+					</a>
+				{/if}
+
+				{#if event.price && !event.priceIsHtml}
+					<i class="icon-[ph--money] mr-2 size-7"></i>
+					<p class="font-medium">{event.price}</p>
+				{/if}
+			</div>
+		</section>
 
 		<div class="flex w-full flex-wrap justify-center gap-4">
-			<div class="flex items-center">
-				<div class="bg-base-200 flex items-center justify-center rounded-l-full py-1.5 pr-2 pl-4">
-					<i class="icon-[ph--clock] mr-2 size-6"></i>
-					<p class="text-md font-medium">
-						{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
-					</p>
-				</div>
-				<AddToCalendarButton
-					event={{
-						title: event.name,
-						description: event.description ?? undefined,
-						start: event.startAt.toISOString(),
-						end: event.endAt?.toISOString(),
-						location: event.address?.join(', ')
-					}}
-				/>
-			</div>
 
-			{#if event.price && !event.priceIsHtml}
-				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
-					<i class="icon-[ph--money] mr-2 size-6"></i>
-					<p class="font-medium">{event.price}</p>
-				</div>
-			{/if}
-
-			{#if event.attendanceMode === 'online'}
-				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
-					<i class="icon-[ph--globe] mr-2 size-6"></i>
-					<p class="font-medium">Online</p>
-				</div>
-			{:else if event.address?.length}
-				<a
-					href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="btn flex h-fit max-w-full min-w-0 items-center gap-1.5 py-1.5 leading-tight font-medium break-words"
-				>
-					<i class="icon-[ph--map-pin] size-6 flex-shrink-0"></i>
-					<span class="block min-w-0 break-words">{formatAddress(event.address)}</span>
-				</a>
-			{/if}
 
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 
@@ -388,11 +410,12 @@
 			<div>
 				<h2 class="mb-2 text-lg font-semibold">Tags</h2>
 				<div class="flex flex-wrap items-center gap-2">
-					{#each tags as tag}
+					{#each tags as tag (tag)}
 						<button
 							class="badge badge-ghost"
 							type="button"
 							title="Filter nach Tag"
+							// onclick={() => onShowEventForTag(tag)}
 						>
 							{tag}
 						</button>

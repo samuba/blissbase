@@ -1,8 +1,17 @@
 <script lang="ts">
 	import { google, outlook, yahoo, ics, type CalendarEvent } from 'calendar-link';
+	import type { Snippet } from 'svelte';
 	import PopOver from './PopOver.svelte';
 
-	let { event }: { event: CalendarEvent } = $props();
+	type TriggerSnippetProps = { props: Record<string, unknown> };
+
+	let {
+		event,
+		children
+	}: {
+		event: CalendarEvent;
+		children?: Snippet<[TriggerSnippetProps]>;
+	} = $props();
 
 	const calendarProviders = [
 		{
@@ -58,53 +67,59 @@
 	];
 </script>
 
-<PopOver contentClass="bg-base-100 p-2 shadow-lg" contentProps={{ align: 'center' }}>
+<PopOver contentClass="bg-base-100 shadow-lg" contentProps={{ align: 'center' }}>
 	{#snippet trigger({ props })}
-		<button
-			{...props}
-			class={[
-				`btn h-full rounded rounded-r-full py-1 pr-2 pl-1.5`,
-				props.class
-			]}
-			title="Zum Kalender hinzufügen"
-			aria-label="Zum Kalender hinzufügen"
-		>
-			<i class="icon-[ph--calendar-plus] size-6"></i>
-		</button>
+		{#if children}
+			{@render children({ props })}
+		{:else}
+			<button
+				{...props}
+				class={['', props.class]}
+				title="Zum Kalender hinzufügen"
+				aria-label="Zum Kalender hinzufügen"
+			>
+				<i class="icon-[ph--calendar-plus] size-5"></i>
+			</button>
+		{/if}
 	{/snippet}
 
 	{#snippet content()}
-		<div class="z-50 flex flex-col gap-2">
-			{#each calendarProviders as provider (provider.name)}
-				<a
-					href={provider.getUrl(event)}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="btn btn-ghost flex items-center justify-start gap-2"
-					onclick={() => {
-						// Close the popover after a short delay to allow the link to open
-						setTimeout(() => {
-							const closeButton = document.querySelector(
-								'[data-bits-floating-content-wrapper] [data-popover-close]'
-							);
-							if (closeButton instanceof HTMLElement) {
-								closeButton.click();
-							}
-						}, 200);
-					}}
-				>
-					{#if provider.svg}
-						<img
-							src={`data:image/svg+xml;utf8,${encodeURIComponent(provider.svg)}`}
-							alt=""
-							class="size-6"
-						/>
-					{:else}
-						<i class={`${provider.icon} size-6`}></i>
-					{/if}
-					<span>{provider.name}</span>
-				</a>
-			{/each}
+		<div class="z-50 flex flex-col">
+			<div class="bg-base-200 p-2 px-4 text-xs rounded-t-xl text-center">
+				Zum Kalender hinzufügen
+			</div>
+			<div class="flex flex-col p-2 gap-2">
+				{#each calendarProviders as provider (provider.name)}
+					<a
+						href={provider.getUrl(event)}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn btn-ghost flex items-center justify-start gap-2"
+						onclick={() => {
+							// Close the popover after a short delay to allow the link to open
+							setTimeout(() => {
+								const closeButton = document.querySelector(
+									'[data-bits-floating-content-wrapper] [data-popover-close]'
+								);
+								if (closeButton instanceof HTMLElement) {
+									closeButton.click();
+								}
+							}, 200);
+						}}
+					>
+						{#if provider.svg}
+							<img
+								src={`data:image/svg+xml;utf8,${encodeURIComponent(provider.svg)}`}
+								alt=""
+								class="size-6"
+							/>
+						{:else}
+							<i class={`${provider.icon} size-6`}></i>
+						{/if}
+						<span>{provider.name}</span>
+					</a>
+				{/each}
+			</div>
 		</div>
 	{/snippet}
 </PopOver>
