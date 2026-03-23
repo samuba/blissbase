@@ -14,6 +14,9 @@ import '../locales/main.loader.svelte.js'
 import '../locales/js.loader.js'
 import { localeStore } from '../locales/localeStore.svelte';
 
+/** PostHog init must run once per tab; root layout load re-runs on navigation. */
+let posthogClientInitialized = false;
+
 export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId, isAdminSession }, depends, fetch }) => {
     // Declare a dependency so the layout can be invalidated, for example, on session refresh.
     depends('supabase:auth');
@@ -40,11 +43,14 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
     }
 
     if (browser && !dev && !url.host.endsWith('.vercel.app')) {
-        posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {
-            api_host: 'https://igel.blissbase.app',
-            defaults: '2025-05-24',
-            person_profiles: 'always', // or 'always' to create profiles for anonymous users as well
-        });
+        if (!posthogClientInitialized) {
+            posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {
+                api_host: 'https://igel.blissbase.app',
+                defaults: '2025-05-24',
+                person_profiles: 'always', // or 'always' to create profiles for anonymous users as well
+            });
+            posthogClientInitialized = true;
+        }
         if (isAdminSession) posthog.identify(PUBLIC_ADMIN_USER_ID)
         else if (userId) posthog.identify(userId);
     }
