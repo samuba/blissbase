@@ -4,6 +4,7 @@
 	import { debounce, sleep } from '$lib/common';
 	import type { RemoteFormField } from '@sveltejs/kit';
 	import { localeStore } from '$lib/../locales/localeStore.svelte';
+	import { normalizeEditorJsInputHtml, ParagraphWithSplitPaste } from './editorJsNormalizeInputHtml';
 
 	let { field }: {
 		field: RemoteFormField<string>;
@@ -38,6 +39,10 @@
 			editor = new EditorJS({
 				holder: editorEl,
 				tools: {
+					paragraph: {
+						class: ParagraphWithSplitPaste as unknown as import('@editorjs/editorjs').BlockToolConstructable,
+						inlineToolbar: true
+					},
 					marker: {
 						class: Marker
 					},
@@ -141,8 +146,10 @@
 					}
 				} : undefined,
 				onReady: async () => {
+					// Split newlines / <br> into multiple blocks before HTML paste pipeline (import + round-trip).
+					const normalized = normalizeEditorJsInputHtml(editorValue);
 					// removed br tags: https://github.com/codex-team/editor.js/issues/2800
-					await editor?.blocks.renderFromHTML(editorValue.replaceAll('<br>', '##br##'));
+					await editor?.blocks.renderFromHTML(normalized.replaceAll('<br>', '##br##'));
 					await sleep(300);
 					const temp = await editor!.save();
 					for (const block of temp.blocks) {

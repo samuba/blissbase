@@ -97,6 +97,7 @@
 		"@editorjs/header": "^2.8.8",
 		"@editorjs/list": "^2.0.9",
 		"@editorjs/marker": "^1.4.0",
+		"@editorjs/paragraph": "^2.11.7",
 		"@internationalized/date": "^3.12.0",
 		"@supabase/ssr": "^0.7.0",
 		"@supabase/supabase-js": "^2.99.2",
