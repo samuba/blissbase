@@ -1,7 +1,6 @@
 import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import * as assets from '$lib/assets';
-import { isAdminSession } from '$lib/server/admin';
 import { db, eq, s } from '$lib/server/db';
 import { CLOUDFLARE_ACCOUNT_ID, S3_ACCESS_KEY_ID, S3_BUCKET_NAME, S3_SECRET_ACCESS_KEY } from '$env/static/private';
 
@@ -20,12 +19,12 @@ export const eventAssetsCreds = assets.loadCreds({
  */
 export async function assertUserIsAllowedToEditEvent(eventId: number, hostSecret: string) {
 	const {
-		locals: { userId }
+		locals: { userId, isAdminSession }
 	} = getRequestEvent();
 
 	const event = await db.query.events.findFirst({ where: eq(s.events.id, eventId) });
 	if (!event) return error(404, `Event not found`);
-	if (await isAdminSession()) return event;
+	if (isAdminSession) return event;
 	if (userId === event.authorId) return event;
 	if (hostSecret === event.hostSecret) return event;
 

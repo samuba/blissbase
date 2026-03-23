@@ -1,16 +1,15 @@
 <script lang="ts">
 	import type { UiEvent } from '$lib/server/events';
-	import { getIsAdminSession } from '$lib/rpc/admin.remote';
 	import { deleteEvent } from '$lib/rpc/eventDelete.remote';
 	import { resolve } from '$app/paths';
+	import { user } from '$lib/user.svelte';
 
 	let { event }: { event: UiEvent } = $props();
 
-	const isAdminSession = $derived(getIsAdminSession());
 	let showJson = $state(false);
 </script>
 
-{#if isAdminSession.current}
+{#if user.isAdmin}
 	<div class="border-base-500 mt-6 flex flex-col gap-4 rounded-md border p-4">
 		<h3 class="flex items-center text-lg font-semibold">
 			<i class="icon-[ph--warning-circle] mr-2 size-6"></i>

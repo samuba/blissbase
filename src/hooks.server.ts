@@ -87,13 +87,13 @@ const clearStaleFilters: Handle = async ({ event, resolve }) => {
 };
 
 const supabaseAuth: Handle = async ({ event, resolve }) => {
-    event.locals.isAdminSession = isAdminSession();
     event.locals.supabase = createSupabaseServerClient();
 
     const { error, data } = await event.locals.supabase.auth.getClaims();
     if (error) console.error('claimsError', error);
     event.locals.jwtClaims = data?.claims as BlissabaseClaims;
     event.locals.userId = event.locals.jwtClaims?.sub;
+    event.locals.isAdminSession = isAdminSession();
 
     if (E2E_TEST === `true` && dev) {
         const e2eUserId = event.cookies.get(`e2e_user_id`);

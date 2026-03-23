@@ -25,7 +25,11 @@ declare global {
 				postalCode: string | null;
 			};
 		}
-		// interface PageData {}
+		interface PageData {
+			userId?: string;
+			jwtClaims?: BlissabaseClaims;
+			supabase?: SupabaseClient;
+		}
 		interface PageState {
 			selectedEventId?: number;
 		}
