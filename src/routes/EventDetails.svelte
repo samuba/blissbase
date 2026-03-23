@@ -234,138 +234,141 @@
 	{/if}
 
 	<div class="card-body text-base-content/90 w-full space-y-4 md:px-10">
-		<div class="relative">
-			<h1 class="card-title block w-full text-center text-2xl font-semibold">
-				{event.name}
-			</h1>
-		</div>
-		
-		{#if event.soldOut}
-			<div class="flex justify-center -mt-1">
-				<span class="badge badge-accent badge-xl">Ausgebucht</span>
+
+		<!-- head -->
+		<div class="flex flex-col gap-6">
+			<div class="relative">
+				<h1 class="card-title block w-full text-center text-2xl font-semibold mb-0">
+					{event.name}
+				</h1>
 			</div>
-		{/if}
-
-		<section class="flex w-full items-center justify-center">
-			<div class="max-w-sm grid grid-cols-[1.5rem_1fr] gap-y-6 gap-x-5 place-items-center justify-items-start">
-
-				<i class="icon-[ph--clock] size-7 inset-0 -mr-2"></i>
-				<div class="flex flex-row gap-0.5">
-					<AddToCalendarButton
-						event={{
-							title: event.name,
-							description: event.description ?? undefined,
-							start: event.startAt.toISOString(),
-							end: event.endAt?.toISOString(),
-							location: event.address?.join(', ')
-						}}
-					>
-						{#snippet children({ props })}
-							<button
-								{...props}
-								type="button"
-								title="Zum Kalender hinzufügen"
-								aria-label="Zum Kalender hinzufügen"
-								class={[
-									`flex cursor-pointer gap-1.5 hover:underline`,
-									props.class
-								]}
-							>
-								<p class="text-md font-medium">
-									{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
-								</p>
-								<i class="icon-[ph--calendar-plus] size-5"></i>
-							</button>
-						{/snippet}
-					</AddToCalendarButton>
+			
+			{#if event.soldOut}
+				<div class="flex justify-center -mt-1">
+					<span class="badge badge-accent badge-xl">Ausgebucht</span>
 				</div>
-				
-				{#if event.attendanceMode === 'online'}
-					<i class="icon-[ph--globe] size-7 shrink-0"></i>
-					<p class="font-medium">Online</p>
-				{:else if event.address?.length}
-					<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
-					<a
-						href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}`}
-						target="_blank"
-						rel="noopener noreferrer"
-						class={[
-							`hover:underline flex min-w-0 cursor-pointer items-center gap-1.5 self-center leading-tight font-medium`
-						]}
-					>
-						<div class={[`w-full min-w-0 line-clamp-3`]}>
-							{formatAddress(event.address)}
-						</div>
+			{/if}
+	
+			<section class="flex w-full items-center justify-center">
+				<div class="max-w-sm grid grid-cols-[1.5rem_1fr] gap-y-6 gap-x-5 place-items-center justify-items-start">
+	
+					<i class="icon-[ph--clock] size-7 inset-0 -mr-2"></i>
+					<div class="flex flex-row gap-0.5">
+						<AddToCalendarButton
+							event={{
+								title: event.name,
+								description: event.description ?? undefined,
+								start: event.startAt.toISOString(),
+								end: event.endAt?.toISOString(),
+								location: event.address?.join(', ')
+							}}
+						>
+							{#snippet children({ props })}
+								<button
+									{...props}
+									type="button"
+									title="Zum Kalender hinzufügen"
+									aria-label="Zum Kalender hinzufügen"
+									class={[
+										`flex cursor-pointer gap-1.5 hover:underline`,
+										props.class
+									]}
+								>
+									<p class="text-md font-medium">
+										{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
+									</p>
+									<i class="icon-[ph--calendar-plus] size-5"></i>
+								</button>
+							{/snippet}
+						</AddToCalendarButton>
+					</div>
+					
+					{#if event.attendanceMode === 'online'}
+						<i class="icon-[ph--globe] size-7 shrink-0"></i>
+						<p class="font-medium">Online</p>
+					{:else if event.address?.length}
+						<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
+						<a
+							href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class={[
+								`hover:underline flex min-w-0 cursor-pointer items-center gap-1.5 self-center leading-tight font-medium`
+							]}
+						>
+							<div class={[`w-full min-w-0 line-clamp-3`]}>
+								{formatAddress(event.address)}
+							</div>
+						</a>
+					{/if}
+	
+					{#if event.price && !event.priceIsHtml}
+						<i class="icon-[ph--money] mr-2 size-7"></i>
+						<p class="font-medium">{event.price}</p>
+					{/if}
+				</div>
+			</section>
+
+			<div class="flex w-full flex-wrap justify-center gap-4 pt-1">
+				<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
+	
+				{#if isAuthor}
+					<a href={resolve(`/edit/${event.id}`)} class="btn btn-warning">
+						<i class="icon-[ph--pencil] mr-1 size-4"></i>
+						Bearbeiten
 					</a>
 				{/if}
-
-				{#if event.price && !event.priceIsHtml}
-					<i class="icon-[ph--money] mr-2 size-7"></i>
-					<p class="font-medium">{event.price}</p>
+	
+				{#if showQuelleInsteadOfAnmelden}
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
+						Quelle
+						<i class="icon-[ph--arrow-square-out] size-5"></i>
+					</a>
+				{:else if sourceUrl && !sourceUrl.includes("todo.today")}
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
+						Anmelden
+						<i class="icon-[ph--arrow-square-out] size-5"></i>
+					</a>
+				{:else if singleContact?.method === 'Website'}
+					<a
+						href={singleContact.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn-primary btn"
+					>
+						Anmelden
+						<i class="icon-[ph--arrow-square-out] size-5"></i>
+					</a>
+				{:else}
+					<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
+						{#snippet trigger({ props })}
+							<button {...props} class={[`btn btn-primary`, props.class]}> Anmelden </button>
+						{/snippet}
+						{#snippet content()}
+							{#if singleContact?.method && singleContact?.url}
+								<span class="word-wrap">
+									Anmeldung per <b> {singleContact.method}</b>.
+								</span>
+	
+								<div class="mt-3 flex flex-col gap-3 justify-center">
+									{@render contactButton(singleContact.method, singleContact.url!)}
+								</div>
+							{:else if event.contact?.length}
+								<span class="word-wrap">
+									Anmeldung über diese Kanäle:
+								</span>
+								<div class="mt-3 flex flex-col gap-3">
+									{#each event.contact as contact}
+										{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
+									{/each}
+								</div>
+							{/if}
+						{/snippet}
+					</PopOver>
 				{/if}
 			</div>
-		</section>
-
-		<div class="flex w-full flex-wrap justify-center gap-4">
-
-
-			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
-
-			{#if isAuthor}
-				<a href={resolve(`/edit/${event.id}`)} class="btn btn-warning">
-					<i class="icon-[ph--pencil] mr-1 size-4"></i>
-					Bearbeiten
-				</a>
-			{/if}
-
-			{#if showQuelleInsteadOfAnmelden}
-				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
-					Quelle
-					<i class="icon-[ph--arrow-square-out] size-5"></i>
-				</a>
-			{:else if sourceUrl && !sourceUrl.includes("todo.today")}
-				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
-					Anmelden
-					<i class="icon-[ph--arrow-square-out] size-5"></i>
-				</a>
-			{:else if singleContact?.method === 'Website'}
-				<a
-					href={singleContact.url}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="btn-primary btn"
-				>
-					Anmelden
-					<i class="icon-[ph--arrow-square-out] size-5"></i>
-				</a>
-			{:else}
-				<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
-					{#snippet trigger({ props })}
-						<button {...props} class={[`btn btn-primary`, props.class]}> Anmelden </button>
-					{/snippet}
-					{#snippet content()}
-						{#if singleContact?.method && singleContact?.url}
-							<span class="word-wrap">
-								Anmeldung per <b> {singleContact.method}</b>.
-							</span>
-
-							<div class="mt-3 flex flex-col gap-3 justify-center">
-								{@render contactButton(singleContact.method, singleContact.url!)}
-							</div>
-						{:else if event.contact?.length}
-							<span class="word-wrap">
-								Anmeldung über diese Kanäle:
-							</span>
-							<div class="mt-3 flex flex-col gap-3">
-								{#each event.contact as contact}
-									{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
-								{/each}
-							</div>
-						{/if}
-					{/snippet}
-				</PopOver>
-			{/if}
 		</div>
+
 
 		{#if event.description}
 			<div class="event-description prose max-w-none">
