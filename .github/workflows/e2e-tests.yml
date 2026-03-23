@@ -34,7 +34,7 @@ jobs:
           S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+          ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
         run: bun run test:run
 
   e2e-tests:
@@ -85,7 +85,7 @@ jobs:
           S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+          ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
         run: bun run test:e2e
 
       - name: Upload test results

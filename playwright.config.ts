@@ -64,7 +64,7 @@ export default defineConfig({
 			S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || 'test-s3-secret',
 			S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || 'test-bucket',
 			CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID || 'test-account',
-			ADMIN_SECRET: process.env.ADMIN_SECRET || 'test-admin-secret',
+			ADMIN_EMAILS: process.env.ADMIN_EMAILS || 'test@admin.de',
 		},
 	},
 	expect: {

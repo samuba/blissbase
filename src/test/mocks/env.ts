@@ -1,4 +1,4 @@
-export const ADMIN_SECRET = process.env.ADMIN_SECRET ?? `test-admin-secret`;
+export const ADMIN_EMAILS = process.env.ADMIN_EMAILS ?? `test@admin.de`;
 export const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID ?? `test-cloudflare-account-id`;
 export const E2E_TEST = process.env.E2E_TEST ?? `true`;
 export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? `test-google-maps-api-key`;
