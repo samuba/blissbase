@@ -3,7 +3,7 @@
 	import { page, updated } from '$app/state';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { pwaAssetsHead } from 'virtual:pwa-assets/head';
-	import { beforeNavigate, invalidate } from '$app/navigation';
+	import { beforeNavigate, invalidate, goto } from '$app/navigation';
 	import { MetaTags, deepMerge } from 'svelte-meta-tags';
 	import { onMount } from 'svelte';
 	import { setupAutoRefresh } from '$lib/auto-refresh';
@@ -13,6 +13,7 @@
 	import { navigationIsDelayed } from '$lib/components/navigationIsDelayed.svelte';
 	import { fade } from 'svelte/transition';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
+	import AuthFeedbackDialog, { showAuthFeedback } from '$lib/components/AuthFeedbackDialog.svelte';
 	import { resolve } from '$app/paths';
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
@@ -36,6 +37,23 @@
 
 	onMount(() => {
 		const cleanup = setupAutoRefresh();
+		
+		// Check for auth feedback from URL params
+		const url = new URL(window.location.href);
+		const authError = url.searchParams.get('auth_error');
+		const authSuccess = url.searchParams.get('auth_success');
+		
+		if (authError) {
+			showAuthFeedback('error', authError);
+			// Clean up URL params without reloading
+			url.searchParams.delete('auth_error');
+			goto(url.pathname + url.search, { replaceState: true });
+		} else if (authSuccess) {
+			showAuthFeedback('success', 'Du hast dich erfolgreich angemeldet. Willkommen zurück!');
+			// Clean up URL params without reloading
+			url.searchParams.delete('auth_success');
+			goto(url.pathname + url.search, { replaceState: true });
+		}
 		
 		// Listen to Auth events to handle session refreshes and signouts
 		const { data: authData } = supabase.auth.onAuthStateChange((event, newSession) => {
@@ -96,3 +114,4 @@
 {/if}
 
 <LoginDialog />
+<AuthFeedbackDialog />
