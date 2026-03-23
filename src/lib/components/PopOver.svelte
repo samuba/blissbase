@@ -2,8 +2,11 @@
 	import { Popover } from 'bits-ui';
 	import type { Snippet } from 'svelte';
 
+	/** Bits UI trigger props (handlers, aria, ref) — spread onto your root trigger element. */
+	type TriggerSnippetProps = { props: Record<string, unknown> };
+
 	type Props = {
-		trigger: Snippet;
+		trigger: Snippet<[TriggerSnippetProps]>;
 		content: Snippet;
 		contentClass?: string;
 		contentProps?: Popover.ContentProps;
@@ -18,7 +21,9 @@
 
 <Popover.Root bind:open={open} onOpenChange={onOpenChange}>
 	<Popover.Trigger class={triggerClass}>
-		{@render trigger()}
+		{#snippet child({ props })}
+			{@render trigger({ props })}
+		{/snippet}
 	</Popover.Trigger>
 	<Popover.Content
 		{...contentProps}

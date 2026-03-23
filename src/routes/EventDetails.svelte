@@ -318,8 +318,8 @@
 				</a>
 			{:else}
 				<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
-					{#snippet trigger()}
-						<button class="btn btn-primary"> Anmelden </button>
+					{#snippet trigger({ props })}
+						<button {...props} class={[`btn btn-primary`, props.class]}> Anmelden </button>
 					{/snippet}
 					{#snippet content()}
 						{#if singleContact?.method && singleContact?.url}

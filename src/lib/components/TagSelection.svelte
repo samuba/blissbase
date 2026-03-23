@@ -233,11 +233,13 @@
 				popoverOpen = open;
 			}}
 		>
-			{#snippet trigger()}
+			{#snippet trigger({ props })}
 				<div
+					{...props}
 					class={[
-						'tag-trigger shrink-0 overflow-hidden transition-all duration-300 ease-out',
-						searchExpanded || showTextSearch && 'w-42'
+						`tag-trigger shrink-0 overflow-hidden transition-all duration-300 ease-out`,
+						searchExpanded || showTextSearch && `w-42`,
+						props.class
 					]}
 				>
 					{#if searchExpanded || showTextSearch}

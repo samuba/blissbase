@@ -683,8 +683,12 @@
 							contentClass="max-w-xs py-1 bg-base-100 w-fit"
 							arrowProps={{ width: 12, height: 10, class: 'text-primary' }}
 						>
-							{#snippet trigger()}
-								<div use:dragHandle class="p-2">
+							{#snippet trigger({ props })}
+								<div
+									use:dragHandle
+									{...props}
+									class={[`p-2`, props.class]}
+								>
 									<button
 										data-testid="image-preview-handle"
 										type="button"

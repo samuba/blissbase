@@ -80,7 +80,9 @@
 		<fieldset class="fieldset">
 			<label class="label cursor-pointer justify-start gap-2">
 				<input class="checkbox" {...remoteForm.fields.isOnline.as('checkbox')} />
-				<legend class="font-bold text-base-content">Online Event</legend>
+				<legend class="font-bold text-base-content">Online Event
+					<p class="text-xs text-base-content/65 font-normal">Event wird über Video-Call angeboten (Zoom etc.)</p>
+				</legend>
 			</label>
 			<FormFieldIssues field={remoteForm.fields.isOnline} />
 		</fieldset>
@@ -88,7 +90,9 @@
 		<fieldset class="fieldset">
 			<label class="label cursor-pointer justify-start gap-2">
 				<input class="checkbox" {...remoteForm.fields.isNotListed.as('checkbox')} />
-				<legend class="font-bold text-base-content">Event <span class="underline">nicht</span> in Suche anzeigen</legend>
+				<legend class="font-bold text-base-content">Event <span class="underline">nicht</span> in Suche anzeigen
+					<p class="text-xs text-base-content/65 font-normal">Privater Event. Nur sichtbar für Leute denen du den Link gibst.</p>
+				</legend>
 			</label>
 			<FormFieldIssues field={remoteForm.fields.isNotListed} />
 		</fieldset>

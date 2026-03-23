@@ -16,13 +16,12 @@ export const getFavoriteEventIds = query(async () => {
 	try {
 		const userFavorites = await favoriteEventIdsQuery(userId)
 
+		console.timeEnd('getFavorites');
 		return userFavorites.map((f) => f.eventId);
 	} catch (err) {
 		console.error(`Failed to fetch favorites:`, err);
 		error(500, `Failed to fetch favorites`);
-	} finally {
-		console.timeEnd('getFavorites');
-	}
+	} 
 });
 
 export const addFavorite = command(v.number(), async (eventId) => {
