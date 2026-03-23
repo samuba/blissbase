@@ -17,7 +17,7 @@
 		},
 		{
 			name: 'Outlook Online',
-			icon: 'icon-[logos--microsoft-outlook-logo]',
+			icon: '',
 			svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-.12979373 0 33.25199672 32">
   <path fill="#0364b8" d="M28.596 2H11.404A1.404 1.404 0 0 0 10 3.404V5l9.69 3L30 5V3.404A1.404 1.404 0 0 0 28.596 2z"/>
   <path fill="#0a2767" d="M31.65 17.405A11.341 11.341 0 0 0 32 16a.666.666 0 0 0-.333-.576l-.013-.008-.004-.002L20.812 9.24a1.499 1.499 0 0 0-.145-.083 1.5 1.5 0 0 0-1.334 0 1.49 1.49 0 0 0-.145.082L8.35 15.415l-.004.002-.012.007A.666.666 0 0 0 8 16a11.344 11.344 0 0 0 .35 1.405l11.492 8.405z"/>
@@ -59,9 +59,13 @@
 </script>
 
 <PopOver contentClass="bg-base-100 p-2 shadow-lg" contentProps={{ align: 'center' }}>
-	{#snippet trigger()}
+	{#snippet trigger({ props })}
 		<button
-			class="btn h-full rounded rounded-r-full py-1 pr-2 pl-1.5"
+			{...props}
+			class={[
+				`btn h-full rounded rounded-r-full py-1 pr-2 pl-1.5`,
+				props.class
+			]}
 			title="Zum Kalender hinzufügen"
 			aria-label="Zum Kalender hinzufügen"
 		>
@@ -71,7 +75,7 @@
 
 	{#snippet content()}
 		<div class="z-50 flex flex-col gap-2">
-			{#each calendarProviders as provider}
+			{#each calendarProviders as provider (provider.name)}
 				<a
 					href={provider.getUrl(event)}
 					target="_blank"
