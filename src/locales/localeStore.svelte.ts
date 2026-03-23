@@ -17,7 +17,6 @@ class LocaleStore {
             this.locale = locale as 'en' | 'de';
             document.cookie = `locale=${this.locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
         }
-        console.log('localeStore', this.locale);
     }
 }
 

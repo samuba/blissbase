@@ -6,11 +6,7 @@ const adminEmails = ADMIN_EMAILS.split(",")?.map((email) => email?.trim())?.filt
 export function isAdminSession(): boolean {
     try {
         const { locals } = getRequestEvent();
-        console.log('locals', locals.jwtClaims?.email);
-        if (adminEmails.some(x => x === locals.jwtClaims?.email)) {
-            return true;
-        }
-        return false;
+        return adminEmails.some(x => x === locals.jwtClaims?.email)
     } catch (error) {
         console.error('Failed to find out if this is admin session', error);
         return false;
