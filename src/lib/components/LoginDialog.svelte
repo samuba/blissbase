@@ -14,7 +14,7 @@
 <Dialog.Root bind:open>
 	<Dialog.Portal>
 		<Dialog.OverlayAnimated />
-		<Dialog.ContentAnimated class="bg-base-100 fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl">
+		<Dialog.ContentAnimated class="bg-base-100 fixed top-1/2 left-1/2 z-60 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl">
 			<Dialog.Title class="mb-4 text-xl font-semibold">Anmelden</Dialog.Title>
 
 			<Login />
