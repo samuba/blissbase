@@ -244,57 +244,48 @@
 			</h1>
 		</div>
 
-		<section class="flex w-full items-center justify-center">
-			<div class="max-w-sm grid grid-cols-[1.5rem_1fr] gap-6 place-items-center justify-items-start">
-
-				<i class="icon-[ph--clock] size-7 inset-0"></i>
-				<div class="flex flex-row gap-0.5">
-	
-					<AddToCalendarButton
-						event={{
-							title: event.name,
-							description: event.description ?? undefined,
-							start: event.startAt.toISOString(),
-							end: event.endAt?.toISOString(),
-							location: event.address?.join(', ')
-						}}
-					>
-						<button class="cursor-pointer hover:underline flex gap-1.5">
-							<p class="text-md font-medium">
-								{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
-							</p>
-							<i class="icon-[ph--calendar-plus] size-5"></i>
-						</button>
-					</AddToCalendarButton>
-				</div>
-				
-				{#if event.attendanceMode === 'online'}
-					<div class="flex items-center justify-center rounded-full px-4 py-1.5">
-						<i class="icon-[ph--globe] mr-2 size-6"></i>
-						<p class="font-medium">Online</p>
-					</div>
-				{:else if event.address?.length}
-						<i class="icon-[ph--map-pin] size-7 flex-shrink-0"></i>
-						<a
-							href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="hover:underline cursor-pointer flex items-center shrink gap-1.5 leading-tight font-medium break-words"
-						>
-							<span class="block min-w-0 break-words shrink">{formatAddress(event.address)}</span>
-							<!-- <i class="icon-[ph--arrow-square-out] size-5 min-w-5"></i> -->
-						</a>
-				{/if}
-
-				{#if event.price && !event.priceIsHtml}
-					<i class="icon-[ph--money] mr-2 size-7"></i>
-					<p class="font-medium">{event.price}</p>
-				{/if}
-			</div>
-		</section>
-
 		<div class="flex w-full flex-wrap justify-center gap-4">
+			<div class="flex items-center">
+				<div class="bg-base-200 flex items-center justify-center rounded-l-full py-1.5 pr-2 pl-4">
+					<i class="icon-[ph--clock] mr-2 size-6"></i>
+					<p class="text-md font-medium">
+						{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
+					</p>
+				</div>
+				<AddToCalendarButton
+					event={{
+						title: event.name,
+						description: event.description ?? undefined,
+						start: event.startAt.toISOString(),
+						end: event.endAt?.toISOString(),
+						location: event.address?.join(', ')
+					}}
+				/>
+			</div>
 
+			{#if event.price && !event.priceIsHtml}
+				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
+					<i class="icon-[ph--money] mr-2 size-6"></i>
+					<p class="font-medium">{event.price}</p>
+				</div>
+			{/if}
+
+			{#if event.attendanceMode === 'online'}
+				<div class="bg-base-200 flex items-center justify-center rounded-full px-4 py-1.5">
+					<i class="icon-[ph--globe] mr-2 size-6"></i>
+					<p class="font-medium">Online</p>
+				</div>
+			{:else if event.address?.length}
+				<a
+					href={`https://www.google.com/maps/search/?api=1&query=${event.address.join(',')}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="btn flex h-fit max-w-full min-w-0 items-center gap-1.5 py-1.5 leading-tight font-medium break-words"
+				>
+					<i class="icon-[ph--map-pin] size-6 flex-shrink-0"></i>
+					<span class="block min-w-0 break-words">{formatAddress(event.address)}</span>
+				</a>
+			{/if}
 
 			<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 
