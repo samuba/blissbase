@@ -43,7 +43,7 @@
 
 <header
 	bind:this={headerElement}
-	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  py-3 mt-3 max-w-3xl' ]}
+	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  pt-3 pb-1 mt-3 max-w-3xl' ]}
 	id="header-controls"
 >		
 	<!-- shadow -->
