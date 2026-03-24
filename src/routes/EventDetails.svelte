@@ -250,9 +250,11 @@
 			{/if}
 	
 			<section class="flex w-full items-center justify-center">
-				<div class="max-w-sm grid grid-cols-[1.5rem_1fr] gap-y-6 gap-x-5 place-items-center justify-items-start">
+				<div class="max-w-[400px] grid grid-cols-[2.5rem_1fr] gap-y-6 gap-x-5 place-items-center justify-items-start">
 	
-					<i class="icon-[ph--clock] size-7 inset-0 -mr-2"></i>
+					<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+						<i class="icon-[ph--clock] size-7 inset-0"></i>
+					</div>
 					<div class="flex flex-row gap-0.5">
 						<AddToCalendarButton
 							event={{
@@ -284,10 +286,14 @@
 					</div>
 					
 					{#if event.attendanceMode === 'online'}
-						<i class="icon-[ph--globe] size-7 shrink-0"></i>
+						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+							<i class="icon-[ph--globe] size-7 shrink-0"></i>
+						</div>
 						<p class="font-medium">Online</p>
 					{:else if event.address?.length}
-						<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
+						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+							<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
+						</div>
 						<a
 							href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}`}
 							target="_blank"
@@ -304,7 +310,9 @@
 					{/if}
 	
 					{#if event.price && !event.priceIsHtml}
-						<i class="icon-[ph--money] mr-2 size-7"></i>
+						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+							<i class="icon-[ph--money] size-7 shrink-0"></i>
+						</div>	
 						<p class="font-medium">{event.price}</p>
 					{/if}
 				</div>

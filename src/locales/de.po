@@ -198,6 +198,10 @@ msgid "Nächste 30 Tage"
 msgstr "Nächste 30 Tage"
 
 #: src/lib/components/AddToCalendarButton.svelte
+#: src/lib/components/AddToCalendarButton.svelte
+#: src/lib/components/AddToCalendarButton.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
 msgid "Zum Kalender hinzufügen"
 msgstr "Zum Kalender hinzufügen"
 
