@@ -293,12 +293,13 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class={[
-								`hover:underline flex min-w-0 cursor-pointer items-center gap-1.5 self-center leading-tight font-medium`
+								`hover:underline block w-full min-w-0 cursor-pointer text-left font-medium`
 							]}
 						>
-							<div class={[`w-full min-w-0 line-clamp-3`]}>
+							<span class={[ `line-clamp-3 min-w-0 wrap-break-word leading-`]}>
 								{formatAddress(event.address)}
-							</div>
+								<i class="icon-[ph--arrow-square-out] ml-0.75 inline-block size-4.5 shrink-0 align-middle mb-1" aria-hidden="true"></i>
+							</span>
 						</a>
 					{/if}
 	
