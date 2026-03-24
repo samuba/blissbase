@@ -52,6 +52,8 @@
 		return Array.from(tags);
 	});
 
+	const mapsUrl = $derived(event.address?.length ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}` : undefined);
+
 	function getContactMethod(str: string | undefined) {
 		if (!str?.trim()) return undefined;
 		if (str?.startsWith('tg://') || str?.startsWith('t.me/') || str?.startsWith('https://t.me/')) {
@@ -251,39 +253,55 @@
 	
 			<section class="flex w-full items-center justify-center">
 				<div class="max-w-[400px] grid grid-cols-[2.5rem_1fr] gap-y-6 gap-x-5 place-items-center justify-items-start">
-	
-					<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
-						<i class="icon-[ph--clock] size-7 inset-0"></i>
-					</div>
-					<div class="flex flex-row gap-0.5">
-						<AddToCalendarButton
-							event={{
-								title: event.name,
-								description: event.description ?? undefined,
-								start: event.startAt.toISOString(),
-								end: event.endAt?.toISOString(),
-								location: event.address?.join(', ')
-							}}
-						>
-							{#snippet children({ props })}
-								<button
-									{...props}
-									type="button"
-									title="Zum Kalender hinzufügen"
-									aria-label="Zum Kalender hinzufügen"
-									class={[
-										`flex cursor-pointer gap-1.5 hover:underline`,
-										props.class
-									]}
-								>
-									<p class="text-md font-medium">
-										{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
-									</p>
-									<i class="icon-[ph--calendar-plus] size-5"></i>
-								</button>
-							{/snippet}
-						</AddToCalendarButton>
-					</div>
+					<AddToCalendarButton
+						event={{
+							title: event.name,
+							description: event.description ?? undefined,
+							start: event.startAt.toISOString(),
+							end: event.endAt?.toISOString(),
+							location: event.address?.join(', ')
+						}}
+					>
+						{#snippet children({ props })}
+							<button
+								{...props}
+								type="button"
+								title="Zum Kalender hinzufügen"
+								aria-label="Zum Kalender hinzufügen"
+								class={[`bg-base-200/60 rounded-lg flex items-center justify-center size-11`,props.class ]}
+							>
+								<i class="icon-[ph--clock] size-7 inset-0"></i>
+							</button>
+						{/snippet}
+					</AddToCalendarButton>
+
+					<AddToCalendarButton
+						event={{
+							title: event.name,
+							description: event.description ?? undefined,
+							start: event.startAt.toISOString(),
+							end: event.endAt?.toISOString(),
+							location: event.address?.join(', ')
+						}}
+					>
+						{#snippet children({ props })}
+							<button
+								{...props}
+								type="button"
+								title="Zum Kalender hinzufügen"
+								aria-label="Zum Kalender hinzufügen"
+								class={[
+									`flex cursor-pointer gap-1.5 hover:underline`,
+									props.class
+								]}
+							>
+								<p class="text-md font-medium">
+									{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
+								</p>
+								<i class="icon-[ph--calendar-plus] size-5"></i>
+							</button>
+						{/snippet}
+					</AddToCalendarButton>
 					
 					{#if event.attendanceMode === 'online'}
 						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
@@ -291,16 +309,14 @@
 						</div>
 						<p class="font-medium">Online</p>
 					{:else if event.address?.length}
-						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+						<a href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Öffne Karte" class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
 							<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
-						</div>
+						</a>
 						<a
-							href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}`}
+							href={mapsUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							class={[
-								`hover:underline block w-full min-w-0 cursor-pointer text-left font-medium`
-							]}
+							class={[ `hover:underline block w-full min-w-0 cursor-pointer text-left font-medium` ]}
 						>
 							<span class={[ `line-clamp-3 min-w-0 wrap-break-word leading-`]}>
 								{formatAddress(event.address)}

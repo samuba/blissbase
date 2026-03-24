@@ -202,6 +202,8 @@ msgstr "Next 30 days"
 #: src/lib/components/AddToCalendarButton.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
 msgid "Zum Kalender hinzufügen"
 msgstr "Add to calendar"
 
@@ -1023,3 +1025,7 @@ msgstr "Online Event <0>The event is offered via video call (Zoom, etc.)</0>"
 #: src/lib/components/EventForm.svelte
 msgid "Event <0>nicht</0> in Suche anzeigen <1>Privater Event. Nur sichtbar für Leute denen du den Link gibst.</1>"
 msgstr "Event <0>not</0> shown in search <1>Private event. Only visible to people you give the link to.</1>"
+
+#: src/routes/EventDetails.svelte
+msgid "Öffne Karte"
+msgstr "Open map"
