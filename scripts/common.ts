@@ -343,7 +343,8 @@ export function dateToIsoStr(year: number, month: number, day: number, hour: num
 
     // Create a Date object from this string, but we need to be careful about timezone interpretation
     // We'll create a date that represents "noon on this date" to check the timezone offset
-    const referenceDate = new Date(year, month, day, 12, 0, 0);
+    const monthIndex = countMonthFromZero ? month : month - 1;
+    const referenceDate = new Date(year, monthIndex, day, 12, 0, 0);
 
     // Get the timezone offset for this date (handles DST automatically)
     const formatter = new Intl.DateTimeFormat('en', {
