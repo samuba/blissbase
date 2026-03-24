@@ -1029,3 +1029,11 @@ msgstr "Event <0>nicht</0> in Suche anzeigen <1>Privater Event. Nur sichtbar fü
 #: src/routes/EventDetails.svelte
 msgid "Öffne Karte"
 msgstr "Öffne Karte"
+
+#: src/lib/authCallbackFeedbackToast.svelte.ts
+msgid "Fordere einen neuen Login-Link an und öffne den Link im selben Browser in dem du ihn angefordert hast."
+msgstr "Fordere einen neuen Login-Link an und öffne den Link im selben Browser in dem du ihn angefordert hast."
+
+#: src/lib/authCallbackFeedbackToast.svelte.ts
+msgid "Login-Link stammt aus anderem Browser"
+msgstr "Login-Link stammt aus anderem Browser"

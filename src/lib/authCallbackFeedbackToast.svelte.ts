@@ -31,14 +31,20 @@ export function registerAuthCallbackFeedbackToast() {
 		strippingUrl = true;
 
 		if (authError) {
+			const errorCode = page.url.searchParams.get(`error_code`);
 			const errorPros = {
-				duration: 30_000,
+				duration: 60_000,
 				closeButton: true,
 				classes: { description: `whitespace-pre-line`}
 			};
-			if (page.url.searchParams.get(`error_code`) === `otp_expired`) {
+			if (errorCode === `otp_expired`) {
 				toast.error(`Der Login-Link ist abgelaufen.`, {
 					description: `Lass dir einen neuen Login-Link schicken.`,
+					...errorPros
+				});
+			} else if (errorCode === `pkce_code_verifier_not_found`) {
+				toast.error(`Login-Link stammt aus anderem Browser`, {
+					description: `Fordere einen neuen Login-Link an und öffne den Link im selben Browser in dem du ihn angefordert hast.`,
 					...errorPros
 				});
 			} else {
