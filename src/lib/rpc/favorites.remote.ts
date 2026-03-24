@@ -30,11 +30,10 @@ export const addFavorite = command(v.number(), async (eventId) => {
 	try {
 		await db.insert(favorites).values({ userId, eventId }).onConflictDoNothing();
 		getFavoriteEventIds().refresh();
+		console.timeEnd('addFavorite');
 	} catch (err) {
 		console.error(`Failed to add favorite:`, err);
 		error(500, `Failed to add favorite`);
-	} finally {
-		console.timeEnd('addFavorite');
 	}
 });
 
@@ -46,11 +45,10 @@ export const removeFavorite = command(v.number(), async (eventId) => {
 			.delete(favorites)
 			.where(and(eq(favorites.userId, userId), eq(favorites.eventId, eventId)));
 		getFavoriteEventIds().refresh();
+		console.timeEnd('removeFavorite');
 	} catch (err) {
 		console.error(`Failed to remove favorite:`, err);
 		error(500, `Failed to remove favorite`);
-	} finally {
-		console.timeEnd('removeFavorite');
 	}
 });
 

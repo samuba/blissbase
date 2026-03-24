@@ -44,15 +44,13 @@ export async function aiExtractEventData(
 			if (!Array.isArray(result.contact)) result.contact = [];
 			if (!Array.isArray(result.tags)) result.tags = [];
 		}
+		console.timeEnd(`🤖 AI extracting event data with ${imageUrls.length} images`);
 		return result;
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.message : String(e);
 		const msg = `Failed to parse OpenAI response as JSON: ${errorMessage}`;
 		console.error(`AI answer: `, text);
 		throw new Error(msg);
-	}
-	finally {
-		console.timeEnd(`🤖 AI extracting event data with ${imageUrls.length} images`);
 	}
 }
 

@@ -1,4 +1,5 @@
-import type { HTMLPasteEvent } from "@editorjs/editorjs";import Paragraph from "@editorjs/paragraph";
+import type { HTMLPasteEvent } from "@editorjs/editorjs";
+import Paragraph from "@editorjs/paragraph";
 
 /**
  * Regex matching `<br>` / `<br/>` for splitting pasted or imported HTML into paragraph blocks.
@@ -64,6 +65,63 @@ export function splitInlineHtmlOnBrParts(innerHtml: string): string[] | null {
 }
 
 /**
+ * If a single P/DIV should become multiple `<p>` chunks for Editor.js, returns combined HTML; otherwise null.
+ * Handles `<br>` lines, literal newlines in text-only nodes, and Chrome-style `<div><div>…</div>…</div>`.
+ *
+ * @example
+ * collapseBlockElementToParagraphsHtml(pEl) // `<p>a</p><p>b</p>` when inner was `a<br>b`
+ */
+export function collapseBlockElementToParagraphsHtml(only: Element): string | null {
+	const tag = only.tagName.toLowerCase();
+	if (tag !== `p` && tag !== `div`) return null;
+
+	const brParts = splitInlineHtmlOnBrParts(only.innerHTML);
+	if (brParts) {
+		return brParts.map((p) => `<p>${p}</p>`).join(``);
+	}
+
+	if (tag === `div` && only.children.length > 0) {
+		const kids = [...only.children];
+		if (kids.length >= 2 && kids.every((k) => k.tagName.toLowerCase() === `div`)) {
+			return kids
+				.map((k) => {
+					const nested = collapseBlockElementToParagraphsHtml(k);
+					if (nested) return nested;
+					return `<p>${k.innerHTML}</p>`;
+				})
+				.join(``);
+		}
+	}
+
+	if (only.childElementCount === 0) {
+		const text = only.textContent ?? ``;
+		if (/\r?\n/.test(text)) {
+			const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+			if (lines.length > 1) {
+				return linesToParagraphHtml(lines);
+			}
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Parses normalized multi-`<p>` HTML into paragraph block payloads for `blocks.insert` / `insertMany`.
+ *
+ * @example
+ * paragraphOutputBlocksFromNormalizedHtml(`<p>a</p><p>b</p>`) // two paragraph blocks
+ */
+export function paragraphOutputBlocksFromNormalizedHtml(normalized: string): { type: string; data: { text: string } }[] {
+	const template = document.createElement(`template`);
+	template.innerHTML = normalized.trim();
+	return [...template.content.querySelectorAll(`p`)].map((p) => ({
+		type: `paragraph`,
+		data: { text: p.innerHTML },
+	}));
+}
+
+/**
  * Normalizes description HTML so Editor.js `renderFromHTML` creates one paragraph block per line
  * where the source only had newlines or `<br>` (fixes import / AI prefill and saved round-trips).
  *
@@ -79,9 +137,11 @@ export function normalizeEditorJsInputHtml(html: string): string {
 	template.innerHTML = trimmed;
 
 	const root = template.content;
-	const elementChildren = [...root.childNodes].filter(
-		(n) => n.nodeType === Node.ELEMENT_NODE
-	) as Element[];
+	const elementChildren = [...root.childNodes].filter((n) => {
+		if (n.nodeType !== Node.ELEMENT_NODE) return false;
+		const tag = (n as Element).tagName.toUpperCase();
+		return ![`META`, `LINK`, `STYLE`].includes(tag);
+	}) as Element[];
 	const hasNonEmptyTextNode = [...root.childNodes].some(
 		(n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? ``).trim().length > 0
 	);
@@ -98,6 +158,15 @@ export function normalizeEditorJsInputHtml(html: string): string {
 	}
 
 	if (elementChildren.length > 1) {
+		const allPOrDiv = elementChildren.every(
+			(n) => n.nodeType === Node.ELEMENT_NODE && [`p`, `div`].includes(n.tagName.toLowerCase())
+		);
+		if (allPOrDiv) {
+			return elementChildren
+				.filter((n) => n.nodeType === Node.ELEMENT_NODE)
+				.map((n) => collapseBlockElementToParagraphsHtml(n as Element) ?? (n as Element).outerHTML)
+				.join(``);
+		}
 		return trimmed;
 	}
 
@@ -109,19 +178,9 @@ export function normalizeEditorJsInputHtml(html: string): string {
 	}
 
 	if (tag === `p` || tag === `div`) {
-		const brParts = splitInlineHtmlOnBrParts(only.innerHTML);
-		if (brParts) {
-			return brParts.map((p) => `<p>${p}</p>`).join(``);
-		}
-
-		if (tag === `p` && only.childElementCount === 0) {
-			const text = only.textContent ?? ``;
-			if (/\r?\n/.test(text)) {
-				const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-				if (lines.length > 1) {
-					return linesToParagraphHtml(lines);
-				}
-			}
+		const collapsed = collapseBlockElementToParagraphsHtml(only);
+		if (collapsed) {
+			return collapsed;
 		}
 	}
 
@@ -135,14 +194,38 @@ export function normalizeEditorJsInputHtml(html: string): string {
  * Pasting `<p>Line A<br>Line B</p>` yields two blocks instead of one.
  */
 export class ParagraphWithSplitPaste extends Paragraph {
+	static override get pasteConfig() {
+		return {
+			tags: [`P`, `DIV`],
+		};
+	}
+
 	override onPaste(event: HTMLPasteEvent): void {
 		const raw = event.detail.data.innerHTML ?? ``;
 		const parts = splitInlineHtmlOnBrParts(raw);
-		if (!parts) {
-			super.onPaste(event);
+		if (parts) {
+			this.applySplitPasteParts(parts, event);
 			return;
 		}
 
+		if (!raw.includes(`<`)) {
+			const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+			if (lines.length > 1) {
+				this.applySplitPasteParts(lines, event);
+				return;
+			}
+		}
+
+		super.onPaste(event);
+	}
+
+	/**
+	 * Inserts the first chunk via the default paragraph paste, then adds further chunks as new blocks.
+	 *
+	 * @example
+	 * applySplitPasteParts([`<b>a</b>`, `b`], event)
+	 */
+	private applySplitPasteParts(parts: string[], event: HTMLPasteEvent): void {
 		const firstHost = document.createElement(`p`);
 		firstHost.innerHTML = parts[0];
 		const synthetic = { ...event, detail: { data: firstHost } } as HTMLPasteEvent;

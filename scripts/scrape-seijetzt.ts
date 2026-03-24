@@ -133,9 +133,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const [year, month, day] = dateStr.split('-').map(Number);
         const [hour, minute] = timeStr.split(':').map(Number);
         if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Invalid time parameters');
-        if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 0 || month > 11 || year < 1900 || year > 2100) throw new Error('Invalid date parameters');
+        if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) throw new Error('Invalid date parameters');
 
-        return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', true);
+        return dateToIsoStr(year, month, day, hour, minute, 'Europe/Berlin', false);
     }
 
     extractAddress(html: string): string[] | undefined {

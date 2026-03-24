@@ -4,7 +4,11 @@
 	import { debounce, sleep } from '$lib/common';
 	import type { RemoteFormField } from '@sveltejs/kit';
 	import { localeStore } from '$lib/../locales/localeStore.svelte';
-	import { normalizeEditorJsInputHtml, ParagraphWithSplitPaste } from './editorJsNormalizeInputHtml';
+	import {
+		normalizeEditorJsInputHtml,
+		ParagraphWithSplitPaste,
+		paragraphOutputBlocksFromNormalizedHtml
+	} from './editorJsNormalizeInputHtml';
 
 	let { field }: {
 		field: RemoteFormField<string>;
@@ -15,9 +19,11 @@
 
 	let editorValue = $derived(field.value() || '');
 
-	onMount(async () => {
-		try {
-			const { default: EditorJS } = await import('@editorjs/editorjs');
+	onMount(() => {
+		let detachSplitPasteCapture: (() => void) | undefined;
+		void (async () => {
+			try {
+				const { default: EditorJS } = await import('@editorjs/editorjs');
 			const { default: Header } = await import('@editorjs/header');
 			const { default: List } = await import('@editorjs/list');
 			const { default: Marker } = await import('@editorjs/marker');
@@ -158,16 +164,53 @@
 						}
 					}
 					editor?.blocks.render(temp);
+
+					// Editor.js merges single `<p>a<br>b</p>` via `insertContentAtCaretPosition`, skipping `onPaste`.
+					const holderEl = editorEl;
+					if (holderEl) {
+						const onPasteCapture = (e: ClipboardEvent) => {
+							const inst = editor;
+							if (!inst) return;
+							const html = e.clipboardData?.getData(`text/html`) ?? ``;
+							if (!html.trim()) return;
+							const next = normalizeEditorJsInputHtml(html);
+							if (next === html.trim()) return;
+							const chunks = paragraphOutputBlocksFromNormalizedHtml(next);
+							if (chunks.length < 2) return;
+							const idx = inst.blocks.getCurrentBlockIndex();
+							const cur = inst.blocks.getBlockByIndex(idx);
+							if (!cur || cur.name !== `paragraph` || !cur.isEmpty) return;
+							e.preventDefault();
+							e.stopImmediatePropagation();
+							for (let i = 0; i < chunks.length; i++) {
+								inst.blocks.insert(
+									`paragraph`,
+									chunks[i].data,
+									{},
+									idx + i,
+									i === chunks.length - 1,
+									i === 0
+								);
+							}
+						};
+						holderEl.addEventListener(`paste`, onPasteCapture, true);
+						detachSplitPasteCapture = () =>
+							holderEl.removeEventListener(`paste`, onPasteCapture, true);
+					}
 				},
 				onChange: debounce(async () => {
 					const blocks = await editor!.save();
 					editorValue = editorJsHtml.parse(blocks);
 				}, 1000)
 			});
-		} catch (error) {
-			console.error('Failed to load EditorJS:', error);
-			throw error;
-		}
+			} catch (error) {
+				console.error('Failed to load EditorJS:', error);
+				throw error;
+			}
+		})();
+		return () => {
+			detachSplitPasteCapture?.();
+		};
 	});
 </script>
 
