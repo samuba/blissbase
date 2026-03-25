@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { signInAsE2EUser } from './helpers/auth';
 import { createEvent, clearTestEvents, createMeditationEvent, createYogaEvent, createTelegramEvent } from './helpers/seed';
 
 test.describe('Event Details Modal', () => {
@@ -27,9 +28,8 @@ test.describe('Event Details Modal', () => {
 	test('event details show price information', async ({ page }) => {
 		const firstCard = page.locator('[data-testid="event-card"]').first();
 		await firstCard.click();
-		await page.waitForTimeout(2000);
-
 		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByText('Free', { exact: true })).toBeVisible();
 	});
 
@@ -37,9 +37,8 @@ test.describe('Event Details Modal', () => {
 	test('event details show location', async ({ page }) => {
 		const firstCard = page.locator('[data-testid="event-card"]').first();
 		await firstCard.click();
-		await page.waitForTimeout(2000);
-
 		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByText(/Zen Center.*Berlin/)).toBeVisible();
 	});
 
@@ -106,6 +105,7 @@ test.describe('Source-Dependent Rendering', () => {
 
 test.describe('Navigation Menu', () => {
 	test.beforeEach(async ({ page }) => {
+		await signInAsE2EUser(page);
 		await clearTestEvents(page);
 		await createEvent(page, createMeditationEvent());
 		await page.goto('/');
@@ -117,7 +117,15 @@ test.describe('Navigation Menu', () => {
 	});
 
 	test('create event page is accessible', async ({ page }) => {
-		await page.goto('/new');
+		for (let attempt = 0; attempt < 3; attempt++) {
+			try {
+				await page.goto('/new', { waitUntil: 'domcontentloaded' });
+				break;
+			} catch {
+				if (attempt === 2) throw new Error(`Failed to open /new after 3 attempts`);
+				await page.waitForTimeout(400);
+			}
+		}
 		await expect(page.locator('body')).toBeVisible();
 		await expect(page.locator('h1, h2').first()).toBeVisible();
 	});

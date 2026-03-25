@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/** Dedicated port so we never reuse a normal `vite dev` on 5173 without E2E_TEST (seed API would 403). */
+const e2eDevPort = Number(process.env.PLAYWRIGHT_DEV_PORT) || 5174;
+const e2eBaseUrl = process.env.PLAYWRIGHT_BASE_URL || `http://localhost:${e2eDevPort}`;
+
 /**
  * Playwright configuration for Blissbase E2E tests
  * @see https://playwright.dev/docs/test-configuration
@@ -13,11 +17,11 @@ export default defineConfig({
 	/* Fail the build on CI if you accidentally left test.only in the source code */
 	forbidOnly: !!process.env.CI,
 
-	/* Retry on CI only */
-	retries: process.env.CI ? 2 : 0,
+	/* CI: flakes from infra; local: first test can hit Vite cold start / dep optimize before SSR is stable */
+	retries: process.env.CI ? 2 : 1,
 
-	/* Opt out of parallel tests on CI */
-	workers: process.env.CI ? 1 : undefined,
+	/* One worker: shared Vite dev server + PGlite; parallel runs trigger HMR/full reloads and flake modal/state tests. */
+	workers: 1,
 
 	/* Reporter to use */
 	reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
@@ -25,7 +29,7 @@ export default defineConfig({
 	/* Shared settings for all the projects below */
 	use: {
 		/* Base URL to use in actions like `await page.goto('/')` */
-		baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
+		baseURL: e2eBaseUrl,
 
 		/* Collect trace when retrying the failed test */
 		trace: 'on-first-retry',
@@ -47,8 +51,8 @@ export default defineConfig({
 
 	/* Run local dev server before starting the tests */
 	webServer: {
-		command: 'bun run dev',
-		url: 'http://localhost:5173',
+		command: `bun run dev -- --port ${e2eDevPort}`,
+		url: e2eBaseUrl,
 		reuseExistingServer: !process.env.CI,
 		timeout: 120000,
 		stdout: 'pipe',

@@ -6,9 +6,13 @@ import type { Page } from '@playwright/test';
  * @example
  * await signInAsE2EUser(page);
  */
+function e2ePlaywrightOrigin() {
+	const port = process.env.PLAYWRIGHT_DEV_PORT || `5174`;
+	return process.env.PLAYWRIGHT_BASE_URL || `http://localhost:${port}`;
+}
+
 export async function signInAsE2EUser(page: Page, args: SignInAsE2EUserArgs = {}) {
-	const baseURL = process.env.PLAYWRIGHT_BASE_URL || `http://localhost:5173`;
-	const url = new URL(baseURL);
+	const url = new URL(e2ePlaywrightOrigin());
 
 	await page.context().addCookies([
 		{
