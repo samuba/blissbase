@@ -515,4 +515,9 @@
 	:global(.event-description a) {
 		text-decoration: underline;
 	}
+
+	:global(.event-description h3) {
+		margin-top: 1rem;
+		margin-bottom: 0.3rem;
+	}
 </style>

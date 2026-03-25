@@ -57,8 +57,8 @@
 						inlineToolbar: true,
 						config: {
 							placeholder: 'Überschrift',
-							levels: [2, 3, 4],
-							defaultLevel: 2
+							levels: [3],
+							defaultLevel: 3
 						}
 					},
 					list: {
