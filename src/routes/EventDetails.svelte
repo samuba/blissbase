@@ -344,7 +344,7 @@
 						Anmelden
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
-				{:else}
+				{:else if event.contact?.length}
 					<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
 						{#snippet trigger({ props })}
 							<button {...props} class={[`btn btn-primary`, props.class]}> Anmelden </button>
