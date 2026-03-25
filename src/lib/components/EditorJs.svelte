@@ -238,21 +238,27 @@
 	}
 
 	/*
-		Editor.js ships `.codex-editor { z-index: 1 }`, which creates a stacking context so the whole
-		tree (including `position: fixed` mobile popovers) stays below fixed UI like TabsNav (z-50).
+		Editor.js ships `.codex-editor { z-index: 1 }`, which pins the whole editor under later
+		siblings. Use `auto` so only the floating UI below can sit above form fields.
 	*/
 	:global(.codex-editor) {
 		z-index: auto !important;
 	}
 
-	/* Above mobile TabsNav (z-50); !important beats Editor.js bundle order */
+	/*
+		Above TabsNavMobile / sticky nav (z-50) and Editor.js defaults (popover container z-4).
+		Below full-screen overlays (e.g. z-100 navigation veil) and Toaster (z-200).
+	*/
 	:global(.ce-toolbar),
+	:global(.ce-toolbox),
+	:global(.ce-settings),
 	:global(.ce-toolbox),
 	:global(.ce-popover),
 	:global(.ce-popover__overlay),
 	:global(.ce-popover__container),
 	:global(.ce-popover__items),
+	:global(.ce-popover__item),
 	:global(.ce-inline-toolbar) {
-		z-index: 100 !important;
+		z-index: 60 !important;
 	}
 </style>
