@@ -66,6 +66,10 @@
 			contact += `&text=${contactMessage}&parse_mode=HTML`;
 		}
 
+		if (contact?.startsWith('https://wa.me/')) {
+			contact += `?text=${contactMessage}`;
+		}
+
 		if (contact?.startsWith('mailto:')) {
 			contact += `?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString(localeStore.longLocale)})`)}&body=${contactMessage}`;
 		} else if (getContactMethod(str) === 'Email') {

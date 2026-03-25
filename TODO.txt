@@ -20,12 +20,7 @@ tags anklicken
 tags klicken zeigt nicht den gefilterten tag oben an
 
 events editieren checken insbesondere tags!
-
-häßlicher schwarzer ring bei fokus um inputs
-
 sort distanz everywhere geht nicht
-
-app installation übersetzen
 
 show that a location was not found in the input somehow
 
