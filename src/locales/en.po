@@ -33,33 +33,24 @@ msgstr "Loading Blissbase"
 msgid "Lade..."
 msgstr "Loading..."
 
-#: src/lib/components/EventForm.svelte
-#: src/lib/components/EventForm.svelte
-#: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/sources/+page.svelte
 msgid "Telegram"
 msgstr "Telegram"
 
 #: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
-#: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 msgid "Telefon"
 msgstr "Phone"
 
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
 msgid "Email"
 msgstr "Email"
 
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 msgid "Website"
@@ -692,10 +683,6 @@ msgid "Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Tel
 msgstr "Enter a contact method, e.g., email, phone, website, WhatsApp, Telegram, etc."
 
 #: src/lib/components/EventForm.svelte
-msgid "Anmeldung über"
-msgstr "Sign in with"
-
-#: src/lib/components/EventForm.svelte
 msgid "Anmelde Methode auswählen"
 msgstr "Select registration method"
 
@@ -1037,3 +1024,7 @@ msgstr "Request a new login link and open it in the same browser you used to req
 #: src/lib/authCallbackFeedbackToast.svelte.ts
 msgid "Login-Link stammt aus anderem Browser"
 msgstr "Login link comes from a different browser"
+
+#: src/lib/components/EventForm.svelte
+msgid "Anmeldung / Tickets über"
+msgstr "Registration / Tickets via"
