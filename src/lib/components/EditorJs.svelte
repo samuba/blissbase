@@ -214,9 +214,12 @@
 	});
 </script>
 
-<div bind:this={editorEl} class="prose-sm textarea w-full sm:pl-0"></div>
+<!-- Stacking: later form siblings (e.g. price/tags row) paint on top unless this subtree has a higher z-index. -->
+<div class={['relative', 'z-60']}>
+	<div bind:this={editorEl} class="prose-sm textarea w-full sm:pl-0"></div>
 
-<textarea {...field.as('text')} class="hidden peer" aria-hidden="true" value={editorValue}></textarea>
+	<textarea {...field.as('text')} class="hidden peer" aria-hidden="true" value={editorValue}></textarea>
+</div>
 
 <style>
 	@reference '../../app.css';
@@ -237,12 +240,10 @@
 		@apply sm:mr-0 sm:ml-12;
 	}
 
-	/*
-		Editor.js ships `.codex-editor { z-index: 1 }`, which pins the whole editor under later
-		siblings. Use `auto` so only the floating UI below can sit above form fields.
-	*/
-	:global(.codex-editor) {
-		z-index: auto !important;
+	:global(.ce-toolbar__settings-btn:hover),
+	:global(.ce-toolbar__plus:hover),
+	:global(.ce-popover-item:hover:not(.ce-popover-item--no-hover)) {
+		background-color: var(--color-base-200) !important;
 	}
 
 	/*
@@ -252,7 +253,6 @@
 	:global(.ce-toolbar),
 	:global(.ce-toolbox),
 	:global(.ce-settings),
-	:global(.ce-toolbox),
 	:global(.ce-popover),
 	:global(.ce-popover__overlay),
 	:global(.ce-popover__container),
