@@ -250,3 +250,26 @@ export function randomString(length: number) {
 // added backface-visibility-hidden and will-change-transform to prevent mobile flickering during animations
 export const dialogContentAnimationClasses = 'backface-visibility-hidden will-change-transform data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95';
 export const dialogOverlayAnimationClasses = 'backface-visibility-hidden will-change-[opacity] data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:duration-150 data-[state=closed]:ease-in data-[state=open]:duration-300 data-[state=open]:ease-out';
+
+export function getContactMethod(contact: string | undefined) {
+    if (!contact?.trim()) return undefined;
+    if (contact.startsWith('tg://') || contact.startsWith('t.me/') || contact.startsWith('https://t.me/')) {
+        return 'Telegram';
+    }
+    if (contact.startsWith('https://wa.me/') || contact.startsWith('wa.me/') || contact.startsWith('https://api.whatsapp.com') || contact.startsWith('api.whatsapp.com')) {
+        return 'WhatsApp';
+    }
+    if (contact.startsWith('tel:')) {
+        return 'Telefon';
+    }
+    if (contact.startsWith('mailto:')) {
+        return 'Email';
+    }
+    if (contact.match(/^[\w\.-]+@[\w\.-]+\.\w+$/)) {
+        return 'Email';
+    }
+    if (contact.startsWith('http')) {
+        return 'Website';
+    }
+    return 'Website';
+}

@@ -3,7 +3,7 @@ import { error, invalid, redirect } from '@sveltejs/kit';
 import { ensureUserId } from '$lib/server/common';
 import * as assets from '$lib/assets';
 import { generateSlug, randomString } from '$lib/common';
-import { createEventSchema, updateEventSchema, type CreateEventData } from '$lib/events.remote.common';
+import { createEventSchema, updateEventSchema, type CreateEventData, type ContactMethod } from '$lib/events.remote.common';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import {
 	EVENT_IMAGE_HASH_LENGTH,
@@ -117,6 +117,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 
 /**
  * Maps the validated form payload to the event row shape.
+ * Builds `contact[]` URIs from plain form `contact` + `contactMethod` (reverse of `storedContactUriToFormFields` on load).
  *
  * @example
  * formDataToDbData(data)
@@ -128,8 +129,21 @@ function formDataToDbData(data: CreateEventData) {
 	const address = data.address?.split(/,|\n/).map((x) => x.trim()).filter((x) => x) ?? [];
 	const slug = generateSlug({ name: data.name, startAt, endAt });
 	const attendanceMode = data.isOnline ? `online` : `offline`;
-	const contact = data.contact ? [data.contact] : [];
 	const listed = !data.isNotListed;
+	let contact: string[] = []
+	const contactMethod = data.contactMethod as ContactMethod;
+	if (contactMethod === 'email') {
+		contact = [`mailto:${data.contact}`];
+	} else if (contactMethod === 'telegram') {
+		contact = [`tg://resolve?domain=${data.contact}`];
+	} else if (contactMethod === 'whatsapp') {
+		contact = [`https://wa.me/${data.contact}`];
+	} else if (contactMethod === 'phone') {
+		contact = [`tel:${data.contact}`];
+	} else if (contactMethod === 'website') {
+		if (data.contact?.startsWith('http')) contact = [data.contact];
+		else contact = [`https://${data.contact}`];
+	}
 
 	return {
 		...data,

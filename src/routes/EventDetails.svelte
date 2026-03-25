@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAddress, formatTimeStr, getLongLocale } from '$lib/common';
+	import { formatAddress, formatTimeStr, getLongLocale, getContactMethod } from '$lib/common';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
@@ -8,7 +8,6 @@
 	import ImageDialog from '$lib/components/ImageDialog.svelte';
 	import EventAdminSection from '$lib/components/EventAdminSection.svelte';
 	import { getFavoriteEventIds, addFavorite, removeFavorite } from '$lib/rpc/favorites.remote';
-	import LoginDialog from '$lib/components/LoginDialog.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { localeStore } from '../locales/localeStore.svelte';
 	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
@@ -53,29 +52,6 @@
 	});
 
 	const mapsUrl = $derived(event.address?.length ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}` : undefined);
-
-	function getContactMethod(str: string | undefined) {
-		if (!str?.trim()) return undefined;
-		if (str?.startsWith('tg://') || str?.startsWith('t.me/') || str?.startsWith('https://t.me/')) {
-			return 'Telegram';
-		}
-		if (str?.startsWith('https://wa.me/') || str?.startsWith('wa.me/') || str.startsWith('https://api.whatsapp.com') || str.startsWith('api.whatsapp.com')) {
-			return 'WhatsApp';
-		}
-		if (str?.startsWith('tel:')) {
-			return 'Telefon';
-		}
-		if (str?.startsWith('mailto:')) {
-			return 'Email';
-		}
-		if (str?.match(/^[\w\.-]+@[\w\.-]+\.\w+$/)) {
-			return 'Email';
-		}
-		if (str?.startsWith('http')) {
-			return 'Website';
-		}
-		return 'Website';
-	}
 
 	function getContactUrl(str: string | undefined) {
 		let contact = str ?? event.hostLink;
@@ -335,14 +311,14 @@
 			</section>
 
 			<div class="flex w-full flex-wrap justify-center gap-4 pt-1">
-				<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
-	
 				{#if isAuthor}
 					<a href={resolve(`/edit/${event.id}`)} class="btn btn-warning">
 						<i class="icon-[ph--pencil] mr-1 size-4"></i>
 						Bearbeiten
 					</a>
 				{/if}
+
+				<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 	
 				{#if showQuelleInsteadOfAnmelden}
 					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">

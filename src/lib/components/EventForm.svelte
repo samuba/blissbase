@@ -4,7 +4,7 @@
 	import { cubicInOut } from 'svelte/easing';
 	import * as v from 'valibot';
 	import ImageInput from './ImageInput.svelte';
-	import type { CreateEventSchema, UpdateEventSchema } from '$lib/events.remote.common';
+	import type { CreateEventSchema, UpdateEventSchema, ContactMethod } from '$lib/events.remote.common';
 	import TagsInput from '$lib/components/TagsInput.svelte';
 	import EditorJs from '$lib/components/EditorJs.svelte';
 	import Select from '$lib/components/Select.svelte';
@@ -27,7 +27,9 @@
 	} = $props();
 
 	let updateFields = $derived(remoteForm.fields as Partial<UpdateOnlyFields>);
-	let selectedContactMethod = $derived(remoteForm.fields.contactMethod.value() || `none`);
+	let selectedContactMethod = $derived(
+		(remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ?? `none`
+	);
 
 	onMount(() => {
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -125,10 +127,10 @@
 	{/if}
 
 	<fieldset class="fieldset">
-		<legend class="fieldset-legend peer-aria-invalid:text-red-600">Anmeldung über </legend>
+		<legend class="fieldset-legend peer-aria-invalid:text-red-600">Anmeldung / Tickets über </legend>
 		<div class="join">
 			<Select
-				bind:value={selectedContactMethod}
+				bind:value={() => remoteForm.fields.contactMethod.value(), (v) => remoteForm.fields.contactMethod.set(v)}
 				placeholder="Anmelde Methode auswählen"
 				onValueChange={() => remoteForm.fields.contact.set('')}
 				remoteFunctionField={remoteForm.fields.contactMethod}
@@ -147,7 +149,7 @@
 						html: `<i class="icon-[ph--whatsapp-logo] size-5 text-base-content/50"></i><span>WhatsApp</span>`
 					},
 					{
-						value: `Telegram`,
+						value: `telegram`,
 						html: `<i class="icon-[ph--telegram-logo] size-5 text-base-content/50"></i><span>Telegram</span>`
 					},
 					{
@@ -158,20 +160,20 @@
 						value: `phone`,
 						html: `<i class="icon-[ph--phone] size-5 text-base-content/50"></i><span>Telefon</span>`
 					}
-				]}
+				] satisfies { value: ContactMethod; html: string }[]}
 			/>
 			{#if selectedContactMethod && selectedContactMethod !== 'none'}
 				<div>
 					<label class="input has-user-invalid:validator join-item">
 						{#if selectedContactMethod === `email`}
-							<input class="w-full peer" {...remoteForm.fields.contact.as('email')} placeholder="example@example.com" />
+							<input class="w-full peer" {...remoteForm.fields.contact.as('email')} placeholder="tina@example.com" />
 						{:else if selectedContactMethod === `phone`}
 							<input class="w-full peer" {...remoteForm.fields.contact.as('tel')} placeholder="+49123456789" />
 						{:else if selectedContactMethod === `website`}
 							<input class="w-full peer" {...remoteForm.fields.contact.as('url')} placeholder="https://www.example.com" />
 						{:else if selectedContactMethod === `whatsapp`}
 							<input class="w-full peer" {...remoteForm.fields.contact.as('tel')} placeholder="+49123456789" />
-						{:else if selectedContactMethod === `Telegram`}
+						{:else if selectedContactMethod === `telegram`}
 							<input class="w-full peer" {...remoteForm.fields.contact.as('text')} placeholder="@username" />
 						{/if}
 					</label>

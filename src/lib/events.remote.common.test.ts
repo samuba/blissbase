@@ -1,6 +1,44 @@
-import { createEventSchema, updateEventSchema } from '$lib/events.remote.common';
+import { createEventSchema, inferContactMethod, storedContactUriToFormFields, updateEventSchema } from '$lib/events.remote.common';
 import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
+
+describe(`inferContactMethod`, () => {
+	it(`detects WhatsApp wa.me links`, () => {
+		expect(inferContactMethod({ contact: `https://wa.me/491234567890` })).toBe(`whatsapp`);
+		expect(inferContactMethod({ contact: `http://wa.me/49` })).toBe(`whatsapp`);
+	});
+
+	it(`detects api.whatsapp.com links`, () => {
+		expect(
+			inferContactMethod({
+				contact: `https://api.whatsapp.com/send?phone=491234`
+			})
+		).toBe(`whatsapp`);
+	});
+});
+
+describe(`storedContactUriToFormFields`, () => {
+	it(`strips mailto and sets email method`, () => {
+		expect(storedContactUriToFormFields({ storedContactUri: `mailto:hi@example.com` })).toEqual({
+			contactMethod: `email`,
+			contact: `hi@example.com`
+		});
+	});
+
+	it(`parses tg://resolve?domain= into @handle`, () => {
+		expect(storedContactUriToFormFields({ storedContactUri: `tg://resolve?domain=mygroup` })).toEqual({
+			contactMethod: `telegram`,
+			contact: `@mygroup`
+		});
+	});
+
+	it(`strips tel: and sets phone method`, () => {
+		expect(storedContactUriToFormFields({ storedContactUri: `tel:+234` })).toEqual({
+			contactMethod: `phone`,
+			contact: `+234`
+		});
+	});
+});
 
 describe(`event schemas`, () => {
 	it(`requires a future start date when creating an event`, () => {

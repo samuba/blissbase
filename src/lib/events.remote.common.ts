@@ -1,5 +1,72 @@
 import * as v from 'valibot';
 
+export type ContactMethod = `none` | `email` | `phone` | `website` | `telegram` | `whatsapp`;
+
+/**
+ * Guesses a contact method from a plain form value (no `mailto:` / `tel:` prefixes).
+ *
+ * @example
+ * inferContactMethod({ contact: `hello@example.com` }); // `email`
+ * inferContactMethod({ contact: `https://wa.me/491234` }); // `whatsapp`
+ */
+export function inferContactMethod(args: { contact: string }): ContactMethod {
+	const contact = args.contact.trim();
+	if (!contact) return `none`;
+	if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) return `email`;
+	if (/^https?:\/\/(www\.)?wa\.me\/[^\s]+$/i.test(contact)) return `whatsapp`;
+	if (/^https?:\/\/(www\.)?api\.whatsapp\.com\/[^\s]+$/i.test(contact)) return `whatsapp`;
+	if (/^https?:\/\/[^\s]+$/.test(contact)) return `website`;
+	if (/^@[^\s]+$/.test(contact)) return `telegram`;
+	if (/^\+?\d[\d\s\-()]+\d$/.test(contact)) return `phone`;
+	return `website`;
+}
+
+/**
+ * Maps a persisted contact URI (`events.contact[]`) to form `contact` + `contactMethod`.
+ * Used when the server builds edit-form defaults (`getEditEventInitialValues`).
+ * The opposite direction (plain form values → DB URIs) is `formDataToDbData` in `eventMutations.remote.ts`.
+ *
+ * @example
+ * storedContactUriToFormFields({ storedContactUri: `tel:+234` })
+ * // { contactMethod: `phone`, contact: `+234` }
+ */
+export function storedContactUriToFormFields(args: { storedContactUri: string }): {
+	contactMethod: ContactMethod;
+	contact: string;
+} {
+	const raw = args.storedContactUri.trim();
+	if (!raw) {
+		return { contactMethod: `none`, contact: `` };
+	}
+	if (raw.startsWith(`mailto:`)) {
+		return { contactMethod: `email`, contact: raw.slice(`mailto:`.length) };
+	}
+	if (raw.startsWith(`tel:`)) {
+		return { contactMethod: `phone`, contact: raw.slice(`tel:`.length) };
+	}
+	if (raw.startsWith(`tg://`)) {
+		const afterProtocol = raw.slice(`tg://`.length);
+		const domainMatch = /^resolve\?domain=(.+)$/.exec(afterProtocol);
+		if (domainMatch?.[1]) {
+			let domain = decodeURIComponent(domainMatch[1]);
+			if (!domain.startsWith(`@`)) {
+				domain = `@${domain}`;
+			}
+			return { contactMethod: `telegram`, contact: domain };
+		}
+		const handle = afterProtocol.startsWith(`@`) ? afterProtocol : `@${afterProtocol}`;
+		return { contactMethod: `telegram`, contact: handle };
+	}
+	if (raw.startsWith(`https://wa.me/`)) {
+		return { contactMethod: `whatsapp`, contact: raw.slice(`https://wa.me/`.length) };
+	}
+	if (raw.startsWith(`https://`) || raw.startsWith(`http://`)) {
+		return { contactMethod: `website`, contact: raw };
+	}
+	const method = inferContactMethod({ contact: raw });
+	return { contactMethod: method, contact: raw };
+}
+
 const eventSchemaEntries = {
 	name: v.pipe(v.string(), v.trim(), v.nonEmpty(`Event Name muss ausgefüllt werden`)),
 	description: v.pipe(
@@ -61,7 +128,7 @@ export const createEventSchema = v.pipe(
 				if (contactMethod === `phone`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
 				if (contactMethod === `website`) return !!contact?.match(/^https?:\/\/[^\s]+$/);
 				if (contactMethod === `whatsapp`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
-				if (contactMethod === `Telegram`) return !!contact?.match(/^@[^\s]+$/);
+				if (contactMethod === `telegram`) return !!contact?.match(/^@[^\s]+$/);
 				return true;
 			},
 			`Kontakt-Methode ist ungültig`
@@ -107,7 +174,7 @@ export const updateEventSchema = v.pipe(
 				if (contactMethod === `phone`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
 				if (contactMethod === `website`) return !!contact?.match(/^https?:\/\/[^\s]+$/);
 				if (contactMethod === `whatsapp`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
-				if (contactMethod === `Telegram`) return !!contact?.match(/^@[^\s]+$/);
+				if (contactMethod === `telegram`) return !!contact?.match(/^@[^\s]+$/);
 				return true;
 			},
 			`Kontakt-Methode ist ungültig`
@@ -117,12 +184,14 @@ export const updateEventSchema = v.pipe(
 );
 
 /**
- * Converts persisted event data into the shared edit form values.
+ * Converts persisted event data into the shared edit form values (including `storedContactUriToFormFields` for `contact`).
+ *
  * @example
  * getEditEventInitialValues({ event: { id: 1, name: `Foo`, startAt: new Date(), endAt: null, address: [], description: `x`, price: null, listed: true, attendanceMode: `offline`, contact: [], imageUrls: [] }, tagIds: [] });
  */
 export function getEditEventInitialValues(args: { event: EditEventSource; tagIds: number[] }) {
 	const firstContact = args.event.contact?.[0] ?? ``;
+	const { contactMethod, contact } = storedContactUriToFormFields({ storedContactUri: firstContact });
 
 	return {
 		eventId: args.event.id,
@@ -136,8 +205,8 @@ export function getEditEventInitialValues(args: { event: EditEventSource; tagIds
 		endAt: args.event.endAt ? formatDateForLocalInput(args.event.endAt) : ``,
 		isOnline: args.event.attendanceMode === `online`,
 		isNotListed: !args.event.listed,
-		contact: firstContact,
-		contactMethod: inferContactMethod({ contact: firstContact }),
+		contact,
+		contactMethod,
 		existingImageUrls: args.event.imageUrls ?? [],
 		images: []
 	};
@@ -155,21 +224,6 @@ export function formatDateForLocalInput(date: Date): string {
 	const hours = String(date.getHours()).padStart(2, `0`);
 	const minutes = String(date.getMinutes()).padStart(2, `0`);
 	return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-/**
- * Guesses a contact method from a contact value.
- * @example
- * inferContactMethod({ contact: `hello@example.com` }); // `email`
- */
-export function inferContactMethod(args: { contact: string }) {
-	const contact = args.contact.trim();
-	if (!contact) return `none`;
-	if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) return `email`;
-	if (/^https?:\/\/[^\s]+$/.test(contact)) return `website`;
-	if (/^@[^\s]+$/.test(contact)) return `Telegram`;
-	if (/^\+?\d[\d\s\-()]+\d$/.test(contact)) return `phone`;
-	return `website`;
 }
 
 /**
