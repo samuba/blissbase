@@ -3,7 +3,9 @@ import { bmvbhash } from 'blockhash-core';
 export const EVENT_IMAGE_MAX_DIMENSION = 850;
 export const EVENT_IMAGE_OUTPUT_MIME_TYPE = `image/webp`;
 export const EVENT_IMAGE_OUTPUT_EXTENSION = `webp`;
-export const EVENT_IMAGE_OUTPUT_QUALITY = 0.95;
+export const EVENT_IMAGE_ACCEPTED_MIME_TYPES = [`image/webp`, `image/jpeg`] as const;
+export const EVENT_IMAGE_OUTPUT_QUALITY = 0.86;
+export const EVENT_IMAGE_MAX_SIZE_MB = 0.35;
 export const EVENT_IMAGE_HASH_PREFIX_BYTES = 8;
 export const EVENT_IMAGE_HASH_LENGTH = 11;
 export const EVENT_IMAGE_PHASH_BITS = 8;
@@ -38,11 +40,13 @@ export function getPerceptualHash(args: { imageData: HashImageData }) {
  *
  * @example
  * getProcessedImageFileName({ hash: `abc123def45`, originalFileName: `cover photo.png` });
+ * getProcessedImageFileName({ hash: `abc123def45`, originalFileName: `cover.png`, extension: `jpg` });
  */
-export function getProcessedImageFileName(args: { hash: string; originalFileName: string }) {
+export function getProcessedImageFileName(args: { hash: string; originalFileName: string; extension?: string }) {
+	const ext = args.extension ?? EVENT_IMAGE_OUTPUT_EXTENSION;
 	const safeBaseName = sanitizeFileBaseName(stripFileExtension(args.originalFileName));
-	if (!safeBaseName) return `${args.hash}.${EVENT_IMAGE_OUTPUT_EXTENSION}`;
-	return `${args.hash}-${safeBaseName}.${EVENT_IMAGE_OUTPUT_EXTENSION}`;
+	if (!safeBaseName) return `${args.hash}.${ext}`;
+	return `${args.hash}-${safeBaseName}.${ext}`;
 }
 
 /**

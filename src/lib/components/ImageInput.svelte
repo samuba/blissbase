@@ -8,6 +8,7 @@
 	import { fade } from 'svelte/transition';
 	import {
 		EVENT_IMAGE_MAX_DIMENSION,
+		EVENT_IMAGE_MAX_SIZE_MB,
 		EVENT_IMAGE_OUTPUT_MIME_TYPE,
 		EVENT_IMAGE_OUTPUT_QUALITY,
 		getProcessedImageFileName,
@@ -332,26 +333,32 @@
 	async function processImageFile(args: ProcessImageFileArgs) {
 		args.onProgress?.(10);
 		const compressedFile = await imageCompression(args.file, {
+			maxSizeMB: EVENT_IMAGE_MAX_SIZE_MB,
 			maxWidthOrHeight: EVENT_IMAGE_MAX_DIMENSION,
 			useWebWorker: true,
 			fileType: EVENT_IMAGE_OUTPUT_MIME_TYPE,
 			initialQuality: EVENT_IMAGE_OUTPUT_QUALITY,
 			onProgress: (progress: number) => {
-				args.onProgress?.(Math.min(75, Math.max(10, progress * 0.75)));
+				args.onProgress?.(Math.min(70, Math.max(10, progress * 0.7)));
 			}
 		});
+		args.onProgress?.(72);
+
+		const outputFile = await ensureCompressedFormat({ file: compressedFile });
 		args.onProgress?.(80);
 
-		const imageData = await createImageDataFromFile({ file: compressedFile });
+		const imageData = await createImageDataFromFile({ file: outputFile });
 		args.onProgress?.(92);
 
 		const hash = getPerceptualHash({ imageData });
+		const extension = outputFile.type === JPEG_FALLBACK_MIME ? `jpg` : undefined;
 		const fileName = getProcessedImageFileName({
 			hash,
-			originalFileName: args.file.name
+			originalFileName: args.file.name,
+			extension
 		});
-		const processedFile = new File([compressedFile], fileName, {
-			type: EVENT_IMAGE_OUTPUT_MIME_TYPE,
+		const processedFile = new File([outputFile], fileName, {
+			type: outputFile.type,
 			lastModified: args.file.lastModified
 		});
 
@@ -360,6 +367,57 @@
 			file: processedFile,
 			hash
 		} satisfies ProcessedImageResult;
+	}
+
+	const WEBP_MAGIC_BYTES = [0x52, 0x49, 0x46, 0x46];
+	const JPEG_FALLBACK_MIME = `image/jpeg`;
+
+	/**
+	 * Verifies the file is actually WebP; re-encodes as JPEG if the browser
+	 * silently fell back to PNG (common on older iOS Safari).
+	 * @example
+	 * const verified = await ensureCompressedFormat({ file: compressedFile });
+	 */
+	async function ensureCompressedFormat(args: { file: File }) {
+		if (await isWebP({ file: args.file })) return args.file;
+
+		const image = await loadImageFromFile({ file: args.file });
+		try {
+			const size = getContainedImageSize({
+				width: image.naturalWidth,
+				height: image.naturalHeight
+			});
+			const canvas = document.createElement(`canvas`);
+			canvas.width = size.width;
+			canvas.height = size.height;
+
+			const ctx = canvas.getContext(`2d`);
+			if (!ctx) throw new Error(`Canvas Kontext konnte nicht erstellt werden`);
+			ctx.drawImage(image, 0, 0, size.width, size.height);
+
+			const blob = await new Promise<Blob | null>((resolve) =>
+				canvas.toBlob(resolve, JPEG_FALLBACK_MIME, EVENT_IMAGE_OUTPUT_QUALITY)
+			);
+			if (!blob) throw new Error(`JPEG-Fallback-Kodierung fehlgeschlagen`);
+
+			return new File([blob], args.file.name.replace(/\.\w+$/, `.jpg`), {
+				type: JPEG_FALLBACK_MIME,
+				lastModified: args.file.lastModified
+			});
+		} finally {
+			image.remove();
+		}
+	}
+
+	/**
+	 * Checks file magic bytes to detect real WebP (RIFF header).
+	 * @example
+	 * const ok = await isWebP({ file });
+	 */
+	async function isWebP(args: { file: File }) {
+		if (args.file.size < 12) return false;
+		const header = new Uint8Array(await args.file.slice(0, 4).arrayBuffer());
+		return WEBP_MAGIC_BYTES.every((b, i) => header[i] === b);
 	}
 
 	/**

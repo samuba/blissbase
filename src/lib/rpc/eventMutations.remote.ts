@@ -6,8 +6,8 @@ import { generateSlug, randomString } from '$lib/common';
 import { createEventSchema, updateEventSchema, type CreateEventData, type ContactMethod } from '$lib/events.remote.common';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import {
+	EVENT_IMAGE_ACCEPTED_MIME_TYPES,
 	EVENT_IMAGE_HASH_LENGTH,
-	EVENT_IMAGE_OUTPUT_MIME_TYPE,
 	getStableContentHash,
 	getProcessedImageHashFromFileName
 } from '$lib/eventImageProcessing.shared';
@@ -181,8 +181,8 @@ async function uploadImages(args: UploadImagesArgs) {
 		let imageHash: string | undefined = undefined;
 
 		try {
-			if (file.type !== EVENT_IMAGE_OUTPUT_MIME_TYPE) {
-				throw new Error(`Expected processed WebP uploads, received ${file.type || `unknown`}`);
+			if (!EVENT_IMAGE_ACCEPTED_MIME_TYPES.includes(file.type as (typeof EVENT_IMAGE_ACCEPTED_MIME_TYPES)[number])) {
+				throw new Error(`Expected processed image upload (WebP or JPEG), received ${file.type || `unknown`}`);
 			}
 
 			const bytes = new Uint8Array(await file.arrayBuffer());
@@ -193,7 +193,7 @@ async function uploadImages(args: UploadImagesArgs) {
 
 			let imageUrlPromise = uploadedImages.get(imageHash);
 			if (!imageUrlPromise) {
-				imageUrlPromise = assets.uploadImage(Buffer.from(bytes), args.slug, imageHash, eventAssetsCreds);
+				imageUrlPromise = assets.uploadImage(Buffer.from(bytes), args.slug, imageHash, eventAssetsCreds, file.type);
 				uploadedImages.set(imageHash, imageUrlPromise);
 			}
 

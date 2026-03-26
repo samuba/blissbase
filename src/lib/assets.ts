@@ -1,4 +1,4 @@
-import { S3Client } from "@bradenmacdonald/s3-lite-client";
+import { S3Client } from '@bradenmacdonald/s3-lite-client';
 
 export type S3Creds = ReturnType<typeof loadCreds>;
 
@@ -19,19 +19,19 @@ export function loadCreds(env?: {
 }
 
 export interface Image {
-    public_id: string;
-    secure_url: string;
-    created_at: string;
-    bytes: number;
-    format: string;
+	public_id: string;
+	secure_url: string;
+	created_at: string;
+	bytes: number;
+	format: string;
 }
 
-export function eventImageObjectKey(eventSlug: string, phash: string) {
-    return `events/${eventSlug}/${phash}.webp`;
+export function eventImageObjectKey(eventSlug: string, phash: string, contentType = `image/webp`) {
+	return `events/${eventSlug}/${phash}.${getImageObjectExtensionFromMimeType(contentType)}`;
 }
 
 function publicUrl(objectKey: string) {
-    return `https://assets.blissbase.app/${objectKey}`;
+	return `https://assets.blissbase.app/${objectKey}`;
 }
 
 /**
@@ -40,24 +40,25 @@ function publicUrl(objectKey: string) {
  * @param eventSlug - The event slug for organizing images
  * @param phash - The perceptual hash for the image
  * @param creds - R2 credentials
+ * @param contentType - The uploaded image MIME type
  * @returns Promise with the upload result containing secure_url
  */
-export async function uploadImage(buffer: Buffer, eventSlug: string, phash: string, creds: S3Creds) {
-    if (!buffer || buffer.length === 0) throw new Error(`Cannot upload empty buffer`);
-    if (!eventSlug || !eventSlug.trim()) throw new Error(`Event slug cannot be empty`);
-    if (!phash || !phash.trim()) throw new Error(`Phash cannot be empty`);
+export async function uploadImage(buffer: Buffer, eventSlug: string, phash: string, creds: S3Creds, contentType = `image/webp`) {
+	if (!buffer || buffer.length === 0) throw new Error(`Cannot upload empty buffer`);
+	if (!eventSlug || !eventSlug.trim()) throw new Error(`Event slug cannot be empty`);
+	if (!phash || !phash.trim()) throw new Error(`Phash cannot be empty`);
 
-    const key = eventImageObjectKey(eventSlug, phash);
-    try {
-        const s3 = new S3Client(creds);
-        await s3.putObject(key, buffer, { metadata: { 'Content-Type': 'image/webp' } });
-        console.log(`Uploaded to R2 ${key}`);
+	const key = eventImageObjectKey(eventSlug, phash, contentType);
+	try {
+		const s3 = new S3Client(creds);
+		await s3.putObject(key, buffer, { metadata: { 'Content-Type': contentType } });
+		console.log(`Uploaded to R2 ${key}`);
 
-        return publicUrl(key);
-    } catch (error) {
-        console.error(`Error uploading image ${key}:`, error);
-        throw error;
-    }
+		return publicUrl(key);
+	} catch (error) {
+		console.error(`Error uploading image ${key}:`, error);
+		throw error;
+	}
 }
 
 /**
@@ -67,27 +68,27 @@ export async function uploadImage(buffer: Buffer, eventSlug: string, phash: stri
  * @returns Promise with deletion results
  */
 export async function deleteImages(objectKeys: string[], creds: S3Creds) {
-    if (!objectKeys?.length) {
-        console.log(`No public IDs provided for deletion`);
-        return [];
-    }
+	if (!objectKeys?.length) {
+		console.log(`No public IDs provided for deletion`);
+		return [];
+	}
 
-    objectKeys = objectKeys.map(x => {
-        if (x.startsWith("https://assets.blissbase.app")) {
-            return x.split("https://assets.blissbase.app/").pop()?.trim() || "";
-        }
-        return x;
-    });
-    console.log(`Deleting from R2: ${objectKeys}`);
+	objectKeys = objectKeys.map((x) => {
+		if (x.startsWith(`https://assets.blissbase.app`)) {
+			return x.split(`https://assets.blissbase.app/`).pop()?.trim() || ``;
+		}
+		return x;
+	});
+	console.log(`Deleting from R2: ${objectKeys}`);
 
-    try {
-        const s3 = new S3Client(creds);
-        await Promise.all(objectKeys.map(x => s3.deleteObject(x.trim())));
-        console.log(`Deletion completed`);
-    } catch (error) {
-        console.error(`Error in deleteImages:`, error);
-        throw error;
-    }
+	try {
+		const s3 = new S3Client(creds);
+		await Promise.all(objectKeys.map((x) => s3.deleteObject(x.trim())));
+		console.log(`Deletion completed`);
+	} catch (error) {
+		console.error(`Error in deleteImages:`, error);
+		throw error;
+	}
 }
 
 /**
@@ -96,30 +97,30 @@ export async function deleteImages(objectKeys: string[], creds: S3Creds) {
  * @returns Promise with array of all image metadata
  */
 export async function getAllImageData(creds: S3Creds): Promise<Image[]> {
-    console.log(`Fetching meta data for all images in R2...`);
+	console.log(`Fetching meta data for all images in R2...`);
 
-    try {
-        const s3 = new S3Client(creds);
-        const res = await s3.listObjects();
+	try {
+		const s3 = new S3Client(creds);
+		const res = await s3.listObjects();
 
-        const results: { public_id: string, secure_url: string, created_at: string, bytes: number, format: string }[] = [];
-        for await (const obj of res) {
-            results.push({
-                public_id: obj.key || '',
-                secure_url: publicUrl(obj.key || ''),
-                created_at: obj.lastModified?.toISOString(),
-                bytes: obj.size || 0,
-                format: obj.key?.split('.').pop() || 'unknown',
-            });
-        }
+		const results: { public_id: string; secure_url: string; created_at: string; bytes: number; format: string }[] = [];
+		for await (const obj of res) {
+			results.push({
+				public_id: obj.key || ``,
+				secure_url: publicUrl(obj.key || ``),
+				created_at: obj.lastModified?.toISOString(),
+				bytes: obj.size || 0,
+				format: obj.key?.split(`.`).pop() || `unknown`,
+			});
+		}
 
-        console.log(`Found ${results.length} total images in R2`);
+		console.log(`Found ${results.length} total images in R2`);
 
-        return results;
-    } catch (error) {
-        console.error(`Error fetching R2 images:`, error);
-        throw error;
-    }
+		return results;
+	} catch (error) {
+		console.error(`Error fetching R2 images:`, error);
+		throw error;
+	}
 }
 
 /**
@@ -129,5 +130,16 @@ export async function getAllImageData(creds: S3Creds): Promise<Image[]> {
  * @returns Promise with boolean indicating if the object exists
  */
 export function exists(objectKey: string, creds: S3Creds) {
-    return new S3Client(creds).exists(objectKey);
+	return new S3Client(creds).exists(objectKey);
+}
+
+/**
+ * Maps an uploaded image MIME type to the stored object extension.
+ * @example
+ * getImageObjectExtensionFromMimeType(`image/jpeg`);
+ */
+function getImageObjectExtensionFromMimeType(contentType: string) {
+	if (contentType === `image/jpeg`) return `jpg`;
+	if (contentType === `image/webp`) return `webp`;
+	throw new Error(`Unsupported image content type: ${contentType || `unknown`}`);
 }
