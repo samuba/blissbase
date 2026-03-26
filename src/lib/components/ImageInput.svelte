@@ -821,7 +821,7 @@
 	{#if fullscreenImageUrl}
 		<button
 			type="button"
-			class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+			class="fixed inset-0 z-70 flex items-center justify-center bg-black/85 p-4"
 			in:fade={{ duration: 180 }}
 			out:fade={{ duration: 80 }}
 			onclick={closeFullscreenPreview}
