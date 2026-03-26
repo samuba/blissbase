@@ -518,6 +518,7 @@
 
 	:global(.event-description h3) {
 		margin-top: 1rem;
-		margin-bottom: 0.3rem;
+		margin-bottom: 0.8rem;
+		font-size: 1.2rem;
 	}
 </style>
