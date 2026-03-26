@@ -33,10 +33,7 @@ export async function load({ url, params: { id } }) {
     if (hostSecretCorrect || userIsAuthor || await isAdminSession()) {
         return {
             event,
-            editFormValues: getEditEventInitialValues({
-                event,
-                tagIds: event.eventTags.map((x) => x.tagId)
-            })
+            editFormValues: getEditEventInitialValues(event, event.eventTags.map((x) => x.tagId))
         };
     }
 

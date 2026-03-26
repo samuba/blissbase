@@ -123,9 +123,9 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
  * formDataToDbData(data)
  */
 function formDataToDbData(data: CreateEventData) {
-	const timeZone = data.timeZone ?? `Europe/Berlin`;
-	const startAt = utcDate(data.startAt, timeZone);
-	const endAt = data.endAt ? utcDate(data.endAt, timeZone) : undefined;
+	const timezone = data.timeZone ?? `Europe/Berlin`;
+	const startAt = utcDate(data.startAt, timezone);
+	const endAt = data.endAt ? utcDate(data.endAt, timezone) : undefined;
 	const address = data.address?.split(/,|\n/).map((x) => x.trim()).filter((x) => x) ?? [];
 	const slug = generateSlug({ name: data.name, startAt, endAt });
 	const attendanceMode = data.isOnline ? `online` : `offline`;
@@ -150,6 +150,7 @@ function formDataToDbData(data: CreateEventData) {
 		listed,
 		startAt,
 		endAt,
+		timezone,
 		address,
 		slug,
 		attendanceMode,

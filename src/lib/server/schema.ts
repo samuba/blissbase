@@ -10,6 +10,7 @@ export const events = pgTable('events', {
     name: text().notNull(),
     startAt: timestamp().notNull(),
     endAt: timestamp(),
+    timezone: text(),
     address: text().notNull().array(),
     price: text(),
     priceIsHtml: boolean().notNull().default(false),

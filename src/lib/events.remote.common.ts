@@ -189,31 +189,68 @@ export const updateEventSchema = v.pipe(
  * @example
  * getEditEventInitialValues({ event: { id: 1, name: `Foo`, startAt: new Date(), endAt: null, address: [], description: `x`, price: null, listed: true, attendanceMode: `offline`, contact: [], imageUrls: [] }, tagIds: [] });
  */
-export function getEditEventInitialValues(args: { event: EditEventSource; tagIds: number[] }) {
-	const firstContact = args.event.contact?.[0] ?? ``;
+export function getEditEventInitialValues(event: EditEventSource, tagIds: number[]) {
+	const firstContact = event.contact?.[0] ?? ``;
 	const { contactMethod, contact } = storedContactUriToFormFields({ storedContactUri: firstContact });
 
 	return {
-		eventId: args.event.id,
-		hostSecret: args.event.hostSecret ?? ``,
-		name: args.event.name,
-		description: args.event.description ?? ``,
-		tagIds: args.tagIds.map((x) => x.toString()),
-		price: args.event.price ?? ``,
-		address: (args.event.address ?? []).join(`\n`),
-		startAt: formatDateForLocalInput(args.event.startAt),
-		endAt: args.event.endAt ? formatDateForLocalInput(args.event.endAt) : ``,
-		isOnline: args.event.attendanceMode === `online`,
-		isNotListed: !args.event.listed,
+		eventId: event.id,
+		hostSecret: event.hostSecret ?? ``,
+		name: event.name,
+		description: event.description ?? ``,
+		tagIds: tagIds.map((x) => x.toString()),
+		price: event.price ?? ``,
+		address: (event.address ?? []).join(`\n`),
+		startAt: formatDateForLocalInputInTimeZone(event.startAt, event.timezone ?? DEFAULT_EVENT_FORM_TIME_ZONE),
+		endAt: event.endAt
+			? formatDateForLocalInputInTimeZone(event.endAt, event.timezone ?? DEFAULT_EVENT_FORM_TIME_ZONE)
+			: ``,
+		isOnline: event.attendanceMode === `online`,
+		isNotListed: !event.listed,
 		contact,
 		contactMethod,
-		existingImageUrls: args.event.imageUrls ?? [],
+		existingImageUrls: event.imageUrls ?? [],
 		images: []
 	};
 }
 
+/** Matches `formDataToDbData` default when `timeZone` is omitted (eventMutations.remote). */
+const DEFAULT_EVENT_FORM_TIME_ZONE = `Europe/Berlin`;
+
 /**
- * Formats a Date into a value accepted by `datetime-local` inputs.
+ * Formats an instant as `YYYY-MM-DDTHH:mm` in a fixed IANA timezone (stable on server for SSR).
+ *
+ * @example
+ * formatDateForLocalInputInTimeZone({
+ *   date: new Date(`2026-06-15T12:00:00.000Z`),
+ *   timeZone: `Europe/Berlin`
+ * }); // CEST → `2026-06-15T14:00`
+ */
+export function formatDateForLocalInputInTimeZone(date: Date, timeZone: string): string {
+	console.log({date, timeZone});
+	const formatter = new Intl.DateTimeFormat(`en-CA`, {
+		timeZone: timeZone,
+		year: `numeric`,
+		month: `2-digit`,
+		day: `2-digit`,
+		hour: `2-digit`,
+		minute: `2-digit`,
+		hour12: false
+	});
+	const parts = formatter.formatToParts(date);
+	const get = (type: string) => parts.find((p) => p.type === type)?.value ?? `0`;
+	const year = get(`year`);
+	const month = get(`month`);
+	const day = get(`day`);
+	const hour = String(parseInt(get(`hour`), 10) % 24).padStart(2, `0`);
+	const minute = get(`minute`);
+	return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+/**
+ * Formats a Date into a value accepted by `datetime-local` inputs using the **current** environment local zone (browser or server).
+ * Prefer `formatDateForLocalInputInTimeZone` in server load when the user’s zone is unknown.
+ *
  * @example
  * formatDateForLocalInput(new Date(`2026-01-01T10:30:00.000Z`));
  */
@@ -244,6 +281,7 @@ type EditEventSource = {
 	address: string[] | null;
 	startAt: Date;
 	endAt: Date | null;
+	timezone: string | null;
 	price: string | null;
 	listed: boolean;
 	attendanceMode: `online` | `offline` | `offline+online`;

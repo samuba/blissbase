@@ -1,4 +1,10 @@
-import { createEventSchema, inferContactMethod, storedContactUriToFormFields, updateEventSchema } from '$lib/events.remote.common';
+import {
+	createEventSchema,
+	formatDateForLocalInputInTimeZone,
+	inferContactMethod,
+	storedContactUriToFormFields,
+	updateEventSchema
+} from '$lib/events.remote.common';
 import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
 
@@ -37,6 +43,13 @@ describe(`storedContactUriToFormFields`, () => {
 			contactMethod: `phone`,
 			contact: `+234`
 		});
+	});
+});
+
+describe(`formatDateForLocalInputInTimeZone`, () => {
+	it(`formats UTC instant in Europe/Berlin (CEST)`, () => {
+		const s = formatDateForLocalInputInTimeZone(new Date(`2026-06-15T12:00:00.000Z`), `Europe/Berlin`);
+		expect(s).toBe(`2026-06-15T14:00`);
 	});
 });
 
