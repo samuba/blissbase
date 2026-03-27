@@ -29,7 +29,7 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	]);
 
 	if (formData.address.length && !coords) {
-		return invalid(issue.address(`Address was not found`));
+		return invalid(issue.address(`Address was not found in Google Maps`));
 	}
 
 	const { imageUrls, deletedImageUrls } = getImagesForEventUpdate({
@@ -76,7 +76,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	]);
 
 	if (event.address.length && !coords) {
-		return invalid(issue.address(`Address was not found`));
+		return invalid(issue.address(`Address was not found in Google Maps`));
 	}
 
 	let createdEvent: SelectEvent | undefined = undefined;
