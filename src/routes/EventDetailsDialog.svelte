@@ -4,86 +4,62 @@
 	import EventDetails from './EventDetails.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
+	import { routes } from '$lib/routes';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { browser } from '$app/environment';
 	import { replaceState } from '$app/navigation';
 
 	let { events }: { events: UiEvent[] } = $props();
 	let isHandlingClose = $state(false);
 
 	/**
-	 * Returns the first URL path segment for event-style URLs (`/my-event`), or undefined for nested paths.
-	 * @example getEventSlugFromPathname('/yoga-morgen') // 'yoga-morgen'
+	 * Validates shallow state so visible close links stay same-origin paths only.
+	 * @example getSafeEventListOrigin('/profile/favorites') // '/profile/favorites'
 	 */
-	function getEventSlugFromPathname(pathname: string): string | undefined {
-		const trimmed = pathname.replace(/^\/+|\/+$/g, '');
-		if (!trimmed || trimmed.includes('/')) return undefined;
-		try {
-			return decodeURIComponent(trimmed);
-		} catch {
-			return undefined;
-		}
+	function getSafeEventListOrigin(raw: unknown): string | undefined {
+		if (typeof raw !== `string`) return undefined;
+		const t = raw.trim();
+		if (!t.startsWith(`/`) || t.startsWith(`//`)) return undefined;
+		return t;
 	}
 
-	const RESERVED_FIRST_SEGMENTS = new Set([
-		'profile',
-		'new',
-		'sources',
-		'about',
-		'auth',
-		'edit',
-		'telegram',
-		'api'
-	]);
-
-	const event = $derived.by(() => {
-		const pathname = page.url.pathname;
-		const pathSlug = getEventSlugFromPathname(pathname);
-		const bySlug =
-			pathSlug && !RESERVED_FIRST_SEGMENTS.has(pathSlug)
-				? events.find((x) => x.slug === pathSlug)
-				: undefined;
-
-		const id = page.state.selectedEventId;
-		const byId = id != null ? events.find((x) => x.id === id) : undefined;
-
-		if (bySlug && byId && bySlug.id !== byId.id) return bySlug;
-		if (bySlug) return bySlug;
-		if (byId) return byId;
-		return undefined;
-	});
-
-	$effect(() => {
-		if (!browser) return;
-		const ev = event;
-		if (!ev) return;
-		if (page.state.selectedEventId === ev.id) return;
-		replaceState(page.url, { selectedEventId: ev.id });
-	});
-
-	const isOpen = $derived(event !== undefined);
+	/**
+	 * Resolves the visible event from the current shallow page state.
+	 * @example getEventFromState({ selectedEventId: 12, events })
+	 */
+	function getEventFromState(selectedEventId: number | undefined, events: UiEvent[]): UiEvent | undefined {
+		if (!selectedEventId) return undefined;
+		return events.find((x) => x.id === selectedEventId);
+	}
+	const event = $derived(getEventFromState(page.state.selectedEventId, events));
+	const isOpen = $derived(!!event);
+	const originPath = $derived(getSafeEventListOrigin(page.state.eventListOrigin) ?? routes.root());
 
 	/**
-	 * Closes via history and keeps `isHandlingClose` set until the dialog actually closes.
-	 * @example handleClose() // after shallow pushState stack entry
+	 * Replaces the current history entry with the list origin URL while clearing the selected event.
+	 * @example handleClose() // dialog close / overlay / escape
 	 */
 	function handleClose() {
 		if (isHandlingClose) return;
 		isHandlingClose = true;
-		window.history.back();
+		replaceState(resolve(originPath as InternalPathname), {
+			...page.state,
+			selectedEventId: undefined
+		});
+		queueMicrotask(() => {
+			isHandlingClose = false;
+		});
 	}
 
-	$effect(() => {
-		if (isOpen || !isHandlingClose) return;
-		isHandlingClose = false;
-	});
+	/** Satisfies typed `resolve()` while keeping runtime validation in {@link getSafeEventListOrigin}. */
+	type InternalPathname = `/${string}`;
 </script>
 
 <Dialog.Root
 	open={isOpen}
 	onOpenChange={(shouldOpen) => {
 		// Intercept close attempts - we handle the animation ourselves
-		if (!shouldOpen && isOpen && !isHandlingClose) {
+		if (!shouldOpen && isOpen) {
 			handleClose();
 		}
 	}}
@@ -111,11 +87,15 @@
 			}}
 		>
 			<div class="sticky top-0 right-0 z-20 ml-auto h-0 w-max">
-				<button onclick={handleClose} class="rounded-full p-4" aria-label="Schließen">
+				<a
+					href={resolve(originPath as InternalPathname)}
+					class="rounded-full p-4 block"
+					aria-label="Schließen"
+				>
 					<div class="btn btn-circle btn-primary shadow-lg drop-shadow-2xl">
 						<i class="icon-[ph--x] size-5"></i>
 					</div>
-				</button>
+				</a>
 			</div>
 
 			{#if event}
@@ -129,10 +109,10 @@
 			{/if}
 
 			<div class="md:hidden flex w-full justify-center gap-6 pb-6">
-				<button onclick={handleClose} class="btn btn-sm">
+				<a href={resolve(originPath as InternalPathname)} class="btn btn-sm">
 					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 					Zurück zur Übersicht
-				</button>
+				</a>
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>

@@ -2,7 +2,8 @@
 	import type { UiEvent } from '$lib/server/events';
 	import { addHours, formatAddress, formatTimeStr } from '$lib/common';
 	import { pushState } from '$app/navigation';
-	import { routes } from '$lib/routes';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
 	import FavoriteButton from './FavoriteButton.svelte';
 	import { now } from '$lib/now.svelte';
@@ -39,7 +40,11 @@
 
 	function handleClick(e: MouseEvent) {
 		e.preventDefault();
-		pushState(routes.eventDetails(event.slug), { selectedEventId: event.id });
+		const eventListOrigin = `${page.url.pathname}${page.url.search}${page.url.hash}`;
+		pushState(resolve('/[slug]', { slug: event.slug }), {
+			selectedEventId: event.id,
+			eventListOrigin
+		});
 	}
 
 	const tags = $derived.by(() => {
@@ -55,7 +60,7 @@
 
 {#if !hideEvent}
 	<a
-		href={routes.eventDetails(event.slug)}
+		href={resolve('/[slug]', { slug: event.slug })}
 		class=" w-full"
 		data-sveltekit-preload-data="false"
 		onclick={handleClick}

@@ -32,6 +32,8 @@ declare global {
 		}
 		interface PageState {
 			selectedEventId?: number;
+			/** Path (+ optional search/hash) of the page that opened the event dialog via shallow routing. */
+			eventListOrigin?: string;
 		}
 		interface Platform {
 			caches: CacheStorage & { default: Cache };
