@@ -19,6 +19,7 @@ import {
     superTrim,
     cleanProseHtml
 } from "./common.ts";
+import { geocodeAddressCached } from "../src/lib/server/google.script.ts";
 
 const BASE_URL = 'https://tribehaus.org';
 
@@ -277,13 +278,17 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             return undefined;
         }
 
+        const address = this.extractAddress(html) || [];
         const { latitude, longitude } = this.extractCoordinates(html);
+        const geocodedLocation = address.length
+            ? await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || ``)
+            : null;
 
         return {
             name,
             startAt,
             endAt: this.extractEndAt(html),
-            address: this.extractAddress(html) || [],
+            address,
             price: this.extractPrice(html),
             priceIsHtml: false,
             description: this.extractDescription(html) || '',
@@ -291,8 +296,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             host: this.extractHost(html),
             hostLink: this.extractHostLink(html),
             sourceUrl: permalink,
-            latitude,
-            longitude,
+            latitude: latitude ?? geocodedLocation?.lat ?? null,
+            longitude: longitude ?? geocodedLocation?.lng ?? null,
+            timezone: geocodedLocation?.timezone ?? null,
             tags: this.extractTags(html) || [],
             source: 'tribehaus',
         };

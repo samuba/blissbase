@@ -122,6 +122,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 contact: [],
                 latitude: coordinates?.lat,
                 longitude: coordinates?.lng,
+                timezone: coordinates?.timezone,
                 tags: tag ? [tag] : [],
                 sourceUrl: activity._activity.booking_link,
                 source: 'vortexapp' as const
@@ -201,9 +202,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             contact: [],
             latitude: coordinates?.lat,
             longitude: coordinates?.lng,
+            timezone: coordinates?.timezone,
             tags,
             sourceUrl,
-            source: 'todotoday' as const
+            source: 'vortexapp' as const
         } satisfies ScrapedEvent;
         console.log({ event });
         return event;

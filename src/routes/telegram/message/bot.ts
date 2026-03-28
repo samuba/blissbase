@@ -104,6 +104,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             tags: aiAnswer.tags,
             latitude: coords?.lat,
             longitude: coords?.lng,
+            timezone: coords?.timezone,
             price: aiAnswer.price,
             description: aiAnswer.description,
             descriptionOriginal: msgTextHtml,

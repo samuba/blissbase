@@ -58,6 +58,7 @@ export const geocodeCache = pgTable('geocode_cache', {
     address: text().notNull().unique(),
     latitude: real(),
     longitude: real(),
+    timezone: text(),
     cachedAt: timestamp().notNull().defaultNow(),
 });
 

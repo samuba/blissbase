@@ -1,5 +1,7 @@
 get event timezone via api based on location, over ruling users timezone
 
+add whatsapp groups in hoi an
+
 test all "Anmelden über" funktionen mit gerendertem event. scraped events haben manchmal daten die man nicht mehr speichern kann nachdem sie im editor geladenwurden
 new layout with tabs at the bottom: profile, discover, impressum?
 hydration errors

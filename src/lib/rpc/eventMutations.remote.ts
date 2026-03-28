@@ -22,15 +22,20 @@ import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	console.time('updateEvent');
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
-	const formData = formDataToDbData(data);
+	const address = toAddressLines(data.address);
 	const [coords, uploadedImageUrls] = await Promise.all([
-		geocodeAddressCached(formData.address, GOOGLE_MAPS_API_KEY),
+		geocodeAddressCached(address, GOOGLE_MAPS_API_KEY),
 		uploadImages({ files: data.images, slug: eventFromDb.slug })
 	]);
 
-	if (formData.address.length && !coords) {
+	if (address.length && !coords) {
 		return invalid(issue.address(`Address was not found in Google Maps`));
 	}
+	const formData = formDataToDbData({
+		data,
+		timezone: coords?.timezone ?? data.timeZone ?? `Europe/Berlin`,
+		address
+	});
 
 	const { imageUrls, deletedImageUrls } = getImagesForEventUpdate({
 		existingImageUrls: eventFromDb.imageUrls ?? [],
@@ -69,15 +74,18 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	const userEmail = locals.jwtClaims?.email;
 	if (!userEmail) throw error(400, `Signed-in user does not have an email`);
 
-	const event = formDataToDbData(data);
-	const [coords, imageUrls] = await Promise.all([
-		geocodeAddressCached(event.address, GOOGLE_MAPS_API_KEY),
-		uploadImages({ files: data.images, slug: event.slug })
-	]);
+	const address = toAddressLines(data.address);
+	const coords = await geocodeAddressCached(address, GOOGLE_MAPS_API_KEY);
 
-	if (event.address.length && !coords) {
+	if (address.length && !coords) {
 		return invalid(issue.address(`Address was not found in Google Maps`));
 	}
+	const event = formDataToDbData({
+		data,
+		timezone: coords?.timezone ?? data.timeZone ?? `Europe/Berlin`,
+		address
+	});
+	const imageUrls = await uploadImages({ files: data.images, slug: event.slug });
 
 	let createdEvent: SelectEvent | undefined = undefined;
 
@@ -120,43 +128,51 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
  * Builds `contact[]` URIs from plain form `contact` + `contactMethod` (reverse of `storedContactUriToFormFields` on load).
  *
  * @example
- * formDataToDbData(data)
+ * formDataToDbData({ data, timezone: `Europe/Berlin`, address: [`Berlin`] })
  */
-function formDataToDbData(data: CreateEventData) {
-	const timezone = data.timeZone ?? `Europe/Berlin`;
-	const startAt = utcDate(data.startAt, timezone);
-	const endAt = data.endAt ? utcDate(data.endAt, timezone) : undefined;
-	const address = data.address?.split(/,|\n/).map((x) => x.trim()).filter((x) => x) ?? [];
-	const slug = generateSlug({ name: data.name, startAt, endAt });
-	const attendanceMode = data.isOnline ? `online` : `offline`;
-	const listed = !data.isNotListed;
+function formDataToDbData(args: FormDataToDbDataArgs) {
+	const startAt = utcDate(args.data.startAt, args.timezone);
+	const endAt = args.data.endAt ? utcDate(args.data.endAt, args.timezone) : undefined;
+	const slug = generateSlug({ name: args.data.name, startAt, endAt });
+	const attendanceMode = args.data.isOnline ? `online` : `offline`;
+	const listed = !args.data.isNotListed;
 	let contact: string[] = []
-	const contactMethod = data.contactMethod as ContactMethod;
-	if (contactMethod === 'email') {
-		contact = [`mailto:${data.contact}`];
-	} else if (contactMethod === 'telegram') {
-		contact = [`tg://resolve?domain=${data.contact}`];
-	} else if (contactMethod === 'whatsapp') {
-		contact = [`https://wa.me/${data.contact}`];
-	} else if (contactMethod === 'phone') {
-		contact = [`tel:${data.contact}`];
-	} else if (contactMethod === 'website') {
-		if (data.contact?.startsWith('http')) contact = [data.contact];
-		else contact = [`https://${data.contact}`];
+	const contactMethod = args.data.contactMethod as ContactMethod;
+	if (contactMethod === `email`) {
+		contact = [`mailto:${args.data.contact}`];
+	} else if (contactMethod === `telegram`) {
+		contact = [`tg://resolve?domain=${args.data.contact}`];
+	} else if (contactMethod === `whatsapp`) {
+		contact = [`https://wa.me/${args.data.contact}`];
+	} else if (contactMethod === `phone`) {
+		contact = [`tel:${args.data.contact}`];
+	} else if (contactMethod === `website`) {
+		if (args.data.contact?.startsWith(`http`)) contact = [args.data.contact];
+		else contact = [`https://${args.data.contact}`];
 	}
 
 	return {
-		...data,
+		...args.data,
 		listed,
 		startAt,
 		endAt,
-		timezone,
-		address,
+		timezone: args.timezone,
+		address: args.address,
 		slug,
 		attendanceMode,
 		contact,
 		source: `website-form`,
 	} satisfies InsertEvent;
+}
+
+/**
+ * Normalizes the free-text event address into cached address lines.
+ *
+ * @example
+ * toAddressLines(`Studio\nBerlin`)
+ */
+function toAddressLines(address: string | undefined) {
+	return address?.split(/,|\n/).map((x) => x.trim()).filter((x) => x) ?? [];
 }
 
 /**
@@ -305,6 +321,12 @@ function applyTimezone(naiveDatetime: string, timeZone: string): string {
 type UploadImagesArgs = {
 	files: File[];
 	slug: string;
+};
+
+type FormDataToDbDataArgs = {
+	data: CreateEventData;
+	timezone: string;
+	address: string[];
 };
 
 type GetImagesForEventUpdateArgs = {

@@ -302,6 +302,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             hostLink: this.extractHostLink(html),
             latitude: null as number | null,
             longitude: null as number | null,
+            timezone: null as string | null,
             sourceUrl: url,
             source: 'kuschelraum',
             tags: this.extractTags()
@@ -317,6 +318,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             if (coords) {
                 event.latitude = coords.lat;
                 event.longitude = coords.lng;
+                event.timezone = coords.timezone;
             }
         }
 

@@ -49,11 +49,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 console.log(`Scraping event ${event.title}`)
 
                 const address = event.location.address?.split(',')?.map(x => x.trim()) ?? [areaId.charAt(0).toUpperCase() + areaId.slice(1)]
+                const timezoneLookup = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
                 let coordinates: { lat: number, lng: number } | null = null;
                 if (event.location.latitude && event.location.longitude) {
                     coordinates = { lat: event.location.latitude, lng: event.location.longitude }
                 } else {
-                    coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '')
+                    coordinates = timezoneLookup
                 }
 
                 let description = cleanProseHtml(event.description).replaceAll('\n', '<br>')
@@ -78,6 +79,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                         tags: event.categories,
                         latitude: coordinates?.lat,
                         longitude: coordinates?.lng,
+                        timezone: timezoneLookup?.timezone,
                         contact: [event.contact.url, event.contact.email, event.contact.whatsapp, event.contact.telegram].filter(x => x) as string[],
                         host: event.contact.instagramUsername || undefined,
                         hostLink: event.contact.instagramUsername ? `https://www.instagram.com/${event.contact.instagramUsername.replace('@', '')}` : undefined,

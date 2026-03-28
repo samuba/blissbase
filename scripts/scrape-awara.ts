@@ -130,6 +130,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             address: address,
             latitude: coordinates?.lat,
             longitude: coordinates?.lng,
+            timezone: coordinates?.timezone,
             name: this.extractName(html),
             host: this.extractHost(html),
             startAt: startAt,

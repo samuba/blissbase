@@ -73,17 +73,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         [hour, minute] = entry.end_datetime.split(' ')[1].split(':').map(x => parseInt(x));
         const endAt = dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
 
-        const address: string[] = [] 
+        let address: string[] = [] 
         if (data.venue?.full_address?.includes('The Yoga Barn')) {
             address.push('The Yoga Barn', 'Ubud');
         } else if (data.venue?.full_address?.includes('Paradiso ')) {
             address.push('Paradiso ', 'Ubud');
         } else {
-            data.venue.full_address?.split(',').map(part => part.trim())
+            address = data.venue.full_address?.split(',').map(part => part.trim())
         }
-        const coordinates = data.venue.latitude && data.venue.longitude 
-            ? { lat: data.venue.latitude, lng: data.venue.longitude } 
-            : await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+        const timezoneLookup = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+        const coordinates = data.venue.latitude && data.venue.longitude
+            ? { lat: data.venue.latitude, lng: data.venue.longitude }
+            : timezoneLookup;
         
         const event = {
             name,
@@ -99,6 +100,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             contact: [],
             latitude: coordinates?.lat,
             longitude: coordinates?.lng,
+            timezone: timezoneLookup?.timezone,
             tags: [],
             sourceUrl,
             source: 'megatix_indonesia' as const

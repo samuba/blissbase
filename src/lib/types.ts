@@ -8,6 +8,7 @@ export interface ScrapedEvent {
     name: string;
     startAt: string; // ISO string with timezone offset
     endAt: string | null | undefined; // ISO string with timezone offset
+    timezone?: string | null; // IANA timezone ID resolved from location
     address: string[]; // Array of address lines
     price: string | null | undefined; // From priceRange or specific price element, can be null | undefined
     priceIsHtml: boolean; // Whether the price is HTML or not

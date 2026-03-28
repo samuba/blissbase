@@ -351,6 +351,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const venueName = detailData?.venue?.name?.trim() || event.venue?.trim();
 		const venueArea = detailData?.venue?.area?.trim() || event.area?.trim();
 		const address = [venueName, formatLocationName(location)].filter(Boolean) as string[];
+		const timezoneLookup = (event.google_map || venueName || venueArea)
+			? await geocodeAddressCached(
+				[venueName, venueArea, formatLocationName(location)].filter(Boolean) as string[],
+				process.env.GOOGLE_MAPS_API_KEY || ''
+			)
+			: null;
 
 		let coordinates: { lat: number; lng: number } | null | undefined;
 		const venueLat = detailData?.venue?.lat ? Number.parseFloat(detailData.venue.lat) : undefined;
@@ -358,10 +364,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		if (venueLat !== undefined && venueLng !== undefined && !Number.isNaN(venueLat) && !Number.isNaN(venueLng)) {
 			coordinates = { lat: venueLat, lng: venueLng };
 		} else if (event.google_map || venueName || venueArea) {
-			coordinates = await geocodeAddressCached(
-				[venueName, venueArea, formatLocationName(location)].filter(Boolean) as string[],
-				process.env.GOOGLE_MAPS_API_KEY || ''
-			);
+			coordinates = timezoneLookup;
 		}
 
 		const creatorName = detailData?.creator?.name || event.creator_name;
@@ -407,6 +410,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			contact,
 			latitude: coordinates?.lat,
 			longitude: coordinates?.lng,
+			timezone: timezoneLookup?.timezone,
 			tags,
 			sourceUrl: event.link,
 			source: 'todotoday'

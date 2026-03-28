@@ -359,6 +359,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             sourceUrl: url,
             latitude: coordinates?.lat ?? null,
             longitude: coordinates?.lng ?? null,
+            timezone: coordinates?.timezone ?? null,
             tags: this.extractTags(html) || [],
             source: 'ggbrandenburg',
         };
