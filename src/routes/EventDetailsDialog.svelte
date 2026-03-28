@@ -5,27 +5,78 @@
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	import { page } from '$app/state';
+	import { browser } from '$app/environment';
+	import { replaceState } from '$app/navigation';
 
-	let {  events }: { events: UiEvent[] } = $props();
+	let { events }: { events: UiEvent[] } = $props();
 	let isHandlingClose = $state(false);
 
-	// Show event from url
-	const event = $derived.by(() => {
-		const eventId = page.state.selectedEventId;
-		if (!eventId) return undefined;
+	/**
+	 * Returns the first URL path segment for event-style URLs (`/my-event`), or undefined for nested paths.
+	 * @example getEventSlugFromPathname('/yoga-morgen') // 'yoga-morgen'
+	 */
+	function getEventSlugFromPathname(pathname: string): string | undefined {
+		const trimmed = pathname.replace(/^\/+|\/+$/g, '');
+		if (!trimmed || trimmed.includes('/')) return undefined;
+		try {
+			return decodeURIComponent(trimmed);
+		} catch {
+			return undefined;
+		}
+	}
 
-		const event = events.find((x) => x.id === eventId);
-		if (event) return event;
+	const RESERVED_FIRST_SEGMENTS = new Set([
+		'profile',
+		'new',
+		'sources',
+		'about',
+		'auth',
+		'edit',
+		'telegram',
+		'api'
+	]);
+
+	const event = $derived.by(() => {
+		const pathname = page.url.pathname;
+		const pathSlug = getEventSlugFromPathname(pathname);
+		const bySlug =
+			pathSlug && !RESERVED_FIRST_SEGMENTS.has(pathSlug)
+				? events.find((x) => x.slug === pathSlug)
+				: undefined;
+
+		const id = page.state.selectedEventId;
+		const byId = id != null ? events.find((x) => x.id === id) : undefined;
+
+		if (bySlug && byId && bySlug.id !== byId.id) return bySlug;
+		if (bySlug) return bySlug;
+		if (byId) return byId;
+		return undefined;
+	});
+
+	$effect(() => {
+		if (!browser) return;
+		const ev = event;
+		if (!ev) return;
+		if (page.state.selectedEventId === ev.id) return;
+		replaceState(page.url, { selectedEventId: ev.id });
 	});
 
 	const isOpen = $derived(event !== undefined);
 
+	/**
+	 * Closes via history and keeps `isHandlingClose` set until the dialog actually closes.
+	 * @example handleClose() // after shallow pushState stack entry
+	 */
 	function handleClose() {
 		if (isHandlingClose) return;
 		isHandlingClose = true;
 		window.history.back();
-		isHandlingClose = false;
 	}
+
+	$effect(() => {
+		if (isOpen || !isHandlingClose) return;
+		isHandlingClose = false;
+	});
 </script>
 
 <Dialog.Root

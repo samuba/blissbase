@@ -4,28 +4,44 @@
 	import { cubicInOut } from 'svelte/easing';
 	import * as v from 'valibot';
 	import ImageInput from './ImageInput.svelte';
-	import type { CreateEventSchema, UpdateEventSchema, ContactMethod } from '$lib/events.remote.common';
+	import {
+		createEventSchema,
+		updateEventSchema,
+		type UpdateEventSchema,
+		type ContactMethod
+	} from '$lib/events.remote.common';
 	import TagsInput from '$lib/components/TagsInput.svelte';
 	import EditorJs from '$lib/components/EditorJs.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
-	import type { RemoteForm, RemoteFormFields } from '@sveltejs/kit';
+	import type { RemoteFormFields } from '@sveltejs/kit';
 
-	type EventFormInput = v.InferInput<CreateEventSchema | UpdateEventSchema>;
+	type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
+	type UpdateEventForm = typeof import('$lib/rpc/eventMutations.remote').updateEvent;
+	type EventFormRemoteForm = CreateEventForm | UpdateEventForm;
 	type UpdateOnlyFields = Pick<RemoteFormFields<v.InferInput<UpdateEventSchema>>,
 		'existingImageUrls' | 'eventId' | 'hostSecret'
 	>;
 
 	let {
 		remoteForm,
-		preflightSchema,
 		initialExistingImageUrls = []
 	}: {
-		remoteForm: RemoteForm<EventFormInput & Partial<v.InferInput<UpdateEventSchema>>, unknown>;
-		preflightSchema: CreateEventSchema | UpdateEventSchema;
+		remoteForm: EventFormRemoteForm;
 		initialExistingImageUrls?: string[];
 	} = $props();
 
+	function isUpdateEventForm(remoteForm: EventFormRemoteForm): remoteForm is UpdateEventForm {
+		return 'eventId' in remoteForm.fields;
+	}
+
+	let preflight = $derived.by(() => {
+		if (isUpdateEventForm(remoteForm)) {
+			return remoteForm.preflight(updateEventSchema);
+		}
+
+		return remoteForm.preflight(createEventSchema);
+	});
 	let updateFields = $derived(remoteForm.fields as Partial<UpdateOnlyFields>);
 	let selectedContactMethod = $derived(
 		(remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ?? `none`
@@ -37,7 +53,7 @@
 	});
 </script>
 
-<form {...remoteForm.preflight(preflightSchema)} enctype="multipart/form-data" class="flex flex-col gap-5" id="event-form">
+<form {...preflight} enctype="multipart/form-data" class="flex flex-col gap-5" id="event-form">
 	<ImageInput
 		field={remoteForm.fields.images}
 		existingImageUrlsField={updateFields.existingImageUrls}

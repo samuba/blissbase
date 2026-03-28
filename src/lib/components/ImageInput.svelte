@@ -31,11 +31,19 @@
 	let isDesktop = $state(false);
 	let isDragging = $derived(dragDepth > 0);
 	let fullscreenImageUrl = $state<string | null>(null);
+	let hasInitializedPreviews = $state(false);
 	let previewItems = $state<ImagePreviewItem[]>([]);
 	let previewFlipDurationMs = 220;
 	let objectUrlsByPreviewId = new SvelteMap<string, string>();
 	let newImageOccurrenceByFingerprint = new SvelteMap<string, number>();
 	let hasProcessingInFlight = $derived(previewItems.some((x) => x.processingState === `processing`));
+	let existingImageTokens = $derived.by(() => {
+		const fieldTokens = (existingImageUrlsField?.value() ?? []).filter(
+			(token): token is string => Boolean(token)
+		);
+		if (hasInitializedPreviews || fieldTokens.length) return fieldTokens;
+		return initialExistingImageUrls.filter((token): token is string => Boolean(token));
+	});
 
 	onMount(() => {
 		const mediaQuery = window.matchMedia(`(min-width: 640px) and (hover: hover) and (pointer: fine)`);
@@ -59,9 +67,7 @@
 	 * initializeFromFields();
 	 */
 	function initializeFromFields() {
-		const existingUrls = (
-			existingImageUrlsField?.value()?.length ? existingImageUrlsField.value() : initialExistingImageUrls
-		).filter((x): x is string => typeof x === `string` && !x.startsWith(`new:`));
+		const existingUrls = existingImageTokens.filter((x) => !x.startsWith(`new:`));
 		const existingPreviews = existingUrls.map((url, index) => {
 			return {
 				id: `existing:${index}:${url}`,
@@ -78,6 +84,7 @@
 		const newFiles = (field.value() ?? []).filter((f): f is File => f != null);
 		const newPreviews = newFiles.map((file) => createReadyImagePreview({ file }));
 		previewItems = [...existingPreviews, ...newPreviews];
+		hasInitializedPreviews = true;
 		syncFieldsFromPreviews();
 	}
 
@@ -205,7 +212,7 @@
 		}
 		if (imageInputElement) imageInputElement.files = dt.files;
 
-		if (!existingImageUrlsField) return;
+		if (!existingImageUrlsField || !hasInitializedPreviews) return;
 		existingImageUrlsField.set(getSubmittedPreviewItems().map((x) => x.token));
 	}
 
@@ -854,7 +861,7 @@
 
 	{#if existingImageUrlsField}
 		<div class="hidden">
-			{#each (existingImageUrlsField.value() ?? []).filter((t): t is string => Boolean(t)) as token, i (`${token}-${i}`)}
+			{#each existingImageTokens as token, i (`${token}-${i}`)}
 				<input {...existingImageUrlsField.as('checkbox', token)} checked />
 			{/each}
 		</div>

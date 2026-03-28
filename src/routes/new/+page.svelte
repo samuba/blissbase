@@ -3,7 +3,7 @@
 	import EventForm from '$lib/components/EventForm.svelte';
 	import { createEvent } from '$lib/rpc/eventMutations.remote';
 	import { prefillEventFromDescription } from '$lib/rpc/prefillEventFromDescription.remote';
-	import { createEventSchema, formatDateForLocalInput } from '$lib/events.remote.common';
+	import { formatDateForLocalInput } from '$lib/events.remote.common';
 	import { getDefaultCreateEventFieldBase } from '$lib/eventCreateDefaults';
 	import type { CreateEventPrefillFields } from '$lib/server/mapAiAnswerToCreateEventPrefill';
 	import { resolve } from '$app/paths';
@@ -173,7 +173,7 @@
 						</div>
 					{/if}
 
-					<EventForm remoteForm={createEvent} preflightSchema={createEventSchema} />
+					<EventForm remoteForm={createEvent} />
 
 					<div class="flex flex-col-reverse sm:flex-row gap-6 justify-end">
 						<button
