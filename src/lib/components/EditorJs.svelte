@@ -215,7 +215,7 @@
 </script>
 
 <!-- Stacking: later form siblings (e.g. price/tags row) paint on top unless this subtree has a higher z-index. -->
-<div class={['relative', 'z-60']}>
+<div class={['relative', 'focus-within:z-60', 'hover:z-60']}>
 	<div bind:this={editorEl} class="prose-sm textarea w-full sm:pl-0"></div>
 
 	<textarea {...field.as('text')} class="hidden peer" aria-hidden="true" value={editorValue}></textarea>
