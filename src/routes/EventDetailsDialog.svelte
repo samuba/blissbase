@@ -8,7 +8,6 @@
 	import { page } from '$app/state';
 
 	let { events }: { events: UiEvent[] } = $props();
-	let isHandlingClose = $state(false);
 
 	/**
 	 * Resolves the visible event from the current shallow page state.
@@ -27,22 +26,15 @@
 	 */
 	function handleClose() {
 		if (!browser) return;
-		if (isHandlingClose) return;
-		isHandlingClose = true;
 		history.back();
-		queueMicrotask(() => {
-			isHandlingClose = false;
-		});
 	}
 </script>
 
 <Dialog.Root
 	open={isOpen}
 	onOpenChange={(shouldOpen) => {
-		// Intercept close attempts - we handle the animation ourselves
-		if (!shouldOpen && isOpen) {
-			handleClose();
-		}
+		if (shouldOpen || !isOpen) return;
+		handleClose();
 	}}
 >
 	<Dialog.Portal>
@@ -58,21 +50,13 @@
 			onOpenAutoFocus={(e) => {
 				e.preventDefault(); // ugly blue focus on close button in safari otherwise
 			}}
-			onInteractOutside={(e) => {
-				e.preventDefault();
-				handleClose();
-			}}
-			onEscapeKeydown={(e) => {
-				e.preventDefault();
-				handleClose();
-			}}
 		>
 			<div class="sticky top-0 right-0 z-20 ml-auto h-0 w-max">
-				<button type="button" class="rounded-full p-4 block" aria-label="Schließen" onclick={handleClose}>
+				<Dialog.Close  class="rounded-full p-4 block" aria-label="Schließen">
 					<div class="btn btn-circle btn-primary shadow-lg drop-shadow-2xl">
 						<i class="icon-[ph--x] size-5"></i>
 					</div>
-				</button>
+				</Dialog.Close>
 			</div>
 
 			{#if event}
