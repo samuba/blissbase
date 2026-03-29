@@ -1,4 +1,4 @@
-module blissbase/whatsapp
+module blissbase/whatsapp2sqlite
 
 go 1.25.0
 
