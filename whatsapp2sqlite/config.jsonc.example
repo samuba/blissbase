@@ -1,0 +1,16 @@
+{
+  // Relative paths are resolved from this config file's directory.
+  "database_path": "./whatsapp.sqlite",
+  "database_sync_interval": "30s",
+  "push_name": "Blissbase Sync",
+
+  // Set either r2_endpoint directly or r2_account_id to derive it automatically.
+  "r2_account_id": "your-cloudflare-account-id",
+  // "r2_endpoint": "https://your-account-id.r2.cloudflarestorage.com",
+
+  "r2_bucket": "your-r2-bucket",
+  "r2_access_key_id": "your-r2-access-key-id",
+  "r2_secret_access_key": "your-r2-secret-access-key",
+  "r2_database_object_key": "whatsapp.sqlite",
+  "r2_media_prefix": "media"
+}

@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"mime"
 	"net/url"
@@ -14,9 +17,15 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/mdp/qrterminal/v3"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -31,12 +40,27 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
-const messageRetentionWindow = 30 * 24 * time.Hour
+const (
+	messageRetentionWindow      = 30 * 24 * time.Hour
+	defaultConfigPath           = "./config.jsonc"
+	defaultDatabaseSyncInterval = 30 * time.Second
+	databaseSyncTimeout         = 2 * time.Minute
+	mediaUploadTimeout          = 2 * time.Minute
+	objectDeleteTimeout         = 30 * time.Second
+	mediaUploadWorkerCount      = 4
+	mediaUploadQueueSize        = 256
+	objectDeleteQueueSize       = 256
+	defaultR2DatabaseObjectKey  = "whatsapp.sqlite"
+	defaultR2MediaPrefix        = "media"
+)
 
 // main starts the long-running WhatsApp sync daemon.
-// Example: `go run . -db ./whatsapp.sqlite`
+// Example: `go run . -config ./config.jsonc`
 func main() {
-	config := parseConfig()
+	config, err := parseConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -49,18 +73,13 @@ func main() {
 // run opens SQLite, initializes WhatsApp, and blocks until shutdown.
 // Example: `if err := run(ctx, config); err != nil { log.Fatal(err) }`
 func run(ctx context.Context, config daemonConfig) error {
-	dbPath, err := filepath.Abs(config.DatabasePath)
+	if err := config.validate(); err != nil {
+		return err
+	}
+
+	dbPath, err := config.resolvePath(config.DatabasePath)
 	if err != nil {
 		return fmt.Errorf("resolve database path: %w", err)
-	}
-
-	mediaPath, err := filepath.Abs(config.MediaDirectory)
-	if err != nil {
-		return fmt.Errorf("resolve media path: %w", err)
-	}
-
-	if err := os.MkdirAll(mediaPath, 0o755); err != nil {
-		return fmt.Errorf("create media directory: %w", err)
 	}
 
 	db, err := openDatabase(dbPath)
@@ -70,10 +89,6 @@ func run(ctx context.Context, config daemonConfig) error {
 	defer db.Close()
 
 	if err := ensureSchema(ctx, db); err != nil {
-		return err
-	}
-
-	if err := deleteExpiredMessages(ctx, db, time.Now()); err != nil {
 		return err
 	}
 
@@ -95,11 +110,36 @@ func run(ctx context.Context, config daemonConfig) error {
 	clientLog := waLog.Stdout("WA", "INFO", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
+	r2Manager, err := newR2Manager(ctx, r2ManagerConfig{
+		AccessKeyID:       config.R2AccessKeyID,
+		Bucket:            config.R2Bucket,
+		DatabaseObjectKey: config.R2DatabaseObjectKey,
+		DatabasePath:      dbPath,
+		Endpoint:          config.r2Endpoint(),
+		SecretAccessKey:   config.R2SecretAccessKey,
+		MediaPrefix:       config.R2MediaPrefix,
+		SyncInterval:      config.databaseSyncInterval(),
+	})
+	if err != nil {
+		return err
+	}
+
 	daemon := &daemon{
 		client:      client,
 		db:          db,
-		mediaDir:    mediaPath,
+		r2:          r2Manager,
 		fatalEvents: make(chan error, 1),
+	}
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), databaseSyncTimeout)
+		defer cancel()
+		if err := daemon.shutdown(shutdownCtx); err != nil {
+			log.Printf("shutdown R2 workers failed: %v", err)
+		}
+	}()
+
+	if err := daemon.deleteExpiredMessages(ctx, time.Now()); err != nil {
+		return err
 	}
 
 	client.AddEventHandler(daemon.handleEvent)
@@ -132,17 +172,68 @@ func run(ctx context.Context, config daemonConfig) error {
 	}
 }
 
-// parseConfig reads daemon flags.
-// Example: `config := parseConfig()`
-func parseConfig() daemonConfig {
-	var config daemonConfig
+// parseConfig reads the daemon config path flag and loads the JSONC file.
+// Example: `config, err := parseConfig()`
+func parseConfig() (daemonConfig, error) {
+	var configPath string
 
-	flag.StringVar(&config.DatabasePath, "db", "./whatsapp.sqlite", "SQLite database file for session state and synced messages")
-	flag.StringVar(&config.MediaDirectory, "media-dir", "./media", "Directory where downloaded WhatsApp media files are stored")
-	flag.StringVar(&config.PushName, "push-name", "Blissbase Sync", "push name stored for this linked device")
+	flag.StringVar(&configPath, "config", defaultConfigPath, "Path to the daemon JSONC config file")
 	flag.Parse()
 
-	return config
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return daemonConfig{}, err
+	}
+
+	return config, nil
+}
+
+// loadConfig reads and parses the JSONC daemon config file.
+// Example: `config, err := loadConfig("./config.jsonc")`
+func loadConfig(path string) (daemonConfig, error) {
+	absolutePath, err := filepath.Abs(strings.TrimSpace(path))
+	if err != nil {
+		return daemonConfig{}, fmt.Errorf("resolve config path: %w", err)
+	}
+
+	data, err := os.ReadFile(absolutePath)
+	if err != nil {
+		return daemonConfig{}, fmt.Errorf("read config file %s: %w", absolutePath, err)
+	}
+
+	var config daemonConfig
+	if err := json.Unmarshal(stripJSONCComments(data), &config); err != nil {
+		return daemonConfig{}, fmt.Errorf("parse config file %s: %w", absolutePath, err)
+	}
+
+	config.configDirectory = filepath.Dir(absolutePath)
+	config.DatabasePath = strings.TrimSpace(config.DatabasePath)
+	config.PushName = strings.TrimSpace(config.PushName)
+	config.DatabaseSyncInterval = strings.TrimSpace(config.DatabaseSyncInterval)
+	config.R2Endpoint = strings.TrimSpace(config.R2Endpoint)
+	config.R2Bucket = strings.TrimSpace(config.R2Bucket)
+	config.R2AccessKeyID = strings.TrimSpace(config.R2AccessKeyID)
+	config.R2SecretAccessKey = strings.TrimSpace(config.R2SecretAccessKey)
+	config.R2DatabaseObjectKey = strings.Trim(strings.TrimSpace(config.R2DatabaseObjectKey), "/")
+	config.R2MediaPrefix = strings.Trim(strings.TrimSpace(config.R2MediaPrefix), "/")
+
+	if config.PushName == "" {
+		config.PushName = "Blissbase Sync"
+	}
+
+	if config.DatabaseSyncInterval == "" {
+		config.DatabaseSyncInterval = defaultDatabaseSyncInterval.String()
+	}
+
+	if config.R2DatabaseObjectKey == "" {
+		config.R2DatabaseObjectKey = defaultR2DatabaseObjectKey
+	}
+
+	if config.R2MediaPrefix == "" {
+		config.R2MediaPrefix = defaultR2MediaPrefix
+	}
+
+	return config, nil
 }
 
 // openDatabase opens the shared SQLite database with the pragmas required by whatsmeow.
@@ -419,6 +510,8 @@ func (d *daemon) storeConversation(ctx context.Context, conversation *waHistoryS
 		return fmt.Errorf("upsert chat metadata: %w", err)
 	}
 
+	d.notifyDatabaseChanged()
+
 	return nil
 }
 
@@ -430,7 +523,7 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 	}
 
 	now := time.Now()
-	if err := deleteExpiredMessages(ctx, d.db, now); err != nil {
+	if err := d.deleteExpiredMessages(ctx, now); err != nil {
 		return err
 	}
 
@@ -446,13 +539,10 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 	messageID := payload.id
 	message := payload.message
 	messageType, textValue := describeMessage(message)
-	mediaInfo, err := d.downloadMedia(ctx, evt, messageID, message)
-	if err != nil {
-		log.Printf("download media for %s/%s failed: %v", evt.Info.Chat, messageID, err)
-	}
+	mediaInfo, mediaUploadJob := d.prepareMediaUploadJob(evt, messageID, message)
 	senderPhoneNumber := extractSenderPhoneNumber(evt.Info.Sender, evt.Info.SenderAlt)
 
-	_, err = d.db.ExecContext(
+	_, err := d.db.ExecContext(
 		ctx,
 		`INSERT INTO sync_messages (
 			chat_jid,
@@ -533,17 +623,22 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 		return fmt.Errorf("upsert message %s/%s: %w", evt.Info.Chat, messageID, err)
 	}
 
+	d.notifyDatabaseChanged()
+	if mediaUploadJob != nil {
+		d.r2.enqueueMediaUpload(*mediaUploadJob)
+	}
+
 	return nil
 }
 
 // deleteExpiredMessages removes synced messages older than the retention window.
-// Example: `if err := deleteExpiredMessages(ctx, db, time.Now()); err != nil { return err }`
-func deleteExpiredMessages(ctx context.Context, db *sql.DB, now time.Time) error {
-	if db == nil {
+// Example: `if err := d.deleteExpiredMessages(ctx, time.Now()); err != nil { return err }`
+func (d *daemon) deleteExpiredMessages(ctx context.Context, now time.Time) error {
+	if d == nil || d.db == nil {
 		return nil
 	}
 
-	tx, err := db.BeginTx(ctx, nil)
+	tx, err := d.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin expired message cleanup: %w", err)
 	}
@@ -570,10 +665,10 @@ func deleteExpiredMessages(ctx context.Context, db *sql.DB, now time.Time) error
 	}
 
 	for mediaPath := range mediaPaths {
-		if err := deleteFileIfExists(mediaPath); err != nil {
-			return err
-		}
+		d.r2.enqueueMediaDelete(mediaPath)
 	}
+
+	d.notifyDatabaseChanged()
 
 	return nil
 }
@@ -621,10 +716,10 @@ func (d *daemon) deleteRevokedMessage(ctx context.Context, chatJID string, messa
 	}
 
 	if mediaPath != `` {
-		if err := deleteFileIfExists(mediaPath); err != nil {
-			log.Printf("delete media for revoked message %s/%s failed: %v", chatJID, messageID, err)
-		}
+		d.r2.enqueueMediaDelete(mediaPath)
 	}
+
+	d.notifyDatabaseChanged()
 
 	return nil
 }
@@ -663,79 +758,45 @@ func getExpiredMessageMediaPaths(ctx context.Context, tx *sql.Tx, cutoff int64) 
 	return mediaPaths, nil
 }
 
-// deleteFileIfExists removes a file and ignores missing-file errors.
-// Example: `if err := deleteFileIfExists(path); err != nil { return err }`
-func deleteFileIfExists(path string) error {
-	if path == "" {
-		return nil
-	}
-
-	err := os.Remove(path)
-	if err == nil || errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-
-	return fmt.Errorf("delete media file %s: %w", path, err)
-}
-
 // messageRetentionCutoff returns the oldest timestamp that may remain stored.
 // Example: `cutoff := messageRetentionCutoff(time.Now())`
 func messageRetentionCutoff(now time.Time) time.Time {
 	return now.Add(-messageRetentionWindow)
 }
 
-// downloadMedia saves a downloadable WhatsApp attachment and returns its persisted file metadata.
-// Example: `mediaInfo, err := d.downloadMedia(ctx, evt, messageID, message)`
-func (d *daemon) downloadMedia(ctx context.Context, evt *events.Message, messageID types.MessageID, message *waE2E.Message) (storedMediaInfo, error) {
+// prepareMediaUploadJob builds remote media metadata and the async upload job.
+// Example: `mediaInfo, job := d.prepareMediaUploadJob(evt, messageID, message)`
+func (d *daemon) prepareMediaUploadJob(evt *events.Message, messageID types.MessageID, message *waE2E.Message) (storedMediaInfo, *mediaUploadJob) {
 	downloadable, mediaKind, mimeType, sha256 := getDownloadableMedia(message)
 	if downloadable == nil {
 		return storedMediaInfo{}, nil
 	}
 
-	chatDir := filepath.Join(d.mediaDir, sanitizePathSegment(evt.Info.Chat.String()))
-	if err := os.MkdirAll(chatDir, 0o755); err != nil {
-		return storedMediaInfo{}, fmt.Errorf("create chat media directory: %w", err)
+	mediaInfo := storedMediaInfo{
+		mimeType: mimeType,
+		sha256:   sha256,
 	}
 
-	extension := mediaExtension(mimeType, mediaKind)
-	filePath := filepath.Join(chatDir, fmt.Sprintf("%s%s", sanitizePathSegment(messageID), extension))
-	absolutePath, err := filepath.Abs(filePath)
-	if err != nil {
-		return storedMediaInfo{}, fmt.Errorf("resolve media file path: %w", err)
-	}
-
-	if _, err := os.Stat(absolutePath); err == nil {
-		return storedMediaInfo{
-			mimeType: mimeType,
-			path:     absolutePath,
-			sha256:   sha256,
-		}, nil
+	if evt == nil {
+		return mediaInfo, nil
 	}
 
 	if evt.Info.Timestamp.Before(messageRetentionCutoff(time.Now())) {
-		return storedMediaInfo{
-			mimeType: mimeType,
-			sha256:   sha256,
-		}, nil
+		return mediaInfo, nil
 	}
 
-	downloadCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancel()
+	objectKey := d.r2.mediaObjectKey(evt.Info.Chat.String(), messageID, mediaExtension(mimeType, mediaKind))
+	mediaInfo.path = r2ObjectURI(d.r2.bucket, objectKey)
 
-	payload, err := d.client.Download(downloadCtx, downloadable)
-	if err != nil {
-		return storedMediaInfo{}, fmt.Errorf("download attachment: %w", err)
+	return mediaInfo, &mediaUploadJob{
+		chatJID:      evt.Info.Chat.String(),
+		client:       d.client,
+		downloadable: downloadable,
+		messageID:    messageID,
+		mimeType:     mimeType,
+		objectKey:    objectKey,
+		objectURI:    mediaInfo.path,
 	}
-
-	if err := os.WriteFile(absolutePath, payload, 0o644); err != nil {
-		return storedMediaInfo{}, fmt.Errorf("write media file: %w", err)
-	}
-
-	return storedMediaInfo{
-		mimeType: mimeType,
-		path:     absolutePath,
-		sha256:   sha256,
-	}, nil
 }
 
 // describeMessage extracts a stable type label and the most useful text-like payload.
@@ -1044,17 +1105,590 @@ func encodeHex(value []byte) string {
 	return hex.EncodeToString(value)
 }
 
+// stripJSONCComments removes `//` and `/* */` comments while preserving strings.
+// Example: `clean := stripJSONCComments(data)`
+func stripJSONCComments(data []byte) []byte {
+	var builder strings.Builder
+	builder.Grow(len(data))
+
+	inString := false
+	inLineComment := false
+	inBlockComment := false
+	isEscaped := false
+
+	for index := 0; index < len(data); index++ {
+		char := data[index]
+
+		switch {
+		case inLineComment:
+			if char == '\n' {
+				inLineComment = false
+				builder.WriteByte(char)
+			}
+		case inBlockComment:
+			if char == '*' && index+1 < len(data) && data[index+1] == '/' {
+				inBlockComment = false
+				index++
+			}
+		case inString:
+			builder.WriteByte(char)
+			if isEscaped {
+				isEscaped = false
+				continue
+			}
+
+			if char == '\\' {
+				isEscaped = true
+				continue
+			}
+
+			if char == '"' {
+				inString = false
+			}
+		default:
+			if char == '"' {
+				inString = true
+				builder.WriteByte(char)
+				continue
+			}
+
+			if char == '/' && index+1 < len(data) {
+				switch data[index+1] {
+				case '/':
+					inLineComment = true
+					index++
+					continue
+				case '*':
+					inBlockComment = true
+					index++
+					continue
+				}
+			}
+
+			builder.WriteByte(char)
+		}
+	}
+
+	return []byte(builder.String())
+}
+
+// shutdown flushes background R2 work before the daemon exits.
+// Example: `if err := d.shutdown(ctx); err != nil { return err }`
+func (d *daemon) shutdown(ctx context.Context) error {
+	if d == nil || d.r2 == nil {
+		return nil
+	}
+
+	return d.r2.Shutdown(ctx)
+}
+
+// notifyDatabaseChanged schedules an async SQLite snapshot upload.
+// Example: `d.notifyDatabaseChanged()`
+func (d *daemon) notifyDatabaseChanged() {
+	if d == nil || d.r2 == nil {
+		return
+	}
+
+	d.r2.NotifyDatabaseChanged()
+}
+
+// validate ensures the daemon has the required R2 configuration.
+// Example: `if err := config.validate(); err != nil { return err }`
+func (c daemonConfig) validate() error {
+	switch {
+	case strings.TrimSpace(c.DatabasePath) == "":
+		return errors.New("missing `database_path` in config")
+	case strings.TrimSpace(c.R2Bucket) == "":
+		return errors.New("missing `r2_bucket` in config")
+	case strings.TrimSpace(c.R2AccessKeyID) == "":
+		return errors.New("missing `r2_access_key_id` in config")
+	case strings.TrimSpace(c.R2SecretAccessKey) == "":
+		return errors.New("missing `r2_secret_access_key` in config")
+	case strings.TrimSpace(c.R2DatabaseObjectKey) == "":
+		return errors.New("missing `r2_database_object_key` in config")
+	case c.r2Endpoint() == "":
+		return errors.New("missing `r2_endpoint` or `r2_account_id` in config")
+	case c.databaseSyncInterval() <= 0:
+		return errors.New("`database_sync_interval` must be greater than zero")
+	}
+
+	return nil
+}
+
+// r2Endpoint resolves the configured Cloudflare R2 endpoint.
+// Example: `endpoint := config.r2Endpoint()`
+func (c daemonConfig) r2Endpoint() string {
+	if strings.TrimSpace(c.R2Endpoint) != "" {
+		return strings.TrimSpace(c.R2Endpoint)
+	}
+
+	accountID := strings.TrimSpace(c.R2AccountID)
+	if accountID == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID)
+}
+
+// databaseSyncInterval parses the configured periodic SQLite sync interval.
+// Example: `interval := config.databaseSyncInterval()`
+func (c daemonConfig) databaseSyncInterval() time.Duration {
+	interval, err := time.ParseDuration(strings.TrimSpace(c.DatabaseSyncInterval))
+	if err != nil {
+		return 0
+	}
+
+	return interval
+}
+
+// resolvePath makes relative config paths resolve from the config file directory.
+// Example: `dbPath, err := config.resolvePath(config.DatabasePath)`
+func (c daemonConfig) resolvePath(value string) (string, error) {
+	if filepath.IsAbs(value) {
+		return value, nil
+	}
+
+	basePath := c.configDirectory
+	if basePath == "" {
+		basePath = "."
+	}
+
+	return filepath.Abs(filepath.Join(basePath, value))
+}
+
+// newR2Manager creates the async R2 workers used for media and SQLite replication.
+// Example: `manager, err := newR2Manager(ctx, config)`
+func newR2Manager(ctx context.Context, config r2ManagerConfig) (*r2Manager, error) {
+	snapshotDB, err := openDatabase(config.DatabasePath)
+	if err != nil {
+		return nil, fmt.Errorf("open snapshot database: %w", err)
+	}
+
+	awsCfg, err := awsConfig.LoadDefaultConfig(
+		ctx,
+		awsConfig.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(config.AccessKeyID, config.SecretAccessKey, ""),
+		),
+		awsConfig.WithRegion("auto"),
+	)
+	if err != nil {
+		snapshotDB.Close()
+		return nil, fmt.Errorf("load R2 AWS config: %w", err)
+	}
+
+	client := s3.NewFromConfig(awsCfg, func(options *s3.Options) {
+		options.BaseEndpoint = aws.String(config.Endpoint)
+		options.UsePathStyle = true
+	})
+
+	manager := &r2Manager{
+		bucket:            config.Bucket,
+		client:            client,
+		databaseObjectKey: strings.Trim(config.DatabaseObjectKey, "/"),
+		mediaPrefix:       strings.Trim(config.MediaPrefix, "/"),
+		mediaUploads:      make(chan mediaUploadJob, mediaUploadQueueSize),
+		objectDeletes:     make(chan string, objectDeleteQueueSize),
+		snapshotDB:        snapshotDB,
+		stopDatabaseSync:  make(chan struct{}),
+		syncInterval:      config.SyncInterval,
+	}
+
+	manager.wg.Add(1)
+	go manager.runDatabaseSyncLoop()
+
+	for range mediaUploadWorkerCount {
+		manager.wg.Add(1)
+		go manager.runMediaUploadWorker()
+	}
+
+	manager.wg.Add(1)
+	go manager.runObjectDeleteWorker()
+
+	manager.NotifyDatabaseChanged()
+
+	return manager, nil
+}
+
+// NotifyDatabaseChanged marks the SQLite snapshot as dirty for the next periodic sync.
+// Example: `manager.NotifyDatabaseChanged()`
+func (m *r2Manager) NotifyDatabaseChanged() {
+	if m == nil || m.closing.Load() {
+		return
+	}
+
+	m.databaseDirty.Store(true)
+}
+
+// Shutdown stops the workers after flushing a final SQLite snapshot.
+// Example: `if err := manager.Shutdown(ctx); err != nil { return err }`
+func (m *r2Manager) Shutdown(ctx context.Context) error {
+	if m == nil {
+		return nil
+	}
+
+	var shutdownErr error
+	m.shutdownOnce.Do(func() {
+		m.closing.Store(true)
+		close(m.stopDatabaseSync)
+
+		if err := m.syncDatabaseSnapshot(ctx); err != nil {
+			shutdownErr = err
+		}
+
+		close(m.mediaUploads)
+		close(m.objectDeletes)
+		m.wg.Wait()
+
+		if err := m.snapshotDB.Close(); err != nil && shutdownErr == nil {
+			shutdownErr = fmt.Errorf("close snapshot database: %w", err)
+		}
+	})
+
+	return shutdownErr
+}
+
+// mediaObjectKey returns the stable R2 object key for a WhatsApp attachment.
+// Example: `key := manager.mediaObjectKey(chatJID, messageID, ".jpg")`
+func (m *r2Manager) mediaObjectKey(chatJID string, messageID types.MessageID, extension string) string {
+	prefix := strings.Trim(m.mediaPrefix, "/")
+	if prefix == "" {
+		return fmt.Sprintf("%s/%s%s", sanitizePathSegment(chatJID), sanitizePathSegment(string(messageID)), extension)
+	}
+
+	return fmt.Sprintf("%s/%s/%s%s", prefix, sanitizePathSegment(chatJID), sanitizePathSegment(string(messageID)), extension)
+}
+
+// enqueueMediaUpload schedules a background upload without blocking message storage.
+// Example: `manager.enqueueMediaUpload(job)`
+func (m *r2Manager) enqueueMediaUpload(job mediaUploadJob) {
+	if m == nil || m.closing.Load() {
+		return
+	}
+
+	defer func() {
+		recover()
+	}()
+
+	select {
+	case m.mediaUploads <- job:
+	default:
+		go m.enqueueMediaUploadSlow(job)
+	}
+}
+
+// enqueueMediaDelete schedules a background R2 object deletion.
+// Example: `manager.enqueueMediaDelete(mediaURI)`
+func (m *r2Manager) enqueueMediaDelete(mediaURI string) {
+	if m == nil || m.closing.Load() {
+		return
+	}
+
+	bucket, objectKey, ok := parseR2ObjectURI(mediaURI)
+	if !ok || bucket != m.bucket {
+		return
+	}
+
+	defer func() {
+		recover()
+	}()
+
+	select {
+	case m.objectDeletes <- objectKey:
+	default:
+		go m.enqueueMediaDeleteSlow(objectKey)
+	}
+}
+
+// enqueueMediaUploadSlow waits briefly for queue space without blocking callers.
+// Example: `go manager.enqueueMediaUploadSlow(job)`
+func (m *r2Manager) enqueueMediaUploadSlow(job mediaUploadJob) {
+	defer func() {
+		recover()
+	}()
+
+	timer := time.NewTimer(10 * time.Second)
+	defer timer.Stop()
+
+	select {
+	case m.mediaUploads <- job:
+	case <-timer.C:
+		log.Printf("drop media upload for %s/%s: queue is saturated", job.chatJID, job.messageID)
+	}
+}
+
+// enqueueMediaDeleteSlow waits briefly for queue space without blocking callers.
+// Example: `go manager.enqueueMediaDeleteSlow(objectKey)`
+func (m *r2Manager) enqueueMediaDeleteSlow(objectKey string) {
+	defer func() {
+		recover()
+	}()
+
+	timer := time.NewTimer(10 * time.Second)
+	defer timer.Stop()
+
+	select {
+	case m.objectDeletes <- objectKey:
+	case <-timer.C:
+		log.Printf("drop media delete for %s: queue is saturated", objectKey)
+	}
+}
+
+// runDatabaseSyncLoop uploads the SQLite snapshot on a fixed interval whenever writes happened.
+// Example: `go manager.runDatabaseSyncLoop()`
+func (m *r2Manager) runDatabaseSyncLoop() {
+	defer m.wg.Done()
+
+	ticker := time.NewTicker(m.syncInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-m.stopDatabaseSync:
+			return
+		case <-ticker.C:
+			if !m.databaseDirty.Load() {
+				continue
+			}
+
+			m.databaseDirty.Store(false)
+			if err := m.syncDatabaseSnapshot(context.Background()); err != nil {
+				m.databaseDirty.Store(true)
+				log.Printf("periodic SQLite snapshot sync failed: %v", err)
+			}
+		}
+	}
+}
+
+// runMediaUploadWorker uploads WhatsApp attachments to R2 in the background.
+// Example: `go manager.runMediaUploadWorker()`
+func (m *r2Manager) runMediaUploadWorker() {
+	defer m.wg.Done()
+
+	for job := range m.mediaUploads {
+		if err := m.processMediaUpload(job); err != nil {
+			log.Printf("upload media %s/%s failed: %v", job.chatJID, job.messageID, err)
+		}
+	}
+}
+
+// runObjectDeleteWorker deletes R2 objects for expired or revoked messages.
+// Example: `go manager.runObjectDeleteWorker()`
+func (m *r2Manager) runObjectDeleteWorker() {
+	defer m.wg.Done()
+
+	for objectKey := range m.objectDeletes {
+		if err := m.deleteObject(context.Background(), objectKey); err != nil {
+			log.Printf("delete media object %s failed: %v", objectKey, err)
+		}
+	}
+}
+
+// processMediaUpload downloads a WhatsApp attachment and streams it directly to R2.
+// Example: `if err := manager.processMediaUpload(job); err != nil { ... }`
+func (m *r2Manager) processMediaUpload(job mediaUploadJob) error {
+	for attempt := 1; attempt <= 4; attempt++ {
+		if !m.messageStillNeedsMedia(job.chatJID, job.messageID, job.objectURI) {
+			return nil
+		}
+
+		payload, err := downloadWhatsAppMedia(job)
+		if err != nil {
+			if attempt == 4 {
+				return err
+			}
+
+			time.Sleep(time.Duration(attempt) * 5 * time.Second)
+			continue
+		}
+
+		if !m.messageStillNeedsMedia(job.chatJID, job.messageID, job.objectURI) {
+			return nil
+		}
+
+		if err := m.uploadObject(context.Background(), job.objectKey, bytes.NewReader(payload), int64(len(payload)), job.mimeType); err != nil {
+			if attempt == 4 {
+				return err
+			}
+
+			time.Sleep(time.Duration(attempt) * 5 * time.Second)
+			continue
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
+// syncDatabaseSnapshot creates a consistent SQLite snapshot and uploads it to R2.
+// Example: `if err := manager.syncDatabaseSnapshot(ctx); err != nil { return err }`
+func (m *r2Manager) syncDatabaseSnapshot(ctx context.Context) error {
+	if m == nil {
+		return nil
+	}
+
+	m.databaseSyncMu.Lock()
+	defer m.databaseSyncMu.Unlock()
+
+	syncCtx, cancel := context.WithTimeout(ctx, databaseSyncTimeout)
+	defer cancel()
+
+	snapshotDir, err := os.MkdirTemp("", "whatsapp2sqlite-r2-*")
+	if err != nil {
+		return fmt.Errorf("create snapshot temp dir: %w", err)
+	}
+	defer os.RemoveAll(snapshotDir)
+
+	snapshotPath := filepath.Join(snapshotDir, "whatsapp.sqlite")
+	statement := fmt.Sprintf("VACUUM INTO %s", sqliteStringLiteral(snapshotPath))
+	if _, err := m.snapshotDB.ExecContext(syncCtx, statement); err != nil {
+		return fmt.Errorf("vacuum sqlite snapshot: %w", err)
+	}
+
+	file, err := os.Open(snapshotPath)
+	if err != nil {
+		return fmt.Errorf("open sqlite snapshot: %w", err)
+	}
+	defer file.Close()
+
+	info, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("stat sqlite snapshot: %w", err)
+	}
+
+	return m.uploadObject(syncCtx, m.databaseObjectKey, file, info.Size(), "application/vnd.sqlite3")
+}
+
+// uploadObject writes a stream into R2.
+// Example: `if err := manager.uploadObject(ctx, key, file, size, contentType); err != nil { ... }`
+func (m *r2Manager) uploadObject(ctx context.Context, objectKey string, body io.Reader, contentLength int64, contentType string) error {
+	uploadCtx, cancel := context.WithTimeout(ctx, mediaUploadTimeout)
+	defer cancel()
+
+	_, err := m.client.PutObject(uploadCtx, &s3.PutObjectInput{
+		Bucket:        aws.String(m.bucket),
+		ContentLength: aws.Int64(contentLength),
+		ContentType:   aws.String(contentType),
+		Key:           aws.String(objectKey),
+		Body:          body,
+	})
+	if err != nil {
+		return fmt.Errorf("put object %s: %w", objectKey, err)
+	}
+
+	return nil
+}
+
+// deleteObject removes an existing object from R2.
+// Example: `if err := manager.deleteObject(ctx, key); err != nil { ... }`
+func (m *r2Manager) deleteObject(ctx context.Context, objectKey string) error {
+	deleteCtx, cancel := context.WithTimeout(ctx, objectDeleteTimeout)
+	defer cancel()
+
+	_, err := m.client.DeleteObject(deleteCtx, &s3.DeleteObjectInput{
+		Bucket: aws.String(m.bucket),
+		Key:    aws.String(objectKey),
+	})
+	if err != nil {
+		return fmt.Errorf("delete object %s: %w", objectKey, err)
+	}
+
+	return nil
+}
+
+// messageStillNeedsMedia skips uploads for rows that were already deleted or changed.
+// Example: `if !manager.messageStillNeedsMedia(chatJID, messageID, mediaURI) { return nil }`
+func (m *r2Manager) messageStillNeedsMedia(chatJID string, messageID types.MessageID, mediaURI string) bool {
+	if m == nil || m.snapshotDB == nil {
+		return false
+	}
+
+	var exists int
+	row := m.snapshotDB.QueryRow(
+		`SELECT 1
+		FROM sync_messages
+		WHERE chat_jid = ?
+			AND message_id = ?
+			AND COALESCE(media_path, '') = ?
+		LIMIT 1`,
+		chatJID,
+		messageID,
+		mediaURI,
+	)
+	if err := row.Scan(&exists); err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("check media upload state for %s/%s failed: %v", chatJID, messageID, err)
+			return true
+		}
+
+		return false
+	}
+
+	return exists == 1
+}
+
+// downloadWhatsAppMedia fetches attachment bytes from WhatsApp with a bounded timeout.
+// Example: `payload, err := downloadWhatsAppMedia(job)`
+func downloadWhatsAppMedia(job mediaUploadJob) ([]byte, error) {
+	downloadCtx, cancel := context.WithTimeout(context.Background(), mediaUploadTimeout)
+	defer cancel()
+
+	payload, err := job.client.Download(downloadCtx, job.downloadable)
+	if err != nil {
+		return nil, fmt.Errorf("download attachment: %w", err)
+	}
+
+	return payload, nil
+}
+
+// r2ObjectURI formats a stable R2 URI for persisted media references.
+// Example: `uri := r2ObjectURI(bucket, objectKey)`
+func r2ObjectURI(bucket, objectKey string) string {
+	return fmt.Sprintf("r2://%s/%s", bucket, strings.TrimLeft(objectKey, "/"))
+}
+
+// parseR2ObjectURI extracts bucket and object key from an `r2://` URI.
+// Example: `bucket, objectKey, ok := parseR2ObjectURI(mediaURI)`
+func parseR2ObjectURI(value string) (string, string, bool) {
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Scheme != "r2" {
+		return "", "", false
+	}
+
+	bucket := parsed.Host
+	objectKey := strings.TrimPrefix(parsed.Path, "/")
+	if bucket == "" || objectKey == "" {
+		return "", "", false
+	}
+
+	return bucket, objectKey, true
+}
+
+// sqliteStringLiteral escapes a value for use inside a SQLite string literal.
+// Example: `query := fmt.Sprintf("VACUUM INTO %s", sqliteStringLiteral(path))`
+func sqliteStringLiteral(value string) string {
+	return fmt.Sprintf("'%s'", strings.ReplaceAll(value, "'", "''"))
+}
+
 type daemon struct {
 	client      *whatsmeow.Client
 	db          *sql.DB
-	mediaDir    string
+	r2          *r2Manager
 	fatalEvents chan error
 }
 
 type daemonConfig struct {
-	DatabasePath   string
-	MediaDirectory string
-	PushName       string
+	DatabasePath         string `json:"database_path"`
+	DatabaseSyncInterval string `json:"database_sync_interval"`
+	PushName             string `json:"push_name"`
+	R2AccessKeyID        string `json:"r2_access_key_id"`
+	R2AccountID          string `json:"r2_account_id"`
+	R2Bucket             string `json:"r2_bucket"`
+	R2DatabaseObjectKey  string `json:"r2_database_object_key"`
+	R2Endpoint           string `json:"r2_endpoint"`
+	R2MediaPrefix        string `json:"r2_media_prefix"`
+	R2SecretAccessKey    string `json:"r2_secret_access_key"`
+	configDirectory      string `json:"-"`
 }
 
 type storedMediaInfo struct {
@@ -1067,4 +1701,42 @@ type storedMessagePayload struct {
 	id      types.MessageID
 	message *waE2E.Message
 	isEdit  bool
+}
+
+type r2ManagerConfig struct {
+	AccessKeyID       string
+	Bucket            string
+	DatabaseObjectKey string
+	DatabasePath      string
+	Endpoint          string
+	MediaPrefix       string
+	SecretAccessKey   string
+	SyncInterval      time.Duration
+}
+
+type r2Manager struct {
+	bucket            string
+	client            *s3.Client
+	closing           atomic.Bool
+	databaseDirty     atomic.Bool
+	databaseObjectKey string
+	databaseSyncMu    sync.Mutex
+	mediaPrefix       string
+	mediaUploads      chan mediaUploadJob
+	objectDeletes     chan string
+	shutdownOnce      sync.Once
+	snapshotDB        *sql.DB
+	stopDatabaseSync  chan struct{}
+	syncInterval      time.Duration
+	wg                sync.WaitGroup
+}
+
+type mediaUploadJob struct {
+	chatJID      string
+	client       *whatsmeow.Client
+	downloadable whatsmeow.DownloadableMessage
+	messageID    types.MessageID
+	mimeType     string
+	objectKey    string
+	objectURI    string
 }
