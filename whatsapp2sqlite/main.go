@@ -438,6 +438,10 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 		return nil
 	}
 
+	if revokedID := getRevokedMessageID(evt); revokedID != "" {
+		return d.deleteRevokedMessage(ctx, evt.Info.Chat.String(), revokedID)
+	}
+
 	payload := getStoredMessagePayload(evt)
 	messageID := payload.id
 	message := payload.message
@@ -568,6 +572,57 @@ func deleteExpiredMessages(ctx context.Context, db *sql.DB, now time.Time) error
 	for mediaPath := range mediaPaths {
 		if err := deleteFileIfExists(mediaPath); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// getRevokedMessageID returns the target message ID when evt is a "delete for everyone" revocation,
+// or an empty string for all other event types.
+// Example: `if id := getRevokedMessageID(evt); id != "" { ... }`
+func getRevokedMessageID(evt *events.Message) types.MessageID {
+	if evt == nil {
+		return ``
+	}
+
+	proto := evt.Message.GetProtocolMessage()
+	if proto == nil {
+		return ``
+	}
+
+	if proto.GetType() != waE2E.ProtocolMessage_REVOKE {
+		return ``
+	}
+
+	return types.MessageID(proto.GetKey().GetID())
+}
+
+// deleteRevokedMessage removes a user-deleted message and its media file from the DB.
+// Example: `if err := d.deleteRevokedMessage(ctx, chatJID, messageID); err != nil { return err }`
+func (d *daemon) deleteRevokedMessage(ctx context.Context, chatJID string, messageID types.MessageID) error {
+	var mediaPath string
+	row := d.db.QueryRowContext(
+		ctx,
+		`SELECT COALESCE(media_path, '') FROM sync_messages WHERE chat_jid = ? AND message_id = ?`,
+		chatJID, messageID,
+	)
+	if err := row.Scan(&mediaPath); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("query revoked message media path %s/%s: %w", chatJID, messageID, err)
+	}
+
+	_, err := d.db.ExecContext(
+		ctx,
+		`DELETE FROM sync_messages WHERE chat_jid = ? AND message_id = ?`,
+		chatJID, messageID,
+	)
+	if err != nil {
+		return fmt.Errorf("delete revoked message %s/%s: %w", chatJID, messageID, err)
+	}
+
+	if mediaPath != `` {
+		if err := deleteFileIfExists(mediaPath); err != nil {
+			log.Printf("delete media for revoked message %s/%s failed: %v", chatJID, messageID, err)
 		}
 	}
 
