@@ -6,6 +6,11 @@
 
 set -e  # Exit on any error
 
+# Always run from the parent of the script's directory so relative paths work
+# regardless of where the script is invoked from
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
 # Configuration
 REPO_NAME="blissbase"
 REPO_URL="blissbase"  # Uses gh CLI default (github.com)
@@ -80,14 +85,11 @@ extract_project() {
         exit 1
     fi
     
-    # Remove existing target directory if it exists
-    if [ -d "$TARGET_DIR" ]; then
-        log_warn "Removing existing $TARGET_DIR directory..."
-        rm -rf "$TARGET_DIR"
-    fi
+    # Create target directory if it doesn't exist
+    mkdir -p "$TARGET_DIR"
     
-    # Copy the project
-    cp -r "$SOURCE_DIR" "$TARGET_DIR"
+    # Copy the project files without deleting existing files/directories
+    cp -r "$SOURCE_DIR/." "$TARGET_DIR/"
     log_info "Project copied to $TARGET_DIR"
 }
 
