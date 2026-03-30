@@ -3,7 +3,6 @@
 	import { getSupabaseBrowserClient } from '$lib/supabase';
 	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
 	import EventCard from '$lib/components/EventCard.svelte';
-	import EventDetailsDialog from '../EventDetailsDialog.svelte';
 
 	let isLoggingOut = $state(false);
 	const session = await getUserSession();

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import EventCard from '$lib/components/EventCard.svelte';
-	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import HeaderControls from '$lib/components/HeaderControls.svelte';

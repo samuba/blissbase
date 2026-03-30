@@ -5,7 +5,6 @@
 		getFavoriteUpcomingEvents,
 		removeFavorite
 	} from '$lib/rpc/favorites.remote';
-	import EventDetailsDialog from '../../EventDetailsDialog.svelte';
 
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
 
