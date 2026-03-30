@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	let event = $state<UiEvent | undefined>(undefined);
+	let open = $derived(!!event);
 
 	export function showEventDetailsDialog(eventToShow: UiEvent) {
 		event = eventToShow;
@@ -39,7 +40,7 @@
 	}
 </script>
 
-<Dialog.Root open={!!event} onOpenChange={onOpenChange}>
+<Dialog.Root open={open} onOpenChange={onOpenChange}>
 	<Dialog.Portal>
 		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 
