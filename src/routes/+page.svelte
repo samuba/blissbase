@@ -170,4 +170,4 @@
 	</div>
 {/snippet}
 
-<EventDetailsDialog />
+<EventDetailsDialog events={eventsStore.events} />

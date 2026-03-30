@@ -141,4 +141,4 @@
 	</div>
 </div>
 
-<EventDetailsDialog />
+<EventDetailsDialog events={[...upcomingEvents, ...pastEvents]} />

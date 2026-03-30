@@ -1,11 +1,3 @@
-<script lang="ts" module>
-	let event = $state<UiEvent | undefined>(undefined);
-
-	export function showEventDetailsDialog(eventToShow: UiEvent) {
-		event = eventToShow;
-	}
-</script>
-
 <script lang="ts">
 	import type { UiEvent } from '$lib/server/events';
 	import { Dialog } from '$lib/components/dialog';
@@ -13,23 +5,38 @@
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	import { browser } from '$app/environment';
+	import { page } from '$app/state';
+
+	let { events }: { events: UiEvent[] } = $props();
+
+	/**
+	 * Resolves the visible event from the current shallow page state.
+	 * @example getEventFromState(12, events)
+	 */
+	function getEventFromState(selectedEventId: number | undefined, events: UiEvent[]): UiEvent | undefined {
+		if (!selectedEventId) return undefined;
+		return events.find((x) => x.id === selectedEventId);
+	}
+	const event = $derived(getEventFromState(page.state.selectedEventId, events));
+	const isOpen = $derived(!!event);
 
 	/**
 	 * Pops the shallow `pushState` entry so the list view is restored (browser back / swipe back).
+	 * @example handleClose() // dialog close / overlay / escape
 	 */
 	function handleClose() {
 		if (!browser) return;
-		event = undefined;
 		history.back();
-	}
-
-	function onOpenChange(shouldOpen: boolean) {
-		if (shouldOpen) return;
-		handleClose();
 	}
 </script>
 
-<Dialog.Root open={!!event} onOpenChange={onOpenChange}>
+<Dialog.Root
+	open={isOpen}
+	onOpenChange={(shouldOpen) => {
+		if (shouldOpen || !isOpen) return;
+		handleClose();
+	}}
+>
 	<Dialog.Portal>
 		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 
