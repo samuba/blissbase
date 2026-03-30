@@ -8,6 +8,7 @@
 	import FavoriteButton from './FavoriteButton.svelte';
 	import { now } from '$lib/now.svelte';
 	import { localeStore } from '../../locales/localeStore.svelte';
+	import { showEventDetailsDialog } from '../../routes/EventDetailsDialog.svelte';
 
 	const {
 		event,
@@ -40,6 +41,7 @@
 
 	function handleClick(e: MouseEvent) {
 		e.preventDefault();
+		showEventDetailsDialog(event);
 		const eventListOrigin = `${page.url.pathname}${page.url.search}${page.url.hash}`;
 		pushState(resolve('/[slug]', { slug: event.slug }), {
 			selectedEventId: event.id,
