@@ -140,5 +140,3 @@
 		</div>
 	</div>
 </div>
-
-<EventDetailsDialog events={[...upcomingEvents, ...pastEvents]} />

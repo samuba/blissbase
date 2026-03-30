@@ -19,6 +19,7 @@
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
 	import { isActiveAppTab } from '$lib/components/tabsNav';
+	import EventDetailsDialog from './EventDetailsDialog.svelte';
 
 	let { data, children } = $props();
 	let { jwtClaims, supabase, userId } = $derived(data);
@@ -105,3 +106,5 @@
 	class={[`pointer-events-auto z-200`]}
 />
 <LoginDialog />
+
+<EventDetailsDialog />

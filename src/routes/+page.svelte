@@ -169,5 +169,3 @@
 		<p class="">Lade...</p>
 	</div>
 {/snippet}
-
-<EventDetailsDialog events={eventsStore.events} />

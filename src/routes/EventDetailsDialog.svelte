@@ -1,3 +1,14 @@
+<script lang="ts" module>
+	let event = $state<UiEvent | undefined>(undefined);
+
+	export function showEventDetailsDialog(eventToShow: UiEvent) {
+		event = eventToShow;
+		pushState(resolve('/[slug]', { slug: eventToShow.slug }), {
+			selectedEventId: eventToShow.id,
+		});
+	}
+</script>
+
 <script lang="ts">
 	import type { UiEvent } from '$lib/server/events';
 	import { Dialog } from '$lib/components/dialog';
@@ -6,37 +17,29 @@
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
+	import { pushState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
-	let { events }: { events: UiEvent[] } = $props();
+	$effect(() => {
+		// close dialog if user clicked browser back button
+		if (!page.state.selectedEventId) {
+			event = undefined;
+		}
+	});
 
-	/**
-	 * Resolves the visible event from the current shallow page state.
-	 * @example getEventFromState(12, events)
-	 */
-	function getEventFromState(selectedEventId: number | undefined, events: UiEvent[]): UiEvent | undefined {
-		if (!selectedEventId) return undefined;
-		return events.find((x) => x.id === selectedEventId);
-	}
-	const event = $derived(getEventFromState(page.state.selectedEventId, events));
-	const isOpen = $derived(!!event);
-
-	/**
-	 * Pops the shallow `pushState` entry so the list view is restored (browser back / swipe back).
-	 * @example handleClose() // dialog close / overlay / escape
-	 */
 	function handleClose() {
 		if (!browser) return;
+		event = undefined;
 		history.back();
+	}
+
+	function onOpenChange(shouldOpen: boolean) {
+		if (shouldOpen) return;
+		handleClose();
 	}
 </script>
 
-<Dialog.Root
-	open={isOpen}
-	onOpenChange={(shouldOpen) => {
-		if (shouldOpen || !isOpen) return;
-		handleClose();
-	}}
->
+<Dialog.Root open={!!event} onOpenChange={onOpenChange}>
 	<Dialog.Portal>
 		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 
