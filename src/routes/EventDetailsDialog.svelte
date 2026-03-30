@@ -20,17 +20,20 @@
 	import { page } from '$app/state';
 	import { pushState } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { tick } from 'svelte';
 
 	$effect(() => {
 		// close dialog if user clicked browser back button
 		if (!page.state.selectedEventId) {
-			event = undefined;
+			open = false;
+			tick().then(() => event = undefined);
 		}
 	});
 
 	function handleClose() {
 		if (!browser) return;
-		event = undefined;
+		open = false;
+		tick().then(() => event = undefined);
 		history.back();
 	}
 
