@@ -24,16 +24,19 @@
 	$effect(() => {
 		// close dialog if user clicked browser back button
 		if (!page.state.selectedEventId) {
-			open = false;
-			setTimeout(() => event = undefined, 200);
+			closeGracefully();
 		}
 	});
 
 	function handleClose() {
 		if (!browser) return;
-		open = false;
-		setTimeout(() => event = undefined, 200);
+		closeGracefully();
 		history.back();
+	}
+
+	function closeGracefully() {
+		open = false;
+		setTimeout(() => event = undefined, 200); // delayed to not have layout shift during closing animation
 	}
 
 	function onOpenChange(shouldOpen: boolean) {
