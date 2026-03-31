@@ -96,6 +96,22 @@ export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
 
 export type TelegramScrapingTarget = typeof telegramScrapingTargets.$inferSelect;
 
+export const whatsappScrapingTargets = pgTable('whatsapp_scraping_targets', {
+    chatJid: text().primaryKey(),
+    name: text(), // whatsapp chat display name
+    lastMessageId: text(),
+    lastMessageTimestamp: timestamp(),
+    defaultAddress: text().array(),
+    createdAt: timestamp().notNull().defaultNow(),
+    messagesConsumed: integer().notNull().default(0),
+    lastError: text(),
+    scrapedEvents: integer().notNull().default(0),
+    lastRunFinishedAt: timestamp(),
+    defaultTimezone: text().notNull().default("germany")
+});
+
+export type WhatsappScrapingTarget = typeof whatsappScrapingTargets.$inferSelect;
+
 // All images are cached in R2. For website-scraped-images we remember the original url so that we dont need to process the image again.
 export const imageCacheMap = pgTable('image_cache_map', {
     originalUrl: text().notNull(),

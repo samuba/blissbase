@@ -536,6 +536,10 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 	}
 
 	payload := getStoredMessagePayload(evt)
+	if !shouldStoreMessage(payload.message) {
+		return nil
+	}
+
 	messageID := payload.id
 	message := payload.message
 	messageType, textValue := describeMessage(message)
@@ -831,6 +835,8 @@ func describeMessage(message *waE2E.Message) (string, string) {
 		return "live_location", message.GetLiveLocationMessage().GetCaption()
 	case message.GetPollCreationMessage() != nil:
 		return "poll_creation", message.GetPollCreationMessage().GetName()
+	case message.GetEventMessage() != nil:
+		return "event", describeEventMessage(message.GetEventMessage())
 	case message.GetReactionMessage() != nil:
 		return "reaction", message.GetReactionMessage().GetText()
 	case message.GetProtocolMessage() != nil:
@@ -838,6 +844,104 @@ func describeMessage(message *waE2E.Message) (string, string) {
 	default:
 		return strings.TrimPrefix(fmt.Sprintf("%T", message), "*waE2E."), ""
 	}
+}
+
+// shouldStoreMessage reports whether the normalized payload is a supported text or media message.
+// Example: `if !shouldStoreMessage(payload.message) { return nil }`
+func shouldStoreMessage(message *waE2E.Message) bool {
+	if message == nil {
+		return false
+	}
+
+	switch {
+	case message.GetConversation() != "":
+		return true
+	case message.GetExtendedTextMessage() != nil:
+		return true
+	case message.GetImageMessage() != nil:
+		return true
+	case message.GetVideoMessage() != nil:
+		return true
+	case message.GetDocumentMessage() != nil:
+		return true
+	case message.GetAudioMessage() != nil:
+		return true
+	case message.GetStickerMessage() != nil:
+		return true
+	case message.GetEventMessage() != nil:
+		return true
+	default:
+		return false
+	}
+}
+
+// describeEventMessage extracts the most useful text summary from a WhatsApp event payload.
+// Example: `textValue := describeEventMessage(message.GetEventMessage())`
+func describeEventMessage(message *waE2E.EventMessage) string {
+	if message == nil {
+		return ""
+	}
+
+	lines := []string{}
+	name := message.GetName()
+	if name != "" {
+		lines = append(lines, fmt.Sprintf("Title: %s", name))
+	}
+
+	description := message.GetDescription()
+	if description != "" {
+		lines = append(lines, fmt.Sprintf("Description: %s", description))
+	}
+
+	locationName := message.GetLocation().GetName()
+	if locationName != "" {
+		lines = append(lines, fmt.Sprintf("Location: %s", locationName))
+	}
+
+	startTime := formatUnixTimestamp(message.GetStartTime())
+	if startTime != "" {
+		lines = append(lines, fmt.Sprintf("Starts: %s", startTime))
+	}
+
+	endTime := formatUnixTimestamp(message.GetEndTime())
+	if endTime != "" {
+		lines = append(lines, fmt.Sprintf("Ends: %s", endTime))
+	}
+
+	joinLink := message.GetJoinLink()
+	if joinLink != "" {
+		lines = append(lines, fmt.Sprintf("Join link: %s", joinLink))
+	}
+
+	if message.GetIsCanceled() {
+		lines = append(lines, "Status: canceled")
+	}
+
+	if message.GetIsScheduleCall() {
+		lines = append(lines, "Type: scheduled call")
+	}
+
+	if !linesHasValues(lines) {
+		return ""
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+// formatUnixTimestamp formats a Unix timestamp into RFC3339 when set.
+// Example: `formatted := formatUnixTimestamp(message.GetStartTime())`
+func formatUnixTimestamp(value int64) string {
+	if value <= 0 {
+		return ""
+	}
+
+	return time.Unix(value, 0).UTC().Format(time.RFC3339)
+}
+
+// linesHasValues reports whether the assembled event summary has any rows.
+// Example: `if !linesHasValues(lines) { return "" }`
+func linesHasValues(lines []string) bool {
+	return len(lines) > 0
 }
 
 // marshalProtoJSON converts protobuf payloads into JSON for downstream SQLite consumers.
