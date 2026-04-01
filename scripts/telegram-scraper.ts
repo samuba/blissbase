@@ -201,7 +201,7 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         return imgUrl;
     } catch (error) {
         console.error("Error extracting photo from message", message.id, ":", error);
-        if (error.message.includes("FILE_REFERENCE_EXPIRED")) {
+        if (error instanceof Error && error.message.includes("FILE_REFERENCE_EXPIRED")) {
             throw new Error("telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT");
         }
 
@@ -230,7 +230,7 @@ async function getResizedImageBufferFromMessage(message: Api.Message, client: Te
         return resize.buffer;
     } catch (error) {
         console.error("Error downloading media from message", message.id, ":", error);
-        if (error.message.includes("FILE_REFERENCE_EXPIRED")) {
+        if (error instanceof Error && error.message.includes("FILE_REFERENCE_EXPIRED")) {
             throw new Error("telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT");
         }
         throw error;
@@ -786,7 +786,13 @@ async function validateAndBuildEventBase(args: {
 /**
  * Processes a single scraping target and returns the result
  */
-async function processScrapingTarget(target: TelegramScrapingTarget, client: TelegramClient): Promise<{ success: boolean; error?: Error; target: TelegramScrapingTarget }> {
+async function processScrapingTarget(target: TelegramScrapingTarget, client: TelegramClient): Promise<{
+    success: boolean;
+    error?: Error;
+    target: TelegramScrapingTarget;
+    newMessagesCount: number;
+    scrapedEventsCount: number;
+}> {
     let resolvedRoomId = target.roomId;
     try {
         console.log(`\n#### Processing target: ${target.roomId}`);
@@ -797,7 +803,13 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
             const chatId = await getChatIdByName(client, chatName);
             if (!chatId) {
                 console.error(`No chat found for name "${chatName}"`);
-                return { success: false, error: new Error(`No chat found for name "${chatName}"`), target };
+                return {
+                    success: false,
+                    error: new Error(`No chat found for name "${chatName}"`),
+                    target,
+                    newMessagesCount: 0,
+                    scrapedEventsCount: 0
+                };
             }
             resolvedRoomId = chatId;
             console.log(`resolved "${chatName}" to ${chatId}`)
@@ -834,8 +846,9 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
         }
         console.log(`Found ${messages.length} new messages`);
 
+        let scrapedEventsCount = 0;
         if (messages.length > 0) {
-            const { scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client, target.defaultTimezone);
+            ({ scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client, target.defaultTimezone));
             messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
             const latestMsgId = BigInt(messages[0].id);
             const latestMsgTime = new Date(messages[0].date * 1000);
@@ -867,19 +880,30 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
                 .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
         }
 
-        return { success: true, target };
+        return {
+            success: true,
+            target,
+            newMessagesCount: messages.length,
+            scrapedEventsCount
+        };
     } catch (error) {
         console.error(`❌ Error processing target ${target.roomId}:`, error);
 
         await db.update(s.telegramScrapingTargets)
-            .set({ lastError: error.message, lastRunFinishedAt: new Date() })
+            .set({ lastError: error instanceof Error ? error.message : String(error), lastRunFinishedAt: new Date() })
             .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
 
         if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
             throw error;
         }
 
-        return { success: false, error: error as Error, target };
+        return {
+            success: false,
+            error: error as Error,
+            target,
+            newMessagesCount: 0,
+            scrapedEventsCount: 0
+        };
     }
 }
 
@@ -1006,8 +1030,16 @@ console.log("Connected to Telegram servers");
  * Processes targets with a truly parallel worker pool that maintains exactly 3 concurrent workers
  * Workers are dynamically spawned and replaced to ensure continuous processing
  */
-async function processTargetsWithWorkerPool(targets: TelegramScrapingTarget[], client: TelegramClient): Promise<Error[]> {
+async function processTargetsWithWorkerPool(targets: TelegramScrapingTarget[], client: TelegramClient): Promise<{
+    fatalErrors: Error[];
+    totalNewMessagesCount: number;
+    totalScrapedEventsCount: number;
+}> {
     const fatalErrors: Error[] = [];
+    const stats = {
+        totalNewMessagesCount: 0,
+        totalScrapedEventsCount: 0
+    };
     const MAX_CONCURRENT = 3;
     const targetQueue = [...targets]; // Copy targets to a queue
     const activeWorkers = new Set<Promise<void>>();
@@ -1021,7 +1053,7 @@ async function processTargetsWithWorkerPool(targets: TelegramScrapingTarget[], c
         const currentWorkerId = ++workerId;
         console.log(`🆕 Spawning worker #${currentWorkerId}`);
 
-        const workerPromise = createWorker(currentWorkerId, targetQueue, client, fatalErrors, () => {
+        const workerPromise = createWorker(currentWorkerId, targetQueue, client, fatalErrors, stats, () => {
             completedCount++;
             console.log(`📊 Progress: ${completedCount}/${targets.length} targets completed`);
         });
@@ -1059,7 +1091,11 @@ async function processTargetsWithWorkerPool(targets: TelegramScrapingTarget[], c
     }
 
     console.log(`\n✅ Completed processing all ${targets.length} targets`);
-    return fatalErrors;
+    return {
+        fatalErrors,
+        totalNewMessagesCount: stats.totalNewMessagesCount,
+        totalScrapedEventsCount: stats.totalScrapedEventsCount
+    };
 }
 
 /**
@@ -1071,6 +1107,10 @@ async function createWorker(
     targetQueue: TelegramScrapingTarget[],
     client: TelegramClient,
     fatalErrors: Error[],
+    stats: {
+        totalNewMessagesCount: number;
+        totalScrapedEventsCount: number;
+    },
     onTargetComplete: () => void
 ): Promise<void> {
     console.log(`🔧 Worker #${workerId} started`);
@@ -1088,6 +1128,8 @@ async function createWorker(
 
         try {
             const result = await processScrapingTarget(target, client);
+            stats.totalNewMessagesCount += result.newMessagesCount;
+            stats.totalScrapedEventsCount += result.scrapedEventsCount;
 
             if (!result.success && result.error && result.error.message.includes("FATAL->EXIT")) {
                 fatalErrors.push(result.error);
@@ -1116,11 +1158,20 @@ try {
     scrapingTargets.sort(() => Math.random() - 0.5); // Shuffle scrapingTargets randomly
 
     // Process targets with worker pool
-    const fatalErrors = await processTargetsWithWorkerPool(scrapingTargets, client);
+    const {
+        fatalErrors,
+        totalNewMessagesCount,
+        totalScrapedEventsCount
+    } = await processTargetsWithWorkerPool(scrapingTargets, client);
 
     // in the end log fatal erors and exit so sam can have a look at them
     if (fatalErrors.length > 0) {
         console.error(`\n❌ Fatal errors occurred:`, fatalErrors.map(e => e.message));
+        process.exit(1);
+    }
+
+    if (totalNewMessagesCount > 0 && totalScrapedEventsCount === 0) {
+        console.error(`\n❌ Processed ${totalNewMessagesCount} new Telegram messages but extracted no events`);
         process.exit(1);
     }
 

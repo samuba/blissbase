@@ -1,5 +1,5 @@
-
-add whatsapp groups in hoi an https://app.apidog.com/project/1017306/apis/api-21325106-run?branchId=1003735
+BUG: sometime tags show als erstes: 1 tages retreat, 1zu1 retreat (sollte eh raus)
+add more whatsapp groups
 
 test all "Anmelden über" funktionen mit gerendertem event. scraped events haben manchmal daten die man nicht mehr speichern kann nachdem sie im editor geladenwurden
 new layout with tabs at the bottom: profile, discover, impressum?
