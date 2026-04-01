@@ -16,7 +16,7 @@ import * as assets from "../src/lib/assets"
 import { insertEvents } from "../src/lib/server/events.script.ts";
 
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!
-const sqliteObjectKey = process.env.WHATSAPP2SQLITE_R2_DATABASE_OBJECT_KEY ?? `whatsapp.sqlite`
+const sqliteObjectKey = `whatsapp.sqlite`
 const maxSecondsBetweenMessagesForSameEvent = 20 * 60
 /** Max messages loaded on first scrape per chat (latest N by time). Incremental runs load all messages since the stored cursor. */
 const initialMessagesPerChat = 50
@@ -33,8 +33,7 @@ function loadWhatsapp2SqliteCreds() {
         accessKey: process.env.WHATSAPP2SQLITE_R2_ACCESS_KEY_ID!,
         secretKey: process.env.WHATSAPP2SQLITE_R2_SECRET_ACCESS_KEY!,
         bucket: process.env.WHATSAPP2SQLITE_R2_BUCKET_NAME!,
-        endPoint: process.env.WHATSAPP2SQLITE_R2_ENDPOINT
-            ?? `https://${process.env.WHATSAPP2SQLITE_CLOUDFLARE_ACCOUNT_ID!}.r2.cloudflarestorage.com`,
+        endPoint: process.env.WHATSAPP2SQLITE_R2_ENDPOINT,
         region: `auto`
     }
 }
@@ -554,13 +553,14 @@ async function extractEventDataFromImageMessage(args: {
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join(`\n\n`) : ``
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(
-        combinedText,
-        new Date(args.message.timestamp * 1000),
-        args.defaultTimezone,
-        getWhatsappAuthor(args.message).name,
-        [imageInput]
-    )
+    const aiAnswer = await aiExtractEventData({
+        message: combinedText,
+        messageDate: new Date(args.message.timestamp * 1000),
+        timezone: args.defaultTimezone,
+        authorName: getWhatsappAuthor(args.message).name,
+        imageInputs: [imageInput],
+        model: `openai`,
+    })
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -617,13 +617,14 @@ async function extractEventDataFromMessage(args: {
     const combinedText = [msgText, ...adjacentTextMessages].join(`\n\n`)
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(
-        combinedText,
-        new Date(args.message.timestamp * 1000),
-        args.defaultTimezone,
-        getWhatsappAuthor(args.message).name,
-        adjacentImageInputs
-    )
+    const aiAnswer = await aiExtractEventData({
+        message: combinedText,
+        messageDate: new Date(args.message.timestamp * 1000),
+        timezone: args.defaultTimezone,
+        authorName: getWhatsappAuthor(args.message).name,
+        imageInputs: adjacentImageInputs,
+        model: `openai`,
+    })
 
     const base = await validateAndBuildEventBase({
         aiAnswer,

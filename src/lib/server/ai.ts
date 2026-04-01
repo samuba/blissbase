@@ -8,18 +8,20 @@ import { WEBSITE_SCRAPE_SOURCE_URLS } from '../commonWithScripts';
  * Extracts structured event fields from free text (same pipeline as the Telegram bot).
  *
  * @example
- * await aiExtractEventData(`Yoga Workshop Samstag 10 Uhr Berlin`, new Date(), `Europe/Berlin`);
+ * await aiExtractEventData({ message: `Yoga Workshop Samstag 10 Uhr Berlin`, messageDate: new Date(), timezone: `Europe/Berlin`, model: `google` });
  */
-export async function aiExtractEventData(
-	message: string,
-	messageDate: Date,
-	timezone: string,
-	authorName?: string,
-	imageInputs: (AiImageInput | undefined)[] = []
-): Promise<MsgAnalysisAnswer> {
+export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<MsgAnalysisAnswer> {
+	const {
+		message,
+		messageDate,
+		timezone,
+		authorName,
+		imageInputs = [],
+		model,
+	} = args;
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	const { text } = await generateText({
-		model: google("gemini-3.1-flash-lite-preview"),
+		model: model === `google` ? google(`gemini-3.1-flash-lite-preview`) : openai(`gpt-5-mini`),
 		system: msgAnalysisSystemPrompt(messageDate, timezone, authorName),
 		messages: [
 			{
@@ -45,7 +47,7 @@ export async function aiExtractEventData(
 		return result;
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.message : String(e);
-		const msg = `Failed to parse OpenAI response as JSON: ${errorMessage}`;
+		const msg = `Failed to parse AI response as JSON: ${errorMessage}`;
 		console.error(`AI answer: `, text);
 		throw new Error(msg);
 	}
@@ -179,3 +181,12 @@ export type AiImageInput = string | URL | {
 };
 
 type AiImageValue = ArrayBuffer | Buffer | Uint8Array | string | URL;
+
+export type AiExtractEventDataArgs = {
+	message: string;
+	messageDate: Date;
+	timezone: string;
+	authorName?: string;
+	imageInputs?: (AiImageInput | undefined)[];
+	model: `openai` | `google`;
+};

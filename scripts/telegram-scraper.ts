@@ -447,7 +447,14 @@ async function extractEventDataFromImageMessage(
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join('\n\n') : '';
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, [imageInput]);
+    const aiAnswer = await aiExtractEventData({
+        message: combinedText,
+        messageDate: new Date(message.date * 1000),
+        timezone: defaultTimezone,
+        authorName: author?.username,
+        imageInputs: [imageInput],
+        model: `openai`,
+    });
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -488,7 +495,14 @@ async function extractEventDataFromMessage(
     const combinedText = [msgHtml, ...adjacentTextMessages].join('\n\n');
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, adjacentImageInputs);
+    const aiAnswer = await aiExtractEventData({
+        message: combinedText,
+        messageDate: new Date(message.date * 1000),
+        timezone: defaultTimezone,
+        authorName: author?.username,
+        imageInputs: adjacentImageInputs,
+        model: `openai`,
+    });
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
