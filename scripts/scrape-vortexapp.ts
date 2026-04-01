@@ -81,7 +81,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             if (tag.includes('Unassigned')) tag = undefined;
 
             const address = [activity._activity._center.center_data.name, "Ubud"];
-            const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+            const coordinates = await geocodeAddressCached({
+                addressLines: address,
+                apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+            });
 
             const startDate = new Date(activity.start_date + (8 * 60 * 60 * 1000)); // bali is utc+8
             const startAt = dateToIsoStr(
@@ -184,7 +187,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const address = superTrim($('.data-entry-content-single-page .event_curren_venue').text())!.split(',').map(part => part.trim());
         const price = superTrim($('.data-entry-content-single-page .event_ticket_price_single').text())!;
         const host = $('.data-entry-content-single-page .author-link').text()?.trim() || name.split(' w/ ')[1];
-        const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+        const coordinates = await geocodeAddressCached({
+            addressLines: address,
+            apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+        });
         const sourceUrl = ($('.data-entry-content-single-page .ticket-link').attr('href')! ?? url).replace('TODOTODAY', '');
         const tags = $('.data-entry-content-single-page .event-category-label-no-image').map((_index, element) => $(element).text().trim()).get().filter(Boolean);
 

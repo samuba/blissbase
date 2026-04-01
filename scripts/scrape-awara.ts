@@ -121,7 +121,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
     async extractEventData(html: string, url: string) {
         const address = this.extractAddress(html);
-        const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+        const coordinates = await geocodeAddressCached({
+            addressLines: address,
+            apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+        });
         const startAt = this.extractStartAt(html);
         if (!startAt) return undefined;
 

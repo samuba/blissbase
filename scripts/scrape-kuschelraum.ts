@@ -314,7 +314,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         }
 
         if (event.address?.length) {
-            const coords = await geocodeAddressCached(event.address, getGoogleMapsApiKey());
+            const coords = await geocodeAddressCached({
+                addressLines: event.address,
+                apiKey: getGoogleMapsApiKey()
+            });
             if (coords) {
                 event.latitude = coords.lat;
                 event.longitude = coords.lng;

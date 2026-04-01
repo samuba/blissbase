@@ -15,9 +15,9 @@ export async function aiExtractEventData(
 	messageDate: Date,
 	timezone: string,
 	authorName?: string,
-	imageUrls: (string | undefined)[] = []
+	imageInputs: (AiImageInput | undefined)[] = []
 ): Promise<MsgAnalysisAnswer> {
-	console.time(`🤖 AI extracting event data with ${imageUrls.length} images`);
+	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	const { text } = await generateText({
 		model: google("gemini-3.1-flash-lite-preview"),
 		system: msgAnalysisSystemPrompt(messageDate, timezone, authorName),
@@ -29,10 +29,7 @@ export async function aiExtractEventData(
 						type: `text`,
 						text: message
 					},
-					...imageUrls.filter((x) => !!x).map((url) => ({
-						type: `image` as const,
-						image: new URL(url!)
-					}))
+					...imageInputs.filter((x) => !!x).map((imageInput) => buildAiImagePart(imageInput!))
 				]
 			}
 		]
@@ -44,7 +41,7 @@ export async function aiExtractEventData(
 			if (!Array.isArray(result.contact)) result.contact = [];
 			if (!Array.isArray(result.tags)) result.tags = [];
 		}
-		console.timeEnd(`🤖 AI extracting event data with ${imageUrls.length} images`);
+		console.timeEnd(`🤖 AI extracting event data with ${imageInputs.length} images`);
 		return result;
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.message : String(e);
@@ -52,6 +49,49 @@ export async function aiExtractEventData(
 		console.error(`AI answer: `, text);
 		throw new Error(msg);
 	}
+}
+
+/**
+ * Normalizes app image inputs into AI SDK image parts.
+ * @example
+ * buildAiImagePart({ image: Buffer.from(`abc`), mediaType: `image/webp` })
+ */
+function buildAiImagePart(imageInput: AiImageInput) {
+	if (typeof imageInput === `string`) {
+		return {
+			type: `image` as const,
+			image: normalizeAiImageValue(imageInput)
+		};
+	}
+	if (imageInput instanceof URL) {
+		return {
+			type: `image` as const,
+			image: imageInput
+		};
+	}
+
+	const part = {
+		type: `image` as const,
+		image: normalizeAiImageValue(imageInput.image)
+	};
+	if (!imageInput.mediaType) return part;
+
+	return {
+		...part,
+		mediaType: imageInput.mediaType
+	};
+}
+
+/**
+ * Converts URL-like strings into URL objects and keeps inline data as-is.
+ * @example
+ * normalizeAiImageValue(`https://example.com/poster.webp`)
+ */
+function normalizeAiImageValue(image: AiImageValue) {
+	if (image instanceof URL) return image;
+	if (typeof image !== `string`) return image;
+	if (!image.startsWith(`http://`) && !image.startsWith(`https://`)) return image;
+	return new URL(image);
 }
 
 export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: string, authorName?: string) => `
@@ -107,6 +147,8 @@ Extract these information from the message:
 
 "tags": Array<string>. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map((x) => x.en).join(`, `)}.
 
+"isConscious": bool. Wether event is interesting to conscious people. Yes: Meditation, Ecstatic Dance, Sexual, Body, Spiritual etc. No: club dance, pure sport, pure business etc
+
 `;
 
 export type MsgAnalysisAnswer = {
@@ -128,4 +170,12 @@ export type MsgAnalysisAnswer = {
 	attendanceMode: 'online' | 'offline' | 'offline+online';
 	city: string;
 	emojis: string;
+	isConscious: boolean;
 }>;
+
+export type AiImageInput = string | URL | {
+	image: AiImageValue;
+	mediaType?: string;
+};
+
+type AiImageValue = ArrayBuffer | Buffer | Uint8Array | string | URL;

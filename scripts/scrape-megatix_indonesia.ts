@@ -81,7 +81,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         } else {
             address = data.venue.full_address?.split(',').map(part => part.trim())
         }
-        const timezoneLookup = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+        const timezoneLookup = await geocodeAddressCached({
+            addressLines: address,
+            apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+        });
         const coordinates = data.venue.latitude && data.venue.longitude
             ? { lat: data.venue.latitude, lng: data.venue.longitude }
             : timezoneLookup;

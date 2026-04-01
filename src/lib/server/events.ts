@@ -169,7 +169,10 @@ export async function fetchEvents(params: LoadEventsParams) {
 				console.error('Invalid lat/lng parameters:', lat, lng);
 			}
 		} else if (plzCity && plzCity.trim() !== '') {
-			geocodedCoords = await geocodeAddressCached([plzCity], GOOGLE_MAPS_API_KEY);
+			geocodedCoords = await geocodeAddressCached({
+				addressLines: [plzCity],
+				apiKey: GOOGLE_MAPS_API_KEY
+			});
 		}
 
         if (geocodedCoords) {

@@ -62,7 +62,10 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
         if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
 
-        const coords = await geocodeAddressCached(addressArr, GOOGLE_MAPS_API_KEY || '')
+        const coords = await geocodeAddressCached({
+            addressLines: addressArr,
+            apiKey: GOOGLE_MAPS_API_KEY || ``
+        })
         const contact = parseTelegramContacts(aiAnswer.contact)
         const telegramAuthor = getTelegramEventOriginalAuthor(ctx.message)
         if (aiAnswer.contactAuthorForMore) {

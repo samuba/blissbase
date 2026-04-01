@@ -9,7 +9,7 @@ import { generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../src/lib/server/ai";
-import type { MsgAnalysisAnswer } from "../src/lib/server/ai";
+import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
 import { insertEvents } from '../src/lib/server/events.script.ts';
 import type { Entity } from "telegram/define";
@@ -237,15 +237,18 @@ async function getResizedImageBufferFromMessage(message: Api.Message, client: Te
     }
 }
 
-// Returns a data URL for AI analysis without uploading to R2
-async function getImageDataUrlFromMessage(message: Api.Message, client: TelegramClient): Promise<string | undefined> {
+// Returns an inline AI image payload without uploading to R2
+async function getAiImageInputFromMessage(message: Api.Message, client: TelegramClient): Promise<AiImageInput | undefined> {
     try {
         const resized = await getResizedImageBufferFromMessage(message, client);
         if (!resized) return undefined;
-        const base64 = Buffer.from(resized).toString('base64');
-        return `data:image/webp;base64,${base64}`;
+
+        return {
+            image: resized,
+            mediaType: `image/webp`
+        } satisfies AiImageInput;
     } catch (err) {
-        console.error("Failed to create data URL from message", message.id, err);
+        console.error("Failed to create AI image input from message", message.id, err);
         if (err instanceof Error && err.message.includes("FATAL->EXIT")) {
             throw err;
         }
@@ -301,26 +304,26 @@ async function findAdjacentImageMessages(
     return { messages: adjacentMessages, messageIds };
 }
 
-// Collect adjacent images as data URLs (no upload). Mirrors time/author filtering logic
-async function collectAdjacentImageDataUrls(
+// Collect adjacent images as AI image inputs (no upload). Mirrors time/author filtering logic
+async function collectAdjacentImageInputs(
     currentMessage: Api.Message,
     allMessages: Api.Message[],
     client: TelegramClient,
-): Promise<{ imageDataUrls: string[]; messageIds: number[] }> {
+): Promise<{ imageInputs: AiImageInput[]; messageIds: number[] }> {
     const { messages, messageIds } = await findAdjacentImageMessages(currentMessage, allMessages);
-    const imageDataUrls: string[] = [];
+    const imageInputs: AiImageInput[] = [];
     for (const message of messages) {
         try {
-            const dataUrl = await getImageDataUrlFromMessage(message, client);
-            if (dataUrl) imageDataUrls.push(dataUrl);
+            const imageInput = await getAiImageInputFromMessage(message, client);
+            if (imageInput) imageInputs.push(imageInput);
         } catch (error) {
-            console.error(`Error getting data URL from message ${message.id}:`, error);
+            console.error(`Error getting AI image input from message ${message.id}:`, error);
             if (error instanceof Error && error.message.includes("FATAL->EXIT")) {
                 throw error;
             }
         }
     }
-    return { imageDataUrls, messageIds };
+    return { imageInputs, messageIds };
 }
 
 async function extractAdjacentImagesWithIds(
@@ -434,8 +437,8 @@ async function extractEventDataFromImageMessage(
 
     console.log("Processing image-only message for event data:", message.id);
 
-    const imageDataUrl = await getImageDataUrlFromMessage(message, client);
-    if (!imageDataUrl) {
+    const imageInput = await getAiImageInputFromMessage(message, client);
+    if (!imageInput) {
         console.log("Could not extract image from message:", message.id);
         return undefined;
     }
@@ -444,7 +447,7 @@ async function extractEventDataFromImageMessage(
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join('\n\n') : '';
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, [imageDataUrl]);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, [imageInput]);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -480,12 +483,12 @@ async function extractEventDataFromMessage(
     console.log("extracting event data from message", message.id)
 
     const { textMessages: adjacentTextMessages, messageIds: adjacentTextMessageIds } = await extractAdjacentTextMessages(message, allMessages);
-    const { imageDataUrls: adjacentImageUrls } = await collectAdjacentImageDataUrls(message, allMessages, client);
+    const { imageInputs: adjacentImageInputs } = await collectAdjacentImageInputs(message, allMessages, client);
 
     const combinedText = [msgHtml, ...adjacentTextMessages].join('\n\n');
 
     await sleep(1000)
-    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, adjacentImageUrls);
+    const aiAnswer = await aiExtractEventData(combinedText, new Date(message.date * 1000), defaultTimezone, author?.username, adjacentImageInputs);
 
     const base = await validateAndBuildEventBase({
         aiAnswer,
@@ -519,22 +522,19 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 : existing.description;
 
             // Merge imageUrls
-            const imageUrls = Array.from(new Set([
-                ...(existing.imageUrls ?? []),
-                ...(event.imageUrls ?? [])
-            ]));
+            const imageUrls = mergeUniqueStrings(existing.imageUrls, event.imageUrls);
 
             // Merge tags
-            const tags = Array.from(new Set([
-                ...(existing.tags ?? []),
-                ...(event.tags ?? [])
-            ]));
+            const tags = mergeUniqueStrings(existing.tags, event.tags);
 
             // Merge telegramRoomIds
-            const telegramRoomIds = Array.from(new Set([
-                ...(existing.telegramRoomIds ?? []),
-                ...(event.telegramRoomIds ?? [])
-            ]));
+            const telegramRoomIds = mergeUniqueStrings(existing.telegramRoomIds, event.telegramRoomIds);
+            const coords = mergeCoords({
+                preferredLatitude: existing.latitude,
+                preferredLongitude: existing.longitude,
+                fallbackLatitude: event.latitude,
+                fallbackLongitude: event.longitude
+            });
 
             // Update the existing event with merged data
             uniqueEvents.set(event.slug, {
@@ -542,7 +542,14 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 description,
                 imageUrls,
                 tags,
-                telegramRoomIds
+                telegramRoomIds,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                listed: mergeListedValue({
+                    preferred: existing,
+                    fallback: event,
+                    mergedCoords: coords
+                })
             });
         } else {
             uniqueEvents.set(event.slug, event);
@@ -561,8 +568,80 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
         console.log(`existing description is longer than new one, not updating description for ${eventRow.slug}`)
         merged.description = existingEvent.description ?? undefined
     }
-    merged.imageUrls = Array.from(new Set([...(existingEvent.imageUrls ?? []), ...(merged.imageUrls ?? [])]));
+    merged.slug = existingEvent.slug;
+    merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls);
+    merged.tags = mergeUniqueStrings(existingEvent.tags, merged.tags);
+    merged.telegramRoomIds = mergeUniqueStrings(existingEvent.telegramRoomIds, merged.telegramRoomIds);
+    const coords = mergeCoords({
+        preferredLatitude: merged.latitude,
+        preferredLongitude: merged.longitude,
+        fallbackLatitude: existingEvent.latitude,
+        fallbackLongitude: existingEvent.longitude
+    });
+    merged.latitude = coords.latitude;
+    merged.longitude = coords.longitude;
+    merged.listed = mergeListedValue({
+        preferred: merged,
+        fallback: existingEvent,
+        mergedCoords: coords
+    });
     return merged;
+}
+
+/**
+ * Deduplicates nullable string arrays while preserving first-seen order.
+ * @example
+ * mergeUniqueStrings([`a`], [`a`, `b`])
+ */
+function mergeUniqueStrings(...values: Array<string[] | null | undefined>) {
+    return Array.from(new Set(values.flatMap((value) => value ?? [])));
+}
+
+/**
+ * Keeps the preferred complete coordinate pair, otherwise falls back to the backup pair.
+ * @example
+ * mergeCoords({ preferredLatitude: null, preferredLongitude: null, fallbackLatitude: 1, fallbackLongitude: 2 })
+ */
+function mergeCoords(args: {
+    preferredLatitude: number | null | undefined;
+    preferredLongitude: number | null | undefined;
+    fallbackLatitude: number | null | undefined;
+    fallbackLongitude: number | null | undefined;
+}): { latitude: number | null; longitude: number | null } {
+    const preferredHasCoords = args.preferredLatitude != null && args.preferredLongitude != null;
+    if (preferredHasCoords) {
+        return {
+            latitude: args.preferredLatitude ?? null,
+            longitude: args.preferredLongitude ?? null
+        };
+    }
+
+    return {
+        latitude: args.fallbackLatitude ?? args.preferredLatitude ?? null,
+        longitude: args.fallbackLongitude ?? args.preferredLongitude ?? null
+    };
+}
+
+/**
+ * Allows a richer duplicate with resolved coordinates to relist an unresolved event.
+ * @example
+ * mergeListedValue({ preferred: { listed: false }, fallback: { listed: true }, mergedCoords: { latitude: 1, longitude: 2 } })
+ */
+function mergeListedValue(args: {
+    preferred: { listed?: boolean | null; latitude?: number | null; longitude?: number | null };
+    fallback: { listed?: boolean | null; latitude?: number | null; longitude?: number | null };
+    mergedCoords: { latitude: number | null; longitude: number | null };
+}) {
+    if (args.preferred.listed === true) return true;
+
+    const preferredHasCoords = args.preferred.latitude != null && args.preferred.longitude != null;
+    const fallbackHasCoords = args.fallback.latitude != null && args.fallback.longitude != null;
+    const mergedHasCoords = args.mergedCoords.latitude != null && args.mergedCoords.longitude != null;
+    if (!preferredHasCoords && fallbackHasCoords && args.fallback.listed === true && mergedHasCoords) {
+        return true;
+    }
+
+    return false;
 }
 
 async function normalizeAddress(args: { aiAnswer: MsgAnalysisAnswer; chatId: string }): Promise<string[] | undefined> {
@@ -614,6 +693,7 @@ async function validateAndBuildEventBase(args: {
         return undefined;
     }
 
+    const targetConfig = await db.query.telegramScrapingTargets.findFirst({ where: eq(s.telegramScrapingTargets.roomId, chatId) })
     const addressArr = await normalizeAddress({ aiAnswer, chatId });
     if (aiAnswer.attendanceMode === "offline") {
         if (!addressArr || addressArr.length === 0) {
@@ -622,7 +702,11 @@ async function validateAndBuildEventBase(args: {
         }
     }
 
-    const coords = await geocodeAddressCached(addressArr, googleMapsApiKey || '')
+    const coords = await geocodeAddressCached({
+        addressLines: addressArr,
+        apiKey: googleMapsApiKey || ``,
+        biasAddressLines: targetConfig?.defaultAddress
+    })
     const contact = parseTelegramContacts(aiAnswer.contact)
     const telegramAuthor = await getTelegramEventOriginalAuthor(message, client);
     if (aiAnswer.contactAuthorForMore) {
@@ -636,6 +720,28 @@ async function validateAndBuildEventBase(args: {
     const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
     const name = aiAnswer.name.trim()
     const slug = generateSlug({ name, startAt, endAt: endAt || undefined })
+    let latitude = coords?.lat
+    let longitude = coords?.lng
+    let listed = true
+
+    if (addressArr?.length && (latitude == null || longitude == null)) {
+        if (!contact?.length) {
+            listed = false
+            console.log(`Unresolved address without contact - marking event as unlisted`);
+        } else if (targetConfig?.defaultAddress?.length) {
+            const defaultCoords = await geocodeAddressCached({
+                addressLines: targetConfig.defaultAddress,
+                apiKey: googleMapsApiKey || ``
+            });
+            if (defaultCoords?.lat != null && defaultCoords?.lng != null) {
+                latitude = defaultCoords.lat
+                longitude = defaultCoords.lng
+                console.log(`Using target defaultAddress coordinates for unresolved event address`);
+            } else {
+                console.log(`Could not resolve target defaultAddress coordinates for unresolved event address`);
+            }
+        }
+    }
 
     const baseEvent: InsertEvent = {
         name,
@@ -645,8 +751,8 @@ async function validateAndBuildEventBase(args: {
         attendanceMode: aiAnswer.attendanceMode,
         address: addressArr,
         tags: aiAnswer.tags,
-        latitude: coords?.lat,
-        longitude: coords?.lng,
+        latitude,
+        longitude,
         price: aiAnswer.price,
         description: aiAnswer.description,
         descriptionOriginal,
@@ -655,6 +761,7 @@ async function validateAndBuildEventBase(args: {
         sourceUrl: aiAnswer.url,
         messageSenderId: getTelegramOriginalAuthorId(message),
         contact,
+        listed,
         source: "telegram",
         slug,
     } satisfies InsertEvent;

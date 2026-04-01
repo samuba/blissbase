@@ -352,10 +352,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const venueArea = detailData?.venue?.area?.trim() || event.area?.trim();
 		const address = [venueName, formatLocationName(location)].filter(Boolean) as string[];
 		const timezoneLookup = (event.google_map || venueName || venueArea)
-			? await geocodeAddressCached(
-				[venueName, venueArea, formatLocationName(location)].filter(Boolean) as string[],
-				process.env.GOOGLE_MAPS_API_KEY || ''
-			)
+			? await geocodeAddressCached({
+				addressLines: [venueName, venueArea, formatLocationName(location)].filter(Boolean) as string[],
+				apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+			})
 			: null;
 
 		let coordinates: { lat: number; lng: number } | null | undefined;

@@ -341,7 +341,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         // everything on this site is from potsdam and some events dont have proper address so we add "potsdam" if they dont have it
         const address = this.extractAddress(html) || [];
         if (!address?.some(x => x.toLowerCase().includes("potsdam"))) address.push("Potsdam");
-        const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+        const coordinates = await geocodeAddressCached({
+            addressLines: address,
+            apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+        });
 
         const price = this.extractPrice(html) ?? null;
 

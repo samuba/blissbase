@@ -49,7 +49,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                 console.log(`Scraping event ${event.title}`)
 
                 const address = event.location.address?.split(',')?.map(x => x.trim()) ?? [areaId.charAt(0).toUpperCase() + areaId.slice(1)]
-                const timezoneLookup = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+                const timezoneLookup = await geocodeAddressCached({
+                    addressLines: address,
+                    apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+                });
                 let coordinates: { lat: number, lng: number } | null = null;
                 if (event.location.latitude && event.location.longitude) {
                     coordinates = { lat: event.location.latitude, lng: event.location.longitude }

@@ -24,7 +24,10 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
 	const address = toAddressLines(data.address);
 	const [coords, uploadedImageUrls] = await Promise.all([
-		geocodeAddressCached(address, GOOGLE_MAPS_API_KEY),
+		geocodeAddressCached({
+			addressLines: address,
+			apiKey: GOOGLE_MAPS_API_KEY
+		}),
 		uploadImages({ files: data.images, slug: eventFromDb.slug })
 	]);
 
@@ -75,7 +78,10 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	if (!userEmail) throw error(400, `Signed-in user does not have an email`);
 
 	const address = toAddressLines(data.address);
-	const coords = await geocodeAddressCached(address, GOOGLE_MAPS_API_KEY);
+	const coords = await geocodeAddressCached({
+		addressLines: address,
+		apiKey: GOOGLE_MAPS_API_KEY
+	});
 
 	if (address.length && !coords) {
 		return invalid(issue.address(`Address was not found in Google Maps`));

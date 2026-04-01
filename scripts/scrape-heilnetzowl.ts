@@ -243,7 +243,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             }
 
             const address = this.extractAddress(html) || [];
-            const coordinates = await geocodeAddressCached(address, process.env.GOOGLE_MAPS_API_KEY || '');
+            const coordinates = await geocodeAddressCached({
+                addressLines: address,
+                apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+            });
 
             return {
                 name,

@@ -291,7 +291,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             endAt = undefined;
         }
 
-        const coordinates = await geocodeAddressCached(this.extractAddress(html) || [], process.env.GOOGLE_MAPS_API_KEY || '');
+        const coordinates = await geocodeAddressCached({
+            addressLines: this.extractAddress(html) || [],
+            apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
+        });
 
         const price = this.extractPrice(html) ?? null;
 
