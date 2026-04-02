@@ -804,6 +804,7 @@ msgstr "Hauptnavigation mobil"
 
 #: src/lib/components/TabsNavMobile.svelte
 #: src/lib/components/TabsNavMobile.svelte
+#: src/lib/components/tabsNav.ts
 msgid "Erstellen"
 msgstr "Erstellen"
 
@@ -1084,3 +1085,19 @@ msgstr "Anmelden"
 #: src/routes/EventDetails.svelte
 msgid "Für Event anmelden"
 msgstr "Für Event anmelden"
+
+#: src/lib/components/tabsNav.ts
+msgid "Entdecken"
+msgstr "Entdecken"
+
+#: src/lib/components/tabsNav.ts
+msgid "Favoriten"
+msgstr "Favoriten"
+
+#: src/lib/components/tabsNav.ts
+msgid "Meins"
+msgstr "Meins"
+
+#: src/lib/components/tabsNav.ts
+msgid "Über"
+msgstr "Über"

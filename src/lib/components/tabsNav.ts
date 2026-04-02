@@ -1,8 +1,7 @@
 import { resolve } from '$app/paths';
 import { routes } from '$lib/routes';
 
-// needs to be a function otherwise wuchale does not pick up the translation
-export function getAppNavItems() {
+export function getAppNavItems(): AppNavItem[] {
 	return [
 		{
 			label: `Entdecken`,
@@ -52,7 +51,7 @@ export function getAppNavItems() {
 			requireLogin: false,
 			isInMoreMenu: true
 		}
-	] satisfies AppNavItem[];
+	];
 }
 
 export function isActiveAppTab(pathname: string, href: string) {

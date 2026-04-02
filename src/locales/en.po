@@ -804,6 +804,7 @@ msgstr "Mobile main navigation"
 
 #: src/lib/components/TabsNavMobile.svelte
 #: src/lib/components/TabsNavMobile.svelte
+#: src/lib/components/tabsNav.ts
 msgid "Erstellen"
 msgstr "Create"
 
@@ -1084,3 +1085,19 @@ msgstr "Register"
 #: src/routes/EventDetails.svelte
 msgid "Für Event anmelden"
 msgstr "Register for event"
+
+#: src/lib/components/tabsNav.ts
+msgid "Entdecken"
+msgstr "Discover"
+
+#: src/lib/components/tabsNav.ts
+msgid "Favoriten"
+msgstr "Favorites"
+
+#: src/lib/components/tabsNav.ts
+msgid "Meins"
+msgstr "My"
+
+#: src/lib/components/tabsNav.ts
+msgid "Über"
+msgstr "About"
