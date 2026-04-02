@@ -55,14 +55,6 @@ export function getAppNavItems() {
 	] satisfies AppNavItem[];
 }
 
-export function getAppTabs() {
-	return getAppNavItems().filter((item) => !item.isInMoreMenu);
-}
-
-export function getMoreMenuTabs() {
-	return getAppNavItems().filter((item) => item.isInMoreMenu);
-}
-
 export function isActiveAppTab(pathname: string, href: string) {
 	if (href.startsWith('./')) {
 		// happens at SSR

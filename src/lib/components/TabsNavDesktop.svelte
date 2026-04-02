@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { getAppTabs, isActiveAppTab } from '$lib/components/tabsNav';
+	import { getAppNavItems, isActiveAppTab } from '$lib/components/tabsNav';
 	import { showLoginDialog } from './LoginDialog.svelte';
 	import TabsNavDropDownMenu from './TabsNavDropDownMenu.svelte';
 
@@ -19,7 +19,7 @@
 		<div class="grow"></div>
 
 		<ul class="flex flex-row gap-1">
-			{#each getAppTabs() as tab (tab.href)}
+			{#each getAppNavItems().filter(x => !x.isInMoreMenu) as tab (tab.href)}
 				{@const isActive = isActiveAppTab(pathname, tab.href)}
 				{@const icon = isActive ? tab.iconActive : tab.icon}
 				<li>

@@ -347,7 +347,9 @@
 				{:else if event.contact?.length}
 					<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
 						{#snippet trigger({ props })}
-							<button {...props} class={[`btn btn-primary`, props.class]}> Anmelden </button>
+							<button {...props} class={[`btn btn-primary`, props.class]}> 
+								Anmelden<i class="hidden">just a dummy for wuchale</i>
+							</button>
 						{/snippet}
 						{#snippet content()}
 							{#if singleContact?.method && singleContact?.url}

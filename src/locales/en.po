@@ -97,7 +97,6 @@ msgstr "Source <0/>"
 
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
 msgid "Anmelden <0/>"
 msgstr "Register <0/>"
 
@@ -1073,3 +1072,11 @@ msgstr "The easiest way is by email at hi@blissbase.app. I welcome any feedback,
 #: src/routes/faq/+page.svelte
 msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals oder Community-Treffen."
 msgstr "Blissbase is the app where you can conveniently find all mindful events in one place — whether Ecstatic Dance, workshops, festivals, or community meetups."
+
+#: src/lib/components/TabsNavMobile.svelte
+msgid "Escape"
+msgstr "Escape"
+
+#: src/routes/EventDetails.svelte
+msgid "Anmelden<0>just a dummy for wuchale</0>"
+msgstr "Register<0>just a dummy for wuchale</0>"

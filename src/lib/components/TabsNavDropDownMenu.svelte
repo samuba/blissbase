@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { DropdownMenu } from 'bits-ui';
-	import { getMoreMenuTabs, isActiveAppTab } from '$lib/components/tabsNav';
+	import { getAppNavItems, isActiveAppTab } from '$lib/components/tabsNav';
 	import { showLoginDialog } from './LoginDialog.svelte';
 	import type { Snippet } from 'svelte';
 
@@ -38,7 +38,7 @@
 			preventScroll={false}
 			class={contentClass}
 		>
-			{#each getMoreMenuTabs() as item (item.href)}
+			{#each getAppNavItems().filter(x => x.isInMoreMenu) as item (item.href)}
 				{@const isActive = isActiveAppTab(pathname, item.href)}
 				{@const icon = isActive ? item.iconActive : item.icon}
 				<DropdownMenu.Item>
