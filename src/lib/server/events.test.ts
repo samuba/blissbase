@@ -315,6 +315,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     longitude: 13.4,
                     messageSenderId: null,
                     endAt: null,
+                    timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
                     eventTags: []
@@ -362,6 +363,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     longitude: null,
                     messageSenderId: null,
                     endAt: null,
+                    timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
                     eventTags: []
@@ -405,6 +407,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     longitude: null,
                     messageSenderId: null,
                     endAt: null,
+                    timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
                     eventTags: []
@@ -452,6 +455,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     longitude: null,
                     messageSenderId: null,
                     endAt: null,
+                    timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
                     eventTags: []
@@ -483,6 +487,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     longitude: null,
                     messageSenderId: null,
                     endAt: null,
+                    timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
                     eventTags: []
