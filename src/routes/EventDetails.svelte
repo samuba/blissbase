@@ -325,12 +325,13 @@
 				<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 	
 				{#if showQuelleInsteadOfAnmelden}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class=" btn">
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn">
 						Quelle
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if sourceUrl && !sourceUrl.includes("todo.today")}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn">
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn" title="Für Event anmelden">
+						<!-- @wc-context: register-for-event -->
 						Anmelden
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
@@ -340,15 +341,18 @@
 						target="_blank"
 						rel="noopener noreferrer"
 						class="btn-primary btn"
+						title="Für Event anmelden"
 					>
+						<!-- @wc-context: register-for-event -->
 						Anmelden
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if event.contact?.length}
 					<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
 						{#snippet trigger({ props })}
-							<button {...props} class={[`btn btn-primary`, props.class]}> 
-								Anmelden<i class="hidden">just a dummy for wuchale</i>
+							<button {...props} class={[`btn btn-primary`, props.class]} title="Für Event anmelden"> 
+								<!-- @wc-context: register-for-event -->
+								Anmelden
 							</button>
 						{/snippet}
 						{#snippet content()}

@@ -95,11 +95,6 @@ msgstr "Online"
 msgid "Quelle <0/>"
 msgstr "Source <0/>"
 
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-msgid "Anmelden <0/>"
-msgstr "Register <0/>"
-
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/auth/login/+page.svelte
 msgid "Anmelden"
@@ -1078,5 +1073,14 @@ msgid "Escape"
 msgstr "Escape"
 
 #: src/routes/EventDetails.svelte
-msgid "Anmelden<0>just a dummy for wuchale</0>"
-msgstr "Register<0>just a dummy for wuchale</0>"
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgctxt "register-for-event"
+msgid "Anmelden"
+msgstr "Register"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "Für Event anmelden"
+msgstr "Register for event"
