@@ -125,23 +125,12 @@
 			
 							{#if eventsStore.isLoadingMore}
 								{@render loading(false)}
+							{:else}
+								{@render noResults(true)}
 							{/if}
 						</div>
 					{:else}
-					<div class={noResultsContainerClasses}>
-							<div class="text-gray-500 text-center">
-								Keine Events gefunden
-								{#if eventsStore.hasSearchFilter}
-									mit <br /> {@html eventsStore.searchFilter?.split(' ').map(x => `<b>${x}</b>`).join(' & ')}<br />
-								{/if}
-								{#if eventsStore.hasLocationFilter}
-									in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km radius)</span><br />
-								{/if}
-								{#if eventsStore.hasDateFilter}
-									vom <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />
-								{/if}
-							</div>
-						</div>
+						{@render noResults(false)}
 					{/if}
 				</div>
 		
@@ -161,10 +150,31 @@
 </div>
 
 {#snippet loading(reserveVerticalSpace: boolean)}
-	<div class={["mb-3 flex flex-col items-center justify-center gap-2", reserveVerticalSpace && 'h-dvh']}
+	<div class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? 'h-dvh' : 'h-15']}
 		id="events-loading-spinner" 
 	>
 		<img src="/logo.svg" alt="Blissbase" class="size-10 min-w-10 animate-spin" />
 		<p class="">Lade...</p>
+	</div>
+{/snippet}
+
+{#snippet noResults(foundSomeResultsBefore: boolean)}
+	<div class={[noResultsContainerClasses, "h-15 mb-6"]}>
+		<div class="text-gray-500 text-center">
+			{#if foundSomeResultsBefore}
+				Keine weiteren Events gefunden
+			{:else}
+				Keine Events gefunden
+			{/if}
+			{#if eventsStore.hasSearchFilter}
+				mit <br /> {@html eventsStore.searchFilter?.split(' ').map(x => `<b>${x}</b>`).join(' & ')}<br />
+			{/if}
+			{#if eventsStore.hasLocationFilter}
+				in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km radius)</span><br />
+			{/if}
+			{#if eventsStore.hasDateFilter}
+				vom <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />
+			{/if}
+		</div>
 	</div>
 {/snippet}

@@ -595,9 +595,8 @@ msgstr "Setze zuerst einen Standort"
 msgid "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 msgstr "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 
-#: src/routes/+page.svelte
-msgid "Keine Events gefunden <0/> <1/> <2/>"
-msgstr "Keine Events gefunden <0/> <1/> <2/>"
+#~ msgid "Keine Events gefunden <0/> <1/> <2/>"
+#~ msgstr "Keine Events gefunden <0/> <1/> <2/>"
 
 #: src/routes/+page.svelte
 msgid "mit <0/> <1/><2/>"
@@ -1028,3 +1027,17 @@ msgstr "Login-Link stammt aus anderem Browser"
 #: src/lib/components/EventForm.svelte
 msgid "Anmeldung / Tickets über"
 msgstr "Anmeldung / Tickets über"
+
+#~ msgid "Das waren alle Events die zu deinen Filtern passen."
+#~ msgstr "Das waren alle Events die zu deinen Filtern passen."
+
+#: src/routes/+page.svelte
+msgid "Keine Events gefunden"
+msgstr "Keine Events gefunden"
+
+#: src/routes/+page.svelte
+msgid "Keine weiteren Events gefunden"
+msgstr "Keine weiteren Events gefunden"
+
+#~ msgid "Keine Events gefunde"
+#~ msgstr "Keine Events gefunde"
