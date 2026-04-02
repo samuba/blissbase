@@ -812,7 +812,7 @@ msgid "Hauptnavigation mobil"
 msgstr "Hauptnavigation mobil"
 
 #: src/lib/components/TabsNavMobile.svelte
-#: src/lib/components/tabsNav.ts
+#: src/lib/components/TabsNavMobile.svelte
 msgid "Erstellen"
 msgstr "Erstellen"
 
@@ -848,21 +848,17 @@ msgstr "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreib
 msgid "Event an Telegram-Bot senden <0/>"
 msgstr "Event an Telegram-Bot senden <0/>"
 
-#: src/lib/components/tabsNav.ts
-msgid "Entdecken"
-msgstr "Entdecken"
+#~ msgid "Entdecken"
+#~ msgstr "Entdecken"
 
-#: src/lib/components/tabsNav.ts
-msgid "Favoriten"
-msgstr "Favoriten"
+#~ msgid "Favoriten"
+#~ msgstr "Favoriten"
 
-#: src/lib/components/tabsNav.ts
-msgid "Über"
-msgstr "Über"
+#~ msgid "Über"
+#~ msgstr "Über"
 
-#: src/lib/components/tabsNav.ts
-msgid "Meins"
-msgstr "Meins"
+#~ msgid "Meins"
+#~ msgstr "Meins"
 
 #: src/routes/profile/+page.svelte
 msgid "Aktuelle Events"
@@ -1041,3 +1037,96 @@ msgstr "Keine weiteren Events gefunden"
 
 #~ msgid "Keine Events gefunde"
 #~ msgstr "Keine Events gefunde"
+
+#: src/lib/components/TabsNavDesktop.svelte
+#: src/lib/components/TabsNavMobile.svelte
+msgid "Mehr"
+msgstr "Mehr"
+
+#: src/routes/faq/+page.svelte
+msgid "FAQ"
+msgstr "FAQ"
+
+#: src/routes/faq/+page.svelte
+msgid "Antworten auf die häufigsten Fragen rund um Blissbase."
+msgstr "Antworten auf die häufigsten Fragen rund um Blissbase."
+
+#: src/routes/faq/+page.svelte
+msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
+msgstr "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
+
+#: src/routes/faq/+page.svelte
+msgid "Was ist Blissbase?"
+msgstr "Was ist Blissbase?"
+
+#~ msgid "Blissbase sammelt achtsame Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase sammelt achtsame Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#: src/routes/faq/+page.svelte
+msgid "Woher kommen die Events?"
+msgstr "Woher kommen die Events?"
+
+#: src/routes/faq/+page.svelte
+msgid "Von Blissbase Usern die ihre Events hier teilen und aus verschiedenen öffentlichen Quellen. Ziel dabei ist es, die achtsamen Communities sichtbarer und zugänglicher zu machen."
+msgstr "Von Blissbase Usern die ihre Events hier teilen und aus verschiedenen öffentlichen Quellen. Ziel dabei ist es, die achtsamen Communities sichtbarer und zugänglicher zu machen."
+
+#: src/routes/faq/+page.svelte
+msgid "Kann ich selbst ein Event eintragen?"
+msgstr "Kann ich selbst ein Event eintragen?"
+
+#: src/routes/faq/+page.svelte
+msgid "Ja. Über 'Erstellen' kannst du eigene Events hinzufügen, sobald du angemeldet bist."
+msgstr "Ja. Über 'Erstellen' kannst du eigene Events hinzufügen, sobald du angemeldet bist."
+
+#: src/routes/faq/+page.svelte
+msgid "Kostet die Nutzung etwas?"
+msgstr "Kostet die Nutzung etwas?"
+
+#: src/routes/faq/+page.svelte
+msgid "Nein, das Nutzen von Blissbase ist kostenlos."
+msgstr "Nein, das Nutzen von Blissbase ist kostenlos."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie kann ich Feedback schicken oder Hallo sagen?"
+msgstr "Wie kann ich Feedback schicken oder Hallo sagen?"
+
+#: src/routes/faq/+page.svelte
+msgid "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
+msgstr "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
+
+#~ msgid "Blissbase ist die App in der du alle sammelt achtsame Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle sammelt achtsame Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsame Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsame Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events aus verschiedenen Quellen und macht sie an einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events  einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events  einem Ort durchsuchbar. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest.. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest.. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findst. So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findst. So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob So findest du Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob So findest du Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Workshops, Festivals und Community-Treffen leichter."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Workshops, Festivals und Community-Treffen leichter."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Workshops, Festivals und Community-Treffen."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Workshops, Festivals und Community-Treffen."
+
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals und Community-Treffen."
+#~ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals und Community-Treffen."
+
+#: src/routes/faq/+page.svelte
+msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals oder Community-Treffen."
+msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals oder Community-Treffen."

@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { getAppTabs, isActiveAppTab } from '$lib/components/tabsNav';
 	import { showLoginDialog } from './LoginDialog.svelte';
+	import TabsNavDropDownMenu from './TabsNavDropDownMenu.svelte';
 
 	const userId = $derived(page.data.userId);
 	const pathname = $derived(page.url.pathname);
@@ -14,23 +15,49 @@
 	<ul class="grid grid-cols-5 px-2 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
 	>
 		{#each getAppTabs() as tab (tab.href)}
-			{@const icon = isActiveAppTab(pathname, tab.href) ? tab.iconActive : tab.icon}
+			{@const isActive = isActiveAppTab(pathname, tab.href)}
+			{@const icon = isActive ? tab.iconActive : tab.icon}
 			<li>
-				<a
-					href={tab.requireLogin && !userId ? '#' : tab.href}
-					onclick={tab.requireLogin && !userId ? showLoginDialog : undefined}
-					aria-current={isActiveAppTab(pathname, tab.href) ? `page` : undefined}
-					class={[
-						`flex min-h-10 flex-col items-center justify-center rounded-2xl  transition-colors`,
-						isActiveAppTab(pathname, tab.href)
-							? `text-primary-btn-border font-bold`
-							: `text-base-content/65`
-					]}
-				>
-					<i class={[icon, tab.label === `Erstellen` ? `size-6` : `size-6`]}></i>
-					<span class="text-[0.7rem] font-medium">{tab.label}</span>
-				</a>
+				{#if tab.requireLogin && !userId}
+					<button
+						type="button"
+						onclick={showLoginDialog}
+						class={[
+							`flex min-h-10 w-full flex-col items-center justify-center rounded-2xl transition-colors`,
+							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`
+						]}
+					>
+						<i class={[icon, tab.label === `Erstellen` ? `size-6` : `size-6`]}></i>
+						<span class="text-[0.7rem] font-medium">{tab.label}</span>
+					</button>
+				{:else}
+					<a
+						href={tab.href}
+						aria-current={isActive ? `page` : undefined}
+						class={[
+							`flex min-h-10 w-full flex-col items-center justify-center rounded-2xl transition-colors`,
+							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`
+						]}
+					>
+						<i class={[icon, tab.label === `Erstellen` ? `size-6` : `size-6`]}></i>
+						<span class="text-[0.7rem] font-medium">{tab.label}</span>
+					</a>
+				{/if}
 			</li>
 		{/each}
+		<li>
+			<TabsNavDropDownMenu side="top" align="center">
+				{#snippet trigger({ props })}
+					<button
+						type="button"
+						{...props}
+						class="flex min-h-10 w-full flex-col items-center justify-center rounded-2xl transition-colors text-base-content/65"
+					>
+						<i class="size-6 icon-[ph--dots-three]"></i>
+						<span class="text-[0.7rem] font-medium">Mehr</span>
+					</button>
+				{/snippet}
+			</TabsNavDropDownMenu>
+		</li>
 	</ul>
 </nav>

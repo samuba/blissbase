@@ -1,44 +1,66 @@
 import { resolve } from '$app/paths';
+import { routes } from '$lib/routes';
 
 // needs to be a function otherwise wuchale does not pick up the translation
-export function getAppTabs() {
+export function getAppNavItems() {
 	return [
 		{
-			label: "Entdecken",
-			href: resolve("/#header-controls"),
-			icon: "icon-[ph--compass]",
-			iconActive: "icon-[ph--compass-fill]",
-			requireLogin: false
+			label: `Entdecken`,
+			href: resolve(`/#header-controls`),
+			icon: `icon-[ph--compass]`,
+			iconActive: `icon-[ph--compass-fill]`,
+			requireLogin: false,
+			isInMoreMenu: false
 		},
 		{
-			label: "Erstellen",
-			href: resolve("/new"),
-			icon: "icon-[ph--plus-circle]",
-			iconActive: "icon-[ph--plus-circle-fill]",
-			requireLogin: true
+			label: `Erstellen`,
+			href: resolve(routes.newEvent()),
+			icon: `icon-[ph--plus-circle]`,
+			iconActive: `icon-[ph--plus-circle-fill]`,
+			requireLogin: true,
+			isInMoreMenu: false
 		},
 		{
-			label: "Favoriten",
-			href: resolve("/profile/favorites"),
-			icon: "icon-[ph--heart]",
-			iconActive: "icon-[ph--heart-fill]",
-			requireLogin: true
+			label: `Favoriten`,
+			href: resolve(routes.favorites()),
+			icon: `icon-[ph--heart]`,
+			iconActive: `icon-[ph--heart-fill]`,
+			requireLogin: true,
+			isInMoreMenu: false
 		},
 		{
-			label: "Meins",
-			href: resolve("/profile"),
-			icon: "icon-[ph--user-circle]",
-			iconActive: "icon-[ph--user-circle-fill]",
-			requireLogin: true
+			label: `Meins`,
+			href: resolve(routes.profile()),
+			icon: `icon-[ph--user-circle]`,
+			iconActive: `icon-[ph--user-circle-fill]`,
+			requireLogin: true,
+			isInMoreMenu: false
 		},
 		{
-			label: "Über",
-			href: resolve("/about"),
-			icon: "icon-[ph--info]",
-			iconActive: "icon-[ph--info-fill]",
-			requireLogin: false
+			label: `Über`,
+			href: resolve(routes.about()),
+			icon: `icon-[ph--info]`,
+			iconActive: `icon-[ph--info-fill]`,
+			requireLogin: false,
+			isInMoreMenu: true
 		},
-	] as const;
+		{
+			label: `FAQ`,
+			href: resolve(routes.faq()),
+			icon: `icon-[ph--question]`,
+			iconActive: `icon-[ph--question-fill]`,
+			requireLogin: false,
+			isInMoreMenu: true
+		}
+	] satisfies AppNavItem[];
+}
+
+export function getAppTabs() {
+	return getAppNavItems().filter((item) => !item.isInMoreMenu);
+}
+
+export function getMoreMenuTabs() {
+	return getAppNavItems().filter((item) => item.isInMoreMenu);
 }
 
 export function isActiveAppTab(pathname: string, href: string) {
@@ -51,3 +73,12 @@ export function isActiveAppTab(pathname: string, href: string) {
 	}
 	return pathname === href;
 }
+
+type AppNavItem = {
+	label: string;
+	href: string;
+	icon: string;
+	iconActive: string;
+	requireLogin: boolean;
+	isInMoreMenu: boolean;
+};

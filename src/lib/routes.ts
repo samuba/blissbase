@@ -12,6 +12,8 @@ export const routes = {
         return absolute ? url.toString() : url.toString().replace(url.origin, '');
     },
     sources: () => `/sources` as const,
+    about: () => `/about` as const,
+    faq: () => `/faq` as const,
     newEvent: () => `/new` as const,
     profile: () => `/profile` as const,
     editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
