@@ -31,7 +31,7 @@ export async function mapAiAnswerToCreateEventPrefill(
 	const attendance = analysis.attendanceMode ?? `offline`;
 	const isOnline = attendance === `online`;
 
-	let description = (analysis.description ?? analysis.descriptionBrief ?? ``).trim();
+	let description = (analysis.description ?? ``).trim();
 	if (!description) description = `<p></p>`;
 
 	let notice: CreateEventPrefillFields[`notice`];

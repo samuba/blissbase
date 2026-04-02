@@ -123,8 +123,6 @@ Extract these information from the message:
 
 "description": string. A exact copy from the message, including html tags, do not convert <br> tags to \n. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of the description. If it contains links that are not wrapped in <a> tags, wrap them in <a> tags. From extracted images only include the information that is not already in the message.
 
-"descriptionBrief": string. The same content as in "description" field, including html tags. Remove name/title, start time, end time if they were extracted into other fields.
-
 "startDate": string. The date and time of the event start. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find date and not time assume start of the day. If multiple start dates are mentioned take the one thats in the future and closest to today. 
 
 "endDate": string. The date and time of the event end. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. ONLY if specified in the message.
@@ -161,7 +159,6 @@ export type MsgAnalysisAnswer = {
 	existingSource: string;
 	name: string;
 	description: string;
-	descriptionBrief: string;
 	startDate: string;
 	endDate: string;
 	url: string;
