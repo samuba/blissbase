@@ -201,8 +201,9 @@
 				onChange: debounce(async () => {
 					const blocks = await editor!.save();
 					editorValue = editorJsHtml.parse(blocks);
-				}, 1000)
+				}, 1000),
 			});
+
 			} catch (error) {
 				console.error('Failed to load EditorJS:', error);
 				throw error;
@@ -214,8 +215,8 @@
 	});
 </script>
 
-<!-- Stacking: later form siblings (e.g. price/tags row) paint on top unless this subtree has a higher z-index. -->
-<div class={['relative', 'focus-within:z-60', 'hover:z-60']}>
+<!-- Stacking: raise this subtree only while the block toolbox is open so it clears siblings; matches Editor.js root class. -->
+<div class={['relative', 'editor-js-stack-root']}>
 	<div bind:this={editorEl} class="prose-sm textarea w-full sm:pl-0"></div>
 
 	<textarea {...field.as('text')} class="hidden peer" aria-hidden="true" value={editorValue}></textarea>
@@ -223,6 +224,12 @@
 
 <style>
 	@reference '../../app.css';
+
+	.editor-js-stack-root:has(:global(.ce-popover--opened)),
+	.editor-js-stack-root:has(:global(.codex-editor--toolbox-opened)) {
+		/* show menus above tabs nav */
+		z-index: 60;
+	}
 
 	:global(.codex-editor__redactor) {
 		padding-bottom: 0 !important;
