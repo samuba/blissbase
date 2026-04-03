@@ -332,7 +332,7 @@
 				{:else if sourceUrl && !sourceUrl.includes("todo.today")}
 					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn" title="Für Event anmelden">
 						<!-- @wc-context: register-for-event -->
-						Anmelden
+						Für Event anmelden
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if singleContact?.method === 'Website'}
@@ -344,15 +344,15 @@
 						title="Für Event anmelden"
 					>
 						<!-- @wc-context: register-for-event -->
-						Anmelden
+						Für Event anmelden
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if event.contact?.length}
-					<PopOver contentClass="bg-base-100 p-5 w-xs z-30">
+					<PopOver contentClass="bg-base-100 p-5 w-xs z-60">
 						{#snippet trigger({ props })}
 							<button {...props} class={[`btn btn-primary`, props.class]} title="Für Event anmelden"> 
 								<!-- @wc-context: register-for-event -->
-								Anmelden
+								Für Event anmelden
 							</button>
 						{/snippet}
 						{#snippet content()}

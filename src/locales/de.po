@@ -1073,12 +1073,9 @@ msgstr "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfo
 msgid "Escape"
 msgstr "Escape"
 
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-msgctxt "register-for-event"
-msgid "Anmelden"
-msgstr "Anmelden"
+#~ msgctxt "register-for-event"
+#~ msgid "Anmelden"
+#~ msgstr "Anmelden"
 
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
@@ -1101,3 +1098,10 @@ msgstr "Meins"
 #: src/lib/components/tabsNav.ts
 msgid "Über"
 msgstr "Über"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgctxt "register-for-event"
+msgid "Für Event anmelden"
+msgstr "Für Event anmelden"
