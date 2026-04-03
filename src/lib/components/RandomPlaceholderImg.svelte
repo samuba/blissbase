@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	let { seed, class: className, children }: { seed: string; class?: string; children?: Snippet } = $props();
+	let { seed, children, ...restProps }: { seed: string; children?: Snippet } = $props();
 
 	// Curated array of aesthetically pleasing hue rotation values
 	const pleasingHueRotations = [0, 10, 20, 30, 35, 290, 300, 310, 320, 330, 340, 350, 360];
@@ -30,7 +30,7 @@
 	const transformStyle = $derived(`transform: rotate(${rotationAngle}deg) scale(${1.5});`);
 </script>
 
-<div class={`overflow-hidden saturate-80 ${className}`}>
+<div class={["overflow-hidden saturate-80", ...restProps.class]}>
 	<img
 		src={'/event-placeholder.png'}
 		alt="placeholder logo"

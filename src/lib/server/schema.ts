@@ -35,6 +35,7 @@ export const events = pgTable('events', {
     hostSecret: text(),
     attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
     authorId: uuid().references(() => profiles.id, { onDelete: 'cascade' }),
+    spotlight: text(),
 });
 
 export type SelectEvent = typeof events.$inferSelect;

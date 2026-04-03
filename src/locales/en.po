@@ -1105,3 +1105,13 @@ msgstr "About"
 msgctxt "register-for-event"
 msgid "Für Event anmelden"
 msgstr "Register for Event"
+
+#~ msgid "Recommended Event"
+#~ msgstr "Recommended Event"
+
+#~ msgid "Empfh"
+#~ msgstr "Recommended"
+
+#: src/lib/components/EventCard.svelte
+msgid "Empfohlener Event"
+msgstr "Recommended event"
