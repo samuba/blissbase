@@ -1115,3 +1115,7 @@ msgstr "Register for Event"
 #: src/lib/components/EventCard.svelte
 msgid "Empfohlener Event"
 msgstr "Recommended event"
+
+#: src/lib/eventDuplicateDraftToast.svelte.ts
+msgid "Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits."
+msgstr "An event with this name and the same start and end times already exists."

@@ -10,6 +10,7 @@
 		type UpdateEventSchema,
 		type ContactMethod
 	} from '$lib/events.remote.common';
+	import { useDuplicateEventDraftToast } from '$lib/eventDuplicateDraftToast.svelte';
 	import TagsInput from '$lib/components/TagsInput.svelte';
 	import EditorJs from '$lib/components/EditorJs.svelte';
 	import Select from '$lib/components/Select.svelte';
@@ -51,6 +52,8 @@
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		remoteForm.fields.timeZone.set(timeZone);
 	});
+
+	useDuplicateEventDraftToast(() => remoteForm);
 </script>
 
 <form {...preflight} enctype="multipart/form-data" class="flex flex-col gap-5" id="event-form">

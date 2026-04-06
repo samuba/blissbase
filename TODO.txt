@@ -1,3 +1,8 @@
+BUG: whatsapp image extraction not working properly
+BUG: whatsapp extraction: contact will have "whatsapp +17605858038"
+
+Check whatsapp events quality
+
 BUG: sometime tags show als erstes: 1 tages retreat, 1zu1 retreat (sollte eh raus)
 add more whatsapp groups
 

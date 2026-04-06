@@ -1,23 +1,24 @@
-import { form, getRequestEvent } from '$app/server';
-import { error, invalid, redirect } from '@sveltejs/kit';
-import { ensureUserId } from '$lib/server/common';
+import { form, getRequestEvent, query } from '$app/server';
+import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import * as assets from '$lib/assets';
 import { generateSlug, randomString } from '$lib/common';
-import { createEventSchema, updateEventSchema, type CreateEventData, type ContactMethod } from '$lib/events.remote.common';
-import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import {
-	EVENT_IMAGE_ACCEPTED_MIME_TYPES,
-	EVENT_IMAGE_HASH_LENGTH,
-	getStableContentHash,
-	getProcessedImageHashFromFileName
+    EVENT_IMAGE_ACCEPTED_MIME_TYPES,
+    EVENT_IMAGE_HASH_LENGTH,
+    getProcessedImageHashFromFileName,
+    getStableContentHash
 } from '$lib/eventImageProcessing.shared';
+import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from '$lib/events.remote.common';
+import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import { routes } from '$lib/routes';
+import { ensureUserId } from '$lib/server/common';
 import { db, eq, s, sql } from '$lib/server/db';
 import { sendEventCreatedEmail } from '$lib/server/email';
 import { geocodeAddressCached } from '$lib/server/google';
 import type { SelectEvent } from '$lib/server/schema';
 import type { InsertEvent } from '$lib/types';
-import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import { error, invalid, redirect } from '@sveltejs/kit';
+import * as v from 'valibot';
 
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	console.time('updateEvent');
@@ -85,15 +86,22 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	if (address.length && !coords) {
 		return invalid(issue.address(`Address was not found in Google Maps`));
 	}
-	const event = formDataToDbData({
-		data,
-		timezone: coords?.timezone ?? data.timeZone ?? `Europe/Berlin`,
-		address
+	const timezone = coords?.timezone ?? data.timeZone ?? `Europe/Berlin`;
+	const event = formDataToDbData({ data, timezone, address });
+	const slug = getEventSlugForDraft({
+		name: event.name,
+		startAt: data.startAt,
+		endAt: data.endAt,
+		timezone
 	});
-	const slug = generateSlug({ name: event.name, startAt: event.startAt, endAt: event.endAt });
 	const imageUrls = await uploadImages({ files: data.images, slug });
 
 	let createdEvent: SelectEvent | undefined = undefined;
+	
+	const existingEvent = await db.query.events.findFirst({ where: eq(s.events.slug, slug), columns: { slug: true } });
+	if (existingEvent) {
+		return invalid(issue.name(`An event with this name and start date already exists.`));
+	}
 
 	await db.transaction(async (tx) => {
 		const createdRows = await tx.insert(s.events).values({
@@ -130,6 +138,43 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	console.timeEnd('createEvent');
 	redirect(303, routes.eventDetails(createdEvent!.slug));
 });
+
+export const getExistingEventForDraft = query(v.object({
+	name: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+	startAt: v.pipe(v.string(), v.isoDateTime()),
+	endAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
+	timeZone: v.pipe(v.string(), v.trim(), v.nonEmpty())
+}), async (draft) => {
+	const slug = getEventSlugForDraft({
+		name: draft.name,
+		startAt: draft.startAt,
+		endAt: draft.endAt,
+		timezone: draft.timeZone
+	});
+	const existingEvent = await db.query.events.findFirst({
+		where: eq(s.events.slug, slug),
+		columns: { slug: true }
+	});
+
+	return { slug: existingEvent?.slug };
+});
+
+/**
+ * Computes the canonical event slug from draft form values before persisting.
+ *
+ * @example
+ * getEventSlugForDraft({ name: `Ecstatic Dance`, startAt: `2026-03-12T19:00`, endAt: `2026-03-12T22:00`, timeZone: `Europe/Berlin` })
+ */
+function getEventSlugForDraft(args: {
+	name: string;
+	startAt: string;
+	endAt?: string;
+	timezone: string;
+}) {
+	const startAt = utcDate(args.startAt, args.timezone);
+	const endAt = args.endAt ? utcDate(args.endAt, args.timezone) : undefined;
+	return generateSlug({ name: args.name, startAt, endAt });
+}
 
 /**
  * Maps the validated form payload to the event row shape.
