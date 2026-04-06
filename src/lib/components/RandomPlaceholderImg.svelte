@@ -1,7 +1,13 @@
 <script lang="ts">
-	import type { Snippet } from "svelte";
+	import type { HTMLAttributes } from 'svelte/elements';
+	import type { Snippet } from 'svelte';
 
-	let { seed, children, ...restProps }: { seed: string; children?: Snippet } = $props();
+	interface Props extends HTMLAttributes<HTMLDivElement> {
+		seed: string; 
+		children?: Snippet
+	}
+
+	let { seed, children, ...restProps }: Props = $props();
 
 	// Curated array of aesthetically pleasing hue rotation values
 	const pleasingHueRotations = [0, 10, 20, 30, 35, 290, 300, 310, 320, 330, 340, 350, 360];
@@ -30,9 +36,9 @@
 	const transformStyle = $derived(`transform: rotate(${rotationAngle}deg) scale(${1.5});`);
 </script>
 
-<div class={["overflow-hidden saturate-80", ...restProps.class]}>
+<div {...restProps} class={["overflow-hidden saturate-80", restProps.class]}>
 	<img
-		src={'/event-placeholder.png'}
+		src="/event-placeholder.png"
 		alt="placeholder logo"
 		title={`Hue: ${selectedHueRotation}°, Rotation: ${rotationAngle}°`}
 		class="h-full w-full object-cover"
