@@ -38,7 +38,13 @@ declare global {
 		}
 	}
 
+	// flatten type definition
 	type Simplify<T> = { [KeyType in keyof T]: T[KeyType] } & {};
+
+	// make specific properties required. Usage: WithRequired<PartialEvent, 'id' | 'slug'>
+	type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+
+	type PartialWithRequired<T, K extends keyof T> = WithRequired<Partial<T> , K>;
 
 	type BlissabaseClaims =  {
 		iss: string

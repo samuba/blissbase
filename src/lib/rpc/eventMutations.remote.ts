@@ -53,7 +53,6 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 			longitude: coords?.lng,
 			imageUrls,
 			updatedAt: sql`now()`,
-			slug: undefined,
 		}).where(eq(s.events.id, eventFromDb.id));
 
 		await tx.delete(s.eventTags).where(eq(s.eventTags.eventId, eventFromDb.id));
@@ -91,13 +90,16 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		timezone: coords?.timezone ?? data.timeZone ?? `Europe/Berlin`,
 		address
 	});
-	const imageUrls = await uploadImages({ files: data.images, slug: event.slug });
+	const slug = generateSlug({ name: event.name, startAt: event.startAt, endAt: event.endAt });
+	const imageUrls = await uploadImages({ files: data.images, slug });
 
 	let createdEvent: SelectEvent | undefined = undefined;
 
 	await db.transaction(async (tx) => {
 		const createdRows = await tx.insert(s.events).values({
 			...event,
+			source: `website-form`,
+			slug,
 			imageUrls,
 			latitude: coords?.lat,
 			longitude: coords?.lng,
@@ -139,7 +141,6 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 function formDataToDbData(args: FormDataToDbDataArgs) {
 	const startAt = utcDate(args.data.startAt, args.timezone);
 	const endAt = args.data.endAt ? utcDate(args.data.endAt, args.timezone) : undefined;
-	const slug = generateSlug({ name: args.data.name, startAt, endAt });
 	const attendanceMode = args.data.isOnline ? `online` : `offline`;
 	const listed = !args.data.isNotListed;
 	let contact: string[] = []
@@ -164,11 +165,9 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 		endAt,
 		timezone: args.timezone,
 		address: args.address,
-		slug,
 		attendanceMode,
 		contact,
-		source: `website-form`,
-	} satisfies InsertEvent;
+	} satisfies Omit<InsertEvent, 'source' | 'slug'>;
 }
 
 /**
