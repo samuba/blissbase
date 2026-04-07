@@ -33,7 +33,7 @@ function loadWhatsapp2SqliteCreds() {
         accessKey: process.env.WHATSAPP2SQLITE_R2_ACCESS_KEY_ID!,
         secretKey: process.env.WHATSAPP2SQLITE_R2_SECRET_ACCESS_KEY!,
         bucket: process.env.WHATSAPP2SQLITE_R2_BUCKET_NAME!,
-        endPoint: process.env.WHATSAPP2SQLITE_R2_ENDPOINT,
+        endPoint: process.env.WHATSAPP2SQLITE_R2_ENDPOINT!,
         region: `auto`
     }
 }
