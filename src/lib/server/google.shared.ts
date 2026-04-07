@@ -256,7 +256,6 @@ async function geocodeLocation(args: {
 		}
 
 		const data = await response.json();
-		console.log(`geocodeLocation`, data);
 
 		if (data.status === `OK` && data.results?.length) {
 			return data.results[0].geometry.location;
