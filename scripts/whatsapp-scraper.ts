@@ -917,6 +917,8 @@ async function validateAndBuildEventBase(args: {
         }
     }
 
+    const description = normalizeWhatsappHtmlText(aiAnswer.description)
+    const normalizedDescriptionOriginal = normalizeWhatsappHtmlText(descriptionOriginal)
     const baseEvent: InsertEvent = {
         name,
         imageUrls: [],
@@ -928,8 +930,8 @@ async function validateAndBuildEventBase(args: {
         latitude,
         longitude,
         price: aiAnswer.price,
-        description: aiAnswer.description,
-        descriptionOriginal,
+        description,
+        descriptionOriginal: normalizedDescriptionOriginal,
         host: author.name,
         hostLink: author.link,
         sourceUrl: aiAnswer.url,
@@ -1303,6 +1305,38 @@ function compareTextIds(a: string, b: string) {
 }
 
 /**
+ * Resolves mixed plain-text and HTML line breaks into stable `<br>` tags.
+ * @example
+ * normalizeWhatsappHtmlText(`Line 1\nLine 2<br>\n\nLine 3`)
+ */
+export function normalizeWhatsappHtmlText(value: string | null | undefined) {
+    if (!value?.trim()) return ``
+
+    return value
+        // Normalize Windows and old-Mac line endings to plain `\n`.
+        .replace(/\r\n?/g, `\n`)
+        // Canonicalize all `<br>` tag variants to lowercase `<br>`.
+        .replace(/<br\s*\/?>/gi, `<br>`)
+        // Remove surrounding horizontal whitespace from plain-text line breaks.
+        .replace(/[ \t]*\n[ \t]*/g, `\n`)
+        // Remove plain-text line breaks directly touching existing `<br>` tags.
+        .replace(/\n*<br>\n*/g, `<br>`)
+        // Turn one or two newline chars into one or two `<br>` tags.
+        .replace(/\n+/g, (match) => `<br>`.repeat(Math.min(match.length, 2)))
+        // Collapse any run of 3+ break tags down to at most two.
+        .replace(/(?:\s*<br>\s*){3,}/g, `<br><br>`)
+        // Normalize spaced two-break sequences to the compact `<br><br>` form.
+        .replace(/\s*<br>\s*<br>\s*/g, `<br><br>`)
+        // Normalize spaced single-break sequences to the compact `<br>` form.
+        .replace(/\s*<br>\s*/g, `<br>`)
+        // Remove any break tags that ended up at the outer edges.
+        .replace(/^(?:<br>)+/, ``)
+        .replace(/(?:<br>)+$/, ``)
+        // Remove outer whitespace without touching intentional inner spacing.
+        .trim()
+}
+
+/**
  * Runs the WhatsApp scraper entrypoint.
  * @example
  * await main()
@@ -1396,3 +1430,4 @@ type WhatsappSyncMessage = {
     timestamp: number
     updatedAt: number
 }
+
