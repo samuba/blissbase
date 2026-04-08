@@ -45,6 +45,7 @@ const (
 	defaultConfigPath           = "./config.jsonc"
 	defaultDatabaseSyncInterval = 30 * time.Second
 	databaseSyncTimeout         = 2 * time.Minute
+	groupMetadataSyncTimeout    = 2 * time.Minute
 	mediaUploadTimeout          = 2 * time.Minute
 	objectDeleteTimeout         = 30 * time.Second
 	mediaUploadWorkerCount      = 4
@@ -391,6 +392,17 @@ func (d *daemon) handleEvent(evt any) {
 		}
 	case *events.Connected:
 		log.Printf("connected as %s", d.client.Store.ID)
+		d.backfillGroupDisplayNamesAsync()
+	case *events.OfflineSyncCompleted:
+		d.backfillGroupDisplayNamesAsync()
+	case *events.JoinedGroup:
+		if err := d.storeJoinedGroup(context.Background(), event); err != nil {
+			log.Printf("store joined group metadata failed: %v", err)
+		}
+	case *events.GroupInfo:
+		if err := d.storeGroupInfoChange(context.Background(), event); err != nil {
+			log.Printf("store group info change failed: %v", err)
+		}
 	case *events.Disconnected:
 		log.Printf("disconnected from WhatsApp, waiting for automatic reconnect")
 	case *events.KeepAliveTimeout:
@@ -490,12 +502,12 @@ func (d *daemon) storeConversation(ctx context.Context, conversation *waHistoryS
 			updated_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(chat_jid) DO UPDATE SET
-			display_name = excluded.display_name,
-			username = excluded.username,
-			last_message_timestamp = excluded.last_message_timestamp,
+			display_name = COALESCE(excluded.display_name, sync_chats.display_name),
+			username = COALESCE(excluded.username, sync_chats.username),
+			last_message_timestamp = COALESCE(excluded.last_message_timestamp, sync_chats.last_message_timestamp),
 			unread_count = excluded.unread_count,
 			archived = excluded.archived,
-			raw_conversation_json = excluded.raw_conversation_json,
+			raw_conversation_json = COALESCE(excluded.raw_conversation_json, sync_chats.raw_conversation_json),
 			updated_at = excluded.updated_at`,
 		chatJID.String(),
 		nilIfEmpty(displayName),
@@ -508,6 +520,126 @@ func (d *daemon) storeConversation(ctx context.Context, conversation *waHistoryS
 	)
 	if err != nil {
 		return fmt.Errorf("upsert chat metadata: %w", err)
+	}
+
+	d.notifyDatabaseChanged()
+
+	return nil
+}
+
+// backfillGroupDisplayNamesAsync refreshes stored group names without blocking the event loop.
+// Example: `d.backfillGroupDisplayNamesAsync()`
+func (d *daemon) backfillGroupDisplayNamesAsync() {
+	if d == nil || d.client == nil {
+		return
+	}
+
+	if !d.groupMetadataSyncRunning.CompareAndSwap(false, true) {
+		return
+	}
+
+	go func() {
+		defer d.groupMetadataSyncRunning.Store(false)
+
+		ctx, cancel := context.WithTimeout(context.Background(), groupMetadataSyncTimeout)
+		defer cancel()
+
+		if err := d.backfillGroupDisplayNames(ctx); err != nil {
+			log.Printf("backfill group display names failed: %v", err)
+		}
+	}()
+}
+
+// backfillGroupDisplayNames fetches the current names for all joined groups and upserts them into SQLite.
+// Example: `if err := d.backfillGroupDisplayNames(ctx); err != nil { return err }`
+func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
+	if d == nil || d.client == nil {
+		return nil
+	}
+
+	groups, err := d.client.GetJoinedGroups(ctx)
+	if err != nil {
+		return fmt.Errorf("get joined groups: %w", err)
+	}
+
+	for _, group := range groups {
+		if err := d.storeGroupMetadata(ctx, group); err != nil {
+			log.Printf("store group metadata failed: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// storeJoinedGroup upserts the group name for newly joined groups.
+// Example: `if err := d.storeJoinedGroup(ctx, evt); err != nil { return err }`
+func (d *daemon) storeJoinedGroup(ctx context.Context, evt *events.JoinedGroup) error {
+	if evt == nil {
+		return nil
+	}
+
+	return d.storeGroupMetadata(ctx, &evt.GroupInfo)
+}
+
+// storeGroupInfoChange persists live group name changes so display_name stays current.
+// Example: `if err := d.storeGroupInfoChange(ctx, evt); err != nil { return err }`
+func (d *daemon) storeGroupInfoChange(ctx context.Context, evt *events.GroupInfo) error {
+	if evt == nil || evt.Name == nil {
+		return nil
+	}
+
+	return d.upsertSyncChatMetadata(ctx, syncChatMetadata{
+		chatJID:     evt.JID.String(),
+		displayName: evt.Name.Name,
+		updatedAt:   unixOrNow(evt.Timestamp),
+	})
+}
+
+// storeGroupMetadata writes the latest known group name into sync_chats.
+// Example: `if err := d.storeGroupMetadata(ctx, group); err != nil { return err }`
+func (d *daemon) storeGroupMetadata(ctx context.Context, group *types.GroupInfo) error {
+	if group == nil || group.JID.IsEmpty() {
+		return nil
+	}
+
+	return d.upsertSyncChatMetadata(ctx, syncChatMetadata{
+		chatJID:     group.JID.String(),
+		displayName: group.Name,
+		updatedAt:   unixOrNow(group.NameSetAt),
+	})
+}
+
+// upsertSyncChatMetadata updates the known chat metadata without clearing existing values on sparse payloads.
+// Example: `if err := d.upsertSyncChatMetadata(ctx, metadata); err != nil { return err }`
+func (d *daemon) upsertSyncChatMetadata(ctx context.Context, metadata syncChatMetadata) error {
+	if d == nil || d.db == nil {
+		return nil
+	}
+
+	if metadata.chatJID == "" {
+		return nil
+	}
+
+	if metadata.updatedAt == 0 {
+		metadata.updatedAt = time.Now().Unix()
+	}
+
+	_, err := d.db.ExecContext(
+		ctx,
+		`INSERT INTO sync_chats (
+			chat_jid,
+			display_name,
+			updated_at
+		) VALUES (?, ?, ?)
+		ON CONFLICT(chat_jid) DO UPDATE SET
+			display_name = COALESCE(excluded.display_name, sync_chats.display_name),
+			updated_at = excluded.updated_at`,
+		metadata.chatJID,
+		nilIfEmpty(metadata.displayName),
+		metadata.updatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("upsert sync chat metadata for %s: %w", metadata.chatJID, err)
 	}
 
 	d.notifyDatabaseChanged()
@@ -1003,6 +1135,16 @@ func boolToInt(value bool) int {
 	}
 
 	return 0
+}
+
+// unixOrNow returns a Unix timestamp and falls back to the current time for zero values.
+// Example: `updatedAt := unixOrNow(evt.Timestamp)`
+func unixOrNow(value time.Time) int64 {
+	if value.IsZero() {
+		return time.Now().Unix()
+	}
+
+	return value.Unix()
 }
 
 // execIgnoringDuplicateColumn runs a schema change and skips duplicate-column errors.
@@ -1779,6 +1921,8 @@ type daemon struct {
 	db          *sql.DB
 	r2          *r2Manager
 	fatalEvents chan error
+
+	groupMetadataSyncRunning atomic.Bool
 }
 
 type daemonConfig struct {
@@ -1843,4 +1987,10 @@ type mediaUploadJob struct {
 	mimeType     string
 	objectKey    string
 	objectURI    string
+}
+
+type syncChatMetadata struct {
+	chatJID     string
+	displayName string
+	updatedAt   int64
 }
