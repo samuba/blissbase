@@ -129,7 +129,7 @@ Extract these information from the message:
 
 "url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider google maps urls for this. Never consider urls for this that start with "https://t.me".
 
-"contact": Array<string>. If the text contains contact or registration information like messenger handles, URLs, phonenumbers etc that could be used to contact the event host or register for the event. Add main registration/contact method first. It needs to be a string which can contact the event host. (no "via dm")
+"contact": Array<string>. Contact or registration information. A valid href value. Example: https://exa.com, https://wa.me/+1234567890, mailto:ex@mpl.de, tel:+12345, tg://resolve?domain=username. Add main registration/contact method first. 
 
 "contactAuthorForMore": boolean. Wether the message states to contact the author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
 
