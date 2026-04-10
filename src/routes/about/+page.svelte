@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { estimateEventCount } from '$lib/rpc/eventCount.remote';
+    import { resolve } from '$app/paths';
+import { estimateEventCount } from '$lib/rpc/eventCount.remote';
 
     const eventCount = await estimateEventCount().then((count) => Math.floor(count / 1000) * 1000);
 </script>
@@ -9,7 +10,7 @@
         <p class="">
             Ich will die achtsamen Communities Deutschlands zusammen bringen. 
             Dafür sammel ich Events (über <b>{eventCount}</b>)
-            aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles
+            aus <a href={resolve("/faq")} class="link">verschiedenen Regionen</a> und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles
             an einem Ort.
             <br />
             Ich hoffe dir gefällt meine Arbeit.

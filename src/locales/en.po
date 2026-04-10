@@ -864,9 +864,8 @@ msgstr "My created events"
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
 msgstr "You're being shown events around <0/>. If that's not your location, change it below."
 
-#: src/routes/about/+page.svelte
-msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
-msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from various sources and make them accessible here. Searchable, convenient, everything in one place. <1/> I hope you like my work."
+#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from various sources and make them accessible here. Searchable, convenient, everything in one place. <1/> I hope you like my work."
 
 #: src/routes/about/+page.svelte
 msgid "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
@@ -1029,45 +1028,35 @@ msgstr "Answers to the most common questions about Blissbase."
 msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Don't see your question? <0>Write to me.</0>"
 
-#: src/routes/faq/+page.svelte
-msgid "Was ist Blissbase?"
-msgstr "What is Blissbase?"
+#~ msgid "Was ist Blissbase?"
+#~ msgstr "What is Blissbase?"
 
-#: src/routes/faq/+page.svelte
-msgid "Woher kommen die Events?"
-msgstr "Where do the events come from?"
+#~ msgid "Woher kommen die Events?"
+#~ msgstr "Where do the events come from?"
 
-#: src/routes/faq/+page.svelte
-msgid "Von Blissbase Usern die ihre Events hier teilen und aus verschiedenen öffentlichen Quellen. Ziel dabei ist es, die achtsamen Communities sichtbarer und zugänglicher zu machen."
-msgstr "They come from Blissbase users who share their events here and from various public sources. The goal is to make mindful communities more visible and accessible."
+#~ msgid "Von Blissbase Usern die ihre Events hier teilen und aus verschiedenen öffentlichen Quellen. Ziel dabei ist es, die achtsamen Communities sichtbarer und zugänglicher zu machen."
+#~ msgstr "They come from Blissbase users who share their events here and from various public sources. The goal is to make mindful communities more visible and accessible."
 
-#: src/routes/faq/+page.svelte
-msgid "Kann ich selbst ein Event eintragen?"
-msgstr "Can I add an event myself?"
+#~ msgid "Kann ich selbst ein Event eintragen?"
+#~ msgstr "Can I add an event myself?"
 
-#: src/routes/faq/+page.svelte
-msgid "Ja. Über 'Erstellen' kannst du eigene Events hinzufügen, sobald du angemeldet bist."
-msgstr "Yes. Use 'Create' to add your own events once you're logged in."
+#~ msgid "Ja. Über 'Erstellen' kannst du eigene Events hinzufügen, sobald du angemeldet bist."
+#~ msgstr "Yes. Use 'Create' to add your own events once you're logged in."
 
-#: src/routes/faq/+page.svelte
-msgid "Kostet die Nutzung etwas?"
-msgstr "Does it cost anything to use?"
+#~ msgid "Kostet die Nutzung etwas?"
+#~ msgstr "Does it cost anything to use?"
 
-#: src/routes/faq/+page.svelte
-msgid "Nein, das Nutzen von Blissbase ist kostenlos."
-msgstr "No, using Blissbase is free."
+#~ msgid "Nein, das Nutzen von Blissbase ist kostenlos."
+#~ msgstr "No, using Blissbase is free."
 
-#: src/routes/faq/+page.svelte
-msgid "Wie kann ich Feedback schicken oder Hallo sagen?"
-msgstr "How can I send feedback or say hello?"
+#~ msgid "Wie kann ich Feedback schicken oder Hallo sagen?"
+#~ msgstr "How can I send feedback or say hello?"
 
-#: src/routes/faq/+page.svelte
-msgid "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
-msgstr "The easiest way is by email at hi@blissbase.app. I welcome any feedback, ideas, corrections, and collaborations."
+#~ msgid "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
+#~ msgstr "The easiest way is by email at hi@blissbase.app. I welcome any feedback, ideas, corrections, and collaborations."
 
-#: src/routes/faq/+page.svelte
-msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals oder Community-Treffen."
-msgstr "Blissbase is the app where you can conveniently find all mindful events in one place — whether Ecstatic Dance, workshops, festivals, or community meetups."
+#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals oder Community-Treffen."
+#~ msgstr "Blissbase is the app where you can conveniently find all mindful events in one place — whether Ecstatic Dance, workshops, festivals, or community meetups."
 
 #: src/lib/components/TabsNavMobile.svelte
 msgid "Escape"
@@ -1119,3 +1108,118 @@ msgstr "Recommended event"
 #: src/lib/eventDuplicateDraftToast.svelte.ts
 msgid "Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits."
 msgstr "An event with this name and the same start and end times already exists."
+
+#~ msgid "Wo finde ich Events?"
+#~ msgstr "Where can I find events?"
+
+#~ msgid "In der App und auf der Website kannst du alle gelisteten Events durchsuchen. In den letzten zwei Monaten waren in diesen Regionen jeweils so viele Events erfasst:"
+#~ msgstr "In the app and on the website you can browse all listed events. In the last two months, the following number of events were recorded in each region:"
+
+#: src/routes/faq/+page.svelte
+msgid "Für Regionen liegen gerade keine Zahlen vor."
+msgstr "There are currently no figures available for the regions."
+
+#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Regionen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from various regions and sources and make them accessible here. Searchable, convenient, all in one place. <1/> I hope you like my work."
+
+#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Regionen und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
+#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from various regions and sources and make them accessible here. Searchable, convenient, all in one place. <1/> I hope you like my work."
+
+#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1/>verschiedenen Regionen und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
+#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from <1/>different regions and sources and make them accessible here. Searchable, convenient, all in one place. <2/> I hope you like my work."
+
+#: src/routes/about/+page.svelte
+msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1>verschiedenen Regionen</1> und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
+msgstr "I want to bring together Germany's mindful communities. To this end, I collect events (via <0/>) from <1>different regions</1> and sources and make them accessible here. Searchable, convenient, all in one place. <2/> I hope you like my work."
+
+#~ msgid "Welche Regionen?"
+#~ msgstr "Which regions?"
+
+#: src/routes/faq/+page.svelte
+msgid "Welche Regionen werden unterstützt?"
+msgstr "Which regions are supported?"
+
+#~ msgid "Blissbase wächst"
+#~ msgstr "Blissbase is growing"
+
+#~ msgid "Der KatalBlissbase wächst"
+#~ msgstr "The KatalBlissbase is growing"
+
+#~ msgid "Der Katalog vonBlissbase wächst"
+#~ msgstr "The Blissbase catalog is growing"
+
+#~ msgid "Unsere unterstützten Regionen sindBlissbase wächst"
+#~ msgstr ""
+#~ "Our supported regions are\n"
+#~ "Blissbase is growing"
+
+#~ msgid "Unsere am besten unter"
+#~ msgstr "Our best among"
+
+#~ msgid "Unsere am besten unterstützten Regionen sind:"
+#~ msgstr "Our best-supported regions are:"
+
+#~ msgid "Unsere am besten unterstützten Regionen sind"
+#~ msgstr "Our best-supported regions are"
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du"
+#~ msgstr "You can see our best-supported regions"
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier."
+#~ msgstr "See our best-supported regions here."
+
+#~ msgid "<0/> <1/>Events"
+#~ msgstr "<0/> <1/>Events"
+
+#~ msgid "<0/> <1/> Events"
+#~ msgstr "<0/> <1/> Events"
+
+#~ msgid "<0/> <1/> <2/> Events"
+#~ msgstr "<0/> <1/> <2/> Events"
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit neuen"
+#~ msgstr "Here you can see our best-supported regions, with new ones"
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit neuen Events der letzten zwei Monate"
+#~ msgstr "You can see our best-supported regions here, with new events from the past two months."
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit neuen Events der letzten zwei Monate pro Region."
+#~ msgstr "Here you can see our best-supported regions, with new events per region from the past two months."
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl der neuen Events der letzten zwei Monate pro Region."
+#~ msgstr "Here are our best-supported regions, with the number of new events per region in the last two months."
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl neuen Events der letzten zwei Monate pro Region."
+#~ msgstr "Here you can see our best-supported regions, with the number of new events per region in the last two months."
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl neuer Events der letzten zwei Monate pro Region."
+#~ msgstr "Here you can see our best-supported regions, with the number of new events per region in the last two months."
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl neuer Events der letzten zwei Monate."
+#~ msgstr "Here you can see our best-supported regions, along with the number of new events in the last two months."
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0/> neuer Events der letzten zwei Monate."
+#~ msgstr "Here you can see our best-supported regions, with the number of <0/> new events in the past two months."
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate.</0>"
+#~ msgstr "Here you can see our best-supported regions, with the number of <0>new events in the last two months.</0>"
+
+#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgstr "Here you can see our best-supported regions, with the number of <0>new events in the last two months</0>."
+
+#~ msgid "Du kannst Blissbase weltweit nutzenUnsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgstr "You can use Blissbase worldwide. Here you can see our best-supported regions, with the number of <0>new events in the last two months</0>."
+
+#~ msgid "Du kannst Blissbase weltweit nutzen aber Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgstr "You can use Blissbase worldwide, but our best-supported regions are shown here, with the number of <0>new events in the last two months</0>."
+
+#~ msgid "Du kannst Blissbase weltweit nutzen aber unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgstr "You can use Blissbase worldwide, but our best-supported regions are shown here, along with the number of <0>new events in the last two months</0>."
+
+#: src/routes/faq/+page.svelte
+msgid "Du kannst Blissbase weltweit nutzen aber unsere zur Zeit am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+msgstr "You can use Blissbase worldwide, but here you can see our currently best-supported regions, along with the number of <0>new events in the last two months</0>."
+
+#: src/routes/faq/+page.svelte
+msgid "<0/> <1/> <2/>Neue Events"
+msgstr "<0/> <1/> <2/>New events"

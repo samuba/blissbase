@@ -1,5 +1,9 @@
 <script lang="ts">
     /* @wc-include */
+	import { getFaqRecentEventCounts } from '$lib/rpc/eventCount.remote';
+
+	const faqRecentEventCounts = await getFaqRecentEventCounts();
+
 	const faqs = [
 		{
 			question: `Was ist Blissbase?`,
@@ -33,7 +37,36 @@
 			</p>
 		</div>
 
-		{#each faqs as faq (faq.question)}
+		{#each faqs.slice(0, 1) as faq (faq.question)}
+			<div class="card bg-base-100 p-6 shadow">
+				<h2 class="text-lg font-semibold">{faq.question}</h2>
+				<p class="mt-2 text-base-content/80">{faq.answer}</p>
+			</div>
+		{/each}
+
+		<div class="card bg-base-100 p-6 shadow">
+			<h2 class="text-lg font-semibold">Welche Regionen werden unterstützt?</h2>
+			<div class="mt-2 text-base-content/80">
+				<p>
+					Du kannst Blissbase weltweit nutzen aber unsere zur Zeit am besten unterstützten Regionen siehst du hier, mit der Anzahl <b>neuer Events der letzten zwei Monate</b>.
+				</p>
+				{#if faqRecentEventCounts.regions?.length}
+					<ul class="mt-3 space-y-1.5 text-sm">
+						{#each faqRecentEventCounts.regions as region (region.key)}
+							<li class="flex gap-4 border-b border-base-200 pb-1.5 last:border-0 last:pb-0">
+								<span>{region.label}</span>
+								<span class="grow"></span>
+								<span class="shrink-0 tabular-nums font-medium">{region.count}</span>Neue Events
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="mt-2 text-sm italic">Für Regionen liegen gerade keine Zahlen vor.</p>
+				{/if}
+			</div>
+		</div>
+
+		{#each faqs.slice(1) as faq (faq.question)}
 			<div class="card bg-base-100 p-6 shadow">
 				<h2 class="text-lg font-semibold">{faq.question}</h2>
 				<p class="mt-2 text-base-content/80">{faq.answer}</p>
