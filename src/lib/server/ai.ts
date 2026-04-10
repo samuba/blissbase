@@ -146,7 +146,7 @@ Extract these information from the message:
 
 "tags": Array<string>. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map((x) => x.en).join(`, `)}.
 
-${eventIsDefinitelyConscious ? '' : `"isConscious": bool. Wether event is interesting to conscious people. Yes: Meditation, Ecstatic Dance, Sexual, Body, Spiritual etc. No: club dance, pure sport, pure business etc`}
+${eventIsDefinitelyConscious ? '' : `"isConscious": bool. Wether event is interesting to conscious people. Yes: Ecstatic Dance, Sexual, Somatic, Spiritual, Community, Self development, Ritual etc. No: club dance, pure sport, pure business etc`}
 
 `;
 
