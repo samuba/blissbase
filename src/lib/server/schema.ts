@@ -83,6 +83,7 @@ export const telegramChatConfig = pgTable('telegram_chat_config', {
 export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
     roomId: text().primaryKey(),
     name: text(), // telegram group or channel name
+    hasOnlyConsciousEvents: boolean().notNull().default(false),
     lastMessageId: bigint({ mode: 'bigint' }),
     lastMessageTime: timestamp(),
     defaultAddress: text().array(),
@@ -100,6 +101,7 @@ export type TelegramScrapingTarget = typeof telegramScrapingTargets.$inferSelect
 export const whatsappScrapingTargets = pgTable('whatsapp_scraping_targets', {
     chatJid: text().primaryKey(),
     name: text(), // whatsapp chat display name
+    hasOnlyConsciousEvents: boolean().notNull().default(false),
     lastMessageId: text(),
     lastMessageTimestamp: timestamp(),
     defaultAddress: text().array(),

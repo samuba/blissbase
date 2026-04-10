@@ -6,9 +6,6 @@ import { WEBSITE_SCRAPE_SOURCE_URLS } from '../commonWithScripts';
 
 /**
  * Extracts structured event fields from free text (same pipeline as the Telegram bot).
- *
- * @example
- * await aiExtractEventData({ message: `Yoga Workshop Samstag 10 Uhr Berlin`, messageDate: new Date(), timezone: `Europe/Berlin`, model: `google` });
  */
 export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<MsgAnalysisAnswer> {
 	const {
@@ -18,11 +15,12 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 		authorName,
 		imageInputs = [],
 		model,
+		eventIsDefinitelyConscious,
 	} = args;
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	const { text } = await generateText({
 		model: model === `google` ? google(`gemini-3.1-flash-lite-preview`) : openai(`gpt-5-mini`),
-		system: msgAnalysisSystemPrompt(messageDate, timezone, authorName),
+		system: msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName),
 		messages: [
 			{
 				role: `user`,
@@ -42,6 +40,7 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 		if (result.hasEventData) {
 			if (!Array.isArray(result.contact)) result.contact = [];
 			if (!Array.isArray(result.tags)) result.tags = [];
+			if (args.eventIsDefinitelyConscious) result.isConscious = true;
 		}
 		console.timeEnd(`🤖 AI extracting event data with ${imageInputs.length} images`);
 		return result;
@@ -96,7 +95,7 @@ function normalizeAiImageValue(image: AiImageValue) {
 	return new URL(image);
 }
 
-export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: string, authorName?: string) => `
+export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: string, eventIsDefinitelyConscious: boolean, authorName?: string) => `
 Your purpose is to analyze messenger text messages and images to extract information about events from them. 
 Ignore messages that are not event announcements by setting hasEventData to false. (Be strict about this. E.g. this is not an event announcement: "..Wir haben noch einen Platz frei für den nächsten Tantra event..")
 Answer only in valid, properly escaped, raw JSON. Do not wrap it inside markdown or anything else.
@@ -147,7 +146,7 @@ Extract these information from the message:
 
 "tags": Array<string>. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map((x) => x.en).join(`, `)}.
 
-"isConscious": bool. Wether event is interesting to conscious people. Yes: Meditation, Ecstatic Dance, Sexual, Body, Spiritual etc. No: club dance, pure sport, pure business etc
+${eventIsDefinitelyConscious ? '' : `"isConscious": bool. Wether event is interesting to conscious people. Yes: Meditation, Ecstatic Dance, Sexual, Body, Spiritual etc. No: club dance, pure sport, pure business etc`}
 
 `;
 
@@ -186,4 +185,5 @@ export type AiExtractEventDataArgs = {
 	authorName?: string;
 	imageInputs?: (AiImageInput | undefined)[];
 	model: `openai` | `google`;
+	eventIsDefinitelyConscious: boolean;
 };

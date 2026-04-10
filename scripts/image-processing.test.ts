@@ -29,9 +29,9 @@ describe('Image Processing for Event Extraction', () => {
         (aiExtractEventData as any).mockResolvedValue(mockAiResponse);
         const date = new Date();
         // Test the AI function with an image URL
-        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/event-flyer.jpg`], model: `google` });
+        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/event-flyer.jpg`], model: `google`, eventIsDefinitelyConscious: false });
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/event-flyer.jpg`], model: `google` }));
+        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/event-flyer.jpg`], model: `google`, eventIsDefinitelyConscious: false }));
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Tantra Workshop");
         expect(result.startDate).toBe("2024-12-15T19:00:00+01:00");
@@ -47,9 +47,9 @@ describe('Image Processing for Event Extraction', () => {
 
         // Test the AI function with an image URL
         const date = new Date();
-        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/random-image.jpg`], model: `google` });
+        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/random-image.jpg`], model: `google`, eventIsDefinitelyConscious: false });
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/random-image.jpg`], model: `google` }));
+        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/random-image.jpg`], model: `google`, eventIsDefinitelyConscious: false }));
         expect(result.hasEventData).toBe(false);
     });
 
@@ -69,9 +69,9 @@ describe('Image Processing for Event Extraction', () => {
 
         // Test the AI function with both text and image
         const date = new Date();
-        const result = await aiExtractEventData({ message: `Join our yoga retreat! See flyer for details.`, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/yoga-flyer.jpg`], model: `google` });
+        const result = await aiExtractEventData({ message: `Join our yoga retreat! See flyer for details.`, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/yoga-flyer.jpg`], model: `google`, eventIsDefinitelyConscious: false });
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: `Join our yoga retreat! See flyer for details.`, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/yoga-flyer.jpg`], model: `google` }));
+        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: `Join our yoga retreat! See flyer for details.`, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/yoga-flyer.jpg`], model: `google`, eventIsDefinitelyConscious: false }));
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Yoga Retreat");
     });
@@ -96,9 +96,9 @@ describe('Image Processing for Event Extraction', () => {
             'https://example.com/workshop-details.jpg'
         ];
         const date = new Date();
-        const result = await aiExtractEventData({ message: `Join our art workshop!`, messageDate: date, timezone: `germany`, imageInputs: adjacentImages, model: `google` });
+        const result = await aiExtractEventData({ message: `Join our art workshop!`, messageDate: date, timezone: `germany`, imageInputs: adjacentImages, model: `google`, eventIsDefinitelyConscious: false });
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: `Join our art workshop!`, messageDate: date, timezone: `germany`, imageInputs: adjacentImages, model: `google` }));
+        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: `Join our art workshop!`, messageDate: date, timezone: `germany`, imageInputs: adjacentImages, model: `google`, eventIsDefinitelyConscious: false }));
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Art Workshop");
     });
@@ -124,9 +124,9 @@ describe('Image Processing for Event Extraction', () => {
         ];
 
         const date = new Date();
-        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: imageUrls, model: `google` });
+        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: imageUrls, model: `google`, eventIsDefinitelyConscious: false });
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: imageUrls, model: `google` }));
+        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: imageUrls, model: `google`, eventIsDefinitelyConscious: false }));
         expect(result.hasEventData).toBe(true);
         expect(result.name).toBe("Art Exhibition");
     });
@@ -142,9 +142,9 @@ describe('Image Processing for Event Extraction', () => {
 
         // Test the AI function with an image that contains a link to an existing source
         const date = new Date();
-        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/awara-event.jpg`], model: `google` });
+        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/awara-event.jpg`], model: `google`, eventIsDefinitelyConscious: false });
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/awara-event.jpg`], model: `google` }));
+        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/awara-event.jpg`], model: `google`, eventIsDefinitelyConscious: false }));
         expect(result.hasEventData).toBe(false);
         expect(result.existingSource).toBe("awara.events");
     });

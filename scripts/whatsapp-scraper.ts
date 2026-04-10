@@ -560,6 +560,7 @@ async function extractEventDataFromImageMessage(args: {
         authorName: getWhatsappAuthor(args.message).name,
         imageInputs: [imageInput],
         model: `openai`,
+        eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
     })
 
     const base = await validateAndBuildEventBase({
@@ -624,6 +625,7 @@ async function extractEventDataFromMessage(args: {
         authorName: getWhatsappAuthor(args.message).name,
         imageInputs: adjacentImageInputs,
         model: `openai`,
+        eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
     })
 
     const base = await validateAndBuildEventBase({

@@ -431,7 +431,8 @@ async function extractEventDataFromImageMessage(
     client: TelegramClient, 
     allMessages: Api.Message[], 
     defaultTimezone: string, 
-    author: TelegramAuthor | undefined
+    author: TelegramAuthor | undefined,
+    eventIsDefinitelyConscious: boolean
 ): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
     if (message.media?.className !== 'MessageMediaPhoto') return undefined;
 
@@ -454,6 +455,7 @@ async function extractEventDataFromImageMessage(
         authorName: author?.username,
         imageInputs: [imageInput],
         model: `openai`,
+        eventIsDefinitelyConscious,
     });
 
     const base = await validateAndBuildEventBase({
@@ -484,7 +486,8 @@ async function extractEventDataFromMessage(
     client: TelegramClient, 
     allMessages: Api.Message[], 
     defaultTimezone: string,
-    author: TelegramAuthor | undefined
+    author: TelegramAuthor | undefined,
+    eventIsDefinitelyConscious: boolean
 ): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
     const msgHtml = resolveTelegramFormattingToHtml(message.message, message.entities);
     console.log("extracting event data from message", message.id)
@@ -502,6 +505,7 @@ async function extractEventDataFromMessage(
         authorName: author?.username,
         imageInputs: adjacentImageInputs,
         model: `openai`,
+        eventIsDefinitelyConscious,
     });
 
     const base = await validateAndBuildEventBase({
@@ -848,7 +852,13 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
 
         let scrapedEventsCount = 0;
         if (messages.length > 0) {
-            ({ scrapedEventsCount } = await processMessages(messages, resolvedRoomId, client, target.defaultTimezone));
+            ({ scrapedEventsCount } = await processMessages(
+                messages,
+                resolvedRoomId,
+                client,
+                target.defaultTimezone,
+                target.hasOnlyConsciousEvents
+            ));
             messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
             const latestMsgId = BigInt(messages[0].id);
             const latestMsgTime = new Date(messages[0].date * 1000);
@@ -910,7 +920,13 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
 /**
  * Processes messages and returns the newest message ID
  */
-async function processMessages(messages: TotalList<Api.Message>, chatId: string, client: TelegramClient, defaultTimezone: string) {
+async function processMessages(
+    messages: TotalList<Api.Message>,
+    chatId: string,
+    client: TelegramClient,
+    defaultTimezone: string,
+    eventIsDefinitelyConscious: boolean
+) {
     let events: InsertEvent[] = [];
     const processedMessageIds = new Set<number>(); // Track processed messages to avoid duplicates
 
@@ -931,7 +947,7 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
 
         // Handle text messages with event data
         if (msg && msg.length > 30) {
-            const result = await extractEventDataFromMessage(message, chatId, client, allMessages, defaultTimezone, author);
+            const result = await extractEventDataFromMessage(message, chatId, client, allMessages, defaultTimezone, author, eventIsDefinitelyConscious);
             if (result) {
                 events.push(result.event);
                 // Mark this message and its adjacent images as processed
@@ -942,7 +958,7 @@ async function processMessages(messages: TotalList<Api.Message>, chatId: string,
         // Handle image-only messages that might contain event flyers
         else if (isImageMedia(message) && (!msg || msg.length <= 30)) {
             console.log(`Processing image-only message ${message.id} for potential event data`);
-            const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages, defaultTimezone, author);
+            const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages, defaultTimezone, author, eventIsDefinitelyConscious);
             if (result) {
                 events.push(result.event);
                 // Mark this message and its adjacent images as processed

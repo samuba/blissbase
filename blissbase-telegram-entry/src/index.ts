@@ -65,6 +65,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			authorName: author?.username,
 			imageInputs: [image?.url],
 			model: `google`,
+			eventIsDefinitelyConscious: false,
 		}), !fromGroup)
 
 		// console.log("calling vercel with", {
