@@ -5,18 +5,32 @@ import {
 } from '../src/lib/server/db.script.ts';
 import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts';
 import { calculateHammingDistance } from '../src/lib/imageProcessing';
+import type { SelectEvent } from '../src/lib/server/schema';
 
+export async function main() {
+    const { duplicates, eventsWithSameStart } = await getDuplicateEventsByImageHash(5);
+    let deletedCount = await processDuplicates({
+        duplicates,
+        eventsWithSameStart,
+        mergeDuplicateEvents: mergeEvents,
+    });
 
-const { duplicates, eventsWithSameStart } = await getDuplicateEventsByImageHash(5);
-let deletedCount = await processDuplicates(duplicates, eventsWithSameStart);
+    const textDuplicates = await getDuplicateEventsByTextSimilarity(0.5);
+    deletedCount += await processDuplicates({
+        duplicates: textDuplicates,
+        eventsWithSameStart,
+        mergeDuplicateEvents: mergeEvents,
+    });
 
-const textDuplicates = await getDuplicateEventsByTextSimilarity(0.5);
-deletedCount += await processDuplicates(textDuplicates, eventsWithSameStart);
+    console.log(`Found ${duplicates.length + textDuplicates.length} duplicates.`);
+    console.log(`Based on image hash: ${duplicates.length}, based on text similarity: ${textDuplicates.length}`)
+    console.log("Deleted", deletedCount, "duplicates. Ignored", (duplicates.length + textDuplicates.length) - deletedCount, "duplicates.");
+    process.exit(0);
+}
 
-console.log(`Found ${duplicates.length + textDuplicates.length} duplicates.`);
-console.log(`Based on image hash: ${duplicates.length}, based on text similarity: ${textDuplicates.length}`)
-console.log("Deleted", deletedCount, "duplicates. Ignored", (duplicates.length + textDuplicates.length) - deletedCount, "duplicates.");
-process.exit(0);
+if (import.meta.main) {
+    await main();
+}
 
 async function getDuplicateEventsByImageHash(hammingDistanceThreshold: number) {
     const duplicates: {
@@ -68,25 +82,15 @@ function getHashFromImageUrl(url: string) {
 }
 
 
-async function processDuplicates(duplicates: { eventAId: number, eventBId: number }[], eventsWithSameStart: typeof s.events.$inferSelect[]) {
-    let deletedCount = 0;
-    for (const dupe of duplicates) {
-        const eventA = eventsWithSameStart.find(e => e.id === dupe.eventAId);
-        const eventB = eventsWithSameStart.find(e => e.id === dupe.eventBId);
-        if (!eventA || !eventB) {
-            console.warn(`Event not found for id: ${dupe.eventAId} or ${dupe.eventBId}`);
-            continue;
-        }
-
-        ({ deletedCount } = await mergeEvents(eventA!, eventB!, deletedCount));
-    }
-    return deletedCount;
-}
-
 /**
  * Merges the two events into one. Will delete one event and take all properties from the deleted event and add it to the surviving event, if these properties were not already set.
  */
-async function mergeEvents(eventA: typeof s.events.$inferSelect, eventB: typeof s.events.$inferSelect, deletedCount: number) {
+async function mergeEvents(args: {
+    eventA: SelectEvent,
+    eventB: SelectEvent,
+    deletedCount: number,
+}) {
+    const { eventA, eventB, deletedCount } = args;
     if (eventA.source === eventB.source && WEBSITE_SCRAPE_SOURCES.includes(eventA.source as WebsiteScrapeSourceName)) {
         console.log(`Skipping this one cuz both are from ${eventA.source} website. Unlikely to be real duplicate.`);
         return { deletedCount };
@@ -107,10 +111,27 @@ async function mergeEvents(eventA: typeof s.events.$inferSelect, eventB: typeof 
     const priorityB = websiteSourcePriority.indexOf(eventB.source);
     if (priorityA > -1 || priorityB > -1) {
         // one of the sources is a website
-        const idToDelete = priorityA > priorityB ? eventB.id : eventA.id;
-        console.log(`Deleting event ${idToDelete} cuz the other has superior website source`);
-        await db.delete(s.events).where(eq(s.events.id, idToDelete));
-        return { deletedCount: deletedCount + 1 }; // we exit here cuz when source is a website we assume data is already clean and complete, no reason to merge
+        const eventToSurvive = priorityA > priorityB ? eventA : eventB;
+        const eventToDelete = priorityA > priorityB ? eventB : eventA;
+        const survivingEventUpdate = preparePreferredSourceEventUpdate({
+            eventToSurvive,
+            eventToDelete,
+        });
+        console.log(`Deleting event ${eventToDelete.id} cuz the other has superior website source`);
+        await db.transaction(async (tx) => {
+            await mergeEventTags({
+                tx,
+                survivingEventId: eventToSurvive.id,
+                deletedEventId: eventToDelete.id
+            });
+            await tx.update(s.events).set(survivingEventUpdate).where(eq(s.events.id, eventToSurvive.id));
+            await tx.delete(s.events).where(eq(s.events.id, eventToDelete.id));
+        });
+        return {
+            deletedCount: deletedCount + 1,
+            survivingEvent: eventToSurvive,
+            deletedEventId: eventToDelete.id,
+        }; // we exit here cuz when source is a website we assume data is already clean and complete, no reason to merge
     }
 
     // sources are not websites -> longest description wins, merge other properties
@@ -158,14 +179,53 @@ async function mergeEvents(eventA: typeof s.events.$inferSelect, eventB: typeof 
     }
     console.log("Surviving event after merging:", eventToSurvive);
     const { id, ...eventToSurviveWithoutId } = eventToSurvive;
-    await db.update(s.events).set(eventToSurviveWithoutId).where(eq(s.events.id, eventToSurvive.id));
-    console.log(`Deleting ${eventToDelete.slug} (${eventToDelete.id})`);
-    await db.delete(s.events).where(eq(s.events.id, eventToDelete.id));
-    return { deletedCount: deletedCount + 1 };
+    await db.transaction(async (tx) => {
+        await mergeEventTags({
+            tx,
+            survivingEventId: eventToSurvive.id,
+            deletedEventId: eventToDelete.id
+        });
+        await tx.update(s.events).set(eventToSurviveWithoutId).where(eq(s.events.id, eventToSurvive.id));
+        console.log(`Deleting ${eventToDelete.slug} (${eventToDelete.id})`);
+        await tx.delete(s.events).where(eq(s.events.id, eventToDelete.id));
+    });
+    return {
+        deletedCount: deletedCount + 1,
+        survivingEvent: eventToSurvive,
+        deletedEventId: eventToDelete.id,
+    };
 }
 
-function mergeArrayDeduplicated(arrayA: string[] | null, arrayB: string[] | null) {
-    return Array.from(new Set([...(arrayA ?? []), ...(arrayB ?? [])]));
+/**
+ * Moves all tag relations from the deleted event onto the surviving event.
+ *
+ * @example
+ * await mergeEventTags({ tx, survivingEventId: 1, deletedEventId: 2 });
+ */
+async function mergeEventTags(args: {
+    tx: DbTx,
+    survivingEventId: number,
+    deletedEventId: number,
+}) {
+    const mergedTagRows = await args.tx
+        .select({ tagId: s.eventTags.tagId })
+        .from(s.eventTags)
+        .where(inArray(s.eventTags.eventId, [args.survivingEventId, args.deletedEventId]));
+
+    const mergedTagIds = Array.from(new Set(mergedTagRows.map((row) => row.tagId)));
+    await args.tx
+        .delete(s.eventTags)
+        .where(inArray(s.eventTags.eventId, [args.survivingEventId, args.deletedEventId]));
+
+    if (!mergedTagIds.length) return;
+
+    await args.tx
+        .insert(s.eventTags)
+        .values(mergedTagIds.map((tagId) => ({
+            eventId: args.survivingEventId,
+            tagId,
+        })))
+        .onConflictDoNothing();
 }
 
 /**
@@ -257,3 +317,98 @@ async function getDuplicateEventsByTextSimilarity(descriptionSimilarityThreshold
         eventBId: Number(dup.id_b),
     }));
 }
+
+type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Processes duplicate pairs against a live in-memory event map so later pairs
+ * cannot accidentally reuse rows that were already deleted in an earlier merge.
+ *
+ * @example
+ * await processDuplicates({
+ *   duplicates: [{ eventAId: 1, eventBId: 2 }],
+ *   eventsWithSameStart: [{ id: 1 }, { id: 2 }],
+ *   mergeDuplicateEvents: async ({ deletedCount, eventB }) => ({
+ *     deletedCount: deletedCount + 1,
+ *     survivingEvent: eventB,
+ *     deletedEventId: 1,
+ *   }),
+ * });
+ */
+export async function processDuplicates<TEvent extends { id: number }>(args: {
+    duplicates: DuplicatePair[],
+    eventsWithSameStart: TEvent[],
+    mergeDuplicateEvents: MergeDuplicateEvents<TEvent>,
+}) {
+    const activeEventsById = new Map(args.eventsWithSameStart.map((event) => [event.id, event]));
+    let deletedCount = 0;
+
+    for (const dupe of args.duplicates) {
+        const eventA = activeEventsById.get(dupe.eventAId);
+        const eventB = activeEventsById.get(dupe.eventBId);
+
+        if (!eventA || !eventB) {
+            console.warn(`Event not found for id: ${dupe.eventAId} or ${dupe.eventBId}`);
+            continue;
+        }
+
+        const mergeResult = await args.mergeDuplicateEvents({ eventA, eventB, deletedCount });
+        deletedCount = mergeResult.deletedCount;
+
+        if (mergeResult.deletedEventId) {
+            activeEventsById.delete(mergeResult.deletedEventId);
+        }
+
+        if (mergeResult.survivingEvent) {
+            activeEventsById.set(mergeResult.survivingEvent.id, mergeResult.survivingEvent);
+        }
+    }
+
+    return deletedCount;
+}
+
+export function mergeArrayDeduplicated(arrayA: string[] | null, arrayB: string[] | null) {
+    return Array.from(new Set([...(arrayA ?? []), ...(arrayB ?? [])]));
+}
+
+/**
+ * Builds the update payload for the preferred-source fast path while keeping
+ * legacy `events.tags` in sync with the relational `event_tags` merge.
+ *
+ * @example
+ * preparePreferredSourceEventUpdate({
+ *   eventToSurvive: { tags: [`music`] },
+ *   eventToDelete: { tags: [`workshop`] },
+ * });
+ */
+export function preparePreferredSourceEventUpdate<TEvent extends { tags: string[] | null }>(args: {
+    eventToSurvive: TEvent,
+    eventToDelete: TEvent,
+}) {
+    args.eventToSurvive.tags = mergeArrayDeduplicated(args.eventToSurvive.tags, args.eventToDelete.tags);
+
+    return {
+        tags: args.eventToSurvive.tags,
+    };
+}
+
+type DuplicatePair = {
+    eventAId: number,
+    eventBId: number,
+};
+
+type MergeDuplicateEvents<TEvent extends { id: number }> = (
+    args: MergeDuplicateEventsArgs<TEvent>,
+) => Promise<MergeDuplicateEventsResult<TEvent>>;
+
+type MergeDuplicateEventsArgs<TEvent extends { id: number }> = {
+    eventA: TEvent,
+    eventB: TEvent,
+    deletedCount: number,
+};
+
+type MergeDuplicateEventsResult<TEvent extends { id: number }> = {
+    deletedCount: number,
+    survivingEvent?: TEvent,
+    deletedEventId?: number,
+};

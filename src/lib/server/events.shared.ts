@@ -1,6 +1,7 @@
 import { generateSlug } from '../common';
 import type { InsertEvent } from '../types';
 import { buildConflictUpdateColumns, type DB, s } from './db.shared';
+import { sql } from 'drizzle-orm';
 
 /**
  * Inserts events using the shared upsert behavior for both app code and Bun scripts.
@@ -8,7 +9,7 @@ import { buildConflictUpdateColumns, type DB, s } from './db.shared';
  * @example
  * await insertEventsWithDb(db, [event])
  */
-export async function insertEventsWithDb(db: DB, events: InsertEvent[]) {
+export async function upsertEvents(db: DB, events: InsertEvent[]) {
 	const processedEvents = events.map((event) => {
 		type EventKey = keyof InsertEvent;
 
@@ -47,7 +48,20 @@ export async function insertEventsWithDb(db: DB, events: InsertEvent[]) {
 		.values(processedEvents)
 		.onConflictDoUpdate({
 			target: s.events.slug,
-			set: buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`])
+			set: {
+				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`]),
+				// Preserve existing legacy tags when a scrape has no tags, otherwise merge both sides.
+				tags: sql`
+					case
+						when excluded.tags is null or coalesce(array_length(excluded.tags, 1), 0) = 0 then ${s.events.tags}
+						when ${s.events.tags} is null or coalesce(array_length(${s.events.tags}, 1), 0) = 0 then excluded.tags
+						else array(
+							select distinct tag
+							from unnest(${s.events.tags} || excluded.tags) as merged_tags(tag)
+						)
+					end
+				`
+			}
 		})
 		.returning();
 }

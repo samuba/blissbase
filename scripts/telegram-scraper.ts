@@ -2,7 +2,7 @@ import { Api, TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import readline from "readline";
 import 'dotenv/config'
-import { and, db, eq, s } from '../src/lib/server/db.script.ts';
+import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";
 import { generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
@@ -11,7 +11,6 @@ import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData } from "../src/lib/server/ai";
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
-import { insertEvents } from '../src/lib/server/events.script.ts';
 import type { Entity } from "telegram/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml } from "../src/lib/telegramCommon";
@@ -978,7 +977,7 @@ async function processMessages(
     if (events.length > 0) {
         console.log("inserting into db:", events)
         console.log("inserting these slugs:", events.map(e => e.slug))
-        await insertEvents(events);
+        await upsertEvents(events);
     } else {
         console.log("no events to insert")
     }

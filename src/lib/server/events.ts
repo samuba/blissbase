@@ -23,7 +23,7 @@ import { type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
 import { attendanceModeEnum, type AttendanceMode } from './schema';
-import { insertEventsWithDb } from './events.shared';
+import { upsertEvents as upsertEventsShared } from './events.shared';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
@@ -366,8 +366,8 @@ export function prepareEventsResultForUi(result: FetchEventsResult) {
 	};
 }
 
-export async function insertEvents(events: InsertEvent[]) {
-	return await insertEventsWithDb(db, events);
+export async function upsertEvents(events: InsertEvent[]) {
+	return await upsertEventsShared(db, events);
 }
 
 export const loadEventsParamsSchema = v.partial(

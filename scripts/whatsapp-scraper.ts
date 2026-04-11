@@ -4,7 +4,7 @@ import { rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import "dotenv/config"
-import { and, db, eq, s } from "../src/lib/server/db.script.ts"
+import { and, db, eq, s, upsertEvents } from "../src/lib/server/db.script.ts"
 import type { InsertEvent } from "../src/lib/types"
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai"
 import { aiExtractEventData } from "../src/lib/server/ai"
@@ -13,7 +13,6 @@ import { geocodeAddressCached } from "../src/lib/server/google.script.ts"
 import { resizeCoverImage } from "../src/lib/imageProcessing"
 import type { WhatsappScrapingTarget } from "../src/lib/server/schema" 
 import * as assets from "../src/lib/assets"
-import { insertEvents } from "../src/lib/server/events.script.ts";
 
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!
 const sqliteObjectKey = `whatsapp.sqlite`
@@ -1036,7 +1035,7 @@ async function processMessages(args: {
     }
     if (events.length > 0) {
         console.log(`[whatsapp] Inserting ${events.length} event(s): ${events.map((e) => e.slug).join(`, `)}`)
-        await insertEvents(events)
+        await upsertEvents(events)
         console.log("events", events)
     } else {
         console.log(`[whatsapp] No events to insert for this batch`)

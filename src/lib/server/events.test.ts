@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { insertEvents, prepareEventsForUi, fetchEvents, prepareEventsResultForUi } from './events';
+import { upsertEvents, prepareEventsForUi, fetchEvents, prepareEventsResultForUi } from './events';
 import { generateSlug } from '$lib/common';
 import { db, s } from './db';
 import { eq } from 'drizzle-orm';
@@ -48,7 +48,7 @@ describe('Events Module - Happy Flow Tests', () => {
 
         it('should insert a single event successfully', async () => {
             const testEvent = createTestEvent();
-            const result = await insertEvents([testEvent]);
+            const result = await upsertEvents([testEvent]);
 
             expect(result).toHaveLength(1);
             expect(result[0]).toMatchObject({
@@ -70,7 +70,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 createTestEvent({ name: 'Event 3', slug: 'event-3' })
             ];
 
-            const result = await insertEvents(events);
+            const result = await upsertEvents(events);
 
             expect(result).toHaveLength(3);
             expect(result.map(e => e.name)).toEqual(['Event 1', 'Event 2', 'Event 3']);
@@ -84,7 +84,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 endAt: new Date('2024-12-15T18:00:00Z')
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0].slug).toBe('2024-12-15-workshop-learn-programming');
         });
@@ -97,7 +97,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 price: '  25€  '
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0].name).toBe('Trimmed Event');
             expect(result[0].description).toBe('Description with spaces');
@@ -111,7 +111,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 name: 'Open-ended Event'
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0].endAt).toBeNull();
             expect(result[0].slug).toBe('2024-12-01-1900-openended-event');
@@ -130,7 +130,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 contact: []
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0]).toMatchObject({
                 name: 'Test Event',
@@ -147,7 +147,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 priceIsHtml: true
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0].price).toBe('<span>Free</span>');
             expect(result[0].priceIsHtml).toBe(true);
@@ -163,7 +163,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 contact: ['email@example.com', 'https://telegram.me/host', '+49123456789']
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0].imageUrls).toHaveLength(3);
             expect(result[0].contact).toHaveLength(3);
@@ -184,7 +184,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 })
             ];
 
-            const result = await insertEvents(events);
+            const result = await upsertEvents(events);
 
             // Should return both events
             expect(result).toHaveLength(2);
@@ -196,13 +196,71 @@ describe('Events Module - Happy Flow Tests', () => {
             expect(result[1].description).toBe('Updated description');
         });
 
+        it('should preserve existing tags when a conflicting upsert has no tags', async () => {
+            const startAt = new Date('2024-12-20T19:00:00Z');
+
+            await upsertEvents([
+                createTestEvent({
+                    name: 'Conflict Tags Event',
+                    startAt,
+                    endAt: new Date('2024-12-20T22:00:00Z'),
+                    slug: '',
+                    tags: ['music']
+                })
+            ]);
+
+            const result = await upsertEvents([
+                createTestEvent({
+                    name: 'Conflict Tags Event',
+                    startAt,
+                    endAt: new Date('2024-12-20T22:00:00Z'),
+                    slug: '',
+                    tags: [],
+                    description: 'Updated by scrape'
+                })
+            ]);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].tags).toEqual(['music']);
+            expect(result[0].description).toBe('Updated by scrape');
+        });
+
+        it('should merge existing and incoming tags on conflicting upserts', async () => {
+            const startAt = new Date('2024-12-21T19:00:00Z');
+
+            await upsertEvents([
+                createTestEvent({
+                    name: 'Merged Tags Event',
+                    startAt,
+                    endAt: new Date('2024-12-21T22:00:00Z'),
+                    slug: '',
+                    tags: ['music']
+                })
+            ]);
+
+            const result = await upsertEvents([
+                createTestEvent({
+                    name: 'Merged Tags Event',
+                    startAt,
+                    endAt: new Date('2024-12-21T22:00:00Z'),
+                    slug: '',
+                    tags: ['workshop'],
+                    description: 'Updated by scrape'
+                })
+            ]);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].tags).toEqual(expect.arrayContaining(['music', 'workshop']));
+            expect(result[0].tags).toHaveLength(2);
+        });
+
         it('should handle events with special characters in names', async () => {
             const event = createTestEvent({
                 name: 'Café & Bar: "Special" Event (50% off!)',
                 slug: ''
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0].slug).toBe('2024-12-01-cafe-bar-special-event-50-off');
         });
@@ -213,7 +271,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 slug: ''
             });
 
-            const result = await insertEvents([event]);
+            const result = await upsertEvents([event]);
 
             expect(result[0].slug).toBe('2024-12-01-muesik-tanz-aepfel-oel');
         });
@@ -318,6 +376,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
+                    spotlight: null,
                     eventTags: []
                 }
             ];
@@ -366,6 +425,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
+                    spotlight: null,
                     eventTags: []
                 }
             ];
@@ -410,6 +470,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
+                    spotlight: null,
                     eventTags: []
                 }
             ];
@@ -458,6 +519,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
+                    spotlight: null,
                     eventTags: []
                 },
                 {
@@ -490,6 +552,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     timezone: null,
                     attendanceMode: 'offline' as const,
                     authorId: null,
+                    spotlight: null,
                     eventTags: []
                 }
             ];
@@ -531,7 +594,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({}));
 
@@ -550,7 +613,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 );
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({ limit: 3 }));
 
@@ -569,7 +632,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 );
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const page1 = prepareEventsResultForUi(await fetchEvents({ limit: 2, page: 1 }));
                 const page2 = prepareEventsResultForUi(await fetchEvents({ limit: 2, page: 2 }));
@@ -606,7 +669,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     startDate: '2024-12-01',
@@ -627,7 +690,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     startDate: '2024-12-01',
@@ -648,7 +711,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     startDate: '2024-12-01',
@@ -670,7 +733,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     startDate: '2023-01-01',
@@ -690,7 +753,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     slug: 'same-day-event'
                 });
 
-                await insertEvents([sameDayEvent]);
+                await upsertEvents([sameDayEvent]);
 
                 // Search for events on that same day (start and end date are the same)
                 const result = prepareEventsResultForUi(await fetchEvents({
@@ -711,7 +774,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     slug: 'full-day-event'
                 });
 
-                await insertEvents([fullDayEvent]);
+                await upsertEvents([fullDayEvent]);
 
                 // Search for events on that same day
                 const result = prepareEventsResultForUi(await fetchEvents({
@@ -732,7 +795,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     slug: 'no-end-time-event'
                 });
 
-                await insertEvents([noEndTimeEvent]);
+                await upsertEvents([noEndTimeEvent]);
 
                 // Search for events on that same day
                 const result = prepareEventsResultForUi(await fetchEvents({
@@ -768,7 +831,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     lat: berlinLat,
@@ -800,7 +863,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     plzCity: 'Berlin',
@@ -830,7 +893,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     lat: 52.5200,
@@ -864,7 +927,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     searchTerm: 'music'
@@ -898,7 +961,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     searchTerm: 'concert'
@@ -932,7 +995,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     searchTerm: 'music'
@@ -953,7 +1016,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     searchTerm: 'MUSIC'
@@ -986,7 +1049,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     sortOrder: 'asc'
@@ -1014,7 +1077,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     sortOrder: 'desc'
@@ -1047,7 +1110,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
                     lat: berlinLat,
@@ -1473,7 +1536,7 @@ describe('Events Module - Happy Flow Tests', () => {
                 ]);
 
                 // Create event
-                const events = await insertEvents([
+                const events = await upsertEvents([
                     createTestEvent({
                         name: 'Yoga Workshop',
                         slug: 'yoga-workshop',
@@ -1529,7 +1592,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({}));
 
@@ -1547,7 +1610,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 );
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({ limit: 20 })); // Request more than max
 
@@ -1580,7 +1643,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({}));
 
@@ -1599,7 +1662,7 @@ describe('Events Module - Happy Flow Tests', () => {
                     })
                 ];
 
-                await insertEvents(events);
+                await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({}));
 
