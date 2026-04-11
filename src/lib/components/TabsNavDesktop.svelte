@@ -60,7 +60,7 @@
 						<button
 							type="button"
 							{...props}
-							class="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors justify-start text-base-content/75 hover:text-primary-content hover:bg-primary/5"
+							class="flex hover:cursor-pointer items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors justify-start text-base-content/75 hover:text-primary-content hover:bg-primary/5"
 						>
 							<i class="icon-[ph--dots-three] size-5 shrink-0"></i>
 							<span>Mehr</span>
