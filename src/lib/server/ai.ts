@@ -105,7 +105,9 @@ Never make up any information. Only use the information provided in the message 
 If there was an image attached, consider all text on the image as part of the message. For image-only messages (flyers), extract all visible text and treat it as the message content.
 If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. awara.events, sei.jetzt.) and do not include anything else.
 # existing sources:
-${WEBSITE_SCRAPE_SOURCE_URLS.join(`\n`)}
+${WEBSITE_SCRAPE_SOURCE_URLS
+		.filter(x => !x.includes(`megatix.co.id`)) // dont include megatix because most events are not publicly listed
+		.join(`\n`)}
 
 When extracting dates and time, assume ${timezone} time unless you know for sure the location is in another timezone, be sure to take correct daylight saving time into account.
 Today is  ${new Date().toLocaleDateString(`en-US`, { year: `numeric`, month: `long`, day: `numeric` })}
