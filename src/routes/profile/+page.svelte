@@ -5,6 +5,7 @@
 	import { getMyPublicProfile } from '$lib/rpc/profile.remote';
 	import { resolve } from '$app/paths';
 	import EventCard from '$lib/components/EventCard.svelte';
+	import { routes } from '$lib/routes';
 
 	let isLoggingOut = $state(false);
 	const session = await getUserSession();
@@ -78,7 +79,7 @@
 							{/if}
 						</a>
 						{#if myPublic.isPublic && myPublic.slug?.trim()}
-							<a href={resolve(`/@/[slug]`, { slug: myPublic.slug })} class="btn">
+							<a href={routes.publicProfile(myPublic.slug)} class="btn">
 								<i class="icon-[ph--eye] size-4"></i>
 								Profil ansehen
 							</a>
