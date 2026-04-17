@@ -1,5 +1,6 @@
 import { sql, type SQL, relations } from 'drizzle-orm';
 import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, index, bigint, primaryKey, pgEnum } from 'drizzle-orm/pg-core';
+import type { PublicProfileSocialLinks } from '$lib/rpc/profile.common';
 
 export const eventAttendanceModeEnum = pgEnum('attendance_mode', ['online', 'offline', 'offline+online']);
 export type AttendanceMode = typeof eventAttendanceModeEnum.enumValues[number];
@@ -40,8 +41,12 @@ export const events = pgTable('events', {
 
 export type SelectEvent = typeof events.$inferSelect;
 
-export const eventsRelations = relations(events, ({ many }) => ({
+export const eventsRelations = relations(events, ({ many, one }) => ({
     eventTags: many(eventTags),
+    author: one(profiles, {
+        fields: [events.authorId],
+        references: [profiles.id],
+    }),
 }));
 
 export const botMessages = pgTable('message_to_bot', {
@@ -181,6 +186,12 @@ export const eventTagsRelations = relations(eventTags, ({ one }) => ({
 // Supabase Auth Tables
 export const profiles = pgTable('profiles', {
     id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
+    slug: text().unique(),
+    displayName: text(),
+    bio: text(),
+    profileImageUrl: text(),
+    bannerImageUrl: text(),
+    socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),
     createdAt: timestamp().notNull().defaultNow(),
     updatedAt: timestamp().notNull().defaultNow(),
 });
@@ -189,6 +200,7 @@ export type Profile = typeof profiles.$inferSelect;
 
 export const profilesRelations = relations(profiles, ({ many }) => ({
     favorites: many(favorites),
+    events: many(events),
 }));
 
 export const favorites = pgTable('favorites', {
