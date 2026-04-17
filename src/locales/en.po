@@ -159,6 +159,7 @@ msgstr "<0/> Website"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
+#: src/routes/profile/public/+page.svelte
 msgid "Schließen"
 msgstr "Close"
 
@@ -336,6 +337,7 @@ msgid "<0/> Login-Link senden"
 msgstr "<0/> Send login link"
 
 #: src/lib/components/PageHeader.svelte
+#: src/routes/profile/public/+page.svelte
 #: src/routes/sources/+page.svelte
 msgid "<0/> Zurück"
 msgstr "<0/> Back"
@@ -447,17 +449,21 @@ msgstr "Deleting..."
 msgid "Event löschen"
 msgstr "Delete event"
 
+#: src/lib/components/ProfileImageCropInput.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
 #: src/routes/new/+page.svelte
+#: src/routes/profile/public/+page.svelte
 msgid "Abbrechen"
 msgstr "Cancel"
 
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
+#: src/routes/profile/public/+page.svelte
 msgid "Speichern"
 msgstr "Save"
 
+#: src/routes/@/[slug]/+page.svelte
 #: src/routes/[slug]/+page.svelte
 msgid "<0/> Alle Events"
 msgstr "<0/> All events"
@@ -649,6 +655,7 @@ msgid "<0/> Zur Startseite"
 msgstr "<0/> Back to the homepage"
 
 #: src/lib/components/EventForm.svelte
+#: src/routes/profile/public/+page.svelte
 msgid "Name *"
 msgstr "Name *"
 
@@ -755,6 +762,7 @@ msgid "Bild konnte nicht verarbeitet werden"
 msgstr "Image could not be processed"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bild konnte nicht geladen werden"
 msgstr "Image could not be loaded"
 
@@ -781,14 +789,6 @@ msgstr "<0/> Edit"
 #: src/routes/edit/[id]/+page.server.ts
 msgid "You are not allowed to edit this event"
 msgstr "You are not allowed to edit this event"
-
-#: src/routes/profile/+page.svelte
-msgid "Meine Bereiche"
-msgstr "My sections"
-
-#: src/routes/profile/+page.svelte
-msgid "Hier findest du deine persönlichen Bereiche und schnelle Wege zu deinen wichtigsten Aktionen."
-msgstr "Here you will find your personal sections and quick links to your most important actions."
 
 #: src/routes/profile/+page.svelte
 msgid "Du bist eingeloggt als <0/>"
@@ -863,9 +863,6 @@ msgstr "My created events"
 #: src/routes/+page.svelte
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
 msgstr "You're being shown events around <0/>. If that's not your location, change it below."
-
-#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
-#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from various sources and make them accessible here. Searchable, convenient, everything in one place. <1/> I hope you like my work."
 
 #: src/routes/about/+page.svelte
 msgid "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
@@ -1028,43 +1025,9 @@ msgstr "Answers to the most common questions about Blissbase."
 msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Don't see your question? <0>Write to me.</0>"
 
-#~ msgid "Was ist Blissbase?"
-#~ msgstr "What is Blissbase?"
-
-#~ msgid "Woher kommen die Events?"
-#~ msgstr "Where do the events come from?"
-
-#~ msgid "Von Blissbase Usern die ihre Events hier teilen und aus verschiedenen öffentlichen Quellen. Ziel dabei ist es, die achtsamen Communities sichtbarer und zugänglicher zu machen."
-#~ msgstr "They come from Blissbase users who share their events here and from various public sources. The goal is to make mindful communities more visible and accessible."
-
-#~ msgid "Kann ich selbst ein Event eintragen?"
-#~ msgstr "Can I add an event myself?"
-
-#~ msgid "Ja. Über 'Erstellen' kannst du eigene Events hinzufügen, sobald du angemeldet bist."
-#~ msgstr "Yes. Use 'Create' to add your own events once you're logged in."
-
-#~ msgid "Kostet die Nutzung etwas?"
-#~ msgstr "Does it cost anything to use?"
-
-#~ msgid "Nein, das Nutzen von Blissbase ist kostenlos."
-#~ msgstr "No, using Blissbase is free."
-
-#~ msgid "Wie kann ich Feedback schicken oder Hallo sagen?"
-#~ msgstr "How can I send feedback or say hello?"
-
-#~ msgid "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
-#~ msgstr "The easiest way is by email at hi@blissbase.app. I welcome any feedback, ideas, corrections, and collaborations."
-
-#~ msgid "Blissbase ist die App in der du alle achtsamen Events an einem Ort komfortabel findest. Egal ob Ecstatic Dance, Workshops, Festivals oder Community-Treffen."
-#~ msgstr "Blissbase is the app where you can conveniently find all mindful events in one place — whether Ecstatic Dance, workshops, festivals, or community meetups."
-
 #: src/lib/components/TabsNavMobile.svelte
 msgid "Escape"
 msgstr "Escape"
-
-#~ msgctxt "register-for-event"
-#~ msgid "Anmelden"
-#~ msgstr "Register"
 
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
@@ -1095,12 +1058,6 @@ msgctxt "register-for-event"
 msgid "Für Event anmelden"
 msgstr "Register for Event"
 
-#~ msgid "Recommended Event"
-#~ msgstr "Recommended Event"
-
-#~ msgid "Empfh"
-#~ msgstr "Recommended"
-
 #: src/lib/components/EventCard.svelte
 msgid "Empfohlener Event"
 msgstr "Recommended event"
@@ -1109,112 +1066,17 @@ msgstr "Recommended event"
 msgid "Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits."
 msgstr "An event with this name and the same start and end times already exists."
 
-#~ msgid "Wo finde ich Events?"
-#~ msgstr "Where can I find events?"
-
-#~ msgid "In der App und auf der Website kannst du alle gelisteten Events durchsuchen. In den letzten zwei Monaten waren in diesen Regionen jeweils so viele Events erfasst:"
-#~ msgstr "In the app and on the website you can browse all listed events. In the last two months, the following number of events were recorded in each region:"
-
 #: src/routes/faq/+page.svelte
 msgid "Für Regionen liegen gerade keine Zahlen vor."
 msgstr "There are currently no figures available for the regions."
-
-#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Regionen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
-#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from various regions and sources and make them accessible here. Searchable, convenient, all in one place. <1/> I hope you like my work."
-
-#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus verschiedenen Regionen und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
-#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from various regions and sources and make them accessible here. Searchable, convenient, all in one place. <1/> I hope you like my work."
-
-#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1/>verschiedenen Regionen und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
-#~ msgstr "I want to bring together Germany's mindful communities. To do this, I collect events (via <0/>) from <1/>different regions and sources and make them accessible here. Searchable, convenient, all in one place. <2/> I hope you like my work."
 
 #: src/routes/about/+page.svelte
 msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1>verschiedenen Regionen</1> und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
 msgstr "I want to bring together Germany's mindful communities. To this end, I collect events (via <0/>) from <1>different regions</1> and sources and make them accessible here. Searchable, convenient, all in one place. <2/> I hope you like my work."
 
-#~ msgid "Welche Regionen?"
-#~ msgstr "Which regions?"
-
 #: src/routes/faq/+page.svelte
 msgid "Welche Regionen werden unterstützt?"
 msgstr "Which regions are supported?"
-
-#~ msgid "Blissbase wächst"
-#~ msgstr "Blissbase is growing"
-
-#~ msgid "Der KatalBlissbase wächst"
-#~ msgstr "The KatalBlissbase is growing"
-
-#~ msgid "Der Katalog vonBlissbase wächst"
-#~ msgstr "The Blissbase catalog is growing"
-
-#~ msgid "Unsere unterstützten Regionen sindBlissbase wächst"
-#~ msgstr ""
-#~ "Our supported regions are\n"
-#~ "Blissbase is growing"
-
-#~ msgid "Unsere am besten unter"
-#~ msgstr "Our best among"
-
-#~ msgid "Unsere am besten unterstützten Regionen sind:"
-#~ msgstr "Our best-supported regions are:"
-
-#~ msgid "Unsere am besten unterstützten Regionen sind"
-#~ msgstr "Our best-supported regions are"
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du"
-#~ msgstr "You can see our best-supported regions"
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier."
-#~ msgstr "See our best-supported regions here."
-
-#~ msgid "<0/> <1/>Events"
-#~ msgstr "<0/> <1/>Events"
-
-#~ msgid "<0/> <1/> Events"
-#~ msgstr "<0/> <1/> Events"
-
-#~ msgid "<0/> <1/> <2/> Events"
-#~ msgstr "<0/> <1/> <2/> Events"
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit neuen"
-#~ msgstr "Here you can see our best-supported regions, with new ones"
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit neuen Events der letzten zwei Monate"
-#~ msgstr "You can see our best-supported regions here, with new events from the past two months."
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit neuen Events der letzten zwei Monate pro Region."
-#~ msgstr "Here you can see our best-supported regions, with new events per region from the past two months."
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl der neuen Events der letzten zwei Monate pro Region."
-#~ msgstr "Here are our best-supported regions, with the number of new events per region in the last two months."
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl neuen Events der letzten zwei Monate pro Region."
-#~ msgstr "Here you can see our best-supported regions, with the number of new events per region in the last two months."
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl neuer Events der letzten zwei Monate pro Region."
-#~ msgstr "Here you can see our best-supported regions, with the number of new events per region in the last two months."
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl neuer Events der letzten zwei Monate."
-#~ msgstr "Here you can see our best-supported regions, along with the number of new events in the last two months."
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0/> neuer Events der letzten zwei Monate."
-#~ msgstr "Here you can see our best-supported regions, with the number of <0/> new events in the past two months."
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate.</0>"
-#~ msgstr "Here you can see our best-supported regions, with the number of <0>new events in the last two months.</0>"
-
-#~ msgid "Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-#~ msgstr "Here you can see our best-supported regions, with the number of <0>new events in the last two months</0>."
-
-#~ msgid "Du kannst Blissbase weltweit nutzenUnsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-#~ msgstr "You can use Blissbase worldwide. Here you can see our best-supported regions, with the number of <0>new events in the last two months</0>."
-
-#~ msgid "Du kannst Blissbase weltweit nutzen aber Unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-#~ msgstr "You can use Blissbase worldwide, but our best-supported regions are shown here, with the number of <0>new events in the last two months</0>."
-
-#~ msgid "Du kannst Blissbase weltweit nutzen aber unsere am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-#~ msgstr "You can use Blissbase worldwide, but our best-supported regions are shown here, along with the number of <0>new events in the last two months</0>."
 
 #: src/routes/faq/+page.svelte
 msgid "Du kannst Blissbase weltweit nutzen aber unsere zur Zeit am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
@@ -1223,3 +1085,190 @@ msgstr "You can use Blissbase worldwide, but here you can see our currently best
 #: src/routes/faq/+page.svelte
 msgid "<0/> <1/> <2/>Neue Events"
 msgstr "<0/> <1/> <2/>New events"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Bitte wähle eine Bilddatei."
+msgstr "Please choose an image file."
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Bild konnte nicht geladen werden."
+msgstr "Image could not be loaded."
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Upload fehlgeschlagen."
+msgstr "Upload failed."
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Bilddatei konnte nicht gelesen werden"
+msgstr "Image file could not be read"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Profilbild"
+msgstr "Profile picture"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Banner"
+msgstr "Banner"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Bild ändern"
+msgstr "Change image"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Bild entfernen"
+msgstr "Remove image"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "<0/> Bild hochladen"
+msgstr "<0/> Upload image"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Profilbild zuschneiden"
+msgstr "Crop profile picture"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Banner zuschneiden"
+msgstr "Crop banner"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Verschiebe und zoome das Bild, um den sichtbaren Ausschnitt festzulegen."
+msgstr "Move and zoom the image to set the visible crop."
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Zoom"
+msgstr "Zoom"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "<0/> Wird hochgeladen…"
+msgstr "<0/> Uploading…"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "<0/> Fertig"
+msgstr "<0/> Done"
+
+#: src/routes/profile/+page.svelte
+#: src/routes/profile/public/+page.svelte
+msgid "Öffentliches Profil"
+msgstr "Public Profile"
+
+#: src/routes/profile/+page.svelte
+msgid "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0>"
+msgstr "Your public profile is visible at <0>blissbase.app/@/{0}</0>"
+
+#: src/routes/profile/+page.svelte
+msgid "Erstelle dein öffentliches Profil."
+msgstr "Create your public profile."
+
+#: src/routes/@/[slug]/+page.svelte
+#: src/routes/profile/+page.svelte
+msgid "Profil bearbeiten"
+msgstr "Edit Profile"
+
+#: src/routes/profile/+page.svelte
+msgid "Profil erstellen"
+msgstr "Create Profile"
+
+#: src/routes/profile/+page.svelte
+#: src/routes/profile/public/+page.svelte
+msgid "<0/> Profil ansehen"
+msgstr "<0/> View profile"
+
+#. 0: profile.displayName
+#: src/routes/@/[slug]/+page.svelte
+msgid "{0}'s kommende Events"
+msgstr "{0}'s upcoming events"
+
+#: src/routes/@/[slug]/+page.svelte
+msgid "Aktuell keine kommenden Events."
+msgstr "No upcoming events at the moment."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Benutzername"
+msgstr "Username"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Bitte einen Link-Typ wählen."
+msgstr "Please select a link type."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Bitte einen Wert eingeben."
+msgstr "Please enter a value."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Leerzeichen ist nicht erlaubt."
+msgstr "Spaces are not allowed."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
+msgstr "You have unsaved changes. Are you sure you want to leave this page?"
+
+#: src/routes/profile/public/+page.svelte
+msgid "blissbase.app/@/"
+msgstr "blissbase.app/@/"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Profil-URL"
+msgstr "Profile URL"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Prüfe Verfügbarkeit …"
+msgstr "Checking availability …"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Slug konnte nicht geprüft werden."
+msgstr "Could not check slug."
+
+#. 0: slugCheck.normalized
+#: src/routes/profile/public/+page.svelte
+msgid "„{0}“ ist frei."
+msgstr "“{0}” is available."
+
+#. 0: slugCheck.normalized
+#: src/routes/profile/public/+page.svelte
+msgid "„{0}“ ist bereits vergeben."
+msgstr "“{0}” is already taken."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Beschreibung"
+msgstr "Description"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Links"
+msgstr "Links"
+
+#: src/routes/profile/public/+page.svelte
+#: src/routes/profile/public/+page.svelte
+#: src/routes/profile/public/+page.svelte
+#: src/routes/profile/public/+page.svelte
+msgid "Zuerst Typ wählen"
+msgstr "Select a type first"
+
+#: src/routes/profile/public/+page.svelte
+msgid "<0/> Link hinzufügen"
+msgstr "<0/> Add link"
+
+#: src/routes/profile/public/+page.svelte
+msgid "<0/> Bild wird hochgeladen…"
+msgstr "<0/> Uploading image…"
+
+#: src/routes/profile/public/+page.svelte
+msgid "<0/> Speichern…"
+msgstr "<0/> Saving…"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Link hinzufügen"
+msgstr "Add link"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Pro Typ ist nur ein Eintrag möglich."
+msgstr "Only one entry per type is allowed."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Typ wählen"
+msgstr "Select type"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Hinzufügen"
+msgstr "Add"

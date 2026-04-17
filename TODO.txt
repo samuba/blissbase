@@ -1,5 +1,19 @@
+AWARA gibts nicht mehr
+
+use single flight mutations for profile and event creation
+make everything go fast - indexes? query inlining?
+
+reality event have wrong time
+unify tabsnav dropdown
+scrape https://hangoutdn.com/events
+make location input editable without clicking the x
+browser back should close maximized image in event details
 BUG: whatsapp image extraction not working properly
 BUG: whatsapp extraction: contact will have "whatsapp +17605858038"
+CI scrapen von https://t.me/citreasurehunt/174/175
+
+MAYBE: go for CI community. They dont have anything, espectially for retreats/big stuff + jams
+
 
 Check whatsapp events quality
 
