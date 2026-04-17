@@ -101,7 +101,7 @@
 					<h1 class="text-center text-2xl font-bold tracking-tight relative inline-block">
 						{profile.displayName}
 					</h1>
-					<a href={resolve(`/profile/edit`)} class=" btn btn-circle btn-sm" title="Profil bearbeiten">
+					<a href={resolve(`/profile/public`)} class=" btn btn-circle btn-sm" title="Profil bearbeiten">
 						<i class="icon-[ph--pencil] size-4"></i>
 					</a>
 				</div>

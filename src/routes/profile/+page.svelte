@@ -70,7 +70,7 @@
 						{/if}
 					</p>
 					<div class="card-actions pt-1 gap-4">
-						<a href={resolve(`/profile/edit`)} class="btn btn-primary">
+						<a href={resolve("/profile/public")} class="btn btn-primary">
 							{#if myPublic.isPublic && myPublic.slug}
 								Profil bearbeiten
 							{:else}
