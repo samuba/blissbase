@@ -190,7 +190,7 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
         }
 
         console.log("Uploading resized file to R2:", `${slug}/${hash}`);
-        const imgUrl = await assets.uploadImage(resizedBuffer, slug, hash, assets.loadCreds());
+        const imgUrl = await assets.uploadEventImage(resizedBuffer, slug, hash, assets.loadCreds());
         await db.insert(s.imageCacheMap).values({
             originalUrl: `tg:${hash}:${slug}`,
             eventSlug: slug,

@@ -40,7 +40,7 @@ const createTestEvent = (overrides = {}) => ({
 
 describe('Events Module - Happy Flow Tests', () => {
 
-    describe('insertEvents', () => {
+    describe('upsertEvents', () => {
         beforeEach(async () => {
             // Clean up test data before each test
             await db.delete(s.events).where(eq(s.events.source, 'test'));
@@ -171,7 +171,7 @@ describe('Events Module - Happy Flow Tests', () => {
 
         it.skip('should handle conflict resolution for duplicate slugs', async () => {
             // Insert both events at once to test conflict resolution
-            // Since insertEvents auto-generates slugs, we need to use the same name to get the same slug
+            // Since upsertEvents auto-generates slugs, we need to use the same name to get the same slug
             const events = [
                 createTestEvent({
                     name: 'Duplicate Event',
@@ -1159,7 +1159,7 @@ describe('Events Module - Happy Flow Tests', () => {
         //         ]);
 
         //         // Create events
-        //         const events = await insertEvents([
+        //         const events = await upsertEvents([
         //             createTestEvent({
         //                 name: 'Yoga Workshop',
         //                 slug: 'yoga-workshop',
@@ -1206,7 +1206,7 @@ describe('Events Module - Happy Flow Tests', () => {
         //         ]).returning();
 
         //         // Create events
-        //         const events = await insertEvents([
+        //         const events = await upsertEvents([
         //             createTestEvent({
         //                 name: 'Yoga Workshop',
         //                 slug: 'yoga-workshop',
@@ -1253,7 +1253,7 @@ describe('Events Module - Happy Flow Tests', () => {
         //         ]).returning();
 
         //         // Create events
-        //         const events = await insertEvents([
+        //         const events = await upsertEvents([
         //             createTestEvent({
         //                 name: 'Yoga & Meditation',
         //                 slug: 'yoga-meditation',
@@ -1292,7 +1292,7 @@ describe('Events Module - Happy Flow Tests', () => {
         //         ]).returning();
 
         //         // Create event with yoga tag only
-        //         const events = await insertEvents([
+        //         const events = await upsertEvents([
         //             createTestEvent({
         //                 name: 'Yoga Workshop',
         //                 slug: 'yoga-workshop',
@@ -1321,7 +1321,7 @@ describe('Events Module - Happy Flow Tests', () => {
         //         ]).returning();
 
         //         // Create events at different dates
-        //         const events = await insertEvents([
+        //         const events = await upsertEvents([
         //             createTestEvent({
         //                 name: 'Yoga Dec 5',
         //                 slug: 'yoga-dec-5',
@@ -1369,7 +1369,7 @@ describe('Events Module - Happy Flow Tests', () => {
         //         ]).returning();
 
         //         // Create events
-        //         const events = await insertEvents([
+        //         const events = await upsertEvents([
         //             createTestEvent({
         //                 name: 'Beginner Yoga',
         //                 slug: 'beginner-yoga',
@@ -1412,7 +1412,7 @@ describe('Events Module - Happy Flow Tests', () => {
             //     ]).returning();
 
             //     // Create events at different locations
-            //     const events = await insertEvents([
+            //     const events = await upsertEvents([
             //         createTestEvent({
             //             name: 'Yoga Berlin',
             //             slug: 'yoga-berlin',
@@ -1456,7 +1456,7 @@ describe('Events Module - Happy Flow Tests', () => {
             //     ]).returning();
 
             //     // Create events - one with tag, one without
-            //     const events = await insertEvents([
+            //     const events = await upsertEvents([
             //         createTestEvent({
             //             name: 'Yoga Workshop',
             //             slug: 'yoga-workshop',
@@ -1492,7 +1492,7 @@ describe('Events Module - Happy Flow Tests', () => {
             //     ]).returning();
 
             //     // Create multiple events
-            //     const events = await insertEvents(
+            //     const events = await upsertEvents(
             //         Array.from({ length: 5 }, (_, i) =>
             //             createTestEvent({
             //                 name: `Yoga Event ${i + 1}`,

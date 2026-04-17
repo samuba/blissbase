@@ -24,6 +24,7 @@ import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
 import { attendanceModeEnum, type AttendanceMode } from './schema';
 import { upsertEvents as upsertEventsShared } from './events.shared';
+import { getPublicProfileBioExcerpt } from './profile';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
@@ -44,6 +45,15 @@ export const eventWith = {
 					}
 				}
 			}
+		}
+	},
+	author: {
+		columns: {
+			id: true,
+			slug: true,
+			displayName: true,
+			profileImageUrl: true,
+			bio: true,
 		}
 	}
 } as const;
@@ -353,7 +363,11 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 					tags: event.tags?.map((x) => allTagsMap.get(x) ?? x) as StringOrTagTranslation[],
 					tags2: event.eventTags?.flatMap((x) => x.tag.translations) ?? [],
 					eventTags: undefined,
-					hostSecret: undefined // never leak this to the ui
+					hostSecret: undefined, // never leak this to the ui
+					author: event.author ? {
+						...event.author,
+						bio: getPublicProfileBioExcerpt({ bio: event.author?.bio })
+					} : undefined
 				};
 			})
 	);

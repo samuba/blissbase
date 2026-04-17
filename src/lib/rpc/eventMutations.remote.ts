@@ -63,7 +63,7 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	});
 
 	if (deletedImageUrls?.length && E2E_TEST !== `true`) {
-		await assets.deleteImages(deletedImageUrls, eventAssetsCreds);
+		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
 	}
 
 	console.timeEnd('updateEvent');
@@ -259,7 +259,7 @@ async function uploadImages(args: UploadImagesArgs) {
 
 			let imageUrlPromise = uploadedImages.get(imageHash);
 			if (!imageUrlPromise) {
-				imageUrlPromise = assets.uploadImage(Buffer.from(bytes), args.slug, imageHash, eventAssetsCreds, file.type);
+				imageUrlPromise = assets.uploadEventImage(Buffer.from(bytes), args.slug, imageHash, eventAssetsCreds, file.type);
 				uploadedImages.set(imageHash, imageUrlPromise);
 			}
 

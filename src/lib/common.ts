@@ -187,7 +187,12 @@ export function stripHtml(html: string | undefined) {
 }
 
 export const trimAllWhitespaces = (text: string | undefined) => {
-    return text?.replace(/\s+/g, ' ').trim();
+    return text
+        ?.replace(/\s+/g, ' ')
+        .replace(/^\s+|\s+$/g, '')
+        .replace(/\n/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .trim();
 }
 
 export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null }) {

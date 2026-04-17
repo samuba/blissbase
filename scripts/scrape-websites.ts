@@ -288,7 +288,7 @@ async function main() {
                 try {
                     const bytes = await customFetch(url, { returnType: 'bytes' })
                     const { buffer, phash } = await resizeCoverImage(bytes)
-                    const imageUrl = await assets.uploadImage(buffer, event.slug, phash, assets.loadCreds());
+                    const imageUrl = await assets.uploadEventImage(buffer, event.slug, phash, assets.loadCreds());
                     cachedEventImageUrls.push(imageUrl);
                     const newCacheEntry = { originalUrl: url, eventSlug: event.slug, url: imageUrl };
                     newlyCachedImages.push(newCacheEntry);

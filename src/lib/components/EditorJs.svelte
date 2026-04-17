@@ -10,20 +10,21 @@
 		paragraphOutputBlocksFromNormalizedHtml
 	} from './editorJsNormalizeInputHtml';
 
-	let { field }: {
+	let { field, value }: {
 		field: RemoteFormField<string>;
+		value: string;
 	} = $props();
 
 	let editor: EditorJS | undefined = $state(undefined);
 	let editorEl: HTMLElement | undefined = $state(undefined);
 
-	let editorValue = $derived(field.value() || '');
+	let editorValue = $derived(field.value() || value || '');
 
 	onMount(() => {
 		let detachSplitPasteCapture: (() => void) | undefined;
 		void (async () => {
 			try {
-				const { default: EditorJS } = await import('@editorjs/editorjs');
+			const { default: EditorJS } = await import('@editorjs/editorjs');
 			const { default: Header } = await import('@editorjs/header');
 			const { default: List } = await import('@editorjs/list');
 			const { default: Marker } = await import('@editorjs/marker');

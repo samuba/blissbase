@@ -2,10 +2,14 @@
 	import { getUserSession } from '$lib/rpc/auth.remote';
 	import { getSupabaseBrowserClient } from '$lib/supabase';
 	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
+	import { getMyPublicProfile } from '$lib/rpc/profile.remote';
+	import { routes } from '$lib/routes';
+	import { resolve } from '$app/paths';
 	import EventCard from '$lib/components/EventCard.svelte';
 
 	let isLoggingOut = $state(false);
 	const session = await getUserSession();
+	const myPublic = await getMyPublicProfile();
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
 
 	const upcomingEvents = await getMyAuthoredUpcomingEvents();
@@ -48,17 +52,39 @@
 
 
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:py-0 md:pb-10">
-	<div class="card bg-base-100 shadow">
-		<div class="card-body gap-6">
-			<div class="flex items-start gap-4">
-				<div class="rounded-2xl bg-primary/12 p-3 text-primary-content">
-					<i class="icon-[ph--user-circle] size-8"></i>
+	<div class="card bg-base-100 mt-4 shadow">
+		<div class="card-body gap-4">
+			<div class="flex items-start gap-3">
+				<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
+					<i class="icon-[ph--identification-card] size-7"></i>
 				</div>
-				<div class="space-y-2">
-					<h2 class="text-2xl font-bold">Meine Bereiche</h2>
-					<p class="text-base-content/70">
-						Hier findest du deine persönlichen Bereiche und schnelle Wege zu deinen wichtigsten Aktionen.
+				<div class="min-w-0 flex-1 space-y-2">
+					<h3 class="text-lg font-semibold">Öffentliches Profil</h3>
+					<p class="text-base-content/80 text-sm leading-relaxed">
+						{#if (myPublic.isPublic && myPublic.slug)}
+							Dein öffentliches Profil ist sichtbar unter 
+							<a href="https://blissbase.app/@/{myPublic.slug}" class="link">
+								blissbase.app/@/{myPublic.slug}
+							</a>
+						{:else}
+							Erstelle dein öffentliches Profil.
+						{/if}
 					</p>
+					<div class="card-actions pt-1 gap-4">
+						<a href={resolve(routes.editPublicProfile())} class="btn btn-primary">
+							{#if myPublic.isPublic && myPublic.slug}
+								Profil bearbeiten
+							{:else}
+								Profil erstellen
+							{/if}
+						</a>
+						{#if myPublic.isPublic && myPublic.slug?.trim()}
+							<a href={resolve(`/@/[slug]`, { slug: myPublic.slug })} class="btn">
+								<i class="icon-[ph--eye] size-4"></i>
+								Profil ansehen
+							</a>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>

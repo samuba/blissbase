@@ -5,9 +5,6 @@ import { sql } from 'drizzle-orm';
 
 /**
  * Inserts events using the shared upsert behavior for both app code and Bun scripts.
- *
- * @example
- * await insertEventsWithDb(db, [event])
  */
 export async function upsertEvents(db: DB, events: InsertEvent[]) {
 	const processedEvents = events.map((event) => {

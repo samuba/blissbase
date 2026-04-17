@@ -4,19 +4,26 @@ import 'dotenv/config';
 import * as assets from '../src/lib/assets';
 
 /**
- * Fetches all image URLs referenced in events from the database.
+ * Fetches all image URLs referenced across events and public profiles.
  */
 async function getReferencedImageUrls(): Promise<Set<string>> {
-    console.log('Fetching referenced image URLs from events...');
+    console.log('Fetching referenced image URLs from events and profiles...');
 
     const events = await db.select({
         imageUrls: s.events.imageUrls
     }).from(s.events)
         .where(and(isNotNull(s.events.imageUrls), sql`array_length(${s.events.imageUrls}, 1) > 0`));
 
-    const referencedUrlsArr = events.flatMap(event => event.imageUrls ?? []);
-    const referencedUrls = new Set(referencedUrlsArr);
+    const profiles = await db.select({
+        profileImageUrl: s.profiles.profileImageUrl,
+        bannerImageUrl: s.profiles.bannerImageUrl
+    }).from(s.profiles);
 
+    const referencedUrlsArr = [
+        ...events.flatMap(event => event.imageUrls ?? []),
+        ...profiles.flatMap(p => [p.profileImageUrl, p.bannerImageUrl])
+    ].filter((url): url is string => !!url?.trim());
+    const referencedUrls = new Set(referencedUrlsArr);
 
     console.log(`Found ${referencedUrls.size} referenced unique image URLs`);
     return referencedUrls;
@@ -126,7 +133,7 @@ async function cleanupUnusedImages(dryRun: boolean = false): Promise<void> {
             return;
         }
         console.log(`Deleting ${publicIds.length} images...`);
-        await assets.deleteImages(publicIds, assets.loadCreds());
+        await assets.deleteObjects(publicIds, assets.loadCreds());
 
         // Step 7: Delete unreferenced images from the database
         console.log('Step 7: Deleting unreferenced images from the db cache...');

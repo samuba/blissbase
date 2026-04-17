@@ -366,7 +366,7 @@ async function extractPhotoFromMessage(args: { message: WhatsappSyncMessage; slu
         })
         if (alreadyCachedImage) return alreadyCachedImage.url
 
-        const imgUrl = await assets.uploadImage(resizedBuffer, slug, hash, assets.loadCreds())
+        const imgUrl = await assets.uploadEventImage(resizedBuffer, slug, hash, assets.loadCreds())
         await db.insert(s.imageCacheMap).values({
             originalUrl: `wa:${hash}:${slug}`,
             eventSlug: slug,

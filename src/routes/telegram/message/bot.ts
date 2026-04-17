@@ -3,14 +3,14 @@ import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
 import { generateSlug, parseTelegramContacts } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
-import { insertEvents } from '$lib/server/events';
+import { upsertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import { getTelegramEventOriginalAuthor, type TelegramCloudflareBody } from '$lib/telegramCommon';
 import { routes } from '$lib/routes';
 import { resizeCoverImage } from '$lib/imageProcessing';
 import { randomString } from '$lib/common';
-import { loadCreds, uploadImage } from '$lib/assets';
+import { loadCreds, uploadEventImage } from '$lib/assets';
 import { detectLanguage, t, type BotLanguage } from '$lib/telegramBotI18n';
 
 const assetsCreds = loadCreds({ S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID })
@@ -91,7 +91,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
                     throw new Error("could not download image " + imageUrl + " " + res.statusText + " " + await res.text())
                 }
                 const { buffer: resizedBuffer, phash: hash } = await resizeCoverImage(await res.bytes())
-                imageUrl = await uploadImage(resizedBuffer, slug, hash, assetsCreds)
+                imageUrl = await uploadEventImage(resizedBuffer, slug, hash, assetsCreds)
                 console.log(`image processing took: ${performance.now() - startTime}ms`);
             } catch (error) {
                 console.error("error processing image", error)
@@ -153,7 +153,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         let dbEvent;
         try {
-            dbEvent = (await insertEvents([eventRow]))[0];
+            dbEvent = (await upsertEvents([eventRow]))[0];
             if (!dbEvent) {
                 throw new Error('Failed to create event in database');
             }

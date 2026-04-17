@@ -21,7 +21,7 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 			.returning({ id: s.events.id, name: s.events.name, imageUrls: s.events.imageUrls });
 
 		if (result[0].imageUrls?.length && E2E_TEST !== `true`) {
-			await assets.deleteImages(result[0].imageUrls, eventAssetsCreds);
+			await assets.deleteObjects(result[0].imageUrls, eventAssetsCreds);
 		}
 
 		return {

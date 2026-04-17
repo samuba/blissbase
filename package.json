@@ -108,6 +108,7 @@
 		"ky": "^1.14.3",
 		"posthog-js": "^1.362.0",
 		"svelte-dnd-action": "^0.9.69",
+		"svelte-easy-crop": "^5.0.1",
 		"svelte-sonner": "^1.1.0",
 		"ws": "^8.19.0"
 	}
