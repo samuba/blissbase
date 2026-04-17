@@ -16,7 +16,6 @@ export const routes = {
     faq: () => `/faq` as const,
     newEvent: () => `/new` as const,
     profile: () => `/profile` as const,
-    edit
     editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
         const url = new URL(`/edit/${id}`, BASE_URL);
         if (hostSecret) {
