@@ -3,7 +3,6 @@
 	import { getSupabaseBrowserClient } from '$lib/supabase';
 	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
 	import { getMyPublicProfile } from '$lib/rpc/profile.remote';
-	import { routes } from '$lib/routes';
 	import { resolve } from '$app/paths';
 	import EventCard from '$lib/components/EventCard.svelte';
 
@@ -71,7 +70,7 @@
 						{/if}
 					</p>
 					<div class="card-actions pt-1 gap-4">
-						<a href={resolve(routes.editPublicProfile())} class="btn btn-primary">
+						<a href={resolve(`/profile/edit`)} class="btn btn-primary">
 							{#if myPublic.isPublic && myPublic.slug}
 								Profil bearbeiten
 							{:else}
