@@ -7,7 +7,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
@@ -154,8 +153,6 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
-#: src/lib/components/AuthCallbackFeedbackDialog.svelte
-#: src/lib/components/BurgerMenu.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
@@ -193,51 +190,22 @@ msgstr "Nächste 30 Tage"
 msgid "Zum Kalender hinzufügen"
 msgstr "Zum Kalender hinzufügen"
 
-#: src/lib/components/BurgerMenu.svelte
-msgid "<0/> Willkommen bei Blissbase"
-msgstr "<0/> Willkommen bei Blissbase"
-
-#: src/lib/components/BurgerMenu.svelte
-#: src/lib/components/BurgerMenu.svelte
 #: src/routes/about/+page.svelte
 #: src/routes/about/+page.svelte
 msgid "Samuel"
 msgstr "Samuel"
 
-#: src/lib/components/BurgerMenu.svelte
 #: src/routes/about/+page.svelte
 msgid "Peace, Love & Light 🌻"
 msgstr "Peace, Love & Light 🌻"
 
-#: src/lib/components/BurgerMenu.svelte
-msgid ""
-"PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich\n"
-"entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
-msgstr ""
-"PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich\n"
-"entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
-
-#: src/lib/components/BurgerMenu.svelte
-msgid "<0/> Neuen Event erstellen"
-msgstr "<0/> Neuen Event erstellen"
-
-#: src/lib/components/BurgerMenu.svelte
-msgid "<0/> Favoriten"
-msgstr "<0/> Favoriten"
-
-#: src/lib/components/BurgerMenu.svelte
 #: src/routes/profile/+page.svelte
 msgid "<0/> Wird abgemeldet..."
 msgstr "<0/> Wird abgemeldet..."
 
-#: src/lib/components/BurgerMenu.svelte
 #: src/routes/profile/+page.svelte
 msgid "<0/> Abmelden"
 msgstr "<0/> Abmelden"
-
-#: src/lib/components/BurgerMenu.svelte
-msgid "<0/> Login"
-msgstr "<0/> Login"
 
 #: src/lib/components/ImageDialog.svelte
 msgid "Close"
@@ -389,10 +357,6 @@ msgid "tribehaus.org"
 msgstr "tribehaus.org"
 
 #: src/routes/sources/+page.svelte
-msgid "awara.events"
-msgstr "awara.events"
-
-#: src/routes/sources/+page.svelte
 msgid "heilnetz.de"
 msgstr "heilnetz.de"
 
@@ -488,10 +452,6 @@ msgstr "Invalid event ID"
 msgid "Event not found"
 msgstr "Event not found"
 
-#: src/lib/components/BurgerMenu.svelte
-msgid "App teilen"
-msgstr "App teilen"
-
 #: src/lib/components/ShareButton.svelte
 msgid "Teilen"
 msgstr "Teilen"
@@ -499,10 +459,6 @@ msgstr "Teilen"
 #: src/lib/components/ShareButton.svelte
 msgid "Link kopieren"
 msgstr "Link kopieren"
-
-#: src/lib/components/BurgerMenu.svelte
-msgid "App link teilen"
-msgstr "App link teilen"
 
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
@@ -614,16 +570,6 @@ msgstr "Hero image"
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
 msgstr "Ort <0/> nicht gefunden"
-
-#: src/lib/components/BurgerMenu.svelte
-msgid ""
-"Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>)\n"
-"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
-"an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
-msgstr ""
-"Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>)\n"
-"aus verschiedenen Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles\n"
-"an einem Ort. <1/> Ich hoffe dir gefällt meine Arbeit."
 
 #: src/routes/+page.svelte
 msgid "Hinweis schließen"
@@ -946,31 +892,18 @@ msgid "<0/> Analysiere Text …"
 msgstr "<0/> Analysiere Text …"
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
-#: src/lib/components/AuthCallbackFeedbackDialog.svelte
-#: src/lib/components/AuthCallbackFeedbackDialog.svelte
-#: src/lib/components/AuthCallbackToast.svelte
 msgid "Anmeldung fehlgeschlagen"
 msgstr "Anmeldung fehlgeschlagen"
 
-#: src/lib/components/AuthCallbackFeedbackDialog.svelte
-msgid "OK"
-msgstr "OK"
-
 #: src/lib/authCallbackFeedbackToast.svelte.ts
-#: src/lib/components/AuthCallbackFeedbackDialog.svelte
-#: src/lib/components/AuthCallbackToast.svelte
 msgid "Du bist jetzt angemeldet. Viel Spaß!"
 msgstr "Du bist jetzt angemeldet. Viel Spaß!"
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
-#: src/lib/components/AuthCallbackFeedbackDialog.svelte
-#: src/lib/components/AuthCallbackToast.svelte
 msgid "Lass dir einen neuen Login-Link schicken."
 msgstr "Lass dir einen neuen Login-Link schicken."
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
-#: src/lib/components/AuthCallbackFeedbackDialog.svelte
-#: src/lib/components/AuthCallbackToast.svelte
 msgid "Der Login-Link ist abgelaufen."
 msgstr "Der Login-Link ist abgelaufen."
 
@@ -1270,6 +1203,3 @@ msgstr "Typ wählen"
 #: src/routes/profile/public/+page.svelte
 msgid "Hinzufügen"
 msgstr "Hinzufügen"
-
-#~ msgid "loading..."
-#~ msgstr "loading..."
