@@ -35,6 +35,9 @@ vi.mock("$lib/server/db", async (importOriginal) => {
     })
     const db = drizzle(client, { schema, casing: 'snake_case' })
 
+    // PGlite 0.4 defaults to the host's local timezone; force UTC so timestamp (without time zone) columns behave the same as in production where the DB runs in UTC.
+    await client.exec("SET TIME ZONE 'UTC';")
+
     // Explicitly create the extensions (cube must come before earthdistance)
     await client.exec('CREATE EXTENSION IF NOT EXISTS cube;')
     await client.exec('CREATE EXTENSION IF NOT EXISTS earthdistance;')

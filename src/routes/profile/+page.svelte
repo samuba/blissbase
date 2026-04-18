@@ -22,7 +22,7 @@
 		if (pastEventsStatus !== `idle`) return;
 
 		pastEventsStatus = `loading`;
-		pastEvents = await getMyAuthoredPastEvents();
+		pastEvents = await getMyAuthoredPastEvents().run();
 		pastEventsStatus = `loaded`;
 	}
 

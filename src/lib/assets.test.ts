@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@bradenmacdonald/s3-lite-client', () => ({
-	S3Client: vi.fn().mockImplementation(() => ({
-		putObject: vi.fn(),
-		deleteObject: vi.fn(),
-		exists: vi.fn(),
-		listObjects: vi.fn()
-	}))
+	S3Client: vi.fn(function S3Client() {
+		return {
+			putObject: vi.fn(),
+			deleteObject: vi.fn(),
+			exists: vi.fn(),
+			listObjects: vi.fn()
+		};
+	})
 }));
 
 import { S3Client } from '@bradenmacdonald/s3-lite-client';

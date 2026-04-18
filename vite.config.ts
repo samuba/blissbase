@@ -3,7 +3,7 @@ import Icons from 'unplugin-icons/vite'
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
-import { wuchale } from '@wuchale/vite-plugin'
+import { wuchale } from 'wuchale/vite'
 import { enhancedImages } from '@sveltejs/enhanced-img';
 
 export default defineConfig({

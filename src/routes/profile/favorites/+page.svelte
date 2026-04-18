@@ -18,7 +18,7 @@
 		if (pastEventsStatus !== `idle`) return;
 
 		pastEventsStatus = `loading`;
-		pastEvents = await getFavoritePastEvents();
+		pastEvents = await getFavoritePastEvents().run();
 		pastEventsStatus = `loaded`;
 	}
 
