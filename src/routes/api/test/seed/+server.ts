@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					latitude: data.latitude || null,
 					longitude: data.longitude || null,
 					tags: data.tags || ['Meditation'],
-					source: data.source || 'awara',
+					source: data.source || 'tribehaus',
 					sourceUrl: data.sourceUrl || 'https://example.com',
 					slug: data.slug || `e2e-${Date.now()}`,
 					listed: true,

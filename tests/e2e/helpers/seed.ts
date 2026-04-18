@@ -130,10 +130,10 @@ export function createMeditationEvent(overrides: TestEvent = {}): TestEvent {
 		startAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 		address: ['Zen Center', 'Berlin'],
 		price: 'Free',
-		host: 'Awara Studio',
+		host: 'Tribehaus Studio',
 		tags: ['Meditation', 'Wellness'],
-		source: 'awara',
-		sourceUrl: 'https://awara.com/meditation-workshop',
+		source: 'tribehaus',
+		sourceUrl: 'https://tribehaus.org/meditation-workshop',
 		...overrides
 	};
 }

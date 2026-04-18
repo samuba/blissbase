@@ -100,7 +100,6 @@ async function mergeEvents(args: {
     const websiteSourcePriority: string[] = ([
         'seijetzt',
         'tribehaus',
-        'awara',
         'kuschelraum',
         'ciglobalcalendar',
         'heilnetz',

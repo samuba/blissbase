@@ -103,7 +103,7 @@ Do not explain anything.
 If you can not find the information for a certain field do not return that field. Leave it out. 
 Never make up any information. Only use the information provided in the message or image!
 If there was an image attached, consider all text on the image as part of the message. For image-only messages (flyers), extract all visible text and treat it as the message content.
-If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. awara.events, sei.jetzt.) and do not include anything else.
+If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. sei.jetzt.) and do not include anything else.
 # existing sources:
 ${WEBSITE_SCRAPE_SOURCE_URLS
 		.filter(x => !x.includes(`megatix.co.id`)) // dont include megatix because most events are not publicly listed

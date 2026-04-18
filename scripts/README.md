@@ -15,14 +15,6 @@ The scripts share common functionality through `common.ts`, which includes:
 
 ## Available Scripts
 
-### scrape-awara.ts
-
-Scrapes events from awara.events, handling AJAX pagination and detailed event pages.
-
-```bash
-bun run scripts/scrape-awara.ts > events.json
-```
-
 ### scrape-heilnetz.ts
 
 Scrapes events from heilnetz.de with support for LD+JSON data extraction.

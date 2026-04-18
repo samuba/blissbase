@@ -135,17 +135,17 @@ describe('Image Processing for Event Extraction', () => {
         // Mock AI response for an image from an existing source
         const mockAiResponse = {
             hasEventData: false,
-            existingSource: "awara.events"
+            existingSource: "sei.jetzt"
         };
 
         (aiExtractEventData as any).mockResolvedValue(mockAiResponse);
 
         // Test the AI function with an image that contains a link to an existing source
         const date = new Date();
-        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/awara-event.jpg`], model: `google`, eventIsDefinitelyConscious: false });
+        const result = await aiExtractEventData({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/sei.jetzt-event.jpg`], model: `google`, eventIsDefinitelyConscious: false });
 
-        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/awara-event.jpg`], model: `google`, eventIsDefinitelyConscious: false }));
+        expect(aiExtractEventData).toHaveBeenCalledWith(expect.objectContaining({ message: ``, messageDate: date, timezone: `germany`, imageInputs: [`https://example.com/sei.jetzt-event.jpg`], model: `google`, eventIsDefinitelyConscious: false }));
         expect(result.hasEventData).toBe(false);
-        expect(result.existingSource).toBe("awara.events");
+        expect(result.existingSource).toBe("sei.jetzt");
     });
 });

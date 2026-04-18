@@ -1,5 +1,4 @@
 export const WEBSITE_SCRAPER_CONFIG = {
-    awara: { module: './scrape-awara.ts', label: 'Awara', url: 'https://awara.events' },
     tribehaus: { module: './scrape-tribehaus.ts', label: 'Tribehaus', url: 'https://tribehaus.org' },
     heilnetz: { module: './scrape-heilnetz.ts', label: 'Heilnetz', url: 'https://heilnetz.de' },
     heilnetzowl: { module: './scrape-heilnetzowl.ts', label: 'Heilnetz OWL', url: 'https://www.heilnetz-owl.de' },

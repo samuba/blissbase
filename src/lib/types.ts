@@ -21,7 +21,7 @@ export interface ScrapedEvent {
     longitude: number | null | undefined;
     tags: string[]; // Tags/Categories from the event page
     sourceUrl: string; // Event detail page URL (should be unique)
-    source: WebsiteScrapeSourceName; // Source of the event e.g. 'awara', 'tribehaus', 'heilnetz', 'seijetzt'
+    source: WebsiteScrapeSourceName; // Source of the event e.g. 'tribehaus', 'heilnetz', 'seijetzt'
 }
 
 export type InsertEvent = typeof events.$inferInsert;

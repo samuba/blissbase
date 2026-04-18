@@ -1,5 +1,5 @@
 /**
- * Main script to orchestrate scraping from multiple sources (Awara, Tribehaus, Heilnetz, SeiJetzt, ...)
+ * Main script to orchestrate scraping from multiple sources (Tribehaus, Heilnetz, SeiJetzt, ...)
  * and store the results in a postgres database using Drizzle ORM.
  *
  * Requires Bun, for network requests and file system operations.
@@ -8,9 +8,9 @@
  * 
  * Examples:
  * bun run scripts/scrape-websites.ts                    # Scrape all sources
- * bun run scripts/scrape-websites.ts awara              # Scrape only awara
+ * bun run scripts/scrape-websites.ts tribehaus              # Scrape only tribehaus
  * bun run scripts/scrape-websites.ts --clean            # Clear all sources and scrape all
- * bun run scripts/scrape-websites.ts awara --clean      # Clear awara and scrape awara
+ * bun run scripts/scrape-websites.ts tribehaus --clean      # Clear tribehaus and scrape tribehaus
  * 
  * The '--clean' flag deletes all existing events from the target source(s) before insertion.
  */

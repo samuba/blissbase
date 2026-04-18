@@ -70,7 +70,7 @@ test.describe('Source-Dependent Rendering', () => {
 		await page.waitForSelector('h1', { timeout: 15000 });
 
 		// Source label (Quelle:/Source:) section should be visible with source link
-		await expect(page.getByRole('link', { name: 'Awara' })).toBeVisible();
+		await expect(page.getByRole('link', { name: 'Tribehaus' })).toBeVisible();
 		// Registration link should be visible (translated: Anmelden → Register)
 		await expect(page.getByRole('link', { name: /Anmelden|Register/i })).toBeVisible();
 	});
