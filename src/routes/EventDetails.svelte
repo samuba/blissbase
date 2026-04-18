@@ -13,6 +13,7 @@
 	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
 	import { user } from '$lib/user.svelte';
 	import { resolve } from '$app/paths';
+	import PublicProfileCard from '$lib/components/PublicProfileCard.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -405,7 +406,9 @@
 			</p>
 		{/if}
 
-		{#if shouldShowHost}
+		{#if event.author?.slug && event.author?.displayName}
+			<PublicProfileCard profile={event.author} />
+		{:else if shouldShowHost}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 			>

@@ -5,8 +5,6 @@
 	let { profile }: { profile: Simplify<Pick<Profile, 'slug' | 'displayName' | 'bio' | 'profileImageUrl'>> } = $props();
 </script>
 
-<hr class="border-base-content/10 border-b border my-2">
-
 <a
 	href={resolve(`/@/[slug]`, { slug: profile.slug! })}
 	class={[
