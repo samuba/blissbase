@@ -8,15 +8,10 @@
 	import { routes } from '$lib/routes';
 
 	let isLoggingOut = $state(false);
-	const session = await getUserSession();
 	const myPublic = await getMyPublicProfile();
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
-
-	const upcomingEvents = await getMyAuthoredUpcomingEvents();
-
-	let pastEvents = $state<typeof upcomingEvents>([]);
+	let pastEvents = $state<Awaited<ReturnType<typeof getMyAuthoredUpcomingEvents>>>([]);
 	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
-
 
 	async function fetchPastEvents() {
 		if (pastEventsStatus !== `idle`) return;
@@ -93,7 +88,7 @@
 	<div class="card shadow bg-base-100 mt-4">
 		<!-- <i class="icon-[ph--check-circle] size-5"></i> -->
 		<div class="flex flex-col gap-3 card-body">
-			<span>Du bist eingeloggt als <strong>{session.email}</strong></span>
+			<span>Du bist eingeloggt als <strong>{(await getUserSession()).email}</strong></span>
 			<button class="btn btn-warning w-fit" onclick={handleLogout} disabled={isLoggingOut}>
 				{#if isLoggingOut}
 					<span class="loading loading-spinner loading-sm"></span>
@@ -133,17 +128,23 @@
 		</div>
 
 		<div class:hidden={selectedTab !== `upcoming`}>
-			{#if upcomingEvents.length}
+			<svelte:boundary>
 				<div class="mt-4 flex w-full flex-col gap-6">
-					{#each upcomingEvents as event (event.id)}
+					{#each await getMyAuthoredUpcomingEvents() as event (event.id)}
 						<EventCard {event} />
+					{:else}
+						<div class="mt-2 text-center text-base-content/60">
+							Du hast aktuell keine Events.
+						</div>
 					{/each}
 				</div>
-			{:else}
-				<div class="mt-12 text-center text-base-content/60">
-					Du hast aktuell keine Events.
-				</div>
-			{/if}
+
+				{#snippet pending()}
+					<div class="mt-12 flex justify-center">
+						<span class="loading loading-spinner"></span>
+					</div>
+				{/snippet}
+			</svelte:boundary>
 		</div>
 
 		<div class:hidden={selectedTab !== `past`}>

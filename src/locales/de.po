@@ -965,9 +965,7 @@ msgstr "Du bist jetzt angemeldet. Viel Spaß!"
 #: src/lib/authCallbackFeedbackToast.svelte.ts
 #: src/lib/components/AuthCallbackFeedbackDialog.svelte
 #: src/lib/components/AuthCallbackToast.svelte
-msgid ""
-"\n"
-"Lass dir einen neuen Login-Link schicken."
+msgid "Lass dir einen neuen Login-Link schicken."
 msgstr "Lass dir einen neuen Login-Link schicken."
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
@@ -1272,3 +1270,6 @@ msgstr "Typ wählen"
 #: src/routes/profile/public/+page.svelte
 msgid "Hinzufügen"
 msgstr "Hinzufügen"
+
+#~ msgid "loading..."
+#~ msgstr "loading..."
