@@ -1,4 +1,4 @@
-import { routes } from '$lib/routes';
+import { absoluteUrl, routes } from '$lib/routes';
 import { posthogCaptureException } from './common';
 import {RESEND_API_KEY} from '$env/static/private';
 
@@ -22,7 +22,7 @@ const from = `Blissbase <hi@blissbase.app>`;
  */
 export async function sendEventCreatedEmail(args: SendEventCreatedEmailArgs) {
 	const subject = `Dein Event wurde erstellt`;
-	const eventUrl = routes.eventDetails(args.eventSlug, true);
+	const eventUrl = absoluteUrl(routes.eventDetails(args.eventSlug));
 	const text = `
 Dein Event wurde erstellt:
 

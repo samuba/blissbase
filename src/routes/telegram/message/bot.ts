@@ -7,7 +7,7 @@ import { upsertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
 import { db, eq, s, sql } from '$lib/server/db';
 import { getTelegramEventOriginalAuthor, type TelegramCloudflareBody } from '$lib/telegramCommon';
-import { routes } from '$lib/routes';
+import { absoluteUrl, routes } from '$lib/routes';
 import { resizeCoverImage } from '$lib/imageProcessing';
 import { randomString } from '$lib/common';
 import { loadCreds, uploadEventImage } from '$lib/assets';
@@ -165,13 +165,13 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 
         await ctx.react('⚡', false) // marker that the event was transferred
 
-        const adminLinkText = t.adminLinkWarning(lang, routes.editEvent(dbEvent.id, eventRow.hostSecret!, true).toString());
+        const adminLinkText = t.adminLinkWarning(lang, absoluteUrl(routes.editEvent(dbEvent.id, eventRow.hostSecret!)));
 
         if (existingEvent) {
             const skippedImageMsg = skippedImage ? t.imageKept(lang) : "";
-            await reply(ctx, t.eventUpdated(lang, routes.eventDetails(dbEvent.slug, true).toString(), skippedImageMsg, adminLinkText), fromGroup, msgId)
+            await reply(ctx, t.eventUpdated(lang, absoluteUrl(routes.eventDetails(dbEvent.slug)), skippedImageMsg, adminLinkText), fromGroup, msgId)
         } else {
-            await reply(ctx, t.eventCreated(lang, routes.eventDetails(dbEvent.slug, true).toString(), adminLinkText), fromGroup, msgId)
+            await reply(ctx, t.eventCreated(lang, absoluteUrl(routes.eventDetails(dbEvent.slug)), adminLinkText), fromGroup, msgId)
         }
     } catch (error) {
         console.error(error)

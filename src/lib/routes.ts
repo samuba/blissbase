@@ -1,30 +1,33 @@
-export const BASE_URL = "https://blissbase.app" as const
+import { resolve } from "$app/paths";
 
 export const routes = {
-    root: () => `/` as const,
+    root: () => resolve("/"),
     eventList: (args: { searchTerm?: string | null } = {}) => {
-        const url = new URL('/', BASE_URL);
+        const url = new URL(resolve("/"), BASE_URL);
         if (args.searchTerm) url.searchParams.set('searchTerm', args.searchTerm);
         return url.toString().replace(url.origin, '');
     },
-    eventDetails: (slug: string, absolute: boolean = false) => {
-        const url = new URL(`/${slug}`, BASE_URL);
-        return absolute ? url.toString() : url.toString().replace(url.origin, '');
-    },
-    sources: () => `/sources` as const,
-    about: () => `/about` as const,
-    faq: () => `/faq` as const,
-    newEvent: () => `/new` as const,
-    profile: () => `/profile` as const,
-    publicProfile: (slug: string) => `/@/${slug}`,
-    editPublicProfile: () => `/profile/public` as const,
-    editEvent: (id: number, hostSecret?: string, absolute: boolean = false) => {
-        const url = new URL(`/edit/${id}`, BASE_URL);
+    eventDetails: (slug: string) => resolve("/[slug]", { slug }),
+    sources: () => resolve(`/sources`),
+    about: () => resolve(`/about`),
+    faq: () => resolve(`/faq`),
+    newEvent: () => resolve(`/new`),
+    profile: () => resolve(`/profile`),
+    publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }),
+    editPublicProfile: () => resolve(`/profile/public`),
+    editEvent: (id: number, hostSecret?: string) => {
+        const url = new URL(resolve(`/edit/[id]`, { id: id.toString() }), BASE_URL);
         if (hostSecret) {
             url.searchParams.set('hostSecret', hostSecret);
             url.searchParams.set('_ADMIN_LINK_NICHT_TEILEN', '');
         }
-        return absolute ? url.toString() : url.toString().replace(url.origin, '');
+        return url.toString().replace(url.origin, '');
     },
-    favorites: () => `/profile/favorites` as const
+    favorites: () => resolve(`/profile/favorites`)
+}
+
+export const BASE_URL = "https://blissbase.app" as const
+
+export function absoluteUrl(path: string) {
+    return new URL(path, BASE_URL).toString();
 }

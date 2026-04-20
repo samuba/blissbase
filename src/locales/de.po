@@ -292,17 +292,15 @@ msgstr "Standort"
 msgid "Überall"
 msgstr "Überall"
 
-#: src/lib/components/Login.svelte
-msgid "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
-msgstr "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
+#~ msgid "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
+#~ msgstr "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
 
 #: src/lib/components/Login.svelte
 msgid "<0/> Wird gesendet..."
 msgstr "<0/> Wird gesendet..."
 
-#: src/lib/components/Login.svelte
-msgid "<0/> Login-Link senden"
-msgstr "<0/> Login-Link senden"
+#~ msgid "<0/> Login-Link senden"
+#~ msgstr "<0/> Login-Link senden"
 
 #: src/lib/components/PageHeader.svelte
 #: src/routes/profile/public/+page.svelte
@@ -468,6 +466,8 @@ msgstr "Stadt / PLZ"
 msgid "Fehler beim Laden der Events:"
 msgstr "Fehler beim Laden der Events:"
 
+#: src/lib/components/Login.svelte
+#: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 msgid "Ein Fehler ist aufgetreten"
 msgstr "Ein Fehler ist aufgetreten"
@@ -740,9 +740,8 @@ msgstr "You are not allowed to edit this event"
 msgid "Du bist eingeloggt als <0/>"
 msgstr "Du bist eingeloggt als <0/>"
 
-#: src/lib/components/Login.svelte
-msgid "Login-Link wurde an <0/> gesendet. Bitte überprüfe dein Postfach."
-msgstr "Login-Link wurde an <0/> gesendet. Bitte überprüfe dein Postfach."
+#~ msgid "Login-Link wurde an <0/> gesendet. Bitte überprüfe dein Postfach."
+#~ msgstr "Login-Link wurde an <0/> gesendet. Bitte überprüfe dein Postfach."
 
 #: src/lib/components/TabsNavMobile.svelte
 msgid "Hauptnavigation mobil"
@@ -896,6 +895,7 @@ msgid "Anmeldung fehlgeschlagen"
 msgstr "Anmeldung fehlgeschlagen"
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
+#: src/lib/components/Login.svelte
 msgid "Du bist jetzt angemeldet. Viel Spaß!"
 msgstr "Du bist jetzt angemeldet. Viel Spaß!"
 
@@ -1203,3 +1203,87 @@ msgstr "Typ wählen"
 #: src/routes/profile/public/+page.svelte
 msgid "Hinzufügen"
 msgstr "Hinzufügen"
+
+#~ msgid "Der Code ist abgelaufen. Fordere einen neuen Code an."
+#~ msgstr "Der Code ist abgelaufen. Fordere einen neuen Code an."
+
+#~ msgid "Der Code ist falsch oder abgelaufen."
+#~ msgstr "Der Code ist falsch oder abgelaufen."
+
+#~ msgid "Bitte gib den 6-stelligen Code ein."
+#~ msgstr "Bitte gib den 6-stelligen Code ein."
+
+#~ msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen 6-stelligen Code und einen Login-Link."
+#~ msgstr "Gib deine E-Mail-Adresse ein. Du erhältst einen 6-stelligen Code und einen Login-Link."
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Code senden"
+msgstr "<0/> Code senden"
+
+#~ msgid "Wir haben dir einen 6-stelligen Code und einen Login-Link an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+#~ msgstr "Wir haben dir einen 6-stelligen Code und einen Login-Link an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+
+#: src/lib/components/Login.svelte
+msgid "Einmalcode"
+msgstr "Einmalcode"
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Wird geprüft..."
+msgstr "<0/> Wird geprüft..."
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Anmelden"
+msgstr "<0/> Anmelden"
+
+#~ msgid "Code erneut senden (gleich möglich)"
+#~ msgstr "Code erneut senden (gleich möglich)"
+
+#~ msgid "Code erneut senden"
+#~ msgstr "Code erneut senden"
+
+#: src/lib/components/Login.svelte
+msgid "Andere E-Mail verwenden"
+msgstr "Andere E-Mail verwenden"
+
+#: src/lib/components/Login.svelte
+msgid "In etwa einer Minute erneut möglich"
+msgstr "In etwa einer Minute erneut möglich"
+
+#~ msgid "Wir haben dir einen Code und einen Login-Link an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+#~ msgstr "Wir haben dir einen Code und einen Login-Link an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+
+#~ msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+#~ msgstr "Wir haben dir einen Code an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+
+#~ msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein um d."
+#~ msgstr "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein um d."
+
+#: src/lib/components/Login.svelte
+msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein um dich anzumelden."
+msgstr "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein um dich anzumelden."
+
+#: src/lib/components/Login.svelte
+msgid "Bitte gib den Code ein."
+msgstr "Bitte gib den Code ein."
+
+#~ msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code und einen Login-Link."
+#~ msgstr "Gib deine E-Mail-Adresse ein. Du erhältst einen Code und einen Login-Link."
+
+#: src/lib/components/Login.svelte
+msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
+msgstr "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
+
+#. 0: resendCooldown.secondsLeft
+#: src/lib/components/Login.svelte
+msgid "(in {0} Sekunden)"
+msgstr "(in {0} Sekunden)"
+
+#: src/lib/components/Login.svelte
+msgid "Code erneut senden <0/>"
+msgstr "Code erneut senden <0/>"
+
+#~ msgid "(<0/> {0} Sekunden)"
+#~ msgstr "(<0/> {0} Sekunden)"
+
+#~ msgid "in {0} Sekunden)"
+#~ msgstr "in {0} Sekunden)"

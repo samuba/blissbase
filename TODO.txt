@@ -1,7 +1,5 @@
-AWARA gibts nicht mehr
-
 use single flight mutations for profile and event creation
-make everything go fast - indexes? query inlining?
+make everything go fast - indexes? 
 
 reality event have wrong time
 unify tabsnav dropdown
