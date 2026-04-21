@@ -5,7 +5,7 @@ import { desc, count, eq } from "drizzle-orm";
 import type { AllTags } from "$lib/components/TagSelection.devData";
 
 export const getTags = prerender(async () => {
-    const previewTagSlugs = ['meditation', 'breathwork', 'tantra', 'conscious-dance', 'cacao-ceremony', 'kirtan']
+    const firstTagsSlugs = ['breathwork', 'tantra', 'conscious-dance', 'meditation', 'cacao-ceremony', 'kirtan']
     const allTags: AllTags = dev ?
         // prerender is run every load in dev and takes too long, so we just return a dummy result for dev
         (await import('$lib/components/TagSelection.devData')).devDummyData :
@@ -23,17 +23,29 @@ export const getTags = prerender(async () => {
             ],
         })
 
-    const previewTags = allTags.filter(x => previewTagSlugs.includes(x.slug));
-    previewTags.sort((a, b) => previewTagSlugs.indexOf(a.slug) - previewTagSlugs.indexOf(b.slug));
-
     const result = {
-        allTags: buildUiTags(allTags),
-        previewTags: buildUiTags(previewTags),
+        allTags: orderWithFirstSlugs(buildUiTags(allTags), firstTagsSlugs),
     }
     return result;
 });
 
 export type UiTag = ReturnType<typeof buildUiTags>[number];
+
+function orderWithFirstSlugs<T extends { slug: string }>(tags: T[], firstSlugs: string[]): T[] {
+    const bySlug = new Map(tags.map((t) => [t.slug, t]));
+    const first: T[] = [];
+    const seen = new Set<string>();
+    for (const slug of firstSlugs) {
+        if (seen.has(slug)) continue;
+        const tag = bySlug.get(slug);
+        if (tag) {
+            first.push(tag);
+            seen.add(slug);
+        }
+    }
+    const rest = tags.filter((t) => !seen.has(t.slug));
+    return [...first, ...rest];
+}
 
 function buildUiTags(dbTags: {
     id: number;
