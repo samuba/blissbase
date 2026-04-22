@@ -31,18 +31,20 @@ export const load = (async ({ cookies, locals }) => {
         }
         if (decodedCity) {
             autoDetectedCity = decodedCity;
-            params = { ...params, plzCity: decodedCity, distance: '100' };
-            saveFiltersToCookie(cookies, {
-                ...(savedFilters ?? {}),
-                plzCity: decodedCity,
-                distance: '50',
-                lat: null,
-                lng: null
-            });
+            params = { ...params, plzCity: decodedCity, distance: '50' };
         }
     }
 
     const { events, pagination } = prepareEventsResultForUi(await fetchEvents(params));
+
+    saveFiltersToCookie(cookies, {
+        ...(savedFilters ?? {}),
+        plzCity: pagination.plzCity,
+        distance: pagination.distance,
+        lat: pagination.lat,
+        lng: pagination.lng
+    });
+
     const tags = await getTags(); // cant do this in TagSelection.svelte cuz it get rerendered via 'if' in template and refetches from server then. Also having it in one component up the tree caused the popover to not be able to close on SSR'd page
     posthogCapture('events_fetched', {
         events: events.length,
