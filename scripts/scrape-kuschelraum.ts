@@ -335,9 +335,23 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
     extractStartAt(html: string) {
         const $ = cheerio.load(html);
-        const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
-        const [startTime] = timeText.split("-").map(time => time.trim());
-        const [hours, minutes] = startTime.split(':').map(Number);
+        const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00 or "Ganztags"
+        
+        let hours = 0;
+        let minutes = 0;
+        
+        // Handle "Ganztags" (all day) events - use default start time of 00:00
+        if (timeText && timeText.includes('-')) {
+            const [startTime] = timeText.split("-").map(time => time.trim());
+            if (startTime && startTime.includes(':')) {
+                const parsedHours = parseInt(startTime.split(':')[0]);
+                const parsedMinutes = parseInt(startTime.split(':')[1]);
+                if (!isNaN(parsedHours) && !isNaN(parsedMinutes)) {
+                    hours = parsedHours;
+                    minutes = parsedMinutes;
+                }
+            }
+        }
 
         const ldEvent = extractLDJsonEvent(html);
         const startDate = new Date(ldEvent.startDate);
@@ -354,9 +368,26 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
     extractEndAt(html: string) {
         const $ = cheerio.load(html);
-        const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00
-        const [, endTime] = timeText.split("-").map(time => time.trim());
-        const [hours, minutes] = endTime.split(':').map(Number);
+        const timeText = $('.mec-single-event-time abbr').text(); // 16:00 - 18:00 or "Ganztags"
+        
+        let hours = 23;
+        let minutes = 59;
+        
+        // Handle "Ganztags" (all day) events - use default end time of 23:59
+        if (timeText && timeText.includes('-')) {
+            const parts = timeText.split("-").map(time => time.trim());
+            if (parts.length >= 2) {
+                const endTime = parts[1];
+                if (endTime && endTime.includes(':')) {
+                    const parsedHours = parseInt(endTime.split(':')[0]);
+                    const parsedMinutes = parseInt(endTime.split(':')[1]);
+                    if (!isNaN(parsedHours) && !isNaN(parsedMinutes)) {
+                        hours = parsedHours;
+                        minutes = parsedMinutes;
+                    }
+                }
+            }
+        }
 
         const ldEvent = extractLDJsonEvent(html);
         const endDate = new Date(ldEvent.endDate);
