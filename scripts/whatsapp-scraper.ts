@@ -623,7 +623,7 @@ async function extractEventDataFromMessage(args: {
         timezone: args.defaultTimezone,
         authorName: getWhatsappAuthor(args.message).name,
         imageInputs: adjacentImageInputs,
-        model: `openai`,
+        model: `gpt-5-mini`,
         eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
     })
 
