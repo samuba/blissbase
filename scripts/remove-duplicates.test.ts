@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
+import { getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
 
 describe(`processDuplicates`, () => {
     it(`skips stale duplicate pairs and keeps the latest survivor state`, async () => {
@@ -80,6 +80,59 @@ describe(`preparePreferredSourceEventUpdate`, () => {
             tags: [`music`, `workshop`],
         });
         expect(eventToSurvive.tags).toEqual([`music`, `workshop`]);
+    });
+});
+
+describe(`getFormCreatedDeduplicationPlan`, () => {
+    it(`keeps a form-created event when paired with a duplicate from another source`, () => {
+        const formEvent = {
+            id: 1,
+            source: `website-form`,
+        };
+        const scrapedEvent = {
+            id: 2,
+            source: `telegram`,
+        };
+
+        const plan = getFormCreatedDeduplicationPlan({
+            eventA: scrapedEvent,
+            eventB: formEvent,
+        });
+
+        expect(plan).toEqual({
+            action: `merge`,
+            eventToSurvive: formEvent,
+            eventToDelete: scrapedEvent,
+        });
+    });
+
+    it(`skips duplicate removal when both events were created via form`, () => {
+        const plan = getFormCreatedDeduplicationPlan({
+            eventA: { id: 1, source: `website-form` },
+            eventB: { id: 2, source: `website-form` },
+        });
+
+        expect(plan).toEqual({ action: `skip` });
+    });
+});
+
+describe(`getMergedSourceUrl`, () => {
+    it(`uses the deleted event source URL when the survivor only has a Blissbase URL`, () => {
+        const sourceUrl = getMergedSourceUrl({
+            survivingSourceUrl: `https://blissbase.app/ecstatic-dance`,
+            deletedSourceUrl: ` https://example.com/ecstatic-dance `,
+        });
+
+        expect(sourceUrl).toBe(`https://example.com/ecstatic-dance`);
+    });
+
+    it(`keeps the survivor source URL when it is already external`, () => {
+        const sourceUrl = getMergedSourceUrl({
+            survivingSourceUrl: `https://survivor.test/event`,
+            deletedSourceUrl: `https://deleted.test/event`,
+        });
+
+        expect(sourceUrl).toBe(`https://survivor.test/event`);
     });
 });
 

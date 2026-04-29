@@ -20,6 +20,11 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 	try {
 		const { output, usage } = await generateText({
 			model: openai(model),
+			providerOptions: {
+				openai: {
+					reasoningEffort: 'high',
+				},
+			},
 			output: Output.object({
 				name: `eventExtraction`,
 				schema: buildMsgAnalysisSchema(timezone)
@@ -140,7 +145,12 @@ function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAn
 
 	if (answer.existingSource !== null) result.existingSource = answer.existingSource;
 	if (answer.name !== null) result.name = answer.name;
-	if (answer.description !== null) result.description = answer.description;
+	if (answer.description !== null) {
+		result.description = normalizeDescription({
+			description: answer.description,
+			name: answer.name
+		});
+	}
 	if (answer.startDate !== null) result.startDate = answer.startDate;
 	if (answer.endDate !== null) result.endDate = answer.endDate;
 	if (answer.url !== null) result.url = answer.url;
@@ -156,6 +166,115 @@ function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAn
 	if (answer.isConscious !== null) result.isConscious = answer.isConscious;
 
 	return result;
+}
+
+/**
+ * Applies deterministic description cleanup for rules that models often miss.
+ * @example
+ * normalizeDescription({ description: `Event\n\nMore: https://example.com`, name: `Event` })
+ */
+export function normalizeDescription(args: { description: string; name: string | null }) {
+	const descriptionWithoutName = removeLeadingEventName({
+		description: args.description,
+		name: args.name
+	});
+	return linkifyBareUrls(descriptionWithoutName);
+}
+
+const LEADING_NAME_SEPARATOR_REGEX = /^(?:\s*\n+|\s*[:.\-–—]\s*)/;
+
+function removeLeadingEventName(args: { description: string; name: string | null }) {
+	if (!args.name) return args.description;
+	const leadingNameEndIndex = findLeadingNameEndIndex({
+		description: args.description,
+		name: args.name
+	});
+	if (leadingNameEndIndex === null) return args.description;
+
+	const descriptionAfterName = args.description.slice(leadingNameEndIndex);
+	if (!descriptionAfterName.trim()) return ``;
+	if (!LEADING_NAME_SEPARATOR_REGEX.test(descriptionAfterName)) return args.description;
+
+	return descriptionAfterName.replace(LEADING_NAME_SEPARATOR_REGEX, ``);
+}
+
+function findLeadingNameEndIndex(args: { description: string; name: string }) {
+	const normalizedName = normalizeComparableText(args.name);
+	if (!normalizedName) return null;
+
+	let normalizedSoFar = ``;
+	let originalIndex = 0;
+	for (const char of args.description) {
+		normalizedSoFar += normalizeComparableText(char);
+		originalIndex += char.length;
+		if (normalizedSoFar === normalizedName) return originalIndex;
+		if (!normalizedName.startsWith(normalizedSoFar)) return null;
+	}
+
+	return null;
+}
+
+function normalizeComparableText(text: string) {
+	return text.normalize(`NFKC`).toLocaleLowerCase();
+}
+
+const TRAILING_URL_PUNCTUATION_REGEX = /[)\]},.!?;:]+$/;
+const PRESERVED_HTML_ENTITY_REGEX = /&(?:amp|lt|gt|quot|apos|#\d+|#x[\da-fA-F]+);/y;
+
+/**
+ * Wraps bare URLs in anchors while leaving existing anchor tags untouched.
+ * @example
+ * linkifyBareUrls(`More: https://example.com`)
+ */
+function linkifyBareUrls(text: string) {
+	return text.replace(/https?:\/\/[^\s<]+/g, (match, offset) => {
+		if (isInsideAnchorTag({ text, offset })) return match;
+
+		const trailingPunctuation = match.match(TRAILING_URL_PUNCTUATION_REGEX)?.[0] ?? ``;
+		const url = trailingPunctuation ? match.slice(0, -trailingPunctuation.length) : match;
+		return `<a href="${escapeHtmlAttribute(url)}">${escapeHtmlText(url)}</a>${trailingPunctuation}`;
+	});
+}
+
+function escapeHtmlAttribute(text: string) {
+	return escapeHtmlText(text).replaceAll(`"`, `&quot;`).replaceAll(`'`, `&#39;`);
+}
+
+/** Escapes HTML special characters while preserving already-encoded entities. */
+function escapeHtmlText(text: string) {
+	let result = ``;
+	for (let i = 0; i < text.length; i++) {
+		const char = text[i];
+		if (char === `&`) {
+			PRESERVED_HTML_ENTITY_REGEX.lastIndex = i;
+			const entityMatch = PRESERVED_HTML_ENTITY_REGEX.exec(text);
+			if (entityMatch) {
+				result += entityMatch[0];
+				i += entityMatch[0].length - 1;
+				continue;
+			}
+			result += `&amp;`;
+			continue;
+		}
+		if (char === `<`) {
+			result += `&lt;`;
+			continue;
+		}
+		if (char === `>`) {
+			result += `&gt;`;
+			continue;
+		}
+		result += char;
+	}
+	return result;
+}
+
+function isInsideAnchorTag(args: { text: string; offset: number }) {
+	const anchorStart = args.text.lastIndexOf(`<a`, args.offset);
+	if (anchorStart === -1) return false;
+
+	const anchorEnd = args.text.lastIndexOf(`</a>`, args.offset);
+	return anchorStart > anchorEnd;
 }
 
 /** Builds extraction schema with timezone and tag-list wording in property descriptions. */
@@ -177,7 +296,7 @@ function buildMsgAnalysisSchema(timezone: string) {
 			},
 			description: {
 				type: [`string`, `null`],
-				description: `An exact copy from the message, including html tags; do not convert <br> tags to line breaks. Preserve line breaks using \\n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of this field. If the text contains links that are not wrapped in <a> tags, wrap them in <a> tags. From extracted images only include information that is not already in the message.`
+				description: `An exact copy from the message, including html tags; do not convert <br> tags to line breaks. Preserve line breaks using \\n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of this field. From extracted images only include information that is not already in the message.`
 			},
 			startDate: {
 				type: [`string`, `null`],

@@ -254,6 +254,34 @@ describe('Events Module - Happy Flow Tests', () => {
             expect(result[0].tags).toHaveLength(2);
         });
 
+        it(`should replace a legacy Blissbase source URL with an incoming external source URL`, async () => {
+            const startAt = new Date(`2024-12-22T19:00:00Z`);
+            const endAt = new Date(`2024-12-22T22:00:00Z`);
+
+            await upsertEvents([
+                createTestEvent({
+                    name: `Conflict Source Url Event`,
+                    startAt,
+                    endAt,
+                    slug: ``,
+                    sourceUrl: `https://blissbase.app/conflict-source-url-event`
+                })
+            ]);
+
+            const result = await upsertEvents([
+                createTestEvent({
+                    name: `Conflict Source Url Event`,
+                    startAt,
+                    endAt,
+                    slug: ``,
+                    sourceUrl: `https://sei.jetzt/event/conflict-source-url-event`
+                })
+            ]);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].sourceUrl).toBe(`https://sei.jetzt/event/conflict-source-url-event`);
+        });
+
         it('should handle events with special characters in names', async () => {
             const event = createTestEvent({
                 name: 'Café & Bar: "Special" Event (50% off!)',

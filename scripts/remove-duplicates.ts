@@ -6,6 +6,7 @@ import {
 import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts';
 import { calculateHammingDistance } from '../src/lib/imageProcessing';
 import type { SelectEvent } from '../src/lib/server/schema';
+import { FORM_CREATED_EVENT_SOURCE, normalizeSourceUrl } from '../src/lib/server/events.shared';
 
 export async function main() {
     const { duplicates, eventsWithSameStart } = await getDuplicateEventsByImageHash(5);
@@ -91,6 +92,19 @@ async function mergeEvents(args: {
     deletedCount: number,
 }) {
     const { eventA, eventB, deletedCount } = args;
+    const formCreatedPlan = getFormCreatedDeduplicationPlan({ eventA, eventB });
+    if (formCreatedPlan.action === `skip`) {
+        console.log(`Skipping duplicate pair cuz both events were created on Blissbase via form.`);
+        return { deletedCount };
+    }
+    if (formCreatedPlan.action === `merge`) {
+        return await mergeAndDeleteDuplicateEvents({
+            eventToSurvive: formCreatedPlan.eventToSurvive,
+            eventToDelete: formCreatedPlan.eventToDelete,
+            deletedCount,
+        });
+    }
+
     if (eventA.source === eventB.source && WEBSITE_SCRAPE_SOURCES.includes(eventA.source as WebsiteScrapeSourceName)) {
         console.log(`Skipping this one cuz both are from ${eventA.source} website. Unlikely to be real duplicate.`);
         return { deletedCount };
@@ -140,6 +154,19 @@ async function mergeEvents(args: {
         eventToDelete = eventA
         eventToSurvive = eventB
     }
+    return await mergeAndDeleteDuplicateEvents({
+        eventToSurvive,
+        eventToDelete,
+        deletedCount,
+    });
+}
+
+async function mergeAndDeleteDuplicateEvents(args: {
+    eventToSurvive: SelectEvent,
+    eventToDelete: SelectEvent,
+    deletedCount: number,
+}) {
+    const { eventToSurvive, eventToDelete, deletedCount } = args;
     console.log(`Merging ${eventToSurvive.slug} with ${eventToDelete.slug} (will be deleted)`);
 
     console.log("Survivng event before merging:", eventToSurvive);
@@ -176,8 +203,12 @@ async function mergeEvents(args: {
     if ((eventToDelete.address?.length ?? 0) > (eventToSurvive.address?.length ?? 0)) {
         eventToSurvive.address = eventToDelete.address;
     }
+    eventToSurvive.sourceUrl = getMergedSourceUrl({
+        survivingSourceUrl: eventToSurvive.sourceUrl,
+        deletedSourceUrl: eventToDelete.sourceUrl,
+    });
     console.log("Surviving event after merging:", eventToSurvive);
-    const { id, ...eventToSurviveWithoutId } = eventToSurvive;
+    const { id: _id, ...eventToSurviveWithoutId } = eventToSurvive;
     await db.transaction(async (tx) => {
         await mergeEventTags({
             tx,
@@ -193,6 +224,53 @@ async function mergeEvents(args: {
         survivingEvent: eventToSurvive,
         deletedEventId: eventToDelete.id,
     };
+}
+
+/**
+ * Chooses the Blissbase form-created event as the survivor, or skips if both are protected.
+ *
+ * @example
+ * getFormCreatedDeduplicationPlan({ eventA: { source: `website-form` }, eventB: { source: `telegram` } })
+ */
+export function getFormCreatedDeduplicationPlan<TEvent extends { source: string }>(args: {
+    eventA: TEvent,
+    eventB: TEvent,
+}): FormCreatedDeduplicationPlan<TEvent> {
+    const eventAIsFormCreated = args.eventA.source === FORM_CREATED_EVENT_SOURCE;
+    const eventBIsFormCreated = args.eventB.source === FORM_CREATED_EVENT_SOURCE;
+
+    if (eventAIsFormCreated && eventBIsFormCreated) return { action: `skip` };
+    if (eventAIsFormCreated) {
+        return {
+            action: `merge`,
+            eventToSurvive: args.eventA,
+            eventToDelete: args.eventB,
+        };
+    }
+    if (eventBIsFormCreated) {
+        return {
+            action: `merge`,
+            eventToSurvive: args.eventB,
+            eventToDelete: args.eventA,
+        };
+    }
+
+    return { action: `none` };
+}
+
+/**
+ * Keeps a valid survivor source URL, otherwise falls back to a valid deleted-event URL.
+ *
+ * @example
+ * getMergedSourceUrl({ survivingSourceUrl: `https://blissbase.app/demo`, deletedSourceUrl: `https://example.com/demo` })
+ */
+export function getMergedSourceUrl(args: {
+    survivingSourceUrl: string | null,
+    deletedSourceUrl: string | null,
+}) {
+    const survivingSourceUrl = normalizeSourceUrl(args.survivingSourceUrl);
+    if (survivingSourceUrl) return survivingSourceUrl;
+    return normalizeSourceUrl(args.deletedSourceUrl);
 }
 
 /**
@@ -411,3 +489,12 @@ type MergeDuplicateEventsResult<TEvent extends { id: number }> = {
     survivingEvent?: TEvent,
     deletedEventId?: number,
 };
+
+type FormCreatedDeduplicationPlan<TEvent> =
+    | { action: `none` }
+    | { action: `skip` }
+    | {
+        action: `merge`,
+        eventToSurvive: TEvent,
+        eventToDelete: TEvent,
+    };
