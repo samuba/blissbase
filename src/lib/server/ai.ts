@@ -1,4 +1,4 @@
-import { generateText, jsonSchema, Output } from 'ai';
+import { generateText, jsonSchema, NoObjectGeneratedError, NoOutputGeneratedError, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { allTags } from './tags';
 import { WEBSITE_SCRAPE_SOURCE_URLS } from '../commonWithScripts';
@@ -17,35 +17,45 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 		eventIsDefinitelyConscious,
 	} = args;
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
-	const { output } = await generateText({
-		model: openai(model),
-		output: Output.object({
-			name: `eventExtraction`,
-			schema: buildMsgAnalysisSchema(timezone)
-		}),
-		system: msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName),
-		messages: [
-			{
-				role: `user`,
-				content: [
-					{
-						type: `text`,
-						text: message
-					},
-					...imageInputs.filter((x) => !!x).map((imageInput) => buildAiImagePart(imageInput!))
-				]
-			}
-		]
-	});
+	try {
+		const { output, usage } = await generateText({
+			model: openai(model),
+			output: Output.object({
+				name: `eventExtraction`,
+				schema: buildMsgAnalysisSchema(timezone)
+			}),
+			system: msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName),
+			messages: [
+				{
+					role: `user`,
+					content: [
+						{
+							type: `text`,
+							text: message
+						},
+						...imageInputs.filter((x) => !!x).map((imageInput) => buildAiImagePart(imageInput!))
+					]
+				}
+			]
+		});
+		console.debug("ai usage", usage)
 
-	const result = normalizeMsgAnalysisAnswer(output);
-	if (result.hasEventData) {
-		if (!Array.isArray(result.contact)) result.contact = [];
-		if (!Array.isArray(result.tags)) result.tags = [];
-		if (args.eventIsDefinitelyConscious) result.isConscious = true;
+		const result = normalizeMsgAnalysisAnswer(output);
+		if (result.hasEventData) {
+			if (!Array.isArray(result.contact)) result.contact = [];
+			if (!Array.isArray(result.tags)) result.tags = [];
+			if (args.eventIsDefinitelyConscious) result.isConscious = true;
+		}
+
+		return result;
+	} catch (error) {
+		if (!isNoGeneratedEventOutputError(error)) throw error;
+
+		console.warn(`[ai] No structured event output generated; treating message as non-event`);
+		return { hasEventData: false };
+	} finally {
+		console.timeEnd(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	}
-	console.timeEnd(`🤖 AI extracting event data with ${imageInputs.length} images`);
-	return result;
 }
 
 /**
@@ -89,6 +99,12 @@ function normalizeAiImageValue(image: AiImageValue) {
 	if (typeof image !== `string`) return image;
 	if (!image.startsWith(`http://`) && !image.startsWith(`https://`)) return image;
 	return new URL(image);
+}
+
+function isNoGeneratedEventOutputError(error: unknown) {
+	if (NoOutputGeneratedError.isInstance(error)) return true;
+	if (NoObjectGeneratedError.isInstance(error)) return true;
+	return false;
 }
 
 export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: string, _eventIsDefinitelyConscious: boolean, authorName?: string) => `
