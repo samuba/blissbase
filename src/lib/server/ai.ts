@@ -1,6 +1,5 @@
-import { generateText } from 'ai';
+import { generateText, jsonSchema, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { google } from '@ai-sdk/google';
 import { allTags } from './tags';
 import { WEBSITE_SCRAPE_SOURCE_URLS } from '../commonWithScripts';
 
@@ -18,8 +17,12 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 		eventIsDefinitelyConscious,
 	} = args;
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
-	const { text } = await generateText({
-		model: model === `google` ? google(`gemini-3.1-flash-lite-preview`) : openai(`gpt-5-mini`),
+	const { output } = await generateText({
+		model: openai(model),
+		output: Output.object({
+			name: `eventExtraction`,
+			schema: buildMsgAnalysisSchema(timezone)
+		}),
 		system: msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName),
 		messages: [
 			{
@@ -35,21 +38,14 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 		]
 	});
 
-	try {
-		const result = JSON.parse(text || `{ "hasEventData": false }`) as MsgAnalysisAnswer;
-		if (result.hasEventData) {
-			if (!Array.isArray(result.contact)) result.contact = [];
-			if (!Array.isArray(result.tags)) result.tags = [];
-			if (args.eventIsDefinitelyConscious) result.isConscious = true;
-		}
-		console.timeEnd(`🤖 AI extracting event data with ${imageInputs.length} images`);
-		return result;
-	} catch (e) {
-		const errorMessage = e instanceof Error ? e.message : String(e);
-		const msg = `Failed to parse AI response as JSON: ${errorMessage}`;
-		console.error(`AI answer: `, text);
-		throw new Error(msg);
+	const result = normalizeMsgAnalysisAnswer(output);
+	if (result.hasEventData) {
+		if (!Array.isArray(result.contact)) result.contact = [];
+		if (!Array.isArray(result.tags)) result.tags = [];
+		if (args.eventIsDefinitelyConscious) result.isConscious = true;
 	}
+	console.timeEnd(`🤖 AI extracting event data with ${imageInputs.length} images`);
+	return result;
 }
 
 /**
@@ -95,12 +91,11 @@ function normalizeAiImageValue(image: AiImageValue) {
 	return new URL(image);
 }
 
-export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: string, eventIsDefinitelyConscious: boolean, authorName?: string) => `
+export const msgAnalysisSystemPrompt = (messageDate: Date, timezone: string, _eventIsDefinitelyConscious: boolean, authorName?: string) => `
 Your purpose is to analyze messenger text messages and images to extract information about events from them. 
 Ignore messages that are not event announcements by setting hasEventData to false. (Be strict about this. E.g. this is not an event announcement: "..Wir haben noch einen Platz frei für den nächsten Tantra event..")
-Answer only in valid, properly escaped, raw JSON. Do not wrap it inside markdown or anything else.
 Do not explain anything.
-If you can not find the information for a certain field do not return that field. Leave it out. 
+If you can not find the information for a certain field return null for that field.
 Never make up any information. Only use the information provided in the message or image!
 If there was an image attached, consider all text on the image as part of the message. For image-only messages (flyers), extract all visible text and treat it as the message content.
 If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. sei.jetzt.) and do not include anything else.
@@ -114,48 +109,143 @@ Today is  ${new Date().toLocaleDateString(`en-US`, { year: `numeric`, month: `lo
 But the message was sent on ${messageDate.toLocaleDateString(`en-US`, { year: `numeric`, month: `long`, day: `numeric` })}.
 ${authorName ? `Author's name of this message: ${authorName}` : ``}
 
-Extract these information from the message:
-
-"hasEventData": boolean. wether or not the message contains information about an event.
-
-"existingSource": string. 
-
-"name": string. the name of the event. needs to be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as its obvious that every event is an invitation. if the name contains a location like ".. in Berlin" remove that part. if there is no name in the text create a short descriptive name with not much personality. Prefer descriptive names over names that are too short.
-
-"description": string. A exact copy from the message, including html tags, do not convert <br> tags to \n. Preserve line breaks using \n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of the description. If it contains links that are not wrapped in <a> tags, wrap them in <a> tags. From extracted images only include the information that is not already in the message.
-
-"startDate": string. The date and time of the event start. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find date and not time assume start of the day. If multiple start dates are mentioned take the one thats in the future and closest to today. 
-
-"endDate": string. The date and time of the event end. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. ONLY if specified in the message.
-
-"url": string. if the text contains a url that likely represents the event and has more information about it, insert it in this field. Never consider google maps urls for this. Never consider urls for this that start with "https://t.me".
-
-"contact": Array<string>. Contact or registration information. A valid href value. Example: https://exa.com, https://wa.me/+1234567890, mailto:ex@mpl.de, tel:+12345, tg://resolve?domain=username. Add main registration/contact method first. 
-
-"contactAuthorForMore": boolean. Wether the message states to contact the author of the message via messenger or phone to register/attend or get more information about the event. Only true if there is no other means of contact specified in the message. E.g. if there is a contact email specified, this should be false.
-
-"price": string. The price or costs of the event for the guest. Do not include html tags. If the price information includes new lines or is longer than 100 characters do not extract the price.
-
-"venue": string. Name of the location/venue where the event is taking place. Do not include html tags.
-
-"address": string. The full address where the event is happening. Do not include html tags.
-
-"attendanceMode": string. The method of attendance for the event. Can be "online", "offline" or "offline+online" (means both offline and online attendance is possible).
-
-"city": string. Name of the city/town where the event is happening.
-
-"emojis": string. Up to 3 emojis that describe the event.
-
-"tags": Array<string>. Tags that describe the event. Use the tags from the following list, only use tags that are not on the list if you think its REALLY necessary: ${allTags.map((x) => x.en).join(`, `)}.
-
-${eventIsDefinitelyConscious ? '' : `"isConscious": bool. Wether event is interesting to conscious people. Yes: Ecstatic Dance, Sexual, Somatic, Spiritual, Community, Self development, Ritual etc. No: club dance, pure sport, pure business etc`}
-
+Fill each output field according to the JSON schema property descriptions.
 `;
+
+/**
+ * Removes schema-required nulls from AI output so callers keep the old optional-field API.
+ * @example
+ * normalizeMsgAnalysisAnswer({ hasEventData: false, name: null, contact: null, tags: null })
+ */
+function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAnswer {
+	const result: MsgAnalysisAnswer = {
+		hasEventData: answer.hasEventData
+	};
+
+	if (answer.existingSource !== null) result.existingSource = answer.existingSource;
+	if (answer.name !== null) result.name = answer.name;
+	if (answer.description !== null) result.description = answer.description;
+	if (answer.startDate !== null) result.startDate = answer.startDate;
+	if (answer.endDate !== null) result.endDate = answer.endDate;
+	if (answer.url !== null) result.url = answer.url;
+	if (answer.contact !== null) result.contact = answer.contact;
+	if (answer.contactAuthorForMore !== null) result.contactAuthorForMore = answer.contactAuthorForMore;
+	if (answer.price !== null) result.price = answer.price;
+	if (answer.venue !== null) result.venue = answer.venue;
+	if (answer.address !== null) result.address = answer.address;
+	if (answer.attendanceMode !== null) result.attendanceMode = answer.attendanceMode;
+	if (answer.city !== null) result.city = answer.city;
+	if (answer.emojis !== null) result.emojis = answer.emojis;
+	if (answer.tags !== null) result.tags = answer.tags;
+	if (answer.isConscious !== null) result.isConscious = answer.isConscious;
+
+	return result;
+}
+
+/** Builds extraction schema with timezone and tag-list wording in property descriptions. */
+function buildMsgAnalysisSchema(timezone: string) {
+	return jsonSchema<RawMsgAnalysisAnswer>({
+		type: `object`,
+		properties: {
+			hasEventData: {
+				type: `boolean`,
+				description: `Whether or not the message contains information about an event.`
+			},
+			existingSource: {
+				type: [`string`, `null`],
+				description: `Domain name of the scrape source (e.g. sei.jetzt.) when the message contains a link that starts with one of the configured existing source URLs; otherwise null. When set, hasEventData must be false and no other event fields should be filled.`
+			},
+			name: {
+				type: [`string`, `null`],
+				description: `The name of the event. Must be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C, convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as it is obvious that every event is an invitation. If the name contains a location like ".. in Berlin", remove that part. If there is no name in the text, create a short descriptive name with not much personality. Prefer descriptive names over names that are too short.`
+			},
+			description: {
+				type: [`string`, `null`],
+				description: `An exact copy from the message, including html tags; do not convert <br> tags to line breaks. Preserve line breaks using \\n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of this field. If the text contains links that are not wrapped in <a> tags, wrap them in <a> tags. From extracted images only include information that is not already in the message.`
+			},
+			startDate: {
+				type: [`string`, `null`],
+				description: `The date and time of the event start. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find a date and not a time, assume start of the day. If multiple start dates are mentioned, take the one that is in the future and closest to today.`
+			},
+			endDate: {
+				type: [`string`, `null`],
+				description: `The date and time of the event end. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. Set null if not specified in the message.`
+			},
+			url: {
+				type: [`string`, `null`],
+				description: `If the text contains a URL that likely represents the event and has more information about it, put it here. Never use Google Maps URLs. Never use URLs that start with "https://t.me".`
+			},
+			contact: {
+				type: [`array`, `null`],
+				items: { type: `string` },
+				description: `Contact or registration information. Each item must be a valid href value. Examples: https://exa.com, https://wa.me/+1234567890, mailto:ex@mpl.de, tel:+12345, tg://resolve?domain=username. List the main registration/contact method first.`
+			},
+			contactAuthorForMore: {
+				type: [`boolean`, `null`],
+				description: `Whether the message states to contact the author of the message via messenger or phone to register, attend, or get more information about the event. Only true if there is no other means of contact specified in the message. For example, if a contact email is specified, this must be false.`
+			},
+			price: {
+				type: [`string`, `null`],
+				description: `The price or cost of the event for the guest. Do not include html tags. If the price information includes new lines or is longer than 100 characters, do not extract the price (return null).`
+			},
+			venue: {
+				type: [`string`, `null`],
+				description: `Name of the location or venue where the event is taking place. Do not include html tags.`
+			},
+			address: {
+				type: [`string`, `null`],
+				description: `The full address where the event is happening. Do not include html tags.`
+			},
+			attendanceMode: {
+				type: [`string`, `null`],
+				enum: [`online`, `offline`, `offline+online`, null],
+				description: `The method of attendance for the event. Use "online", "offline", or "offline+online" when both offline and online attendance are possible.`
+			},
+			city: {
+				type: [`string`, `null`],
+				description: `Name of the city or town where the event is happening.`
+			},
+			emojis: {
+				type: [`string`, `null`],
+				description: `Up to 3 emojis that describe the event.`
+			},
+			tags: {
+				type: [`array`, `null`],
+				items: { type: `string` },
+				description: `Tags that describe the event. Prefer tags from this list; only use a tag not on the list if you think it is really necessary: ${allTags.map((x) => x.en).join(`, `)}.`
+			},
+			isConscious: {
+				type: [`boolean`, `null`],
+				description: `Whether the event is interesting to conscious people. Yes: Ecstatic dance, sexual, somatic, spiritual, community, self development, ritual, etc. No: club dance, pure sport, pure business, etc.`
+			}
+		},
+		required: [
+			`hasEventData`,
+			`existingSource`,
+			`name`,
+			`description`,
+			`startDate`,
+			`endDate`,
+			`url`,
+			`contact`,
+			`contactAuthorForMore`,
+			`price`,
+			`venue`,
+			`address`,
+			`attendanceMode`,
+			`city`,
+			`emojis`,
+			`tags`,
+			`isConscious`
+		],
+		additionalProperties: false
+	});
+}
 
 export type MsgAnalysisAnswer = {
 	hasEventData: boolean;
-	contact: string[];
-	tags: string[];
+	contact?: string[];
+	tags?: string[];
 } & Partial<{
 	existingSource: string;
 	name: string;
@@ -186,6 +276,26 @@ export type AiExtractEventDataArgs = {
 	timezone: string;
 	authorName?: string;
 	imageInputs?: (AiImageInput | undefined)[];
-	model: `openai` | `google`;
+	model: `gpt-5.4-nano` | `gpt-5-mini`;
 	eventIsDefinitelyConscious: boolean;
+};
+
+type RawMsgAnalysisAnswer = {
+	hasEventData: boolean;
+	existingSource: string | null;
+	name: string | null;
+	description: string | null;
+	startDate: string | null;
+	endDate: string | null;
+	url: string | null;
+	contact: string[] | null;
+	contactAuthorForMore: boolean | null;
+	price: string | null;
+	venue: string | null;
+	address: string | null;
+	attendanceMode: 'online' | 'offline' | 'offline+online' | null;
+	city: string | null;
+	emojis: string | null;
+	tags: string[] | null;
+	isConscious: boolean | null;
 };

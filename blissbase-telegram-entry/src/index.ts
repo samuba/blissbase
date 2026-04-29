@@ -64,7 +64,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			timezone: `germany`,
 			authorName: author?.username,
 			imageInputs: [image?.url],
-			model: `google`,
+			model: `gpt-5-mini`,
 			eventIsDefinitelyConscious: false,
 		}), !fromGroup)
 

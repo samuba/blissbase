@@ -453,7 +453,7 @@ async function extractEventDataFromImageMessage(
         timezone: defaultTimezone,
         authorName: author?.username,
         imageInputs: [imageInput],
-        model: `openai`,
+        model: `gpt-5-mini`,
         eventIsDefinitelyConscious,
     });
 
@@ -503,7 +503,7 @@ async function extractEventDataFromMessage(
         timezone: defaultTimezone,
         authorName: author?.username,
         imageInputs: adjacentImageInputs,
-        model: `openai`,
+        model: `gpt-5-mini`,
         eventIsDefinitelyConscious,
     });
 
