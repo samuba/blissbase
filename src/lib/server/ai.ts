@@ -16,6 +16,14 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 		model,
 		eventIsDefinitelyConscious,
 	} = args;
+	const existingSource = getExistingSource(message);
+	if (existingSource) {
+		return {
+			hasEventData: false,
+			existingSource
+		};
+	}
+
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	try {
 		const { output, usage } = await generateText({
@@ -119,11 +127,6 @@ Do not explain anything.
 If you can not find the information for a certain field return null for that field.
 Never make up any information. Only use the information provided in the message or image!
 If there was an image attached, consider all text on the image as part of the message. For image-only messages (flyers), extract all visible text and treat it as the message content.
-If there are links present in the message that start with any of the following strings (existing sources), set hasEventData to false and existingSource to the domain name of the source (e.g. sei.jetzt.) and do not include anything else.
-# existing sources:
-${WEBSITE_SCRAPE_SOURCE_URLS
-		.filter(x => !x.includes(`megatix.co.id`)) // dont include megatix because most events are not publicly listed
-		.join(`\n`)}
 
 When extracting dates and time, assume ${timezone} time unless you know for sure the location is in another timezone, be sure to take correct daylight saving time into account.
 Today is  ${new Date().toLocaleDateString(`en-US`, { year: `numeric`, month: `long`, day: `numeric` })}
@@ -143,7 +146,6 @@ function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAn
 		hasEventData: answer.hasEventData
 	};
 
-	if (answer.existingSource !== null) result.existingSource = answer.existingSource;
 	if (answer.name !== null) result.name = answer.name;
 	if (answer.description !== null) {
 		result.description = normalizeDescription({
@@ -166,6 +168,59 @@ function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAn
 	if (answer.isConscious !== null) result.isConscious = answer.isConscious;
 
 	return result;
+}
+
+const EXISTING_SOURCE_URLS = WEBSITE_SCRAPE_SOURCE_URLS.filter(
+	(sourceUrl) => !sourceUrl.includes(`megatix.co.id`)
+);
+const EXISTING_SOURCE_MATCHERS = EXISTING_SOURCE_URLS.map((sourceUrl) => {
+	const source = new URL(sourceUrl);
+	return {
+		hostname: normalizeSourceHostname(source.hostname),
+		pathname: source.pathname
+	};
+});
+const MESSAGE_URL_REGEX = /https?:\/\/[^\s<>"'`]+/gi;
+const TRAILING_URL_PUNCTUATION_REGEX = /[)\]},.!?;:]+$/;
+
+/**
+ * Detects configured scrape-source links before AI extraction so source routing
+ * is stable and cheap.
+ * @example
+ * getExistingSource(`More: https://sei.jetzt/event/demo`)
+ */
+export function getExistingSource(message: string) {
+	for (const urlMatch of message.matchAll(MESSAGE_URL_REGEX)) {
+		const source = getExistingSourceFromUrl(urlMatch[0]);
+		if (source) return source;
+	}
+	return undefined;
+}
+
+function getExistingSourceFromUrl(urlCandidate: string) {
+	const url = parseUrl(urlCandidate);
+	if (!url) return undefined;
+
+	const candidateHostname = normalizeSourceHostname(url.hostname);
+	for (const source of EXISTING_SOURCE_MATCHERS) {
+		if (candidateHostname !== source.hostname) continue;
+		if (!url.pathname.startsWith(source.pathname)) continue;
+		return source.hostname;
+	}
+
+	return undefined;
+}
+
+function parseUrl(urlCandidate: string) {
+	try {
+		return new URL(urlCandidate.replace(TRAILING_URL_PUNCTUATION_REGEX, ``));
+	} catch {
+		return undefined;
+	}
+}
+
+function normalizeSourceHostname(hostname: string) {
+	return hostname.toLowerCase().replace(/^www\./, ``);
 }
 
 /**
@@ -218,7 +273,6 @@ function normalizeComparableText(text: string) {
 	return text.normalize(`NFKC`).toLocaleLowerCase();
 }
 
-const TRAILING_URL_PUNCTUATION_REGEX = /[)\]},.!?;:]+$/;
 const PRESERVED_HTML_ENTITY_REGEX = /&(?:amp|lt|gt|quot|apos|#\d+|#x[\da-fA-F]+);/y;
 
 /**
@@ -286,10 +340,6 @@ function buildMsgAnalysisSchema(timezone: string) {
 				type: `boolean`,
 				description: `Whether or not the message contains information about an event.`
 			},
-			existingSource: {
-				type: [`string`, `null`],
-				description: `Domain name of the scrape source (e.g. sei.jetzt.) when the message contains a link that starts with one of the configured existing source URLs; otherwise null. When set, hasEventData must be false and no other event fields should be filled.`
-			},
 			name: {
 				type: [`string`, `null`],
 				description: `The name of the event. Must be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C, convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as it is obvious that every event is an invitation. If the name contains a location like ".. in Berlin", remove that part. If there is no name in the text, create a short descriptive name with not much personality. Prefer descriptive names over names that are too short.`
@@ -356,7 +406,6 @@ function buildMsgAnalysisSchema(timezone: string) {
 		},
 		required: [
 			`hasEventData`,
-			`existingSource`,
 			`name`,
 			`description`,
 			`startDate`,
@@ -411,13 +460,12 @@ export type AiExtractEventDataArgs = {
 	timezone: string;
 	authorName?: string;
 	imageInputs?: (AiImageInput | undefined)[];
-	model: `gpt-5.4-nano` | `gpt-5-mini`;
+	model: `gpt-5.4-nano` | `gpt-5.4-nano`;
 	eventIsDefinitelyConscious: boolean;
 };
 
 type RawMsgAnalysisAnswer = {
 	hasEventData: boolean;
-	existingSource: string | null;
 	name: string | null;
 	description: string | null;
 	startDate: string | null;

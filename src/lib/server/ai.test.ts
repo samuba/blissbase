@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
-import { aiExtractEventData, normalizeDescription } from './ai';
+import { aiExtractEventData, getExistingSource, normalizeDescription } from './ai';
 
 const model = process.env.OPENAI_API_KEY ? `gpt-5.4-nano` : undefined;
 const itWithAiKey = model ? it : it.skip;
@@ -82,12 +82,27 @@ Join us for a WhatsApp-only event.`,
 	});
 });
 
+describe(`getExistingSource`, () => {
+	it(`detects configured source links from message text`, () => {
+		expect(getExistingSource(`Sharing https://sei.jetzt/event/ecstatic-dance-berlin`)).toBe(
+			`sei.jetzt`
+		);
+		expect(getExistingSource(`See https://www.heilnetz-owl.de/termine/demo`)).toBe(
+			`heilnetz-owl.de`
+		);
+		expect(getExistingSource(`Wrapped (https://sei.jetzt).`)).toBe(`sei.jetzt`);
+	});
+
+	it(`ignores excluded sources and lookalike hosts`, () => {
+		expect(getExistingSource(`Tickets: https://megatix.co.id/events/demo`)).toBeUndefined();
+		expect(getExistingSource(`Fake: https://sei.jetzt.evil.test/event/demo`)).toBeUndefined();
+	});
+});
+
 describe(`aiExtractEventData`, () => {
-	itWithAiKey(
+	it(
 		`detects an existing source link and skips event extraction`,
 		async () => {
-			if (!model) throw new Error(`AI API key is required for this test`);
-
 			const existingSourceResult = await aiExtractEventData({
 				message: `Sharing this here:
 https://sei.jetzt/event/ecstatic-dance-berlin
@@ -95,7 +110,7 @@ https://sei.jetzt/event/ecstatic-dance-berlin
 Looks nice for anyone interested.`,
 				messageDate: new Date(`2026-04-29T06:00:00.000Z`),
 				timezone: `Europe/Berlin`,
-				model,
+				model: `gpt-5.4-nano`,
 				eventIsDefinitelyConscious: false
 			});
 
@@ -105,8 +120,7 @@ Looks nice for anyone interested.`,
 			});
 			expect(existingSourceResult.name).toBeUndefined();
 			expect(existingSourceResult.description).toBeUndefined();
-		},
-		90_000
+		}
 	);
 
 	itWithAiKey(

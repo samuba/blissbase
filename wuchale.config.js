@@ -27,15 +27,20 @@ export default defineConfig({
         })
     },
     ai: {
-        name: "gpt-5-mini",
+        name: "gpt-5.4-nano",
         group: {},
         batchSize: 50,
         parallel: 3,
         translate: async (messages, instruction) => {
             const { text } = await generateText({
-                model: openai('gpt-5-mini'),
+                model: openai('gpt-5.4-nano'),
                 system: instruction,
                 prompt: messages,
+                providerOptions: {
+                    openai: {
+                        reasoningEffort: 'medium',
+                    },
+                },
             })
             return text
         }

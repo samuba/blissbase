@@ -23,7 +23,7 @@ export const prefillEventFromDescription = command(prefillSchema, async ({ text,
 		return { kind: `empty` as const };
 	}
 
-	const analysis = await aiExtractEventData({ message: trimmed, messageDate: new Date(), timezone: timeZone, model: `gpt-5-mini`, eventIsDefinitelyConscious: true });
+	const analysis = await aiExtractEventData({ message: trimmed, messageDate: new Date(), timezone: timeZone, model: `gpt-5.4-nano`, eventIsDefinitelyConscious: true });
 	const fields = await mapAiAnswerToCreateEventPrefill(analysis);
 	return { kind: `ok` as const, fields };
 });

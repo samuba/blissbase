@@ -1,3 +1,4 @@
+in message text use locale of the author
 use single flight mutations for profile and event creation
 make everything go fast - indexes? 
 
