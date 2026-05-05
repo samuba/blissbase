@@ -33,11 +33,11 @@ When a function has 3 parameters or more use an object named 'args' instead of i
 Always place type definitions at the bottom of the file unless the type is only used inside a function/context then leave it there.  
 Never type a variable if typescript can infer the type correctly on its own.
 Always check if an array is defined and has values like this: `arr?.length` not `arr && arr.length > 0`
-Always create short, descriptive doc comments for new non-trivial functions that include at least one example.
+For new functions that have non-trivial implementation create descriptive doc comments with 1 example.
 
 ## i18n
 Wuchale is used for i18n.
-Never write *.po files inside src/locales.
+Never touch *.po files cuz they generate on the fly.
 Use german Umlaute (ä,ö,ü etc) in all german texts.
 
 ## server communication

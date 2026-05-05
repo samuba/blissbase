@@ -1,28 +1,20 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { saveFiltersToCookie } from '$lib/cookie-utils';
+import { getPlaces } from '$lib/rpc/places.remote';
 
 export const load = (async ({ params: { slug }, cookies }) => {
-    let plzCity: string | undefined;
-    let distance = 50;
-    if (slug === "hoi-an") {
-        plzCity = "Hoi An";
-        distance = 15
-    } else if (slug === "danang") {
-        plzCity = "Da Nang";
-        distance = 30
-    } 
-
-    if (plzCity) {
-        saveFiltersToCookie(cookies, {
-            plzCity,
-            distance: distance.toString(),
-            lat: null,
-            lng: null
-        });
-    
-        redirect(302, `/`);
+    const place = (await getPlaces()).find((place) => place.slug === slug);
+    if (!place) {
+        error(404, 'Place "' + slug + '" not found');
     }
 
-    error(404, 'Place "' + slug + '" not found');
+    saveFiltersToCookie(cookies, {
+        plzCity: place.name,
+        distance: place.defaultRadius.toString(),
+        lat: null,
+        lng: null
+    });
+
+    redirect(302, `/`);
 }) satisfies PageServerLoad;

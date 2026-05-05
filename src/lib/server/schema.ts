@@ -184,6 +184,21 @@ export const eventTagsRelations = relations(eventTags, ({ one }) => ({
 }));
 
 // Supabase Auth Tables
+export const places = pgTable('places', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    name: text().notNull(),
+    slug: text().notNull().unique(),
+    defaultRadius: integer().notNull(),
+    createdAt: timestamp().notNull().defaultNow(),
+    updatedAt: timestamp().notNull().defaultNow(),
+});
+
+export type Place = typeof places.$inferSelect;
+
+export const placesRelations = relations(places, ({ many }) => ({
+    profiles: many(profiles),
+}));
+
 export const profiles = pgTable('profiles', {
     id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
     slug: text().unique(),
@@ -192,15 +207,44 @@ export const profiles = pgTable('profiles', {
     profileImageUrl: text(),
     bannerImageUrl: text(),
     socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),
+    placeId: integer().references(() => places.id, { onDelete: 'set null' }),
     createdAt: timestamp().notNull().defaultNow(),
     updatedAt: timestamp().notNull().defaultNow(),
-});
+}, (t) => [
+    index().on(t.placeId)
+]);
 
 export type Profile = typeof profiles.$inferSelect;
 
-export const profilesRelations = relations(profiles, ({ many }) => ({
+export const profilesRelations = relations(profiles, ({ many, one }) => ({
     favorites: many(favorites),
     events: many(events),
+    offerings: many(offerings),
+    place: one(places, {
+        fields: [profiles.placeId],
+        references: [places.id],
+    }),
+}));
+
+export const offerings = pgTable('offerings', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    profileId: uuid().notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+    name: text().notNull(),
+    description: text(),
+    listed: boolean().notNull().default(true),
+    createdAt: timestamp().notNull().defaultNow(),
+    updatedAt: timestamp().notNull().defaultNow(),
+}, (t) => [
+    index().on(t.profileId)
+]);
+
+export type Offering = typeof offerings.$inferSelect;
+
+export const offeringsRelations = relations(offerings, ({ one }) => ({
+    profile: one(profiles, {
+        fields: [offerings.profileId],
+        references: [profiles.id],
+    }),
 }));
 
 export const favorites = pgTable('favorites', {
