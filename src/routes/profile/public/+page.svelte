@@ -390,8 +390,12 @@
 					onclick={openAddLinkDialog}
 					disabled={!canAddSocialLink}
 				>
-					<i class="icon-[ph--link] mr-1 size-4"></i>
-					Link hinzufügen
+					<i class="icon-[ph--globe] -mr-1 size-5"></i>
+					<i class="icon-[ph--instagram-logo] -mr-1 text-[#E4405F] size-5"></i>
+					<i class="icon-[ph--facebook-logo] -mr-1 text-[#1877F2] size-5"></i>
+					<i class="icon-[ph--whatsapp-logo] text-[#25D366] size-5"></i>
+					<span class="text-base-content/70 text-sm -ml-1">…</span>					
+					Social-Link hinzufügen
 				</button>
 			</div>
 		</fieldset>

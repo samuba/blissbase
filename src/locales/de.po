@@ -1176,9 +1176,8 @@ msgstr "Links"
 msgid "Zuerst Typ wählen"
 msgstr "Zuerst Typ wählen"
 
-#: src/routes/profile/public/+page.svelte
-msgid "<0/> Link hinzufügen"
-msgstr "<0/> Link hinzufügen"
+#~ msgid "<0/> Link hinzufügen"
+#~ msgstr "<0/> Link hinzufügen"
 
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Bild wird hochgeladen…"
@@ -1287,3 +1286,31 @@ msgstr "Code erneut senden <0/>"
 
 #~ msgid "in {0} Sekunden)"
 #~ msgstr "in {0} Sekunden)"
+
+#~ msgid "<0/> Social-Link hinzufügen"
+#~ msgstr "<0/> Social-Link hinzufügen"
+
+#~ msgid "<0/> <1/> <2/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> Social-Link hinzufügen"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> <5/> <6/> <7/> <8/> <9/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> <5/> <6/> <7/> <8/> <9/> Social-Link hinzufügen"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> <5/> <6/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> <5/> <6/> Social-Link hinzufügen"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> <5/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> <5/> Social-Link hinzufügen"
+
+#~ msgid "<0/> <1/> <2/> <3/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> Social-Link hinzufügen"
+
+#~ msgid "<0/> <1/> <2/> <3/> … Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> … Social-Link hinzufügen"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> … Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> … Social-Link hinzufügen"
+
+#: src/routes/profile/public/+page.svelte
+msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
+msgstr "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
