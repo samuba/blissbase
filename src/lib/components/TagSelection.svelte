@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { getTags } from '$lib/rpc/TagSelection.remote';
 	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { debounce } from '$lib/common';
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
+	import { isTouchDevice } from '$lib/common';
 
 	const { allTags } = await getTags();
 	type Tag = (typeof allTags)[number];
 
 	let searchInput = $state<HTMLInputElement | null>(null);
+	let searchButton = $state<HTMLButtonElement | null>(null);
 
 	/** Parses search term and returns matched tags */
 	function parseSearchTermToTags(searchTerm: string): Tag[] {
@@ -85,18 +86,16 @@
 		if (!value?.trim()) return;
 		selectedTags = [];
 		searchExpanded = true;
-		filterQuery = value ?? '';
+		filterQuery = value.trim() || '';
 		setShowTextSearch(true);
-		keywordSearched = Boolean((value ?? '').trim());
-		debouncedSearch(value);
+		keywordSearched = Boolean(filterQuery);
+		eventsStore.handleSearchTermChange(filterQuery)
+		if (isTouchDevice()) {
+			searchButton?.focus();
+		}
 	}
 
 	function handleSearchInput(value: string) {
-		if (selectedTags.length > 0 && value.trim()) {
-			selectedTags = [];
-			eventsStore.handleSearchTermChange('');
-		}
-
 		filterQuery = value;
 		keywordSearched = false;
 	}
@@ -165,11 +164,6 @@
 			resizeObserver.disconnect();
 		};
 	}
-
-	const debouncedSearch = debounce<string | undefined>(
-		(term) => eventsStore.handleSearchTermChange(term?.trim() || ''),
-		400
-	);
 </script>
 
 <div class="flex w-full max-w-full min-w-0 items-center">
@@ -213,6 +207,7 @@
 				{/if}
 			</label>
 			<button
+				bind:this={searchButton}
 				class={[
 					'btn rounded-l-none border-l-0 pl-3 hover:cursor-pointer',
 					(searchExpanded && !keywordSearched) && 'btn-primary'

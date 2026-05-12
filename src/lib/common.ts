@@ -278,3 +278,7 @@ export function getContactMethod(contact: string | undefined) {
     }
     return 'Website';
 }
+
+export function isTouchDevice() {
+    return matchMedia('(hover: none)').matches;
+}
