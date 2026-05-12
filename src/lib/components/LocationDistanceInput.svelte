@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isTouchDevice } from '$lib/common';
 	import { fade } from 'svelte/transition';
 	export interface LocationChangeEvent {
 		location: string | null;
@@ -143,6 +144,8 @@
 			selectedDistance = '50';
 		}
 		notifyChange();
+		
+		if (isTouchDevice()) plzCityInput?.blur();
 	}
 
 	async function handleUseCurrentLocationClick() {
@@ -186,6 +189,7 @@
 		displayLocationText = '';
 		selectedDistance = '';
 		notifyChange();
+		plzCityInput?.focus();
 	}
 </script>
 
@@ -230,10 +234,7 @@
 					<button
 						title="Eingabe löschen"
 						class="btn-ghost bg-base-100 text-base-600 flex h-full items-center justify-center px-1"
-						onclick={() => {
-							typedPlzCity = '';
-							notifyChange();
-						}}
+						onclick={handleResetLocationClick}
 					>
 						<i class="icon-[ph--x] size-5"></i>
 					</button>
