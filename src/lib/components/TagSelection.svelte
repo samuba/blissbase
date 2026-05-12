@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getTags } from '$lib/rpc/TagSelection.remote';
-	import PopOver from './PopOver.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { debounce } from '$lib/common';
 	import { fade } from 'svelte/transition';
@@ -9,6 +8,8 @@
 
 	const { allTags } = await getTags();
 	type Tag = (typeof allTags)[number];
+
+	let searchInput = $state<HTMLInputElement | null>(null);
 
 	/** Parses search term and returns matched tags */
 	function parseSearchTermToTags(searchTerm: string): Tag[] {
@@ -27,14 +28,6 @@
 		);
 	}
 
-	function matchesTagQuery(args: { tag: Tag; query: string }) {
-		return (
-			args.tag.en?.toLowerCase().includes(args.query) ||
-			args.tag.de?.toLowerCase().includes(args.query) ||
-			args.tag.nl?.toLowerCase().includes(args.query)
-		);
-	}
-
 	function buildSelectedTagSearchTerm() {
 		return selectedTags.map((tag) => tag[locale]).join(' ');
 	}
@@ -42,7 +35,7 @@
 	function getInitialState() {
 		let searchTerm = eventsStore.searchFilter || '';
 		const matchedTags = parseSearchTermToTags(searchTerm);
-		if (matchedTags.length > 0) searchTerm = "";
+		if (matchedTags.length > 0) searchTerm = '';
 		return {
 			filterQuery: searchTerm,
 			selectedTags: matchedTags,
@@ -56,10 +49,6 @@
 		eventsStore.showTextSearch = value;
 	}
 
-	function focusOnMount(node: HTMLInputElement) {
-		requestAnimationFrame(() => node.focus());
-	}
-
 	const initialState = getInitialState();
 	let filterQuery = $state(initialState.filterQuery);
 	let selectedTags = $state<Tag[]>(initialState.selectedTags);
@@ -67,22 +56,11 @@
 	let showTextSearch = $state(initialState.showTextSearch);
 	let keywordSearched = $state(initialState.showTextSearch);
 	let locale = $derived(localeStore.locale as 'en' | 'de');
-	let popoverOpen = $state(false);
-	let allowPopoverOpen = $state(false);
 	let showLeftShadow = $state(false);
 	let showRightShadow = $state(false);
 
 	eventsStore.showTextSearch = initialState.showTextSearch;
 
-	let normalizedQuery = $derived(
-		searchExpanded || showTextSearch ? filterQuery.trim().toLowerCase() : ''
-	);
-	let popoverTags = $derived.by(() => {
-		const selectedTagIdSet = new Set(selectedTags.map((tag) => tag.id));
-		const availableTags = allTags.filter((tag) => !selectedTagIdSet.has(tag.id));
-		if (!normalizedQuery) return availableTags;
-		return availableTags.filter((tag) => matchesTagQuery({ tag, query: normalizedQuery }));
-	});
 	let railTags = $derived.by(() => {
 		const selectedTagIdSet = new Set(selectedTags.map((tag) => tag.id));
 		return allTags.filter((tag) => !selectedTagIdSet.has(tag.id));
@@ -90,15 +68,12 @@
 
 	function openSearch() {
 		searchExpanded = true;
-		popoverOpen = false;
-		allowPopoverOpen = false;
 	}
 
 	function selectTag(tag: Tag) {
 		selectedTags = [...selectedTags, tag];
 		filterQuery = '';
 		searchExpanded = false;
-		popoverOpen = false;
 		setShowTextSearch(false);
 		eventsStore.handleSearchTermChange(buildSelectedTagSearchTerm());
 	}
@@ -109,11 +84,10 @@
 	}
 
 	function runTextSearch(value?: string) {
+		if (!value?.trim()) return;
 		selectedTags = [];
 		searchExpanded = true;
 		filterQuery = value ?? '';
-		popoverOpen = false;
-		allowPopoverOpen = false;
 		setShowTextSearch(true);
 		keywordSearched = Boolean((value ?? '').trim());
 		debouncedSearch(value);
@@ -122,18 +96,18 @@
 	function handleSearchInput(value: string) {
 		filterQuery = value;
 		keywordSearched = false;
-		const hasQuery = Boolean(value.trim());
-		allowPopoverOpen = hasQuery;
-		popoverOpen = hasQuery;
 	}
 
 	function handleSearchBlur(e: FocusEvent & { currentTarget: HTMLElement }) {
 		if (filterQuery.trim()) return;
 
 		const nextFocusedEl = e.relatedTarget;
+		console.log(nextFocusedEl);
 		if (nextFocusedEl instanceof HTMLElement) {
 			const container = e.currentTarget.closest('label');
+			console.log(container);
 			if (container && nextFocusedEl.closest('label') === container) return;
+			console.log('close search');
 		}
 
 		closeSearch();
@@ -141,15 +115,8 @@
 
 	function clearSearchQuery() {
 		keywordSearched = false;
-		if (showTextSearch) {
-			runTextSearch('');
-			closeSearch();
-			return;
-		}
-
 		filterQuery = '';
-		popoverOpen = false;
-		allowPopoverOpen = false;
+		showTextSearch = false;
 		closeSearch();
 	}
 
@@ -164,8 +131,6 @@
 		}
 
 		searchExpanded = false;
-		popoverOpen = false;
-		allowPopoverOpen = false;
 	}
 
 	/** Maps vertical wheel movement to horizontal tag scrolling. */
@@ -210,129 +175,65 @@
 	);
 </script>
 
-<div class="flex w-full max-w-full min-w-0 items-center " in:fade={{ duration: 280 }}>
-	<div
-		class="flex w-full gap-2 min-w-0 flex-nowrap items-center pb-1 overflow-hidden relative"
-	>
-		<PopOver
-			bind:open={popoverOpen}
-			triggerClass="shrink-0"
-			contentClass="bg-base-100 shadow-lg border-base-300 w-[280px] z-20"
-			contentProps={{
-				side: 'bottom',
-				align: 'start',
-				sideOffset: 10,
-				collisionPadding: { top: 8, bottom: 8, left: 8, right: 8 },
-				onOpenAutoFocus: (e) => e.preventDefault()
-			}}
-			onOpenChange={(open) => {
-				if (open && !allowPopoverOpen) {
-					popoverOpen = false;
-					return;
-				}
-				popoverOpen = open;
-			}}
-		>
-			{#snippet trigger({ props })}
-				<div
-					{...props}
+<div class="flex w-full max-w-full min-w-0 items-center">
+	<div class="relative flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden pb-1">
+		<div class={[`tag-trigger flex shrink-0 overflow-hidden`]}>
+			<label
+				class={[
+					'input input-bordered min-w-0 rounded-r-none pr-1 ',
+					keywordSearched && 'active font-semibold'
+				]}
+				onblur={handleSearchBlur}
+			>
+				<input
+					bind:this={searchInput}
 					class={[
-						`tag-trigger shrink-0 overflow-hidden transition-all duration-300 ease-out`,
-						searchExpanded || showTextSearch && `w-42`,
-						props.class
+						' min-w-0 transition-transform duration-50 ease-out',
+						searchExpanded || showTextSearch ? `w-28` : `w-14`
 					]}
-				>
-					{#if searchExpanded || showTextSearch}
-						<label
-							class={[
-								'input input-bordered min-w-0 gap-2 pr-1 w-50',
-								keywordSearched && 'active'
-							]}
-							onblur={handleSearchBlur}
-						>
-							<i class="icon-[ph--magnifying-glass] text-base-600 size-5 min-w-5"></i>
-							<input
-								id="tag-search-input"
-								class="w-full min-w-0 "
-								bind:value={filterQuery}
-								{@attach focusOnMount}
-								oninput={(e) => handleSearchInput(e.currentTarget.value)}
-								onblur={handleSearchBlur}
-								onkeydown={(e) => {
-									if (e.key === 'Enter' && filterQuery.trim()) {
-										runTextSearch(filterQuery);
-									}
-								}}
-								type="text"
-								placeholder="Suchbegriff"
-							/>
-							<button
-								class="btn btn-ghost btn-sm btn-circle"
-								aria-label="Suchbegriff löschen"
-								disabled={!filterQuery.trim()}
-								tabindex={filterQuery.trim() ? 0 : -1}
-								onclick={() => {
-									if (filterQuery.trim()) {
-										clearSearchQuery();
-										return;
-									}
-									popoverOpen = false;
-								}}
-							>
-								<i class="icon-[ph--x] size-5"></i>
-							</button>
-						</label>
-					{:else}
-						<div
-							class="btn btn-circle bg-base-100 "
-							aria-controls="tag-search-input"
-							aria-expanded={searchExpanded || showTextSearch}
-							role="button"
-							tabindex="0"
-							aria-label="Suche öffnen"
-							onclick={openSearch}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									openSearch();
-								}
-							}}
-						>
-							<i class="icon-[ph--magnifying-glass] size-5"></i>
-						</div>
-					{/if}
-				</div>
-			{/snippet}
-
-			{#snippet content()}
-				<div class="border-base-300 bg-base-200 flex flex-col gap-2 border-b-2 p-2">
-					{#if filterQuery.trim()}
-						<button
-							class="btn btn-primary btn-sm w-full"
-							onclick={() => runTextSearch(filterQuery)}
-						>
-							<i class="icon-[ph--magnifying-glass] size-5"></i>
-							<strong>{filterQuery.trim()}</strong> suchen
-						</button>
-					{/if}
-				</div>
-
-				{#if popoverTags.length > 0}
-					<div class="scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex max-h-72 flex-col gap-2 overflow-y-auto p-2">
-						{#each popoverTags as tag (tag.id)}
-							<button
-								class="btn w-full text-center font-normal"
-								onclick={() => selectTag(tag)}
-							>
-								{tag[locale] ?? tag.slug}
-							</button>
-						{/each}
-					</div>
+					bind:value={filterQuery}
+					onfocus={openSearch}
+					oninput={(e) => handleSearchInput(e.currentTarget.value)}
+					onblur={handleSearchBlur}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && filterQuery.trim()) {
+							runTextSearch(filterQuery);
+						}
+					}}
+					type="text"
+					placeholder={searchExpanded || showTextSearch ? 'Suchbegriff' : 'Suchen'}
+				/>
+				{#if searchExpanded || showTextSearch}
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm btn-circle hover:cursor-pointer"
+						aria-label="Suchbegriff löschen"
+						tabindex={filterQuery.trim() ? 0 : -1}
+						onclick={clearSearchQuery}
+					>
+						<i class="icon-[ph--x] size-5"></i>
+					</button>
 				{/if}
-			{/snippet}
-		</PopOver>
+			</label>
+			<button
+				class={[
+					'btn rounded-l-none border-l-0 pl-3 hover:cursor-pointer',
+					((searchExpanded || showTextSearch) && !keywordSearched) && 'btn-primary'
+				]}
+				title="Suche starten"
+				onclick={() => {
+					if (!filterQuery.trim()) {
+						searchInput?.focus();
+						return;
+					}
+					runTextSearch(filterQuery);
+				}}
+			>
+				<i class="icon-[ph--magnifying-glass] size-5 min-w-5"></i>
+			</button>
+		</div>
 
-		<div class="flex flex-no-wrap gap-2 tag-trigger" class:hidden={selectedTags.length === 0}>
+		<div class="flex-no-wrap tag-trigger flex gap-2" class:hidden={selectedTags.length === 0}>
 			{#each selectedTags as tag (tag.id)}
 				<button
 					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap"
@@ -346,16 +247,14 @@
 			{/each}
 		</div>
 
-		<div class="relative w-full overflow-hidden">		
-			<div 
-				class="overflow-x-auto flex w-full min-w-0 flex-nowrap items-center tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent "
+		<div class="relative w-full overflow-hidden">
+			<div
+				class="tag-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center overflow-x-auto"
 				{@attach trackTagRail}
 				onscroll={(event) => updateTagRailShadows(event.currentTarget)}
 				onwheel={(event) => handleTagRailWheel({ event, element: event.currentTarget })}
 			>
-				<div 
-					class="flex w-full min-w-0 flex-nowrap items-center gap-2"
-				>	
+				<div class="flex w-full min-w-0 flex-nowrap items-center gap-2">
 					{#each railTags as tag (tag.id)}
 						<button
 							class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap"
@@ -368,15 +267,15 @@
 				<!-- shadow right -->
 				<div
 					class={[
-						'flex items-center justify-center from-base-200 via-base-200/70 pointer-events-none absolute top-0 right-0 bottom-0 bg-linear-to-l to-transparent transition-all duration-300 ease-out',
-						showRightShadow ? 'opacity-100' : 'opacity-0', showLeftShadow ? 'w-10' : 'w-25'
+						'from-base-200 via-base-200/70 pointer-events-none absolute top-0 right-0 bottom-0 flex items-center justify-center bg-linear-to-l to-transparent transition-all duration-300 ease-out',
+						showRightShadow ? 'opacity-100' : 'opacity-0',
+						showLeftShadow ? 'w-10' : 'w-25'
 					]}
-				>
-				</div>
+				></div>
 				<!-- shadow left -->
 				<div
 					class={[
-						'from-base-200 via-base-200/70 pointer-events-none absolute top-0 left-0 bottom-0 w-10 bg-linear-to-r to-transparent transition-opacity duration-300 ease-out',
+						'from-base-200 via-base-200/70 pointer-events-none absolute top-0 bottom-0 left-0 w-10 bg-linear-to-r to-transparent transition-opacity duration-300 ease-out',
 						showLeftShadow ? 'opacity-100' : 'opacity-0'
 					]}
 				></div>

@@ -128,7 +128,7 @@
 								}
 							}}
 						>
-							Vorort
+							Vor Ort
 						</ToggleButton>
 
 						<ToggleButton checked={eventsStore.pagination.attendanceMode === 'online' || eventsStore.pagination.attendanceMode === 'offline+online'} 				

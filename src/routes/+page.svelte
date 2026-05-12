@@ -36,7 +36,7 @@
 		}
 	});
 
-	const noResultsContainerClasses = `flex flex-col justify-center gap-3 pt-4`
+	const noResultsContainerClasses = `flex flex-col justify-center gap-3 pt-20`
 </script>
 
 
@@ -170,7 +170,7 @@
 				mit <br /> {@html eventsStore.searchFilter?.split(' ').map(x => `<b>${x}</b>`).join(' & ')}<br />
 			{/if}
 			{#if eventsStore.hasLocationFilter}
-				in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km radius)</span><br />
+				in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km Radius)</span><br />
 			{/if}
 			{#if eventsStore.hasDateFilter}
 				vom <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />
