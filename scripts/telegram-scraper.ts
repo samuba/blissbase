@@ -1025,6 +1025,26 @@ function isForum(entity: Entity) {
     return entity.className === 'Channel' && entity.forum;
 }
 
+/**
+ * Builds the final CI failure message for targets that still have scraping errors after the run.
+ */
+function formatScrapingTargetLastErrorFailure(targetErrors: TelegramScrapingTarget[]) {
+    const lines = targetErrors.map((target) => {
+        const name = target.name?.trim() || `Unknown`;
+        return `- ${name} (${target.roomId}): ${target.lastError}`;
+    });
+
+    return [
+        `Telegram scraping finished, but ${targetErrors.length} scraping target(s) still have lastError set:`,
+        ...lines
+    ].join(`\n`);
+}
+
+async function getScrapingTargetLastErrors() {
+    const targets = await db.query.telegramScrapingTargets.findMany();
+    return targets.filter((target) => target.lastError?.trim().length)
+}
+
 const client = new TelegramClient(sessionAuthKey, apiId, apiHash, {
     connectionRetries: 5,
 });
@@ -1178,6 +1198,11 @@ try {
         totalNewMessagesCount,
         totalScrapedEventsCount
     } = await processTargetsWithWorkerPool(scrapingTargets, client);
+
+    const scrapingTargetErrors = await getScrapingTargetLastErrors();
+    if (scrapingTargetErrors.length > 0) {
+        throw new Error(formatScrapingTargetLastErrorFailure(scrapingTargetErrors));
+    }
 
     // in the end log fatal erors and exit so sam can have a look at them
     if (fatalErrors.length > 0) {
