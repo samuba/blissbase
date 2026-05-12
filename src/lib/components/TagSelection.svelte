@@ -40,12 +40,10 @@
 			filterQuery: searchTerm,
 			selectedTags: matchedTags,
 			searchExpanded: Boolean(searchTerm.trim()),
-			showTextSearch: Boolean(searchTerm.trim()) && matchedTags.length === 0
 		};
 	}
 
 	function setShowTextSearch(value: boolean) {
-		showTextSearch = value;
 		eventsStore.showTextSearch = value;
 	}
 
@@ -53,13 +51,12 @@
 	let filterQuery = $state(initialState.filterQuery);
 	let selectedTags = $state<Tag[]>(initialState.selectedTags);
 	let searchExpanded = $state(initialState.searchExpanded);
-	let showTextSearch = $state(initialState.showTextSearch);
-	let keywordSearched = $state(initialState.showTextSearch);
+	let keywordSearched = $state(initialState.searchExpanded);
 	let locale = $derived(localeStore.locale as 'en' | 'de');
 	let showLeftShadow = $state(false);
 	let showRightShadow = $state(false);
 
-	eventsStore.showTextSearch = initialState.showTextSearch;
+	eventsStore.showTextSearch = initialState.searchExpanded;
 
 	let railTags = $derived.by(() => {
 		const selectedTagIdSet = new Set(selectedTags.map((tag) => tag.id));
@@ -72,6 +69,7 @@
 
 	function selectTag(tag: Tag) {
 		selectedTags = [...selectedTags, tag];
+		keywordSearched = false;
 		filterQuery = '';
 		searchExpanded = false;
 		setShowTextSearch(false);
@@ -94,6 +92,11 @@
 	}
 
 	function handleSearchInput(value: string) {
+		if (selectedTags.length > 0 && value.trim()) {
+			selectedTags = [];
+			eventsStore.handleSearchTermChange('');
+		}
+
 		filterQuery = value;
 		keywordSearched = false;
 	}
@@ -116,20 +119,14 @@
 	function clearSearchQuery() {
 		keywordSearched = false;
 		filterQuery = '';
-		showTextSearch = false;
 		closeSearch();
 	}
 
 	function closeSearch() {
 		keywordSearched = false;
-		if (showTextSearch) {
-			filterQuery = '';
-			setShowTextSearch(false);
-			eventsStore.handleSearchTermChange('');
-		} else {
-			filterQuery = '';
-		}
-
+		filterQuery = '';
+		setShowTextSearch(false);
+		eventsStore.handleSearchTermChange('');
 		searchExpanded = false;
 	}
 
@@ -189,7 +186,7 @@
 					bind:this={searchInput}
 					class={[
 						' min-w-0 transition-transform duration-50 ease-out',
-						searchExpanded || showTextSearch ? `w-28` : `w-14`
+						searchExpanded ? `w-28` : `w-14`
 					]}
 					bind:value={filterQuery}
 					onfocus={openSearch}
@@ -201,9 +198,9 @@
 						}
 					}}
 					type="text"
-					placeholder={searchExpanded || showTextSearch ? 'Suchbegriff' : 'Suchen'}
+					placeholder={searchExpanded ? 'Suchbegriff' : 'Suchen'}
 				/>
-				{#if searchExpanded || showTextSearch}
+				{#if searchExpanded}
 					<button
 						type="button"
 						class="btn btn-ghost btn-sm btn-circle hover:cursor-pointer"
@@ -218,7 +215,7 @@
 			<button
 				class={[
 					'btn rounded-l-none border-l-0 pl-3 hover:cursor-pointer',
-					((searchExpanded || showTextSearch) && !keywordSearched) && 'btn-primary'
+					(searchExpanded && !keywordSearched) && 'btn-primary'
 				]}
 				title="Suche starten"
 				onclick={() => {

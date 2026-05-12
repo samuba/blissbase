@@ -21,7 +21,7 @@
 		initialDistance,
 		resolvedCityName,
 		onChange,
-		disabled,
+		disabled
 	}: LocationDistanceInputProps = $props();
 
 	// Internal state
@@ -35,12 +35,13 @@
 	let inputWidth = $state(0);
 
 	let showDistanceInput = $derived(
-			(initialLocation || typedPlzCity.trim() || usingCurrentLocation || isLoadingLocation)
+		initialLocation || typedPlzCity.trim() || usingCurrentLocation || isLoadingLocation
 	);
 	let smallLocateMeButton = $derived(inputWidth < 220);
 
 	// Effect to sync component state with props (reacts to prop changes)
 	$effect(() => {
+		console.log('initialLocation', initialLocation);
 		// React to initialLocation changes
 		if (initialLocation?.startsWith('coords:')) {
 			const parts = initialLocation.substring('coords:'.length).split(',');
@@ -89,6 +90,10 @@
 		}
 	});
 
+	$effect(() => {
+		typedPlzCity = resolvedCityName ?? '';
+	})
+
 	const distanceOptions = [
 		{ value: '5', label: '< 5 km' },
 		{ value: '10', label: '< 10 km' },
@@ -118,7 +123,7 @@
 				distance: selectedDistance || null,
 				isUsingCurrentLocation: true,
 				latitude: !isNaN(latitude) ? latitude : null,
-				longitude: !isNaN(longitude) ? longitude : null,
+				longitude: !isNaN(longitude) ? longitude : null
 			};
 		} else {
 			eventData = {
@@ -126,7 +131,7 @@
 				distance: selectedDistance || null,
 				isUsingCurrentLocation: false,
 				latitude: null,
-				longitude: null,
+				longitude: null
 			};
 		}
 
@@ -184,24 +189,24 @@
 	}
 </script>
 
-<div class="flex min-w-0 items-center gap-2.5 overflow-hidden relative">
-	<div class="form-control join flex min-w-0 grow items-center overflow-hidden p-0" in:fade={{ duration: 280 }}>
+<div class="relative flex min-w-0 items-center gap-2.5 overflow-hidden">
+	<div
+		class="form-control join flex min-w-0 grow items-center overflow-hidden p-0"
+		in:fade={{ duration: 280 }}
+	>
 		<div class="relative min-w-0 flex-1 overflow-hidden" bind:clientWidth={inputWidth}>
-			{#if usingCurrentLocation && !isLoadingLocation}
-				<span
-					class="input join-item w-full truncate flex items-center active"
-					in:fade={{ duration: 280 }}
+			<label class={['input join-item peer group w-full', usingCurrentLocation && !isLoadingLocation && 'active']}>
+				<div
+					class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex"
 				>
-					<!-- <i class="icon-[ph--crosshair] -mr-0.5 size-5"></i> -->
-					{resolvedCityName || displayLocationText}
-				</span>
-			{:else}
+					<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
+				</div>
 				<input
 					bind:this={plzCityInput}
 					type="text"
 					id="plzCityInput"
 					placeholder="Stadt / PLZ"
-					class="input input-bordered join-item peer w-full"
+					class={['w-full']}
 					bind:value={typedPlzCity}
 					disabled={isLoadingLocation || disabled}
 					oninput={() => {
@@ -212,26 +217,31 @@
 						}
 					}}
 					onchange={handleFilterInputChange}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+							handleFilterInputChange()
+						}
+					}}
 					in:fade={{ duration: 280 }}
 				/>
-			{/if}
-			<div
-				class="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1"
-			>
-				{#if typedPlzCity.trim()}
+			</label>
+			<div class="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1">
+				{#if typedPlzCity.trim() && !usingCurrentLocation}
 					<button
 						title="Eingabe löschen"
-						class="btn-ghost bg-base-100 text-base-600 flex h-full  items-center justify-center px-1" onclick={() => {
+						class="btn-ghost bg-base-100 text-base-600 flex h-full items-center justify-center px-1"
+						onclick={() => {
 							typedPlzCity = '';
 							notifyChange();
-						}}>
+						}}
+					>
 						<i class="icon-[ph--x] size-5"></i>
 					</button>
 				{/if}
 				<button
 					class={[
-							'btn btn-xs flex h-full  items-center justify-center rounded-full py-0.5 peer-focus:hidden mr-0.5',
-							usingCurrentLocation && 'bg-base-100'
+						'btn btn-xs mr-0.5 flex  h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden',
+						usingCurrentLocation && 'bg-base-100'
 					]}
 					title="Aktuellen Standort verwenden"
 					onclick={usingCurrentLocation && !isLoadingLocation
@@ -242,7 +252,7 @@
 					{#if isLoadingLocation}
 						<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
 					{:else if usingCurrentLocation}
-							<i class="icon-[ph--x] size-4.5"></i>
+						<i class="icon-[ph--x] size-4.5"></i>
 					{:else}
 						<i class="icon-[ph--gps-fix] size-5"></i>
 						{#if !typedPlzCity.trim() && !smallLocateMeButton}
@@ -256,22 +266,16 @@
 		{#if showDistanceInput}
 			<select
 				id="distance"
-				class={["select join-item w-auto appearance-none", usingCurrentLocation && 'active']} 
+				class={['select join-item w-auto appearance-none', usingCurrentLocation && 'active']}
 				bind:value={selectedDistance}
 				onchange={handleFilterInputChange}
 				disabled={isLoadingLocation || disabled || (typedPlzCity === '' && !usingCurrentLocation)}
 			>
 				<option value="">Überall</option>
-				{#each distanceOptions as option}
+				{#each distanceOptions as option (option.value)}
 					<option value={option.value}>{option.label}</option>
 				{/each}
 			</select>
 		{/if}
 	</div>
 </div>
-
-{#snippet filteredIndicator()}
-	<div
-		class="bg-primary border-base-100 absolute top-0 right-1 h-3 w-3 rounded-full border-2"
-	></div>
-{/snippet}

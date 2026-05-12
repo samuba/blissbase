@@ -36,7 +36,7 @@
 		}
 	});
 
-	const noResultsContainerClasses = `flex flex-col justify-center gap-3 pt-20`
+	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
 </script>
 
 
@@ -105,7 +105,7 @@
 					{:else if (eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat)}
 						<div class={noResultsContainerClasses}>
 							<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
-								<i class="icon-[ph--gps-slash] size-10  block"></i>
+								<i class="icon-[ph--map-pin] size-10  block"></i>
 								<span>
 		
 									Ort <b>"{eventsStore.pagination.plzCity}"</b> nicht gefunden
@@ -159,7 +159,7 @@
 {/snippet}
 
 {#snippet noResults(foundSomeResultsBefore: boolean)}
-	<div class={[noResultsContainerClasses, "h-15 mb-6"]}>
+	<div class={[noResultsContainerClasses, "h-15"]}>
 		<div class="text-gray-500 text-center">
 			{#if foundSomeResultsBefore}
 				Keine weiteren Events gefunden

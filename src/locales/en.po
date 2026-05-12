@@ -292,9 +292,15 @@ msgstr "Location"
 msgid "Überall"
 msgstr "Everywhere"
 
+#~ msgid "Gib deine E-Mail-Adresse ein, dann erhältst du einen Login-Link zum Anmelden."
+#~ msgstr "Enter your email address and you will receive a login link to sign in."
+
 #: src/lib/components/Login.svelte
 msgid "<0/> Wird gesendet..."
 msgstr "<0/> Sending..."
+
+#~ msgid "<0/> Login-Link senden"
+#~ msgstr "<0/> Send login link"
 
 #: src/lib/components/PageHeader.svelte
 #: src/routes/profile/public/+page.svelte
@@ -315,6 +321,7 @@ msgstr "Search term"
 msgid "Suchbegriff löschen"
 msgstr "Clear search term"
 
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TagSelection.svelte
 msgid "Enter"
 msgstr "Enter"
@@ -486,6 +493,9 @@ msgstr "Location could not be retrieved. Please check your browser settings or e
 msgid "Filter"
 msgstr "Filter"
 
+#~ msgid "Vorort"
+#~ msgstr "In-person"
+
 #: src/lib/components/HeaderControls.svelte
 msgid "Teilnahme"
 msgstr "Attendance"
@@ -546,6 +556,9 @@ msgstr "Sorting by distance only makes sense for in-person events"
 #: src/routes/+page.svelte
 msgid "mit <0/> <1/><2/>"
 msgstr "with <0/> <1/><2/>"
+
+#~ msgid "in <0/> <1>{0} ({1}km radius)</1><2/>"
+#~ msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
 
 #: src/routes/+page.svelte
 msgid "vom <0/> <1/> bis <2/> <3/><4/>"
@@ -730,6 +743,9 @@ msgstr "You are not allowed to edit this event"
 msgid "Du bist eingeloggt als <0/>"
 msgstr "You are logged in as <0/>"
 
+#~ msgid "Login-Link wurde an <0/> gesendet. Bitte überprüfe dein Postfach."
+#~ msgstr "Login link has been sent to <0/>. Please check your inbox."
+
 #: src/lib/components/TabsNavMobile.svelte
 msgid "Hauptnavigation mobil"
 msgstr "Mobile main navigation"
@@ -807,6 +823,12 @@ msgstr "<0><0/> Event sources</0> Add your event to one of my event sources. I r
 #: src/routes/sources/+page.svelte
 msgid "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
 msgstr "From these sources I fetch events for you several times a day. <0/>Submit your event to one of them so it will appear on Blissbase a few hours later."
+
+#~ msgid "Suche öffnen"
+#~ msgstr "Open search"
+
+#~ msgid "<0/> <1/> suchen"
+#~ msgstr "<0/> <1/> search"
 
 #: src/routes/profile/favorites/+page.svelte
 msgid "Keine aktuellen Events in deinen Favoriten."
@@ -1159,6 +1181,9 @@ msgstr "Links"
 msgid "Zuerst Typ wählen"
 msgstr "Select a type first"
 
+#~ msgid "<0/> Link hinzufügen"
+#~ msgstr "<0/> Add link"
+
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Bild wird hochgeladen…"
 msgstr "<0/> Uploading image…"
@@ -1183,13 +1208,25 @@ msgstr "Select type"
 msgid "Hinzufügen"
 msgstr "Add"
 
+#~ msgid "Der Code ist abgelaufen. Fordere einen neuen Code an."
+#~ msgstr "The code has expired. Request a new code."
+
+#~ msgid "Der Code ist falsch oder abgelaufen."
+#~ msgstr "The code is incorrect or has expired."
+
 #: src/routes/p/[slug]/offerings/new/+page.svelte
 msgid "Bitte gib den 6-stelligen Code ein."
 msgstr "Please enter the 6-digit code."
 
+#~ msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen 6-stelligen Code und einen Login-Link."
+#~ msgstr "Enter your email address. You will receive a 6-digit code and a login link."
+
 #: src/lib/components/Login.svelte
 msgid "<0/> Code senden"
 msgstr "<0/> Send code"
+
+#~ msgid "Wir haben dir einen 6-stelligen Code und einen Login-Link an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+#~ msgstr "We've sent a 6-digit code and a login link to <0/>. Enter the code below or click the link in the email."
 
 #: src/lib/components/Login.svelte
 #: src/routes/p/[slug]/offerings/new/+page.svelte
@@ -1204,6 +1241,12 @@ msgstr "<0/> Checking..."
 msgid "<0/> Anmelden"
 msgstr "<0/> Log in"
 
+#~ msgid "Code erneut senden (gleich möglich)"
+#~ msgstr "Resend code (available immediately)"
+
+#~ msgid "Code erneut senden"
+#~ msgstr "Resend code"
+
 #: src/lib/components/Login.svelte
 #: src/routes/p/[slug]/offerings/new/+page.svelte
 msgid "Andere E-Mail verwenden"
@@ -1213,6 +1256,15 @@ msgstr "Use a different email"
 msgid "In etwa einer Minute erneut möglich"
 msgstr "You can try again in about a minute"
 
+#~ msgid "Wir haben dir einen Code und einen Login-Link an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+#~ msgstr "We sent a code and a login link to <0/>. Enter the code below or click the link in the email."
+
+#~ msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code unten ein oder klicke auf den Link in der E-Mail."
+#~ msgstr "We've sent a code to <0/>. Enter the code below or click the link in the email."
+
+#~ msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein um d."
+#~ msgstr "We sent you a code to <0/>. Enter the code here to d."
+
 #: src/lib/components/Login.svelte
 msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein um dich anzumelden."
 msgstr "We sent you a code to <0/>. Enter the code here to sign in."
@@ -1220,6 +1272,9 @@ msgstr "We sent you a code to <0/>. Enter the code here to sign in."
 #: src/lib/components/Login.svelte
 msgid "Bitte gib den Code ein."
 msgstr "Please enter the code."
+
+#~ msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code und einen Login-Link."
+#~ msgstr "Enter your email address. You'll receive a code and a login link."
 
 #: src/lib/components/Login.svelte
 msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
@@ -1233,6 +1288,36 @@ msgstr "(in {0} seconds)"
 #: src/lib/components/Login.svelte
 msgid "Code erneut senden <0/>"
 msgstr "Resend code <0/>"
+
+#~ msgid "(<0/> {0} Sekunden)"
+#~ msgstr "(<0/> {0} seconds)"
+
+#~ msgid "in {0} Sekunden)"
+#~ msgstr "in {0} seconds)"
+
+#~ msgid "<0/> Social-Link hinzufügen"
+#~ msgstr "<0/> Add Social Link"
+
+#~ msgid "<0/> <1/> <2/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> Add Social Link"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> <5/> <6/> <7/> <8/> <9/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> <5/> <6/> <7/> <8/> <9/> Add social link"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> <5/> <6/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> <5/> <6/> Add Social Link"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> <5/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> <5/> Add Social Link"
+
+#~ msgid "<0/> <1/> <2/> <3/> Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> Add social link"
+
+#~ msgid "<0/> <1/> <2/> <3/> … Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> … Add social link"
+
+#~ msgid "<0/> <1/> <2/> <3/> <4/> … Social-Link hinzufügen"
+#~ msgstr "<0/> <1/> <2/> <3/> <4/> … Add social link"
 
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
@@ -1379,9 +1464,15 @@ msgstr "<0/> Saving…"
 msgid "Wähle einen Ort aus, damit dein Angebot dort gelistet werden kann."
 msgstr "Select a location so your offer can be listed there."
 
+#~ msgid "<0/> Suchen"
+#~ msgstr "<0/> Search"
+
 #: src/lib/components/TagSelection.svelte
 msgid "Suchen"
 msgstr "Search"
+
+#~ msgid "Suche"
+#~ msgstr "Search"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Vor Ort"
@@ -1390,6 +1481,9 @@ msgstr "On-site"
 #: src/routes/+page.svelte
 msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
 msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
+
+#~ msgid "<0/> S"
+#~ msgstr "<0/> S"
 
 #: src/lib/components/TagSelection.svelte
 msgid "Suche starten"
