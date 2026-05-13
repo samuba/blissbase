@@ -282,3 +282,10 @@ export function getContactMethod(contact: string | undefined) {
 export function isTouchDevice() {
     return matchMedia('(hover: none)').matches;
 }
+
+export type SupportedLocale = 'en' | 'de';
+
+export function resolveSupportedLocale(locale: string | null | undefined): SupportedLocale {
+    if (locale === `de`) return locale;
+    return `en`;
+}

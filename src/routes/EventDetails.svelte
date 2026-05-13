@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAddress, formatTimeStr, getLongLocale, getContactMethod } from '$lib/common';
+	import { formatAddress, formatTimeStr, getLongLocale, getContactMethod, type SupportedLocale, resolveSupportedLocale } from '$lib/common';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
@@ -24,15 +24,6 @@
 
 	let selectedImageIndex = $state(0);
 
-	const contactMessage = $derived(
-		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
-		encodeURIComponent(
-			fixTelegramUnsupportedChars(
-				`Hallo, ich habe deinen Event '${event.name}' am ${event.startAt.toLocaleDateString(getLongLocale(localeStore.locale))} auf Blissbase.app gefunden und möchte gerne teilnehmen.`
-			)
-		)
-	);
-
 	let singleContact = $derived(
 		event.contact?.length === 1
 			? {
@@ -56,6 +47,14 @@
 
 	function getContactUrl(str: string | undefined) {
 		let contact = str ?? event.hostLink;
+		const authorLocale = resolveSupportedLocale(event.author?.locale);
+		const eventDate = event.startAt.toLocaleDateString(getLongLocale(authorLocale), { month: 'short', day: 'numeric', year: 'numeric' });
+		const contactMessageText = /* @wc-include */ `Hallo, ich habe deinen Event '${event.name}' am ${eventDate} auf Blissbase.app gefunden und möchte gerne teilnehmen.`;
+		const contactMessage = encodeURIComponent(contactMessageText);
+		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
+		const telegramContactMessage = encodeURIComponent(fixTelegramUnsupportedChars(contactMessageText));
+		const contactSubject = encodeURIComponent(/* @wc-include */ `Anmeldung für ${event.name} (${eventDate})`);
+
 		if (contact && /^\+?\d[\d\s\-\(\)]+\d$/.test(contact)) {
 			contact = `tel:${contact.replace(/\s/g, '')}`;
 		}
@@ -64,7 +63,7 @@
 			contact = contact.replace('https://t.me/', 'tg://resolve?domain=');
 		}
 		if (contact?.startsWith('tg://')) {
-			contact += `&text=${contactMessage}&parse_mode=HTML`;
+			contact += `&text=${telegramContactMessage}&parse_mode=HTML`;
 		}
 
 		if (contact?.startsWith('https://wa.me/')) {
@@ -72,10 +71,10 @@
 		}
 
 		if (contact?.startsWith('mailto:')) {
-			contact += `?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString(localeStore.longLocale)})`)}&body=${contactMessage}`;
+			contact += `?subject=${contactSubject}&body=${contactMessage}`;
 		} else if (getContactMethod(str) === 'Email') {
 			// email without mailto: prefix
-			contact = `mailto:${contact}?subject=${encodeURIComponent(`Anmeldung für ${event.name} (${event.startAt.toLocaleDateString(localeStore.longLocale)})`)}&body=${contactMessage}`;
+			contact = `mailto:${contact}?subject=${contactSubject}&body=${contactMessage}`;
 		}
 
 		return contact;
@@ -191,7 +190,7 @@
 
 		{#if (event.imageUrls?.length ?? 0) > 1}
 			<div class="mt-0.5 flex flex-wrap items-center justify-center gap-2">
-				{#each event.imageUrls! as thumbUrl, i}
+				{#each event.imageUrls! as thumbUrl, i (thumbUrl)}
 					<button
 						type="button"
 						class={[

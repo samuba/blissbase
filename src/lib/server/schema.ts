@@ -204,6 +204,7 @@ export const profiles = pgTable('profiles', {
     slug: text().unique(),
     displayName: text(),
     bio: text(),
+    locale: text().notNull().default("en"),
     profileImageUrl: text(),
     bannerImageUrl: text(),
     socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),

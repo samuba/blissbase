@@ -54,6 +54,7 @@ export const eventWith = {
 			displayName: true,
 			profileImageUrl: true,
 			bio: true,
+			locale: true,
 		}
 	}
 } as const;

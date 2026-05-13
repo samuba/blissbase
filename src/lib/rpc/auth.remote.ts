@@ -1,4 +1,5 @@
 import { command, getRequestEvent, query } from '$app/server';
+import { resolveSupportedLocale } from '$lib/common';
 import { db, s } from '$lib/server/db';
 import * as v from 'valibot';
 
@@ -38,7 +39,13 @@ export const verifyEmailOtp = command(verifyEmailOtpInputSchema, async ({ email,
 		return { ok: false as const, message: `Anmeldung fehlgeschlagen: Benutzer nicht gefunden.` };
 	}
 
-	await db.insert(s.profiles).values({ id: data.user.id }).onConflictDoNothing();
+	const locale = resolveSupportedLocale(data.user.user_metadata?.locale);
+	await db.insert(s.profiles).values({ id: data.user.id, locale }).onConflictDoUpdate({
+		target: s.profiles.id,
+		set: {
+			locale
+		}
+	});
 	return { ok: true as const };
 });
 
@@ -50,5 +57,5 @@ function mapVerifyOtpError(err: { message?: string; code?: string }) {
 	if (c === `invalid_token` || c === `otp_disabled` || c === `bad_jwt`) {
 		return `Der Code ist falsch oder abgelaufen.`;
 	}
-	return err.message ?? `Ein Fehler ist aufgetreten: ` + c;
+	return err.message ?? `Ein Fehler ist aufgetreten: ${c}`;
 }
