@@ -29,6 +29,14 @@ export async function getPublicProfileBySlug(args: { slug: string }) {
 			profileImageUrl: true,
 			bannerImageUrl: true,
 			socialLinks: true,
+		},
+		with: {
+			place: {
+				columns: {
+					name: true,
+					slug: true
+				}
+			}
 		}
 	});
 }

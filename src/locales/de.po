@@ -1385,3 +1385,11 @@ msgstr "in <0/> <1>{0} ({1}km Radius)</1><2/>"
 #: src/lib/components/TagSelection.svelte
 msgid "Suche starten"
 msgstr "Suche starten"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Ort"
+msgstr "Ort"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Kein Ort ausgewählt"
+msgstr "Kein Ort ausgewählt"

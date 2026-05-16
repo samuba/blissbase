@@ -1,3 +1,6 @@
 {
-    "deno.enablePaths": []
+    "deno.enablePaths": [],
+    "svelte.plugin.svelte.compilerWarnings": {
+        "no-navigation-without-resolve": "ignore",
+    }
 }

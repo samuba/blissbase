@@ -3,11 +3,14 @@ import * as v from 'valibot';
 
 
 
-/**
- * Converts empty form strings into `undefined`.
- */
+/** Converts empty form strings into `undefined` */
 function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	return v.union([v.pipe(v.literal(``), v.transform(() => undefined)), schema]);
+}
+
+/** Converts an empty string into `null`. */
+function emptyStringIsNull(schema: v.GenericSchema<string, string>) {
+	return v.union([v.pipe(v.literal(``), v.transform(() => null)), schema]);
 }
 
 export const publicProfileFormSchema = v.pipe(v.object({
@@ -23,6 +26,7 @@ export const publicProfileFormSchema = v.pipe(v.object({
 		)
 	),
 	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio ist zu lang`)), ``),
+	placeId: v.optional(v.pipe(emptyStringIsNull(v.string()), v.toNumber())),
 	profileImageUrl: v.optional(
 		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profilbild-URL ist ungültig`))),
 		``

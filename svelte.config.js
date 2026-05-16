@@ -31,7 +31,8 @@ const config = {
 				warning.code === 'a11y_no_noninteractive_element_interactions' ||
 				warning.code === 'a11y_click_events_have_key_events' ||
 				warning.code === 'a11y_no_static_element_interactions' ||
-				warning.code === 'element_invalid_self_closing_tag'
+				warning.code === 'element_invalid_self_closing_tag' ||
+				warning.code === 'no_navigation_without_resolve' // cuz clashes with routes.profile() pattern
 			) {
 				return false;
 			}

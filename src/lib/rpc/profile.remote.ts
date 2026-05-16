@@ -37,6 +37,7 @@ export const getMyPublicProfile = query(async () => {
 		socialLinks: profile.socialLinks,
 		profileImageUrl: profile.profileImageUrl ?? ``,
 		bannerImageUrl: profile.bannerImageUrl ?? ``,
+		placeId: profile.placeId,
 		isPublic: isPublicProfile(profile)
 	};
 });
@@ -91,9 +92,9 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
 	if (!currentProfile) throw error(404, `Profile not found`);
 
-	const slug = createPublicProfileSlug({ displayName: data.displayName });
+	const slug = (data.slug ?? ``) || (currentProfile.slug ?? ``);
 	if (!slug) {
-		return invalid(issue.slug(`Slug konnte nicht erzeugt werden`));
+		return invalid(issue.slug(`Profil-URL muss ausgefüllt werden`));
 	}
 
 	const existingSlugOwner = await db.query.profiles.findFirst({
@@ -127,6 +128,7 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 			displayName: data.displayName,
 			slug,
 			bio: data.bio || null,
+			placeId: data.placeId ?? null,
 			socialLinks: data.socialLinks,
 			profileImageUrl: nextProfileImageUrl,
 			bannerImageUrl: nextBannerImageUrl,
@@ -142,6 +144,7 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 	]);
 
 	getMyPublicProfile().refresh();
+	getPublicProfile({ slug }).refresh();
 
 	redirect(303, routes.publicProfile(slug));
 });

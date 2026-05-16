@@ -8,6 +8,7 @@
 	import {
 		publicProfileFormSchema,
 	} from '$lib/rpc/profile.common';
+	import { getPlaces } from '$lib/rpc/places.remote';
 	import { checkSlugAvailability, getMyPublicProfile, upsertPublicProfile } from '$lib/rpc/profile.remote';
 	import { routes } from '$lib/routes';
 	import { resolve } from '$app/paths';
@@ -18,6 +19,7 @@
 	import { onMount } from 'svelte';
 
 	const profile = $state(await getMyPublicProfile());
+	const places = await getPlaces();
 
 	let profileImageBusy = $state(false);
 	let bannerImageBusy = $state(false);
@@ -27,12 +29,8 @@
 		return slugify(name).replace(/^-+|-+$/g, ``).slice(0, 80);
 	}
 
-	let slugManuallyEdited = $state(
-		Boolean(
-			profile.slug?.trim() &&
-				slugFromDisplayName(profile.displayName) !== profile.slug.trim()
-		)
-	);
+	const hasInitialSlug = Boolean(profile.slug?.trim());
+	let slugManuallyEdited = $state(hasInitialSlug);
 
 	let slugCheck = $state<`idle` | `checking` | { available: boolean; normalized: string } | `error`>(
 		`idle`
@@ -46,6 +44,7 @@
 		if (slugManuallyEdited) return;
 		const dn = upsertPublicProfile.fields.displayName.value() ?? ``;
 		upsertPublicProfile.fields.slug.set(slugFromDisplayName(dn));
+		slugCheck = `idle`;
 	}
 
 	function onSlugInput() {
@@ -62,9 +61,10 @@
 
 		slugCheck = `checking`;
 		try {
-			const result = await checkSlugAvailability({ slug: raw });
+			const result = await checkSlugAvailability({ slug: raw }).run();
 			slugCheck = { available: result.available, normalized: result.slug };
-		} catch {
+		} catch(error) {
+			console.error(`Slug check failed`, error);
 			slugCheck = `error`;
 		}
 	}
@@ -212,7 +212,7 @@
 		<div class="min-w-0 flex-1">
 			<div class="flex items-center gap-2 justify-between">
 				<h1 class="text-xl font-bold">Öffentliches Profil</h1>
-				<a href={resolve(routes.profile())} class="btn btn-ghost btn-sm">
+				<a href={routes.profile()} class="btn btn-ghost btn-sm">
 					<i class="icon-[ph--arrow-left] mr-1 size-4"></i>
 					Zurück
 				</a>
@@ -318,6 +318,21 @@
 			<EditorJs field={upsertPublicProfile.fields.bio} value={profile.bio} />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={upsertPublicProfile.fields.bio} />
+		</fieldset>
+
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Ort</legend>
+			<select
+				class="select w-full"
+				{...upsertPublicProfile.fields.placeId.as(`select`)}
+				value={profile.placeId ?? ``}
+			>
+				<option value="">Kein Ort ausgewählt</option>
+				{#each places as place (place.id)}
+					<option value={place.id}>{place.name}</option>
+				{/each}
+			</select>
+			<FormFieldIssues field={upsertPublicProfile.fields.placeId} />
 		</fieldset>
 
 		<fieldset class="fieldset">

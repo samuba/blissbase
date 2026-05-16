@@ -13,7 +13,7 @@ export function getAppNavItems(): AppNavItem[] {
 		},
 		{
 			label: `Erstellen`,
-			href: resolve(routes.newEvent()),
+			href: routes.newEvent(),
 			icon: `icon-[ph--plus-circle]`,
 			iconActive: `icon-[ph--plus-circle-fill]`,
 			requireLogin: true,
@@ -21,7 +21,7 @@ export function getAppNavItems(): AppNavItem[] {
 		},
 		{
 			label: `Favoriten`,
-			href: resolve(routes.favorites()),
+			href: routes.favorites(),
 			icon: `icon-[ph--heart]`,
 			iconActive: `icon-[ph--heart-fill]`,
 			requireLogin: true,
@@ -29,7 +29,7 @@ export function getAppNavItems(): AppNavItem[] {
 		},
 		{
 			label: `Meins`,
-			href: resolve(routes.profile()),
+			href: routes.profile(),
 			icon: `icon-[ph--user-circle]`,
 			iconActive: `icon-[ph--user-circle-fill]`,
 			requireLogin: true,
@@ -37,7 +37,7 @@ export function getAppNavItems(): AppNavItem[] {
 		},
 		{
 			label: `Über`,
-			href: resolve(routes.about()),
+			href: routes.about(),
 			icon: `icon-[ph--info]`,
 			iconActive: `icon-[ph--info-fill]`,
 			requireLogin: false,
@@ -45,7 +45,7 @@ export function getAppNavItems(): AppNavItem[] {
 		},
 		{
 			label: `FAQ`,
-			href: resolve(routes.faq()),
+			href: routes.faq(),
 			icon: `icon-[ph--question]`,
 			iconActive: `icon-[ph--question-fill]`,
 			requireLogin: false,
@@ -62,8 +62,8 @@ export function isActiveAppTab(pathname: string, href: string) {
 	if (href.includes('#')) {
 		return pathname === href.split('#')[0];
 	}
-	if (href === resolve(routes.profile())) {
-		return pathname === href || (pathname.startsWith(`${href}/`) && pathname !== resolve(routes.favorites()));
+	if (href === routes.profile()) {
+		return pathname === href || (pathname.startsWith(`${href}/`) && pathname !== routes.favorites());
 	}
 	return pathname === href;
 }
