@@ -8,11 +8,6 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	return v.union([v.pipe(v.literal(``), v.transform(() => undefined)), schema]);
 }
 
-/** Converts an empty string into `null`. */
-function emptyStringIsNull(schema: v.GenericSchema<string, string>) {
-	return v.union([v.pipe(v.literal(``), v.transform(() => null)), schema]);
-}
-
 export const publicProfileFormSchema = v.pipe(v.object({
 	displayName: v.pipe(v.string(), v.trim(), v.nonEmpty(`Name muss ausgefüllt werden`), v.maxLength(120, `Name ist zu lang`)),
 	slug: v.optional(
@@ -26,7 +21,15 @@ export const publicProfileFormSchema = v.pipe(v.object({
 		)
 	),
 	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio ist zu lang`)), ``),
-	placeId: v.optional(v.pipe(emptyStringIsNull(v.string()), v.toNumber())),
+	placeId: v.optional(v.pipe(
+		v.string(),
+		v.trim(),
+		v.transform((value) => {
+			if (value === ``) return null;
+			return Number(value);
+		}),
+		v.check((value) => value === null || Number.isFinite(value), `Ort ist ungültig`)
+	)),
 	profileImageUrl: v.optional(
 		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profilbild-URL ist ungültig`))),
 		``
