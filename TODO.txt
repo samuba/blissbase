@@ -1,4 +1,4 @@
-in message text use locale of the author
+switch to lexical editor?
 use single flight mutations for profile and event creation
 make everything go fast - indexes? 
 

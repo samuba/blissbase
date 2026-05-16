@@ -407,7 +407,6 @@ msgstr "Event löschen"
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
 #: src/routes/new/+page.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Abbrechen"
 msgstr "Abbrechen"
@@ -462,8 +461,6 @@ msgstr "Fehler beim Laden der Events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 msgid "Ein Fehler ist aufgetreten"
 msgstr "Ein Fehler ist aufgetreten"
 
@@ -588,8 +585,6 @@ msgid "<0/> Zur Startseite"
 msgstr "<0/> Zur Startseite"
 
 #: src/lib/components/EventForm.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Name *"
 msgstr "Name *"
@@ -1113,12 +1108,10 @@ msgstr "Leerzeichen ist nicht erlaubt."
 msgid "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 msgstr "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "blissbase.app/@/"
 msgstr "blissbase.app/@/"
 
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Profil-URL"
 msgstr "Profil-URL"
@@ -1141,8 +1134,6 @@ msgstr "„{0}“ ist frei."
 msgid "„{0}“ ist bereits vergeben."
 msgstr "„{0}“ ist bereits vergeben."
 
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Beschreibung"
 msgstr "Beschreibung"
@@ -1182,16 +1173,11 @@ msgstr "Typ wählen"
 msgid "Hinzufügen"
 msgstr "Hinzufügen"
 
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Bitte gib den 6-stelligen Code ein."
-msgstr "Bitte gib den 6-stelligen Code ein."
-
 #: src/lib/components/Login.svelte
 msgid "<0/> Code senden"
 msgstr "<0/> Code senden"
 
 #: src/lib/components/Login.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 msgid "Einmalcode"
 msgstr "Einmalcode"
 
@@ -1204,7 +1190,6 @@ msgid "<0/> Anmelden"
 msgstr "<0/> Anmelden"
 
 #: src/lib/components/Login.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Andere E-Mail verwenden"
 
@@ -1237,139 +1222,6 @@ msgstr "Code erneut senden <0/>"
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 
-#. 0: place.name
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "Angebote in {0} | Blissbase"
-msgstr "Angebote in {0} | Blissbase"
-
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "Zurück zu Events"
-msgstr "Zurück zu Events"
-
-#. 0: place.name
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "Angebote in {0}"
-msgstr "Angebote in {0}"
-
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "Entdecke Menschen und Angebote aus der Blissbase Community vor Ort."
-msgstr "Entdecke Menschen und Angebote aus der Blissbase Community vor Ort."
-
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "<0/> Mein Angebot hinzufügen"
-msgstr "<0/> Mein Angebot hinzufügen"
-
-#. 0: offering.profile.displayName
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "von {0}"
-msgstr "von {0}"
-
-#. 0: place.name
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "Noch keine Angebote in {0}"
-msgstr "Noch keine Angebote in {0}"
-
-#: src/routes/p/[slug]/offerings/+page.svelte
-msgid "Sei die erste Person, die ein Angebot für diesen Ort sichtbar macht."
-msgstr "Sei die erste Person, die ein Angebot für diesen Ort sichtbar macht."
-
-#: src/routes/p/[slug]/offerings/+page.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Mein Angebot hinzufügen"
-msgstr "Mein Angebot hinzufügen"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Bitte bestätige zuerst deine E-Mail-Adresse."
-msgstr "Bitte bestätige zuerst deine E-Mail-Adresse."
-
-#. 0: place.name
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Mein Angebot in {0} hinzufügen | Blissbase"
-msgstr "Mein Angebot in {0} hinzufügen | Blissbase"
-
-#. 0: place.name
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Zurück zu Angeboten in {0}"
-msgstr "Zurück zu Angeboten in {0}"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Lege dein öffentliches Profil und deine Angebote für einen Ort an."
-msgstr "Lege dein öffentliches Profil und deine Angebote für einen Ort an."
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "E-Mail bestätigen"
-msgstr "E-Mail bestätigen"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Du kannst deine Angaben schon ausfüllen. Gespeichert wird erst nach der Bestätigung."
-msgstr "Du kannst deine Angaben schon ausfüllen. Gespeichert wird erst nach der Bestätigung."
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "<0/> Wird gesendet…"
-msgstr "<0/> Wird gesendet…"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Code senden"
-msgstr "Code senden"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Wir haben dir einen Code an <0/> geschickt."
-msgstr "Wir haben dir einen Code an <0/> geschickt."
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "<0/> Wird geprüft…"
-msgstr "<0/> Wird geprüft…"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "E-Mail bestätigt. Du kannst dein Angebot jetzt speichern."
-msgstr "E-Mail bestätigt. Du kannst dein Angebot jetzt speichern."
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Dein öffentliches Profil ist vollständig. <0>Profil bearbeiten</0>"
-msgstr "Dein öffentliches Profil ist vollständig. <0>Profil bearbeiten</0>"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Ort *"
-msgstr "Ort *"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Erzähl kurz, wer du bist und was du anbietest."
-msgstr "Erzähl kurz, wer du bist und was du anbietest."
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Angebote"
-msgstr "Angebote"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "<0/> Angebot hinzufügen"
-msgstr "<0/> Angebot hinzufügen"
-
-#. 0: i + 1
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Angebot {0}"
-msgstr "Angebot {0}"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "<0/> Entfernen"
-msgstr "<0/> Entfernen"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Was bietest du an?"
-msgstr "Was bietest du an?"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Angebot speichern"
-msgstr "Angebot speichern"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "<0/> Wird gespeichert…"
-msgstr "<0/> Wird gespeichert…"
-
-#: src/routes/p/[slug]/offerings/new/+page.svelte
-msgid "Wähle einen Ort aus, damit dein Angebot dort gelistet werden kann."
-msgstr "Wähle einen Ort aus, damit dein Angebot dort gelistet werden kann."
-
 #: src/lib/components/TagSelection.svelte
 msgid "Suchen"
 msgstr "Suchen"
@@ -1387,9 +1239,13 @@ msgid "Suche starten"
 msgstr "Suche starten"
 
 #: src/routes/profile/public/+page.svelte
-msgid "Ort"
-msgstr "Ort"
-
-#: src/routes/profile/public/+page.svelte
 msgid "Kein Ort ausgewählt"
 msgstr "Kein Ort ausgewählt"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Deine Angebote werden für diesen Ort gelistet."
+msgstr "Deine Angebote werden für diesen Ort gelistet."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Aktueller Ort"
+msgstr "Aktueller Ort"

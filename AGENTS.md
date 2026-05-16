@@ -37,7 +37,7 @@ For new functions that have non-trivial implementation create descriptive doc co
 
 ## i18n
 Wuchale is used for i18n.
-Never touch *.po files cuz they generate on the fly.
+Never touch *.po files cuz they generate on the fly automatically.
 Use german Umlaute (ä,ö,ü etc) in all german texts.
 
 ## server communication
