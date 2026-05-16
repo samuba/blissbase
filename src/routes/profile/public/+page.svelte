@@ -321,7 +321,7 @@
 		</fieldset>
 
 		<fieldset class="fieldset">
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Ort</legend>
+			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Aktueller Ort</legend>
 			<select
 				class="select w-full"
 				{...upsertPublicProfile.fields.placeId.as(`select`)}
@@ -332,6 +332,7 @@
 					<option value={place.id}>{place.name}</option>
 				{/each}
 			</select>
+			<p class="label">Deine Angebote werden für diesen Ort gelistet.</p>
 			<FormFieldIssues field={upsertPublicProfile.fields.placeId} />
 		</fieldset>
 
