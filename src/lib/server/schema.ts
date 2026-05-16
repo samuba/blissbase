@@ -183,11 +183,11 @@ export const eventTagsRelations = relations(eventTags, ({ one }) => ({
     }),
 }));
 
-// Supabase Auth Tables
 export const places = pgTable('places', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: text().notNull(),
     slug: text().notNull().unique(),
+    // add lat long here ?
     defaultRadius: integer().notNull(),
     createdAt: timestamp().notNull().defaultNow(),
     updatedAt: timestamp().notNull().defaultNow(),
