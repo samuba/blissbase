@@ -1,10 +1,11 @@
-import tailwindcss from '@tailwindcss/vite';
-import Icons from 'unplugin-icons/vite'
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
-import { SvelteKitPWA } from '@vite-pwa/sveltekit'
-import { wuchale } from 'wuchale/vite'
-import { enhancedImages } from '@sveltejs/enhanced-img';
+import tailwindcss from "@tailwindcss/vite";
+import Icons from "unplugin-icons/vite";
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
+import { SvelteKitPWA } from "@vite-pwa/sveltekit";
+import { wuchale } from "wuchale/vite";
+import { enhancedImages } from "@sveltejs/enhanced-img";
+import posthog from "@posthog/rollup-plugin";
 
 export default defineConfig({
 	plugins: [
@@ -12,52 +13,63 @@ export default defineConfig({
 		wuchale(),
 		enhancedImages(),
 		sveltekit(),
-		Icons({ compiler: 'svelte', }),
+		Icons({ compiler: "svelte" }),
+		process.env.VERCEL
+			? posthog({
+					personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY!, // Personal API Key
+					projectId: process.env.POSTHOG_PROJECT_ID, // Project ID
+					host: "https://eu.i.posthog.com", // (optional) defaults to https://us.i.posthog.com
+					sourcemaps: {
+						enabled: true,
+						releaseVersion: process.env.VERCEL_GIT_COMMIT_SHA,
+					},
+				})
+			: undefined,
 		SvelteKitPWA({
-			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'pwa-512-maskable.png', 'pwa-192-maskable.png', 'logo.svg'],
-			registerType: 'autoUpdate',
+			includeAssets: ["pwa-192x192.png", "pwa-512x512.png", "pwa-512-maskable.png", "pwa-192-maskable.png", "logo.svg"],
+			registerType: "autoUpdate",
 			injectRegister: false,
 			kit: {
 				includeVersionFile: true,
 			},
 			devOptions: {
-				enabled: true
+				enabled: true,
 			},
 			manifest: {
-				name: 'Blissbase',
-				short_name: 'Blissbase',
-				description: 'Achtsame Events in deiner Nähe',
-				theme_color: '#efeae7',
-				background_color: '#efeae7',
-				display_override: ['window-controls-overlay'],
+				name: "Blissbase",
+				short_name: "Blissbase",
+				description: "Achtsame Events in deiner Nähe",
+				theme_color: "#efeae7",
+				background_color: "#efeae7",
+				display_override: ["window-controls-overlay"],
 				icons: [
 					{
-						src: 'pwa-512-maskable.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'maskable'
+						src: "pwa-512-maskable.png",
+						sizes: "512x512",
+						type: "image/png",
+						purpose: "maskable",
 					},
 					{
-						src: 'pwa-512-maskable.png',
-						sizes: '512x512',
-						type: 'image/png',
+						src: "pwa-512-maskable.png",
+						sizes: "512x512",
+						type: "image/png",
 					},
 					{
-						src: 'pwa-192-maskable.png',
-						sizes: '192x192',
-						type: 'image/png',
-						purpose: 'maskable'
+						src: "pwa-192-maskable.png",
+						sizes: "192x192",
+						type: "image/png",
+						purpose: "maskable",
 					},
 					{
-						src: 'pwa-192-maskable.png',
-						sizes: '192x192',
-						type: 'image/png',
-					}
-				]
-			}
-		})
+						src: "pwa-192-maskable.png",
+						sizes: "192x192",
+						type: "image/png",
+					},
+				],
+			},
+		}),
 	],
 	server: {
-		allowedHosts: ['localdev.soulspots.app', 'localhost', '127.0.0.1', 'blissbase.app', 'blissbase.vercel.app']
-	}
+		allowedHosts: ["localdev.soulspots.app", "localhost", "127.0.0.1", "blissbase.app", "blissbase.vercel.app"],
+	},
 });
