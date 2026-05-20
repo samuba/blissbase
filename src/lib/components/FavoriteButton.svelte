@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { addFavorite, getFavoriteEventIds, removeFavorite } from '$lib/rpc/favorites.remote';
 	import { user } from '$lib/user.svelte';
+	import { onMount } from 'svelte';
 	import { showLoginDialog } from './LoginDialog.svelte';
 
 	let {
@@ -17,9 +18,15 @@
 
 	const name = crypto.randomUUID();
 	const favoriteIdsQuery = getFavoriteEventIds();
-	let favorites = await favoriteIdsQuery;
-	let isFavorite = $derived(favorites.includes(eventId));
+	let isFavorite = $state(false);
 	let animate = $state(false);
+
+	onMount(() => {
+		// if we do this directly in root level it will delay card rendering
+		favoriteIdsQuery.then((favorites) => {
+			isFavorite = favorites.includes(eventId);
+		});
+	});
 
 	function handleChange(event: Event) {
 		event.preventDefault();
