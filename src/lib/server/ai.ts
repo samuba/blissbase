@@ -397,7 +397,7 @@ function buildMsgAnalysisSchema(timezone: string) {
 			tags: {
 				type: [`array`, `null`],
 				items: { type: `string` },
-				description: `Tags that describe the event. Prefer tags from this list; only use a tag not on the list if you think it is really necessary: ${allTags.map((x) => x.en).join(`, `)}.`
+				description: `Maximum 3 Tags that describe the event. Prefer tags from this list; only use a tag not on the list if you think it is really necessary: ${allTags.map((x) => x.en).join(`, `)}.`
 			},
 			isConscious: {
 				type: [`boolean`, `null`],
