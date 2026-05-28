@@ -27,7 +27,7 @@
 
 	// Internal state
 	let typedPlzCity = $state('');
-	let selectedDistance = $state('');
+	let selectedDistance = $derived(initialDistance || '');
 	let usingCurrentLocation = $state(false);
 	let plzCityInput = $state<HTMLInputElement | null>(null);
 	let coordsForFilter = $state<string | null>(null);
@@ -35,6 +35,7 @@
 	let displayLocationText = $state('');
 	let inputWidth = $state(0);
 
+	let inputLocationText = $derived(usingCurrentLocation ? displayLocationText : typedPlzCity);
 	let showDistanceInput = $derived(
 		initialLocation || typedPlzCity.trim() || usingCurrentLocation || isLoadingLocation
 	);
@@ -42,8 +43,6 @@
 
 	// Effect to sync component state with props (reacts to prop changes)
 	$effect(() => {
-		console.log('initialLocation', initialLocation);
-		// React to initialLocation changes
 		if (initialLocation?.startsWith('coords:')) {
 			const parts = initialLocation.substring('coords:'.length).split(',');
 			if (parts.length === 2) {
@@ -52,28 +51,27 @@
 				if (!isNaN(lat) && !isNaN(lng)) {
 					usingCurrentLocation = true;
 					coordsForFilter = `${lat},${lng}`;
-					typedPlzCity = '';
-					displayLocationText = 'Dein Standort';
+					typedPlzCity = resolvedCityName ?? '';
+					displayLocationText = resolvedCityName ?? 'Dein Standort';
+					return;
 				}
 			}
-		} else if (initialLocation) {
-			// Handle regular initialLocation string
+
+			return;
+		}
+
+		if (initialLocation) {
 			usingCurrentLocation = false;
 			coordsForFilter = null;
 			typedPlzCity = initialLocation;
 			displayLocationText = '';
-		} else {
-			// No initialLocation provided
-			if (!usingCurrentLocation) {
-				typedPlzCity = '';
-				displayLocationText = '';
-			}
+			return;
 		}
-	});
 
-	// Effect to sync distance with props
-	$effect(() => {
-		selectedDistance = initialDistance || '';
+		if (usingCurrentLocation) return;
+
+		typedPlzCity = '';
+		displayLocationText = '';
 	});
 
 	// Effect to ensure "Überall" is selected when no location is specified
@@ -84,16 +82,6 @@
 			selectedDistance = '';
 		}
 	});
-
-	$effect(() => {
-		if (!initialLocation && !resolvedCityName) {
-			usingCurrentLocation = false;
-		}
-	});
-
-	$effect(() => {
-		typedPlzCity = resolvedCityName ?? '';
-	})
 
 	const distanceOptions = [
 		{ value: '5', label: '< 5 km' },
@@ -211,14 +199,17 @@
 					id="plzCityInput"
 					placeholder="Stadt / PLZ"
 					class={['w-full']}
-					bind:value={typedPlzCity}
+					value={inputLocationText}
 					disabled={isLoadingLocation || disabled}
-					oninput={() => {
+					oninput={(event) => {
 						if (usingCurrentLocation) {
 							usingCurrentLocation = false;
 							coordsForFilter = null;
 							displayLocationText = '';
+							return;
 						}
+
+						typedPlzCity = event.currentTarget.value;
 					}}
 					onchange={handleFilterInputChange}
 					onkeydown={(e) => {
