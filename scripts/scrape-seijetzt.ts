@@ -30,17 +30,12 @@ import {
 import { sleep } from "bun";
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
-const BASE_URL = "https://sei.jetzt";
-const START_PATH = "/"; // Main page seems to list events
-
 export class WebsiteScraper implements WebsiteScraperInterface {
-    private readonly baseUrl: string;
-    private readonly startPath: string;
+    private readonly baseUrl = "https://sei.jetzt";
+    private readonly startPath = "/events";
     private readonly requestDelayMs: number;
 
     constructor() {
-        this.baseUrl = BASE_URL;
-        this.startPath = START_PATH;
         this.requestDelayMs = REQUEST_DELAY_MS;
     }
 
