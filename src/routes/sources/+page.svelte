@@ -1,9 +1,6 @@
 <script lang="ts">
-	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { routes } from '$lib/routes';
 </script>
-
-<PageHeader backRoute={routes.newEvent()} />
 
 <div class=" flex items-center justify-center">
 	<div>

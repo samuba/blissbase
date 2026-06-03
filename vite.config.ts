@@ -38,7 +38,7 @@ export default defineConfig({
 			manifest: {
 				name: "Blissbase",
 				short_name: "Blissbase",
-				description: "Achtsame Events in deiner Nähe",
+				description: "Find conscious events near you.",
 				theme_color: "#efeae7",
 				background_color: "#efeae7",
 				display_override: ["window-controls-overlay"],

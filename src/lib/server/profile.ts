@@ -1,8 +1,7 @@
 import { slugify, stripHtml, trimAllWhitespaces, type Modify } from '$lib/common';
-import {
-	type PublicProfileSocialLinks,
-} from '$lib/rpc/profile.common';
-import { db, s, and, asc, eq, gte, sql } from '$lib/server/db';
+import type { OfferingFormat, OfferingPlaceFilter } from '$lib/rpc/offerings.common';
+import { type PublicProfileSocialLinks } from '$lib/rpc/profile.common';
+import { db, s, and, asc, desc, eq, gte, sql } from '$lib/server/db';
 import { eventWith, prepareEventsForUi, type UiEvent } from '$lib/server/events';
 import type { Profile } from '$lib/server/schema';
 import { type ProfileSocialType } from '$lib/socialLinks';
@@ -24,6 +23,7 @@ export async function getPublicProfileBySlug(args: { slug: string }) {
 		columns: {
 			// state columns specifically to not leak sensitive data
 			id: true,
+			slug: true,
 			displayName: true,
 			bio: true,
 			profileImageUrl: true,
@@ -60,6 +60,59 @@ export async function getUpcomingEventsForPublicProfile(args: { authorId: string
 	});
 
 	return prepareEventsForUi(events) as UiEvent[];
+}
+
+/**
+ * Loads listed offerings owned by a public profile for display on that profile page.
+ *
+ * @example
+ * await getOfferingsForPublicProfile({ profile });
+ */
+export async function getOfferingsForPublicProfile(args: {
+	profile: Pick<
+		Profile,
+		'id' | 'slug' | 'displayName' | 'bio' | 'profileImageUrl' | 'bannerImageUrl' | 'socialLinks'
+	> & {
+		place: { name: string; slug: string } | null;
+	};
+}) {
+	const offerings = await db.query.offerings.findMany({
+		where: and(eq(s.offerings.profileId, args.profile.id), eq(s.offerings.listed, true)),
+		columns: {
+			id: true,
+			title: true,
+			descriptionHtml: true,
+			format: true
+		},
+		orderBy: [desc(s.offerings.createdAt)]
+	});
+
+	return offerings.map((offering) => ({
+		id: offering.id,
+		title: offering.title,
+		descriptionHtml: offering.descriptionHtml ?? ``,
+		format: offering.format,
+		offeringPlaceFilter: getOfferingPlaceFilter(offering.format),
+		profile: {
+			slug: args.profile.slug,
+			displayName: args.profile.displayName,
+			bio: args.profile.bio ?? ``,
+			profileImageUrl: args.profile.profileImageUrl ?? ``,
+			bannerImageUrl: args.profile.bannerImageUrl ?? ``,
+			socialLinks: args.profile.socialLinks,
+			place: args.profile.place
+				? {
+						name: args.profile.place.name,
+						slug: args.profile.place.slug
+					}
+				: null
+		}
+	}));
+}
+
+function getOfferingPlaceFilter(format: OfferingFormat): OfferingPlaceFilter {
+	if (format === `online` || format === `offline+online`) return `online`;
+	return `danang-hoi-an`;
 }
 
 /**

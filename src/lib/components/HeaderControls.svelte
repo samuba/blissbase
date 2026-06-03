@@ -7,14 +7,28 @@
 	import { Dialog } from '$lib/components/dialog';
 	import ToggleButton from './ToggleButton.svelte';
 	import TabsNavDesktop from './TabsNavDesktop.svelte';
+	import { routes } from '$lib/routes';
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
 	let contentBeforeMenuHeight = $state(0);
 	const showShadow = $derived(scrollY > ((headerElement?.offsetHeight ?? 50) + contentBeforeMenuHeight - 100));
 	let isFilterDialogOpen = $state(false);
+	let dismissedOfferingsLink = $state(false);
 	const sortByTime = $derived(eventsStore.selectedSortValue === 'time_asc');
 	const sortByDistance = $derived(eventsStore.selectedSortValue === 'distance_asc');
+	const currentLocationIsNearDanang = $derived.by(() => {
+		const { lat, lng } = eventsStore.pagination;
+		if (lat == null || lng == null) return false;
+
+		return getDistanceInKm({
+			fromLat: lat,
+			fromLng: lng,
+			toLat: 15.977714,
+			toLng: 108.280213
+		}) <= 40;
+	});
+	const showOfferingsLink = $derived(!dismissedOfferingsLink && currentLocationIsNearDanang);
 
 	const startDate = $derived(eventsStore.pagination.startDate ? parseDate(eventsStore.pagination.startDate) : undefined);
 	const endDate = $derived(eventsStore.pagination.endDate ? parseDate(eventsStore.pagination.endDate) : undefined);
@@ -37,13 +51,36 @@
 			unsubscribe();
 		}
 	})
+
+	function getDistanceInKm(args: {
+		fromLat: number;
+		fromLng: number;
+		toLat: number;
+		toLng: number;
+	}) {
+		const earthRadiusKm = 6371;
+		const deltaLat = toRadians(args.toLat - args.fromLat);
+		const deltaLng = toRadians(args.toLng - args.fromLng);
+		const fromLat = toRadians(args.fromLat);
+		const toLat = toRadians(args.toLat);
+		const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(fromLat) * Math.cos(toLat) * Math.sin(deltaLng / 2) ** 2;
+		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+		return earthRadiusKm * c;
+	}
+
+	function toRadians(value: number) {
+		return value * (Math.PI / 180);
+	}
 </script>
 
 <svelte:window bind:scrollY />
 
 <header
 	bind:this={headerElement}
-	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  pt-4 pb-3 max-w-3xl' ]}
+	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  pt-4 max-w-3xl', 
+		showOfferingsLink ? 'pb-0 mb-3 sm:mb-0' : 'pb-3 sm:pb-0' 
+	]}
 	id="header-controls"
 >		
 	<!-- shadow -->
@@ -76,6 +113,26 @@
 	<div class="flex w-full items-center gap-4 px-4 sm:px-0 max-w-2xl mx-auto">
 		<TagSelection />
 	</div>
+
+	{#if showOfferingsLink}
+		<div class="w-full flex max-w-2xl mx-auto">
+			<div class="text-base-content/80 text-xs pl-3 -mt-2 flex items-center bg-base-500 sm:bg-base-100 sm:rounded-box py-1 w-full sm:w-fit sm:-mt-4 sm:mb-3 sm:text-sm">
+				Für private Sessions und Services go to:
+				<a href={routes.offeringsList("danang-hoi-an")} class="link text-base-content font-semibold px-2 items-center gap-1 flex">
+					<i class="icon-[ph--hand-heart] size-4"></i>
+					Offerings
+				</a>
+				<div class="grow"></div>
+				<button
+					class="btn btn-ghost btn-circle btn-xs mr-2 ml-1"
+					aria-label="Offerings-Hinweis ausblenden"
+					onclick={() => dismissedOfferingsLink = true}
+				>
+					<i class="icon-[ph--x] size-4"></i>
+				</button>
+			</div>
+		</div>
+	{/if}
 </header>
 
 <!-- filter dialog -->

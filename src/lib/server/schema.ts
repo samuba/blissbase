@@ -1,276 +1,296 @@
-import { sql, type SQL, relations } from 'drizzle-orm';
-import { pgTable, text, integer, real, timestamp, boolean, jsonb, uuid, uniqueIndex, index, bigint, primaryKey, pgEnum } from 'drizzle-orm/pg-core';
-import type { PublicProfileSocialLinks } from '$lib/rpc/profile.common';
+import { sql, type SQL, relations } from "drizzle-orm";
+import {
+	pgTable,
+	text,
+	integer,
+	real,
+	timestamp,
+	boolean,
+	jsonb,
+	uuid,
+	uniqueIndex,
+	index,
+	bigint,
+	primaryKey,
+	pgEnum,
+} from "drizzle-orm/pg-core";
+import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+import { OFFERING_FORMATS } from "$lib/rpc/offerings.common";
 
-export const eventAttendanceModeEnum = pgEnum('attendance_mode', ['online', 'offline', 'offline+online']);
-export type AttendanceMode = typeof eventAttendanceModeEnum.enumValues[number];
+export const eventAttendanceModeEnum = pgEnum("attendance_mode", ["online", "offline", "offline+online"]);
+export type AttendanceMode = (typeof eventAttendanceModeEnum.enumValues)[number];
 export const attendanceModeEnum = eventAttendanceModeEnum.enumValues;
+export const offeringFormatEnum = pgEnum("offering_format", OFFERING_FORMATS);
+export type OfferingFormat = (typeof offeringFormatEnum.enumValues)[number];
 
-export const events = pgTable('events', {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    name: text().notNull(),
-    startAt: timestamp().notNull(),
-    endAt: timestamp(),
-    timezone: text(),
-    address: text().notNull().array(),
-    price: text(),
-    priceIsHtml: boolean().notNull().default(false),
-    description: text(),
-    descriptionOriginal: text(),
-    imageUrls: text().notNull().array(),
-    host: text(),
-    hostLink: text(),
-    sourceUrl: text(),
-    contact: text().array().default([]).notNull(),
-    latitude: real(),
-    longitude: real(),
-    tags: text().array(),
-    source: text().notNull(),
-    createdAt: timestamp().notNull().defaultNow(),
-    updatedAt: timestamp().notNull().defaultNow(),
-    messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
-    slug: text().notNull().unique(),
-    soldOut: boolean().notNull().default(false),
-    listed: boolean().notNull().default(true),
-    telegramRoomIds: text().array(),
-    hostSecret: text(),
-    attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
-    authorId: uuid().references(() => profiles.id, { onDelete: 'cascade' }),
-    spotlight: text(),
+export const events = pgTable("events", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity(),
+	name: text().notNull(),
+	startAt: timestamp().notNull(),
+	endAt: timestamp(),
+	timezone: text(),
+	address: text().notNull().array(),
+	price: text(),
+	priceIsHtml: boolean().notNull().default(false),
+	description: text(),
+	descriptionOriginal: text(),
+	imageUrls: text().notNull().array(),
+	host: text(),
+	hostLink: text(),
+	sourceUrl: text(),
+	contact: text().array().default([]).notNull(),
+	latitude: real(),
+	longitude: real(),
+	tags: text().array(),
+	source: text().notNull(),
+	createdAt: timestamp().notNull().defaultNow(),
+	updatedAt: timestamp().notNull().defaultNow(),
+	messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
+	slug: text().notNull().unique(),
+	soldOut: boolean().notNull().default(false),
+	listed: boolean().notNull().default(true),
+	telegramRoomIds: text().array(),
+	hostSecret: text(),
+	attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
+	authorId: uuid().references(() => profiles.id, { onDelete: "cascade" }),
+	spotlight: text(),
 });
 
 export type SelectEvent = typeof events.$inferSelect;
 
 export const eventsRelations = relations(events, ({ many, one }) => ({
-    eventTags: many(eventTags),
-    author: one(profiles, {
-        fields: [events.authorId],
-        references: [profiles.id],
-    }),
+	eventTags: many(eventTags),
+	author: one(profiles, {
+		fields: [events.authorId],
+		references: [profiles.id],
+	}),
 }));
 
-export const botMessages = pgTable('message_to_bot', {
-    id: uuid().primaryKey().defaultRandom(),
-    data: jsonb().notNull(),
-    origin: text().generatedAlwaysAs((): SQL => sql`COALESCE((data->'chat'->>'title')::text, (data->'chat'->>'username')::text)`),
-    text: text().generatedAlwaysAs((): SQL => sql`COALESCE((data->>'text')::text, (data->>'caption')::text)`),
-    answer: text(),
-    createdAt: timestamp().notNull().defaultNow(),
+export const botMessages = pgTable("message_to_bot", {
+	id: uuid().primaryKey().defaultRandom(),
+	data: jsonb().notNull(),
+	origin: text().generatedAlwaysAs((): SQL => sql`COALESCE((data->'chat'->>'title')::text, (data->'chat'->>'username')::text)`),
+	text: text().generatedAlwaysAs((): SQL => sql`COALESCE((data->>'text')::text, (data->>'caption')::text)`),
+	answer: text(),
+	createdAt: timestamp().notNull().defaultNow(),
 });
 
-
-export const geocodeCache = pgTable('geocode_cache', {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    address: text().notNull().unique(),
-    latitude: real(),
-    longitude: real(),
-    timezone: text(),
-    cachedAt: timestamp().notNull().defaultNow(),
+export const geocodeCache = pgTable("geocode_cache", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity(),
+	address: text().notNull().unique(),
+	latitude: real(),
+	longitude: real(),
+	timezone: text(),
+	cachedAt: timestamp().notNull().defaultNow(),
 });
 
-export const reverseGeocodeCache = pgTable('reverse_geocode_cache', {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    latitude: real().notNull(),
-    longitude: real().notNull(),
-    cityName: text(),
-    cachedAt: timestamp().notNull().defaultNow(),
-}, (t) => [
-    uniqueIndex().on(t.latitude, t.longitude)
-]);
+export const reverseGeocodeCache = pgTable("reverse_geocode_cache", {
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		latitude: real().notNull(),
+		longitude: real().notNull(),
+		cityName: text(),
+		cachedAt: timestamp().notNull().defaultNow(),
+	},
+	(t) => [uniqueIndex().on(t.latitude, t.longitude)],
+);
 
-export const telegramChatConfig = pgTable('telegram_chat_config', {
-    chatId: bigint({ mode: 'bigint' }).primaryKey(),
-    chatName: text(), // telegram group or channel name
-    defaultAddress: text().array(),
-    createdAt: timestamp().notNull().defaultNow(),
+export const telegramChatConfig = pgTable("telegram_chat_config", {
+	chatId: bigint({ mode: "bigint" }).primaryKey(),
+	chatName: text(), // telegram group or channel name
+	defaultAddress: text().array(),
+	createdAt: timestamp().notNull().defaultNow(),
 });
 
-export const telegramScrapingTargets = pgTable('telegram_scraping_targets', {
-    roomId: text().primaryKey(),
-    name: text(), // telegram group or channel name
-    hasOnlyConsciousEvents: boolean().notNull().default(false),
-    lastMessageId: bigint({ mode: 'bigint' }),
-    lastMessageTime: timestamp(),
-    defaultAddress: text().array(),
-    createdAt: timestamp().notNull().defaultNow(),
-    messagesConsumed: integer().notNull().default(0),
-    lastError: text(),
-    scrapedEvents: integer().notNull().default(0),
-    lastRunFinishedAt: timestamp(),
-    topicIds: bigint({ mode: 'bigint' }).array().notNull().default([]),
-    defaultTimezone: text().notNull().default("germany")
+export const telegramScrapingTargets = pgTable("telegram_scraping_targets", {
+	roomId: text().primaryKey(),
+	name: text(), // telegram group or channel name
+	hasOnlyConsciousEvents: boolean().notNull().default(false),
+	lastMessageId: bigint({ mode: "bigint" }),
+	lastMessageTime: timestamp(),
+	defaultAddress: text().array(),
+	createdAt: timestamp().notNull().defaultNow(),
+	messagesConsumed: integer().notNull().default(0),
+	lastError: text(),
+	scrapedEvents: integer().notNull().default(0),
+	lastRunFinishedAt: timestamp(),
+	topicIds: bigint({ mode: "bigint" }).array().notNull().default([]),
+	defaultTimezone: text().notNull().default("germany"),
 });
 
 export type TelegramScrapingTarget = typeof telegramScrapingTargets.$inferSelect;
 
-export const whatsappScrapingTargets = pgTable('whatsapp_scraping_targets', {
-    chatJid: text().primaryKey(),
-    name: text(), // whatsapp chat display name
-    hasOnlyConsciousEvents: boolean().notNull().default(false),
-    lastMessageId: text(),
-    lastMessageTimestamp: timestamp(),
-    defaultAddress: text().array(),
-    createdAt: timestamp().notNull().defaultNow(),
-    messagesConsumed: integer().notNull().default(0),
-    lastError: text(),
-    scrapedEvents: integer().notNull().default(0),
-    lastRunFinishedAt: timestamp(),
-    defaultTimezone: text().notNull().default("germany")
+export const whatsappScrapingTargets = pgTable("whatsapp_scraping_targets", {
+	chatJid: text().primaryKey(),
+	name: text(), // whatsapp chat display name
+	hasOnlyConsciousEvents: boolean().notNull().default(false),
+	lastMessageId: text(),
+	lastMessageTimestamp: timestamp(),
+	defaultAddress: text().array(),
+	createdAt: timestamp().notNull().defaultNow(),
+	messagesConsumed: integer().notNull().default(0),
+	lastError: text(),
+	scrapedEvents: integer().notNull().default(0),
+	lastRunFinishedAt: timestamp(),
+	defaultTimezone: text().notNull().default("germany"),
 });
 
 export type WhatsappScrapingTarget = typeof whatsappScrapingTargets.$inferSelect;
 
 // All images are cached in R2. For website-scraped-images we remember the original url so that we dont need to process the image again.
-export const imageCacheMap = pgTable('image_cache_map', {
-    originalUrl: text().notNull(),
-    eventSlug: text().notNull(),
-    url: text().notNull(),
-    createdAt: timestamp().notNull().defaultNow(),
-}, (t) => [
-    primaryKey({ columns: [t.originalUrl, t.eventSlug] })
-]);
+export const imageCacheMap = pgTable(
+	"image_cache_map",
+	{
+		originalUrl: text().notNull(),
+		eventSlug: text().notNull(),
+		url: text().notNull(),
+		createdAt: timestamp().notNull().defaultNow(),
+	},
+	(t) => [primaryKey({ columns: [t.originalUrl, t.eventSlug] })],
+);
 
-export const tags = pgTable('tags', {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    slug: text().notNull().unique(),
-    createdAt: timestamp().notNull().defaultNow(),
+export const tags = pgTable("tags", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity(),
+	slug: text().notNull().unique(),
+	createdAt: timestamp().notNull().defaultNow(),
 });
 
 export type Tag = typeof tags.$inferSelect;
 
 export const tagsRelations = relations(tags, ({ many }) => ({
-    translations: many(tagTranslations),
-    eventTags: many(eventTags),
+	translations: many(tagTranslations),
+	eventTags: many(eventTags),
 }));
 
-export const tagTranslations = pgTable('tag_translations', {
-    tagId: integer().notNull().references(() => tags.id, { onDelete: 'cascade' }),
-    locale: text().notNull(), // e.g. 'en', 'de', 'id'
-    name: text().notNull(),   // e.g. "Yoga", "Meditation", "Meditasi"
-}, (t) => [
-    uniqueIndex().on(t.tagId, t.locale),
-    index().on(t.tagId)
-]);
+export const tagTranslations = pgTable("tag_translations", {
+		tagId: integer().notNull().references(() => tags.id, { onDelete: "cascade" }),
+		locale: text().notNull(), // e.g. 'en', 'de', 'id'
+		name: text().notNull(), // e.g. "Yoga", "Meditation", "Meditasi"
+	},
+	(t) => [
+        uniqueIndex().on(t.tagId, t.locale), 
+        index().on(t.tagId)
+    ],
+);
 
 export type TagTranslation = typeof tagTranslations.$inferSelect;
 
 export const tagTranslationsRelations = relations(tagTranslations, ({ one }) => ({
-    tag: one(tags, {
-        fields: [tagTranslations.tagId],
-        references: [tags.id],
-    }),
+	tag: one(tags, {
+		fields: [tagTranslations.tagId],
+		references: [tags.id],
+	}),
 }));
 
-export const eventTags = pgTable('event_tags', {
-    eventId: integer().notNull().references(() => events.id, { onDelete: 'cascade' }),
-    tagId: integer().notNull().references(() => tags.id, { onDelete: 'cascade' }),
-    createdAt: timestamp().notNull().defaultNow(),
-}, (t) => [
-    primaryKey({ columns: [t.eventId, t.tagId] }),
-    index().on(t.tagId)
-]);
+export const eventTags = pgTable("event_tags", {
+		eventId: integer().notNull().references(() => events.id, { onDelete: "cascade" }),
+		tagId: integer().notNull().references(() => tags.id, { onDelete: "cascade" }),
+		createdAt: timestamp().notNull().defaultNow(),
+	},
+	(t) => [
+        primaryKey({ columns: [t.eventId, t.tagId] }), 
+        index().on(t.tagId)
+    ],
+);
 
 export type EventTag = typeof eventTags.$inferSelect;
 
 export const eventTagsRelations = relations(eventTags, ({ one }) => ({
-    event: one(events, {
-        fields: [eventTags.eventId],
-        references: [events.id],
-    }),
-    tag: one(tags, {
-        fields: [eventTags.tagId],
-        references: [tags.id],
-    }),
+	event: one(events, {
+		fields: [eventTags.eventId],
+		references: [events.id],
+	}),
+	tag: one(tags, {
+		fields: [eventTags.tagId],
+		references: [tags.id],
+	}),
 }));
 
-export const places = pgTable('places', {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    name: text().notNull(),
-    slug: text().notNull().unique(),
-    // add lat long here ?
-    defaultRadius: integer().notNull(),
-    createdAt: timestamp().notNull().defaultNow(),
-    updatedAt: timestamp().notNull().defaultNow(),
+export const places = pgTable("places", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity(),
+	name: text().notNull(),
+	slug: text().notNull().unique(),
+	// add lat long here ?
+	defaultRadius: integer().notNull(),
+	createdAt: timestamp().notNull().defaultNow(),
+	updatedAt: timestamp().notNull().defaultNow(),
 });
 
 export type Place = typeof places.$inferSelect;
 
 export const placesRelations = relations(places, ({ many }) => ({
-    profiles: many(profiles),
+	profiles: many(profiles),
 }));
 
-export const profiles = pgTable('profiles', {
-    id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
-    slug: text().unique(),
-    displayName: text(),
-    bio: text(),
-    locale: text().notNull().default("en"),
-    profileImageUrl: text(),
-    bannerImageUrl: text(),
-    socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),
-    placeId: integer().references(() => places.id, { onDelete: 'set null' }),
-    createdAt: timestamp().notNull().defaultNow(),
-    updatedAt: timestamp().notNull().defaultNow(),
-}, (t) => [
-    index().on(t.placeId)
-]);
+export const profiles = pgTable("profiles", {
+		id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
+		slug: text().unique(),
+		displayName: text(),
+		bio: text(),
+		locale: text().notNull().default("en"),
+		profileImageUrl: text(),
+		bannerImageUrl: text(),
+		socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),
+		placeId: integer().references(() => places.id, { onDelete: "set null" }),
+		createdAt: timestamp().notNull().defaultNow(),
+		updatedAt: timestamp().notNull().defaultNow(),
+	},
+	(t) => [index().on(t.placeId)],
+);
 
 export type Profile = typeof profiles.$inferSelect;
 
 export const profilesRelations = relations(profiles, ({ many, one }) => ({
-    favorites: many(favorites),
-    events: many(events),
-    offerings: many(offerings),
-    place: one(places, {
-        fields: [profiles.placeId],
-        references: [places.id],
-    }),
+	favorites: many(favorites),
+	events: many(events),
+	offerings: many(offerings),
+	place: one(places, {
+		fields: [profiles.placeId],
+		references: [places.id],
+	}),
 }));
 
-export const offerings = pgTable('offerings', {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    profileId: uuid().notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-    name: text().notNull(),
-    description: text(),
-    listed: boolean().notNull().default(true),
-    createdAt: timestamp().notNull().defaultNow(),
-    updatedAt: timestamp().notNull().defaultNow(),
-}, (t) => [
-    index().on(t.profileId)
-]);
+export const offerings = pgTable("offerings", {
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		profileId: uuid().notNull().references(() => profiles.id, { onDelete: "cascade" }),
+		title: text().notNull(),
+		descriptionHtml: text(),
+		format: offeringFormatEnum().notNull().default("offline"),
+		listed: boolean().notNull().default(true),
+		createdAt: timestamp().notNull().defaultNow(),
+		updatedAt: timestamp().notNull().defaultNow(),
+	},
+	(t) => [index().on(t.profileId)],
+);
 
 export type Offering = typeof offerings.$inferSelect;
 
 export const offeringsRelations = relations(offerings, ({ one }) => ({
-    profile: one(profiles, {
-        fields: [offerings.profileId],
-        references: [profiles.id],
-    }),
+	profile: one(profiles, {
+		fields: [offerings.profileId],
+		references: [profiles.id],
+	}),
 }));
 
-export const favorites = pgTable('favorites', {
-    userId: uuid().notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-    eventId: integer().notNull().references(() => events.id, { onDelete: 'cascade' }),
-    createdAt: timestamp().notNull().defaultNow(),
-}, (t) => [
-    primaryKey({ columns: [t.userId, t.eventId] })
-]);
+export const favorites = pgTable("favorites", {
+		userId: uuid().notNull().references(() => profiles.id, { onDelete: "cascade" }),
+		eventId: integer().notNull().references(() => events.id, { onDelete: "cascade" }),
+		createdAt: timestamp().notNull().defaultNow(),
+	},
+	(t) => [primaryKey({ columns: [t.userId, t.eventId] })],
+);
 
 export type Favorite = typeof favorites.$inferSelect;
 
 export const favoritesRelations = relations(favorites, ({ one }) => ({
-    profile: one(profiles, {
-        fields: [favorites.userId],
-        references: [profiles.id],
-    }),
-    event: one(events, {
-        fields: [favorites.eventId],
-        references: [events.id],
-    }),
+	profile: one(profiles, {
+		fields: [favorites.userId],
+		references: [profiles.id],
+	}),
+	event: one(events, {
+		fields: [favorites.eventId],
+		references: [events.id],
+	}),
 }));
-
-
-
 
 /*** Cronjobs ***/
 // SELECT cron.schedule(

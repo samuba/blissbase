@@ -1,63 +1,57 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import EventCard from '$lib/components/EventCard.svelte';
-	import { type PublicProfileSocialLink } from '$lib/rpc/profile.common.js';
+	import OfferingCard from '$lib/components/OfferingCard.svelte';
+	import ProfileContactButtons from '$lib/components/ProfileContactButtons.svelte';
 	import { routes } from '$lib/routes';
-	import { socialIconClass, socialIconColorClass, socialLabel, usernameUrlPrefix } from '$lib/socialLinks';
 	import { resolve } from '$app/paths';
+	import OfferingDetailsDialog, { showOfferingDetailsDialog } from '../../offerings/OfferingDetailsDialog.svelte';
+	import { fade } from 'svelte/transition';
 
 	let { data } = $props();
-	const { profile, upcomingEvents, userId } = $derived(data);
+	const { profile, upcomingEvents, publicOfferings, userId } = $derived(data);
 	const isOwnProfile = $derived(Boolean(profile.id === userId));
+	const selectedOfferingId = $derived(Number(page.url.searchParams.get(`offering`) ?? 0));
+	let selectedTab = $state<ProfileTab>(getInitialSelectedTab());
+	let openedOfferingId = $state<number | undefined>(undefined);
 
-	function openLink(link: PublicProfileSocialLink) {
-		let url = link.value;
-		let prefix = usernameUrlPrefix(link.type);
-		if (link.type === `phone`) prefix = `tel:`;
-		if (link.type === `email`) prefix = `mailto:`;
-		if (link.type === `whatsapp`) prefix = `https://wa.me/`;
-		if (link.type === `telegram`) prefix = `https://t.me/`;
-		if (prefix) url = prefix + url;
-		window.open(url, `_blank`, `noopener,noreferrer`);
+	$effect(() => {
+		if (!selectedOfferingId) {
+			openedOfferingId = undefined;
+			return;
+		}
+		if (openedOfferingId === selectedOfferingId) return;
+		const selectedOffering = publicOfferings.find((offering) => offering.id === selectedOfferingId);
+		if (!selectedOffering) return;
+
+		selectedTab = `offerings`;
+		openedOfferingId = selectedOfferingId;
+		showOfferingDetailsDialog(selectedOffering, {
+			currentHistoryEntry: page.state.selectedOfferingId === selectedOfferingId,
+			initialDeepLink: page.state.selectedOfferingId !== selectedOfferingId
+		});
+	});
+
+	function getInitialSelectedTab(): ProfileTab {
+		if (selectedOfferingId && data.publicOfferings.some((offering) => offering.id === selectedOfferingId)) {
+			return `offerings`;
+		}
+		if (!data.upcomingEvents?.length && data.publicOfferings?.length) return `offerings`;
+
+		return `events`;
 	}
 
-	function websiteLabel(url: string) {
-		// only show website hostname if we have more than one website 
-		if (profile.socialLinks.filter(x => x.type === `website`).length <= 1) {
-			return socialLabel(`website`);
-		}
-		try {
-			return new URL(url).hostname;
-		} catch {
-			return socialLabel(`website`);
-		}
+	function selectTab(tab: ProfileTab) {
+		selectedTab = tab;
 	}
 
-	/**
-	 * Splits items into balanced rows, preserving order, with at most `maxPerRow`
-	 * items per row. Avoids unbalanced tails (e.g. 6 items -> [3,3] instead of [5,1]).
-	 *
-	 * @example
-	 * chunkBalanced([1,2,3,4,5,6], 5) // => [[1,2,3], [4,5,6]]
-	 * chunkBalanced([1,2,3,4,5,6,7], 4) // => [[1,2,3,4], [5,6,7]]
-	 */
-	function chunkBalanced<T>(items: T[], maxPerRow: number): T[][] {
-		const n = items.length;
-		if (n <= maxPerRow) return [items];
-		const rows = Math.ceil(n / maxPerRow);
-		const chunks: T[][] = [];
-		let i = 0;
-		for (let r = 0; r < rows; r++) {
-			const remaining = n - i;
-			const remainingRows = rows - r;
-			const thisRow = Math.ceil(remaining / remainingRows);
-			chunks.push(items.slice(i, i + thisRow));
-			i += thisRow;
-		}
-		return chunks;
+	function openOfferingDetails(offering: (typeof publicOfferings)[number]) {
+		selectedTab = `offerings`;
+		openedOfferingId = offering.id;
+		showOfferingDetailsDialog(offering);
 	}
 
-	const socialLinkRowsMobile = $derived(chunkBalanced(profile.socialLinks, 2));
-	const socialLinkRowsDesktop = $derived(chunkBalanced(profile.socialLinks, 4));
+	type ProfileTab = `events` | `offerings`;
 </script>
 
 <div class="mx-auto w-full max-w-3xl px-0 sm:px-4 sm:pt-4 md:pt-0">
@@ -65,11 +59,7 @@
 		<div class="relative">
 			{#if profile.bannerImageUrl}
 				<div class="bg-base-200 aspect-2/1 w-full overflow-hidden sm:aspect-3/1">
-					<img
-						src={profile.bannerImageUrl}
-						alt=""
-						class="size-full object-cover"
-					/>
+					<img src={profile.bannerImageUrl} alt="" class="size-full object-cover" />
 				</div>
 			{/if}
 
@@ -79,7 +69,9 @@
 					profile.bannerImageUrl ? `-mt-17` : `pt-8`
 				]}
 			>
-				<div class="relative flex w-full max-w-sm flex-row items-center justify-center drop-shadow sm:w-fit sm:max-w-none">
+				<div
+					class="relative flex w-full max-w-sm flex-row items-center justify-center drop-shadow sm:w-fit sm:max-w-none"
+				>
 					{#if profile.profileImageUrl}
 						<img
 							src={profile.profileImageUrl}
@@ -100,23 +92,32 @@
 					{/if}
 
 					<div
-						class="bg-base-100 relative -ml-6 flex min-w-0 w-fit max-w-[calc(100%-6.5rem)] flex-none flex-col items-start justify-center gap-3 rounded-box rounded-l-none px-5 py-4 pl-10 text-left sm:max-w-md "
+						class="bg-base-100 rounded-box relative -ml-6 flex w-fit max-w-[calc(100%-6.5rem)] min-w-0 flex-none flex-col items-start justify-center gap-3 rounded-l-none px-5 py-4 pl-10 text-left sm:max-w-md"
 					>
 						<div class="flex w-full items-start justify-between gap-2">
 							<div class="flex min-w-0 flex-col items-start gap-1">
-								<h1 class="relative inline-block max-w-full wrap-break-word text-left text-xl font-bold tracking-tight">
+								<h1
+									class="relative inline-block max-w-full text-left text-xl font-bold tracking-tight wrap-break-word"
+								>
 									{profile.displayName}
 								</h1>
 
 								{#if profile.place?.name?.trim()}
-									<a href={resolve(`/p/[slug]`, { slug: profile.place.slug })} class="text-base-content/60 flex min-w-0 items-center justify-start gap-1 text-sm">
+									<a
+										href={resolve(`/p/[slug]`, { slug: profile.place.slug })}
+										class="text-base-content/60 flex min-w-0 items-center justify-start gap-1 text-sm"
+									>
 										<i class="icon-[ph--map-pin] size-4" aria-hidden="true"></i>
 										<span class="min-w-0 wrap-break-word">{profile.place.name}</span>
 									</a>
 								{/if}
 							</div>
 							{#if isOwnProfile}
-								<a href={resolve(`/profile/public`)} class="btn btn-circle btn-sm" title="Profil bearbeiten">
+								<a
+									href={resolve(`/profile/public`)}
+									class="btn btn-circle btn-sm"
+									title="Profil bearbeiten"
+								>
 									<i class="icon-[ph--pencil] size-4"></i>
 								</a>
 							{/if}
@@ -124,70 +125,71 @@
 					</div>
 				</div>
 
-				{#snippet socialLinkButton(link: PublicProfileSocialLink)}
-					<button
-						type="button"
-						class={[`btn btn-sm gap-1.5 hover:cursor-pointer`]}
-						onclick={() => openLink(link)}
-					>
-						<i class={[socialIconClass(link.type), socialIconColorClass(link.type), `size-5`]}></i>
-						{#if link.type === `website`}
-							{websiteLabel(link.value)}
-						{:else}
-							{socialLabel(link.type)}
-						{/if}
-					</button>
-				{/snippet}
-
-				{#if profile.socialLinks.length}
-					<div class="flex flex-col items-center gap-2 sm:hidden">
-						{#each socialLinkRowsMobile as row, rowIndex (rowIndex)}
-							<div class="flex justify-center gap-2">
-								{#each row as link, i (`${link.type}-${rowIndex}-${i}`)}
-									{@render socialLinkButton(link)}
-								{/each}
-							</div>
-						{/each}
-					</div>
-					<div class="hidden sm:flex flex-col items-center gap-2">
-						{#each socialLinkRowsDesktop as row, rowIndex (rowIndex)}
-							<div class="flex justify-center gap-4">
-								{#each row as link, i (`${link.type}-${rowIndex}-${i}`)}
-									{@render socialLinkButton(link)}
-								{/each}
-							</div>
-						{/each}
-					</div>
-				{/if}
+				<ProfileContactButtons socialLinks={profile.socialLinks} />
 
 				<div class=" gap-6 pt-0 sm:mx-4">
 					{#if profile.bio?.trim()}
-						<div class={["prose max-w-none", (profile.bio.length < 180) && `text-center`]}>
+						<div class={['prose max-w-none', profile.bio.length < 180 && `text-center`]}>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -- public profile bio is stored from the trusted EditorJS form. -->
 							{@html profile.bio}
 						</div>
 					{/if}
-		
 				</div>
 			</div>
 		</div>
-
-
 	</div>
 
-	<div class="mt-6 px-4 sm:px-0">
-		<h2 class="mb-3 text-lg font-semibold pl-1">{profile.displayName}'s kommende Events</h2>
-		{#if upcomingEvents?.length}
-			<div class="flex w-full flex-col gap-6">
-				{#each upcomingEvents as event (event.id)}
-					<EventCard {event} />
-				{/each}
+	<div class="my-4 px-4 sm:px-0">
+		<div role="tablist" class="tabs tabs-box bg-base-300 flex flex-row justify-center">
+			<button
+				role="tab"
+				class={[`tab grow`, selectedTab === `events` ? `tab-active` : 'text-base-content/60 hover:text-base-content']}
+				onclick={() => selectTab(`events`)}
+			>
+				<i class="icon-[ph--calendar] size-5 mr-2"></i>
+				Events
+			</button>
+
+			<button
+				role="tab"
+				class={[`tab grow `, selectedTab === `offerings` ? `tab-active` : 'text-base-content/60 hover:text-base-content']}
+				onclick={() => selectTab(`offerings`)}
+			>
+				<i class="icon-[ph--hand-heart] size-5 mr-2"></i>
+				Angebote
+			</button>
+		</div>
+
+		{#if selectedTab === `events`}
+			<div transition:fade={{ duration: 200 }}>
+				{#if upcomingEvents?.length}
+					<div class="mt-4 flex w-full flex-col gap-4">
+						{#each upcomingEvents as event (event.id)}
+							<EventCard {event} />
+						{/each}
+					</div>
+				{:else}
+					<p class="text-base-content/60 mt-4 text-sm">Aktuell keine kommenden Events.</p>
+				{/if}
 			</div>
-		{:else}
-			<p class="text-base-content/60 text-sm">Aktuell keine kommenden Events.</p>
+		{/if}
+			
+		{#if selectedTab === `offerings`}
+		<div transition:fade={{ duration: 200 }}>
+			{#if publicOfferings?.length}
+				<div class="mt-4 flex w-full flex-col gap-4">
+					{#each publicOfferings as offering (offering.id)}
+						<OfferingCard {offering} showAuthor={false} onclick={() => openOfferingDetails(offering)} />
+					{/each}
+				</div>
+			{:else}
+				<p class="text-base-content/60 mt-4 text-sm">Aktuell keine Angebote.</p>
+			{/if}
+		</div>
 		{/if}
 	</div>
 
-	<div class="flex w-full justify-center gap-6 py-3">
+	<div class="flex w-full justify-center gap-6 my-6">
 		<a href={routes.eventList()} class="btn btn-sm">
 			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 			Alle Events
@@ -195,13 +197,15 @@
 	</div>
 </div>
 
+<OfferingDetailsDialog />
+
 <style>
 	:global(.prose a) {
 		text-decoration: underline;
 	}
 
 	:global(.prose p) {
-		margin-bottom: 0.3rem ;
-		margin-top: 0.3rem ;
+		margin-bottom: 0.3rem;
+		margin-top: 0.3rem;
 	}
 </style>

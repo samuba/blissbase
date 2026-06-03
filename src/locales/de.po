@@ -85,6 +85,7 @@ msgstr "Ausgebucht"
 #: src/lib/components/EventCard.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/routes/EventDetails.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Online"
 msgstr "Online"
 
@@ -153,6 +154,7 @@ msgstr "<0/> Website"
 
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Schließen"
@@ -295,6 +297,7 @@ msgid "<0/> Wird gesendet..."
 msgstr "<0/> Wird gesendet..."
 
 #: src/lib/components/PageHeader.svelte
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 #: src/routes/sources/+page.svelte
 msgid "<0/> Zurück"
@@ -404,9 +407,11 @@ msgid "Event löschen"
 msgstr "Event löschen"
 
 #: src/lib/components/ProfileImageCropInput.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
 #: src/routes/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Abbrechen"
 msgstr "Abbrechen"
@@ -429,10 +434,6 @@ msgstr "Event erstellen"
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "App installieren <0/>"
 msgstr "App installieren <0/>"
-
-#: src/routes/+layout.ts
-msgid "Achtsame Events in deiner Nähe."
-msgstr "Achtsame Events in deiner Nähe."
 
 #: src/routes/edit/[id]/+page.server.ts
 msgid "Invalid event ID"
@@ -461,6 +462,8 @@ msgstr "Fehler beim Laden der Events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
+#: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Ein Fehler ist aufgetreten"
 msgstr "Ein Fehler ist aufgetreten"
 
@@ -739,18 +742,6 @@ msgid "Hauptnavigation"
 msgstr "Hauptnavigation"
 
 #: src/routes/new/+page.svelte
-msgid "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
-msgstr "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
-
-#: src/routes/new/+page.svelte
-msgid "<0/> Direkt hier auf Blissbase"
-msgstr "<0/> Direkt hier auf Blissbase"
-
-#: src/routes/new/+page.svelte
-msgid "Erstelle deinen Event direkt hier auf Blissbase."
-msgstr "Erstelle deinen Event direkt hier auf Blissbase."
-
-#: src/routes/new/+page.svelte
 msgid "Event erstellen <0/>"
 msgstr "Event erstellen <0/>"
 
@@ -933,12 +924,6 @@ msgstr "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgid "Escape"
 msgstr "Escape"
 
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-msgid "Für Event anmelden"
-msgstr "Für Event anmelden"
-
 #: src/lib/components/tabsNav.ts
 msgid "Entdecken"
 msgstr "Entdecken"
@@ -954,13 +939,6 @@ msgstr "Meins"
 #: src/lib/components/tabsNav.ts
 msgid "Über"
 msgstr "Über"
-
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-msgctxt "register-for-event"
-msgid "Für Event anmelden"
-msgstr "Für Event anmelden"
 
 #: src/lib/components/EventCard.svelte
 msgid "Empfohlener Event"
@@ -1079,27 +1057,26 @@ msgstr "Profil erstellen"
 msgid "<0/> Profil ansehen"
 msgstr "<0/> Profil ansehen"
 
-#. 0: profile.displayName
-#: src/routes/@/[slug]/+page.svelte
-msgid "{0}'s kommende Events"
-msgstr "{0}'s kommende Events"
-
 #: src/routes/@/[slug]/+page.svelte
 msgid "Aktuell keine kommenden Events."
 msgstr "Aktuell keine kommenden Events."
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Benutzername"
 msgstr "Benutzername"
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Bitte einen Link-Typ wählen."
 msgstr "Bitte einen Link-Typ wählen."
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Bitte einen Wert eingeben."
 msgstr "Bitte einen Wert eingeben."
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Leerzeichen ist nicht erlaubt."
 msgstr "Leerzeichen ist nicht erlaubt."
@@ -1108,6 +1085,7 @@ msgstr "Leerzeichen ist nicht erlaubt."
 msgid "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 msgstr "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "blissbase.app/@/"
 msgstr "blissbase.app/@/"
@@ -1134,14 +1112,18 @@ msgstr "„{0}“ ist frei."
 msgid "„{0}“ ist bereits vergeben."
 msgstr "„{0}“ ist bereits vergeben."
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Beschreibung"
 msgstr "Beschreibung"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Links"
 msgstr "Links"
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 #: src/routes/profile/public/+page.svelte
 #: src/routes/profile/public/+page.svelte
@@ -1149,6 +1131,7 @@ msgstr "Links"
 msgid "Zuerst Typ wählen"
 msgstr "Zuerst Typ wählen"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Bild wird hochgeladen…"
 msgstr "<0/> Bild wird hochgeladen…"
@@ -1157,27 +1140,31 @@ msgstr "<0/> Bild wird hochgeladen…"
 msgid "<0/> Speichern…"
 msgstr "<0/> Speichern…"
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Link hinzufügen"
 msgstr "Link hinzufügen"
 
-#: src/routes/profile/public/+page.svelte
-msgid "Pro Typ ist nur ein Eintrag möglich."
-msgstr "Pro Typ ist nur ein Eintrag möglich."
-
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Typ wählen"
 msgstr "Typ wählen"
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Hinzufügen"
 msgstr "Hinzufügen"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Bitte gib den 6-stelligen Code ein."
+msgstr "Bitte gib den 6-stelligen Code ein."
 
 #: src/lib/components/Login.svelte
 msgid "<0/> Code senden"
 msgstr "<0/> Code senden"
 
 #: src/lib/components/Login.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Einmalcode"
 msgstr "Einmalcode"
 
@@ -1190,6 +1177,7 @@ msgid "<0/> Anmelden"
 msgstr "<0/> Anmelden"
 
 #: src/lib/components/Login.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Andere E-Mail verwenden"
 
@@ -1218,15 +1206,41 @@ msgstr "(in {0} Sekunden)"
 msgid "Code erneut senden <0/>"
 msgstr "Code erneut senden <0/>"
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
+
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
+msgid "E-Mail bestätigen"
+msgstr "E-Mail bestätigen"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Code senden"
+msgstr "Code senden"
+
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
+msgid "<0/> Wird geprüft…"
+msgstr "<0/> Wird geprüft…"
+
+#: src/routes/offerings/+page.svelte
+msgid "Angebote"
+msgstr "Angebote"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Angebot speichern"
+msgstr "Angebot speichern"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "<0/> Wird gespeichert…"
+msgstr "<0/> Wird gespeichert…"
 
 #: src/lib/components/TagSelection.svelte
 msgid "Suchen"
 msgstr "Suchen"
 
 #: src/lib/components/HeaderControls.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort"
 msgstr "Vor Ort"
 
@@ -1242,6 +1256,10 @@ msgstr "Suche starten"
 msgid "Kein Ort ausgewählt"
 msgstr "Kein Ort ausgewählt"
 
+#: src/routes/offerings/new/+page.svelte
+msgid "Dein aktueller Ort"
+msgstr "Dein aktueller Ort"
+
 #: src/routes/profile/public/+page.svelte
 msgid "Deine Angebote werden für diesen Ort gelistet."
 msgstr "Deine Angebote werden für diesen Ort gelistet."
@@ -1249,3 +1267,260 @@ msgstr "Deine Angebote werden für diesen Ort gelistet."
 #: src/routes/profile/public/+page.svelte
 msgid "Aktueller Ort"
 msgstr "Aktueller Ort"
+
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
+msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
+msgstr "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
+
+#: src/routes/new/+page.svelte
+msgid "Was möchtest du erstellen?"
+msgstr "Was möchtest du erstellen?"
+
+#: src/routes/new/+page.svelte
+msgid "<0/> Event erstellen"
+msgstr "<0/> Event erstellen"
+
+#: src/routes/new/+page.svelte
+msgid "Ein einzelner Termin, Workshop oder Circle mit Datum und Uhrzeit."
+msgstr "Ein einzelner Termin, Workshop oder Circle mit Datum und Uhrzeit."
+
+#: src/routes/new/+page.svelte
+#: src/routes/offerings/+page.svelte
+msgid "<0/> Angebot erstellen"
+msgstr "<0/> Angebot erstellen"
+
+#: src/routes/new/+page.svelte
+msgid "Ein dauerhaft sichtbares Angebot, das Menschen direkt anfragen können."
+msgstr "Ein dauerhaft sichtbares Angebot, das Menschen direkt anfragen können."
+
+#: src/routes/new/+page.svelte
+msgid "Angebot erstellen <0/>"
+msgstr "Angebot erstellen <0/>"
+
+#: src/routes/new/+page.svelte
+msgid "Weitere Wege"
+msgstr "Weitere Wege"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Persönlich an deinem Profil-Ort."
+msgstr "Persönlich an deinem Profil-Ort."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Du bietest beides an."
+msgstr "Du bietest beides an."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Bitte gib deine E-Mail-Adresse ein."
+msgstr "Bitte gib deine E-Mail-Adresse ein."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Angebot erstellen | Blissbase"
+msgstr "Angebot erstellen | Blissbase"
+
+#: src/routes/offerings/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
+msgid "Angebot erstellen"
+msgstr "Angebot erstellen"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
+msgstr "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Titel *"
+msgstr "Titel *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Format *"
+msgstr "Format *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Profilbeschreibung"
+msgstr "Profilbeschreibung"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Keine Angabe"
+msgstr "Keine Angabe"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Offline-Angebote werden über diesen Ort gefunden."
+msgstr "Offline-Angebote werden über diesen Ort gefunden."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail *"
+msgstr "E-Mail *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
+msgstr "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
+
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
+msgid "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
+msgstr "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Vor Ort & Online"
+msgstr "Vor Ort & Online"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Video-Call oder anderes Online-Format."
+msgstr "Video-Call oder anderes Online-Format."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Dein Name *"
+msgstr "Dein Name *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Profil-URL *"
+msgstr "Profil-URL *"
+
+#: src/routes/offerings/+page.svelte
+msgid "Da Nang"
+msgstr "Da Nang"
+
+#: src/routes/offerings/+page.svelte
+msgid "Hoi An"
+msgstr "Hoi An"
+
+#: src/routes/offerings/+page.svelte
+msgid "Angebote | Blissbase"
+msgstr "Angebote | Blissbase"
+
+#: src/routes/offerings/+page.svelte
+msgid "Noch keine Angebote hier"
+msgstr "Noch keine Angebote hier"
+
+#: src/routes/offerings/+page.svelte
+msgid "Erstelle das erste Angebot für diesen Bereich oder schau später wieder vorbei."
+msgstr "Erstelle das erste Angebot für diesen Bereich oder schau später wieder vorbei."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
+msgstr "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Wanna edit your profile? <0><0/> Edit profile</0>"
+msgstr "Wanna edit your profile? <0><0/> Edit profile</0>"
+
+#: src/routes/offerings/+page.svelte
+msgid "Ort auswählen"
+msgstr "Ort auswählen"
+
+#: src/routes/offerings/+page.svelte
+msgid "Ort wählen"
+msgstr "Ort wählen"
+
+#: src/routes/offerings/+page.svelte
+msgid "Suche"
+msgstr "Suche"
+
+#: src/routes/offerings/+page.svelte
+msgid "Titel oder Beschreibung"
+msgstr "Titel oder Beschreibung"
+
+#: src/routes/offerings/+page.svelte
+#: src/routes/offerings/+page.svelte
+#: src/routes/offerings/+page.svelte
+msgid "Suche löschen"
+msgstr "Suche löschen"
+
+#: src/routes/offerings/+page.svelte
+msgid "Keine passenden Angebote"
+msgstr "Keine passenden Angebote"
+
+#: src/routes/offerings/+page.svelte
+#: src/routes/offerings/+page.svelte
+msgid "Ändere deine Suche oder lösche den Suchbegriff, um wieder alle Angebote zu sehen."
+msgstr "Ändere deine Suche oder lösche den Suchbegriff, um wieder alle Angebote zu sehen."
+
+#: src/routes/@/[slug]/+page.svelte
+msgid "Aktuell keine Angebote."
+msgstr "Aktuell keine Angebote."
+
+#: src/routes/@/[slug]/+page.svelte
+msgid "<0/> Angebote"
+msgstr "<0/> Angebote"
+
+#: src/routes/@/[slug]/+page.svelte
+msgid "<0/> Events"
+msgstr "<0/> Events"
+
+#~ msgid "Jetzt Buchen"
+#~ msgstr "Jetzt Buchen"
+
+#~ msgid "Jetzt Buchen <0/>"
+#~ msgstr "Jetzt Buchen <0/>"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Offerings-Hinweis ausblenden"
+msgstr "Offerings-Hinweis ausblenden"
+
+#: src/routes/offerings/+page.svelte
+msgid "Was willst du der Community geben?"
+msgstr "Was willst du der Community geben?"
+
+#: src/routes/offerings/+page.svelte
+msgid "Finde Sessions, Services und Unterstützung."
+msgstr "Finde Sessions, Services und Unterstützung."
+
+#: src/routes/offerings/+page.svelte
+msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
+msgstr "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
+msgstr "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
+
+#. 0: normalizedSearchTerm
+#: src/routes/offerings/+page.svelte
+msgid "Keine weiteren Suchergebnisse für \"{0}\""
+msgstr "Keine weiteren Suchergebnisse für \"{0}\""
+
+#: src/routes/offerings/+page.svelte
+msgid "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
+msgstr "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
+
+#: src/routes/+layout.ts
+msgid "Find conscious events near you."
+msgstr "Find conscious events near you."
+
+#: src/routes/+layout.ts
+msgid "Achtsame Events in deiner Nähe."
+msgstr "Achtsame Events in deiner Nähe."
+
+#: src/routes/new/+page.svelte
+msgid "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
+msgstr "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
+
+#: src/routes/new/+page.svelte
+msgid "<0/> Direkt hier auf Blissbase"
+msgstr "<0/> Direkt hier auf Blissbase"
+
+#: src/routes/new/+page.svelte
+msgid "Erstelle deinen Event direkt hier auf Blissbase."
+msgstr "Erstelle deinen Event direkt hier auf Blissbase."
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgid "Für Event anmelden"
+msgstr "Für Event anmelden"
+
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+msgctxt "register-for-event"
+msgid "Für Event anmelden"
+msgstr "Für Event anmelden"
+
+#. 0: profile.displayName
+#: src/routes/@/[slug]/+page.svelte
+msgid "{0}'s kommende Events"
+msgstr "{0}'s kommende Events"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Pro Typ ist nur ein Eintrag möglich."
+msgstr "Pro Typ ist nur ein Eintrag möglich."

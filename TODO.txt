@@ -1,6 +1,7 @@
 switch to lexical editor?
 use single flight mutations for profile and event creation
 make everything go fast - indexes? 
+run offering schema migration manually: offerings.name -> title, description -> description_html, add offering_format enum + format column
 
 reality event have wrong time
 unify tabsnav dropdown

@@ -1,5 +1,6 @@
 import { getPageMetaTags } from '$lib/common';
 import {
+	getOfferingsForPublicProfile,
 	getPublicProfileBioExcerpt,
 	getPublicProfileBySlug,
 	getUpcomingEventsForPublicProfile
@@ -13,13 +14,18 @@ export const load = (async ({ params, url }) => {
 		throw error(404, `Public profile not found`);
 	}
 
-	const upcomingEvents = await getUpcomingEventsForPublicProfile({ authorId: profile.id });
+	const [upcomingEvents, publicOfferings] = await Promise.all([
+		getUpcomingEventsForPublicProfile({ authorId: profile.id }),
+		getOfferingsForPublicProfile({ profile })
+	]);
+	const profileDisplayName = profile.displayName ?? `Blissbase`;
 
 	return {
 		profile,
 		upcomingEvents,
+		publicOfferings,
 		pageMetaTags: getPageMetaTags({
-			name: profile.displayName,
+			name: profileDisplayName,
 			description: getPublicProfileBioExcerpt({ bio: profile.bio }),
 			imageUrl: profile.profileImageUrl ?? profile.bannerImageUrl,
 			url
