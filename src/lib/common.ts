@@ -26,30 +26,63 @@ export function getLongLocale(locale: string) {
     return locale === 'de' ? 'de-DE' : 'en-US';
 }
 
-export function formatTimeStr(start: Date | undefined, end: Date | undefined | null, locale: string): string {
+export function formatDatesStr(start: Date | undefined, end: Date | undefined | null, locale: string, excludeCurrentYear = false): string {
     if (!start) return 'Date TBD';
 
+    const { dateString, dateRangeString, multiDayRangeEnd, shouldAddWeekday } = getEventDateFormat({ start, end, locale, excludeCurrentYear });
+    let str = dateRangeString ?? dateString;
+    if (!dateRangeString && multiDayRangeEnd) str += ` – ${multiDayRangeEnd}`;
+
+    if (!shouldAddWeekday) return str;
+    const weekday = formatWeekday(start, locale);
+    return `${weekday} ${str}`;
+}
+
+export function formatTimesStr(start: Date | undefined, end: Date | undefined | null, locale: string): string {
+    if (!start) return 'TBD';
+
+    const longLocale = getLongLocale(locale);
+    const { endsOnSameDayOrBeforeNoonNextDay, multiDayRangeEnd } = getEventDateFormat({ start, end, locale });
+
+    if (multiDayRangeEnd) return '';
+    if (isMidnight(start) && (!end || isMidnight(end))) return '';
+
+    const startTime = start.toLocaleTimeString(longLocale, { timeStyle: 'short' });
+
+    if (end && endsOnSameDayOrBeforeNoonNextDay) {
+        const endTime = end.toLocaleTimeString(longLocale, { timeStyle: 'short' });
+        return `${startTime} – ${endTime}`;
+    }
+
+    return startTime;
+}
+
+/**
+ * Calculates date range display details for date and time-only formatters.
+ * @example getEventDateFormat({ start: new Date('2025-06-10'), end: new Date('2025-06-12'), locale: 'de', excludeCurrentYear: false })
+ */
+function getEventDateFormat(args: { start: Date; end: Date | undefined | null; locale: string; excludeCurrentYear?: boolean }) {
+    const { start, end, locale, excludeCurrentYear = false } = args;
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const eventStartDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-
     const diffTime = eventStartDay.getTime() - today.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
     const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 
+    const isRelativeDate = diffDays === 1 || diffDays === 0 || diffDays === -1;
     let dateString: string;
-
-    if (diffDays === 1 || diffDays === 0 || diffDays === -1) {
+    if (isRelativeDate) {
         const relativeDate = rtf.format(diffDays, 'day');
         // Capitalize first letter for German "Gestern", "Heute", "Morgen"
         dateString = relativeDate.charAt(0).toUpperCase() + relativeDate.slice(1);
     } else {
-        dateString = start.toLocaleDateString(getLongLocale(locale), { dateStyle: 'medium' });
+        dateString = getDateFormatter({ locale, excludeYear: shouldExcludeYear({ date: start, today, excludeCurrentYear }) }).format(start);
     }
 
-    let str = `${dateString}, ${start.toLocaleTimeString(getLongLocale(locale), { timeStyle: 'short' })}`;
-    let shouldAddWeekday = false;
+    let endsOnSameDayOrBeforeNoonNextDay = false;
+    let multiDayRangeEnd: string | undefined;
+    let dateRangeString: string | undefined;
 
     if (end) {
         const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -57,37 +90,55 @@ export function formatTimeStr(start: Date | undefined, end: Date | undefined | n
         const nextDayStart = new Date(startDay.getTime() + 24 * 60 * 60 * 1000);
 
         // Check if end is on the same day as start OR if end is on the next day and before noon
-        const endsOnSameDayOrBeforeNoonNextDay =
+        endsOnSameDayOrBeforeNoonNextDay =
             startDay.getTime() === endDay.getTime() ||
             (endDay.getTime() === nextDayStart.getTime() && end.getHours() < 12);
 
-        if (endsOnSameDayOrBeforeNoonNextDay) {
-            // Only show end time
-            str += ` – ${end.toLocaleTimeString(getLongLocale(locale), { timeStyle: 'short' })}`;
-            // Only add weekday if it's not today, tomorrow, or yesterday
-            shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
-        } else {
-            // Show start date – end date (no times)
-            str = dateString; // Initialize str with only the date string, removing the start time
-            str += ` – ${end.toLocaleDateString(getLongLocale(locale), { dateStyle: 'medium' })}`;
-            shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
+        if (!endsOnSameDayOrBeforeNoonNextDay) {
+            const dateFormatter = getDateFormatter({
+                locale,
+                excludeYear: shouldExcludeYear({ date: end, today, excludeCurrentYear })
+            });
+            multiDayRangeEnd = dateFormatter.format(end);
+            if (!isRelativeDate) {
+                const dateRangeFormatter = getDateFormatter({
+                    locale,
+                    excludeYear: shouldExcludeYear({ date: start, today, excludeCurrentYear }) && shouldExcludeYear({ date: end, today, excludeCurrentYear })
+                });
+                dateRangeString = formatDateRange(dateRangeFormatter, start, end);
+            }
         }
-    } else {
-        // No end date - only add weekday if it's not today, tomorrow, or yesterday
-        shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
     }
 
-    // Add German weekday abbreviation for events that are not today, tomorrow, or yesterday
-    if (shouldAddWeekday) {
-        const weekday = start.toLocaleDateString(getLongLocale(locale), { weekday: 'short' });
-        str = `${weekday}. ${str}`;
-    }
+    const shouldAddWeekday = diffDays !== 0 && diffDays !== 1 && diffDays !== -1;
 
-    // 00:00 just means we dont have a proper start time
-    if (str.endsWith(", 00:00")) str = str.replace(", 00:00", "");
-    str = str.replace(", 00:00 – 00:00", "")
+    return { dateString, dateRangeString, diffDays, endsOnSameDayOrBeforeNoonNextDay, multiDayRangeEnd, shouldAddWeekday };
+}
 
-    return str;
+function isMidnight(date: Date) {
+    return date.getHours() === 0 && date.getMinutes() === 0;
+}
+
+function formatWeekday(date: Date, locale: string) {
+    const weekday = date.toLocaleDateString(getLongLocale(locale), { weekday: 'short' });
+    if (!['de', 'en'].includes(locale) || weekday.endsWith('.')) return weekday;
+    return `${weekday}.`;
+}
+
+function formatDateRange(dateFormatter: Intl.DateTimeFormat, start: Date, end: Date) {
+    return dateFormatter.formatRange(start, end).replace(/[\u2009\u202f]\u2013[\u2009\u202f]/u, ' – ');
+}
+
+function getDateFormatter(args: { locale: string; excludeYear: boolean }) {
+    const { locale, excludeYear } = args;
+    const longLocale = getLongLocale(locale);
+    if (!excludeYear) return new Intl.DateTimeFormat(longLocale, { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Intl.DateTimeFormat(longLocale, { day: 'numeric', month: 'short' });
+}
+
+function shouldExcludeYear(args: { date: Date; today: Date; excludeCurrentYear: boolean }) {
+    const { date, today, excludeCurrentYear } = args;
+    return excludeCurrentYear && date.getFullYear() === today.getFullYear();
 }
 
 export function formatAddress(address: string[]): string {
@@ -270,7 +321,7 @@ export function getContactMethod(contact: string | undefined) {
     if (contact.startsWith('mailto:')) {
         return 'Email';
     }
-    if (contact.match(/^[\w\.-]+@[\w\.-]+\.\w+$/)) {
+    if (contact.match(/^[\w.-]+@[\w.-]+\.\w+$/)) {
         return 'Email';
     }
     if (contact.startsWith('http')) {

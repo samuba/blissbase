@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAddress, formatTimeStr, getLongLocale, getContactMethod, type SupportedLocale, resolveSupportedLocale } from '$lib/common';
+	import { formatAddress, getLongLocale, getContactMethod, type SupportedLocale, resolveSupportedLocale, formatDatesStr, formatTimesStr } from '$lib/common';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
@@ -271,14 +271,20 @@
 								title="Zum Kalender hinzufügen"
 								aria-label="Zum Kalender hinzufügen"
 								class={[
-									`flex cursor-pointer gap-1.5 hover:underline`,
+									`flex cursor-pointer gap-1.5 hover:underline items-center`,
 									props.class
 								]}
 							>
-								<p class="text-md font-medium">
-									{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
-								</p>
-								<i class="icon-[ph--calendar-plus] size-5"></i>
+								<div class="text-md font-medium flex flex-col items-start">
+									<div class="flex items-center gap-2">
+										{formatDatesStr(event.startAt, event.endAt, localeStore.locale)}  
+										<i class="icon-[ph--calendar-plus] size-5"></i>
+									</div>
+									<div class="font-normal">
+										{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+									</div>
+								</div>
+								
 							</button>
 						{/snippet}
 					</AddToCalendarButton>
@@ -307,7 +313,7 @@
 	
 					{#if event.price && !event.priceIsHtml}
 						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
-							<i class="icon-[ph--money] size-7 shrink-0"></i>
+							<i class="icon-[ph--coins] size-7 shrink-0"></i>
 						</div>	
 						<p class="font-medium">{event.price}</p>
 					{/if}
@@ -330,9 +336,8 @@
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if sourceUrl && !sourceUrl.includes("todo.today")}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn" title="Für Event anmelden">
-						<!-- @wc-context: register-for-event -->
-						Für Event anmelden
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn" title="Jetzt Buchen">
+						Jetzt Buchen
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if singleContact?.method === 'Website'}
@@ -341,18 +346,16 @@
 						target="_blank"
 						rel="noopener noreferrer"
 						class="btn-primary btn"
-						title="Für Event anmelden"
+						title="Jetzt Buchen"
 					>
-						<!-- @wc-context: register-for-event -->
-						Für Event anmelden
+						Jetzt Buchen
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if event.contact?.length}
 					<PopOver contentClass="bg-base-100 p-5 w-xs z-60">
 						{#snippet trigger({ props })}
-							<button {...props} class={[`btn btn-primary`, props.class]} title="Für Event anmelden"> 
-								<!-- @wc-context: register-for-event -->
-								Für Event anmelden
+							<button {...props} class={[`btn btn-primary`, props.class]} title="Jetzt Buchen"> 
+								Jetzt Buchen
 							</button>
 						{/snippet}
 						{#snippet content()}

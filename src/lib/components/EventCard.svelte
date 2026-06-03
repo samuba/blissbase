@@ -1,21 +1,19 @@
 <script lang="ts">
-	import type { UiEvent } from '$lib/server/events';
-	import { addHours, formatAddress, formatTimeStr } from '$lib/common';
-	import { pushState } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import RandomPlaceholderImg from './RandomPlaceholderImg.svelte';
-	import FavoriteButton from './FavoriteButton.svelte';
-	import { now } from '$lib/now.svelte';
-	import { localeStore } from '../../locales/localeStore.svelte';
-	import { showEventDetailsDialog } from '../../routes/EventDetailsDialog.svelte';
+	import type { UiEvent } from "$lib/server/events";
+	import { addHours, formatAddress, formatDatesStr, formatTimesStr } from "$lib/common";
+	import { resolve } from "$app/paths";
+	import RandomPlaceholderImg from "./RandomPlaceholderImg.svelte";
+	import FavoriteButton from "./FavoriteButton.svelte";
+	import { now } from "$lib/now.svelte";
+	import { localeStore } from "../../locales/localeStore.svelte";
+	import { showEventDetailsDialog } from "../../routes/EventDetailsDialog.svelte";
 
 	const {
 		event,
 		class: className,
 		onAddFavorite,
 		onRemoveFavorite,
-		hidePastEvent
+		hidePastEvent,
 	}: {
 		event: UiEvent;
 		class?: string;
@@ -56,60 +54,44 @@
 </script>
 
 {#if !hideEvent}
-	<a
-		href={resolve('/[slug]', { slug: event.slug })}
-		class=" w-full"
-		data-sveltekit-preload-data="false"
-		onclick={handleClick}
-	> 
+	<a href={resolve("/[slug]", { slug: event.slug })} class=" w-full" data-sveltekit-preload-data="false" onclick={handleClick}>
 		<article
 			class={[
 				`card bg-base-100 fade-out-0 flex flex-col rounded-lg transition-all`,
 				event.spotlight
-					? [
-							`ring-1 ring-primary/60`,
-							`shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`
-						]
+					? [`ring-primary/60 ring-1`, `shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`]
 					: `shadow-sm`,
-				className
+				className,
 			]}
 			data-event-id={event.id}
 			data-testid="event-card"
 		>
 			{#if event.spotlight}
 				<div
-					class="bg-primary/60 text-primary-content rounded-t-lg w-full px-3 py-1.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider"
+					class="bg-primary/60 text-primary-content w-full rounded-t-lg px-3 py-1.5 text-center text-[0.65rem] font-semibold tracking-wider uppercase"
 				>
 					Empfohlener Event
 				</div>
 			{/if}
 			<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
 				<div
-				class={[
-					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-bl-lg sm:rounded-tr-none`,
-					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`
-				]}
+					class={[
+						`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+						event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+					]}
 				>
-					<FavoriteButton
-						eventId={event.id}
-						class="absolute right-2 bottom-2 z-5"
-						{onAddFavorite}
-						{onRemoveFavorite}
-					/>
+					<FavoriteButton eventId={event.id} class="absolute right-2 bottom-2 z-5" {onAddFavorite} {onRemoveFavorite} />
 
 					{#if imageUrl}
 						<div
-						class={[
-							`h-full bg-cover bg-center`,
-							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`
-						]}
+							class={[`h-full bg-cover bg-center`, event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`]}
 							style="background-image: url({imageUrl})"
 						>
 							<figure
-						class={[
-							`h-full backdrop-blur-md backdrop-brightness-85 sm:rounded-bl-lg sm:rounded-tr-none`,
-							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`
-						]}
+								class={[
+									`h-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
+									event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+								]}
 							>
 								<img
 									src={imageUrl}
@@ -122,10 +104,10 @@
 					{:else}
 						<RandomPlaceholderImg
 							seed={event.name}
-						class={[
-							`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-bl-lg sm:rounded-tr-none`,
-							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`
-						]}
+							class={[
+								`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+							]}
 						/>
 					{/if}
 				</div>
@@ -139,25 +121,29 @@
 						{/if}
 					</h3>
 
-					<div class="flex items-center gap-1 flex-wrap">
-						<!-- <i class="icon-[ph--clock] mr-1.5 size-4 min-w-4"></i> -->
+					<div class="flex flex-wrap items-center gap-1">
+						<i class="icon-[ph--calendar-dots] size-4 min-w-4"></i>
 						<span>
-							{formatTimeStr(event.startAt, event.endAt, localeStore.locale)}
+							{formatDatesStr(event.startAt, event.endAt, localeStore.locale, true)}
 						</span>
-						
+						{#if formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+							<i class="inline-block icon-[ph--clock] size-4 min-w-4 ml-2"></i>
+							<span>
+								{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+							</span>
+						{/if}
+
 						{#if isPast}
-							<div class="badge badge-secondary badge-sm ml-2">
-								Vorbei
-							</div>
+							<div class="badge badge-secondary badge-sm ml-2">Vorbei</div>
 						{:else if isOngoing}
 							<div class="badge badge-ghost badge-sm ml-2">
-								<div class="bg-success w-2 h-2 rounded-full"></div>
+								<div class="bg-success h-2 w-2 rounded-full"></div>
 								Läuft
 							</div>
 						{/if}
 					</div>
 
-					{#if event.attendanceMode === 'online'}
+					{#if event.attendanceMode === "online"}
 						<div class="flex items-center gap-1.5 text-sm">
 							<i class="icon-[ph--globe] size-4 min-w-4"></i>
 							<span class="leading-tight">Online</span>
@@ -165,7 +151,7 @@
 					{:else if event.address?.length}
 						<div class="flex items-center gap-1.5 text-sm">
 							<div class="flex items-center gap-1">
-								{#if event.attendanceMode === 'offline+online'}
+								{#if event.attendanceMode === "offline+online"}
 									<i class="icon-[ph--globe] size-4 min-w-4"></i>
 								{/if}
 								<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
@@ -177,7 +163,7 @@
 										{event.distanceKm} km entfernt
 									</span>
 								{/if}
-								<div title={event.address?.join(', ')} class="truncate-2lines">
+								<div title={event.address?.join(", ")} class="truncate-2lines">
 									{formatAddress(event.address)}
 								</div>
 							</div>
