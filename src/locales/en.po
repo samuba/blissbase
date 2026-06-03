@@ -7,6 +7,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
@@ -84,7 +85,9 @@ msgstr "Sold out"
 
 #: src/lib/components/EventCard.svelte
 #: src/lib/components/HeaderControls.svelte
+#: src/lib/components/OfferingCard.svelte
 #: src/routes/EventDetails.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Online"
 msgstr "Online"
@@ -156,11 +159,12 @@ msgstr "<0/> Website"
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
-#: src/routes/profile/public/+page.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
 msgstr "Close"
 
 #: src/routes/EventDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "<0/> Zurück zur Übersicht"
 msgstr "<0/> Back to overview"
 
@@ -412,7 +416,6 @@ msgstr "Delete event"
 #: src/routes/new/+page.svelte
 #: src/routes/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Abbrechen"
 msgstr "Cancel"
 
@@ -532,7 +535,7 @@ msgstr "Show results"
 
 #: src/routes/+page.svelte
 msgid "✨ Achtsame Events in deiner Nähe ✨"
-msgstr "✨ Conscious events near you ✨"
+msgstr "✨ Find conscious events near you ✨"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Setze zuerst einen Standort"
@@ -1062,22 +1065,18 @@ msgid "Aktuell keine kommenden Events."
 msgstr "No upcoming events at the moment."
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Benutzername"
 msgstr "Username"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Bitte einen Link-Typ wählen."
 msgstr "Please select a link type."
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Bitte einen Wert eingeben."
 msgstr "Please enter a value."
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Leerzeichen ist nicht erlaubt."
 msgstr "Spaces are not allowed."
 
@@ -1124,10 +1123,6 @@ msgstr "Links"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
-#: src/routes/profile/public/+page.svelte
-#: src/routes/profile/public/+page.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Zuerst Typ wählen"
 msgstr "Select a type first"
 
@@ -1141,17 +1136,14 @@ msgid "<0/> Speichern…"
 msgstr "<0/> Saving…"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Link hinzufügen"
 msgstr "Add link"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Typ wählen"
 msgstr "Select type"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "Hinzufügen"
 msgstr "Add"
 
@@ -1207,7 +1199,6 @@ msgid "Code erneut senden <0/>"
 msgstr "Resend code <0/>"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/profile/public/+page.svelte
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
@@ -1240,9 +1231,11 @@ msgid "Suchen"
 msgstr "Search"
 
 #: src/lib/components/HeaderControls.svelte
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort"
-msgstr "On-site"
+msgstr "In-Person"
 
 #: src/routes/+page.svelte
 msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
@@ -1446,13 +1439,7 @@ msgstr "<0/> Offerings"
 
 #: src/routes/@/[slug]/+page.svelte
 msgid "<0/> Events"
-msgstr "<0/> Events"
-
-#~ msgid "Jetzt Buchen"
-#~ msgstr "Book now"
-
-#~ msgid "Jetzt Buchen <0/>"
-#~ msgstr "Book now <0/>"
+msgstr "<0/> Events<<<<<<< HEAD"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Offerings-Hinweis ausblenden"
@@ -1485,42 +1472,16 @@ msgstr "<0/>w <1><0/> Looking for events?We have lots!Show events <0/></1>"
 
 #: src/routes/+layout.ts
 msgid "Find conscious events near you."
-msgstr "Find conscious events near you."
-
-#: src/routes/+layout.ts
-msgid "Achtsame Events in deiner Nähe."
-msgstr "Conscious events near you."
-
-#: src/routes/new/+page.svelte
-msgid "Es gibt mehrere Möglichkeiten wie du einen Event erstellen kannst:"
-msgstr "There are several ways you can create an event:"
-
-#: src/routes/new/+page.svelte
-msgid "<0/> Direkt hier auf Blissbase"
-msgstr "<0/> Directly here on Blissbase"
-
-#: src/routes/new/+page.svelte
-msgid "Erstelle deinen Event direkt hier auf Blissbase."
-msgstr "Create your event directly here on Blissbase."
+msgstr "Find conscious events near you.<<<<<<< HEAD"
 
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
-msgid "Für Event anmelden"
-msgstr "Register for event"
+#: src/routes/EventDetails.svelte
+msgid "Jetzt Buchen"
+msgstr "Book now"
 
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-msgctxt "register-for-event"
-msgid "Für Event anmelden"
-msgstr "Register for Event"
-
-#. 0: profile.displayName
-#: src/routes/@/[slug]/+page.svelte
-msgid "{0}'s kommende Events"
-msgstr "{0}'s upcoming events"
-
-#: src/routes/profile/public/+page.svelte
-msgid "Pro Typ ist nur ein Eintrag möglich."
-msgstr "Only one entry per type is allowed."
+msgid "Jetzt Buchen <0/>"
+msgstr "Book now <0/>>>>>>>> origin/main"
