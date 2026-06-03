@@ -22,10 +22,10 @@ import { and, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
-import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES } from '../src/lib/commonWithScripts.ts';
+import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts.ts';
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
-import { matchesBlackListWords, matchesWhiteListWords } from '../src/whitelistWords.ts';
+import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
 
 /**
  * Dynamically scrapes a single source using its corresponding scraper
@@ -401,8 +401,9 @@ async function main() {
         }
     }
 
-    function shouldBeListed({ name }: { name: string }): boolean {
+    function shouldBeListed({ name, source }: { name: string, source: WebsiteScrapeSourceName }): boolean {
         if (matchesBlackListWords(name)) return false;
+        if (whiteListSources.includes(source)) return true; // these sources only have conscious events
         return matchesWhiteListWords(name);
     }
 
