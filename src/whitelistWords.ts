@@ -1,4 +1,5 @@
 
+import type { WebsiteScrapeSourceName } from '$lib/commonWithScripts';
 import whitelistWords from './whitelistWords.json' with { type: 'json' };
 
 const blackListWords = [
@@ -52,3 +53,14 @@ export function matchesBlackListWords(text: string) {
     if (!text) return false;
     return blackListWords.some(x => text.toLowerCase().includes(x));
 }
+
+export const whiteListSources = [
+    'tribehaus',
+    'heilnetz',
+    'heilnetzowl',
+    'seijetzt',
+    'ggbrandenburg',
+    'kuschelraum',
+    'ciglobalcalendar',
+    'vortexapp',
+] satisfies WebsiteScrapeSourceName[];
