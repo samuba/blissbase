@@ -81,7 +81,6 @@
 	import ProfileContactButtons from "$lib/components/ProfileContactButtons.svelte";
 	import PublicProfileCard from "$lib/components/PublicProfileCard.svelte";
 	import { Dialog } from "$lib/components/dialog";
-	import { showFlashToast } from "$lib/flashToast.svelte";
 	import { deleteOffering, listOffering, unlistOffering } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import { toast } from "svelte-sonner";

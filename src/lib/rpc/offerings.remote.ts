@@ -7,7 +7,6 @@ import {
 	offeringFormSchema,
 	updateOfferingFormSchema,
 	type OfferingFormat,
-	type OfferingPlaceFilter,
 } from "$lib/rpc/offerings.common";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 import { routes } from "$lib/routes";
@@ -40,48 +39,39 @@ const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
 
 export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
 	const currentUserId = getRequestEvent().locals.userId;
-	const [offerings, places] = await Promise.all([
-		db.query.offerings.findMany({
-			where: eq(s.offerings.listed, true),
-			columns: {
-				id: true,
-				title: true,
-				descriptionHtml: true,
-				format: true,
-				imageUrls: true,
-				listed: true,
-			},
-			with: {
-				profile: {
-					columns: {
-						id: true,
-						slug: true,
-						displayName: true,
-						bio: true,
-						profileImageUrl: true,
-						bannerImageUrl: true,
-						socialLinks: true,
-						placeId: true,
-					},
-					with: {
-						place: {
-							columns: {
-								id: true,
-								name: true,
-								slug: true,
-							},
+	const offerings = await db.query.offerings.findMany({
+		where: eq(s.offerings.listed, true),
+		columns: {
+			id: true,
+			title: true,
+			descriptionHtml: true,
+			format: true,
+			imageUrls: true,
+			listed: true,
+		},
+		with: {
+			profile: {
+				columns: {
+					id: true,
+					slug: true,
+					displayName: true,
+					bio: true,
+					profileImageUrl: true,
+					bannerImageUrl: true,
+					socialLinks: true,
+				},
+				with: {
+					place: {
+						columns: {
+							name: true,
+							slug: true,
 						},
 					},
 				},
 			},
-			orderBy: (offerings, { desc }) => [desc(offerings.createdAt)],
-		}),
-		db.query.places.findMany({
-			columns: { id: true, name: true, slug: true },
-		}),
-	]);
-
-	const filterPlaceIds = getPlaceIdsForFilter({ filter, places });
+		},
+		orderBy: (offerings, { desc }) => [desc(offerings.createdAt)],
+	});
 
 	return {
 		filter,
@@ -90,32 +80,72 @@ export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
 				if (!offering.profile || !isPublicProfile(offering.profile)) return false;
 				if (!hasSocialLink(offering.profile)) return false;
 				if (filter === `online`) return isOnlineOffering(offering.format);
-				return isOfflineOffering(offering.format) && filterPlaceIds.includes(offering.profile.placeId ?? -1);
+				if (!isOfflineOffering(offering.format)) return false;
+				if (filter === `danang`) return offering.profile.place?.slug === `danang`;
+				if (filter === `hoi-an`) return offering.profile.place?.slug === `hoi-an`;
+				return [`danang`, `hoi-an`].includes(offering.profile.place?.slug ?? ``);
 			})
 			.map((offering) => ({
-				id: offering.id,
-				title: offering.title,
+				...offering,
 				descriptionHtml: offering.descriptionHtml ?? ``,
-				format: offering.format,
 				imageUrls: offering.imageUrls ?? [],
-				listed: offering.listed,
 				profile: {
-					slug: offering.profile.slug,
-					displayName: offering.profile.displayName,
+					...offering.profile,
 					bio: offering.profile.bio ?? ``,
 					profileImageUrl: offering.profile.profileImageUrl ?? ``,
 					bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
-					socialLinks: offering.profile.socialLinks,
-					place: offering.profile.place
-						? {
-								name: offering.profile.place.name,
-								slug: offering.profile.place.slug,
-							}
-						: null,
 				},
 				canManage: currentUserId === offering.profile.id,
 			})),
 	};
+});
+
+export const getMyOfferings = query(async () => {
+	const userId = ensureUserId();
+	const profile = await db.query.profiles.findFirst({
+		where: eq(s.profiles.id, userId),
+		columns: {
+			slug: true,
+			displayName: true,
+			bio: true,
+			profileImageUrl: true,
+			bannerImageUrl: true,
+			socialLinks: true,
+		},
+		with: {
+			place: {
+				columns: {
+					name: true,
+					slug: true,
+				},
+			},
+			offerings: {
+				columns: {
+					id: true,
+					title: true,
+					descriptionHtml: true,
+					format: true,
+					imageUrls: true,
+					listed: true,
+				},
+				orderBy: (offerings, { desc }) => [desc(offerings.createdAt)],
+			},
+		},
+	});
+	if (!profile) return [];
+
+	return profile.offerings.map((offering) => ({
+		...offering,
+		descriptionHtml: offering.descriptionHtml ?? ``,
+		imageUrls: offering.imageUrls ?? [],
+		canManage: true,
+		profile: {
+			...profile,
+			bio: profile.bio ?? ``,
+			profileImageUrl: profile.profileImageUrl ?? ``,
+			bannerImageUrl: profile.bannerImageUrl ?? ``,
+		},
+	}));
 });
 
 export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, async ({ contentType }) => {
@@ -312,7 +342,7 @@ export const deleteOffering = command(offeringMutationSchema, async ({ offeringI
 
 	refreshOfferingLists();
 	setFlash(`offeringDeleted`);
-	
+
 	return { success: true };
 });
 
@@ -522,15 +552,6 @@ async function isProfileSlugAvailable(args: { slug: string; profileId: string })
 	return !existingSlugOwner;
 }
 
-function getPlaceIdsForFilter(args: { filter: OfferingPlaceFilter; places: Array<{ id: number; slug: string }> }) {
-	if (args.filter === `danang`) return args.places.filter((place) => place.slug === `danang`).map((place) => place.id);
-	if (args.filter === `hoi-an`) return args.places.filter((place) => place.slug === `hoi-an`).map((place) => place.id);
-	if (args.filter === `danang-hoi-an`) {
-		return args.places.filter((place) => [`danang`, `hoi-an`].includes(place.slug)).map((place) => place.id);
-	}
-	return [];
-}
-
 function defaultFilterForOffering(args: { format: OfferingFormat; placeId: number | null }) {
 	if (isOnlineOffering(args.format)) return `online`;
 	if (!args.placeId) return `online`;
@@ -616,6 +637,9 @@ function addUniqueImageUrl(args: { imageUrls: string[]; url: string }) {
 function refreshOfferingLists() {
 	for (const filter of OFFERING_PLACE_FILTERS) {
 		getOfferings({ filter }).refresh();
+	}
+	if (getRequestEvent().locals.userId) {
+		getMyOfferings().refresh();
 	}
 }
 

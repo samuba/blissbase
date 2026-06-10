@@ -1302,6 +1302,7 @@ msgstr "Ein einzelner Termin, Workshop oder Circle mit Datum und Uhrzeit."
 
 #: src/routes/new/+page.svelte
 #: src/routes/offerings/+page.svelte
+#: src/routes/profile/offerings/+page.svelte
 msgid "<0/> Angebot erstellen"
 msgstr "<0/> Angebot erstellen"
 
@@ -1336,6 +1337,7 @@ msgstr "Angebot erstellen | Blissbase"
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
+#: src/routes/profile/offerings/+page.svelte
 msgid "Angebot erstellen"
 msgstr "Angebot erstellen"
 
@@ -1644,3 +1646,73 @@ msgstr "<0/> Aktivieren"
 
 #~ msgid "Du kannst es in deinem Profil wieder aktivieren."
 #~ msgstr "Du kannst es in deinem Profil wieder aktivieren."
+
+#: src/routes/profile/+page.svelte
+#: src/routes/profile/offerings/+page.svelte
+msgid "Meine Angebote"
+msgstr "Meine Angebote"
+
+#: src/routes/profile/+page.svelte
+msgid "Verwalte deine Angebote und aktiviere oder deaktiviere sie."
+msgstr "Verwalte deine Angebote und aktiviere oder deaktiviere sie."
+
+#: src/routes/profile/+page.svelte
+msgid "Angebote verwalten"
+msgstr "Angebote verwalten"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Meine Angebote | Blissbase"
+msgstr "Meine Angebote | Blissbase"
+
+#~ msgid "Aktiv"
+#~ msgstr "Aktiv"
+
+#~ msgid "Deaktiviert"
+#~ msgstr "Deaktiviert"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Du hast keine aktiven Angebote."
+msgstr "Du hast keine aktiven Angebote."
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Du hast keine deaktivierten Angebote."
+msgstr "Du hast keine deaktivierten Angebote."
+
+#~ msgid "a"
+#~ msgstr "a"
+
+#~ msgid "adsasda sda s"
+#~ msgstr "adsasda sda s"
+
+#~ msgid "Verwalte deine Angebote. Sie werden"
+#~ msgstr "Verwalte deine Angebote. Sie werden"
+
+#~ msgid "Verwalte deine Angebote. Aktivierte Angebote"
+#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote"
+
+#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer"
+#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer"
+
+#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in d"
+#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in d"
+
+#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der Angebot Seite sichtbar."
+#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der Angebot Seite sichtbar."
+
+#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebot Seite</0> sichtbar."
+#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebot Seite</0> sichtbar."
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seite</0> sichtbar."
+msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seite</0> sichtbar."
+
+#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seitesichtbar.</0>"
+#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seitesichtbar.</0>"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "<0/> Aktiv"
+msgstr "<0/> Aktiv"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "<0/> Deaktiviert"
+msgstr "<0/> Deaktiviert"

@@ -85,6 +85,27 @@
 		</div>
 	</div>
 
+	<div class="card bg-base-100 mt-4 shadow">
+		<div class="card-body gap-4">
+			<div class="flex items-start gap-3">
+				<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
+					<i class="icon-[ph--hand-heart] size-7"></i>
+				</div>
+				<div class="min-w-0 flex-1 space-y-2">
+					<h3 class="text-lg font-semibold">Meine Angebote</h3>
+					<p class="text-base-content/80 text-sm leading-relaxed">
+						Verwalte deine Angebote und aktiviere oder deaktiviere sie.
+					</p>
+					<div class="card-actions pt-1">
+						<a href={routes.myOfferings()} class="btn btn-primary">
+							Angebote verwalten
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div class="card shadow bg-base-100 mt-4">
 		<!-- <i class="icon-[ph--check-circle] size-5"></i> -->
 		<div class="flex flex-col gap-3 card-body">

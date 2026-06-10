@@ -23,6 +23,7 @@ export const routes = {
     offeringDetails: (id: number) => resolve(`/offerings/[id]`, { id: id.toString() }),
     editOffering: (id: number) => resolve(`/offerings/[id]/edit`, { id: id.toString() }),
     profile: () => resolve(`/profile`),
+    myOfferings: () => resolve(`/profile/offerings`),
     publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }),
     editPublicProfile: () => resolve(`/profile/public`),
     editEvent: (id: number, hostSecret?: string) => {
