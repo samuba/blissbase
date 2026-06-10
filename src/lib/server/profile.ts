@@ -1,3 +1,4 @@
+import { getRequestEvent } from '$app/server';
 import { slugify, stripHtml, trimAllWhitespaces, type Modify } from '$lib/common';
 import type { OfferingFormat, OfferingPlaceFilter } from '$lib/rpc/offerings.common';
 import { type PublicProfileSocialLinks } from '$lib/rpc/profile.common';
@@ -76,13 +77,16 @@ export async function getOfferingsForPublicProfile(args: {
 		place: { name: string; slug: string } | null;
 	};
 }) {
+	const currentUserId = getRequestEvent().locals.userId;
 	const offerings = await db.query.offerings.findMany({
 		where: and(eq(s.offerings.profileId, args.profile.id), eq(s.offerings.listed, true)),
 		columns: {
 			id: true,
 			title: true,
 			descriptionHtml: true,
-			format: true
+			format: true,
+			imageUrls: true,
+			listed: true
 		},
 		orderBy: [desc(s.offerings.createdAt)]
 	});
@@ -92,7 +96,10 @@ export async function getOfferingsForPublicProfile(args: {
 		title: offering.title,
 		descriptionHtml: offering.descriptionHtml ?? ``,
 		format: offering.format,
+		imageUrls: offering.imageUrls ?? [],
+		listed: offering.listed,
 		offeringPlaceFilter: getOfferingPlaceFilter(offering.format),
+		canManage: currentUserId === args.profile.id,
 		profile: {
 			slug: args.profile.slug,
 			displayName: args.profile.displayName,

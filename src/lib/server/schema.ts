@@ -255,6 +255,7 @@ export const offerings = pgTable("offerings", {
 		title: text().notNull(),
 		descriptionHtml: text(),
 		format: offeringFormatEnum().notNull().default("offline"),
+		imageUrls: text().array().notNull().default([]),
 		listed: boolean().notNull().default(true),
 		createdAt: timestamp().notNull().defaultNow(),
 		updatedAt: timestamp().notNull().defaultNow(),

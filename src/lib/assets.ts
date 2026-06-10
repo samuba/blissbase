@@ -1,21 +1,21 @@
-import { S3Client } from '@bradenmacdonald/s3-lite-client';
+import { S3Client } from "@bradenmacdonald/s3-lite-client";
 
 export type S3Creds = ReturnType<typeof loadCreds>;
 
 // Instead of reading process.env directly
 export function loadCreds(env?: {
-    S3_ACCESS_KEY_ID: string;
-    S3_SECRET_ACCESS_KEY: string;
-    S3_BUCKET_NAME: string;
-    CLOUDFLARE_ACCOUNT_ID: string;
+	S3_ACCESS_KEY_ID: string;
+	S3_SECRET_ACCESS_KEY: string;
+	S3_BUCKET_NAME: string;
+	CLOUDFLARE_ACCOUNT_ID: string;
 }) {
-    return {
-        accessKey: env?.S3_ACCESS_KEY_ID ?? process.env.S3_ACCESS_KEY_ID!,
-        secretKey: env?.S3_SECRET_ACCESS_KEY ?? process.env.S3_SECRET_ACCESS_KEY!,
-        bucket: env?.S3_BUCKET_NAME ?? process.env.S3_BUCKET_NAME!,
-        endPoint: `https://${env?.CLOUDFLARE_ACCOUNT_ID ?? process.env.CLOUDFLARE_ACCOUNT_ID!}.r2.cloudflarestorage.com`,
-        region: "auto",
-    };
+	return {
+		accessKey: env?.S3_ACCESS_KEY_ID ?? process.env.S3_ACCESS_KEY_ID!,
+		secretKey: env?.S3_SECRET_ACCESS_KEY ?? process.env.S3_SECRET_ACCESS_KEY!,
+		bucket: env?.S3_BUCKET_NAME ?? process.env.S3_BUCKET_NAME!,
+		endPoint: `https://${env?.CLOUDFLARE_ACCOUNT_ID ?? process.env.CLOUDFLARE_ACCOUNT_ID!}.r2.cloudflarestorage.com`,
+		region: "auto",
+	};
 }
 
 export interface Image {
@@ -38,15 +38,52 @@ export function eventImageObjectKey(eventSlug: string, phash: string, contentTyp
  * publicProfileImageObjectKey(`user-123`, `profile`)
  * publicProfileImageObjectKey(`user-123`, `banner`, `image/webp`, `ab12cd34`)
  */
-export function publicProfileImageObjectKey(
-	profileId: string,
-	type: 'profile' | 'banner',
-	contentType = `image/webp`,
-	suffix?: string
-) {
+export function publicProfileImageObjectKey(profileId: string, type: "profile" | "banner", contentType = `image/webp`, suffix?: string) {
 	const ext = getImageObjectExtensionFromMimeType(contentType);
 	if (suffix?.trim()) return `profiles/${profileId}/${type}-${suffix}.${ext}`;
 	return `profiles/${profileId}/${type}.${ext}`;
+}
+
+/**
+ * Builds the temporary R2 key for a profile image upload.
+ *
+ * @example
+ * profileTempImageObjectKey({ type: `profile`, suffix: `crop` });
+ */
+export function profileTempImageObjectKey(args: {
+	type: "profile" | "banner";
+	suffix: string;
+	contentType?: string;
+}) {
+	assertSafeObjectKeyPart(args.suffix, `Profile image suffix`);
+	const ext = getImageObjectExtensionFromMimeType(args.contentType ?? `image/webp`);
+	return `profiles/temp/${args.type}-${args.suffix}.${ext}`;
+}
+
+/**
+ * Builds the temporary R2 key for an offering image upload.
+ *
+ * @example
+ * offeringTempImageObjectKey({ suffix: `cover`, contentType: `image/webp` });
+ */
+export function offeringTempImageObjectKey(args: { suffix: string; contentType?: string }) {
+	assertSafeObjectKeyPart(args.suffix, `Offering image suffix`);
+	const ext = getImageObjectExtensionFromMimeType(args.contentType ?? `image/webp`);
+	return `offerings/temp/${args.suffix}.${ext}`;
+}
+
+/**
+ * Builds the final R2 key for an offering image owned by a saved offering.
+ *
+ * @example
+ * offeringImageObjectKey({ userId: `user-123`, offeringId: 42, suffix: `cover`, contentType: `image/webp` });
+ */
+export function offeringImageObjectKey(args: { userId: string; offeringId: number; suffix: string; contentType?: string }) {
+	if (!args.userId?.trim()) throw new Error(`User id cannot be empty`);
+	if (!Number.isInteger(args.offeringId) || args.offeringId <= 0) throw new Error(`Offering id is invalid`);
+	assertSafeObjectKeyPart(args.suffix, `Offering image suffix`);
+	const ext = getImageObjectExtensionFromMimeType(args.contentType ?? `image/webp`);
+	return `offerings/${args.userId}/${args.offeringId}/${args.suffix}.${ext}`;
 }
 
 const PUBLIC_URL_ORIGIN = `https://assets.blissbase.app`;
@@ -66,8 +103,14 @@ export function publicUrl(objectKey: string) {
  */
 export function objectKeyFromPublicUrl(url: string | null | undefined) {
 	if (!url) return null;
-	if (!url.startsWith(`${PUBLIC_URL_ORIGIN}/`)) return null;
-	return url.slice(PUBLIC_URL_ORIGIN.length + 1) || null;
+	try {
+		const parsed = new URL(url);
+		if (parsed.origin !== PUBLIC_URL_ORIGIN) return null;
+		return parsed.pathname.slice(1) || null;
+	} catch {
+		if (!url.startsWith(`${PUBLIC_URL_ORIGIN}/`)) return null;
+		return url.slice(PUBLIC_URL_ORIGIN.length + 1).split(`#`)[0] || null;
+	}
 }
 
 /**
@@ -93,15 +136,11 @@ export async function listObjectKeysByPrefix(args: { prefix: string; creds: S3Cr
  * @example
  * const url = await getPresignedPutUrl({ objectKey: `profiles/u1/profile-ab12.webp`, creds });
  */
-export async function getPresignedPutUrl(args: {
-	objectKey: string;
-	creds: S3Creds;
-	expirySeconds?: number;
-}) {
+export async function getPresignedPutUrl(args: { objectKey: string; creds: S3Creds; expirySeconds?: number }) {
 	if (!args.objectKey?.trim()) throw new Error(`Object key cannot be empty`);
 	const s3 = new S3Client(args.creds);
 	return await s3.getPresignedUrl(`PUT`, args.objectKey, {
-		expirySeconds: args.expirySeconds ?? 300
+		expirySeconds: args.expirySeconds ?? 300,
 	});
 }
 
@@ -117,7 +156,7 @@ export async function uploadImageAtObjectKey(buffer: Buffer, objectKey: string, 
 
 	try {
 		const s3 = new S3Client(creds);
-		await s3.putObject(objectKey, buffer, { metadata: { 'Content-Type': contentType } });
+		await s3.putObject(objectKey, buffer, { metadata: { "Content-Type": contentType } });
 		console.log(`Uploaded to R2 ${objectKey}`);
 
 		return publicUrl(objectKey);
@@ -125,6 +164,50 @@ export async function uploadImageAtObjectKey(buffer: Buffer, objectKey: string, 
 		console.error(`Error uploading image ${objectKey}:`, error);
 		throw error;
 	}
+}
+
+/**
+ * Moves a temporary offering upload into the final offering namespace.
+ *
+ * @example
+ * await finalizeOfferingImage({ tempObjectKey, finalObjectKey, creds });
+ */
+export async function finalizeOfferingImage(args: { tempObjectKey: string; finalObjectKey: string; creds: S3Creds }) {
+	if (!isTempOfferingImageObjectKey(args.tempObjectKey)) {
+		throw new Error(`Temporary offering image key is invalid`);
+	}
+	if (!args.finalObjectKey?.startsWith(`offerings/`) || args.finalObjectKey.includes(`/temp/`)) {
+		throw new Error(`Final offering image key is invalid`);
+	}
+
+	return await moveTemporaryImage({
+		tempObjectKey: args.tempObjectKey,
+		finalObjectKey: args.finalObjectKey,
+		creds: args.creds,
+		label: `offering`,
+	});
+}
+
+/**
+ * Moves a temporary profile upload into the final profile namespace.
+ *
+ * @example
+ * await finalizeProfileImage({ tempObjectKey, finalObjectKey, creds });
+ */
+export async function finalizeProfileImage(args: { tempObjectKey: string; finalObjectKey: string; creds: S3Creds }) {
+	if (!isTempProfileImageObjectKey(args.tempObjectKey)) {
+		throw new Error(`Temporary profile image key is invalid`);
+	}
+	if (!args.finalObjectKey?.startsWith(`profiles/`) || args.finalObjectKey.includes(`/temp/`)) {
+		throw new Error(`Final profile image key is invalid`);
+	}
+
+	return await moveTemporaryImage({
+		tempObjectKey: args.tempObjectKey,
+		finalObjectKey: args.finalObjectKey,
+		creds: args.creds,
+		label: `profile`,
+	});
 }
 
 /**
@@ -155,7 +238,7 @@ export async function uploadProfileImage(args: UploadProfileImageArgs) {
 		args.buffer,
 		publicProfileImageObjectKey(args.profileId, `profile`, args.contentType),
 		args.creds,
-		args.contentType
+		args.contentType,
 	);
 }
 
@@ -169,7 +252,7 @@ export async function uploadProfileBannerImage(args: UploadProfileImageArgs) {
 		args.buffer,
 		publicProfileImageObjectKey(args.profileId, `banner`, args.contentType),
 		args.creds,
-		args.contentType
+		args.contentType,
 	);
 }
 
@@ -240,6 +323,31 @@ export function exists(objectKey: string, creds: S3Creds) {
 	return new S3Client(creds).exists(objectKey);
 }
 
+export function isTempOfferingImageObjectKey(objectKey: string) {
+	return /^offerings\/temp\/[a-zA-Z0-9_-]+\.(webp|jpg)$/.test(objectKey);
+}
+
+export function isTempProfileImageObjectKey(objectKey: string) {
+	return /^profiles\/temp\/(profile|banner)-[a-zA-Z0-9_-]+\.(webp|jpg)$/.test(objectKey);
+}
+
+async function moveTemporaryImage(args: {
+	tempObjectKey: string;
+	finalObjectKey: string;
+	creds: S3Creds;
+	label: string;
+}) {
+	try {
+		const s3 = new S3Client(args.creds);
+		await s3.copyObject({ sourceKey: args.tempObjectKey }, args.finalObjectKey);
+		await s3.deleteObject(args.tempObjectKey);
+		return publicUrl(args.finalObjectKey);
+	} catch (error) {
+		console.error(`Error moving temporary ${args.label} image:`, error);
+		throw error;
+	}
+}
+
 /**
  * Maps an uploaded image MIME type to the stored object extension.
  * @example
@@ -249,6 +357,12 @@ function getImageObjectExtensionFromMimeType(contentType: string) {
 	if (contentType === `image/jpeg`) return `jpg`;
 	if (contentType === `image/webp`) return `webp`;
 	throw new Error(`Unsupported image content type: ${contentType || `unknown`}`);
+}
+
+function assertSafeObjectKeyPart(value: string, label: string) {
+	if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+		throw new Error(`${label} contains invalid characters`);
+	}
 }
 
 type UploadProfileImageArgs = {

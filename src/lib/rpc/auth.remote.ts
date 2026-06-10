@@ -1,6 +1,8 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { resolveSupportedLocale } from '$lib/common';
+import { refreshAuthLocalsFromSupabase } from '$lib/server/authLocals';
 import { db, s } from '$lib/server/db';
+import { signOfferingSubmitAuthToken } from '$lib/server/offeringSubmitAuth';
 import * as v from 'valibot';
 
 export const getUserSession = query(async () => {
@@ -39,6 +41,9 @@ export const verifyEmailOtp = command(verifyEmailOtpInputSchema, async ({ email,
 		return { ok: false as const, message: `Anmeldung fehlgeschlagen: Benutzer nicht gefunden.` };
 	}
 
+	// Hooks only populate locals at request start, so keep this login request in sync.
+	await refreshAuthLocalsFromSupabase();
+
 	const locale = resolveSupportedLocale(data.user.user_metadata?.locale);
 	await db.insert(s.profiles).values({ id: data.user.id, locale }).onConflictDoUpdate({
 		target: s.profiles.id,
@@ -46,7 +51,10 @@ export const verifyEmailOtp = command(verifyEmailOtpInputSchema, async ({ email,
 			locale
 		}
 	});
-	return { ok: true as const };
+	return {
+		ok: true as const,
+		offeringSubmitAuthToken: signOfferingSubmitAuthToken({ userId: data.user.id })
+	};
 });
 
 function mapVerifyOtpError(err: { message?: string; code?: string }) {

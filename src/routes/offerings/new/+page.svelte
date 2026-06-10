@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { invalidateAll } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import EditorJs from "$lib/components/EditorJs.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
+	import OfferingForm from "$lib/components/OfferingForm.svelte";
 	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
 	import PublicProfileSocialLinksEditor from "$lib/components/PublicProfileSocialLinksEditor.svelte";
-	import Select from "$lib/components/Select.svelte";
 	import { verifyEmailOtp } from "$lib/rpc/auth.remote";
-	import { OFFERING_FORMATS, offeringFormSchema, type OfferingFormat } from "$lib/rpc/offerings.common";
+	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { createOffering } from "$lib/rpc/offerings.remote";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import { getMyPublicProfile } from "$lib/rpc/profile.remote";
@@ -17,11 +18,12 @@
 	import { localeStore } from "../../../locales/localeStore.svelte";
 	import OtpVerificationDialog from "./OtpVerificationDialog.svelte";
 
-	const profile = await getMyPublicProfile().catch(() => null);
-	const places = await getPlaces();
+	type ResolvablePath = `/${string}` & {};
+
 	const isSignedIn = Boolean(page.data.userId);
+	const profile = isSignedIn ? await getMyPublicProfile() : null;
+	const places = await getPlaces();
 	const missingDisplayName = !profile?.displayName?.trim();
-	const missingSlug = !profile?.slug?.trim();
 	const missingProfileImageUrl = !profile?.profileImageUrl?.trim();
 	const missingBannerImageUrl = !profile?.bannerImageUrl?.trim();
 	const missingBio = !profile?.bio?.trim();
@@ -29,16 +31,14 @@
 	const missingSocialLinks = !profile?.socialLinks?.some((link) => link.value?.trim());
 	const showProfileSection =
 		missingDisplayName ||
-		missingSlug ||
 		missingProfileImageUrl ||
 		missingBannerImageUrl ||
 		missingBio ||
 		missingPlaceId ||
 		missingSocialLinks;
-	const preflight = $derived(createOffering.preflight(offeringFormSchema));
 
-	let formEl = $state<HTMLFormElement | undefined>();
 	let format = $state<OfferingFormat>(`offline`);
+	let offeringImagesBusy = $state(false);
 	let profileImageBusy = $state(false);
 	let bannerImageBusy = $state(false);
 	let email = $state(``);
@@ -48,28 +48,12 @@
 	let authBusy = $state(false);
 	let authError = $state(``);
 	let authVerified = $state(isSignedIn);
+	let offeringSubmitAuthToken = $state(``);
 	let submitError = $state(``);
 	let socialLinks = $state([...(profile?.socialLinks ?? [])] as PublicProfileSocialLinks);
-	const anyImageUploadInFlight = $derived(profileImageBusy || bannerImageBusy);
+	const anyImageUploadInFlight = $derived(offeringImagesBusy || profileImageBusy || bannerImageBusy);
 	const selectedPlaceId = $derived(createOffering.fields.profile.placeId.value() ?? profile?.placeId?.toString() ?? ``);
 	const showPlaceWarning = $derived(!selectedPlaceId && format !== `online`);
-
-	function formatLabel(value: OfferingFormat) {
-		if (value === `online`) return `Online`;
-		if (value === `offline`) return `Vor Ort`;
-		if (value === `offline+online`) return `Vor Ort & Online`;
-	}
-
-	function formatDescription(value: OfferingFormat) {
-		if (value === `online`) return `Video-Call oder anderes Online-Format.`;
-		if (value === `offline`) return `Persönlich an deinem Profil-Ort.`;
-		return `Du bietest beides an.`;
-	}
-
-	const formatOptions = OFFERING_FORMATS.map((option) => ({
-		value: option,
-		html: `<span>${formatLabel(option)}</span><span class="text-base-content/60 text-xs font-normal">${formatDescription(option)}</span>`,
-	}));
 
 	async function sendOtpAndOpenDialog() {
 		const trimmed = email.trim();
@@ -121,10 +105,17 @@
 				authError = result.message;
 				return;
 			}
+			offeringSubmitAuthToken = result.offeringSubmitAuthToken;
+			createOffering.fields.authToken.set(offeringSubmitAuthToken);
+			await invalidateAll();
+			if (!page.data.userId && !offeringSubmitAuthToken) {
+				authError = `Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut.`;
+				return;
+			}
+
 			authVerified = true;
 			otpDialogOpen = false;
-			await invalidateAll();
-			queueMicrotask(() => formEl?.requestSubmit());
+			queueMicrotask(() => (document.getElementById(`offering-form`) as HTMLFormElement | null)?.requestSubmit());
 		} catch (err: unknown) {
 			authError = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
 			console.error(`Auth error:`, err);
@@ -142,7 +133,12 @@
 
 	function onSubmit(event: SubmitEvent) {
 		submitError = ``;
-		if (authVerified) return;
+		if (anyImageUploadInFlight) {
+			event.preventDefault();
+			submitError = `Bitte warte, bis alle Bilder hochgeladen sind.`;
+			return;
+		}
+		if (authVerified && (page.data.userId || offeringSubmitAuthToken)) return;
 		event.preventDefault();
 		void sendOtpAndOpenDialog();
 	}
@@ -162,42 +158,14 @@
 						Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden.
 					</p>
 				</div>
-				<a href={routes.offeringsList()} class="btn btn-ghost btn-sm">
+				<a href={resolve(routes.offeringsList() as ResolvablePath)} class="btn btn-ghost btn-sm">
 					<i class="icon-[ph--arrow-left] size-4"></i>
 					Zurück
 				</a>
 			</div>
 
-			<form bind:this={formEl} {...preflight} class="flex flex-col gap-6" id="offering-form" onsubmit={onSubmit}>
-				<section class="grid gap-4">
-					<fieldset class="fieldset">
-						<input
-							class="input peer w-full"
-							{...createOffering.fields.title.as(`text`)}
-							required
-							placeholder="z.B. Atemarbeit 1:1 Session"
-						/>
-						<legend class="fieldset-legend peer-aria-invalid:text-red-600">Titel *</legend>
-						<FormFieldIssues field={createOffering.fields.title} />
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<EditorJs field={createOffering.fields.descriptionHtml} value="" />
-						<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
-						<FormFieldIssues field={createOffering.fields.descriptionHtml} />
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend peer-aria-invalid:text-red-600">Format *</legend>
-						<Select
-							bind:value={() => format, (value) => (format = value as OfferingFormat)}
-							options={formatOptions}
-							remoteFunctionField={createOffering.fields.format}
-							triggerProps={{ class: `peer w-full justify-between text-left` }}
-						/>
-						<FormFieldIssues field={createOffering.fields.format} />
-					</fieldset>
-				</section>
+			<OfferingForm remoteForm={createOffering} bind:format onImageBusyChange={(busy) => (offeringImagesBusy = busy)} onsubmit={onSubmit}>
+				<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={offeringSubmitAuthToken} />
 
 				{#if showProfileSection}
 					<section class="">
@@ -212,25 +180,6 @@
 								/>
 								<legend class="fieldset-legend peer-aria-invalid:text-red-600">Dein Name *</legend>
 								<FormFieldIssues field={createOffering.fields.profile.displayName} />
-							</fieldset>
-
-							<fieldset class={[`fieldset`, !missingSlug && `hidden`]}>
-								<label class="input w-full pl-0">
-									<div
-										class="bg-base-200 border-base-300 flex h-full items-center justify-center rounded-l-full border-r-2 py-0 pr-1 pl-3 text-sm"
-									>
-										blissbase.app/@/
-									</div>
-									<input
-										class="input peer w-full grow pl-0 text-sm"
-										{...createOffering.fields.profile.slug.as(`text`)}
-										value={profile?.slug ?? ``}
-										spellcheck="false"
-										placeholder="optional"
-									/>
-								</label>
-								<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profil-URL *</legend>
-								<FormFieldIssues field={createOffering.fields.profile.slug} />
 							</fieldset>
 						</div>
 
@@ -303,9 +252,9 @@
 						<FormFieldIssues field={createOffering.fields.email} />
 					</fieldset>
 				{:else}
-					<div class="alert ">
+					<div class="alert">
 						Wanna edit your profile?
-						<a href={routes.publicProfile(profile?.slug!)} class="btn">
+						<a href={resolve(routes.editPublicProfile() as ResolvablePath)} class="btn">
 							<i class="icon-[ph--arrow-right] size-4"></i>
 							Edit profile
 						</a>
@@ -319,33 +268,29 @@
 					</div>
 				{/if}
 
-				{#if createOffering.fields.allIssues()?.length}
-					<div class="alert alert-error alert-soft">
-						<ul class="list-disc pl-5">
-							{#each createOffering.fields.allIssues() as issue, i (`${issue.message}-${i}`)}
-								<li>{issue.message}</li>
-							{/each}
-						</ul>
-					</div>
-				{/if}
+			</OfferingForm>
 
-				<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-					<a href={routes.offeringsList()} class="btn btn-ghost">Abbrechen</a>
-					<button type="submit" class="btn btn-primary" disabled={createOffering.pending > 0 || authBusy || anyImageUploadInFlight}>
-						{#if anyImageUploadInFlight}
-							<span class="loading loading-spinner loading-sm"></span>
-							Bild wird hochgeladen…
-						{:else if createOffering.pending > 0}
-							<span class="loading loading-spinner loading-sm"></span>
-							Wird gespeichert…
-						{:else if !isSignedIn && !authVerified}
-							Code senden
-						{:else}
-							Angebot speichern
-						{/if}
-					</button>
-				</div>
-			</form>
+			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+				<a href={resolve(routes.offeringsList() as ResolvablePath)} class="btn btn-ghost">Abbrechen</a>
+				<button
+					type="submit"
+					form="offering-form"
+					class="btn btn-primary"
+					disabled={createOffering.pending > 0 || authBusy || anyImageUploadInFlight}
+				>
+					{#if anyImageUploadInFlight}
+						<span class="loading loading-spinner loading-sm"></span>
+						Bilder werden hochgeladen…
+					{:else if createOffering.pending > 0}
+						<span class="loading loading-spinner loading-sm"></span>
+						Wird gespeichert…
+					{:else if !isSignedIn && !authVerified}
+						Code senden
+					{:else}
+						Angebot speichern
+					{/if}
+				</button>
+			</div>
 		</div>
 	</div>
 </div>

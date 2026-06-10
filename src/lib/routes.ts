@@ -13,14 +13,16 @@ export const routes = {
     about: () => resolve(`/about`),
     faq: () => resolve(`/faq`),
     newEvent: () => resolve(`/new`),
-    offeringsList: (filter?: OfferingPlaceFilter, selectedOfferingId?: number) => {
+    offeringsList: (filter?: OfferingPlaceFilter, selectedOfferingId?: number, offeringCreated?: boolean) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
         if (filter) url.searchParams.set('place', filter);
         if (selectedOfferingId) url.searchParams.set('offering', selectedOfferingId.toString());
+        if (offeringCreated) url.searchParams.set('created', 'true');
         return relativeUrl(url);
     },
     newOffering: () => resolve(`/offerings/new`),
     offeringDetails: (id: number) => resolve(`/offerings/[id]`, { id: id.toString() }),
+    editOffering: (id: number) => resolve(`/offerings/[id]/edit`, { id: id.toString() }),
     profile: () => resolve(`/profile`),
     publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }),
     editPublicProfile: () => resolve(`/profile/public`),

@@ -1,26 +1,44 @@
-import { form, query } from '$app/server';
-import * as assets from '$lib/assets';
+import { command, form, getRequestEvent, query } from "$app/server";
+import * as assets from "$lib/assets";
+import { randomString } from "$lib/common";
 import {
+	OFFERING_IMAGE_MAX_COUNT,
 	OFFERING_PLACE_FILTERS,
 	offeringFormSchema,
+	updateOfferingFormSchema,
 	type OfferingFormat,
-	type OfferingPlaceFilter
-} from '$lib/rpc/offerings.common';
-import { getMyPublicProfile } from '$lib/rpc/profile.remote';
-import { routes } from '$lib/routes';
-import { eventAssetsCreds } from '$lib/events.remote.shared';
-import { ensureUserId } from '$lib/server/common';
-import { and, db, eq, ne, s, sql } from '$lib/server/db';
-import { createPublicProfileSlug, isPublicProfile } from '$lib/server/profile';
-import type { Profile } from '$lib/server/schema';
-import { error, invalid, redirect } from '@sveltejs/kit';
-import * as v from 'valibot';
+	type OfferingPlaceFilter,
+} from "$lib/rpc/offerings.common";
+import { getMyPublicProfile } from "$lib/rpc/profile.remote";
+import { routes } from "$lib/routes";
+import { eventAssetsCreds } from "$lib/events.remote.shared";
+import { E2E_TEST } from "$env/static/private";
+import { ensureUserId } from "$lib/server/common";
+import { and, db, eq, ne, s, sql } from "$lib/server/db";
+import { verifyOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
+import { createPublicProfileSlug, isPublicProfile } from "$lib/server/profile";
+import { resolveProfileImageUrl } from "$lib/server/profileImages";
+import type { Profile } from "$lib/server/schema";
+import { error, invalid, redirect } from "@sveltejs/kit";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import * as v from "valibot";
 
 const placeFilterSchema = v.object({
-	filter: v.optional(v.picklist(OFFERING_PLACE_FILTERS), `online`)
+	filter: v.optional(v.picklist(OFFERING_PLACE_FILTERS), `online`),
 });
 
+const offeringImageUploadSchema = v.object({
+	contentType: v.picklist([`image/webp`, `image/jpeg`]),
+});
+
+const offeringMutationSchema = v.object({
+	offeringId: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
+
+const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
+
 export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
+	const currentUserId = getRequestEvent().locals.userId;
 	const [offerings, places] = await Promise.all([
 		db.query.offerings.findMany({
 			where: eq(s.offerings.listed, true),
@@ -28,7 +46,9 @@ export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
 				id: true,
 				title: true,
 				descriptionHtml: true,
-				format: true
+				format: true,
+				imageUrls: true,
+				listed: true,
 			},
 			with: {
 				profile: {
@@ -40,24 +60,24 @@ export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
 						profileImageUrl: true,
 						bannerImageUrl: true,
 						socialLinks: true,
-						placeId: true
+						placeId: true,
 					},
 					with: {
 						place: {
 							columns: {
 								id: true,
 								name: true,
-								slug: true
-							}
-						}
-					}
-				}
+								slug: true,
+							},
+						},
+					},
+				},
 			},
-			orderBy: (offerings, { desc }) => [desc(offerings.createdAt)]
+			orderBy: (offerings, { desc }) => [desc(offerings.createdAt)],
 		}),
 		db.query.places.findMany({
-			columns: { id: true, name: true, slug: true }
-		})
+			columns: { id: true, name: true, slug: true },
+		}),
 	]);
 
 	const filterPlaceIds = getPlaceIdsForFilter({ filter, places });
@@ -69,16 +89,15 @@ export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
 				if (!offering.profile || !isPublicProfile(offering.profile)) return false;
 				if (!hasSocialLink(offering.profile)) return false;
 				if (filter === `online`) return isOnlineOffering(offering.format);
-				return (
-					isOfflineOffering(offering.format) &&
-					filterPlaceIds.includes(offering.profile.placeId ?? -1)
-				);
+				return isOfflineOffering(offering.format) && filterPlaceIds.includes(offering.profile.placeId ?? -1);
 			})
 			.map((offering) => ({
 				id: offering.id,
 				title: offering.title,
 				descriptionHtml: offering.descriptionHtml ?? ``,
 				format: offering.format,
+				imageUrls: offering.imageUrls ?? [],
+				listed: offering.listed,
 				profile: {
 					slug: offering.profile.slug,
 					displayName: offering.profile.displayName,
@@ -89,28 +108,51 @@ export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
 					place: offering.profile.place
 						? {
 								name: offering.profile.place.name,
-								slug: offering.profile.place.slug
+								slug: offering.profile.place.slug,
 							}
-						: null
-				}
-			}))
+						: null,
+				},
+				canManage: currentUserId === offering.profile.id,
+			})),
+	};
+});
+
+export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, async ({ contentType }) => {
+	const objectKey = assets.offeringTempImageObjectKey({
+		suffix: `${Date.now().toString(36)}-${randomString(8).toLowerCase()}`,
+		contentType,
+	});
+	const uploadUrl = await assets.getPresignedPutUrl({ objectKey, creds: eventAssetsCreds });
+
+	return {
+		uploadUrl,
+		publicUrl: assets.publicUrl(objectKey),
+		objectKey,
+		claimToken: signOfferingImageClaim({ objectKey, contentType }),
 	};
 });
 
 export const createOffering = form(offeringFormSchema, async (data, issue) => {
-	const userId = ensureUserId();
+	const userId = getOfferingSubmitUserId(data.authToken);
+	if (!userId) return invalid(issue.email(`Bitte bestätige deine E-Mail erneut.`));
+
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
 	if (!currentProfile) throw error(404, `Profile not found`);
 
 	const nextProfile = data.profile
 		? await updateProfileFromOfferingForm({ currentProfile, data: data.profile, issue })
-		: currentProfile;
+		: await ensureOfferingProfileSlug(currentProfile);
 
 	if (!hasSocialLink(nextProfile)) {
 		return invalid(issue.profile.socialLinks(`Bitte füge mindestens einen Social-Link hinzu.`));
 	}
 	if (!isPublicProfile(nextProfile)) {
 		return invalid(issue.profile.displayName(`Bitte vervollständige dein öffentliches Profil.`));
+	}
+
+	const imageClaims = verifyOfferingImageClaims(data.imageClaims);
+	if (imageClaims instanceof Error) {
+		return invalid(issue.imageClaims(imageClaims.message));
 	}
 
 	const [offering] = await db
@@ -120,9 +162,26 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 			title: data.title,
 			descriptionHtml: data.descriptionHtml || null,
 			format: data.format,
-			listed: true
+			imageUrls: [],
+			listed: true,
 		})
 		.returning({ id: s.offerings.id });
+	if (!offering) throw error(500, `Failed to create offering`);
+
+	const imageUrls = await finalizeOfferingImageClaims({
+		claims: imageClaims,
+		userId,
+		offeringId: offering.id,
+	});
+	if (imageUrls.length) {
+		await db
+			.update(s.offerings)
+			.set({
+				imageUrls,
+				updatedAt: sql`now()`,
+			})
+			.where(eq(s.offerings.id, offering.id));
+	}
 
 	getMyPublicProfile().refresh();
 	refreshOfferingLists();
@@ -132,12 +191,227 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 		routes.offeringsList(
 			defaultFilterForOffering({
 				format: data.format,
-				placeId: nextProfile.placeId
+				placeId: nextProfile.placeId,
 			}),
-			offering?.id
-		)
+			offering?.id,
+			true,
+		),
 	);
 });
+
+export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {
+	const userId = ensureUserId();
+	const offering = await db.query.offerings.findFirst({
+		where: and(eq(s.offerings.id, data.offeringId), eq(s.offerings.profileId, userId)),
+		with: {
+			profile: {
+				columns: {
+					placeId: true,
+				},
+			},
+		},
+	});
+	if (!offering) throw error(404, `Offering not found`);
+
+	const imageClaims = verifyOfferingImageClaims(data.imageClaims);
+	if (imageClaims instanceof Error) {
+		return invalid(issue.imageClaims(imageClaims.message));
+	}
+
+	const uploadedImageUrls = await finalizeOfferingImageClaims({
+		claims: imageClaims,
+		userId,
+		offeringId: offering.id,
+	});
+	const submittedClaimTokens = getUniqueOfferingImageClaimTokens(data.imageClaims);
+	const nextImageUrls = getNextOfferingImageUrls({
+		currentImageUrls: offering.imageUrls ?? [],
+		submittedImageUrls: data.existingImageUrls,
+		submittedClaimTokens,
+		uploadedImageUrls,
+		imageOrder: data.imageOrder,
+	});
+	const deletedImageUrls = (offering.imageUrls ?? []).filter((url) => !nextImageUrls.includes(url));
+
+	await db
+		.update(s.offerings)
+		.set({
+			title: data.title,
+			descriptionHtml: data.descriptionHtml || null,
+			format: data.format,
+			imageUrls: nextImageUrls,
+			updatedAt: sql`now()`,
+		})
+		.where(and(eq(s.offerings.id, offering.id), eq(s.offerings.profileId, userId)));
+
+	if (deletedImageUrls?.length && E2E_TEST !== `true`) {
+		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
+	}
+
+	refreshOfferingLists();
+	redirect(
+		303,
+		routes.offeringsList(
+			defaultFilterForOffering({
+				format: data.format,
+				placeId: offering.profile?.placeId ?? null,
+			}),
+			offering.id,
+		),
+	);
+});
+
+export const unlistOffering = command(offeringMutationSchema, async ({ offeringId }) => {
+	const userId = ensureUserId();
+	const [offering] = await db
+		.update(s.offerings)
+		.set({
+			listed: false,
+			updatedAt: sql`now()`,
+		})
+		.where(and(eq(s.offerings.id, offeringId), eq(s.offerings.profileId, userId)))
+		.returning({ id: s.offerings.id });
+
+	if (!offering) throw error(404, `Offering not found`);
+	refreshOfferingLists();
+
+	return { success: true };
+});
+
+export const listOffering = command(offeringMutationSchema, async ({ offeringId }) => {
+	const userId = ensureUserId();
+	const [offering] = await db
+		.update(s.offerings)
+		.set({
+			listed: true,
+			updatedAt: sql`now()`,
+		})
+		.where(and(eq(s.offerings.id, offeringId), eq(s.offerings.profileId, userId)))
+		.returning({ id: s.offerings.id });
+
+	if (!offering) throw error(404, `Offering not found`);
+	refreshOfferingLists();
+
+	return { success: true };
+});
+
+export const deleteOffering = command(offeringMutationSchema, async ({ offeringId }) => {
+	const userId = ensureUserId();
+	const [offering] = await db
+		.delete(s.offerings)
+		.where(and(eq(s.offerings.id, offeringId), eq(s.offerings.profileId, userId)))
+		.returning({ id: s.offerings.id, imageUrls: s.offerings.imageUrls });
+
+	if (!offering) throw error(404, `Offering not found`);
+	if (offering.imageUrls?.length && E2E_TEST !== `true`) {
+		await assets.deleteObjects(offering.imageUrls, eventAssetsCreds);
+	}
+
+	refreshOfferingLists();
+
+	return { success: true };
+});
+
+/**
+ * Verifies and moves temporary offering image uploads into the final offering prefix.
+ *
+ * @example
+ * await finalizeOfferingImageClaims({ claims: [], userId: `u1`, offeringId: 1 });
+ */
+async function finalizeOfferingImageClaims(args: FinalizeOfferingImageClaimsArgs) {
+	if (!args.claims?.length) return [];
+	const imageUrls: string[] = [];
+	for (const claim of args.claims) {
+		const suffix = getOfferingImageSuffixFromObjectKey(claim.objectKey);
+		if (!suffix) throw error(400, `Bild-Upload ist ungültig`);
+
+		const finalObjectKey = assets.offeringImageObjectKey({
+			userId: args.userId,
+			offeringId: args.offeringId,
+			suffix,
+			contentType: claim.contentType,
+		});
+		const imageUrl = await assets.finalizeOfferingImage({
+			tempObjectKey: claim.objectKey,
+			finalObjectKey,
+			creds: eventAssetsCreds,
+		});
+		imageUrls.push(imageUrl);
+	}
+
+	return imageUrls;
+}
+
+function verifyOfferingImageClaims(claimTokens: string[]) {
+	if (!claimTokens?.length) return [];
+	const uniqueClaimTokens = getUniqueOfferingImageClaimTokens(claimTokens);
+	const verifiedClaims: OfferingImageClaim[] = [];
+
+	for (const claimToken of uniqueClaimTokens) {
+		const claim = verifyOfferingImageClaim(claimToken);
+		if (claim instanceof Error) return claim;
+		verifiedClaims.push(claim);
+	}
+
+	return verifiedClaims;
+}
+
+function getUniqueOfferingImageClaimTokens(claimTokens: string[]) {
+	return [...new Set(claimTokens ?? [])].slice(0, OFFERING_IMAGE_MAX_COUNT);
+}
+
+/**
+ * Creates a tamper-evident claim for one temporary offering image upload.
+ *
+ * @example
+ * signOfferingImageClaim({ objectKey: `offerings/temp/b.webp`, contentType: `image/webp` });
+ */
+function signOfferingImageClaim(args: { objectKey: string; contentType: OfferingImageContentType }) {
+	const payload = encodeClaimPayload({
+		objectKey: args.objectKey,
+		contentType: args.contentType,
+		expiresAt: Date.now() + OFFERING_IMAGE_CLAIM_TTL_MS,
+	});
+	const signature = signClaimPayload(payload);
+	return `${payload}.${signature}`;
+}
+
+function verifyOfferingImageClaim(token: string): OfferingImageClaim | Error {
+	const [payload, signature, ...rest] = token.split(`.`);
+	if (!payload || !signature || rest.length) return new Error(`Bild-Upload ist ungültig`);
+	if (!isValidClaimSignature({ payload, signature })) return new Error(`Bild-Upload ist ungültig`);
+
+	try {
+		const claim = JSON.parse(Buffer.from(payload, `base64url`).toString(`utf8`)) as OfferingImageClaim;
+		if (claim.expiresAt < Date.now()) return new Error(`Bild-Upload ist abgelaufen`);
+		if (![`image/webp`, `image/jpeg`].includes(claim.contentType)) return new Error(`Bild-Upload ist ungültig`);
+		if (!assets.isTempOfferingImageObjectKey(claim.objectKey)) return new Error(`Bild-Upload ist ungültig`);
+		return claim;
+	} catch {
+		return new Error(`Bild-Upload ist ungültig`);
+	}
+}
+
+function encodeClaimPayload(claim: OfferingImageClaim) {
+	return Buffer.from(JSON.stringify(claim)).toString(`base64url`);
+}
+
+function signClaimPayload(payload: string) {
+	return createHmac(`sha256`, eventAssetsCreds.secretKey).update(payload).digest(`base64url`);
+}
+
+function isValidClaimSignature(args: { payload: string; signature: string }) {
+	const expectedSignature = signClaimPayload(args.payload);
+	const expected = Buffer.from(expectedSignature, `base64url`);
+	const submitted = Buffer.from(args.signature, `base64url`);
+	if (expected.length !== submitted.length) return false;
+	return timingSafeEqual(expected, submitted);
+}
+
+function getOfferingImageSuffixFromObjectKey(objectKey: string) {
+	const fileName = objectKey.split(`/`).at(-1);
+	return fileName?.replace(/\.(webp|jpg)$/, ``);
+}
 
 /**
  * Updates only the profile fields collected during offering onboarding.
@@ -146,33 +420,29 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
  * await updateProfileFromOfferingForm({ currentProfile, data, issue });
  */
 async function updateProfileFromOfferingForm(args: UpdateProfileFromOfferingFormArgs) {
-	const fallbackSlug = createPublicProfileSlug({ displayName: args.data.displayName });
-	const slug = args.data.slug || args.currentProfile.slug || fallbackSlug;
-	if (!slug) {
-		return invalid(args.issue.profile.slug(`Profil-URL muss ausgefüllt werden`));
-	}
+	const currentSlug = args.currentProfile.slug?.trim();
+	const slug =
+		currentSlug ||
+		(await createAvailableProfileSlug({
+			displayName: args.data.displayName,
+			profileId: args.currentProfile.id,
+		}));
 
-	const existingSlugOwner = await db.query.profiles.findFirst({
-		where: and(eq(s.profiles.slug, slug), ne(s.profiles.id, args.currentProfile.id)),
-		columns: { id: true }
-	});
-	if (existingSlugOwner) {
-		return invalid(args.issue.profile.slug(`Dieser Slug ist bereits vergeben`));
-	}
-
-	const nextProfileImageUrl = assertOwnedProfileImageUrl({
+	const nextProfileImageUrl = await resolveProfileImageUrl({
 		submittedUrl: args.data.profileImageUrl,
 		currentUrl: args.currentProfile.profileImageUrl,
-		userId: args.currentProfile.id
+		userId: args.currentProfile.id,
+		expectedType: `profile`,
 	});
 	if (nextProfileImageUrl instanceof Error) {
 		return invalid(args.issue.profile.profileImageUrl(nextProfileImageUrl.message));
 	}
 
-	const nextBannerImageUrl = assertOwnedProfileImageUrl({
+	const nextBannerImageUrl = await resolveProfileImageUrl({
 		submittedUrl: args.data.bannerImageUrl,
 		currentUrl: args.currentProfile.bannerImageUrl,
-		userId: args.currentProfile.id
+		userId: args.currentProfile.id,
+		expectedType: `banner`,
 	});
 	if (nextBannerImageUrl instanceof Error) {
 		return invalid(args.issue.profile.bannerImageUrl(nextBannerImageUrl.message));
@@ -188,7 +458,7 @@ async function updateProfileFromOfferingForm(args: UpdateProfileFromOfferingForm
 			socialLinks: args.data.socialLinks,
 			profileImageUrl: nextProfileImageUrl,
 			bannerImageUrl: nextBannerImageUrl,
-			updatedAt: sql`now()`
+			updatedAt: sql`now()`,
 		})
 		.where(eq(s.profiles.id, args.currentProfile.id))
 		.returning();
@@ -197,30 +467,62 @@ async function updateProfileFromOfferingForm(args: UpdateProfileFromOfferingForm
 		sweepProfileImagePrefix({
 			userId: args.currentProfile.id,
 			kind: `profile`,
-			keepUrl: nextProfileImageUrl
+			keepUrl: nextProfileImageUrl,
 		}),
 		sweepProfileImagePrefix({
 			userId: args.currentProfile.id,
 			kind: `banner`,
-			keepUrl: nextBannerImageUrl
-		})
+			keepUrl: nextBannerImageUrl,
+		}),
 	]);
 
 	return updatedProfile;
 }
 
-function getPlaceIdsForFilter(args: {
-	filter: OfferingPlaceFilter;
-	places: Array<{ id: number; slug: string }>;
-}) {
-	if (args.filter === `danang`)
-		return args.places.filter((place) => place.slug === `danang`).map((place) => place.id);
-	if (args.filter === `hoi-an`)
-		return args.places.filter((place) => place.slug === `hoi-an`).map((place) => place.id);
+async function ensureOfferingProfileSlug(profile: Profile) {
+	if (profile.slug?.trim()) return profile;
+	const slug = await createAvailableProfileSlug({
+		displayName: profile.displayName ?? `profile`,
+		profileId: profile.id,
+	});
+
+	const [updatedProfile] = await db
+		.update(s.profiles)
+		.set({
+			slug,
+			updatedAt: sql`now()`,
+		})
+		.where(eq(s.profiles.id, profile.id))
+		.returning();
+
+	return updatedProfile ?? profile;
+}
+
+async function createAvailableProfileSlug(args: { displayName: string; profileId: string }) {
+	const baseSlug = createPublicProfileSlug({ displayName: args.displayName }) || `profile`;
+	for (let attempt = 0; attempt < 100; attempt++) {
+		const suffix = attempt === 0 ? `` : `-${randomString(2).toLowerCase()}`;
+		const slug = `${baseSlug.slice(0, 80 - suffix.length)}${suffix}`;
+		if (await isProfileSlugAvailable({ slug, profileId: args.profileId })) return slug;
+	}
+
+	throw error(409, `Could not create a unique profile slug`);
+}
+
+async function isProfileSlugAvailable(args: { slug: string; profileId: string }) {
+	const existingSlugOwner = await db.query.profiles.findFirst({
+		where: and(eq(s.profiles.slug, args.slug), ne(s.profiles.id, args.profileId)),
+		columns: { id: true },
+	});
+
+	return !existingSlugOwner;
+}
+
+function getPlaceIdsForFilter(args: { filter: OfferingPlaceFilter; places: Array<{ id: number; slug: string }> }) {
+	if (args.filter === `danang`) return args.places.filter((place) => place.slug === `danang`).map((place) => place.id);
+	if (args.filter === `hoi-an`) return args.places.filter((place) => place.slug === `hoi-an`).map((place) => place.id);
 	if (args.filter === `danang-hoi-an`) {
-		return args.places
-			.filter((place) => [`danang`, `hoi-an`].includes(place.slug))
-			.map((place) => place.id);
+		return args.places.filter((place) => [`danang`, `hoi-an`].includes(place.slug)).map((place) => place.id);
 	}
 	return [];
 }
@@ -239,8 +541,72 @@ function isOfflineOffering(format: OfferingFormat) {
 	return format === `offline` || format === `offline+online`;
 }
 
-function hasSocialLink(profile: Pick<Profile, 'socialLinks'> | null | undefined) {
+function hasSocialLink(profile: Pick<Profile, "socialLinks"> | null | undefined) {
 	return Boolean(profile?.socialLinks?.some((link) => link.value?.trim()));
+}
+
+function keepSubmittedOfferingImages(args: { currentImageUrls: string[]; submittedImageUrls: string[] }) {
+	if (!args.currentImageUrls?.length || !args.submittedImageUrls?.length) return [];
+
+	const currentUrls = new Set(args.currentImageUrls);
+	const keptUrls = new Set<string>();
+	return args.submittedImageUrls.filter((url) => {
+		if (!currentUrls.has(url)) return false;
+		if (keptUrls.has(url)) return false;
+		keptUrls.add(url);
+		return true;
+	});
+}
+
+function getNextOfferingImageUrls(args: {
+	currentImageUrls: string[];
+	submittedImageUrls: string[];
+	submittedClaimTokens: string[];
+	uploadedImageUrls: string[];
+	imageOrder: string[];
+}) {
+	const existingImageUrls = keepSubmittedOfferingImages({
+		currentImageUrls: args.currentImageUrls,
+		submittedImageUrls: args.submittedImageUrls,
+	});
+	const existingUrls = new Set(existingImageUrls);
+	const uploadedUrlByClaimToken = new Map(
+		args.submittedClaimTokens.flatMap((token, index) => {
+			const url = args.uploadedImageUrls[index];
+			if (!url) return [];
+			return [[token, url] as const];
+		}),
+	);
+	const nextImageUrls: string[] = [];
+
+	for (const token of args.imageOrder) {
+		if (existingUrls.has(token)) {
+			addUniqueImageUrl({ imageUrls: nextImageUrls, url: token });
+			continue;
+		}
+
+		const uploadedUrl = uploadedUrlByClaimToken.get(token);
+		if (uploadedUrl) {
+			addUniqueImageUrl({ imageUrls: nextImageUrls, url: uploadedUrl });
+		}
+	}
+
+	for (const url of existingImageUrls) {
+		addUniqueImageUrl({ imageUrls: nextImageUrls, url });
+	}
+	for (const token of args.submittedClaimTokens) {
+		const uploadedUrl = uploadedUrlByClaimToken.get(token);
+		if (uploadedUrl) {
+			addUniqueImageUrl({ imageUrls: nextImageUrls, url: uploadedUrl });
+		}
+	}
+
+	return nextImageUrls.slice(0, OFFERING_IMAGE_MAX_COUNT);
+}
+
+function addUniqueImageUrl(args: { imageUrls: string[]; url: string }) {
+	if (args.imageUrls.includes(args.url)) return;
+	args.imageUrls.push(args.url);
 }
 
 function refreshOfferingLists() {
@@ -249,16 +615,10 @@ function refreshOfferingLists() {
 	}
 }
 
-function assertOwnedProfileImageUrl(args: AssertOwnedProfileImageUrlArgs) {
-	const submitted = args.submittedUrl?.trim() || ``;
-	if (!submitted) return null;
-	if (submitted === args.currentUrl) return submitted;
-
-	const expectedPrefix = assets.publicUrl(`profiles/${args.userId}/`);
-	if (!submitted.startsWith(expectedPrefix)) {
-		return new Error(`Bild-URL ist nicht erlaubt`);
-	}
-	return submitted;
+function getOfferingSubmitUserId(authToken: string | undefined) {
+	const sessionUserId = getRequestEvent().locals.userId;
+	if (sessionUserId) return sessionUserId;
+	return verifyOfferingSubmitAuthToken(authToken);
 }
 
 async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
@@ -272,13 +632,12 @@ async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
 
 type UpdateProfileFromOfferingFormArgs = {
 	currentProfile: Profile;
-	data: NonNullable<v.InferOutput<typeof offeringFormSchema>['profile']>;
+	data: NonNullable<v.InferOutput<typeof offeringFormSchema>["profile"]>;
 	issue: OfferingFormIssue;
 };
 
 type OfferingFormIssue = {
 	profile: {
-		slug: (message: string) => InvalidIssue;
 		profileImageUrl: (message: string) => InvalidIssue;
 		bannerImageUrl: (message: string) => InvalidIssue;
 	};
@@ -286,14 +645,22 @@ type OfferingFormIssue = {
 
 type InvalidIssue = Parameters<typeof invalid>[0];
 
-type AssertOwnedProfileImageUrlArgs = {
-	submittedUrl?: string | null;
-	currentUrl?: string | null;
-	userId: string;
-};
-
 type SweepProfileImagePrefixArgs = {
 	userId: string;
 	kind: `profile` | `banner`;
 	keepUrl: string | null;
+};
+
+type FinalizeOfferingImageClaimsArgs = {
+	claims: OfferingImageClaim[];
+	userId: string;
+	offeringId: number;
+};
+
+type OfferingImageContentType = `image/webp` | `image/jpeg`;
+
+type OfferingImageClaim = {
+	objectKey: string;
+	contentType: OfferingImageContentType;
+	expiresAt: number;
 };

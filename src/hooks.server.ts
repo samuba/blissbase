@@ -5,7 +5,7 @@ import { PostHog } from 'posthog-node';
 import { dev } from '$app/environment';
 import { waitUntil } from '@vercel/functions';
 import { createSupabaseServerClient } from '$lib/server/supabase';
-import { isAdminSession } from '$lib/server/admin';
+import { refreshAuthLocalsFromSupabase, setAuthLocalsFromClaims } from '$lib/server/authLocals';
 import * as main from './locales/main.loader.server.svelte.js'
 import * as js from './locales/js.loader.server.js'
 import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
@@ -89,21 +89,16 @@ const clearStaleFilters: Handle = async ({ event, resolve }) => {
 const supabaseAuth: Handle = async ({ event, resolve }) => {
     event.locals.supabase = createSupabaseServerClient();
 
-    const { error, data } = await event.locals.supabase.auth.getClaims();
-    if (error) console.error('claimsError', error);
-    event.locals.jwtClaims = data?.claims as BlissabaseClaims;
-    event.locals.userId = event.locals.jwtClaims?.sub;
-    event.locals.isAdminSession = isAdminSession();
+    await refreshAuthLocalsFromSupabase();
 
     if (E2E_TEST === `true` && dev) {
         const e2eUserId = event.cookies.get(`e2e_user_id`);
         const e2eUserEmail = event.cookies.get(`e2e_user_email`);
         if (e2eUserId && e2eUserEmail) {
-            event.locals.userId = e2eUserId;
-            event.locals.jwtClaims = buildE2EClaims({
+            setAuthLocalsFromClaims(buildE2EClaims({
                 userId: e2eUserId,
                 email: e2eUserEmail
-            });
+            }));
         }
     }
 

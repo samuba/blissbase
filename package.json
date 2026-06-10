@@ -20,7 +20,7 @@
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:debug": "playwright test --debug",
 		"test:all": "bun run test:run && bun run test:e2e",
-		"db:push": "drizzle-kit push",
+		"db:push": "drizzle-kit push --strict --verbose ",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:pull": "drizzle-kit pull",
