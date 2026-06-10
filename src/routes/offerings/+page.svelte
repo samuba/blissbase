@@ -66,6 +66,18 @@
 		searchTerm = ``;
 		searchInput?.focus();
 	}
+
+	function newOfferingHref() {
+		return routes.newOffering({ returnTo: routes.currentPath(page.url) });
+	}
+
+	function openOfferingDetails(offering: (typeof offerings)[number]) {
+		showOfferingDetailsDialog(offering, {
+			returnTo: offering.slug
+				? routes.offeringDialog({ returnTo: routes.currentPath(page.url), offeringSlug: offering.slug })
+				: routes.currentPath(page.url),
+		});
+	}
 </script>
 
 <svelte:head>
@@ -147,14 +159,14 @@
 					<p class="text-primary-content/80 hidden md:block">
 						Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten.
 					</p>
-					<a href={routes.newOffering()} class="btn btn-primary mt-2 w-fit">
+					<a href={newOfferingHref()} class="btn btn-primary mt-2 w-fit">
 						<i class="icon-[ph--plus] size-5"></i>
 						Angebot erstellen
 					</a>
 				</div>
 				{#each filteredOfferings as offering (offering.id)}
 					<div class="h-full" animate:flip={{ duration: 200 }} out:fade={{ duration: 200 }} in:fade={{ duration: 200 }}>
-						<OfferingCard {offering} onclick={() => showOfferingDetailsDialog(offering)} />
+						<OfferingCard {offering} onclick={() => openOfferingDetails(offering)} />
 					</div>
 				{/each}
 			</div>
@@ -184,7 +196,7 @@
 					</div>
 					<h2 class="card-title mt-2">Noch keine Angebote hier</h2>
 					<p class="text-base-content/70 max-w-md">Erstelle das erste Angebot für diesen Bereich oder schau später wieder vorbei.</p>
-					<a href={routes.newOffering()} class="btn btn-primary mt-2"> Angebot erstellen </a>
+					<a href={newOfferingHref()} class="btn btn-primary mt-2"> Angebot erstellen </a>
 				</div>
 			</section>
 		{/if}
@@ -207,4 +219,4 @@
 	</div>
 </div>
 
-<OfferingDetailsDialog />
+<OfferingDetailsDialog {offerings} />

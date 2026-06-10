@@ -1,17 +1,20 @@
 <script lang="ts" module>
-	import { pushState } from "$app/navigation";
+	import { pushState, replaceState } from "$app/navigation";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import { routes } from "$lib/routes";
+	import { untrack } from "svelte";
 
 	let offering = $state<Offering | undefined>(undefined);
 	let offeringsById = $state<Record<number, Offering>>({});
+	let offeringReturnTo = $state<string | undefined>(undefined);
 	let open = $state(false);
 	let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
-	export function showOfferingDetailsDialog(offeringToShow: Offering) {
+	export function showOfferingDetailsDialog(offeringToShow: Offering, args: { returnTo?: string } = {}) {
 		clearCloseTimer();
 		offering = offeringToShow;
+		offeringReturnTo = args.returnTo;
 		offeringsById = {
 			...offeringsById,
 			[offeringToShow.id]: offeringToShow,
@@ -22,6 +25,27 @@
 		pushState(routes.offeringDetails(offeringToShow.slug), {
 			selectedOfferingId: offeringToShow.id,
 		});
+	}
+
+	function rememberOfferings(offerings: Offering[]) {
+		if (!offerings?.length) return;
+
+		const rememberedOfferings = untrack(() => offeringsById);
+		let nextOfferingsById: Record<number, Offering> | undefined;
+
+		for (const knownOffering of offerings) {
+			if (rememberedOfferings[knownOffering.id] === knownOffering) continue;
+
+			nextOfferingsById ??= { ...rememberedOfferings };
+			nextOfferingsById[knownOffering.id] = knownOffering;
+		}
+
+		if (!nextOfferingsById) return;
+		offeringsById = nextOfferingsById;
+	}
+
+	function offeringBySlug(slug: string) {
+		return Object.values(offeringsById).find((knownOffering) => knownOffering.slug === slug);
 	}
 
 	function clearCloseTimer() {
@@ -59,7 +83,25 @@
 	import { Dialog } from "$lib/components/dialog";
 	import OfferingDetails from "./OfferingDetails.svelte";
 
+	let { offerings = [] }: { offerings?: Offering[] } = $props();
+
 	$effect(() => {
+		rememberOfferings(offerings);
+	});
+
+	$effect(() => {
+		const returnOfferingSlug = page.url.searchParams.get(`offering`);
+		if (returnOfferingSlug) {
+			const returnOffering = offeringBySlug(returnOfferingSlug);
+			if (!returnOffering) return;
+
+			clearCloseTimer();
+			offering = returnOffering;
+			offeringReturnTo = routes.currentPath(page.url);
+			open = true;
+			return;
+		}
+
 		const selectedOfferingId = page.state.selectedOfferingId;
 		if (!selectedOfferingId) {
 			if (!offering?.slug) return;
@@ -77,7 +119,19 @@
 
 	function handleClose() {
 		if (!browser) return;
+		if (page.url.searchParams.has(`offering`)) {
+			closeReturnToDialog();
+			return;
+		}
+
 		history.back();
+	}
+
+	function closeReturnToDialog() {
+		const url = new URL(page.url);
+		url.searchParams.delete(`offering`);
+		replaceState(routes.currentPath(url), page.state);
+		closeGracefully();
 	}
 
 	function closeGracefully() {
@@ -119,7 +173,7 @@
 			</div>
 
 			{#if offering}
-				<OfferingDetails {offering} onManaged={handleClose} />
+				<OfferingDetails {offering} editReturnTo={offeringReturnTo} onManaged={handleClose} />
 			{/if}
 
 			<div class="mt-2 flex w-full justify-center gap-6 pb-6 md:hidden">

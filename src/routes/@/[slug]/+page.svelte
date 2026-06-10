@@ -4,6 +4,7 @@
 	import ProfileContactButtons from '$lib/components/ProfileContactButtons.svelte';
 	import { routes } from '$lib/routes';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from '../../offerings/OfferingDetailsDialog.svelte';
 	import { fade } from 'svelte/transition';
 
@@ -24,7 +25,11 @@
 
 	function openOfferingDetails(offering: (typeof publicOfferings)[number]) {
 		selectedTab = `offerings`;
-		showOfferingDetailsDialog(offering);
+		showOfferingDetailsDialog(offering, {
+			returnTo: offering.slug
+				? routes.offeringDialog({ returnTo: routes.currentPath(page.url), offeringSlug: offering.slug })
+				: routes.currentPath(page.url),
+		});
 	}
 
 	type ProfileTab = `events` | `offerings`;
@@ -173,7 +178,7 @@
 	</div>
 </div>
 
-<OfferingDetailsDialog />
+<OfferingDetailsDialog offerings={publicOfferings} />
 
 <style>
 	:global(.prose a) {

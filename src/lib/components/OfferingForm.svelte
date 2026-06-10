@@ -18,6 +18,7 @@
 		initialExistingImageUrls = [],
 		onImageBusyChange,
 		formId = `offering-form`,
+		returnTo = ``,
 		format = $bindable<OfferingFormat>(`offline`),
 		onsubmit,
 		children,
@@ -26,6 +27,7 @@
 		initialExistingImageUrls?: string[];
 		onImageBusyChange?: (busy: boolean) => void;
 		formId?: string;
+		returnTo?: string;
 		format?: OfferingFormat;
 		onsubmit?: (event: SubmitEvent) => void;
 		children?: Snippet;
@@ -95,6 +97,7 @@
 	{#if updateFields.offeringId}
 		<input class="hidden" readonly {...updateFields.offeringId.as(`number`)} />
 	{/if}
+	<input type="hidden" {...remoteForm.fields.returnTo.as(`text`)} value={returnTo} />
 
 	{@render children?.()}
 

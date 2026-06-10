@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
+	import { page } from "$app/state";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "$lib/rpc/offerings.remote";
-	import { routes } from "$lib/routes";
+	import { routes, safeReturnToPath } from "$lib/routes";
 	import { toast } from "svelte-sonner";
 	import type { PageProps } from "./$types";
 
@@ -18,6 +19,14 @@
 	let isChangingListing = $state(false);
 	let isSubmitting = $derived(updateOffering.pending > 0);
 	let actionsDisabled = $derived(isSubmitting || isDeletingOffering || isChangingListing || imageBusy);
+	let fallbackReturnHref = $derived(offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList());
+	let returnHref = $derived(
+		safeReturnToPath({
+			returnTo: page.url.searchParams.get(`returnTo`),
+			fallback: fallbackReturnHref,
+			origin: page.url.origin,
+		}),
+	);
 
 	$effect(() => {
 		if (initializedFormOfferingId === offering.id) return;
@@ -27,12 +36,7 @@
 	});
 
 	function handleCancel() {
-		void goto(returnHref());
-	}
-
-	function returnHref() {
-		if (offering.slug) return routes.offeringDetails(offering.slug);
-		return routes.offeringsList();
+		void goto(returnHref);
 	}
 
 	async function handleDeleteOffering() {
@@ -92,7 +96,7 @@
 				<div>
 					<h1 class="text-2xl font-bold">Angebot bearbeiten</h1>
 				</div>
-				<a href={returnHref()} class="btn btn-ghost btn-sm">
+				<a href={returnHref} class="btn btn-ghost btn-sm">
 					<i class="icon-[ph--arrow-left] size-4"></i>
 					Zurück
 				</a>
@@ -102,6 +106,7 @@
 				<OfferingForm
 					remoteForm={updateOffering}
 					initialExistingImageUrls={editFormValues.existingImageUrls}
+					returnTo={returnHref}
 					bind:format
 					onImageBusyChange={(busy) => (imageBusy = busy)}
 				/>

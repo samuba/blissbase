@@ -235,7 +235,7 @@
 					</a>
 
 					<a
-						href={routes.newOffering()}
+						href={routes.newOffering({ returnTo: routes.currentPath(page.url) })}
 						class="card bg-secondary/15 transition-all hover:-translate-y-0.5 hover:shadow-md"
 					>
 						<div class="card-body gap-3">

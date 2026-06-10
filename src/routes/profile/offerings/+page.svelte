@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
 	import { getMyOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
@@ -9,6 +10,18 @@
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
 
 	let selectedTab = $state<`active` | `inactive`>(`active`);
+
+	function newOfferingHref() {
+		return routes.newOffering({ returnTo: routes.currentPath(page.url) });
+	}
+
+	function openOfferingDetails(offering: (typeof offerings)[number]) {
+		showOfferingDetailsDialog(offering, {
+			returnTo: offering.slug
+				? routes.offeringDialog({ returnTo: routes.currentPath(page.url), offeringSlug: offering.slug })
+				: routes.currentPath(page.url),
+		});
+	}
 </script>
 
 <svelte:head>
@@ -25,7 +38,7 @@
 	</p>
 
 	<div class=" my-4">
-		<a href={routes.newOffering()} class="btn btn-primary w-full sm:w-auto">
+		<a href={newOfferingHref()} class="btn btn-primary w-full sm:w-auto">
 			<i class="icon-[ph--plus] size-4"></i>
 			Angebot erstellen
 		</a>
@@ -55,13 +68,13 @@
 		{#if activeOfferings.length}
 			<div class="mt-4 flex w-full flex-col gap-4">
 				{#each activeOfferings as offering (offering.id)}
-					<OfferingCard {offering} showAuthor={false} onclick={() => showOfferingDetailsDialog(offering)} />
+					<OfferingCard {offering} showAuthor={false} onclick={() => openOfferingDetails(offering)} />
 				{/each}
 			</div>
 		{:else}
 			<div class="text-base-content/60 mt-12 flex flex-col items-center gap-3 text-center">
 				<span>Du hast keine aktiven Angebote.</span>
-				<a href={routes.newOffering()} class="btn btn-primary btn-sm w-fit">Angebot erstellen</a>
+				<a href={newOfferingHref()} class="btn btn-primary btn-sm w-fit">Angebot erstellen</a>
 			</div>
 		{/if}
 	</div>
@@ -70,7 +83,7 @@
 		{#if inactiveOfferings.length}
 			<div class="mt-4 flex w-full flex-col gap-4">
 				{#each inactiveOfferings as offering (offering.id)}
-					<OfferingCard {offering} showAuthor={false} onclick={() => showOfferingDetailsDialog(offering)} />
+					<OfferingCard {offering} showAuthor={false} onclick={() => openOfferingDetails(offering)} />
 				{/each}
 			</div>
 		{:else}
@@ -79,4 +92,4 @@
 	</div>
 </div>
 
-<OfferingDetailsDialog />
+<OfferingDetailsDialog {offerings} />

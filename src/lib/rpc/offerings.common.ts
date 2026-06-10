@@ -23,7 +23,8 @@ const offeringFormEntries = {
 		[]
 	),
 	email: v.optional(v.pipe(v.string(), v.trim(), v.email(`E-Mail ist ungültig`))),
-	authToken: v.optional(v.pipe(v.string(), v.trim()), ``)
+	authToken: v.optional(v.pipe(v.string(), v.trim()), ``),
+	returnTo: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(2_000)), ``)
 } satisfies v.ObjectEntries;
 
 export const offeringFormSchema = v.object(offeringFormEntries);

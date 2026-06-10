@@ -12,7 +12,7 @@
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 	import { getPlaces } from "$lib/rpc/places.remote";
-	import { routes } from "$lib/routes";
+	import { routes, safeReturnToPath } from "$lib/routes";
 	import { getSupabaseBrowserClient } from "$lib/supabase";
 	import { localeStore } from "../../../locales/localeStore.svelte";
 	import OtpVerificationDialog from "./OtpVerificationDialog.svelte";
@@ -51,6 +51,13 @@
 	const anyImageUploadInFlight = $derived(offeringImagesBusy || profileImageBusy || bannerImageBusy);
 	const selectedPlaceId = $derived(createOffering.fields.profile.placeId.value() ?? profile?.placeId?.toString() ?? ``);
 	const showPlaceWarning = $derived(!selectedPlaceId && format !== `online`);
+	const returnHref = $derived(
+		safeReturnToPath({
+			returnTo: page.url.searchParams.get(`returnTo`),
+			fallback: routes.offeringsList(),
+			origin: page.url.origin,
+		}),
+	);
 
 	async function sendOtpAndOpenDialog() {
 		const trimmed = email.trim();
@@ -155,13 +162,19 @@
 						Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden.
 					</p>
 				</div>
-				<a href={routes.offeringsList()} class="btn btn-ghost btn-sm">
+				<a href={returnHref} class="btn btn-ghost btn-sm">
 					<i class="icon-[ph--arrow-left] size-4"></i>
 					Zurück
 				</a>
 			</div>
 
-			<OfferingForm remoteForm={createOffering} bind:format onImageBusyChange={(busy) => (offeringImagesBusy = busy)} onsubmit={onSubmit}>
+			<OfferingForm
+				remoteForm={createOffering}
+				returnTo={returnHref}
+				bind:format
+				onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
+				onsubmit={onSubmit}
+			>
 				<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={offeringSubmitAuthToken} />
 
 				{#if showProfileSection}
@@ -268,7 +281,7 @@
 			</OfferingForm>
 
 			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-				<a href={routes.offeringsList()} class="btn btn-ghost">Abbrechen</a>
+				<a href={returnHref} class="btn btn-ghost">Abbrechen</a>
 				<button
 					type="submit"
 					form="offering-form"

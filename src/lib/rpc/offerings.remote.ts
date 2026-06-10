@@ -9,7 +9,7 @@ import {
 	type OfferingFormat,
 } from "$lib/rpc/offerings.common";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
-import { routes } from "$lib/routes";
+import { routes, safeReturnToPath } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
@@ -223,10 +223,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	refreshOfferingLists();
 	setFlash(`offeringCreated`);
 
-	redirect(
-		303,
-		routes.offeringDetails(slug),
-	);
+	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(slug) }));
 });
 
 export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {
@@ -281,10 +278,8 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	if (!offering.slug) throw error(500, `Offering is missing a slug`);
 
 	refreshOfferingLists();
-	redirect(
-		303,
-		routes.offeringDetails(offering.slug),
-	);
+	setFlash(`offeringUpdated`);
+	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(offering.slug) }));
 });
 
 export const unlistOffering = command(offeringMutationSchema, async ({ offeringId }) => {
@@ -630,6 +625,26 @@ function refreshOfferingLists() {
 	if (getRequestEvent().locals.userId) {
 		getMyOfferings().refresh();
 	}
+}
+
+function offeringRedirectHref(args: { returnTo?: string | null; fallback: ReturnType<typeof routes.offeringDetails> }) {
+	const { url } = getRequestEvent();
+	const href = safeReturnToPath({
+		returnTo: args.returnTo,
+		fallback: args.fallback,
+		origin: url.origin,
+	});
+	if (isOfferingFormHref({ href, origin: url.origin })) return args.fallback;
+
+	return href;
+}
+
+function isOfferingFormHref(args: { href: string; origin: string }) {
+	const { pathname } = new URL(args.href, args.origin);
+	if (pathname === routes.newOffering()) return true;
+	if (!pathname.startsWith(`/offerings/`)) return false;
+
+	return pathname.endsWith(`/edit`);
 }
 
 function getOfferingSubmitUserId(authToken: string | undefined) {

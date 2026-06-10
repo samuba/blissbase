@@ -12,10 +12,12 @@
 	let {
 		offering,
 		onManaged,
+		editReturnTo,
 		class: className,
 	}: {
 		offering: OfferingDetailsOffering;
 		onManaged?: (action: OfferingManagementAction) => void | Promise<void>;
+		editReturnTo?: string;
 		class?: string;
 	} = $props();
 
@@ -177,7 +179,7 @@
 							Löschen
 						</button>
 						{#if offering.slug}
-							<a href={routes.editOffering(offering.slug)} class="btn btn-sm join-item">
+							<a href={routes.editOffering(offering.slug, { returnTo: editReturnTo })} class="btn btn-sm join-item">
 								<i class="icon-[ph--pencil-simple] size-4"></i>
 								Bearbeiten
 							</a>

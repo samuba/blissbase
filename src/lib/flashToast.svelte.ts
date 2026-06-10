@@ -8,6 +8,7 @@ const flashToasts: Record<FlashKey, () => void> = {
 	offeringListed: () => toast.success(`Angebot wurde aktiviert`, { description: `Es ist jetzt für andere Nutzer sichtbar.` }),
 	offeringUnlisted: () => toast.success(`Angebot wurde deaktiviert`, { description: `Du kannst es in deinem Profil wieder aktivieren.` }),
 	offeringDeleted: () => toast.success(`Angebot wurde gelöscht.`),
+	offeringUpdated: () => toast.success(`Angebot wurde aktualisiert.`),
 };
 
 /** Immediately shows a flash toast. For client-side flows without a redirect (e.g. after awaiting a command). */
