@@ -82,6 +82,7 @@ export async function getOfferingsForPublicProfile(args: {
 		where: and(eq(s.offerings.profileId, args.profile.id), eq(s.offerings.listed, true)),
 		columns: {
 			id: true,
+			slug: true,
 			title: true,
 			descriptionHtml: true,
 			format: true,
@@ -93,6 +94,7 @@ export async function getOfferingsForPublicProfile(args: {
 
 	return offerings.map((offering) => ({
 		id: offering.id,
+		slug: offering.slug,
 		title: offering.title,
 		descriptionHtml: offering.descriptionHtml ?? ``,
 		format: offering.format,

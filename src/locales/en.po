@@ -76,7 +76,7 @@ msgstr "Ue"
 #. 0: i + 1
 #. 0: i + 1
 #: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Bild {0}"
 msgstr "Image {0}"
 
@@ -90,7 +90,7 @@ msgstr "Sold out"
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Online"
 msgstr "Online"
 
@@ -743,7 +743,7 @@ msgid "Wird verarbeitet"
 msgstr "Processing"
 
 #: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "<0/> Bearbeiten"
 msgstr "<0/> Edit"
 
@@ -1256,7 +1256,7 @@ msgstr "Search"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Vor Ort"
 msgstr "In-Person"
 
@@ -1379,7 +1379,7 @@ msgstr "To allow your offer to be created, please enter the code that we sent to
 
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Vor Ort & Online"
 msgstr "In-person & Online"
 
@@ -1555,12 +1555,12 @@ msgstr "Registration could not be confirmed. Please try again."
 #~ msgid "Angebot erstellt!"
 #~ msgstr "Listing created!"
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "Angebot konnte nicht gelöscht werden."
 msgstr "The listing could not be deleted."
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 msgstr "Permanently delete this listing? This action cannot be undone."
@@ -1568,24 +1568,23 @@ msgstr "Permanently delete this listing? This action cannot be undone."
 #~ msgid "Angebot wurde gelöscht."
 #~ msgstr "The listing has been deleted."
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "<0/> Löschen"
 msgstr "<0/> Delete"
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "Angebot konnte nicht deaktiviert werden."
 msgstr "The listing could not be deactivated."
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "Angebot konnte nicht aktiviert werden."
 msgstr "The listing could not be activated."
 
-#: src/routes/offerings/[id]/edit/+page.server.ts
-msgid "Invalid offering ID"
-msgstr "Invalid offering ID"
+#~ msgid "Invalid offering ID"
+#~ msgstr "Invalid offering ID"
 
 #: src/routes/offerings/[id]/edit/+page.server.ts
 msgid "Offering not found"
@@ -1611,11 +1610,11 @@ msgstr "<0/> Delete…"
 msgid "<0/> Speichere…"
 msgstr "<0/> Save…"
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Deaktivieren"
 msgstr "Deactivate"
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Aktivieren"
 msgstr "Activate"
 
@@ -1716,3 +1715,11 @@ msgstr "<0/> Active"
 #: src/routes/profile/offerings/+page.svelte
 msgid "<0/> Deaktiviert"
 msgstr "<0/> Disabled"
+
+#: src/routes/offerings/[id]/+page.svelte
+msgid "<0/> Alle Angebote"
+msgstr "<0/> All offers"
+
+#: src/routes/offerings/[id]/edit/+page.server.ts
+msgid "Invalid offering slug"
+msgstr "Invalid offering slug"

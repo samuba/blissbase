@@ -252,6 +252,7 @@ export const profilesRelations = relations(profiles, ({ many, one }) => ({
 export const offerings = pgTable("offerings", {
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		profileId: uuid().notNull().references(() => profiles.id, { onDelete: "cascade" }),
+		slug: text().notNull().unique(),
 		title: text().notNull(),
 		descriptionHtml: text(),
 		format: offeringFormatEnum().notNull().default("offline"),

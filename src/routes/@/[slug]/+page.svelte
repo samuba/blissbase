@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import OfferingCard from '$lib/components/OfferingCard.svelte';
 	import ProfileContactButtons from '$lib/components/ProfileContactButtons.svelte';
@@ -11,31 +10,9 @@
 	let { data } = $props();
 	const { profile, upcomingEvents, publicOfferings, userId } = $derived(data);
 	const isOwnProfile = $derived(Boolean(profile.id === userId));
-	const selectedOfferingId = $derived(Number(page.url.searchParams.get(`offering`) ?? 0));
 	let selectedTab = $state<ProfileTab>(getInitialSelectedTab());
-	let openedOfferingId = $state<number | undefined>(undefined);
-
-	$effect(() => {
-		if (!selectedOfferingId) {
-			openedOfferingId = undefined;
-			return;
-		}
-		if (openedOfferingId === selectedOfferingId) return;
-		const selectedOffering = publicOfferings.find((offering) => offering.id === selectedOfferingId);
-		if (!selectedOffering) return;
-
-		selectedTab = `offerings`;
-		openedOfferingId = selectedOfferingId;
-		showOfferingDetailsDialog(selectedOffering, {
-			currentHistoryEntry: page.state.selectedOfferingId === selectedOfferingId,
-			initialDeepLink: page.state.selectedOfferingId !== selectedOfferingId
-		});
-	});
 
 	function getInitialSelectedTab(): ProfileTab {
-		if (selectedOfferingId && data.publicOfferings.some((offering) => offering.id === selectedOfferingId)) {
-			return `offerings`;
-		}
 		if (!data.upcomingEvents?.length && data.publicOfferings?.length) return `offerings`;
 
 		return `events`;
@@ -47,7 +24,6 @@
 
 	function openOfferingDetails(offering: (typeof publicOfferings)[number]) {
 		selectedTab = `offerings`;
-		openedOfferingId = offering.id;
 		showOfferingDetailsDialog(offering);
 	}
 

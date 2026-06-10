@@ -1,14 +1,13 @@
-import { error } from "@sveltejs/kit";
 import { db, eq, s } from "$lib/server/db";
+import { error } from "@sveltejs/kit";
 
-export async function load({ locals, params: { id } }) {
-	const offeringId = Number(id);
-	if (!id || !Number.isInteger(offeringId) || offeringId < 1) {
-		error(400, `Invalid offering ID`);
+export async function load({ locals, params: { id: slug } }) {
+	if (!slug?.trim()) {
+		error(400, `Invalid offering slug`);
 	}
 
 	const offering = await db.query.offerings.findFirst({
-		where: eq(s.offerings.id, offeringId),
+		where: eq(s.offerings.slug, slug),
 	});
 	if (!offering) {
 		error(404, `Offering not found`);

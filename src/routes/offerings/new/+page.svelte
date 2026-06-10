@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { invalidateAll } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import EditorJs from "$lib/components/EditorJs.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
@@ -17,8 +16,6 @@
 	import { getSupabaseBrowserClient } from "$lib/supabase";
 	import { localeStore } from "../../../locales/localeStore.svelte";
 	import OtpVerificationDialog from "./OtpVerificationDialog.svelte";
-
-	type ResolvablePath = `/${string}` & {};
 
 	const isSignedIn = Boolean(page.data.userId);
 	const profile = isSignedIn ? await getMyPublicProfile() : null;
@@ -158,7 +155,7 @@
 						Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden.
 					</p>
 				</div>
-				<a href={resolve(routes.offeringsList() as ResolvablePath)} class="btn btn-ghost btn-sm">
+				<a href={routes.offeringsList()} class="btn btn-ghost btn-sm">
 					<i class="icon-[ph--arrow-left] size-4"></i>
 					Zurück
 				</a>
@@ -254,7 +251,7 @@
 				{:else}
 					<div class="alert">
 						Wanna edit your profile?
-						<a href={resolve(routes.editPublicProfile() as ResolvablePath)} class="btn">
+						<a href={routes.editPublicProfile()} class="btn">
 							<i class="icon-[ph--arrow-right] size-4"></i>
 							Edit profile
 						</a>
@@ -271,7 +268,7 @@
 			</OfferingForm>
 
 			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-				<a href={resolve(routes.offeringsList() as ResolvablePath)} class="btn btn-ghost">Abbrechen</a>
+				<a href={routes.offeringsList()} class="btn btn-ghost">Abbrechen</a>
 				<button
 					type="submit"
 					form="offering-form"

@@ -298,8 +298,15 @@ export function parseTelegramContacts(contacts: string[] | undefined) {
     }).filter(x => !!x)! as string[]));
 }
 
+// Generates a string of the specified length consisting of only 
+// uppercase (A-Z) and lowercase (a-z) English letters.
+// Does NOT include numbers, special characters, or non-ASCII letters.
 export function randomString(length: number) {
-    return Array.from({ length }, () => String.fromCharCode(Math.floor(Math.random() * 26) + (Math.random() < 0.5 ? 65 : 97))).join('');
+    return Array.from({ length }, () =>
+        String.fromCharCode(
+            Math.floor(Math.random() * 26) + (Math.random() < 0.5 ? 65 : 97)
+        )
+    ).join('');
 }
 
 // we have it here cuz for some reason having it in app.css via @apply will result in flickering of the dialog content when closing 

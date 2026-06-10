@@ -1,6 +1,6 @@
 import { command, form, getRequestEvent, query } from "$app/server";
 import * as assets from "$lib/assets";
-import { randomString } from "$lib/common";
+import { randomString, slugify } from "$lib/common";
 import {
 	OFFERING_IMAGE_MAX_COUNT,
 	OFFERING_PLACE_FILTERS,
@@ -43,6 +43,7 @@ export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
 		where: eq(s.offerings.listed, true),
 		columns: {
 			id: true,
+			slug: true,
 			title: true,
 			descriptionHtml: true,
 			format: true,
@@ -122,6 +123,7 @@ export const getMyOfferings = query(async () => {
 			offerings: {
 				columns: {
 					id: true,
+					slug: true,
 					title: true,
 					descriptionHtml: true,
 					format: true,
@@ -186,10 +188,13 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 		return invalid(issue.imageClaims(imageClaims.message));
 	}
 
+	const slug = `${randomString(6).toLowerCase()}-${slugify(data.title)}`;
+
 	const [offering] = await db
 		.insert(s.offerings)
 		.values({
 			profileId: userId,
+			slug,
 			title: data.title,
 			descriptionHtml: data.descriptionHtml || null,
 			format: data.format,
@@ -220,13 +225,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 
 	redirect(
 		303,
-		routes.offeringsList(
-			defaultFilterForOffering({
-				format: data.format,
-				placeId: nextProfile.placeId,
-			}),
-			offering?.id,
-		),
+		routes.offeringDetails(slug),
 	);
 });
 
@@ -279,16 +278,12 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
 	}
 
+	if (!offering.slug) throw error(500, `Offering is missing a slug`);
+
 	refreshOfferingLists();
 	redirect(
 		303,
-		routes.offeringsList(
-			defaultFilterForOffering({
-				format: data.format,
-				placeId: offering.profile?.placeId ?? null,
-			}),
-			offering.id,
-		),
+		routes.offeringDetails(offering.slug),
 	);
 });
 
@@ -550,12 +545,6 @@ async function isProfileSlugAvailable(args: { slug: string; profileId: string })
 	});
 
 	return !existingSlugOwner;
-}
-
-function defaultFilterForOffering(args: { format: OfferingFormat; placeId: number | null }) {
-	if (isOnlineOffering(args.format)) return `online`;
-	if (!args.placeId) return `online`;
-	return `danang-hoi-an`;
 }
 
 function isOnlineOffering(format: OfferingFormat) {

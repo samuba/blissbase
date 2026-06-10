@@ -1,15 +1,11 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
-	import { showFlashToast } from "$lib/flashToast.svelte";
 	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import { toast } from "svelte-sonner";
 	import type { PageProps } from "./$types";
-
-	type ResolvablePath = `/${string}` & {};
 
 	let { data }: PageProps = $props();
 	let offering = $derived(data.offering);
@@ -31,7 +27,12 @@
 	});
 
 	function handleCancel() {
-		void goto(resolve(routes.offeringsList(undefined, offering.id) as ResolvablePath));
+		void goto(returnHref());
+	}
+
+	function returnHref() {
+		if (offering.slug) return routes.offeringDetails(offering.slug);
+		return routes.offeringsList();
 	}
 
 	async function handleDeleteOffering() {
@@ -40,7 +41,7 @@
 		try {
 			isDeletingOffering = true;
 			await deleteOffering({ offeringId: offering.id });
-			await goto(resolve(routes.offeringsList() as ResolvablePath));
+			await goto(routes.offeringsList());
 		} catch (error) {
 			console.error(`Failed to delete offering:`, error);
 			toast.error(managementErrorMessage(`delete`));
@@ -91,7 +92,7 @@
 				<div>
 					<h1 class="text-2xl font-bold">Angebot bearbeiten</h1>
 				</div>
-				<a href={resolve(routes.offeringsList(undefined, offering.id) as ResolvablePath)} class="btn btn-ghost btn-sm">
+				<a href={returnHref()} class="btn btn-ghost btn-sm">
 					<i class="icon-[ph--arrow-left] size-4"></i>
 					Zurück
 				</a>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { stripHtml, trimAllWhitespaces } from "$lib/common";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
+	import { routes } from "$lib/routes";
 
 	let {
 		offering,
@@ -16,9 +17,18 @@
 
 	const preview = $derived(trimAllWhitespaces(stripHtml(offering.descriptionHtml)) ?? ``);
 	const imageUrl = $derived(offering.imageUrls?.[0]);
+	const href = $derived(offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList());
+
+	function handleClick(event: MouseEvent) {
+		if (!onclick) return;
+		if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+		event.preventDefault();
+		onclick();
+	}
 
 	type OfferingCardOffering = {
 		id: number;
+		slug: string | null;
 		title: string;
 		descriptionHtml: string;
 		format: OfferingFormat;
@@ -30,13 +40,14 @@
 	};
 </script>
 
-<button
-	type="button"
+<a
+	href={href}
 	class={[
 		`card bg-base-100 group h-full w-full cursor-pointer rounded-2xl text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`,
 		className,
 	]}
-	onclick={() => onclick?.()}
+	data-sveltekit-preload-data="false"
+	onclick={handleClick}
 	data-offering-id={offering.id}
 >
 	<article class="flex h-full flex-col">
@@ -84,4 +95,4 @@
 			</div>
 		</div>
 	</article>
-</button>
+</a>

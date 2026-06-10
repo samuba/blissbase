@@ -15,8 +15,6 @@
 	const result = $derived(await getOfferings({ filter: requestedFilter }));
 	const offerings = $derived(result.offerings);
 	const filter = $derived(result.filter);
-	const selectedOfferingId = $derived(Number(page.url.searchParams.get(`offering`) ?? 0));
-	let initialDialogOpened = $state(false);
 	let searchTerm = $state(``);
 	let searchInput = $state<HTMLInputElement | null>(null);
 
@@ -49,17 +47,6 @@
 		if (filter === `danang`) return routes.eventList({ searchTerm: `Da Nang` });
 		if (filter === `hoi-an`) return routes.eventList({ searchTerm: `Hoi An` });
 		return routes.eventList();
-	});
-
-	$effect(() => {
-		if (initialDialogOpened || !selectedOfferingId) return;
-		const selectedOffering = offerings.find((offering) => offering.id === selectedOfferingId);
-		if (!selectedOffering) return;
-		initialDialogOpened = true;
-		showOfferingDetailsDialog(selectedOffering, {
-			currentHistoryEntry: page.state.selectedOfferingId === selectedOfferingId,
-			initialDeepLink: page.state.selectedOfferingId !== selectedOfferingId,
-		});
 	});
 
 	function normalizeFilter(value: string | null): OfferingPlaceFilter {

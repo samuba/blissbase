@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from "$app/state";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
 	import { getMyOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
@@ -10,19 +9,6 @@
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
 
 	let selectedTab = $state<`active` | `inactive`>(`active`);
-	const selectedOfferingId = $derived(Number(page.url.searchParams.get(`offering`) ?? 0));
-	let initialDialogOpened = $state(false);
-
-	$effect(() => {
-		if (initialDialogOpened || !selectedOfferingId) return;
-		const selectedOffering = offerings.find((offering) => offering.id === selectedOfferingId);
-		if (!selectedOffering) return;
-		initialDialogOpened = true;
-		showOfferingDetailsDialog(selectedOffering, {
-			currentHistoryEntry: page.state.selectedOfferingId === selectedOfferingId,
-			initialDeepLink: page.state.selectedOfferingId !== selectedOfferingId,
-		});
-	});
 </script>
 
 <svelte:head>

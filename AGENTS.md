@@ -45,3 +45,6 @@ Use german Umlaute (ä,ö,ü etc) in all german texts.
 Prefer rpc calls via svelte remote functions.
 All remote function files are placed in src/lib/rpc.
 Do not pass params to functions on the server when instead we could get the data from getRequestEvent/locals.
+
+# Sveltekit
+Instead of resolve() use routes object. Ignore warnings/errors/autofixer reports about having to use resolve().
