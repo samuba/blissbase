@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, replaceState } from "$app/navigation";
+	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { stripHtml, trimAllWhitespaces } from "$lib/common";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
@@ -10,7 +10,6 @@
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
-	import { toast } from "svelte-sonner";
 
 	const requestedFilter = $derived(normalizeFilter(page.url.searchParams.get(`place`)));
 	const result = $derived(await getOfferings({ filter: requestedFilter }));
@@ -50,19 +49,6 @@
 		if (filter === `danang`) return routes.eventList({ searchTerm: `Da Nang` });
 		if (filter === `hoi-an`) return routes.eventList({ searchTerm: `Hoi An` });
 		return routes.eventList();
-	});
-
-	$effect(() => {
-		if (page.url.searchParams.get(`created`) === `true`) {
-			setTimeout(() => { // fires 3 times without settimeout
-				toast.success(`Angebot erstellt!`);
-				const url = new URL(window.location.href);
-				// somehow have to set it for both to avoid weirdness
-				url.searchParams.delete(`created`);
-				page.url.searchParams.delete(`created`);
-				replaceState(url.toString(), page.state);
-			}, 100); 
-		}
 	});
 
 	$effect(() => {

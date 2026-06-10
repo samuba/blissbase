@@ -22,6 +22,7 @@ import type { Profile } from "$lib/server/schema";
 import { error, invalid, redirect } from "@sveltejs/kit";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import * as v from "valibot";
+import { setFlash } from "$lib/server/flash";
 
 const placeFilterSchema = v.object({
 	filter: v.optional(v.picklist(OFFERING_PLACE_FILTERS), `online`),
@@ -185,6 +186,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 
 	getMyPublicProfile().refresh();
 	refreshOfferingLists();
+	setFlash(`offeringCreated`);
 
 	redirect(
 		303,
@@ -194,7 +196,6 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 				placeId: nextProfile.placeId,
 			}),
 			offering?.id,
-			true,
 		),
 	);
 });
@@ -274,6 +275,7 @@ export const unlistOffering = command(offeringMutationSchema, async ({ offeringI
 
 	if (!offering) throw error(404, `Offering not found`);
 	refreshOfferingLists();
+	setFlash(`offeringUnlisted`);
 
 	return { success: true };
 });
@@ -291,6 +293,7 @@ export const listOffering = command(offeringMutationSchema, async ({ offeringId 
 
 	if (!offering) throw error(404, `Offering not found`);
 	refreshOfferingLists();
+	setFlash(`offeringListed`);
 
 	return { success: true };
 });
@@ -308,7 +311,8 @@ export const deleteOffering = command(offeringMutationSchema, async ({ offeringI
 	}
 
 	refreshOfferingLists();
-
+	setFlash(`offeringDeleted`);
+	
 	return { success: true };
 });
 

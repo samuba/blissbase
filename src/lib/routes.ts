@@ -13,11 +13,10 @@ export const routes = {
     about: () => resolve(`/about`),
     faq: () => resolve(`/faq`),
     newEvent: () => resolve(`/new`),
-    offeringsList: (filter?: OfferingPlaceFilter, selectedOfferingId?: number, offeringCreated?: boolean) => {
+    offeringsList: (filter?: OfferingPlaceFilter, selectedOfferingId?: number) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
         if (filter) url.searchParams.set('place', filter);
         if (selectedOfferingId) url.searchParams.set('offering', selectedOfferingId.toString());
-        if (offeringCreated) url.searchParams.set('created', 'true');
         return relativeUrl(url);
     },
     newOffering: () => resolve(`/offerings/new`),

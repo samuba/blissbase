@@ -81,6 +81,7 @@
 	import ProfileContactButtons from "$lib/components/ProfileContactButtons.svelte";
 	import PublicProfileCard from "$lib/components/PublicProfileCard.svelte";
 	import { Dialog } from "$lib/components/dialog";
+	import { showFlashToast } from "$lib/flashToast.svelte";
 	import { deleteOffering, listOffering, unlistOffering } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import { toast } from "svelte-sonner";
@@ -137,13 +138,10 @@
 		try {
 			if (action === `unlist`) {
 				await unlistOffering({ offeringId: offering.id });
-				toast.success(`Angebot wurde deaktiviert`, { description: `Du kannst es in deinem Profil wieder aktivieren.` });
 			} else if (action === `list`) {
 				await listOffering({ offeringId: offering.id });
-				toast.success(`Angebot wurde aktiviert`, { description: `Es ist jetzt für andere Nutzer sichtbar.` });
 			} else {
 				await deleteOffering({ offeringId: offering.id });
-				toast.success(`Angebot wurde gelöscht.`);
 			}
 
 			await invalidateAll();

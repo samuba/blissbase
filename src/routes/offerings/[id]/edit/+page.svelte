@@ -3,6 +3,7 @@
 	import { resolve } from "$app/paths";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
+	import { showFlashToast } from "$lib/flashToast.svelte";
 	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import { toast } from "svelte-sonner";
@@ -39,7 +40,6 @@
 		try {
 			isDeletingOffering = true;
 			await deleteOffering({ offeringId: offering.id });
-			toast.success(`Angebot wurde gelöscht.`);
 			await goto(resolve(routes.offeringsList() as ResolvablePath));
 		} catch (error) {
 			console.error(`Failed to delete offering:`, error);
@@ -58,10 +58,8 @@
 			isChangingListing = true;
 			if (offering.listed) {
 				await unlistOffering({ offeringId: offering.id });
-				toast.success(`Angebot wurde deaktiviert`, { description: `Du kannst es in deinem Profil wieder aktivieren.` });
 			} else {
 				await listOffering({ offeringId: offering.id });
-				toast.success(`Angebot wurde aktiviert`, { description: `Es ist jetzt für andere Nutzer sichtbar.` });
 			}
 
 			await invalidateAll();

@@ -13,6 +13,7 @@
 	import { navigationIsDelayed } from '$lib/components/navigationIsDelayed.svelte';
 	import { fade } from 'svelte/transition';
 	import { registerAuthCallbackFeedbackToast } from '$lib/authCallbackFeedbackToast.svelte';
+	import { registerFlashToast } from '$lib/flashToast.svelte';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
 	import { Toaster } from 'svelte-sonner';
 	import { resolve } from '$app/paths';
@@ -59,6 +60,7 @@
 	});
 
 	registerAuthCallbackFeedbackToast();
+	registerFlashToast();
 
 	const showDesktopNav = $derived(!isActiveAppTab(page.url.pathname, resolve('/')));
 </script>

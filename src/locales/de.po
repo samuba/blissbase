@@ -1550,9 +1550,8 @@ msgstr "<0/>Bilder werden lokal verarbeitet und hochgeladen."
 msgid "Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut."
 msgstr "Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut."
 
-#: src/routes/offerings/+page.svelte
-msgid "Angebot erstellt!"
-msgstr "Angebot erstellt!"
+#~ msgid "Angebot erstellt!"
+#~ msgstr "Angebot erstellt!"
 
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
@@ -1564,10 +1563,8 @@ msgstr "Angebot konnte nicht gelöscht werden."
 msgid "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 msgstr "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
-msgid "Angebot wurde gelöscht."
-msgstr "Angebot wurde gelöscht."
+#~ msgid "Angebot wurde gelöscht."
+#~ msgstr "Angebot wurde gelöscht."
 
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
@@ -1636,22 +1633,14 @@ msgstr "<0/> Deaktivieren"
 msgid "<0/> Aktivieren"
 msgstr "<0/> Aktivieren"
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
-msgid "Angebot wurde aktiviert"
-msgstr "Angebot wurde aktiviert"
+#~ msgid "Angebot wurde aktiviert"
+#~ msgstr "Angebot wurde aktiviert"
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
-msgid "Es ist jetzt für andere Nutzer sichtbar."
-msgstr "Es ist jetzt für andere Nutzer sichtbar."
+#~ msgid "Es ist jetzt für andere Nutzer sichtbar."
+#~ msgstr "Es ist jetzt für andere Nutzer sichtbar."
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
-msgid "Angebot wurde deaktiviert"
-msgstr "Angebot wurde deaktiviert"
+#~ msgid "Angebot wurde deaktiviert"
+#~ msgstr "Angebot wurde deaktiviert"
 
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
-msgid "Du kannst es in deinem Profil wieder aktivieren."
-msgstr "Du kannst es in deinem Profil wieder aktivieren."
+#~ msgid "Du kannst es in deinem Profil wieder aktivieren."
+#~ msgstr "Du kannst es in deinem Profil wieder aktivieren."
