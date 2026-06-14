@@ -185,7 +185,7 @@ async function main() {
             endAt: x.endAt ? new Date(x.endAt) : undefined,
             imageUrls: x.imageUrls?.filter(x => x),
             description: cleanProseHtml(x.description),
-            listed: shouldBeListed({ name: cleanedName }),
+            listed: shouldBeListed({ name: cleanedName, source: x.source }),
             tags: [...new Set(x.tags)], // ensure tags are unique
             attendanceMode: detectAttendanceModeFromAddress({ address: x.address }),
         } satisfies InsertEvent;
