@@ -2,45 +2,45 @@ import { resolve } from "$app/paths";
 import type { OfferingPlaceFilter } from "$lib/rpc/offerings.common";
 
 export const routes = {
-    root: () => resolve("/") as ResolvablePath,
+    root: () => resolve("/") ,
     eventList: (args: { searchTerm?: string | null } = {}) => {
         const url = new URL(resolve("/"), BASE_URL);
         if (args.searchTerm) url.searchParams.set('searchTerm', args.searchTerm);
         return relativeUrl(url);
     },
-    eventDetails: (slug: string) => resolve("/[slug]", { slug }) as ResolvablePath,
-    sources: () => resolve(`/sources`) as ResolvablePath,
-    about: () => resolve(`/about`) as ResolvablePath,
-    faq: () => resolve(`/faq`) as ResolvablePath,
-    newEvent: () => resolve(`/new`) as ResolvablePath,
+    eventDetails: (slug: string) => resolve("/[slug]", { slug }) ,
+    sources: () => resolve(`/sources`) ,
+    about: () => resolve(`/about`) ,
+    faq: () => resolve(`/faq`) ,
+    newEvent: () => resolve(`/new`) ,
     offeringsList: (filter?: OfferingPlaceFilter) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
         if (filter) url.searchParams.set('place', filter);
-        return relativeUrl(url) as ResolvablePath;
+        return relativeUrl(url) ;
     } ,
     offeringDialog: (args: { returnTo: string; offeringSlug: string }) => {
         const returnToPath = normalizeReturnToPath(args.returnTo, BASE_URL) ?? routes.offeringsList();
         const url = new URL(returnToPath, BASE_URL);
         url.searchParams.set(`offering`, args.offeringSlug);
-        return relativeUrl(url) as ResolvablePath;
+        return relativeUrl(url) ;
     },
-    currentPath: (url: URL) => `${url.pathname}${url.search}${url.hash}` as ResolvablePath,
-    newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/new`) as ResolvablePath, args.returnTo),
-    offeringDetails: (slug: string) => resolve(`/offerings/[id]`, { id: slug }) as ResolvablePath,
-    editOffering: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[id]/edit`, { id: slug }) as ResolvablePath, args.returnTo),
-    profile: () => resolve(`/profile`) as ResolvablePath,
-    myOfferings: () => resolve(`/profile/offerings`) as ResolvablePath,
-    publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }) as ResolvablePath,
-    editPublicProfile: () => resolve(`/profile/public`) as ResolvablePath,
+    currentPath: (url: URL) => `${url.pathname}${url.search}${url.hash}` ,
+    newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/new`) , args.returnTo),
+    offeringDetails: (slug: string) => resolve(`/offerings/[id]`, { id: slug }) ,
+    editOffering: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[id]/edit`, { id: slug }) , args.returnTo),
+    profile: () => resolve(`/profile`) ,
+    myOfferings: () => resolve(`/profile/offerings`) ,
+    publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }) ,
+    editPublicProfile: () => resolve(`/profile/public`) ,
     editEvent: (id: number, hostSecret?: string) => {
         const url = new URL(resolve(`/edit/[id]`, { id: id.toString() }), BASE_URL);
         if (hostSecret) {
             url.searchParams.set('hostSecret', hostSecret);
             url.searchParams.set('_ADMIN_LINK_NICHT_TEILEN', '');
         }
-        return relativeUrl(url) as ResolvablePath;
+        return relativeUrl(url) ;
     },
-    favorites: () => resolve(`/profile/favorites`) as ResolvablePath,
+    favorites: () => resolve(`/profile/favorites`) ,
 }
 
 export const BASE_URL = "https://blissbase.app" as const
@@ -49,7 +49,7 @@ export function absoluteUrl(path: string) {
     return new URL(path, BASE_URL).toString();
 }
 
-export function safeReturnToPath(args: SafeReturnToPathArgs) {
+export function safeReturnToPath(args: { returnTo?: ResolvedPathname | null; fallback: ResolvedPathname; origin?: string }) {
     const returnTo = normalizeReturnToPath(args.returnTo, args.origin ?? BASE_URL);
     return returnTo ?? args.fallback;
 }
@@ -58,13 +58,13 @@ function relativeUrl(url: URL) {
     return url.toString().replace(url.origin, '')
 }
 
-function withReturnTo(path: ResolvablePath, returnTo?: string | null) {
+function withReturnTo(path: ResolvedPathname, returnTo?: ResolvedPathname | null) {
     const returnToPath = normalizeReturnToPath(returnTo, BASE_URL);
     if (!returnToPath) return path;
 
     const url = new URL(path, BASE_URL);
     url.searchParams.set(`returnTo`, returnToPath);
-    return relativeUrl(url) as ResolvablePath;
+    return relativeUrl(url) ;
 }
 
 function normalizeReturnToPath(value: string | null | undefined, origin: string) {
@@ -75,12 +75,12 @@ function normalizeReturnToPath(value: string | null | undefined, origin: string)
         const url = new URL(trimmed, origin);
         if (url.origin !== origin) return null;
 
-        return `${url.pathname}${url.search}${url.hash}` as ResolvablePath;
+        return `${url.pathname}${url.search}${url.hash}` ;
     } catch {
         return null;
     }
 }
 
-type ResolvablePath = `/${string}` & {}; // to trick svelte into not complaining about not using resolve()
-type ReturnToArgs = { returnTo?: string | null };
-type SafeReturnToPathArgs = { returnTo?: string | null; fallback: ResolvablePath; origin?: string };
+type ReturnToArgs = { returnTo?: ResolvedPathname | null };
+
+type ResolvedPathname = ReturnType<typeof resolve>;

@@ -11,7 +11,10 @@
 	type CreateOfferingForm = typeof import("$lib/rpc/offerings.remote").createOffering;
 	type UpdateOfferingForm = typeof import("$lib/rpc/offerings.remote").updateOffering;
 	type OfferingRemoteForm = CreateOfferingForm | UpdateOfferingForm;
-	type UpdateOnlyFields = Pick<RemoteFormFields<v.InferInput<typeof updateOfferingFormSchema>>, `existingImageUrls` | `imageOrder` | `offeringId`>;
+	type UpdateOnlyFields = Pick<
+		RemoteFormFields<v.InferInput<typeof updateOfferingFormSchema>>,
+		`existingImageUrls` | `imageOrder` | `offeringId`
+	>;
 
 	let {
 		remoteForm,
@@ -20,6 +23,7 @@
 		formId = `offering-form`,
 		returnTo = ``,
 		format = $bindable<OfferingFormat>(`offline`),
+		fieldsHidden = false,
 		onsubmit,
 		children,
 	}: {
@@ -29,6 +33,7 @@
 		formId?: string;
 		returnTo?: string;
 		format?: OfferingFormat;
+		fieldsHidden?: boolean;
 		onsubmit?: (event: SubmitEvent) => void;
 		children?: Snippet;
 	} = $props();
@@ -61,7 +66,7 @@
 </script>
 
 <form {...preflight} class="flex flex-col gap-6" id={formId} {onsubmit}>
-	<section class="grid gap-4">
+	<section class={[`grid gap-4`, fieldsHidden && `hidden`]} data-wizard-step="offering">
 		<OfferingImageUploadInput
 			field={remoteForm.fields.imageClaims}
 			existingImageUrlsField={updateFields.existingImageUrls}

@@ -6,7 +6,13 @@ import { publicProfileFormSchema } from "$lib/rpc/profile.common";
 import { routes } from "$lib/routes";
 import { ensureUserId } from "$lib/server/common";
 import { db, s, and, eq, ne, sql } from "$lib/server/db";
-import { createPublicProfileSlug, getPublicProfileBySlug, isPublicProfile, getUpcomingEventsForPublicProfile } from "$lib/server/profile";
+import {
+	createPublicProfileSlug,
+	getPublicProfileBySlug,
+	hasSocialLink,
+	isPublicProfile,
+	getUpcomingEventsForPublicProfile,
+} from "$lib/server/profile";
 import { resolveProfileImageUrl, signProfileImageClaim } from "$lib/server/profileImages";
 import { error, invalid, redirect } from "@sveltejs/kit";
 import * as v from "valibot";
@@ -37,6 +43,22 @@ export const getMyPublicProfile = query(async () => {
 		isPublic: isPublicProfile(profile),
 	};
 });
+
+export const checkEmailProfileComplete = command(
+	v.object({
+		email: v.pipe(v.string(), v.trim(), v.email()),
+	}),
+	async ({ email }) => {
+		const rows = await db.execute<{ id: string }>(sql`select id::text as id from auth.users where lower(email) = lower(${email}) limit 1`);
+		const userId = rows[0]?.id;
+		if (!userId) return { profileComplete: false };
+
+		const profile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
+		return {
+			profileComplete: isPublicProfile(profile) && hasSocialLink(profile),
+		};
+	},
+);
 
 export const checkSlugAvailability = query(
 	v.object({

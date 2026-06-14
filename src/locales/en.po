@@ -1179,6 +1179,7 @@ msgid "<0/> Code senden"
 msgstr "<0/> Send code"
 
 #: src/lib/components/Login.svelte
+#: src/routes/offerings/new/OtpStep.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Einmalcode"
 msgstr "One-time code"
@@ -1192,6 +1193,7 @@ msgid "<0/> Anmelden"
 msgstr "<0/> Log in"
 
 #: src/lib/components/Login.svelte
+#: src/routes/offerings/new/OtpStep.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Use a different email"
@@ -1225,6 +1227,7 @@ msgstr "Resend code <0/>"
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
+#: src/routes/offerings/new/OtpStep.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "E-Mail bestätigen"
 msgstr "Confirm email"
@@ -1233,6 +1236,7 @@ msgstr "Confirm email"
 msgid "Code senden"
 msgstr "Send code"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Checking…"
@@ -1327,6 +1331,7 @@ msgid "Du bietest beides an."
 msgstr "You offer both."
 
 #: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Bitte gib deine E-Mail-Adresse ein."
 msgstr "Please enter your email address."
 
@@ -1365,13 +1370,11 @@ msgstr "No information"
 msgid "Offline-Angebote werden über diesen Ort gefunden."
 msgstr "Offline offerings can be found via this location."
 
-#: src/routes/offerings/new/+page.svelte
-msgid "E-Mail *"
-msgstr "Email *"
+#~ msgid "E-Mail *"
+#~ msgstr "Email *"
 
-#: src/routes/offerings/new/+page.svelte
-msgid "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
-msgstr "We’ll send you a code before your offering is saved."
+#~ msgid "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
+#~ msgstr "We’ll send you a code before your offering is saved."
 
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
@@ -1415,9 +1418,8 @@ msgstr "Create the first offering for this area or check back later."
 msgid "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
 msgstr "Without a location, only your online offerings will be discoverable."
 
-#: src/routes/offerings/new/+page.svelte
-msgid "Wanna edit your profile? <0><0/> Edit profile</0>"
-msgstr "Want to edit your profile? <0><0/> Edit profile</0>"
+#~ msgid "Wanna edit your profile? <0><0/> Edit profile</0>"
+#~ msgstr "Want to edit your profile? <0><0/> Edit profile</0>"
 
 #: src/routes/offerings/+page.svelte
 msgid "Ort auswählen"
@@ -1516,6 +1518,7 @@ msgstr "Upload failed"
 msgid "Wird hochgeladen"
 msgstr "Uploading"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte warte, bis alle Bilder hochgeladen sind."
 msgstr "Please wait until all images have been uploaded."
@@ -1723,3 +1726,104 @@ msgstr "<0/> All offers"
 #: src/routes/offerings/[id]/edit/+page.server.ts
 msgid "Invalid offering slug"
 msgstr "Invalid offering slug"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Angebot"
+msgstr "Offer"
+
+#~ msgid "E-Mail konnte nicht geprüft werden."
+#~ msgstr "Email could not be verified."
+
+#~ msgid "Wir prüfen kurz, ob dein Profil schon vollständig ist, und senden später einen Code."
+#~ msgstr "We’ll quickly check whether your profile is already complete, and send you a code later."
+
+#~ msgid "<0/> Profil wird geprüft…"
+#~ msgstr "<0/> Your profile is being checked…"
+
+#~ msgid "Dein Profil ist vollständig. Du kannst den Profil-Schritt überspringen."
+#~ msgstr "Your profile is complete. You can skip the profile step."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen, dich vor der Anfrage besser einzuschätzen."
+msgstr "A complete profile builds trust. These details are shown publicly with your listing and help people assess you better before they reach out."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Möchtest du dein Profil bearbeiten? <0><0/> Profil bearbeiten</0>"
+msgstr "Do you want to edit your profile? <0><0/> Edit profile</0>"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Zurück"
+msgstr "Back"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "<0/> E-Mail wird geprüft…"
+msgstr "<0/> Email is being checked…"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Weiter"
+msgstr "Next"
+
+#~ msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, damit wir dein Angebot sicher deinem Profil zuordnen können."
+#~ msgstr "We’ve sent a 6-digit code to <0/>. Enter it here so we can securely match it to your profile."
+
+#: src/routes/offerings/new/OtpStep.svelte
+msgid "Code erneut senden"
+msgstr "Resend code"
+
+#~ msgid "Login E-Mail *"
+#~ msgstr "Login Email *"
+
+#~ msgid "E-Mail for Login *"
+#~ msgstr "Email for Login *"
+
+#~ msgid "We ."
+#~ msgstr "We ."
+
+#~ msgid "We'll send you a code to verify your email address."
+#~ msgstr "We'll send you a code to verify your email address."
+
+#~ msgid "Not pubWe'll send you a code to verify your email address."
+#~ msgstr "Not pubWe'll send you a code to verify your email address."
+
+#~ msgid "Not publicWe'll send you a code to verify your email address."
+#~ msgstr "Not publicWe’ll send you a code to verify your email address."
+
+#~ msgid "Not public.We'll send you a code to verify your email address."
+#~ msgstr "Not public. We’ll send you a code to verify your email address."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail für Login *"
+msgstr "Email for login *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
+msgstr "Not public. We’ll send you a code to verify your email address."
+
+#: src/routes/offerings/new/OtpStep.svelte
+msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
+msgstr "We sent a 6-digit code to <0/>. Enter it here to confirm your email. Your offer will not go live until the confirmation is complete."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail bestätigen und Angebot veröffentlichen"
+msgstr "Confirm email and publish offer"
+
+#~ msgid "E-Mail (für Login *"
+#~ msgstr "Email (for login *"
+
+#~ msgid "E-Mail (Für Login *"
+#~ msgstr "Email (for login *"
+
+#~ msgid "E-Mail (Für Login) *"
+#~ msgstr "Email (for login) *"
+
+#~ msgid "E-Mail (Für Login)"
+#~ msgstr "Email (for login)"
+
+#~ msgid "E-Mail* (Für Login)"
+#~ msgstr "Email* (for login)"
+
+#~ msgid "E-Mail (Für Login)*"
+#~ msgstr "Email (for login)*"
+
+#~ msgid "E-Mail für Login*"
+#~ msgstr "Email for login*"

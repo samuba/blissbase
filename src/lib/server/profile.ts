@@ -1,11 +1,11 @@
-import { getRequestEvent } from '$app/server';
-import { slugify, stripHtml, trimAllWhitespaces, type Modify } from '$lib/common';
-import type { OfferingFormat, OfferingPlaceFilter } from '$lib/rpc/offerings.common';
-import { type PublicProfileSocialLinks } from '$lib/rpc/profile.common';
-import { db, s, and, asc, desc, eq, gte, sql } from '$lib/server/db';
-import { eventWith, prepareEventsForUi, type UiEvent } from '$lib/server/events';
-import type { Profile } from '$lib/server/schema';
-import { type ProfileSocialType } from '$lib/socialLinks';
+import { getRequestEvent } from "$app/server";
+import { slugify, stripHtml, trimAllWhitespaces, type Modify } from "$lib/common";
+import type { OfferingFormat, OfferingPlaceFilter } from "$lib/rpc/offerings.common";
+import { type PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+import { db, s, and, asc, desc, eq, gte, sql } from "$lib/server/db";
+import { eventWith, prepareEventsForUi, type UiEvent } from "$lib/server/events";
+import type { Profile } from "$lib/server/schema";
+import { type ProfileSocialType } from "$lib/socialLinks";
 
 /**
  * Builds the editable/public slug for a profile.
@@ -14,7 +14,9 @@ import { type ProfileSocialType } from '$lib/socialLinks';
  * createPublicProfileSlug({ displayName: `Anna Müller` });
  */
 export function createPublicProfileSlug(args: { displayName: string }) {
-	const slug = slugify(args.displayName).replace(/^-+|-+$/g, ``).slice(0, 80);
+	const slug = slugify(args.displayName)
+		.replace(/^-+|-+$/g, ``)
+		.slice(0, 80);
 	return slug;
 }
 
@@ -35,10 +37,10 @@ export async function getPublicProfileBySlug(args: { slug: string }) {
 			place: {
 				columns: {
 					name: true,
-					slug: true
-				}
-			}
-		}
+					slug: true,
+				},
+			},
+		},
 	});
 }
 
@@ -51,13 +53,9 @@ export async function getPublicProfileBySlug(args: { slug: string }) {
 export async function getUpcomingEventsForPublicProfile(args: { authorId: string }) {
 	const endsAtOrDefault = sql<Date>`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
 	const events = await db.query.events.findMany({
-		where: and(
-			eq(s.events.authorId, args.authorId),
-			eq(s.events.listed, true),
-			gte(endsAtOrDefault, sql`NOW()`)
-		),
+		where: and(eq(s.events.authorId, args.authorId), eq(s.events.listed, true), gte(endsAtOrDefault, sql`NOW()`)),
 		with: eventWith,
-		orderBy: [asc(s.events.startAt), asc(s.events.id)]
+		orderBy: [asc(s.events.startAt), asc(s.events.id)],
 	});
 
 	return prepareEventsForUi(events) as UiEvent[];
@@ -70,10 +68,7 @@ export async function getUpcomingEventsForPublicProfile(args: { authorId: string
  * await getOfferingsForPublicProfile({ profile });
  */
 export async function getOfferingsForPublicProfile(args: {
-	profile: Pick<
-		Profile,
-		'id' | 'slug' | 'displayName' | 'bio' | 'profileImageUrl' | 'bannerImageUrl' | 'socialLinks'
-	> & {
+	profile: Pick<Profile, "id" | "slug" | "displayName" | "bio" | "profileImageUrl" | "bannerImageUrl" | "socialLinks"> & {
 		place: { name: string; slug: string } | null;
 	};
 }) {
@@ -87,9 +82,9 @@ export async function getOfferingsForPublicProfile(args: {
 			descriptionHtml: true,
 			format: true,
 			imageUrls: true,
-			listed: true
+			listed: true,
 		},
-		orderBy: [desc(s.offerings.createdAt)]
+		orderBy: [desc(s.offerings.createdAt)],
 	});
 
 	return offerings.map((offering) => ({
@@ -112,10 +107,10 @@ export async function getOfferingsForPublicProfile(args: {
 			place: args.profile.place
 				? {
 						name: args.profile.place.name,
-						slug: args.profile.place.slug
+						slug: args.profile.place.slug,
 					}
-				: null
-		}
+				: null,
+		},
 	}));
 }
 
@@ -143,9 +138,13 @@ export function getPublicProfileBioExcerpt(args: { bio?: string | null }) {
  * isPublicProfile({ slug: `anna`, displayName: `Anna` } as Profile);
  */
 export function isPublicProfile(
-	profile: Pick<Profile, 'slug' | 'displayName'> | null | undefined
-): profile is Pick<Profile, 'slug' | 'displayName'> & { slug: string; displayName: string } {
+	profile: Pick<Profile, "slug" | "displayName"> | null | undefined,
+): profile is Pick<Profile, "slug" | "displayName"> & { slug: string; displayName: string } {
 	return Boolean(profile?.slug?.trim() && profile?.displayName?.trim());
+}
+
+export function hasSocialLink(profile: Pick<Profile, "socialLinks"> | null | undefined) {
+	return Boolean(profile?.socialLinks?.some((link) => link.value?.trim()));
 }
 
 /**
