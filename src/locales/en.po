@@ -1453,9 +1453,8 @@ msgstr "Book now"
 msgid "Jetzt Buchen <0/>"
 msgstr "Book now <0/>"
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Offerings-Hinweis ausblenden"
-msgstr "Hide offer notice"
+#~ msgid "Offerings-Hinweis ausblenden"
+#~ msgstr "Hide offer notice"
 
 #: src/routes/offerings/+page.svelte
 msgid "Was willst du der Community geben?"
@@ -1469,9 +1468,8 @@ msgstr "Find sessions, services, and support."
 msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
 msgstr "Whether it’s a private breathwork session, coaching, massage, Reiki, or tarot readings—here you can offer it to the community."
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
-msgstr "For private sessions and services, go to: <0><0/> Offerings</0> <1/> <2/>"
+#~ msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
+#~ msgstr "For private sessions and services, go to: <0><0/> Offerings</0> <1/> <2/>"
 
 #. 0: normalizedSearchTerm
 #: src/routes/offerings/+page.svelte
@@ -1482,6 +1480,9 @@ msgstr "No more search results for \"{0}\""
 msgid "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
 msgstr "<0/>w <1><0/> Looking for events?We have lots!Show events <0/></1>"
 
+#~ msgid "Find conscious events near you."
+#~ msgstr "Find conscious events near you."
+
 #: src/routes/+layout.ts
-msgid "Find conscious events near you."
-msgstr "Find conscious events near you."
+msgid "Achtsame Events in deiner Nähe."
+msgstr "Conscious events near you."
