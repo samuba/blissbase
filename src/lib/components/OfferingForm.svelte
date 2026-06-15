@@ -82,7 +82,7 @@
 		</fieldset>
 
 		<fieldset class="fieldset">
-			<EditorJs field={remoteForm.fields.descriptionHtml} value="" />
+			<EditorJs field={remoteForm.fields.descriptionHtml} />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={remoteForm.fields.descriptionHtml} />
 		</fieldset>

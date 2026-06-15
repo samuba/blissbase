@@ -1,8 +1,29 @@
-import { formatDatesStr, formatTimesStr, generateSlug } from '../lib/common';
+import { deduplicateItems, formatDatesStr, formatTimesStr, generateSlug } from '../lib/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /** Fixed "now": Wed 4 Jun 2025, 12:00 local — used by relative-date logic. */
 const REFERENCE_NOW = new Date(2025, 5, 4, 12, 0, 0);
+
+describe(`deduplicateItems`, () => {
+    it(`keeps only the first occurrence of each item`, () => {
+        expect(deduplicateItems([
+            `https://example.com/one.jpg`,
+            `https://example.com/two.jpg`,
+            `https://example.com/one.jpg`,
+            `https://example.com/three.jpg`,
+            `https://example.com/two.jpg`
+        ])).toEqual([
+            `https://example.com/one.jpg`,
+            `https://example.com/two.jpg`,
+            `https://example.com/three.jpg`
+        ]);
+    });
+
+    it(`normalizes missing arrays to an empty array`, () => {
+        expect(deduplicateItems(undefined)).toEqual([]);
+        expect(deduplicateItems(null)).toEqual([]);
+    });
+});
 
 describe('formatTimesStr', () => {
     beforeEach(() => {

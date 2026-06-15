@@ -12,7 +12,7 @@
 
 	let { field, value }: {
 		field: RemoteFormField<string>;
-		value: string;
+		value?: string;
 	} = $props();
 
 	let editor: EditorJS | undefined = $state(undefined);

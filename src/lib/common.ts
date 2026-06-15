@@ -18,6 +18,11 @@ export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export function deduplicateItems<T>(items: readonly T[] | null | undefined) {
+    if (!Array.isArray(items) || !items.length) return [];
+    return Array.from(new Set(items));
+}
+
 export function addHours(date: Date, hours: number) {
     return new Date(date.getTime() + hours * 60 * 60 * 1000);
 }
