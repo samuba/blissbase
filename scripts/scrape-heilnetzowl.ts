@@ -160,8 +160,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             const dateTime = $timeElement.attr('datetime');
             if (!dateTime) return;
 
-            // Extract the event title
-            const $titleElement = $item.find('.col-8.col-md-8.ps-0 > div').first();
+            const $titleElement = $item.find('.accordion-button .text-wrap').first();
             const title = $titleElement.text().trim();
             if (!title) return;
 
