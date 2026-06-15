@@ -1,13 +1,19 @@
 <script lang="ts">
 	import DateRangePicker from './DateRangePicker.svelte';
 	import LocationDistanceInput from './LocationDistanceInput.svelte';
+	import type { LocationChangeEvent } from './LocationDistanceInput.svelte';
 	import { parseDate } from '@internationalized/date';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import TagSelection from './TagSelection.svelte';
 	import { Dialog } from '$lib/components/dialog';
 	import ToggleButton from './ToggleButton.svelte';
 	import TabsNavDesktop from './TabsNavDesktop.svelte';
-	import { routes } from '$lib/routes';
+
+	let {
+		onLocationDistanceChange = eventsStore.handleLocationDistanceChange
+	}: {
+		onLocationDistanceChange?: (event: LocationChangeEvent) => void;
+	} = $props();
 
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
@@ -107,7 +113,7 @@
 				resolvedCityName={resolvedCityName}
 				locationBiasLat={eventsStore.pagination.lat}
 				locationBiasLng={eventsStore.pagination.lng}
-				onChange={eventsStore.handleLocationDistanceChange}
+				onChange={onLocationDistanceChange}
 			/>
 		</div>
 

@@ -3,6 +3,7 @@
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import HeaderControls from '$lib/components/HeaderControls.svelte';
+	import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.svelte';
 	import { browser } from '$app/environment';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
 	import { setLocationInteractedCookie } from '$lib/cookie-utils';
@@ -35,6 +36,13 @@
 			document.getElementById('events-loading-spinner')?.scrollIntoView(true);
 		}
 	});
+
+	function handleLocationDistanceChange(event: LocationChangeEvent) {
+		if (event.location || event.isUsingCurrentLocation) {
+			dismissedAutoLocationHint = true;
+		}
+		eventsStore.handleLocationDistanceChange(event);
+	}
 
 	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
 </script>
@@ -96,7 +104,7 @@
 				</div>
 			{/if}
 		
-			<HeaderControls />
+			<HeaderControls onLocationDistanceChange={handleLocationDistanceChange} />
 		
 			<svelte:boundary>
 				<div class="px-4 md:px-0 max-w-2xl mx-auto">
