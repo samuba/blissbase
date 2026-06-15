@@ -38,9 +38,7 @@
 	});
 
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
-		if (event.location || event.isUsingCurrentLocation) {
-			dismissedAutoLocationHint = true;
-		}
+		dismissedAutoLocationHint = true;
 		eventsStore.handleLocationDistanceChange(event);
 	}
 
