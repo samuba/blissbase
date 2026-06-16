@@ -1141,7 +1141,6 @@ msgstr "“{0}” is already taken."
 msgid "Beschreibung"
 msgstr "Description"
 
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Links"
 msgstr "Links"
@@ -1849,3 +1848,14 @@ msgstr "✨ From the community, for the community ✨"
 #: src/routes/offerings/+page.svelte
 msgid "Ort"
 msgstr "Location"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Bitte füge mindestens einen Social-Link hinzu."
+msgstr "Please add at least one social link."
+
+#~ msgid "Links *"
+#~ msgstr "Links *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Social Links *"
+msgstr "Social Links *"
