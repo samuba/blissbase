@@ -111,12 +111,12 @@
 	</div>
 </div>
 
-<div class="container mx-auto flex flex-col items-center justify-center pb-4">
+<div class="flex w-full flex-col items-center justify-center pb-4">
 	<header
 		bind:this={headerElement}
 		class={[
-			`z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  pt-4 max-w-3xl`,
-			`pb-3 sm:pb-0`
+			`z-10 w-full bg-base-200 sticky top-0 pt-4`,
+			`pb-3`
 		]}
 		id="header-controls"
 	>
@@ -127,56 +127,58 @@
 			></div>
 		{/if}
 
-		<TabsNavDesktop />
+		<div class="mx-auto flex w-full max-w-3xl flex-col justify-center gap-3">
+			<TabsNavDesktop />
 
-		<div class="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 sm:flex-row sm:items-end sm:px-0">
-			<div class="flex w-full flex-col gap-1.5 sm:max-w-xs">
-				<span id="offering-location-label" class="hidden text-sm font-medium sm:block">Ort auswählen</span>
-				<Select
-					bind:value={selectedFilter}
-					options={filterOptions}
-					placeholder="Ort wählen"
-					triggerProps={{
-						class: `w-full justify-between text-left`,
-						"aria-labelledby": `offering-location-label`,
-					}}
-					onValueChange={onFilterChange}
-				/>
-			</div>
+			<div class="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 sm:flex-row sm:items-end sm:px-0">
+				<div class="flex w-full flex-col gap-1.5 sm:max-w-xs">
+					<span id="offering-location-label" class="hidden text-sm font-medium sm:block">Ort auswählen</span>
+					<Select
+						bind:value={selectedFilter}
+						options={filterOptions}
+						placeholder="Ort wählen"
+						triggerProps={{
+							class: `w-full justify-between text-left`,
+							"aria-labelledby": `offering-location-label`,
+						}}
+						onValueChange={onFilterChange}
+					/>
+				</div>
 
-			<div class="flex w-full flex-col gap-1.5 sm:max-w-xs">
-				<label for="offering-search" class="hidden text-sm font-medium sm:block">Suche</label>
-				<div class="relative">
-					<label class="input w-full">
-						<i class="icon-[ph--magnifying-glass] size-5"></i>
-						<input
-							id="offering-search"
-							type="text"
-							bind:this={searchInput}
-							bind:value={searchTerm}
-							placeholder="Titel oder Beschreibung"
-							class={[`grow`, normalizedSearchTerm && `active`]}
-						/>
-						{#if normalizedSearchTerm}
-							<button
-								type="button"
-								class="btn btn-ghost btn-sm btn-circle absolute top-1/2 right-2 -translate-y-1/2"
-								aria-label="Suche löschen"
-								onclick={clearSearch}
-							>
-								<i class="icon-[ph--x] size-4"></i>
-							</button>
-						{/if}
-					</label>
+				<div class="flex w-full flex-col gap-1.5 sm:max-w-xs">
+					<label for="offering-search" class="hidden text-sm font-medium sm:block">Suche</label>
+					<div class="relative">
+						<label class="input w-full">
+							<i class="icon-[ph--magnifying-glass] size-5"></i>
+							<input
+								id="offering-search"
+								type="text"
+								bind:this={searchInput}
+								bind:value={searchTerm}
+								placeholder="Titel oder Beschreibung"
+								class={[`grow`, normalizedSearchTerm && `active`]}
+							/>
+							{#if normalizedSearchTerm}
+								<button
+									type="button"
+									class="btn btn-ghost btn-sm btn-circle absolute top-1/2 right-2 -translate-y-1/2"
+									aria-label="Suche löschen"
+									onclick={clearSearch}
+								>
+									<i class="icon-[ph--x] size-4"></i>
+								</button>
+							{/if}
+						</label>
+					</div>
 				</div>
 			</div>
 		</div>
 	</header>
 
 	<div class="mx-auto mb-2 w-full max-w-5xl pt-4 sm:mb-4">
-		<div class="px-4 lg:px-0">
+		<div class="px-4">
 			{#if filteredOfferings.length}
-				<div class="grid gap-4 md:grid-cols-2">
+				<div class="grid gap-4 min-[920px]:grid-cols-2">
 					<div class="border-primary rounded-box bg-primary/20 flex flex-col gap-2 border-2 border-dashed p-4">
 						<span class="md:card-title text-primary-content mt-2">Was willst du der Community geben?</span>
 						<p class="text-primary-content/80 hidden md:block">
