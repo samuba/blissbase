@@ -559,6 +559,7 @@ msgid "vom <0/> <1/> bis <2/> <3/><4/>"
 msgstr "vom <0/> <1/> bis <2/> <3/><4/>"
 
 #: src/routes/+page.svelte
+#: src/routes/offerings/+page.svelte
 msgid "Hero image"
 msgstr "Hero image"
 
@@ -1472,9 +1473,8 @@ msgstr "Offerings-Hinweis ausblenden"
 msgid "Was willst du der Community geben?"
 msgstr "Was willst du der Community geben?"
 
-#: src/routes/offerings/+page.svelte
-msgid "Finde Sessions, Services und Unterstützung."
-msgstr "Finde Sessions, Services und Unterstützung."
+#~ msgid "Finde Sessions, Services und Unterstützung."
+#~ msgstr "Finde Sessions, Services und Unterstützung."
 
 #: src/routes/offerings/+page.svelte
 msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
@@ -1827,3 +1827,22 @@ msgstr "E-Mail bestätigen und Angebot veröffentlichen"
 
 #~ msgid "E-Mail für Login*"
 #~ msgstr "E-Mail für Login*"
+
+#~ msgid "Community Angebote"
+#~ msgstr "Community Angebote"
+
+#~ msgid "Sessions, Services und Unterstützung"
+#~ msgstr "Sessions, Services und Unterstützung"
+
+#~ msgid "✨ D ✨"
+#~ msgstr "✨ D ✨"
+
+#~ msgid "✨ Auser Community für die Community ✨"
+#~ msgstr "✨ Auser Community für die Community ✨"
+
+#~ msgid "Blissbase ist eine Community für die Community. Hier kannst du Angebote für die Community erstellen."
+#~ msgstr "Blissbase ist eine Community für die Community. Hier kannst du Angebote für die Community erstellen."
+
+#: src/routes/offerings/+page.svelte
+msgid "✨ Aus der Community für die Community ✨"
+msgstr "✨ Aus der Community für die Community ✨"

@@ -16,12 +16,12 @@
 	import { registerFlashToast } from '$lib/flashToast.svelte';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
 	import { Toaster } from 'svelte-sonner';
-	import { resolve } from '$app/paths';
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
 	import { isActiveAppTab } from '$lib/components/tabsNav';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import OfferingDetailsDialog from './offerings/OfferingDetailsDialog.svelte';
+	import { routes } from '$lib/routes';
 
 	let { data, children } = $props();
 	let { jwtClaims, supabase, userId } = $derived(data);
@@ -41,7 +41,7 @@
 
 	onMount(() => {
 		const cleanup = setupAutoRefresh();
-		
+
 		// Listen to Auth events to handle session refreshes and signouts
 		const { data: authData } = supabase.auth.onAuthStateChange((event, newSession) => {
 			console.log('authStateChange', newSession, event);
@@ -63,7 +63,9 @@
 	registerAuthCallbackFeedbackToast();
 	registerFlashToast();
 
-	const showDesktopNav = $derived(!isActiveAppTab(page.url.pathname, resolve('/')));
+	const showDesktopNav = $derived(
+		!isActiveAppTab(page.url.pathname, routes.root()) && !isActiveAppTab(page.url.pathname, routes.offeringsList())
+	);
 </script>
 
 <svelte:head>
