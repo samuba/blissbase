@@ -62,9 +62,11 @@
 	let authVerified = $state(isSignedIn);
 	let offeringSubmitAuthToken = $state(``);
 	let submitError = $state(``);
+	let profileSocialLinkError = $state(``);
 	let socialLinks = $state([...(profile?.socialLinks ?? [])] as PublicProfileSocialLinks);
 
 	const anyImageUploadInFlight = $derived(offeringImagesBusy || profileImageBusy || bannerImageBusy);
+	const profileHasSocialLink = $derived(hasSocialLink(socialLinks));
 	const selectedPlaceId = $derived(createOffering.fields.profile.placeId.value() ?? profile?.placeId?.toString() ?? ``);
 	const showPlaceWarning = $derived(!selectedPlaceId && format !== `online`);
 	const profileFieldIssues = $derived(hasProfileFieldIssues());
@@ -137,6 +139,30 @@
 			}
 		}
 		return true;
+	}
+
+	function validateProfileSocialLinks() {
+		if (profileHasSocialLink) {
+			profileSocialLinkError = ``;
+			return true;
+		}
+
+		profileSocialLinkError = `Bitte füge mindestens einen Social-Link hinzu.`;
+		return false;
+	}
+
+	function hasSocialLink(links: PublicProfileSocialLinks) {
+		return links.some((link) => link.value?.trim());
+	}
+
+	function getSocialLinks() {
+		return socialLinks;
+	}
+
+	function setSocialLinks(nextSocialLinks: PublicProfileSocialLinks) {
+		socialLinks = nextSocialLinks;
+		if (!hasSocialLink(nextSocialLinks)) return;
+		profileSocialLinkError = ``;
 	}
 
 	function resetEmailProfileCheck(emailValue = email) {
@@ -348,6 +374,7 @@
 		}
 		if (currentStep === `profile`) {
 			if (!validateCurrentStep()) return;
+			if (!validateProfileSocialLinks()) return;
 			if (!isSignedIn) {
 				await enterOtpStep();
 				return;
@@ -512,8 +539,14 @@
 						{/if}
 
 						<fieldset class={[`fieldset`, !missingSocialLinks && `hidden`]}>
-							<legend class="fieldset-legend">Links</legend>
-							<PublicProfileSocialLinksEditor bind:socialLinks field={createOffering.fields.profile.socialLinks} />
+							<legend class="fieldset-legend">Social Links *</legend>
+							<PublicProfileSocialLinksEditor
+								bind:socialLinks={getSocialLinks, setSocialLinks}
+								field={createOffering.fields.profile.socialLinks}
+							/>
+							{#if profileSocialLinkError}
+								<p class="text-error text-sm">{profileSocialLinkError}</p>
+							{/if}
 						</fieldset>
 					</section>
 				{:else if isSignedIn && currentStep === `offering`}

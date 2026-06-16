@@ -1,24 +1,24 @@
 <script lang="ts">
-	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
-	import Select from '$lib/components/Select.svelte';
-	import { Dialog } from '$lib/components/dialog';
-	import type { PublicProfileSocialLinks } from '$lib/rpc/profile.common';
+	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
+	import Select from "$lib/components/Select.svelte";
+	import { Dialog } from "$lib/components/dialog";
+	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import {
 		PROFILE_SOCIAL_TYPES,
 		socialIconClass,
 		socialIconColorClass,
 		socialLabel,
 		usernameUrlPrefix,
-		type ProfileSocialType
-	} from '$lib/socialLinks';
-	import type { RemoteFormField, RemoteFormIssue } from '@sveltejs/kit';
-	import { flip } from 'svelte/animate';
-	import { fade } from 'svelte/transition';
+		type ProfileSocialType,
+	} from "$lib/socialLinks";
+	import type { RemoteFormField, RemoteFormIssue } from "@sveltejs/kit";
+	import { flip } from "svelte/animate";
+	import { fade } from "svelte/transition";
 
 	let {
 		socialLinks = $bindable(),
 		field,
-		markDirty
+		markDirty,
 	}: {
 		socialLinks: PublicProfileSocialLinks;
 		field: PublicProfileSocialLinksField;
@@ -36,8 +36,8 @@
 	const addLinkSelectOptions = $derived(
 		PROFILE_SOCIAL_TYPES.map((type) => ({
 			value: type,
-			html: `<i class="${socialIconClass(type)} ${socialIconColorClass(type)} size-5 shrink-0"></i><span>${socialLabel(type)}</span>`
-		}))
+			html: `<i class="${socialIconClass(type)} ${socialIconColorClass(type)} size-5 shrink-0"></i><span>${socialLabel(type)}</span>`,
+		})),
 	);
 
 	function socialValuePlaceholder(type: ProfileSocialType) {
@@ -101,6 +101,18 @@
 		markDirty?.();
 	}
 
+	function onSocialLinkValueInput(args: { index: number; value: string }) {
+		const link = socialLinks[args.index];
+		if (!link) return;
+		if (link.value === args.value) return;
+
+		socialLinks = socialLinks.map((existingLink, i) => {
+			if (i !== args.index) return existingLink;
+			return { ...existingLink, value: args.value };
+		});
+		markDirty?.();
+	}
+
 	function getHtmlInputType(type: ProfileSocialType) {
 		if (type === `email`) return `email`;
 		if (type === `whatsapp`) return `tel`;
@@ -118,65 +130,63 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<ul class="mt-3 flex flex-col gap-4 md:grid md:grid-cols-2">
-		{#each socialLinks as link, i (`${link.type}-${link.value}-${i}`)}
-			<li
-				class={[`bg-base-200 flex flex-col gap-3 rounded-2xl px-4 py-3`]}
-				out:fade={{ duration: 160 }}
-				animate:flip={{ duration: 370, delay: 50 }}
-			>
-				<input type="hidden" {...field[i].type.as(`text`)} value={link.type} />
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend flex w-full items-center justify-between pt-0 pb-1">
-						<div class="flex items-center gap-2">
-							<i
-								class={[
-									socialIconClass(link.type),
-									socialIconColorClass(link.type),
-									`size-5 shrink-0`
-								]}
-							></i>
-							{socialLabel(link.type)}
-						</div>
-						<button
-							type="button"
-							class="btn btn-ghost btn-square btn-sm shrink-0"
-							aria-label={`${socialLabel(link.type)} entfernen`}
-							onclick={() => removeSocialLink(i)}
-						>
-							<i class="icon-[ph--trash] size-4"></i>
-						</button>
-					</legend>
-
-					{#if usernameUrlPrefix(link.type)}
-						<label class="input w-full pl-0">
-							<div
-								class="bg-base-200 border-base-300 flex h-full items-center justify-center rounded-l-full border-r-2 py-0 pr-1 pl-3 text-sm leading-tight"
-							>
-								{usernameUrlPrefix(link.type)?.replace(`https://`, ``)}
+	{#if socialLinks.length > 0}
+		<ul class="mt-3 flex flex-col gap-4 md:grid md:grid-cols-2">
+			{#each socialLinks as link, i (`${link.type}-${i}`)}
+				<li
+					class={[`bg-base-200 flex flex-col gap-3 rounded-2xl px-4 py-3`]}
+					out:fade={{ duration: 160 }}
+					animate:flip={{ duration: 370, delay: 50 }}
+				>
+					<input type="hidden" {...field[i].type.as(`text`)} value={link.type} />
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend flex w-full items-center justify-between pt-0 pb-1">
+							<div class="flex items-center gap-2">
+								<i class={[socialIconClass(link.type), socialIconColorClass(link.type), `size-5 shrink-0`]}></i>
+								{socialLabel(link.type)}
 							</div>
+							<button
+								type="button"
+								class="btn btn-ghost btn-square btn-sm shrink-0"
+								aria-label={`${socialLabel(link.type)} entfernen`}
+								onclick={() => removeSocialLink(i)}
+							>
+								<i class="icon-[ph--trash] size-4"></i>
+							</button>
+						</legend>
+
+						{#if usernameUrlPrefix(link.type)}
+							<label class="input w-full pl-0">
+								<div
+									class="bg-base-200 border-base-300 flex h-full items-center justify-center rounded-l-full border-r-2 py-0 pr-1 pl-3 text-sm leading-tight"
+								>
+									{usernameUrlPrefix(link.type)?.replace(`https://`, ``)}
+								</div>
+								<input
+									class="input peer w-full grow pl-0 text-sm"
+									spellcheck="false"
+									placeholder={socialValuePlaceholder(link.type)}
+									{...field[i].value.as(`text`)}
+									value={link.value}
+									oninput={(event) => onSocialLinkValueInput({ index: i, value: event.currentTarget.value })}
+								/>
+							</label>
+						{:else}
 							<input
-								class="input peer w-full grow pl-0 text-sm"
-								spellcheck="false"
+								id={`public-social-link-${link.type}-value`}
+								class="input input-bordered w-full"
+								type={getHtmlInputType(link.type)}
 								placeholder={socialValuePlaceholder(link.type)}
 								{...field[i].value.as(`text`)}
 								value={link.value}
+								oninput={(event) => onSocialLinkValueInput({ index: i, value: event.currentTarget.value })}
 							/>
-						</label>
-					{:else}
-						<input
-							id={`public-social-link-${link.type}-value`}
-							class="input input-bordered w-full"
-							type={getHtmlInputType(link.type)}
-							placeholder={socialValuePlaceholder(link.type)}
-							{...field[i].value.as(`text`)}
-							value={link.value}
-						/>
-					{/if}
-				</fieldset>
-			</li>
-		{/each}
-	</ul>
+						{/if}
+					</fieldset>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 
 	<FormFieldIssues {field} />
 
@@ -200,7 +210,7 @@
 		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class={[
-				`bg-base-100 fixed top-1/2 left-1/2 z-60 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl`
+				`bg-base-100 fixed top-1/2 left-1/2 z-60 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl`,
 			]}
 		>
 			<Dialog.Title class="mb-1 text-xl font-semibold">Link hinzufügen</Dialog.Title>
@@ -232,9 +242,7 @@
 								class="input peer w-full grow pl-0 text-sm"
 								bind:value={pendingLinkValue}
 								spellcheck="false"
-								placeholder={pendingLinkType
-									? socialValuePlaceholder(pendingLinkType)
-									: `Zuerst Typ wählen`}
+								placeholder={pendingLinkType ? socialValuePlaceholder(pendingLinkType) : `Zuerst Typ wählen`}
 							/>
 						</label>
 					{:else}
@@ -243,9 +251,7 @@
 							class="input input-bordered w-full"
 							spellcheck="false"
 							bind:value={pendingLinkValue}
-							placeholder={pendingLinkType
-								? socialValuePlaceholder(pendingLinkType)
-								: `Zuerst Typ wählen`}
+							placeholder={pendingLinkType ? socialValuePlaceholder(pendingLinkType) : `Zuerst Typ wählen`}
 							disabled={!pendingLinkType}
 						/>
 					{/if}
@@ -258,14 +264,7 @@
 
 			<div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<Dialog.Close class="btn btn-ghost" type="button">Abbrechen</Dialog.Close>
-				<button
-					type="button"
-					onclick={confirmAddLink}
-					form="add-social-link-form"
-					class="btn btn-primary"
-				>
-					Hinzufügen
-				</button>
+				<button type="button" onclick={confirmAddLink} form="add-social-link-form" class="btn btn-primary"> Hinzufügen </button>
 			</div>
 
 			<Dialog.Close
