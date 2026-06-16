@@ -1431,12 +1431,12 @@ msgid "Ort wählen"
 msgstr "Choose a location"
 
 #: src/routes/offerings/+page.svelte
+#: src/routes/offerings/+page.svelte
 msgid "Suche"
 msgstr "Search"
 
-#: src/routes/offerings/+page.svelte
-msgid "Titel oder Beschreibung"
-msgstr "Title or description"
+#~ msgid "Titel oder Beschreibung"
+#~ msgstr "Title or description"
 
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte

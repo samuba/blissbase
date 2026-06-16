@@ -155,7 +155,7 @@
 								type="text"
 								bind:this={searchInput}
 								bind:value={searchTerm}
-								placeholder="Titel oder Beschreibung"
+								placeholder="Suche"
 								class={[`grow`, normalizedSearchTerm && `active`]}
 							/>
 							{#if normalizedSearchTerm}
