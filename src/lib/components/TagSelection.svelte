@@ -4,13 +4,12 @@
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
-	import { isTouchDevice } from '$lib/common';
+	import TextSearchInput from '$lib/components/TextSearchInput.svelte';
 
 	const { allTags } = await getTags();
 	type Tag = (typeof allTags)[number];
 
-	let searchInput = $state<HTMLInputElement | null>(null);
-	let searchButton = $state<HTMLButtonElement | null>(null);
+	let textSearchInput = $state<TextSearchInput | null>(null);
 
 	/** Parses search term and returns matched tags */
 	function parseSearchTermToTags(searchTerm: string): Tag[] {
@@ -40,7 +39,7 @@
 		return {
 			filterQuery: searchTerm,
 			selectedTags: matchedTags,
-			searchExpanded: Boolean(searchTerm.trim()),
+			keywordSearched: Boolean(searchTerm.trim()),
 		};
 	}
 
@@ -51,82 +50,38 @@
 	const initialState = getInitialState();
 	let filterQuery = $state(initialState.filterQuery);
 	let selectedTags = $state<Tag[]>(initialState.selectedTags);
-	let searchExpanded = $state(initialState.searchExpanded);
-	let keywordSearched = $state(initialState.searchExpanded);
+	let keywordSearched = $state(initialState.keywordSearched);
 	let locale = $derived(localeStore.locale as 'en' | 'de');
 	let showLeftShadow = $state(false);
 	let showRightShadow = $state(false);
 
-	eventsStore.showTextSearch = initialState.searchExpanded;
+	eventsStore.showTextSearch = initialState.keywordSearched;
 
 	let railTags = $derived.by(() => {
 		const selectedTagIdSet = new Set(selectedTags.map((tag) => tag.id));
 		return allTags.filter((tag) => !selectedTagIdSet.has(tag.id));
 	});
 
-	function openSearch() {
-		searchExpanded = true;
+	function handleTextSearch(value: string) {
+		selectedTags = [];
+		setShowTextSearch(true);
+		eventsStore.handleSearchTermChange(value);
+	}
+
+	function handleSearchClose() {
+		setShowTextSearch(false);
+		eventsStore.handleSearchTermChange('');
 	}
 
 	function selectTag(tag: Tag) {
 		selectedTags = [...selectedTags, tag];
-		keywordSearched = false;
-		filterQuery = '';
-		searchExpanded = false;
-		setShowTextSearch(false);
+		textSearchInput?.close();
 		eventsStore.handleSearchTermChange(buildSelectedTagSearchTerm());
 	}
 
 	function removeTag(tag: Tag) {
 		selectedTags = selectedTags.filter((selectedTag) => selectedTag.id !== tag.id);
 		eventsStore.handleSearchTermChange(buildSelectedTagSearchTerm());
-	}
-
-	function runTextSearch(value?: string) {
-		if (!value?.trim()) return;
-		selectedTags = [];
-		searchExpanded = true;
-		filterQuery = value.trim() || '';
-		setShowTextSearch(true);
-		keywordSearched = Boolean(filterQuery);
-		eventsStore.handleSearchTermChange(filterQuery)
-		if (isTouchDevice()) {
-			searchButton?.focus();
-		}
-	}
-
-	function handleSearchInput(value: string) {
-		filterQuery = value;
-		keywordSearched = false;
-	}
-
-	function handleSearchBlur(e: FocusEvent & { currentTarget: HTMLElement }) {
-		if (filterQuery.trim()) return;
-
-		const nextFocusedEl = e.relatedTarget;
-		console.log(nextFocusedEl);
-		if (nextFocusedEl instanceof HTMLElement) {
-			const container = e.currentTarget.closest('label');
-			console.log(container);
-			if (container && nextFocusedEl.closest('label') === container) return;
-			console.log('close search');
-		}
-
-		closeSearch();
-	}
-
-	function clearSearchQuery() {
-		keywordSearched = false;
-		filterQuery = '';
-		closeSearch();
-	}
-
-	function closeSearch() {
-		keywordSearched = false;
-		filterQuery = '';
-		setShowTextSearch(false);
-		eventsStore.handleSearchTermChange('');
-		searchExpanded = false;
 	}
 
 	/** Maps vertical wheel movement to horizontal tag scrolling. */
@@ -168,62 +123,14 @@
 
 <div class="flex w-full max-w-full min-w-0 items-center">
 	<div class="relative flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden pb-1">
-		<div class={[`tag-trigger flex shrink-0 overflow-hidden`]}>
-			<label
-				class={[
-					'input input-bordered min-w-0 rounded-r-none pr-1 ',
-					keywordSearched && 'active font-semibold'
-				]}
-				onblur={handleSearchBlur}
-			>
-				<input
-					bind:this={searchInput}
-					class={[
-						' min-w-0 transition-transform duration-50 ease-out',
-						searchExpanded ? `w-28` : `w-14`
-					]}
-					bind:value={filterQuery}
-					onfocus={openSearch}
-					oninput={(e) => handleSearchInput(e.currentTarget.value)}
-					onblur={handleSearchBlur}
-					onkeydown={(e) => {
-						if (e.key === 'Enter' && filterQuery.trim()) {
-							runTextSearch(filterQuery);
-						}
-					}}
-					type="text"
-					placeholder={searchExpanded ? 'Suchbegriff' : 'Suchen'}
-				/>
-				{#if searchExpanded}
-					<button
-						type="button"
-						class="btn btn-ghost btn-sm btn-circle hover:cursor-pointer"
-						aria-label="Suchbegriff löschen"
-						tabindex={filterQuery.trim() ? 0 : -1}
-						onclick={clearSearchQuery}
-					>
-						<i class="icon-[ph--x] size-5"></i>
-					</button>
-				{/if}
-			</label>
-			<button
-				bind:this={searchButton}
-				class={[
-					'btn rounded-l-none border-l-0 pl-3 hover:cursor-pointer',
-					(searchExpanded && !keywordSearched) && 'btn-primary'
-				]}
-				title="Suche starten"
-				onclick={() => {
-					if (!filterQuery.trim()) {
-						searchInput?.focus();
-						return;
-					}
-					runTextSearch(filterQuery);
-				}}
-			>
-				<i class="icon-[ph--magnifying-glass] size-5 min-w-5"></i>
-			</button>
-		</div>
+		<TextSearchInput
+			bind:this={textSearchInput}
+			bind:query={filterQuery}
+			bind:searched={keywordSearched}
+			variant="compact"
+			onSearch={handleTextSearch}
+			onClose={handleSearchClose}
+		/>
 
 		<div class="flex-no-wrap tag-trigger flex gap-2" class:hidden={selectedTags.length === 0}>
 			{#each selectedTags as tag (tag.id)}

@@ -315,16 +315,16 @@ msgstr "<0/> Back"
 msgid "Hue: {0}°, Rotation: {1}°"
 msgstr "Hue: {0}°, Rotation: {1}°"
 
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Suchbegriff"
 msgstr "Search term"
 
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Suchbegriff löschen"
 msgstr "Clear search term"
 
 #: src/lib/components/LocationDistanceInput.svelte
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Enter"
 msgstr "Enter"
 
@@ -1253,7 +1253,7 @@ msgstr "Save listing"
 msgid "<0/> Wird gespeichert…"
 msgstr "<0/> Saving…"
 
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Suchen"
 msgstr "Search"
 
@@ -1268,7 +1268,8 @@ msgstr "In-Person"
 msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
 msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
 
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Suche starten"
 msgstr "Start search"
 
@@ -1429,14 +1430,12 @@ msgid "Ort wählen"
 msgstr "Choose a location"
 
 #: src/routes/offerings/+page.svelte
-#: src/routes/offerings/+page.svelte
 msgid "Suche"
 msgstr "Search"
 
 #~ msgid "Titel oder Beschreibung"
 #~ msgstr "Title or description"
 
-#: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 msgid "Suche löschen"

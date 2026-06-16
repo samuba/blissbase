@@ -5,6 +5,7 @@
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
 	import Select from "$lib/components/Select.svelte";
 	import TabsNavDesktop from "$lib/components/TabsNavDesktop.svelte";
+	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
 	import { OFFERING_PLACE_FILTERS, type OfferingPlaceFilter } from "$lib/rpc/offerings.common";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
@@ -16,8 +17,9 @@
 	const result = $derived(await getOfferings({ filter: requestedFilter }));
 	const offerings = $derived(result.offerings);
 	const filter = $derived(result.filter);
-	let searchTerm = $state(``);
-	let searchInput = $state<HTMLInputElement | null>(null);
+	let filterQuery = $state(``);
+	let keywordSearched = $state(false);
+	let searchInput = $state<TextSearchInput | null>(null);
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
 	let contentBeforeMenuHeight = $state(0);
@@ -36,7 +38,7 @@
 	}));
 
 	let selectedFilter = $derived<OfferingPlaceFilter>(requestedFilter);
-	const normalizedSearchTerm = $derived(searchTerm.trim().toLocaleLowerCase());
+	const normalizedSearchTerm = $derived(keywordSearched ? filterQuery.trim().toLocaleLowerCase() : ``);
 	const filteredOfferings = $derived.by(() => {
 		if (!normalizedSearchTerm) return offerings;
 		return offerings.filter((offering) => {
@@ -72,8 +74,7 @@
 	}
 
 	function clearSearch() {
-		searchTerm = ``;
-		searchInput?.focus();
+		searchInput?.clearAndFocus();
 	}
 
 	function newOfferingHref() {
@@ -147,29 +148,13 @@
 
 				<div class="flex w-full flex-col gap-1.5">
 					<label for="offering-search" class="hidden text-sm font-medium sm:block">Suche</label>
-					<div class="relative">
-						<label class="input w-full">
-							<i class="icon-[ph--magnifying-glass] size-5"></i>
-							<input
-								id="offering-search"
-								type="text"
-								bind:this={searchInput}
-								bind:value={searchTerm}
-								placeholder="Suche"
-								class={[`grow`, normalizedSearchTerm && `active`]}
-							/>
-							{#if normalizedSearchTerm}
-								<button
-									type="button"
-									class="btn btn-ghost btn-sm btn-circle absolute top-1/2 right-2 -translate-y-1/2"
-									aria-label="Suche löschen"
-									onclick={clearSearch}
-								>
-									<i class="icon-[ph--x] size-4"></i>
-								</button>
-							{/if}
-						</label>
-					</div>
+					<TextSearchInput
+						bind:this={searchInput}
+						id="offering-search"
+						bind:query={filterQuery}
+						bind:searched={keywordSearched}
+						wrapperClass="w-full"
+					/>
 				</div>
 			</div>
 		</div>
