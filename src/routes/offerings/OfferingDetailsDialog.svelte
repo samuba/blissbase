@@ -1,57 +1,20 @@
 <script lang="ts" module>
-	import { pushState, replaceState } from "$app/navigation";
+	import { pushState } from "$app/navigation";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import { routes } from "$lib/routes";
-	import { untrack } from "svelte";
 
 	let offering = $state<Offering | undefined>(undefined);
-	let offeringsById = $state<Record<number, Offering>>({});
 	let offeringReturnTo = $state<string | undefined>(undefined);
-	let open = $state(false);
-	let closeTimer: ReturnType<typeof setTimeout> | undefined;
+	let open = $derived(!!offering);
 
 	export function showOfferingDetailsDialog(offeringToShow: Offering, args: { returnTo?: string } = {}) {
-		clearCloseTimer();
+		if (!offeringToShow.slug) return;
 		offering = offeringToShow;
 		offeringReturnTo = args.returnTo;
-		offeringsById = {
-			...offeringsById,
-			[offeringToShow.id]: offeringToShow,
-		};
-		open = true;
-
-		if (!offeringToShow.slug) return;
 		pushState(routes.offeringDetails(offeringToShow.slug), {
 			selectedOfferingId: offeringToShow.id,
 		});
-	}
-
-	function rememberOfferings(offerings: Offering[]) {
-		if (!offerings?.length) return;
-
-		const rememberedOfferings = untrack(() => offeringsById);
-		let nextOfferingsById: Record<number, Offering> | undefined;
-
-		for (const knownOffering of offerings) {
-			if (rememberedOfferings[knownOffering.id] === knownOffering) continue;
-
-			nextOfferingsById ??= { ...rememberedOfferings };
-			nextOfferingsById[knownOffering.id] = knownOffering;
-		}
-
-		if (!nextOfferingsById) return;
-		offeringsById = nextOfferingsById;
-	}
-
-	function offeringBySlug(slug: string) {
-		return Object.values(offeringsById).find((knownOffering) => knownOffering.slug === slug);
-	}
-
-	function clearCloseTimer() {
-		if (!closeTimer) return;
-		clearTimeout(closeTimer);
-		closeTimer = undefined;
 	}
 
 	type Offering = {
@@ -81,66 +44,59 @@
 	import { page } from "$app/state";
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from "$lib/common";
 	import { Dialog } from "$lib/components/dialog";
+	import { getOfferingForDialog } from "$lib/rpc/offerings.remote";
+	import { replaceState } from "$app/navigation";
 	import OfferingDetails from "./OfferingDetails.svelte";
 
-	let { offerings = [] }: { offerings?: Offering[] } = $props();
+	let openingOfferingSlug = $state<string | undefined>(undefined);
 
 	$effect(() => {
-		rememberOfferings(offerings);
-	});
-
-	$effect(() => {
-		const returnOfferingSlug = page.url.searchParams.get(`offering`);
-		if (returnOfferingSlug) {
-			const returnOffering = offeringBySlug(returnOfferingSlug);
-			if (!returnOffering) return;
-
-			clearCloseTimer();
-			offering = returnOffering;
-			offeringReturnTo = routes.currentPath(page.url);
-			open = true;
+		const offeringSlug = page.url.searchParams.get(`offering`);
+		if (offeringSlug) {
+			void openOfferingFromUrl(offeringSlug);
 			return;
 		}
 
-		const selectedOfferingId = page.state.selectedOfferingId;
-		if (!selectedOfferingId) {
-			if (!offering?.slug) return;
-			if (page.url.pathname === routes.offeringDetails(offering.slug)) return;
+		// close dialog if user clicked browser back button
+		if (!page.state.selectedOfferingId) {
 			closeGracefully();
-			return;
 		}
-
-		const selectedOffering = offeringsById[selectedOfferingId];
-		if (!selectedOffering) return;
-		clearCloseTimer();
-		offering = selectedOffering;
-		open = true;
 	});
+
+	async function openOfferingFromUrl(offeringSlug: string) {
+		if (openingOfferingSlug === offeringSlug) return;
+		openingOfferingSlug = offeringSlug;
+		try {
+			const offeringToShow = await getOfferingForDialog({ slug: offeringSlug });
+			if (page.url.searchParams.get(`offering`) !== offeringSlug) return;
+
+			const returnTo = urlWithoutOfferingDialogParam(page.url);
+			replaceState(returnTo, page.state);
+			if (!offeringToShow) return;
+			showOfferingDetailsDialog(offeringToShow, { returnTo });
+		} finally {
+			openingOfferingSlug = undefined;
+		}
+	}
 
 	function handleClose() {
 		if (!browser) return;
-		if (page.url.searchParams.has(`offering`)) {
-			closeReturnToDialog();
-			return;
-		}
-
-		history.back();
-	}
-
-	function closeReturnToDialog() {
-		const url = new URL(page.url);
-		url.searchParams.delete(`offering`);
-		replaceState(routes.currentPath(url), page.state);
 		closeGracefully();
+		history.back();
 	}
 
 	function closeGracefully() {
 		open = false;
-		clearCloseTimer();
-		closeTimer = setTimeout(() => {
+		setTimeout(() => {
 			offering = undefined;
-			closeTimer = undefined;
-		}, 200);
+			offeringReturnTo = undefined;
+		}, 200); // delayed to not have layout shift during closing animation
+	}
+
+	function urlWithoutOfferingDialogParam(url: URL) {
+		const nextUrl = new URL(url);
+		nextUrl.searchParams.delete(`offering`);
+		return routes.currentPath(nextUrl);
 	}
 
 	function onOpenChange(shouldOpen: boolean) {
@@ -173,7 +129,9 @@
 			</div>
 
 			{#if offering}
-				<OfferingDetails {offering} editReturnTo={offeringReturnTo} onManaged={handleClose} />
+				{#key offering.id}
+					<OfferingDetails {offering} editReturnTo={offeringReturnTo} onManaged={handleClose} />
+				{/key}
 			{/if}
 
 			<div class="mt-2 flex w-full justify-center gap-6 pb-6 md:hidden">

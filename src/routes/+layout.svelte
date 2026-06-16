@@ -21,6 +21,7 @@
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
 	import { isActiveAppTab } from '$lib/components/tabsNav';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
+	import OfferingDetailsDialog from './offerings/OfferingDetailsDialog.svelte';
 
 	let { data, children } = $props();
 	let { jwtClaims, supabase, userId } = $derived(data);
@@ -110,3 +111,4 @@
 <LoginDialog />
 
 <EventDetailsDialog />
+<OfferingDetailsDialog />

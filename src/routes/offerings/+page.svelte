@@ -7,7 +7,7 @@
 	import { OFFERING_PLACE_FILTERS, type OfferingPlaceFilter } from "$lib/rpc/offerings.common";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
-	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
+	import { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 
@@ -72,11 +72,7 @@
 	}
 
 	function openOfferingDetails(offering: (typeof offerings)[number]) {
-		showOfferingDetailsDialog(offering, {
-			returnTo: offering.slug
-				? routes.offeringDialog({ returnTo: routes.currentPath(page.url), offeringSlug: offering.slug })
-				: routes.currentPath(page.url),
-		});
+		showOfferingDetailsDialog(offering, { returnTo: routes.currentPath(page.url) });
 	}
 </script>
 
@@ -219,4 +215,3 @@
 	</div>
 </div>
 
-<OfferingDetailsDialog {offerings} />

@@ -2,6 +2,7 @@
 	import { stripHtml, trimAllWhitespaces } from "$lib/common";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { routes } from "$lib/routes";
+	import RandomPlaceholderImg from "./RandomPlaceholderImg.svelte";
 
 	let {
 		offering,
@@ -21,6 +22,7 @@
 
 	function handleClick(event: MouseEvent) {
 		if (!onclick) return;
+		if (!offering.slug) return;
 		if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 		event.preventDefault();
 		onclick();
@@ -41,7 +43,7 @@
 </script>
 
 <a
-	href={href}
+	{href}
 	class={[
 		`card bg-base-100 group h-full w-full cursor-pointer rounded-2xl text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`,
 		className,
@@ -54,13 +56,25 @@
 		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
 			{#if imageUrl}
 				<div
-					class="bg-base-200 min-w-32 w-full overflow-hidden rounded-t-2xl sm:max-w-42 sm:min-w-42 sm:rounded-tr-none sm:rounded-bl-2xl"
+					class={[
+						`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+						`rounded-t-lg sm:rounded-tl-lg`,
+					]}
 				>
-					<img
-						src={imageUrl}
-						alt=""
-						class="h-full max-h-72 w-full object-cover transition-transform duration-300 group-hover:scale-105 sm:max-h-54"
-					/>
+					<div class={[`h-full bg-cover bg-center`, `rounded-t-lg sm:rounded-tl-lg`]} style="background-image: url({imageUrl})">
+						<figure
+							class={[
+								`h-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
+								`rounded-t-lg sm:rounded-tl-lg`,
+							]}
+						>
+							<img
+								src={imageUrl}
+								alt="illustration for offering: {offering.title}"
+								class="h-full max-h-72 max-w-full object-cover sm:max-h-54"
+							/>
+						</figure>
+					</div>
 				</div>
 			{/if}
 

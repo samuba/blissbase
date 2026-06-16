@@ -19,7 +19,7 @@
 	let isChangingListing = $state(false);
 	let isSubmitting = $derived(updateOffering.pending > 0);
 	let actionsDisabled = $derived(isSubmitting || isDeletingOffering || isChangingListing || imageBusy);
-	let fallbackReturnHref = $derived(offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList());
+	const fallbackReturnHref = routes.offeringsList();
 	let returnHref = $derived(
 		safeReturnToPath({
 			returnTo: page.url.searchParams.get(`returnTo`),

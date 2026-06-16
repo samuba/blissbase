@@ -4,12 +4,14 @@
 	import type { PageProps } from "./$types";
 
 	let { data }: PageProps = $props();
-	const { offering } = $derived(data);
+	const offering = $derived(data.offering);
 </script>
 
 <div class="container mx-auto max-w-3xl">
 	<div class="bg-base-100 sm:rounded-box overflow-hidden shadow">
-		<OfferingDetails {offering} />
+		{#key offering.id}
+			<OfferingDetails {offering} />
+		{/key}
 	</div>
 
 	<div class="flex w-full justify-center gap-6 py-3">

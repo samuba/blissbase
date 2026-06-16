@@ -13,7 +13,7 @@ import { routes, safeReturnToPath } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
-import { and, db, eq, ne, s, sql } from "$lib/server/db";
+import { and, db, eq, ne, or, s, sql } from "$lib/server/db";
 import { verifyOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
 import { createPublicProfileSlug, isPublicProfile } from "$lib/server/profile";
 import { resolveProfileImageUrl } from "$lib/server/profileImages";
@@ -33,6 +33,10 @@ const offeringImageUploadSchema = v.object({
 
 const offeringMutationSchema = v.object({
 	offeringId: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
+
+const offeringBySlugSchema = v.object({
+	slug: v.pipe(v.string(), v.trim(), v.nonEmpty()),
 });
 
 const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
@@ -165,6 +169,60 @@ export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, a
 	};
 });
 
+export const getOfferingForDialog = query(offeringBySlugSchema, async ({ slug }) => {
+	const userId = getRequestEvent().locals.userId;
+	const offering = await db.query.offerings.findFirst({
+		where: userId
+			? and(eq(s.offerings.slug, slug), or(eq(s.offerings.listed, true), eq(s.offerings.profileId, userId)))
+			: and(eq(s.offerings.slug, slug), eq(s.offerings.listed, true)),
+		columns: {
+			id: true,
+			slug: true,
+			title: true,
+			descriptionHtml: true,
+			format: true,
+			imageUrls: true,
+			listed: true,
+		},
+		with: {
+			profile: {
+				columns: {
+					id: true,
+					slug: true,
+					displayName: true,
+					bio: true,
+					profileImageUrl: true,
+					bannerImageUrl: true,
+					socialLinks: true,
+				},
+				with: {
+					place: {
+						columns: {
+							name: true,
+							slug: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!offering?.profile) return null;
+
+	return {
+		...offering,
+		descriptionHtml: offering.descriptionHtml ?? ``,
+		imageUrls: offering.imageUrls ?? [],
+		canManage: userId === offering.profile.id,
+		profile: {
+			...offering.profile,
+			bio: offering.profile.bio ?? ``,
+			profileImageUrl: offering.profile.profileImageUrl ?? ``,
+			bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
+		},
+	};
+});
+
 export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	const userId = getOfferingSubmitUserId(data.authToken);
 	if (!userId) return invalid(issue.email(`Bitte bestätige deine E-Mail erneut.`));
@@ -223,7 +281,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	refreshOfferingLists();
 	setFlash(`offeringCreated`);
 
-	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(slug) }));
+	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(slug), offeringSlug: slug }));
 });
 
 export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {
@@ -279,7 +337,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 
 	refreshOfferingLists();
 	setFlash(`offeringUpdated`);
-	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(offering.slug) }));
+	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(offering.slug), offeringSlug: offering.slug }));
 });
 
 export const unlistOffering = command(offeringMutationSchema, async ({ offeringId }) => {
@@ -627,7 +685,7 @@ function refreshOfferingLists() {
 	}
 }
 
-function offeringRedirectHref(args: { returnTo?: string | null; fallback: ReturnType<typeof routes.offeringDetails> }) {
+function offeringRedirectHref(args: { returnTo?: string | null; fallback: ReturnType<typeof routes.offeringDetails>; offeringSlug: string }) {
 	const { url } = getRequestEvent();
 	const href = safeReturnToPath({
 		returnTo: args.returnTo,
@@ -635,6 +693,7 @@ function offeringRedirectHref(args: { returnTo?: string | null; fallback: Return
 		origin: url.origin,
 	});
 	if (isOfferingFormHref({ href, origin: url.origin })) return args.fallback;
+	if (args.returnTo) return routes.offeringDialog({ returnTo: href, offeringSlug: args.offeringSlug });
 
 	return href;
 }

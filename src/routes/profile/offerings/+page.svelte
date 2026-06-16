@@ -3,7 +3,7 @@
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
 	import { getMyOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
-	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
+	import { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
 
 	const offerings = $derived(await getMyOfferings());
 	const activeOfferings = $derived(offerings.filter((offering) => offering.listed));
@@ -16,11 +16,7 @@
 	}
 
 	function openOfferingDetails(offering: (typeof offerings)[number]) {
-		showOfferingDetailsDialog(offering, {
-			returnTo: offering.slug
-				? routes.offeringDialog({ returnTo: routes.currentPath(page.url), offeringSlug: offering.slug })
-				: routes.currentPath(page.url),
-		});
+		showOfferingDetailsDialog(offering, { returnTo: routes.currentPath(page.url) });
 	}
 </script>
 
@@ -92,4 +88,3 @@
 	</div>
 </div>
 
-<OfferingDetailsDialog {offerings} />

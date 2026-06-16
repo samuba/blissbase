@@ -49,7 +49,7 @@ export function absoluteUrl(path: string) {
     return new URL(path, BASE_URL).toString();
 }
 
-export function safeReturnToPath(args: { returnTo?: ResolvedPathname | null; fallback: ResolvedPathname; origin?: string }) {
+export function safeReturnToPath(args: { returnTo?: string | null; fallback: string; origin?: string }) {
     const returnTo = normalizeReturnToPath(args.returnTo, args.origin ?? BASE_URL);
     return returnTo ?? args.fallback;
 }
@@ -58,7 +58,7 @@ function relativeUrl(url: URL) {
     return url.toString().replace(url.origin, '')
 }
 
-function withReturnTo(path: ResolvedPathname, returnTo?: ResolvedPathname | null) {
+function withReturnTo(path: ResolvedPathname, returnTo?: string | null) {
     const returnToPath = normalizeReturnToPath(returnTo, BASE_URL);
     if (!returnToPath) return path;
 
@@ -81,6 +81,6 @@ function normalizeReturnToPath(value: string | null | undefined, origin: string)
     }
 }
 
-type ReturnToArgs = { returnTo?: ResolvedPathname | null };
+type ReturnToArgs = { returnTo?: string | null };
 
 type ResolvedPathname = ReturnType<typeof resolve>;
