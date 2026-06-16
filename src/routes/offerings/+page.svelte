@@ -95,7 +95,7 @@
 <div class="grid w-full overflow-hidden" id="content-before-menu">
 	<div class="col-start-1 row-start-1">
 		<enhanced:img
-			src="/static/offering-hero.jpg?blur=2&brightness=0.87"
+			src="/static/offering-hero.jpg?blur=2.5&brightness=0.87"
 			alt="Hero image"
 			class="w-full md:h-auto md:max-h-[550px] h-72 object-cover md:blur-[2px]"
 		/>
