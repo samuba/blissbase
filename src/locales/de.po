@@ -1422,9 +1422,8 @@ msgstr "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
 #~ msgid "Wanna edit your profile? <0><0/> Edit profile</0>"
 #~ msgstr "Wanna edit your profile? <0><0/> Edit profile</0>"
 
-#: src/routes/offerings/+page.svelte
-msgid "Ort auswählen"
-msgstr "Ort auswählen"
+#~ msgid "Ort auswählen"
+#~ msgstr "Ort auswählen"
 
 #: src/routes/offerings/+page.svelte
 msgid "Ort wählen"
@@ -1846,3 +1845,7 @@ msgstr "E-Mail bestätigen und Angebot veröffentlichen"
 #: src/routes/offerings/+page.svelte
 msgid "✨ Aus der Community für die Community ✨"
 msgstr "✨ Aus der Community für die Community ✨"
+
+#: src/routes/offerings/+page.svelte
+msgid "Ort"
+msgstr "Ort"
