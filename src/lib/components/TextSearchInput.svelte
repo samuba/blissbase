@@ -84,11 +84,17 @@
 	}
 </script>
 
-<div class={[`tag-trigger flex shrink-0 overflow-hidden`, wrapperClass]}>
+<div
+	class={[
+		`shrink-0`,
+		variant === `full` ? [`join`, `w-full`] : [`tag-trigger`, `flex`, `overflow-hidden`],
+		wrapperClass,
+	]}
+>
 	<label
 		class={[
-			`input input-bordered min-w-0 rounded-r-none pr-1`,
-			variant === `full` && `w-full`,
+			`input input-bordered min-w-0 pr-1`,
+			variant === `full` ? [`join-item`, `w-full`] : `rounded-r-none`,
 			searched && `active font-semibold`,
 		]}
 		onblur={handleSearchBlur}
@@ -128,7 +134,8 @@
 	<button
 		bind:this={searchButton}
 		class={[
-			`btn rounded-l-none border-l-0 pl-3 hover:cursor-pointer`,
+			`btn pl-3 hover:cursor-pointer`,
+			variant === `full` ? `join-item` : [`rounded-l-none`, `border-l-0`],
 			searchExpanded && !searched && `btn-primary`,
 		]}
 		title="Suche starten"

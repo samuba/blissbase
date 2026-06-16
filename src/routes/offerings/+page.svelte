@@ -131,9 +131,9 @@
 		<div class="mx-auto flex w-full max-w-3xl flex-col justify-center gap-3">
 			<TabsNavDesktop />
 
-			<div class="flex w-full flex-col gap-3 px-4 sm:flex-row sm:items-end sm:px-0">
+			<div class="flex w-full flex-col gap-3 px-4 sm:flex-row sm:items-end">
 				<div class="flex w-full flex-col gap-1.5">
-					<span id="offering-location-label" class="hidden text-sm font-medium sm:block">Ort</span>
+					<span id="offering-location-label" class="hidden text-xs font-medium sm:block">Ort</span>
 					<Select
 						bind:value={selectedFilter}
 						options={filterOptions}
@@ -147,7 +147,7 @@
 				</div>
 
 				<div class="flex w-full flex-col gap-1.5">
-					<label for="offering-search" class="hidden text-sm font-medium sm:block">Suche</label>
+					<label for="offering-search" class="hidden text-xs font-medium sm:block">Suche</label>
 					<TextSearchInput
 						bind:this={searchInput}
 						id="offering-search"
