@@ -1,5 +1,6 @@
 import { fetchEvents, loadEventsParamsSchema, prepareEventsResultForUi } from "$lib/server/events";
 import { loadFiltersFromCookie, saveFiltersToCookie } from "$lib/cookie-utils";
+import { coarseLatLngForAnalytics } from "$lib/locationFilter";
 import { getRequestEvent, command, query } from '$app/server';
 import { ensureUserId, posthogCapture } from "$lib/server/common";
 import { db, s } from '$lib/server/db';
@@ -36,12 +37,15 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
     // Fetch events with current params
     const result = prepareEventsResultForUi(await fetchEvents(params));
 
+    const coarseCoords = coarseLatLngForAnalytics({
+        lat: result.pagination.lat,
+        lng: result.pagination.lng
+    });
     posthogCapture('events_fetched', {
         events: result.events.length,
         totalEvents: result.pagination.totalEvents,
         totalPages: result.pagination.totalPages,
-        lat: result.pagination.lat,
-        lng: result.pagination.lng,
+        ...coarseCoords,
         plzCity: result.pagination.plzCity,
         distance: result.pagination.distance,
         searchTerm: result.pagination.searchTerm,

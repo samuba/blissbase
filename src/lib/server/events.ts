@@ -18,6 +18,7 @@ import {
 } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
+import { sanitizeLocationParams } from '$lib/locationFilter';
 import type { InsertEvent } from '$lib/types';
 import { type Modify } from '$lib/common';
 import * as v from 'valibot';
@@ -95,7 +96,8 @@ export const eventWith = {
  * });
  */
 export async function fetchEvents(params: LoadEventsParams) {
-	const { plzCity, distance, lat, lng, searchTerm, tagIds, onlyOnlineEvents } = params;
+	const sanitizedParams = sanitizeLocationParams(params);
+	const { plzCity, distance, lat, lng, searchTerm, tagIds, onlyOnlineEvents } = sanitizedParams;
 	const timeZone = 'Europe/Berlin';
 	const today = getToday(timeZone);
 	const startCalDate = params.startDate
@@ -173,7 +175,7 @@ export async function fetchEvents(params: LoadEventsParams) {
     let geocodedCoords: { lat: number; lng: number } | null = null;
 
 	if ((attendanceMode === 'offline' || attendanceMode === 'offline+online' || !attendanceMode) && distance) {
-		if (lat && lng) {
+		if (lat != null && lng != null) {
 			if (!isNaN(lat) && !isNaN(lng)) {
 				geocodedCoords = { lat, lng };
 			} else {
@@ -302,7 +304,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 
 	// Resolve city name from coordinates if using current location
 	let resolvedCityName: string | null = null;
-	if (lat && lng && !plzCity) {
+	if (lat != null && lng != null && !plzCity) {
 		// Only resolve city name when using coordinates directly (not when plzCity was provided)
 		resolvedCityName = await reverseGeocodeCityCached(lat, lng, GOOGLE_MAPS_API_KEY);
 	}

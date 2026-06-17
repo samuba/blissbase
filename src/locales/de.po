@@ -324,6 +324,7 @@ msgid "Suchbegriff löschen"
 msgstr "Suchbegriff löschen"
 
 #: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TextSearchInput.svelte
 msgid "Enter"
 msgstr "Enter"
@@ -609,10 +610,12 @@ msgstr "Beschreibung *"
 msgid "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 msgstr "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "ArrowDown"
 msgstr "ArrowDown"
 
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "ArrowUp"
 msgstr "ArrowUp"
@@ -949,6 +952,7 @@ msgstr "Antworten auf die häufigsten Fragen rund um Blissbase."
 msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TabsNavMobile.svelte
 msgid "Escape"
 msgstr "Escape"
@@ -1858,3 +1862,14 @@ msgstr "Bitte füge mindestens einen Social-Link hinzu."
 #: src/routes/offerings/new/+page.svelte
 msgid "Social Links *"
 msgstr "Social Links *"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Tab"
+msgstr "Tab"
+
+#~ msgid "Google Maps"
+#~ msgstr "Google Maps"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "<0/> Google Maps"
+msgstr "<0/> Google Maps"

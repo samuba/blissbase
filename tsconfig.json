@@ -13,7 +13,8 @@
 		"types": [
 			"unplugin-icons/types/svelte",
 			"vite-plugin-pwa/info",
-			"vite-plugin-pwa/pwa-assets"
+			"vite-plugin-pwa/pwa-assets",
+			"google.maps"
 		]
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias

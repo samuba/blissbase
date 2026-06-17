@@ -1,4 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
+import { sanitizeLocationParams } from '$lib/locationFilter';
 import type { AttendanceMode } from './server/schema';
 
 const COOKIE_NAME = 'blissbase_filters';
@@ -31,36 +32,37 @@ export type FilterCookieData = {
  * @param data - Raw data from cookie
  * @returns Validated filter data or null if invalid
  */
-function validateFilterData(data: unknown): FilterCookieData | null {
+export function validateFilterData(data: unknown): FilterCookieData | null {
     if (!data || typeof data !== 'object') return null;
 
     const filterData = data as Record<string, unknown>;
-
-    // Validate and convert lat/lng to numbers if they exist
-    const lat = filterData.lat !== undefined && filterData.lat !== null
-        ? Number(filterData.lat)
-        : null;
-    const lng = filterData.lng !== undefined && filterData.lng !== null
-        ? Number(filterData.lng)
-        : null;
-
-    // Check if lat/lng are valid numbers
-    if ((lat !== null && isNaN(lat)) || (lng !== null && isNaN(lng))) {
-        return null;
-    }
 
     // Validate tagIds array
     const tagIds = Array.isArray(filterData.tagIds)
         ? filterData.tagIds.filter((id): id is number => typeof id === 'number' && !isNaN(id))
         : null;
 
+    const location = sanitizeLocationParams({
+        plzCity: typeof filterData.plzCity === 'string' ? filterData.plzCity : null,
+        distance: typeof filterData.distance === 'string' ? filterData.distance : null,
+        lat: filterData.lat !== undefined && filterData.lat !== null ? Number(filterData.lat) : null,
+        lng: filterData.lng !== undefined && filterData.lng !== null ? Number(filterData.lng) : null
+    });
+
+    if (
+        (filterData.lat !== undefined && filterData.lat !== null && isNaN(Number(filterData.lat))) ||
+        (filterData.lng !== undefined && filterData.lng !== null && isNaN(Number(filterData.lng)))
+    ) {
+        return null;
+    }
+
     return {
         startDate: typeof filterData.startDate === 'string' ? filterData.startDate : null,
         endDate: typeof filterData.endDate === 'string' ? filterData.endDate : null,
-        plzCity: typeof filterData.plzCity === 'string' ? filterData.plzCity : null,
-        distance: typeof filterData.distance === 'string' ? filterData.distance : null,
-        lat,
-        lng,
+        plzCity: location.plzCity,
+        distance: location.distance,
+        lat: location.lat,
+        lng: location.lng,
         searchTerm: typeof filterData.searchTerm === 'string' ? filterData.searchTerm : null,
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
         sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,

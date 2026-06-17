@@ -45,6 +45,7 @@ export class EventsStore {
     showTextSearch = $state(false);
 
     private finishedLoadingCallbacks = new SvelteSet<FinishedLoadingCallback>();
+    private loadRequestId = 0;
 
     // Derived reactive values
     selectedSortValue = $derived(this.getSortValue(this.pagination.sortBy, this.pagination.sortOrder));
@@ -58,7 +59,7 @@ export class EventsStore {
     );
     hasSearchFilter = $derived(Boolean(this.pagination.searchTerm?.trim()));
     hasDateFilter = $derived(this.pagination.startDate || this.pagination.endDate);
-    hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat && this.pagination.lng)));
+    hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat != null && this.pagination.lng != null)));
     hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
     hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
     hasAttendanceModeFilter = $derived(this.pagination.attendanceMode);
@@ -86,6 +87,7 @@ export class EventsStore {
 
     // Core loading function
     async loadEvents(params: Parameters<typeof fetchEventsWithCookiePersistence>[0], append?: boolean) {
+        const requestId = ++this.loadRequestId;
         const applyPagination = (params: Parameters<typeof fetchEventsWithCookiePersistence>[0]) => {
                 // Normalize undefined to null for consistency with PaginationState type
                 this.pagination = {
@@ -111,6 +113,8 @@ export class EventsStore {
             this.loadingState = append ? 'loading-more' : 'loading';
             applyPagination(params); // optimistically set pagination state
             const data = await fetchEventsWithCookiePersistence(params);
+
+            if (requestId !== this.loadRequestId) return;
 
             if (append) {
                 // Filter out duplicate events that may result from pagination

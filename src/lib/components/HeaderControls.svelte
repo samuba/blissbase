@@ -33,12 +33,17 @@
 	const startDate = $derived(eventsStore.pagination.startDate ? parseDate(eventsStore.pagination.startDate) : undefined);
 	const endDate = $derived(eventsStore.pagination.endDate ? parseDate(eventsStore.pagination.endDate) : undefined);
 
-	const resolvedCityName = $derived(eventsStore.pagination.lat && eventsStore.pagination.lng
-		? eventsStore.pagination.plzCity
-		: null);
-	const initialLocation = $derived(eventsStore.pagination.lat && eventsStore.pagination.lng
-		? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
-		: eventsStore.pagination.plzCity);
+	const resolvedCityName = $derived(
+		eventsStore.pagination.lat != null && eventsStore.pagination.lng != null
+			? eventsStore.pagination.plzCity
+			: null
+	);
+	const initialLocation = $derived(
+		eventsStore.pagination.plzCity ||
+		(eventsStore.pagination.lat != null && eventsStore.pagination.lng != null
+			? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
+			: null)
+	);
 
 	$effect(() => {
 		contentBeforeMenuHeight = document.getElementById('content-before-menu')?.clientHeight ?? 0;
@@ -96,9 +101,12 @@
 	<div class="flex w-full items-center justify-center gap-3 px-4 sm:px-0 max-w-2xl mx-auto">
 		<div class="w-full min-w-0 flex-1 md:w-auto">
 			<LocationDistanceInput
+				inputId="plzCityInput-header"
 				initialLocation={initialLocation}
 				initialDistance={eventsStore.pagination.distance}
 				resolvedCityName={resolvedCityName}
+				locationBiasLat={eventsStore.pagination.lat}
+				locationBiasLng={eventsStore.pagination.lng}
 				onChange={eventsStore.handleLocationDistanceChange}
 			/>
 		</div>
@@ -160,9 +168,12 @@
 					<h3>Entfernung</h3>
 					<div class="w-full min-w-0">
 						<LocationDistanceInput
+							inputId="plzCityInput-dialog"
 							initialLocation={initialLocation}
 							initialDistance={eventsStore.pagination.distance}
 							resolvedCityName={resolvedCityName}
+							locationBiasLat={eventsStore.pagination.lat}
+							locationBiasLng={eventsStore.pagination.lng}
 							onChange={eventsStore.handleLocationDistanceChange}
 						/>
 					</div>
@@ -217,9 +228,9 @@
 						</ToggleButton>
 						<ToggleButton 
 							checked={sortByDistance} 
-							tooltip={eventsStore.pagination.attendanceMode === 'online' ? 'Sortieren nach Distanz macht nur für Vorort-Events Sinn' : eventsStore.pagination.lat && eventsStore.pagination.lng ? '' : 'Setze zuerst einen Standort'}
+							tooltip={eventsStore.pagination.attendanceMode === 'online' ? 'Sortieren nach Distanz macht nur für Vorort-Events Sinn' : eventsStore.pagination.lat != null && eventsStore.pagination.lng != null ? '' : 'Setze zuerst einen Standort'}
 							onchange={() => {
-								if (eventsStore.pagination.lat && eventsStore.pagination.lng) {
+								if (eventsStore.pagination.lat != null && eventsStore.pagination.lng != null) {
 									eventsStore.handleSortChanged('distance_asc');
 								}
 							}}
