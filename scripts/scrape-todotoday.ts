@@ -218,6 +218,15 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		}, { config: safeConfig });
 
 		if (!apiResponse.ok) {
+			// Check if Cloudflare is blocking the request
+			if (apiResponse.status === 403 && apiResponse.body?.includes('Just a moment')) {
+				throw new Error(
+					`Cloudflare Turnstile blocking REST API for ${location}. ` +
+					`The site has implemented bot protection. ` +
+					`Status: ${apiResponse.status}. ` +
+					`Body: ${apiResponse.body?.slice(0, 200)}`
+				);
+			}
 			throw new Error(`REST API returned ${apiResponse.status} for ${location}: ${apiResponse.body?.slice(0, 200)}`);
 		}
 
