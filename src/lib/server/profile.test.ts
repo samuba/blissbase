@@ -1,6 +1,4 @@
 import { publicProfileFormSchema } from '$lib/rpc/profile.common';
-import {
-} from '$lib/server/profile';
 import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
 
