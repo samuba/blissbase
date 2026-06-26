@@ -6,12 +6,13 @@
 
 	let offering = $state<Offering | undefined>(undefined);
 	let offeringReturnTo = $state<string | undefined>(undefined);
-	let open = $derived(!!offering);
+	let open = $state(false);
 
 	export function showOfferingDetailsDialog(offeringToShow: Offering, args: { returnTo?: string } = {}) {
 		if (!offeringToShow.slug) return;
 		offering = offeringToShow;
 		offeringReturnTo = args.returnTo;
+		open = true;
 		pushState(routes.offeringDetails(offeringToShow.slug), {
 			selectedOfferingId: offeringToShow.id,
 		});
@@ -49,30 +50,38 @@
 	import OfferingDetails from "./OfferingDetails.svelte";
 
 	let openingOfferingSlug = $state<string | undefined>(undefined);
+	let isClosing = $state(false);
 
 	$effect(() => {
 		const offeringSlug = page.url.searchParams.get(`offering`);
-		if (offeringSlug) {
-			void openOfferingFromUrl(offeringSlug);
+
+		if (!page.state.selectedOfferingId && offering && !isClosing) {
+			closeGracefully();
+			if (offeringSlug) {
+				replaceState(offeringReturnTo ?? urlWithoutOfferingDialogParam(page.url), {});
+			}
 			return;
 		}
 
-		// close dialog if user clicked browser back button
-		if (!page.state.selectedOfferingId) {
-			closeGracefully();
+		if (!offeringSlug || isClosing || offering?.slug === offeringSlug || openingOfferingSlug === offeringSlug) {
+			return;
 		}
+
+		queueMicrotask(() => void openOfferingFromUrl(offeringSlug));
 	});
 
 	async function openOfferingFromUrl(offeringSlug: string) {
-		if (openingOfferingSlug === offeringSlug) return;
+		if (isClosing || openingOfferingSlug === offeringSlug) return;
+		if (offering?.slug === offeringSlug) return;
 		openingOfferingSlug = offeringSlug;
 		try {
-			const offeringToShow = await getOfferingForDialog({ slug: offeringSlug });
-			if (page.url.searchParams.get(`offering`) !== offeringSlug) return;
+			const offeringToShow = await getOfferingForDialog({ slug: offeringSlug }).run();
+			if (isClosing || page.url.searchParams.get(`offering`) !== offeringSlug) return;
 
 			const returnTo = urlWithoutOfferingDialogParam(page.url);
-			replaceState(returnTo, page.state);
+			replaceState(returnTo, {});
 			if (!offeringToShow) return;
+
 			showOfferingDetailsDialog(offeringToShow, { returnTo });
 		} finally {
 			openingOfferingSlug = undefined;
@@ -82,14 +91,17 @@
 	function handleClose() {
 		if (!browser) return;
 		closeGracefully();
-		history.back();
+		replaceState(offeringReturnTo ?? urlWithoutOfferingDialogParam(page.url), {});
 	}
 
 	function closeGracefully() {
+		if (!offering || isClosing) return;
+		isClosing = true;
 		open = false;
 		setTimeout(() => {
 			offering = undefined;
 			offeringReturnTo = undefined;
+			isClosing = false;
 		}, 200); // delayed to not have layout shift during closing animation
 	}
 
