@@ -9,19 +9,7 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	return v.union([v.pipe(v.literal(``), v.transform(() => undefined)), schema]);
 }
 
-export const publicProfileFormSchema = v.pipe(v.object({
-	displayName: v.pipe(v.string(), v.trim(), v.nonEmpty(`Name muss ausgefüllt werden`), v.maxLength(120, `Name ist zu lang`)),
-	slug: v.optional(
-		emptyStringIsUndefined(
-			v.pipe(
-				v.string(),
-				v.trim(),
-				v.maxLength(80, `Profil-URL ist zu lang`),
-				v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, `Profil-URL darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten`)
-			)
-		)
-	),
-	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio ist zu lang`)), ``),
+const profileLocationFields = {
 	locationLabel: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(200, `Ort ist zu lang`)), ``),
 	latitude: v.optional(
 		v.pipe(
@@ -41,6 +29,40 @@ export const publicProfileFormSchema = v.pipe(v.object({
 		),
 		``,
 	),
+} satisfies v.ObjectEntries;
+
+function isValidProfileLocation(data: {
+	locationLabel?: string;
+	latitude: number | null;
+	longitude: number | null;
+}) {
+	const hasLabel = Boolean(data.locationLabel?.trim());
+	const hasCoords = hasValidCoordinates({ lat: data.latitude, lng: data.longitude });
+	if (!hasLabel && !hasCoords) return true;
+	return hasLabel && hasCoords;
+}
+
+const profileLocationCheckMessage =
+	`Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`;
+
+export const profileLocationFormSchema = v.pipe(
+	v.object(profileLocationFields),
+	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
+);
+
+const publicProfileFields = {
+	displayName: v.pipe(v.string(), v.trim(), v.nonEmpty(`Name muss ausgefüllt werden`), v.maxLength(120, `Name ist zu lang`)),
+	slug: v.optional(
+		emptyStringIsUndefined(
+			v.pipe(
+				v.string(),
+				v.trim(),
+				v.maxLength(80, `Profil-URL ist zu lang`),
+				v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, `Profil-URL darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten`)
+			)
+		)
+	),
+	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio ist zu lang`)), ``),
 	profileImageUrl: v.optional(
 		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profilbild-URL ist ungültig`))),
 		``
@@ -172,13 +194,16 @@ export const publicProfileFormSchema = v.pipe(v.object({
 			return true;
 		}, 'Website ist keine gültige URL')
 	),
-}),
-	v.check((data) => {
-		const hasLabel = Boolean(data.locationLabel?.trim());
-		const hasCoords = hasValidCoordinates({ lat: data.latitude, lng: data.longitude });
-		if (!hasLabel && !hasCoords) return true;
-		return hasLabel && hasCoords;
-	}, `Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`),
+} satisfies v.ObjectEntries;
+
+export const publicProfileFormSchema = v.object(publicProfileFields);
+
+export const offeringProfileFormSchema = v.pipe(
+	v.object({
+		...publicProfileFields,
+		...profileLocationFields,
+	}),
+	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
 );
 
 /**

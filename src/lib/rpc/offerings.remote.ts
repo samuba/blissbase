@@ -6,6 +6,7 @@ import {
 	offeringFormSchema,
 	updateOfferingFormSchema,
 } from "$lib/rpc/offerings.common";
+import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 import { loadOfferingsList } from "$lib/server/offeringsList";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 import { routes, safeReturnToPath } from "$lib/routes";
@@ -99,6 +100,25 @@ export const getMyOfferings = query(async () => {
 			locationLabel: profile.locationLabel ?? ``,
 		},
 	}));
+});
+
+export const updateProfileLocation = form(profileLocationFormSchema, async (data) => {
+	const userId = ensureUserId();
+	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
+	if (!currentProfile) throw error(404, `Profile not found`);
+
+	await db
+		.update(s.profiles)
+		.set({
+			locationLabel: data.locationLabel?.trim() || null,
+			latitude: data.latitude ?? null,
+			longitude: data.longitude ?? null,
+			updatedAt: sql`now()`,
+		})
+		.where(eq(s.profiles.id, userId));
+
+	getMyPublicProfile().refresh();
+	getMyOfferings().refresh();
 });
 
 export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, async ({ contentType }) => {

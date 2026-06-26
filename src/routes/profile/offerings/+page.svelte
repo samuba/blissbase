@@ -1,13 +1,19 @@
 <script lang="ts">
 	import { page } from "$app/state";
+	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
+	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
-	import { getMyOfferings } from "$lib/rpc/offerings.remote";
+	import { profileLocationFormSchema } from "$lib/rpc/profile.common";
+	import { getMyOfferings, updateProfileLocation } from "$lib/rpc/offerings.remote";
+	import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 	import { routes } from "$lib/routes";
 	import { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
 
+	const profile = $state(await getMyPublicProfile());
 	const offerings = $derived(await getMyOfferings());
 	const activeOfferings = $derived(offerings.filter((offering) => offering.listed));
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
+	const locationPreflight = $derived(updateProfileLocation.preflight(profileLocationFormSchema));
 
 	let selectedTab = $state<`active` | `inactive`>(`active`);
 
@@ -29,9 +35,53 @@
 		<h1 class="text-xl font-bold">Meine Angebote</h1>
 	</div>
 	<p class="text-base-content/60 text-sm leading-relaxed">
-		Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der 
-		<a href={routes.offeringsList()} class="link">Angebote Seite</a> sichtbar.
+		Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der
+		<a href={routes.offeringsList()} class="link">Angebote-Seite</a> sichtbar.
 	</p>
+
+	<form
+		{...locationPreflight}
+		class="card bg-base-100 mt-4 shadow"
+	>
+		<div class="card-body gap-3">
+			<fieldset class="fieldset">
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">
+					Standort für deine Angebote
+				</legend>
+				<p class="text-base-content/70 mb-1 text-sm leading-relaxed">
+					Deine Angebote werden in der Nähe dieses Orts angezeigt.
+					Ohne Standort sind nur Online-Angebote auffindbar.
+				</p>
+				<LocationAutocompleteInput
+					inputId="offeringsProfileLocationInput"
+					initialLabel={profile.locationLabel}
+					initialLat={profile.latitude}
+					initialLng={profile.longitude}
+					locationLabelField={updateProfileLocation.fields.locationLabel}
+					latitudeField={updateProfileLocation.fields.latitude}
+					longitudeField={updateProfileLocation.fields.longitude}
+				/>
+				<FormFieldIssues field={updateProfileLocation.fields.locationLabel} />
+				<FormFieldIssues field={updateProfileLocation.fields.latitude} />
+				<FormFieldIssues field={updateProfileLocation.fields.longitude} />
+			</fieldset>
+
+			<div class="flex justify-end">
+				<button
+					type="submit"
+					class="btn btn-primary btn-sm"
+					disabled={updateProfileLocation.pending > 0}
+				>
+					{#if updateProfileLocation.pending > 0}
+						<span class="loading loading-spinner loading-sm"></span>
+						Speichern…
+					{:else}
+						Standort speichern
+					{/if}
+				</button>
+			</div>
+		</div>
+	</form>
 
 	<div class=" my-4">
 		<a href={newOfferingHref()} class="btn btn-primary w-full sm:w-auto">

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { slugify } from '$lib/common';
-	import LocationAutocompleteInput from '$lib/components/LocationAutocompleteInput.svelte';
 	import EditorJs from '$lib/components/EditorJs.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import ProfileImageCropInput from '$lib/components/ProfileImageCropInput.svelte';
@@ -219,23 +218,6 @@
 			<EditorJs field={upsertPublicProfile.fields.bio} value={profile.bio} />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={upsertPublicProfile.fields.bio} />
-		</fieldset>
-
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Aktueller Ort</legend>
-			<LocationAutocompleteInput
-				inputId="profileLocationInput"
-				initialLabel={profile.locationLabel}
-				initialLat={profile.latitude}
-				initialLng={profile.longitude}
-				locationLabelField={upsertPublicProfile.fields.locationLabel}
-				latitudeField={upsertPublicProfile.fields.latitude}
-				longitudeField={upsertPublicProfile.fields.longitude}
-			/>
-			<p class="label">Deine Angebote werden in der Nähe dieses Orts gefunden.</p>
-			<FormFieldIssues field={upsertPublicProfile.fields.locationLabel} />
-			<FormFieldIssues field={upsertPublicProfile.fields.latitude} />
-			<FormFieldIssues field={upsertPublicProfile.fields.longitude} />
 		</fieldset>
 
 		<fieldset class="fieldset">

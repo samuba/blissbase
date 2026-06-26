@@ -1,4 +1,4 @@
-import { publicProfileFormSchema } from '$lib/rpc/profile.common';
+import { offeringProfileFormSchema } from '$lib/rpc/profile.common';
 import * as v from 'valibot';
 
 export const OFFERING_FORMATS = ['offline', 'online', 'offline+online'] as const;
@@ -13,7 +13,7 @@ const offeringFormEntries = {
 	),
 	descriptionHtml: v.pipe(v.string(), v.trim(), v.maxLength(50_000, `Beschreibung ist zu lang`)),
 	format: v.picklist(OFFERING_FORMATS, `Angebotsformat ist ungültig`),
-	profile: v.optional(publicProfileFormSchema),
+	profile: v.optional(offeringProfileFormSchema),
 	imageClaims: v.optional(
 		v.pipe(
 			v.array(v.pipe(v.string(), v.trim(), v.nonEmpty())),

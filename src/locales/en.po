@@ -92,7 +92,7 @@ msgstr "Sold out"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Online"
 msgstr "Online"
@@ -166,12 +166,10 @@ msgstr "<0/> Website"
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
 msgstr "Close"
 
 #: src/routes/EventDetailsDialog.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "<0/> Zurück zur Übersicht"
 msgstr "<0/> Back to overview"
@@ -1151,6 +1149,7 @@ msgstr "Select a type first"
 msgid "<0/> Bild wird hochgeladen…"
 msgstr "<0/> Uploading image…"
 
+#: src/routes/profile/offerings/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Speichern…"
 msgstr "<0/> Saving…"
@@ -1265,7 +1264,6 @@ msgstr "Search"
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/lib/components/OfferingCard.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort"
 msgstr "In-Person"
@@ -1355,7 +1353,7 @@ msgid "Offline-Angebote werden über diesen Ort gefunden."
 msgstr "Offline offerings can be found via this location."
 
 #: src/lib/components/OfferingCard.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort & Online"
 msgstr "In-person & Online"
@@ -1432,8 +1430,9 @@ msgstr "For private sessions and services, go to: <0><0/> Offerings</0> <1/> <2/
 msgid "Keine weiteren Suchergebnisse für \"{0}\""
 msgstr "No more search results for \"{0}\""
 
-#~ msgid "Find conscious events near you."
-#~ msgstr "Find conscious events near you."
+#: src/routes/+layout.ts
+msgid "Find conscious events near you."
+msgstr "Find conscious events near you."
 
 #: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -1717,8 +1716,9 @@ msgstr "Your offers will be shown near this location. Without a location, only o
 #~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
 #~ msgstr "An offering is permanently visible in your profile and on the offerings page."
 
-#~ msgid "<0/> Navigation erneut laden"
-#~ msgstr "<0/> Reload navigation"
+#: src/lib/components/TabsNavDesktop.svelte
+msgid "<0/> Navigation erneut laden"
+msgstr "<0/> Reload navigation"
 
 #~ msgid "LADE <0/>"
 #~ msgstr "LOADING <0/>"
@@ -2036,6 +2036,90 @@ msgstr "Select a location"
 msgid "Finde Sessions, Services und Unterstützung."
 msgstr "Find sessions, services, and support."
 
-#: src/routes/+layout.ts
-msgid "Achtsame Events in deiner Nähe."
-msgstr "Conscious events near you."
+#~ msgid "Achtsame Events in deiner Nähe."
+#~ msgstr "Conscious events near you."
+
+#~ msgid "Suche starten<<<<<<< HEAD======="
+#~ msgstr "Start search<<<<<<< HEAD======="
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Dein aktueller Ort<<<<<<< HEAD======="
+msgstr "Your current location<<<<<<< HEAD======="
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Profilbeschreibung<<<<<<< HEAD======="
+msgstr "Profile description<<<<<<< HEAD======="
+
+#~ msgid "✨ Aus der Community für die Community ✨<<<<<<< HEAD======="
+#~ msgstr "✨ From the community, for the community ✨<<<<<<< HEAD======="
+
+#: src/lib/components/LocationAutocompleteInput.svelte
+msgid "<0/> Google Maps<<<<<<< HEAD"
+msgstr "<0/> Google Maps<<<<<<< HEAD"
+
+#~ msgid "Achtsame Events in deiner Nähe.======="
+#~ msgstr "Conscious events near you.======="
+
+#: src/routes/profile/public/+page.svelte
+msgid "Deine Angebote werden in der Nähe dieses Orts gefunden."
+msgstr "Your offers will be found near this location."
+
+#~ msgid "Format"
+#~ msgstr "Format"
+
+#~ msgid "<0/> Online"
+#~ msgstr "<0/> Online"
+
+#~ msgid "Ändere deine Suche, deaktiviere den Online-Filter oder lösche den Suchbegriff."
+#~ msgstr "Change your search, disable the online filter, or delete the search term."
+
+#~ msgid "Deaktiviere den Online-Filter, um auch Vor-Ort-Angebote zu sehen."
+#~ msgstr "Disable the online filter to also see on-site offers."
+
+#~ msgid "Online-Filter aus"
+#~ msgstr "Online filter off"
+
+#~ msgid "Online Angebote auch anzeigen!"
+#~ msgstr "Also show online offerings!"
+
+#~ msgid "Online Angebote auch anzeigen«>>>>>>> 10db09b (wip)"
+#~ msgstr "«Show online offers as well«>>>>>>> 10db09b (wip)"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Du hast keine deaktivierten Angebote.<<<<<<< HEAD======="
+msgstr "You have no deactivated offers.<<<<<<< HEAD======="
+
+#~ msgid "Online Angebote auch anzeigen======="
+#~ msgstr "Also show online offers======="
+
+#~ msgid "Deine Angebote werden in der Nähe dieses Orts gefunden.>>>>>>> e5ebc52 (wip)"
+#~ msgstr "Your offers will be found near this location.>>>>>>> e5ebc52 (wip)"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.>>>>>>> e5ebc52 (wip)"
+msgstr "Your offers will be shown near this location. Without a location, only online offers can be found.>>>>>>> e5ebc52 (wip)"
+
+#: src/routes/offerings/+page.svelte
+msgid "Ort<<<<<<< HEAD"
+msgstr "Location<<<<<<< HEAD"
+
+#~ msgid "Online Angebote auch anzeigen«"
+#~ msgstr "«Show online offers as well«"
+
+#~ msgid "Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
+#~ msgstr "Offline listings are shown to users near this place on the Listings page. Without a location, only online listings are discoverable."
+
+#~ msgid "Standort gespeichert"
+#~ msgstr "Location saved"
+
+#~ msgid "De Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
+#~ msgstr "Offline offerings are shown to users near this location on the offerings page. Without a location, only online offerings can be found."
+
+#~ msgid "Deine Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
+#~ msgstr "Your offline offers will be shown to users near this location on the Offers page. Without a location, only online offers can be found."
+
+#~ msgid "Deine Angebote werden in der Nähe dieses Orts gefunden. Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
+#~ msgstr "Your offers will be found near this location. Offline offers are shown to users near this location on the offers page. Without a location, only online offers can be found."
+
+#~ msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
+#~ msgstr "Your offers will be shown near this location. Offline offers will be shown to users near this location on the offers page. Without a location, only online offers are discoverable."
