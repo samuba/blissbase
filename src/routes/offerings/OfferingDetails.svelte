@@ -179,7 +179,10 @@
 							Löschen
 						</button>
 						{#if offering.slug}
-							<a href={routes.editOffering(offering.slug, { returnTo: editReturnTo })} class="btn btn-sm join-item">
+							<a
+								href={pendingManagementAction ? "#" : routes.editOffering(offering.slug, { returnTo: editReturnTo })}
+								class={["btn btn-sm join-item", pendingManagementAction && `btn-disabled`]}
+							>
 								<i class="icon-[ph--pencil-simple] size-4"></i>
 								Bearbeiten
 							</a>
