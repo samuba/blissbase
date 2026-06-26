@@ -27,14 +27,9 @@ export const load = (async ({ locals, params: { id: slug }, url }) => {
 					profileImageUrl: true,
 					bannerImageUrl: true,
 					socialLinks: true,
-				},
-				with: {
-					place: {
-						columns: {
-							name: true,
-							slug: true,
-						},
-					},
+					locationLabel: true,
+					latitude: true,
+					longitude: true,
 				},
 			},
 		},
@@ -54,6 +49,7 @@ export const load = (async ({ locals, params: { id: slug }, url }) => {
 			bio: offering.profile.bio ?? ``,
 			profileImageUrl: offering.profile.profileImageUrl ?? ``,
 			bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
+			locationLabel: offering.profile.locationLabel ?? ``,
 		},
 	};
 

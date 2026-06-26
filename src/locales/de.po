@@ -12,6 +12,8 @@ msgstr ""
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
+#: src/lib/components/TabsNavDesktop.svelte
+#: src/lib/components/TabsNavDesktop.svelte
 #: src/routes/+error.svelte
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
@@ -282,14 +284,17 @@ msgstr "Previous image"
 msgid "Next image"
 msgstr "Next image"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort wird ermittelt..."
 msgstr "Standort wird ermittelt..."
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Eingabe löschen"
 msgstr "Eingabe löschen"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Aktuellen Standort verwenden"
 msgstr "Aktuellen Standort verwenden"
@@ -328,6 +333,8 @@ msgstr "Suchbegriff"
 msgid "Suchbegriff löschen"
 msgstr "Suchbegriff löschen"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TextSearchInput.svelte
@@ -467,6 +474,7 @@ msgstr "Teilen"
 msgid "Link kopieren"
 msgstr "Link kopieren"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
 msgstr "Stadt / PLZ"
@@ -489,11 +497,14 @@ msgstr "Ein Fehler ist aufgetreten"
 msgid "AbortError"
 msgstr "AbortError"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Dein Standort"
 msgstr "Dein Standort"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein."
 msgstr "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein."
@@ -611,11 +622,13 @@ msgstr "Beschreibung *"
 msgid "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 msgstr "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "ArrowDown"
 msgstr "ArrowDown"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "ArrowUp"
@@ -771,6 +784,7 @@ msgid "Erstellen"
 msgstr "Erstellen"
 
 #: src/lib/components/TabsNavDesktop.svelte
+#: src/lib/components/TabsNavDesktop.svelte
 msgid "Hauptnavigation"
 msgstr "Hauptnavigation"
 
@@ -920,6 +934,7 @@ msgstr "Antworten auf die häufigsten Fragen rund um Blissbase."
 msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TabsNavMobile.svelte
 msgid "Escape"
@@ -1652,6 +1667,7 @@ msgstr "Bitte füge mindestens einen Social-Link hinzu."
 msgid "Social Links *"
 msgstr "Social Links *"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Tab"
 msgstr "Tab"

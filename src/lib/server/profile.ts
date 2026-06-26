@@ -1,6 +1,5 @@
 import { getRequestEvent } from "$app/server";
 import { slugify, stripHtml, trimAllWhitespaces, type Modify } from "$lib/common";
-import type { OfferingFormat, OfferingPlaceFilter } from "$lib/rpc/offerings.common";
 import { type PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 import { db, s, and, asc, desc, eq, gte, sql } from "$lib/server/db";
 import { eventWith, prepareEventsForUi, type UiEvent } from "$lib/server/events";
@@ -32,14 +31,9 @@ export async function getPublicProfileBySlug(args: { slug: string }) {
 			profileImageUrl: true,
 			bannerImageUrl: true,
 			socialLinks: true,
-		},
-		with: {
-			place: {
-				columns: {
-					name: true,
-					slug: true,
-				},
-			},
+			locationLabel: true,
+			latitude: true,
+			longitude: true,
 		},
 	});
 }
@@ -68,9 +62,10 @@ export async function getUpcomingEventsForPublicProfile(args: { authorId: string
  * await getOfferingsForPublicProfile({ profile });
  */
 export async function getOfferingsForPublicProfile(args: {
-	profile: Pick<Profile, "id" | "slug" | "displayName" | "bio" | "profileImageUrl" | "bannerImageUrl" | "socialLinks"> & {
-		place: { name: string; slug: string } | null;
-	};
+	profile: Pick<
+		Profile,
+		"id" | "slug" | "displayName" | "bio" | "profileImageUrl" | "bannerImageUrl" | "socialLinks" | "locationLabel"
+	>;
 }) {
 	const currentUserId = getRequestEvent().locals.userId;
 	const offerings = await db.query.offerings.findMany({
@@ -95,7 +90,6 @@ export async function getOfferingsForPublicProfile(args: {
 		format: offering.format,
 		imageUrls: offering.imageUrls ?? [],
 		listed: offering.listed,
-		offeringPlaceFilter: getOfferingPlaceFilter(offering.format),
 		canManage: currentUserId === args.profile.id,
 		profile: {
 			slug: args.profile.slug,
@@ -104,19 +98,9 @@ export async function getOfferingsForPublicProfile(args: {
 			profileImageUrl: args.profile.profileImageUrl ?? ``,
 			bannerImageUrl: args.profile.bannerImageUrl ?? ``,
 			socialLinks: args.profile.socialLinks,
-			place: args.profile.place
-				? {
-						name: args.profile.place.name,
-						slug: args.profile.place.slug,
-					}
-				: null,
+			locationLabel: args.profile.locationLabel ?? ``,
 		},
 	}));
-}
-
-function getOfferingPlaceFilter(format: OfferingFormat): OfferingPlaceFilter {
-	if (format === `online` || format === `offline+online`) return `online`;
-	return `danang-hoi-an`;
 }
 
 /**

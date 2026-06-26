@@ -3,6 +3,7 @@
 	import { page } from "$app/state";
 	import { onDestroy } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
+	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
 	import EditorJs from "$lib/components/EditorJs.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
@@ -13,7 +14,7 @@
 	import { createOffering } from "$lib/rpc/offerings.remote";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import { checkEmailProfileComplete, getMyPublicProfile } from "$lib/rpc/profile.remote";
-	import { getPlaces } from "$lib/rpc/places.remote";
+	import { hasValidCoordinates } from "$lib/locationFilter";
 	import { routes, safeReturnToPath } from "$lib/routes";
 	import { getSupabaseBrowserClient } from "$lib/supabase";
 	import { localeStore } from "../../../locales/localeStore.svelte";
@@ -31,17 +32,15 @@
 
 	const isSignedIn = Boolean(page.data.userId);
 	const profile = isSignedIn ? await getMyPublicProfile() : null;
-	const places = await getPlaces();
 	const EMAIL_CHECK_DEBOUNCE_MS = 500;
-	const placeOptions = places.map((place) => ({ ...place, id: place.id.toString() }));
 	const missingDisplayName = !profile?.displayName?.trim();
 	const missingProfileImageUrl = !profile?.profileImageUrl?.trim();
 	const missingBannerImageUrl = !profile?.bannerImageUrl?.trim();
 	const missingBio = !profile?.bio?.trim();
-	const missingPlaceId = !profile?.placeId;
+	const missingLocation = !hasValidCoordinates({ lat: profile?.latitude, lng: profile?.longitude });
 	const missingSocialLinks = !profile?.socialLinks?.some((link) => link.value?.trim());
 	const signedInProfileIncomplete =
-		missingDisplayName || missingProfileImageUrl || missingBannerImageUrl || missingBio || missingPlaceId || missingSocialLinks;
+		missingDisplayName || missingProfileImageUrl || missingBannerImageUrl || missingBio || missingLocation || missingSocialLinks;
 
 	let requestedStep = $state<WizardStep>(`offering`);
 	let format = $state<OfferingFormat>(`offline`);
@@ -67,8 +66,15 @@
 
 	const anyImageUploadInFlight = $derived(offeringImagesBusy || profileImageBusy || bannerImageBusy);
 	const profileHasSocialLink = $derived(hasSocialLink(socialLinks));
-	const selectedPlaceId = $derived(createOffering.fields.profile.placeId.value() ?? profile?.placeId?.toString() ?? ``);
-	const showPlaceWarning = $derived(!selectedPlaceId && format !== `online`);
+	const hasSelectedLocation = $derived.by(() => {
+		const latValue = createOffering.fields.profile.latitude.value();
+		const lngValue = createOffering.fields.profile.longitude.value();
+		const lat = latValue === `` ? null : Number(latValue);
+		const lng = lngValue === `` ? null : Number(lngValue);
+		if (hasValidCoordinates({ lat, lng })) return true;
+		return hasValidCoordinates({ lat: profile?.latitude, lng: profile?.longitude });
+	});
+	const showLocationWarning = $derived(!hasSelectedLocation && format !== `online`);
 	const profileFieldIssues = $derived(hasProfileFieldIssues());
 	const profileStepApplies = $derived(
 		isSignedIn ? signedInProfileIncomplete || profileFieldIssues : emailProfileComplete !== true || profileFieldIssues,
@@ -117,7 +123,9 @@
 			fieldHasIssues(profileFields.profileImageUrl) ||
 			fieldHasIssues(profileFields.bannerImageUrl) ||
 			fieldHasIssues(profileFields.bio) ||
-			fieldHasIssues(profileFields.placeId) ||
+			fieldHasIssues(profileFields.locationLabel) ||
+			fieldHasIssues(profileFields.latitude) ||
+			fieldHasIssues(profileFields.longitude) ||
 			fieldHasIssues(profileFields.socialLinks),
 		);
 	}
@@ -515,23 +523,24 @@
 							<FormFieldIssues field={createOffering.fields.profile.bio} />
 						</fieldset>
 
-						<fieldset class={[`fieldset`, !missingPlaceId && `hidden`]}>
+						<fieldset class={[`fieldset`, !missingLocation && `hidden`]}>
 							<legend class="fieldset-legend peer-aria-invalid:text-red-600">Dein aktueller Ort</legend>
-							<select
-								class="select w-full"
-								{...createOffering.fields.profile.placeId.as(`select`)}
-								value={profile?.placeId?.toString() ?? ``}
-							>
-								<option value="">Keine Angabe</option>
-								{#each placeOptions as place (place.id)}
-									<option value={place.id}>{place.name}</option>
-								{/each}
-							</select>
+							<LocationAutocompleteInput
+								inputId="offeringProfileLocationInput"
+								initialLabel={profile?.locationLabel}
+								initialLat={profile?.latitude}
+								initialLng={profile?.longitude}
+								locationLabelField={createOffering.fields.profile.locationLabel}
+								latitudeField={createOffering.fields.profile.latitude}
+								longitudeField={createOffering.fields.profile.longitude}
+							/>
 							<p class="label">Offline-Angebote werden über diesen Ort gefunden.</p>
-							<FormFieldIssues field={createOffering.fields.profile.placeId} />
+							<FormFieldIssues field={createOffering.fields.profile.locationLabel} />
+							<FormFieldIssues field={createOffering.fields.profile.latitude} />
+							<FormFieldIssues field={createOffering.fields.profile.longitude} />
 						</fieldset>
 
-						{#if showPlaceWarning}
+						{#if showLocationWarning}
 							<div class="alert alert-warning alert-soft">
 								<i class="icon-[ph--warning-circle] size-5"></i>
 								<span>Ohne Ort werden nur deine Online-Angebote auffindbar sein.</span>

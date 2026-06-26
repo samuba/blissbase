@@ -132,7 +132,15 @@
 		<div class="w-full flex max-w-2xl mx-auto">
 			<div class="text-base-content/80 text-xs pl-3 -mt-2 flex items-center bg-base-500 sm:bg-base-100 sm:rounded-box py-1 w-full sm:w-fit sm:-mt-4 sm:mb-3 sm:text-sm">
 				Für private Sessions und Services go to:
-				<a href={routes.offeringsList("danang-hoi-an")} class="link text-base-content font-semibold px-2 items-center gap-1 flex">
+				<a
+					href={routes.offeringsList({
+						lat: eventsStore.pagination.lat,
+						lng: eventsStore.pagination.lng,
+						distance: eventsStore.pagination.distance,
+						plzCity: eventsStore.pagination.plzCity,
+					})}
+					class="link text-base-content font-semibold px-2 items-center gap-1 flex"
+				>
 					<i class="icon-[ph--hand-heart] size-4"></i>
 					Offerings
 				</a>

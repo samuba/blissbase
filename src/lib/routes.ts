@@ -1,5 +1,6 @@
 import { resolve } from "$app/paths";
-import type { OfferingPlaceFilter } from "$lib/rpc/offerings.common";
+import type { OfferingsFilter } from "$lib/offeringsFilter";
+import { buildOfferingsFilterSearchParams } from "$lib/offeringsFilter";
 
 export const routes = {
     root: () => resolve("/") ,
@@ -13,9 +14,19 @@ export const routes = {
     about: () => resolve(`/about`) ,
     faq: () => resolve(`/faq`) ,
     newEvent: () => resolve(`/new`) ,
-    offeringsList: (filter?: OfferingPlaceFilter) => {
+    offeringsList: (args: Partial<OfferingsFilter> = {}) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
-        if (filter) url.searchParams.set('place', filter);
+        const params = buildOfferingsFilterSearchParams({
+            plzCity: args.plzCity ?? null,
+            distance: args.distance ?? null,
+            lat: args.lat ?? null,
+            lng: args.lng ?? null,
+            searchTerm: args.searchTerm ?? null,
+            includeOnline: args.includeOnline ?? false,
+        });
+        for (const [key, value] of params.entries()) {
+            url.searchParams.set(key, value);
+        }
         return relativeUrl(url) ;
     } ,
     offeringDialog: (args: { returnTo: string; offeringSlug: string }) => {

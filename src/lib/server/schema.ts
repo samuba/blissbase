@@ -217,10 +217,6 @@ export const places = pgTable("places", {
 
 export type Place = typeof places.$inferSelect;
 
-export const placesRelations = relations(places, ({ many }) => ({
-	profiles: many(profiles),
-}));
-
 export const profiles = pgTable("profiles", {
 		id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
 		slug: text().unique(),
@@ -230,23 +226,20 @@ export const profiles = pgTable("profiles", {
 		profileImageUrl: text(),
 		bannerImageUrl: text(),
 		socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),
-		placeId: integer().references(() => places.id, { onDelete: "set null" }),
+		locationLabel: text(),
+		latitude: real(),
+		longitude: real(),
 		createdAt: timestamp().notNull().defaultNow(),
 		updatedAt: timestamp().notNull().defaultNow(),
 	},
-	(t) => [index().on(t.placeId)],
 );
 
 export type Profile = typeof profiles.$inferSelect;
 
-export const profilesRelations = relations(profiles, ({ many, one }) => ({
+export const profilesRelations = relations(profiles, ({ many }) => ({
 	favorites: many(favorites),
 	events: many(events),
 	offerings: many(offerings),
-	place: one(places, {
-		fields: [profiles.placeId],
-		references: [places.id],
-	}),
 }));
 
 export const offerings = pgTable("offerings", {

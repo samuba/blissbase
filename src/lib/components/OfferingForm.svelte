@@ -5,7 +5,6 @@
 	import EditorJs from "$lib/components/EditorJs.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import OfferingImageUploadInput from "$lib/components/OfferingImageUploadInput.svelte";
-	import Select from "$lib/components/Select.svelte";
 	import { OFFERING_FORMATS, offeringFormSchema, updateOfferingFormSchema, type OfferingFormat } from "$lib/rpc/offerings.common";
 
 	type CreateOfferingForm = typeof import("$lib/rpc/offerings.remote").createOffering;
@@ -59,10 +58,6 @@
 		return remoteForm.preflight(offeringFormSchema);
 	});
 	const updateFields = $derived(remoteForm.fields as Partial<UpdateOnlyFields>);
-	const formatOptions = OFFERING_FORMATS.map((option) => ({
-		value: option,
-		html: `<span>${formatLabel(option)}</span><span class="text-base-content/60 text-xs font-normal">${formatDescription(option)}</span>`,
-	}));
 </script>
 
 <form {...preflight} class="flex flex-col gap-6" id={formId} {onsubmit}>
@@ -88,13 +83,37 @@
 		</fieldset>
 
 		<fieldset class="fieldset">
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Format *</legend>
-			<Select
-				bind:value={() => format, (value) => (format = value as OfferingFormat)}
-				options={formatOptions}
-				remoteFunctionField={remoteForm.fields.format}
-				triggerProps={{ class: `peer w-full justify-between text-left` }}
-			/>
+			<legend class="fieldset-legend font-semibold peer-aria-invalid:text-red-600">Format *</legend>
+			<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+				{#each OFFERING_FORMATS as option (option)}
+					<label
+						class={[
+							`card card-border bg-base-100 relative cursor-pointer border-2 transition-colors`,
+							`border-base-500 hover:border-dashed hover:border-primary has-checked:border-solid has-checked:border-primary outline-0`,
+						]}
+					>
+						<input class="peer sr-only" type="radio" name="offering-format" value={option} bind:group={format} />
+						<span
+							class={[
+								`bg-primary text-primary-content absolute top-3 right-3 flex size-5 items-center justify-center rounded-full`,
+								`opacity-0 transition-opacity peer-checked:opacity-100`,
+							]}
+							aria-hidden="true"
+						>
+							<i class="icon-[ph--check] size-3"></i>
+						</span>
+						<div class="card-body gap-1 p-4">
+							<span class="text-sm font-semibold">{formatLabel(option)}</span>
+							<p class="text-base-content/60 text-sm">{formatDescription(option)}</p>
+						</div>
+					</label>
+				{/each}
+			</div>
+			<select class="hidden" {...remoteForm.fields.format.as(`select`)} bind:value={format}>
+				{#each OFFERING_FORMATS as option (option)}
+					<option value={option}></option>
+				{/each}
+			</select>
 			<FormFieldIssues field={remoteForm.fields.format} />
 		</fieldset>
 	</section>

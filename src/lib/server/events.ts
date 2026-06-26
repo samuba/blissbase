@@ -17,7 +17,8 @@ import {
 	eq
 } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
-import { geocodeAddressCached, reverseGeocodeCityCached } from '$lib/server/google';
+import { reverseGeocodeCityCached } from '$lib/server/google';
+import { resolveFilterCoordinates } from '$lib/server/locationDistance';
 import { sanitizeLocationParams } from '$lib/locationFilter';
 import type { InsertEvent } from '$lib/types';
 import { type Modify } from '$lib/common';
@@ -175,18 +176,12 @@ export async function fetchEvents(params: LoadEventsParams) {
     let geocodedCoords: { lat: number; lng: number } | null = null;
 
 	if ((attendanceMode === 'offline' || attendanceMode === 'offline+online' || !attendanceMode) && distance) {
-		if (lat != null && lng != null) {
-			if (!isNaN(lat) && !isNaN(lng)) {
-				geocodedCoords = { lat, lng };
-			} else {
-				console.error('Invalid lat/lng parameters:', lat, lng);
-			}
-		} else if (plzCity && plzCity.trim() !== '') {
-			geocodedCoords = await geocodeAddressCached({
-				addressLines: [plzCity],
-				apiKey: GOOGLE_MAPS_API_KEY
-			});
-		}
+		geocodedCoords = await resolveFilterCoordinates({
+			plzCity,
+			lat,
+			lng,
+			apiKey: GOOGLE_MAPS_API_KEY,
+		});
 
         if (geocodedCoords) {
             const distanceMeters = parseFloat(distance) * 1000;

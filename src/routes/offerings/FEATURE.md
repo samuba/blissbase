@@ -1,7 +1,7 @@
 offerings are 1:1 sessions, or other (paid) services that users can offer to the community.
 
 # offerings list
-on /offerings users can select the place for which they want to see offerings for (Online, Danang, Hoi An, Danang & Hoi An)
+on /offerings users can filter offerings by location (same LocationDistanceInput as events) and keyword search. Filter state is reflected in the URL (`lat`, `lng`, `distance`, `plzCity`, `searchTerm`). On first visit without URL params, saved location cookie is used once and synced into the URL.
 Offerings are listed as cards with the authors profile image and name showing inside the card, the card should have the title of the offering at the top and a small 3 lines preview of the description.
 When user clicks the card the offering shows as a dialog, same way as EventDetailsDialog.
 All offering data for the selected place are loaded in the beginning, the dialog should not load more data.
@@ -22,7 +22,7 @@ profile name
 profile image
 profile banner image
 profile description 
-profile currentPlace (this defines where the user is currently living, a reference to the place table), can also be "Keine Angabe". Wenn user selects "Keine Angabe" Show a warning that tells him that only his online events will be findable. He has to state his currentPlace in order for the offering to show up there.
+profile current location via Google Maps autocomplete (latitude, longitude, location label on profile). If no location is set, show a warning that only online offerings will be findable.
 profile social links. Use same controls as in public profile page, maybe create shared components if required. User has to have at least one social link so seekers can actually talk to them.
 
 At the top of the offerings list there is a "Add Offering" button. At the bottom of the list there is a inviting link to checkout events which links to /p/hoi-an or /p/danang depending on what user selected  for filtering the offerings. And a add your 

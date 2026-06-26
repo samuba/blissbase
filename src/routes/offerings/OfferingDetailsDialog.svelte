@@ -34,7 +34,7 @@
 			profileImageUrl: string;
 			bannerImageUrl: string;
 			socialLinks: PublicProfileSocialLinks;
-			place?: { name: string; slug: string } | null;
+			locationLabel?: string | null;
 		};
 	};
 

@@ -119,3 +119,35 @@ export function setLocationInteractedCookie() {
     if (typeof document === 'undefined') return;
     document.cookie = `${LOCATION_INTERACTED_COOKIE_NAME}=1; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
 }
+
+function getBrowserFilterCookie(): FilterCookieData | null {
+    if (typeof document === 'undefined') return null;
+
+    const cookiePrefix = `${COOKIE_NAME}=`;
+    const rawCookie = document.cookie
+        .split(`;`)
+        .map((part) => part.trim())
+        .find((part) => part.startsWith(cookiePrefix));
+    if (!rawCookie) return null;
+
+    try {
+        const value = decodeURIComponent(rawCookie.slice(cookiePrefix.length));
+        return validateFilterData(JSON.parse(value));
+    } catch {
+        return null;
+    }
+}
+
+export function saveLocationFiltersToBrowserCookie(filters: Pick<FilterCookieData, 'plzCity' | 'distance' | 'lat' | 'lng'>) {
+    if (typeof document === 'undefined') return;
+
+    const next = {
+        ...(getBrowserFilterCookie() ?? {}),
+        plzCity: filters.plzCity,
+        distance: filters.distance,
+        lat: filters.lat,
+        lng: filters.lng,
+    };
+
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(next))}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
+}

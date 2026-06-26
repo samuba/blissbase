@@ -39,7 +39,9 @@ export const getMyPublicProfile = query(async () => {
 		socialLinks: profile.socialLinks,
 		profileImageUrl: profile.profileImageUrl ?? ``,
 		bannerImageUrl: profile.bannerImageUrl ?? ``,
-		placeId: profile.placeId,
+		locationLabel: profile.locationLabel ?? ``,
+		latitude: profile.latitude,
+		longitude: profile.longitude,
 		isPublic: isPublicProfile(profile),
 	};
 });
@@ -153,7 +155,9 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 			displayName: data.displayName,
 			slug,
 			bio: data.bio || null,
-			placeId: data.placeId ?? null,
+			locationLabel: data.locationLabel?.trim() || null,
+			latitude: data.latitude ?? null,
+			longitude: data.longitude ?? null,
 			socialLinks: data.socialLinks,
 			profileImageUrl: nextProfileImageUrl,
 			bannerImageUrl: nextBannerImageUrl,

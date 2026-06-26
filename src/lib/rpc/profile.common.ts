@@ -1,4 +1,5 @@
 import { PROFILE_SOCIAL_TYPES, type ProfileSocialType } from '$lib/socialLinks';
+import { hasValidCoordinates, isValidLatitude, isValidLongitude } from '$lib/locationFilter';
 import * as v from 'valibot';
 
 
@@ -21,15 +22,25 @@ export const publicProfileFormSchema = v.pipe(v.object({
 		)
 	),
 	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio ist zu lang`)), ``),
-	placeId: v.optional(v.pipe(
-		v.string(),
-		v.trim(),
-		v.transform((value) => {
-			if (value === ``) return null;
-			return Number(value);
-		}),
-		v.check((value) => value === null || Number.isFinite(value), `Ort ist ungültig`)
-	)),
+	locationLabel: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(200, `Ort ist zu lang`)), ``),
+	latitude: v.optional(
+		v.pipe(
+			v.string(),
+			v.trim(),
+			v.transform((value) => (value === `` ? null : Number(value))),
+			v.check((value) => value === null || isValidLatitude(value), `Breitengrad ist ungültig`),
+		),
+		``,
+	),
+	longitude: v.optional(
+		v.pipe(
+			v.string(),
+			v.trim(),
+			v.transform((value) => (value === `` ? null : Number(value))),
+			v.check((value) => value === null || isValidLongitude(value), `Längengrad ist ungültig`),
+		),
+		``,
+	),
 	profileImageUrl: v.optional(
 		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profilbild-URL ist ungültig`))),
 		``
@@ -161,7 +172,14 @@ export const publicProfileFormSchema = v.pipe(v.object({
 			return true;
 		}, 'Website ist keine gültige URL')
 	),
-}));
+}),
+	v.check((data) => {
+		const hasLabel = Boolean(data.locationLabel?.trim());
+		const hasCoords = hasValidCoordinates({ lat: data.latitude, lng: data.longitude });
+		if (!hasLabel && !hasCoords) return true;
+		return hasLabel && hasCoords;
+	}, `Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`),
+);
 
 /**
  * Converts stored social links into button-ready href entries.

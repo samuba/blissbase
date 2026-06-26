@@ -3,11 +3,10 @@ import * as assets from "$lib/assets";
 import { randomString, slugify } from "$lib/common";
 import {
 	OFFERING_IMAGE_MAX_COUNT,
-	OFFERING_PLACE_FILTERS,
 	offeringFormSchema,
 	updateOfferingFormSchema,
-	type OfferingFormat,
 } from "$lib/rpc/offerings.common";
+import { loadOfferingsList } from "$lib/server/offeringsList";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 import { routes, safeReturnToPath } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
@@ -15,7 +14,7 @@ import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
 import { and, db, eq, ne, or, s, sql } from "$lib/server/db";
 import { verifyOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
-import { createPublicProfileSlug, isPublicProfile } from "$lib/server/profile";
+import { createPublicProfileSlug, hasSocialLink, isPublicProfile } from "$lib/server/profile";
 import { resolveProfileImageUrl } from "$lib/server/profileImages";
 import type { Profile } from "$lib/server/schema";
 import { error, invalid, redirect } from "@sveltejs/kit";
@@ -23,8 +22,13 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import * as v from "valibot";
 import { setFlash } from "$lib/server/flash";
 
-const placeFilterSchema = v.object({
-	filter: v.optional(v.picklist(OFFERING_PLACE_FILTERS), `online`),
+const offeringsFilterSchema = v.object({
+	plzCity: v.optional(v.nullable(v.string())),
+	distance: v.optional(v.nullable(v.string())),
+	lat: v.optional(v.nullable(v.number())),
+	lng: v.optional(v.nullable(v.number())),
+	searchTerm: v.optional(v.nullable(v.string())),
+	includeOnline: v.optional(v.boolean()),
 });
 
 const offeringImageUploadSchema = v.object({
@@ -41,69 +45,14 @@ const offeringBySlugSchema = v.object({
 
 const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
 
-export const getOfferings = query(placeFilterSchema, async ({ filter }) => {
-	const currentUserId = getRequestEvent().locals.userId;
-	const offerings = await db.query.offerings.findMany({
-		where: eq(s.offerings.listed, true),
-		columns: {
-			id: true,
-			slug: true,
-			title: true,
-			descriptionHtml: true,
-			format: true,
-			imageUrls: true,
-			listed: true,
-		},
-		with: {
-			profile: {
-				columns: {
-					id: true,
-					slug: true,
-					displayName: true,
-					bio: true,
-					profileImageUrl: true,
-					bannerImageUrl: true,
-					socialLinks: true,
-				},
-				with: {
-					place: {
-						columns: {
-							name: true,
-							slug: true,
-						},
-					},
-				},
-			},
-		},
-		orderBy: (offerings, { desc }) => [desc(offerings.createdAt)],
-	});
-
-	return {
-		filter,
-		offerings: offerings
-			.filter((offering) => {
-				if (!offering.profile || !isPublicProfile(offering.profile)) return false;
-				if (!hasSocialLink(offering.profile)) return false;
-				if (filter === `online`) return isOnlineOffering(offering.format);
-				if (!isOfflineOffering(offering.format)) return false;
-				if (filter === `danang`) return offering.profile.place?.slug === `danang`;
-				if (filter === `hoi-an`) return offering.profile.place?.slug === `hoi-an`;
-				return [`danang`, `hoi-an`].includes(offering.profile.place?.slug ?? ``);
-			})
-			.map((offering) => ({
-				...offering,
-				descriptionHtml: offering.descriptionHtml ?? ``,
-				imageUrls: offering.imageUrls ?? [],
-				profile: {
-					...offering.profile,
-					bio: offering.profile.bio ?? ``,
-					profileImageUrl: offering.profile.profileImageUrl ?? ``,
-					bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
-				},
-				canManage: currentUserId === offering.profile.id,
-			})),
-	};
-});
+export const getOfferings = query(offeringsFilterSchema, async (args) => loadOfferingsList({
+	plzCity: args.plzCity ?? null,
+	distance: args.distance ?? null,
+	lat: args.lat ?? null,
+	lng: args.lng ?? null,
+	searchTerm: args.searchTerm ?? null,
+	includeOnline: args.includeOnline ?? false,
+}));
 
 export const getMyOfferings = query(async () => {
 	const userId = ensureUserId();
@@ -116,14 +65,11 @@ export const getMyOfferings = query(async () => {
 			profileImageUrl: true,
 			bannerImageUrl: true,
 			socialLinks: true,
+			locationLabel: true,
+			latitude: true,
+			longitude: true,
 		},
 		with: {
-			place: {
-				columns: {
-					name: true,
-					slug: true,
-				},
-			},
 			offerings: {
 				columns: {
 					id: true,
@@ -150,6 +96,7 @@ export const getMyOfferings = query(async () => {
 			bio: profile.bio ?? ``,
 			profileImageUrl: profile.profileImageUrl ?? ``,
 			bannerImageUrl: profile.bannerImageUrl ?? ``,
+			locationLabel: profile.locationLabel ?? ``,
 		},
 	}));
 });
@@ -194,14 +141,9 @@ export const getOfferingForDialog = query(offeringBySlugSchema, async ({ slug })
 					profileImageUrl: true,
 					bannerImageUrl: true,
 					socialLinks: true,
-				},
-				with: {
-					place: {
-						columns: {
-							name: true,
-							slug: true,
-						},
-					},
+					locationLabel: true,
+					latitude: true,
+					longitude: true,
 				},
 			},
 		},
@@ -219,6 +161,7 @@ export const getOfferingForDialog = query(offeringBySlugSchema, async ({ slug })
 			bio: offering.profile.bio ?? ``,
 			profileImageUrl: offering.profile.profileImageUrl ?? ``,
 			bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
+			locationLabel: offering.profile.locationLabel ?? ``,
 		},
 	};
 });
@@ -288,13 +231,6 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	const userId = ensureUserId();
 	const offering = await db.query.offerings.findFirst({
 		where: and(eq(s.offerings.id, data.offeringId), eq(s.offerings.profileId, userId)),
-		with: {
-			profile: {
-				columns: {
-					placeId: true,
-				},
-			},
-		},
 	});
 	if (!offering) throw error(404, `Offering not found`);
 
@@ -536,7 +472,9 @@ async function updateProfileFromOfferingForm(args: UpdateProfileFromOfferingForm
 			displayName: args.data.displayName,
 			slug,
 			bio: args.data.bio || null,
-			placeId: args.data.placeId ?? null,
+			locationLabel: args.data.locationLabel?.trim() || null,
+			latitude: args.data.latitude ?? null,
+			longitude: args.data.longitude ?? null,
 			socialLinks: args.data.socialLinks,
 			profileImageUrl: nextProfileImageUrl,
 			bannerImageUrl: nextBannerImageUrl,
@@ -598,18 +536,6 @@ async function isProfileSlugAvailable(args: { slug: string; profileId: string })
 	});
 
 	return !existingSlugOwner;
-}
-
-function isOnlineOffering(format: OfferingFormat) {
-	return format === `online` || format === `offline+online`;
-}
-
-function isOfflineOffering(format: OfferingFormat) {
-	return format === `offline` || format === `offline+online`;
-}
-
-function hasSocialLink(profile: Pick<Profile, "socialLinks"> | null | undefined) {
-	return Boolean(profile?.socialLinks?.some((link) => link.value?.trim()));
 }
 
 function keepSubmittedOfferingImages(args: { currentImageUrls: string[]; submittedImageUrls: string[] }) {
@@ -677,9 +603,13 @@ function addUniqueImageUrl(args: { imageUrls: string[]; url: string }) {
 }
 
 function refreshOfferingLists() {
-	for (const filter of OFFERING_PLACE_FILTERS) {
-		getOfferings({ filter }).refresh();
-	}
+	getOfferings({
+		plzCity: null,
+		distance: null,
+		lat: null,
+		lng: null,
+		searchTerm: null,
+	}).refresh();
 	if (getRequestEvent().locals.userId) {
 		getMyOfferings().refresh();
 	}

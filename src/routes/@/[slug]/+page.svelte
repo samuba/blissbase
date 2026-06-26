@@ -79,14 +79,11 @@
 									{profile.displayName}
 								</h1>
 
-								{#if profile.place?.name?.trim()}
-									<a
-										href={resolve(`/p/[slug]`, { slug: profile.place.slug })}
-										class="text-base-content/60 flex min-w-0 items-center justify-start gap-1 text-sm"
-									>
+								{#if profile.locationLabel?.trim()}
+									<p class="text-base-content/60 flex min-w-0 items-center justify-start gap-1 text-sm">
 										<i class="icon-[ph--map-pin] size-4" aria-hidden="true"></i>
-										<span class="min-w-0 wrap-break-word">{profile.place.name}</span>
-									</a>
+										<span class="min-w-0 wrap-break-word">{profile.locationLabel}</span>
+									</p>
 								{/if}
 							</div>
 							{#if isOwnProfile}

@@ -2,7 +2,6 @@ import { publicProfileFormSchema } from '$lib/rpc/profile.common';
 import * as v from 'valibot';
 
 export const OFFERING_FORMATS = ['offline', 'online', 'offline+online'] as const;
-export const OFFERING_PLACE_FILTERS = ['online', 'danang', 'hoi-an', 'danang-hoi-an'] as const;
 export const OFFERING_IMAGE_MAX_COUNT = 12;
 
 const offeringFormEntries = {
@@ -39,4 +38,3 @@ export const updateOfferingFormSchema = v.object({
 export type OfferingForm = v.InferOutput<typeof offeringFormSchema>;
 export type UpdateOfferingForm = v.InferOutput<typeof updateOfferingFormSchema>;
 export type OfferingFormat = (typeof OFFERING_FORMATS)[number];
-export type OfferingPlaceFilter = (typeof OFFERING_PLACE_FILTERS)[number];

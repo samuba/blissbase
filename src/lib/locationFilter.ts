@@ -35,6 +35,37 @@ export function hasValidCoordinates(args: {
 	return isValidLatitude(args.lat) && isValidLongitude(args.lng);
 }
 
+export function getDistanceInKm(args: {
+	fromLat: number;
+	fromLng: number;
+	toLat: number;
+	toLng: number;
+}) {
+	const earthRadiusKm = 6371;
+	const deltaLat = toRadians(args.toLat - args.fromLat);
+	const deltaLng = toRadians(args.toLng - args.fromLng);
+	const fromLat = toRadians(args.fromLat);
+	const toLat = toRadians(args.toLat);
+	const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(fromLat) * Math.cos(toLat) * Math.sin(deltaLng / 2) ** 2;
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+	return earthRadiusKm * c;
+}
+
+export function isWithinDistanceKm(args: {
+	fromLat: number;
+	fromLng: number;
+	toLat: number;
+	toLng: number;
+	distanceKm: number;
+}) {
+	return getDistanceInKm(args) <= args.distanceKm;
+}
+
+function toRadians(value: number) {
+	return value * (Math.PI / 180);
+}
+
 export function sanitizeLocationParams<T extends {
 	plzCity?: string | null;
 	distance?: string | null;

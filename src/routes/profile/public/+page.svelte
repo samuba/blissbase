@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { slugify } from '$lib/common';
+	import LocationAutocompleteInput from '$lib/components/LocationAutocompleteInput.svelte';
 	import EditorJs from '$lib/components/EditorJs.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import ProfileImageCropInput from '$lib/components/ProfileImageCropInput.svelte';
 	import PublicProfileSocialLinksEditor from '$lib/components/PublicProfileSocialLinksEditor.svelte';
 	import { publicProfileFormSchema } from '$lib/rpc/profile.common';
-	import { getPlaces } from '$lib/rpc/places.remote';
 	import {
 		checkSlugAvailability,
 		getMyPublicProfile,
@@ -17,7 +17,6 @@
 	import { onMount } from 'svelte';
 
 	const profile = $state(await getMyPublicProfile());
-	const places = await getPlaces();
 
 	let profileImageBusy = $state(false);
 	let bannerImageBusy = $state(false);
@@ -224,18 +223,19 @@
 
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Aktueller Ort</legend>
-			<select
-				class="select w-full"
-				{...upsertPublicProfile.fields.placeId.as(`select`)}
-				value={profile.placeId ?? ``}
-			>
-				<option value="">Kein Ort ausgewählt</option>
-				{#each places as place (place.id)}
-					<option value={place.id}>{place.name}</option>
-				{/each}
-			</select>
-			<p class="label">Deine Angebote werden für diesen Ort gelistet.</p>
-			<FormFieldIssues field={upsertPublicProfile.fields.placeId} />
+			<LocationAutocompleteInput
+				inputId="profileLocationInput"
+				initialLabel={profile.locationLabel}
+				initialLat={profile.latitude}
+				initialLng={profile.longitude}
+				locationLabelField={upsertPublicProfile.fields.locationLabel}
+				latitudeField={upsertPublicProfile.fields.latitude}
+				longitudeField={upsertPublicProfile.fields.longitude}
+			/>
+			<p class="label">Deine Angebote werden in der Nähe dieses Orts gefunden.</p>
+			<FormFieldIssues field={upsertPublicProfile.fields.locationLabel} />
+			<FormFieldIssues field={upsertPublicProfile.fields.latitude} />
+			<FormFieldIssues field={upsertPublicProfile.fields.longitude} />
 		</fieldset>
 
 		<fieldset class="fieldset">

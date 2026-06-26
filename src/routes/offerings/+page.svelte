@@ -1,80 +1,101 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { stripHtml, trimAllWhitespaces } from "$lib/common";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
-	import Select from "$lib/components/Select.svelte";
+	import LocationDistanceInput from "$lib/components/LocationDistanceInput.svelte";
+	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
 	import TabsNavDesktop from "$lib/components/TabsNavDesktop.svelte";
 	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
-	import { OFFERING_PLACE_FILTERS, type OfferingPlaceFilter } from "$lib/rpc/offerings.common";
-	import { getOfferings } from "$lib/rpc/offerings.remote";
+	import { filterOfferingsBySearchTerm } from "$lib/offeringsFilter";
+	import type { OfferingsFilter } from "$lib/offeringsFilter";
+	import { saveLocationFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
 	import { routes } from "$lib/routes";
 	import { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 
-	const requestedFilter = $derived(normalizeFilter(page.url.searchParams.get(`place`)));
-	const result = $derived(await getOfferings({ filter: requestedFilter }));
-	const offerings = $derived(result.offerings);
-	const filter = $derived(result.filter);
-	let filterQuery = $state(``);
-	let keywordSearched = $state(false);
+	let { data } = $props();
+
+	const filter = $derived(data.filter);
+	const offerings = $derived(data.offerings);
+	const filteredOfferings = $derived(
+		filterOfferingsBySearchTerm({
+			offerings,
+			searchTerm: filter.searchTerm,
+		}),
+	);
+
 	let searchInput = $state<TextSearchInput | null>(null);
 	let headerElement = $state<HTMLElement | null>(null);
 	let scrollY = $state(0);
 	let contentBeforeMenuHeight = $state(0);
 	const showShadow = $derived(scrollY > (headerElement?.offsetHeight ?? 50) + contentBeforeMenuHeight - 100);
 
-	const filters: Array<{ value: OfferingPlaceFilter; label: string; icon: string }> = [
-		{ value: `online`, label: `Online`, icon: `icon-[ph--globe]` },
-		{ value: `danang`, label: `Danang`, icon: `icon-[ph--map-pin]` },
-		{ value: `hoi-an`, label: `Hoi An`, icon: `icon-[ph--map-pin]` },
-		{ value: `danang-hoi-an`, label: `Danang & Hoi An`, icon: `icon-[ph--map-pin]` },
-	];
+	const resolvedCityName = $derived(
+		filter.lat != null && filter.lng != null ? filter.plzCity : null,
+	);
+	const initialLocation = $derived(
+		filter.plzCity ||
+		(filter.lat != null && filter.lng != null ? `coords:${filter.lat},${filter.lng}` : null),
+	);
 
-	const filterOptions = filters.map((filterOption) => ({
-		value: filterOption.value,
-		html: `<i class="${filterOption.icon} size-4"></i><span>${filterOption.label}</span>`,
-	}));
-
-	let selectedFilter = $derived<OfferingPlaceFilter>(requestedFilter);
-	const normalizedSearchTerm = $derived(keywordSearched ? filterQuery.trim().toLocaleLowerCase() : ``);
-	const filteredOfferings = $derived.by(() => {
-		if (!normalizedSearchTerm) return offerings;
-		return offerings.filter((offering) => {
-			const title = offering.title.toLocaleLowerCase();
-			const description = (trimAllWhitespaces(stripHtml(offering.descriptionHtml)) ?? ``).toLocaleLowerCase();
-			const host = offering.profile.displayName?.toLocaleLowerCase();
-
-			return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm) || host?.includes(normalizedSearchTerm);
-		});
-	});
-
-	const ctaHref = $derived.by(() => {
-		if (filter === `danang`) return routes.eventList({ searchTerm: `Da Nang` });
-		if (filter === `hoi-an`) return routes.eventList({ searchTerm: `Hoi An` });
-		return routes.eventList();
-	});
+	const ctaHref = $derived(
+		filter.plzCity ? routes.eventList({ searchTerm: filter.plzCity }) : routes.eventList(),
+	);
 
 	$effect(() => {
 		contentBeforeMenuHeight = document.getElementById(`content-before-menu`)?.clientHeight ?? 0;
 	});
 
-	function normalizeFilter(value: string | null): OfferingPlaceFilter {
-		if (OFFERING_PLACE_FILTERS.includes(value as OfferingPlaceFilter)) {
-			return value as OfferingPlaceFilter;
-		}
-		return `online`;
+	function navigateWithFilter(nextFilter: Partial<OfferingsFilter>) {
+		void goto(
+			routes.offeringsList({
+				plzCity: `plzCity` in nextFilter ? nextFilter.plzCity ?? null : filter.plzCity,
+				distance: `distance` in nextFilter ? nextFilter.distance ?? null : filter.distance,
+				lat: `lat` in nextFilter ? nextFilter.lat ?? null : filter.lat,
+				lng: `lng` in nextFilter ? nextFilter.lng ?? null : filter.lng,
+				searchTerm: `searchTerm` in nextFilter ? nextFilter.searchTerm ?? null : filter.searchTerm,
+				includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? false : filter.includeOnline,
+			}),
+			{ keepFocus: true, noScroll: true },
+		);
 	}
 
-	function onFilterChange(value: string) {
-		const nextFilter = normalizeFilter(value);
-		if (nextFilter === requestedFilter) return;
-		void goto(routes.offeringsList(nextFilter));
+	function handleLocationDistanceChange(event: LocationChangeEvent) {
+		setLocationInteractedCookie();
+		saveLocationFiltersToBrowserCookie({
+			plzCity: event.location,
+			distance: event.distance,
+			lat: event.latitude ?? null,
+			lng: event.longitude ?? null,
+		});
+
+		navigateWithFilter({
+			plzCity: event.location,
+			distance: event.distance,
+			lat: event.latitude ?? null,
+			lng: event.longitude ?? null,
+		});
+	}
+
+	function handleSearchTermChange(value: string) {
+		navigateWithFilter({
+			searchTerm: value.trim() || null,
+		});
+	}
+
+	function handleIncludeOnlineChange(event: Event) {
+		const target = event.currentTarget;
+		if (!(target instanceof HTMLInputElement)) return;
+
+		navigateWithFilter({
+			includeOnline: target.checked,
+		});
 	}
 
 	function clearSearch() {
 		searchInput?.clearAndFocus();
+		navigateWithFilter({ searchTerm: null });
 	}
 
 	function newOfferingHref() {
@@ -84,6 +105,8 @@
 	function openOfferingDetails(offering: (typeof offerings)[number]) {
 		showOfferingDetailsDialog(offering, { returnTo: routes.currentPath(page.url) });
 	}
+
+	const normalizedSearchTerm = $derived(filter.searchTerm?.trim() ?? ``);
 </script>
 
 <svelte:head>
@@ -133,30 +156,39 @@
 
 			<div class="flex w-full flex-col gap-3 px-4 sm:flex-row sm:items-end">
 				<div class="flex w-full flex-col gap-1.5">
-					<span id="offering-location-label" class="hidden text-xs font-medium sm:block">Ort</span>
-					<Select
-						bind:value={selectedFilter}
-						options={filterOptions}
-						placeholder="Ort wählen"
-						triggerProps={{
-							class: `w-full justify-between text-left`,
-							"aria-labelledby": `offering-location-label`,
-						}}
-						onValueChange={onFilterChange}
+					<LocationDistanceInput
+						inputId="plzCityInput-offerings"
+						initialLocation={initialLocation}
+						initialDistance={filter.distance}
+						resolvedCityName={resolvedCityName}
+						locationBiasLat={filter.lat}
+						locationBiasLng={filter.lng}
+						onChange={handleLocationDistanceChange}
 					/>
 				</div>
 
 				<div class="flex w-full flex-col gap-1.5">
-					<label for="offering-search" class="hidden text-xs font-medium sm:block">Suche</label>
 					<TextSearchInput
 						bind:this={searchInput}
 						id="offering-search"
-						bind:query={filterQuery}
-						bind:searched={keywordSearched}
+						query={filter.searchTerm ?? ``}
+						searched={Boolean(filter.searchTerm?.trim())}
 						wrapperClass="w-full"
+						onSearch={handleSearchTermChange}
+						onClose={() => navigateWithFilter({ searchTerm: null })}
 					/>
 				</div>
 			</div>
+
+			<label class="label cursor-pointer justify-start gap-2 px-4 sm:-mt-2">
+				<input
+					type="checkbox"
+					class="checkbox checkbox-sm bg-base-100"
+					checked={filter.includeOnline}
+					onchange={handleIncludeOnlineChange}
+				/>
+				<span class="text-sm">Online Angebote auch anzeigen</span>
+			</label>
 		</div>
 	</header>
 
