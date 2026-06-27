@@ -75,7 +75,7 @@
 		if (offering?.slug === offeringSlug) return;
 		openingOfferingSlug = offeringSlug;
 		try {
-			const offeringToShow = await getOfferingForDialog({ slug: offeringSlug }).run();
+			const offeringToShow = await getOfferingForDialog({ slug: offeringSlug });
 			if (isClosing || page.url.searchParams.get(`offering`) !== offeringSlug) return;
 
 			const returnTo = urlWithoutOfferingDialogParam(page.url);

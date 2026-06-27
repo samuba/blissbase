@@ -17,7 +17,7 @@
 		if (pastEventsStatus !== `idle`) return;
 
 		pastEventsStatus = `loading`;
-		pastEvents = await getMyAuthoredPastEvents().run();
+		pastEvents = await getMyAuthoredPastEvents();
 		pastEventsStatus = `loaded`;
 	}
 

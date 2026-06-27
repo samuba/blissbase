@@ -1,4 +1,4 @@
-offerings show online does not work after hovering over page menu
+offerings show online does not work after hovering over page menu!!
 
 switch to lexical editor?
 use single flight mutations for profile and event creation

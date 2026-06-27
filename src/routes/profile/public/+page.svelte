@@ -59,7 +59,7 @@
 
 		slugCheck = `checking`;
 		try {
-			const result = await checkSlugAvailability({ slug: raw }).run();
+			const result = await checkSlugAvailability({ slug: raw });
 			slugCheck = { available: result.available, normalized: result.slug };
 		} catch (error) {
 			console.error(`Slug check failed`, error);
