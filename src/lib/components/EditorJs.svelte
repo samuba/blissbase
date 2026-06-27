@@ -18,7 +18,34 @@
 	let editor: EditorJS | undefined = $state(undefined);
 	let editorEl: HTMLElement | undefined = $state(undefined);
 
-	let editorValue = $derived(field.value() || value || '');
+	let editorValue = $derived(field.value() || value || ``);
+	let isEditorReady = $state(false);
+	let lastRenderedExternalValue = ``;
+
+	async function renderEditorHtml(html: string) {
+		if (!editor) return;
+
+		const normalized = normalizeEditorJsInputHtml(html);
+		// removed br tags: https://github.com/codex-team/editor.js/issues/2800
+		await editor.blocks.renderFromHTML(normalized.replaceAll(`<br>`, `##br##`));
+		await sleep(300);
+		const temp = await editor.save();
+		for (const block of temp.blocks) {
+			if (block.type === `paragraph`) {
+				block.data.text = block.data.text.replaceAll(`##br##`, `<br>`);
+			}
+		}
+		await editor.blocks.render(temp);
+		lastRenderedExternalValue = html;
+	}
+
+	$effect(() => {
+		const nextValue = field.value() || value || ``;
+		if (!isEditorReady) return;
+		if (nextValue === lastRenderedExternalValue) return;
+
+		void renderEditorHtml(nextValue);
+	});
 
 	onMount(() => {
 		let detachSplitPasteCapture: (() => void) | undefined;
@@ -29,17 +56,21 @@
 			const { default: List } = await import('@editorjs/list');
 			const { default: Marker } = await import('@editorjs/marker');
 			const { default: EditorJsHtml } = await import('editorjs-html');
-			class CustomList extends List {
+			const CustomList = class extends List {
 				override renderSettings() {
 					return super.renderSettings().filter(
-						(item) =>
+						(item) => {
+							if (!(`label` in item)) return false;
+							if (typeof item.label !== `string`) return false;
+
 							// Here you can filter needed items
 							// In my case I need to only support unordered and ordered lists without any new options like 'checklist' or 'start from'
 							// But if you want to only disable Checklist you can filter like (item) => item.label !== 'Checklist'
-							['Unordered', 'Ordered'].includes(item.label) //  as { label: string } if TS
+							return [`Unordered`, `Ordered`].includes(item.label);
+						}
 					);
 				}
-			}
+			};
 
 			const editorJsHtml = EditorJsHtml();
 			/* @wc-ignore */
@@ -154,17 +185,8 @@
 				} : undefined,
 				onReady: async () => {
 					// Split newlines / <br> into multiple blocks before HTML paste pipeline (import + round-trip).
-					const normalized = normalizeEditorJsInputHtml(editorValue);
-					// removed br tags: https://github.com/codex-team/editor.js/issues/2800
-					await editor?.blocks.renderFromHTML(normalized.replaceAll('<br>', '##br##'));
-					await sleep(300);
-					const temp = await editor!.save();
-					for (const block of temp.blocks) {
-						if (block.type === 'paragraph') {
-							block.data.text = block.data.text.replaceAll('##br##', '<br>');
-						}
-					}
-					editor?.blocks.render(temp);
+					await renderEditorHtml(editorValue);
+					isEditorReady = true;
 
 					// Editor.js merges single `<p>a<br>b</p>` via `insertContentAtCaretPosition`, skipping `onPaste`.
 					const holderEl = editorEl;
@@ -202,6 +224,9 @@
 				onChange: debounce(async () => {
 					const blocks = await editor!.save();
 					editorValue = editorJsHtml.parse(blocks);
+					// Keep the guard in sync with the editor's own output so a post-submit
+					// field.value() sync (round-tripped HTML) doesn't trigger a disruptive re-render.
+					lastRenderedExternalValue = editorValue;
 				}, 1000),
 			});
 

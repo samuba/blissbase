@@ -6,10 +6,14 @@
 	import ImageInput from './ImageInput.svelte';
 	import {
 		createEventSchema,
+		formatDateForLocalInput,
 		updateEventSchema,
 		type UpdateEventSchema,
 		type ContactMethod
 	} from '$lib/events.remote.common';
+	import { getDefaultCreateEventFieldBase } from '$lib/eventCreateDefaults';
+	import { prefillEventFromDescription } from '$lib/rpc/prefillEventFromDescription.remote';
+	import type { CreateEventPrefillFields } from '$lib/server/mapAiAnswerToCreateEventPrefill';
 	import { useDuplicateEventDraftToast } from '$lib/eventDuplicateDraftToast.svelte';
 	import TagsInput from '$lib/components/TagsInput.svelte';
 	import EditorJs from '$lib/components/EditorJs.svelte';
@@ -26,14 +30,20 @@
 
 	let {
 		remoteForm,
-		initialExistingImageUrls = []
+		initialExistingImageUrls = [],
+		showAutofillControl = false
 	}: {
 		remoteForm: EventFormRemoteForm;
 		initialExistingImageUrls?: string[];
+		showAutofillControl?: boolean;
 	} = $props();
 
 	function isUpdateEventForm(remoteForm: EventFormRemoteForm): remoteForm is UpdateEventForm {
 		return 'eventId' in remoteForm.fields;
+	}
+
+	function isCreateEventForm(remoteForm: EventFormRemoteForm): remoteForm is CreateEventForm {
+		return !isUpdateEventForm(remoteForm);
 	}
 
 	let preflight = $derived.by(() => {
@@ -47,6 +57,10 @@
 	let selectedContactMethod = $derived(
 		(remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ?? `none`
 	);
+	let isAutofillOpen = $state(false);
+	let autofillText = $state(``);
+	let isPrefilling = $state(false);
+	let prefillBanner = $state<{ kind: `source` | `noEvent` | `error`; text: string } | null>(null);
 
 	onMount(() => {
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -54,9 +68,188 @@
 	});
 
 	useDuplicateEventDraftToast(() => remoteForm);
+
+	function getDefaultCreateFields(args: { timeZone: string }) {
+		return getDefaultCreateEventFieldBase({ timeZone: args.timeZone });
+	}
+
+	function getCurrentCreateFields(args: { remoteForm: CreateEventForm; timeZone: string }) {
+		const defaults = getDefaultCreateFields({ timeZone: args.timeZone });
+		return {
+			...defaults,
+			name: args.remoteForm.fields.name.value() || defaults.name,
+			description: args.remoteForm.fields.description.value() || defaults.description,
+			tagIds: (args.remoteForm.fields.tagIds.value() ?? defaults.tagIds).filter(
+				(tagId): tagId is string => !!tagId
+			),
+			price: args.remoteForm.fields.price.value() || defaults.price,
+			address: args.remoteForm.fields.address.value() || defaults.address,
+			startAt: args.remoteForm.fields.startAt.value() || defaults.startAt,
+			endAt: args.remoteForm.fields.endAt.value() || defaults.endAt,
+			timeZone: args.remoteForm.fields.timeZone.value() || defaults.timeZone,
+			isOnline: args.remoteForm.fields.isOnline.value() ?? defaults.isOnline,
+			isNotListed: args.remoteForm.fields.isNotListed.value() ?? defaults.isNotListed,
+			contact: args.remoteForm.fields.contact.value() || defaults.contact,
+			contactMethod: args.remoteForm.fields.contactMethod.value() || defaults.contactMethod,
+			images: (args.remoteForm.fields.images.value() ?? defaults.images).filter((file): file is File => !!file)
+		};
+	}
+
+	function mergePrefill(
+		base: ReturnType<typeof getDefaultCreateFields>,
+		prefill: CreateEventPrefillFields
+	) {
+		return {
+			...base,
+			name: prefill.name || base.name,
+			description: prefill.description || base.description,
+			tagIds: prefill.tagIds?.length ? prefill.tagIds : base.tagIds,
+			price: prefill.price || base.price,
+			address: prefill.address || base.address,
+			startAt: prefill.startAtIso
+				? formatDateForLocalInput(new Date(prefill.startAtIso))
+				: base.startAt,
+			endAt: prefill.endAtIso ? formatDateForLocalInput(new Date(prefill.endAtIso)) : base.endAt,
+			isOnline: prefill.isOnline,
+			isNotListed: prefill.isNotListed,
+			contact: prefill.contact || base.contact,
+			contactMethod: prefill.contactMethod || base.contactMethod
+		};
+	}
+
+	async function prefillFromText() {
+		const text = autofillText.trim();
+		if (!text || isPrefilling) return;
+		if (!isCreateEventForm(remoteForm)) return;
+
+		prefillBanner = null;
+		isPrefilling = true;
+		const timeZone = remoteForm.fields.timeZone.value() || Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const currentFields = getCurrentCreateFields({ remoteForm, timeZone });
+
+		try {
+			const result = await prefillEventFromDescription({ text, timeZone });
+			if (result.kind === `empty`) return;
+			if (result.fields.notice === `existingSource` && result.fields.existingSource) {
+				prefillBanner = {
+					kind: `source`,
+					text: `Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von ${result.fields.existingSource}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein.`
+				};
+				return;
+			}
+			const merged = mergePrefill(currentFields, result.fields);
+			remoteForm.fields.set(merged);
+			if (result.fields.notice === `noEventData`) {
+				prefillBanner = {
+					kind: `noEvent`,
+					text: `Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen.`
+				};
+				return;
+			}
+			autofillText = ``;
+			isAutofillOpen = false;
+		} catch (e) {
+			console.error(e);
+			prefillBanner = {
+				kind: `error`,
+				text: `Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen.`
+			};
+		} finally {
+			isPrefilling = false;
+		}
+	}
 </script>
 
 <form {...preflight} enctype="multipart/form-data" class="flex flex-col gap-5" id="event-form">
+	{#if showAutofillControl && isCreateEventForm(remoteForm)}
+		<fieldset class="fieldset w-full min-w-0 gap-3">
+			<div
+				class={[
+					`flex w-full flex-col rounded-xl border-2 border-dashed border-primary text-primary-content sm:bg-primary/10`,
+					prefillBanner?.kind === `error` ? `bg-error/10 text-error` : `bg-primary/5`
+				]}
+			>
+				<button
+					type="button"
+					onclick={() => (isAutofillOpen = !isAutofillOpen)}
+					class="flex h-auto min-h-0 w-full items-center justify-start gap-3 px-4 py-4 text-left normal-case"
+					aria-expanded={isAutofillOpen}
+				>
+					<i class="icon-[ph--magic-wand] size-7 shrink-0"></i>
+					<span class="flex min-w-0 flex-col items-start">
+						<span class="font-semibold text-sm">Automatisch ausfüllen aus Beschreibung</span>
+						<span class="text-base-content/70 text-xs font-normal">
+							WhatsApp, Telegram oder andere Event-Beschreibung einfügen
+						</span>
+					</span>
+					<i
+						class={[
+							`icon-[ph--caret-down] ml-auto size-5 shrink-0 transition-transform`,
+							isAutofillOpen ? `rotate-180` : ``
+						]}
+					></i>
+				</button>
+
+				{#if isAutofillOpen}
+					<div class="flex flex-col gap-3 px-4 pb-4" transition:slide={{ duration: 250, easing: cubicInOut }}>
+						<textarea
+							class="textarea min-h-28 w-full font-mono text-sm"
+							bind:value={autofillText}
+							disabled={isPrefilling}
+							placeholder="Event Beschreibung einfügen…"
+						></textarea>
+
+						<div class="flex flex-row justify-end gap-3">
+							<button
+								type="button"
+								class="btn"
+								onclick={() => (isAutofillOpen = false)}
+								disabled={isPrefilling}
+							>
+								Schließen
+							</button>
+							<button
+								type="button"
+								onclick={prefillFromText}
+								class="btn btn-primary disabled:bg-primary disabled:text-primary-content"
+								disabled={isPrefilling || !autofillText.trim()}
+							>
+								{#if isPrefilling}
+									<span class="loading loading-spinner loading-sm"></span>
+									Analysiere Text …
+								{:else}
+									Daten übernehmen
+									<i class="icon-[ph--sparkle] size-5"></i>
+								{/if}
+							</button>
+						</div>
+
+						{#if prefillBanner}
+							<div
+								class={[
+									`alert alert-soft`,
+									prefillBanner.kind === `error`
+										? `alert-error`
+										: prefillBanner.kind === `source`
+											? `alert-warning`
+											: `alert-info`
+								]}
+								role={prefillBanner.kind === `error` ? `alert` : `status`}
+							>
+								{#if prefillBanner.kind === `error`}
+									<i class="icon-[ph--warning-circle] size-5 shrink-0"></i>
+								{:else}
+									<i class="icon-[ph--info] size-5 shrink-0"></i>
+								{/if}
+								<span>{prefillBanner.text}</span>
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		</fieldset>
+	{/if}
+
 	<ImageInput
 		field={remoteForm.fields.images}
 		existingImageUrlsField={updateFields.existingImageUrls}

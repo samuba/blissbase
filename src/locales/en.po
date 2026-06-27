@@ -91,8 +91,9 @@ msgstr "Sold out"
 #: src/lib/components/EventCard.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetails.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Online"
 msgstr "Online"
@@ -160,16 +161,19 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
+#: src/lib/components/EventForm.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
 msgstr "Close"
 
 #: src/routes/EventDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "<0/> Zurück zur Übersicht"
 msgstr "<0/> Back to overview"
@@ -428,7 +432,6 @@ msgstr "Delete event"
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/edit/[id]/+page.svelte
-#: src/routes/new/+page.svelte
 #: src/routes/new/+page.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -858,11 +861,11 @@ msgstr "Current Favorites"
 msgid "Vergangene Favoriten"
 msgstr "Past Favorites"
 
-#: src/routes/new/+page.svelte
+#: src/lib/components/EventForm.svelte
 msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
 msgstr "No clear event was detected in the text. You can still fill out the form."
 
-#: src/routes/new/+page.svelte
+#: src/lib/components/EventForm.svelte
 msgid "<0/> Analysiere Text …"
 msgstr "<0/> Analyzing text …"
 
@@ -1264,6 +1267,7 @@ msgstr "Search"
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort"
 msgstr "In-Person"
@@ -1314,10 +1318,12 @@ msgstr "Create offering <0/>"
 msgid "Weitere Wege"
 msgstr "Other ways"
 
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Persönlich an deinem Profil-Ort."
 msgstr "In person at your profile location."
 
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Du bietest beides an."
 msgstr "You offer both."
@@ -1336,10 +1342,12 @@ msgstr "Create offering | Blissbase"
 msgid "Angebot erstellen"
 msgstr "Create offering"
 
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Titel *"
 msgstr "Title *"
 
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Format *"
 msgstr "Format *"
@@ -1353,11 +1361,13 @@ msgid "Offline-Angebote werden über diesen Ort gefunden."
 msgstr "Offline offerings can be found via this location."
 
 #: src/lib/components/OfferingCard.svelte
-#: src/routes/offerings/OfferingDetails.svelte
+#: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort & Online"
 msgstr "In-person & Online"
 
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Video-Call oder anderes Online-Format."
 msgstr "Video call or other online format."
@@ -1430,9 +1440,8 @@ msgstr "For private sessions and services, go to: <0><0/> Offerings</0> <1/> <2/
 msgid "Keine weiteren Suchergebnisse für \"{0}\""
 msgstr "No more search results for \"{0}\""
 
-#: src/routes/+layout.ts
-msgid "Find conscious events near you."
-msgstr "Find conscious events near you."
+#~ msgid "Find conscious events near you."
+#~ msgstr "Find conscious events near you."
 
 #: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -1695,66 +1704,63 @@ msgstr "Save location"
 msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
 msgstr "Your offers will be shown near this location. Without a location, only online offers can be found."
 
-#~ msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
-#~ msgstr "Error while filling in automatically. You can still fill out the form."
+#: src/lib/components/EventForm.svelte
+msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
+msgstr "Error while filling in automatically. You can still fill out the form."
 
-#~ msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
-#~ msgstr "Insert WhatsApp, Telegram or other event description"
+#: src/lib/components/EventForm.svelte
+msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
+msgstr "Insert WhatsApp, Telegram or other event description"
 
-#~ msgid "Daten übernehmen <0/>"
-#~ msgstr "Use data <0/>"
+#: src/lib/components/EventForm.svelte
+msgid "Daten übernehmen <0/>"
+msgstr "Use data <0/>"
 
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
-#~ msgstr "The text appears to come from an existing source. We regularly import events from {0}. So the event is already listed with us, or will be shortly."
+#. 0: result.fields.existingSource
+#: src/lib/components/EventForm.svelte
+msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+msgstr "The text appears to come from an existing source. We regularly import events from {0}. So the event is already listed with us, or will be shortly."
 
-#~ msgid "Event Beschreibung einfügen…"
-#~ msgstr "Enter event description…"
+#: src/lib/components/EventForm.svelte
+msgid "Event Beschreibung einfügen…"
+msgstr "Enter event description…"
 
-#~ msgid "Automatisch ausfüllen aus Beschreibung"
-#~ msgstr "Automatically fill from description"
+#: src/lib/components/EventForm.svelte
+msgid "Automatisch ausfüllen aus Beschreibung"
+msgstr "Automatically fill from description"
 
 #~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
 #~ msgstr "An offering is permanently visible in your profile and on the offerings page."
 
-#: src/lib/components/TabsNavDesktop.svelte
-msgid "<0/> Navigation erneut laden"
-msgstr "<0/> Reload navigation"
+#~ msgid "<0/> Navigation erneut laden"
+#~ msgstr "<0/> Reload navigation"
 
 #~ msgid "LADE <0/>"
 #~ msgstr "LOADING <0/>"
 
-#. 0: result.fields.existingSource
-#: src/routes/new/+page.svelte
-msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von <b>{0}</b>. Der Event ist also schon bei uns gelistet oder wird es in kürze sein."
-msgstr "The text appears to come from an existing source. We regularly import events from <b>{0}</b>, so the event is already listed with us or will be shortly."
+#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von <b>{0}</b>. Der Event ist also schon bei uns gelistet oder wird es in kürze sein."
+#~ msgstr "The text appears to come from an existing source. We regularly import events from <b>{0}</b>, so the event is already listed with us or will be shortly."
 
-#: src/routes/new/+page.svelte
-msgid "Fehler beim importieren. Du kannst das Formular trotzdem ausfüllen"
-msgstr "Error importing. You can still fill out the form"
+#~ msgid "Fehler beim importieren. Du kannst das Formular trotzdem ausfüllen"
+#~ msgstr "Error importing. You can still fill out the form"
 
-#: src/routes/new/+page.svelte
-msgid "Event Importieren"
-msgstr "Import Event"
+#~ msgid "Event Importieren"
+#~ msgstr "Import Event"
 
-#: src/routes/new/+page.svelte
-msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann importieren wir die Daten."
-msgstr "Paste an event description from WhatsApp, Telegram, etc., and we will import the data."
+#~ msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann importieren wir die Daten."
+#~ msgstr "Paste an event description from WhatsApp, Telegram, etc., and we will import the data."
 
-#: src/routes/new/+page.svelte
-msgid "WhatsApp/Telegram Beschreibung einfügen…"
-msgstr "Insert WhatsApp/Telegram description…"
+#~ msgid "WhatsApp/Telegram Beschreibung einfügen…"
+#~ msgstr "Insert WhatsApp/Telegram description…"
 
-#: src/routes/new/+page.svelte
-msgid "Optional"
-msgstr "Optional"
+#~ msgid "Optional"
+#~ msgstr "Optional"
 
-#: src/routes/new/+page.svelte
-msgid "Event importieren"
-msgstr "Import event"
+#~ msgid "Event importieren"
+#~ msgstr "Import event"
 
-#: src/routes/new/+page.svelte
-msgid "Weiter ohne importieren"
-msgstr "Continue without importing"
+#~ msgid "Weiter ohne importieren"
+#~ msgstr "Continue without importing"
 
 #: src/routes/offerings/+page.svelte
 msgid "Da Nang"
@@ -1776,13 +1782,11 @@ msgstr "Choose a location"
 msgid "Suche"
 msgstr "Search"
 
-#: src/lib/components/EditorJs.svelte
-msgid "Unordered"
-msgstr "Unordered"
+#~ msgid "Unordered"
+#~ msgstr "Unordered"
 
-#: src/lib/components/EditorJs.svelte
-msgid "Ordered"
-msgstr "Ordered"
+#~ msgid "Ordered"
+#~ msgstr "Ordered"
 
 #. 0: slugCheck.normalized
 #: src/routes/profile/public/+page.svelte
@@ -2036,8 +2040,9 @@ msgstr "Select a location"
 msgid "Finde Sessions, Services und Unterstützung."
 msgstr "Find sessions, services, and support."
 
-#~ msgid "Achtsame Events in deiner Nähe."
-#~ msgstr "Conscious events near you."
+#: src/routes/+layout.ts
+msgid "Achtsame Events in deiner Nähe."
+msgstr "Conscious events near you."
 
 #~ msgid "Suche starten<<<<<<< HEAD======="
 #~ msgstr "Start search<<<<<<< HEAD======="
@@ -2123,3 +2128,17 @@ msgstr "Location<<<<<<< HEAD"
 
 #~ msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
 #~ msgstr "Your offers will be shown near this location. Offline offers will be shown to users near this location on the offers page. Without a location, only online offers are discoverable."
+
+#~ msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen.<<<<<<< HEAD"
+#~ msgstr "No clear event was detected in the text. You can still fill out the form.<<<<<<< HEAD"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Standort für deine Angebote=======>>>>>>> 13fd996 (wip)"
+msgstr "Listing location"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.<<<<<<< HEAD"
+msgstr "Your offers will be shown near this location. Without a location, only online offers can be found.<<<<<<< HEAD"
+
+#~ msgid "Automatisch ausfüllen aus Beschreibung>>>>>>> 13fd996 (wip)"
+#~ msgstr "Automatically fill from description>>>>>>> 13fd996 (wip)"
