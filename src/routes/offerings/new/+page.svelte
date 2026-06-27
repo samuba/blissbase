@@ -435,7 +435,7 @@
 				<div>
 					<h1 class="text-2xl font-bold">Angebot erstellen</h1>
 					<p class="text-base-content/70 mt-1 text-sm">
-						Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden.
+						Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar. 
 					</p>
 				</div>
 				<a href={returnHref} class="btn btn-ghost btn-sm">
