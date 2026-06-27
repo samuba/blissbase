@@ -116,7 +116,7 @@ describe('filterOfferingsByIncludeOnline', () => {
 		expect(filterOfferingsByIncludeOnline({ offerings, includeOnline: true })).toHaveLength(3);
 	});
 
-	it('excludes pure online offerings when includeOnline is false', () => {
+	it('excludes only pure online offerings when includeOnline is false', () => {
 		const filtered = filterOfferingsByIncludeOnline({ offerings, includeOnline: false });
 		expect(filtered).toHaveLength(2);
 		expect(filtered.map((offering) => offering.id)).toEqual([2, 3]);
@@ -198,6 +198,32 @@ describe('shouldIncludeOfferingInLocationFilter', () => {
 				distanceKm: 10,
 			}),
 		).toBe(false);
+	});
+
+	it('includes hybrid offerings when includeOnline is true', () => {
+		expect(
+			shouldIncludeOfferingInLocationFilter({
+				format: `offline+online`,
+				includeOnline: true,
+				profileLatitude: null,
+				profileLongitude: null,
+				filterCoords,
+				distanceKm: 10,
+			}),
+		).toBe(true);
+	});
+
+	it('includes nearby hybrid offerings when includeOnline is false', () => {
+		expect(
+			shouldIncludeOfferingInLocationFilter({
+				format: `offline+online`,
+				includeOnline: false,
+				profileLatitude: 16.06,
+				profileLongitude: 108.21,
+				filterCoords,
+				distanceKm: 10,
+			}),
+		).toBe(true);
 	});
 
 	it('includes offline offerings within radius', () => {

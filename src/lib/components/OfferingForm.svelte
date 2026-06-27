@@ -92,7 +92,7 @@
 							`border-base-500 hover:border-dashed hover:border-primary has-checked:border-solid has-checked:border-primary outline-0`,
 						]}
 					>
-						<input class="peer sr-only" type="radio" name="offering-format" value={option} bind:group={format} />
+						<input class="peer sr-only" {...remoteForm.fields.format.as(`radio`, option)} bind:group={format} />
 						<span
 							class={[
 								`bg-primary text-primary-content absolute top-3 right-3 flex size-5 items-center justify-center rounded-full`,
@@ -109,11 +109,6 @@
 					</label>
 				{/each}
 			</div>
-			<select class="hidden" {...remoteForm.fields.format.as(`select`)} bind:value={format}>
-				{#each OFFERING_FORMATS as option (option)}
-					<option value={option}></option>
-				{/each}
-			</select>
 			<FormFieldIssues field={remoteForm.fields.format} />
 		</fieldset>
 	</section>
