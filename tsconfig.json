@@ -11,7 +11,6 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"types": [
-			"unplugin-icons/types/svelte",
 			"vite-plugin-pwa/info",
 			"vite-plugin-pwa/pwa-assets",
 			"google.maps"
