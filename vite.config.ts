@@ -1,5 +1,4 @@
 import tailwindcss from "@tailwindcss/vite";
-import Icons from "unplugin-icons/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
 import { SvelteKitPWA } from "@vite-pwa/sveltekit";
@@ -13,7 +12,6 @@ export default defineConfig({
 		wuchale(),
 		enhancedImages(),
 		sveltekit(),
-		Icons({ compiler: "svelte" }),
 		process.env.VERCEL
 			? posthog({
 					personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY!, // Personal API Key
