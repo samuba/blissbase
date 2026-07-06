@@ -9,6 +9,7 @@
 	import { filterOfferingsBySearchTerm } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveLocationFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
+	import { OfferingsFeatureFlag } from "$lib/OfferingsFeatureFlag.svelte";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
@@ -48,18 +49,31 @@
 		contentBeforeMenuHeight = document.getElementById(`content-before-menu`)?.clientHeight ?? 0;
 	});
 
+	$effect(() => {
+		OfferingsFeatureFlag.updateFromPosition({
+			lat: filter.lat,
+			lng: filter.lng,
+		});
+	});
+
 	async function navigateWithFilter(nextFilter: Partial<OfferingsFilter>) {
 		loading = true;
+		const nextOfferingsFilter = {
+			plzCity: `plzCity` in nextFilter ? nextFilter.plzCity ?? null : filter.plzCity,
+			distance: `distance` in nextFilter ? nextFilter.distance ?? null : filter.distance,
+			lat: `lat` in nextFilter ? nextFilter.lat ?? null : filter.lat,
+			lng: `lng` in nextFilter ? nextFilter.lng ?? null : filter.lng,
+			searchTerm: `searchTerm` in nextFilter ? nextFilter.searchTerm ?? null : filter.searchTerm,
+			includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? false : filter.includeOnline,
+		};
+
+		OfferingsFeatureFlag.updateFromPosition({
+			lat: nextOfferingsFilter.lat,
+			lng: nextOfferingsFilter.lng,
+		});
 
 		await goto(
-			routes.offeringsList({
-				plzCity: `plzCity` in nextFilter ? nextFilter.plzCity ?? null : filter.plzCity,
-				distance: `distance` in nextFilter ? nextFilter.distance ?? null : filter.distance,
-				lat: `lat` in nextFilter ? nextFilter.lat ?? null : filter.lat,
-				lng: `lng` in nextFilter ? nextFilter.lng ?? null : filter.lng,
-				searchTerm: `searchTerm` in nextFilter ? nextFilter.searchTerm ?? null : filter.searchTerm,
-				includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? false : filter.includeOnline,
-			}),
+			routes.offeringsList(nextOfferingsFilter),
 			{ keepFocus: true, noScroll: true },
 		)
 

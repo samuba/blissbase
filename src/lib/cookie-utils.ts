@@ -120,7 +120,7 @@ export function setLocationInteractedCookie() {
     document.cookie = `${LOCATION_INTERACTED_COOKIE_NAME}=1; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
 }
 
-function getBrowserFilterCookie(): FilterCookieData | null {
+export function loadFiltersFromBrowserCookie(): FilterCookieData | null {
     if (typeof document === 'undefined') return null;
 
     const cookiePrefix = `${COOKIE_NAME}=`;
@@ -142,7 +142,7 @@ export function saveLocationFiltersToBrowserCookie(filters: Pick<FilterCookieDat
     if (typeof document === 'undefined') return;
 
     const next = {
-        ...(getBrowserFilterCookie() ?? {}),
+        ...(loadFiltersFromBrowserCookie() ?? {}),
         plzCity: filters.plzCity,
         distance: filters.distance,
         lat: filters.lat,

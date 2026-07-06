@@ -3,6 +3,7 @@
 	import EventForm from '$lib/components/EventForm.svelte';
 	import { createEvent } from '$lib/rpc/eventMutations.remote';
 	import { getDefaultCreateEventFieldBase } from '$lib/eventCreateDefaults';
+	import { OfferingsFeatureFlag } from '$lib/OfferingsFeatureFlag.svelte';
 	import { resolve } from '$app/paths';
 	import { routes } from '$lib/routes';
 	import { fade } from 'svelte/transition';
@@ -66,11 +67,7 @@
 			</div>
 		{:else}
 			<div class="card-body gap-4 p-4 sm:p-6">
-				<div>
-					<p class="text-base-content/80 mt-1 text-sm">Was möchtest du erstellen?</p>
-				</div>
-
-				<div class="grid gap-4 sm:grid-cols-2">
+				<div class={[`grid gap-4`, OfferingsFeatureFlag.isEnabled && `sm:grid-cols-2`]}>
 					<a
 						href={resolve(`/new?create=1`)}
 						class="card bg-primary/10 transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -92,26 +89,28 @@
 						</div>
 					</a>
 
-					<a
-						href={routes.newOffering({ returnTo: routes.currentPath(page.url) })}
-						class="card bg-secondary/15 transition-all hover:-translate-y-0.5 hover:shadow-md"
-					>
-						<div class="card-body gap-3">
-							<h2 class="card-title flex items-center gap-2">
-								<i class="icon-[ph--hand-heart] size-6"></i>
-								Angebot erstellen
-							</h2>
-							<p class="text-sm">
-								Ein dauerhaft sichtbares Angebot, das Menschen direkt anfragen können.
-							</p>
-							<div class="card-actions">
-								<span class="btn btn-secondary">
+					{#if OfferingsFeatureFlag.isEnabled}
+						<a
+							href={routes.newOffering({ returnTo: routes.currentPath(page.url) })}
+							class="card bg-secondary/15 transition-all hover:-translate-y-0.5 hover:shadow-md"
+						>
+							<div class="card-body gap-3">
+								<h2 class="card-title flex items-center gap-2">
+									<i class="icon-[ph--hand-heart] size-6"></i>
 									Angebot erstellen
-									<i class="icon-[ph--arrow-right] size-5"></i>
-								</span>
+								</h2>
+								<p class="text-sm">
+									Ein dauerhaft sichtbares Angebot, das Menschen direkt anfragen können.
+								</p>
+								<div class="card-actions">
+									<span class="btn btn-secondary">
+										Angebot erstellen
+										<i class="icon-[ph--arrow-right] size-5"></i>
+									</span>
+								</div>
 							</div>
-						</div>
-					</a>
+						</a>
+					{/if}
 				</div>
 
 				<h2 class="text-base-content/70 mt-4 text-sm font-semibold tracking-wide uppercase">
