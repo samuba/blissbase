@@ -8,7 +8,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/lib/components/OfferingCard.svelte
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
@@ -93,6 +92,7 @@ msgstr "Sold out"
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/EventDetails.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Online"
 msgstr "Online"
 
@@ -162,6 +162,7 @@ msgstr "<0/> Website"
 #: src/lib/components/EventForm.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
@@ -423,6 +424,7 @@ msgid "Event löschen"
 msgstr "Delete event"
 
 #: src/lib/components/ProfileImageCropInput.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
@@ -913,6 +915,7 @@ msgstr "No more events found"
 msgid "Mehr"
 msgstr "More"
 
+#: src/lib/components/tabsNav.ts
 #: src/routes/faq/+page.svelte
 msgid "FAQ"
 msgstr "FAQ"
@@ -1069,17 +1072,21 @@ msgid "Aktuell keine kommenden Events."
 msgstr "No upcoming events at the moment."
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Benutzername"
 msgstr "Username"
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Bitte einen Link-Typ wählen."
 msgstr "Please select a link type."
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Bitte einen Wert eingeben."
 msgstr "Please enter a value."
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Leerzeichen ist nicht erlaubt."
 msgstr "Spaces are not allowed."
@@ -1125,6 +1132,8 @@ msgstr "Links"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Zuerst Typ wählen"
 msgstr "Select a type first"
 
@@ -1138,13 +1147,16 @@ msgid "<0/> Speichern…"
 msgstr "<0/> Saving…"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Link hinzufügen"
 msgstr "Add link"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Typ wählen"
 msgstr "Select type"
 
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Hinzufügen"
 msgstr "Add"
@@ -1205,6 +1217,7 @@ msgid "Code erneut senden <0/>"
 msgstr "Resend code <0/>"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
@@ -1263,9 +1276,8 @@ msgstr "Your current location"
 msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
 msgstr "Add a contact link so people can reach you."
 
-#: src/routes/new/+page.svelte
-msgid "Was möchtest du erstellen?"
-msgstr "What would you like to create?"
+#~ msgid "Was möchtest du erstellen?"
+#~ msgstr "What would you like to create?"
 
 #: src/routes/new/+page.svelte
 msgid "<0/> Event erstellen"
@@ -1333,6 +1345,7 @@ msgstr "Offline offerings can be found via this location."
 
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Vor Ort & Online"
 msgstr "In-person & Online"
 
@@ -1360,7 +1373,6 @@ msgstr "Create the first offering for this area or check back later."
 msgid "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
 msgstr "Without a location, only your online offerings will be discoverable."
 
-#: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 msgid "Suche löschen"
@@ -1653,8 +1665,9 @@ msgstr "Tab"
 msgid "<0/> Google Maps"
 msgstr "<0/> Google Maps"
 
-#~ msgid "Online Angebote auch anzeigen"
-#~ msgstr "Also show online offers"
+#: src/routes/offerings/+page.svelte
+msgid "Online Angebote auch anzeigen"
+msgstr "Also show online offers"
 
 #: src/routes/profile/offerings/+page.svelte
 msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der <0>Angebote-Seite</0> sichtbar."
@@ -1701,8 +1714,9 @@ msgstr "Automatically fill from description"
 msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
 msgstr "An offering is permanently visible in your profile and on the offerings page."
 
-#~ msgid "<0/> Navigation erneut laden"
-#~ msgstr "<0/> Reload navigation"
+#: src/lib/components/TabsNavDesktop.svelte
+msgid "<0/> Navigation erneut laden"
+msgstr "<0/> Reload navigation"
 
 #~ msgid "LADE <0/>"
 #~ msgstr "LOADING <0/>"
@@ -1731,25 +1745,20 @@ msgstr "An offering is permanently visible in your profile and on the offerings 
 #~ msgid "Weiter ohne importieren"
 #~ msgstr "Continue without importing"
 
-#: src/routes/offerings/+page.svelte
-msgid "Da Nang"
-msgstr "Da Nang"
+#~ msgid "Da Nang"
+#~ msgstr "Da Nang"
 
-#: src/routes/offerings/+page.svelte
-msgid "Hoi An"
-msgstr "Hoi An"
+#~ msgid "Hoi An"
+#~ msgstr "Hoi An"
 
-#: src/routes/offerings/+page.svelte
-msgid "Ort"
-msgstr "Location"
+#~ msgid "Ort"
+#~ msgstr "Location"
 
-#: src/routes/offerings/+page.svelte
-msgid "Ort wählen"
-msgstr "Choose a location"
+#~ msgid "Ort wählen"
+#~ msgstr "Choose a location"
 
-#: src/routes/offerings/+page.svelte
-msgid "Suche"
-msgstr "Search"
+#~ msgid "Suche"
+#~ msgstr "Search"
 
 #~ msgid "Unordered"
 #~ msgstr "Unordered"
@@ -1823,9 +1832,8 @@ msgstr "To allow your offer to be created, please enter the code that we sent to
 #~ msgid "Suche<<<<<<< HEAD"
 #~ msgstr ""
 
-#: src/routes/offerings/+page.svelte
-msgid "Titel oder Beschreibung"
-msgstr "Title or description"
+#~ msgid "Titel oder Beschreibung"
+#~ msgstr "Title or description"
 
 #: src/routes/@/[slug]/+page.svelte
 msgid "<0/> Events<<<<<<< HEAD======="
@@ -1982,9 +1990,8 @@ msgstr ""
 #~ msgid "<0/> Google Maps======="
 #~ msgstr ""
 
-#: src/routes/offerings/+page.svelte
-msgid "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
-msgstr "<0/>w <1><0/> Looking for events?We have lots!Show events <0/></1>"
+#~ msgid "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
+#~ msgstr "<0/>w <1><0/> Looking for events?We have lots!Show events <0/></1>"
 
 #~ msgid "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
 #~ msgstr "An offer is permanently visible and can be requested directly by people through your profile."
@@ -1995,13 +2002,11 @@ msgstr "<0/>w <1><0/> Looking for events?We have lots!Show events <0/></1>"
 #~ msgid "Profil-URL *"
 #~ msgstr "Profile URL *"
 
-#: src/routes/offerings/+page.svelte
-msgid "Ort auswählen"
-msgstr "Select a location"
+#~ msgid "Ort auswählen"
+#~ msgstr "Select a location"
 
-#: src/routes/offerings/+page.svelte
-msgid "Finde Sessions, Services und Unterstützung."
-msgstr "Find sessions, services, and support."
+#~ msgid "Finde Sessions, Services und Unterstützung."
+#~ msgstr "Find sessions, services, and support."
 
 #: src/routes/+layout.ts
 msgid "Achtsame Events in deiner Nähe."
@@ -2064,9 +2069,8 @@ msgstr "You have no deactivated offers.<<<<<<< HEAD======="
 msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.>>>>>>> e5ebc52 (wip)"
 msgstr "Your offers will be shown near this location. Without a location, only online offers can be found.>>>>>>> e5ebc52 (wip)"
 
-#: src/routes/offerings/+page.svelte
-msgid "Ort<<<<<<< HEAD"
-msgstr "Location<<<<<<< HEAD"
+#~ msgid "Ort<<<<<<< HEAD"
+#~ msgstr "Location<<<<<<< HEAD"
 
 #~ msgid "Online Angebote auch anzeigen«"
 #~ msgstr "«Show online offers as well«"
@@ -2103,7 +2107,6 @@ msgstr "Your offers will be shown near this location. Without a location, only o
 #~ msgid "Automatisch ausfüllen aus Beschreibung>>>>>>> 13fd996 (wip)"
 #~ msgstr "Automatically fill from description>>>>>>> 13fd996 (wip)"
 
-#: src/routes/offerings/+page.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Angebot erstellen<<<<<<< HEAD======="
 msgstr "Create offering<<<<<<< HEAD======="
@@ -2138,3 +2141,16 @@ msgstr "Automatically fill from description<<<<<<< HEAD"
 
 #~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar"
 #~ msgstr "An offer is permanently visible in your profile and on the offers page"
+
+#~ msgid "Online Angebote auch anzeigen>>>>>>> 7dab5fb (wip)"
+#~ msgstr "Also show online offers>>>>>>> 7dab5fb (wip)"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.<<<<<<< HEAD"
+msgstr "An offering is permanently visible in your profile and on the offerings page.<<<<<<< HEAD"
+
+#~ msgid "LADE <0/>>>>>>>> 7dab5fb (wip)"
+#~ msgstr "LOADING <0/>>>>>>>> 7dab5fb (wip)"
+
+#~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar======="
+#~ msgstr "An offer is permanently visible in your profile and on the offers page======="

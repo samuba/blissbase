@@ -7,6 +7,7 @@ import {
 	updateOfferingFormSchema,
 } from "$lib/rpc/offerings.common";
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
+import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 import { loadOfferingsList } from "$lib/server/offeringsList";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 import { routes, safeReturnToPath } from "$lib/routes";
@@ -22,15 +23,10 @@ import { error, invalid, redirect } from "@sveltejs/kit";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import * as v from "valibot";
 import { setFlash } from "$lib/server/flash";
-
-const offeringsFilterSchema = v.object({
-	plzCity: v.optional(v.nullable(v.string())),
-	distance: v.optional(v.nullable(v.string())),
-	lat: v.optional(v.nullable(v.number())),
-	lng: v.optional(v.nullable(v.number())),
-	searchTerm: v.optional(v.nullable(v.string())),
-	includeOnline: v.optional(v.boolean()),
-});
+import type { OfferingsFilter } from '$lib/offeringsFilter';
+import { filterOfferingsByIncludeOnline, shouldIncludeOfferingInLocationFilter } from '$lib/offeringsFilter';
+import { sanitizeLocationParams } from '$lib/locationFilter';
+import { resolveOfferingsFilterCoordinates } from '$lib/server/offeringsFilter';
 
 const offeringImageUploadSchema = v.object({
 	contentType: v.picklist([`image/webp`, `image/jpeg`]),
@@ -46,14 +42,87 @@ const offeringBySlugSchema = v.object({
 
 const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
 
-export const getOfferings = query(offeringsFilterSchema, async (args) => loadOfferingsList({
-	plzCity: args.plzCity ?? null,
-	distance: args.distance ?? null,
-	lat: args.lat ?? null,
-	lng: args.lng ?? null,
-	searchTerm: args.searchTerm ?? null,
-	includeOnline: args.includeOnline ?? false,
-}));
+export const getOfferings = query(async () => {
+	const { url } = getRequestEvent();
+	const args = parseOfferingsFilterFromUrl(url)
+	const sanitized = sanitizeLocationParams(args);
+	const filter: OfferingsFilter = {
+		plzCity: sanitized.plzCity ?? null,
+		distance: sanitized.distance ?? null,
+		lat: sanitized.lat ?? null,
+		lng: sanitized.lng ?? null,
+		searchTerm: args.searchTerm?.trim() || null,
+		includeOnline: args.includeOnline ?? false,
+	};
+	const currentUserId = getRequestEvent().locals.userId;
+	const filterCoords = await resolveOfferingsFilterCoordinates(filter);
+	const distanceKm = filter.distance ? parseFloat(filter.distance) : null;
+
+	const offerings = await db.query.offerings.findMany({
+		where: eq(s.offerings.listed, true),
+		columns: {
+			id: true,
+			slug: true,
+			title: true,
+			descriptionHtml: true,
+			format: true,
+			imageUrls: true,
+			listed: true,
+		},
+		with: {
+			profile: {
+				columns: {
+					id: true,
+					slug: true,
+					displayName: true,
+					bio: true,
+					profileImageUrl: true,
+					bannerImageUrl: true,
+					socialLinks: true,
+					locationLabel: true,
+					latitude: true,
+					longitude: true,
+				},
+			},
+		},
+		orderBy: (offerings, { desc }) => [desc(offerings.createdAt)],
+	});
+
+	return {
+		filter,
+		offerings: filterOfferingsByIncludeOnline({
+			offerings: offerings
+				.filter((offering) => {
+					if (!offering.profile || !isPublicProfile(offering.profile)) return false;
+					if (!hasSocialLink(offering.profile)) return false;
+					if (!filterCoords || distanceKm == null || Number.isNaN(distanceKm)) return true;
+
+					return shouldIncludeOfferingInLocationFilter({
+						format: offering.format,
+						includeOnline: filter.includeOnline,
+						profileLatitude: offering.profile.latitude,
+						profileLongitude: offering.profile.longitude,
+						filterCoords,
+						distanceKm,
+					});
+				})
+				.map((offering) => ({
+					...offering,
+					descriptionHtml: offering.descriptionHtml ?? ``,
+					imageUrls: offering.imageUrls ?? [],
+					profile: {
+						...offering.profile,
+						bio: offering.profile.bio ?? ``,
+						profileImageUrl: offering.profile.profileImageUrl ?? ``,
+						bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
+						locationLabel: offering.profile.locationLabel ?? ``,
+					},
+					canManage: currentUserId === offering.profile.id,
+				})),
+			includeOnline: filter.includeOnline,
+		}),
+	};
+});
 
 export const getMyOfferings = query(async () => {
 	const userId = ensureUserId();
@@ -623,13 +692,7 @@ function addUniqueImageUrl(args: { imageUrls: string[]; url: string }) {
 }
 
 function refreshOfferingLists() {
-	getOfferings({
-		plzCity: null,
-		distance: null,
-		lat: null,
-		lng: null,
-		searchTerm: null,
-	}).refresh();
+	getOfferings().refresh();
 	if (getRequestEvent().locals.userId) {
 		getMyOfferings().refresh();
 	}

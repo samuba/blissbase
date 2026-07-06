@@ -4,7 +4,7 @@ import { routes } from '$lib/routes';
 export function getAppNavItems(): AppNavItem[] {
 	return [
 		{
-			label: `Entdecken`,
+			label: /* @wc-include */ `Entdecken`,
 			href: resolve(`/#header-controls`),
 			icon: `icon-[ph--compass]`,
 			iconActive: `icon-[ph--compass-fill]`,
@@ -12,40 +12,40 @@ export function getAppNavItems(): AppNavItem[] {
 			isInMoreMenu: false
 		},
 		{
-			label: `Erstellen`,
-			href: routes.newEvent(),
+			label: /* @wc-include */ `Erstellen`,
+			href: resolve(`/new`),
 			icon: `icon-[ph--plus-circle]`,
 			iconActive: `icon-[ph--plus-circle-fill]`,
 			requireLogin: true,
-			isInMoreMenu: false
+			isInMoreMenu: false,
 		},
 		{
-			label: `Favoriten`,
-			href: routes.favorites(),
+			label: /* @wc-include */ `Favoriten`, 
+			href: resolve(`/profile/favorites`),
 			icon: `icon-[ph--heart]`,
 			iconActive: `icon-[ph--heart-fill]`,
 			requireLogin: true,
 			isInMoreMenu: false
 		},
 		{
-			label: `Meins`,
-			href: routes.profile(),
+			label: /* @wc-include */ `Meins`,
+			href: resolve(`/profile`),
 			icon: `icon-[ph--user-circle]`,
 			iconActive: `icon-[ph--user-circle-fill]`,
 			requireLogin: true,
 			isInMoreMenu: false
 		},
 		{
-			label: `Über`,
-			href: routes.about(),
+			label: /* @wc-include */ `Über`,
+			href: resolve(`/about`),
 			icon: `icon-[ph--info]`,
 			iconActive: `icon-[ph--info-fill]`,
 			requireLogin: false,
 			isInMoreMenu: true
 		},
 		{
-			label: `FAQ`,
-			href: routes.faq(),
+			label: /* @wc-include */ `FAQ`,
+			href: resolve(`/faq`),
 			icon: `icon-[ph--question]`,
 			iconActive: `icon-[ph--question-fill]`,
 			requireLogin: false,
@@ -53,6 +53,8 @@ export function getAppNavItems(): AppNavItem[] {
 		}
 	];
 }
+
+export const appNavItems = getAppNavItems();
 
 export function isActiveAppTab(pathname: string, href: string) {
 	if (href.startsWith('./')) {

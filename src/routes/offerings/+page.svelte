@@ -9,15 +9,16 @@
 	import { filterOfferingsBySearchTerm } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveLocationFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
+	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 
-	let { data } = $props();
-
-	const filter = $derived(data.filter);
-	const offerings = $derived(data.offerings);
+	const offeringsResult = $derived(await (page.url.search, getOfferings()));
+	let loading = $state(false); // can not use getOfferings().loading as its broken: https://github.com/sveltejs/kit/issues/14915
+	const filter = $derived(offeringsResult.filter);
+	const offerings = $derived(offeringsResult.offerings);
 	const filteredOfferings = $derived(
 		filterOfferingsBySearchTerm({
 			offerings,
@@ -47,8 +48,10 @@
 		contentBeforeMenuHeight = document.getElementById(`content-before-menu`)?.clientHeight ?? 0;
 	});
 
-	function navigateWithFilter(nextFilter: Partial<OfferingsFilter>) {
-		void goto(
+	async function navigateWithFilter(nextFilter: Partial<OfferingsFilter>) {
+		loading = true;
+
+		await goto(
 			routes.offeringsList({
 				plzCity: `plzCity` in nextFilter ? nextFilter.plzCity ?? null : filter.plzCity,
 				distance: `distance` in nextFilter ? nextFilter.distance ?? null : filter.distance,
@@ -58,7 +61,13 @@
 				includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? false : filter.includeOnline,
 			}),
 			{ keepFocus: true, noScroll: true },
-		);
+		)
+
+		try {
+			await getOfferings().refresh()
+		} finally {
+			loading = false;
+		}
 	}
 
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
@@ -194,7 +203,11 @@
 
 	<div class="mx-auto mb-2 w-full max-w-5xl pt-4 sm:mb-4">
 		<div class="px-4">
-			{#if filteredOfferings.length}
+			{#if loading}
+				<div class="flex justify-center py-12">
+					<span class="loading loading-spinner loading-lg"></span>
+				</div>
+			{:else if filteredOfferings.length}
 				<div class="grid gap-4 min-[920px]:grid-cols-2">
 					<div class="border-primary rounded-box bg-primary/20 flex flex-col gap-2 border-2 border-dashed p-4">
 						<span class="md:card-title text-primary-content mt-2">Was willst du der Community geben?</span>

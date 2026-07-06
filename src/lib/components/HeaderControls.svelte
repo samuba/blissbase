@@ -133,6 +133,7 @@
 			<div class="text-base-content/80 text-xs pl-3 -mt-2 flex items-center bg-base-500 sm:bg-base-100 sm:rounded-box py-1 w-full sm:w-fit sm:-mt-4 sm:mb-3 sm:text-sm">
 				Für private Sessions und Services go to:
 				<a
+					data-sveltekit-preload-data="off" // on preloading this results in 2 requests one freezes the tab
 					href={routes.offeringsList({
 						lat: eventsStore.pagination.lat,
 						lng: eventsStore.pagination.lng,
