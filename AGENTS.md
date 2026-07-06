@@ -8,6 +8,7 @@ Always use clsx style (array) when dynamically constructing class names on eleme
 
 ## DB
 Assume drizzle is being used for all database operations and schemas.
+Never create db migrations.
 NEVER EVER run db migrations. So never execute this commands: drizzle push, drizzle migrate, db:push, db:migrate
 
 ## Sveltekit
@@ -33,7 +34,7 @@ When a function has 3 parameters or more use an object named 'args' instead of i
 Always place type definitions at the bottom of the file unless the type is only used inside a function/context then leave it there.  
 Never type a variable if typescript can infer the type correctly on its own.
 Always check if an array is defined and has values like this: `arr?.length` not `arr && arr.length > 0`
-For new functions that have non-trivial implementation create descriptive doc comments with 1 example.
+Only create doc comments when the complexity of the function calls for it or the semantics/context is needed to understand.
 
 ## i18n
 Wuchale is used for i18n.
@@ -42,4 +43,8 @@ Use german Umlaute (ä,ö,ü etc) in all german texts.
 
 ## server communication
 Prefer rpc calls via svelte remote functions.
-All remote function files are placed in src/lib/rpc
+All remote function files are placed in src/lib/rpc.
+Do not pass params to functions on the server when instead we could get the data from getRequestEvent/locals.
+
+# Sveltekit
+Instead of resolve() use routes object. Ignore warnings/errors/autofixer reports about having to use resolve().

@@ -1,4 +1,5 @@
 import { PROFILE_SOCIAL_TYPES, type ProfileSocialType } from '$lib/socialLinks';
+import { hasValidCoordinates, isValidLatitude, isValidLongitude } from '$lib/locationFilter';
 import * as v from 'valibot';
 
 
@@ -8,7 +9,48 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	return v.union([v.pipe(v.literal(``), v.transform(() => undefined)), schema]);
 }
 
-export const publicProfileFormSchema = v.pipe(v.object({
+const profileLocationFields = {
+	locationLabel: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(200, `Ort ist zu lang`)), ``),
+	latitude: v.optional(
+		v.pipe(
+			v.string(),
+			v.trim(),
+			v.transform((value) => (value === `` ? null : Number(value))),
+			v.check((value) => value === null || isValidLatitude(value), `Breitengrad ist ungültig`),
+		),
+		``,
+	),
+	longitude: v.optional(
+		v.pipe(
+			v.string(),
+			v.trim(),
+			v.transform((value) => (value === `` ? null : Number(value))),
+			v.check((value) => value === null || isValidLongitude(value), `Längengrad ist ungültig`),
+		),
+		``,
+	),
+} satisfies v.ObjectEntries;
+
+function isValidProfileLocation(data: {
+	locationLabel?: string;
+	latitude: number | null;
+	longitude: number | null;
+}) {
+	const hasLabel = Boolean(data.locationLabel?.trim());
+	const hasCoords = hasValidCoordinates({ lat: data.latitude, lng: data.longitude });
+	if (!hasLabel && !hasCoords) return true;
+	return hasLabel && hasCoords;
+}
+
+const profileLocationCheckMessage =
+	`Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`;
+
+export const profileLocationFormSchema = v.pipe(
+	v.object(profileLocationFields),
+	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
+);
+
+const publicProfileFields = {
 	displayName: v.pipe(v.string(), v.trim(), v.nonEmpty(`Name muss ausgefüllt werden`), v.maxLength(120, `Name ist zu lang`)),
 	slug: v.optional(
 		emptyStringIsUndefined(
@@ -21,15 +63,6 @@ export const publicProfileFormSchema = v.pipe(v.object({
 		)
 	),
 	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio ist zu lang`)), ``),
-	placeId: v.optional(v.pipe(
-		v.string(),
-		v.trim(),
-		v.transform((value) => {
-			if (value === ``) return null;
-			return Number(value);
-		}),
-		v.check((value) => value === null || Number.isFinite(value), `Ort ist ungültig`)
-	)),
 	profileImageUrl: v.optional(
 		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profilbild-URL ist ungültig`))),
 		``
@@ -161,7 +194,17 @@ export const publicProfileFormSchema = v.pipe(v.object({
 			return true;
 		}, 'Website ist keine gültige URL')
 	),
-}));
+} satisfies v.ObjectEntries;
+
+export const publicProfileFormSchema = v.object(publicProfileFields);
+
+export const offeringProfileFormSchema = v.pipe(
+	v.object({
+		...publicProfileFields,
+		...profileLocationFields,
+	}),
+	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
+);
 
 /**
  * Converts stored social links into button-ready href entries.

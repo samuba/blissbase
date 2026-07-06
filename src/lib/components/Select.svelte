@@ -45,13 +45,12 @@
 </script>
 
 <BitsSelect.Root bind:value type="single" {...restProps}>
-	<BitsSelect.Trigger {...triggerProps} class={[`btn justify-start gap-2`, triggerProps?.class]} >
+	<BitsSelect.Trigger {...triggerProps} class={[`select appearance-none! justify-start gap-2 pr-8`, triggerProps?.class]} >
 		{#if selectedOption}
 			{@html selectedOption.html}
 		{:else if placeholder}
 			{placeholder}
 		{/if}
-		<i class="icon-[ph--caret-down] size-5"></i>
 	</BitsSelect.Trigger>
 	<BitsSelect.Portal>
 		<BitsSelect.Content

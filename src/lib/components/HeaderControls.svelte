@@ -8,6 +8,8 @@
 	import { Dialog } from '$lib/components/dialog';
 	import ToggleButton from './ToggleButton.svelte';
 	import TabsNavDesktop from './TabsNavDesktop.svelte';
+	import { routes } from '$lib/routes';
+	import { OfferingsFeatureFlag } from '$lib/OfferingsFeatureFlag.svelte';
 
 	let {
 		onLocationDistanceChange = eventsStore.handleLocationDistanceChange
@@ -20,18 +22,25 @@
 	let contentBeforeMenuHeight = $state(0);
 	const showShadow = $derived(scrollY > ((headerElement?.offsetHeight ?? 50) + contentBeforeMenuHeight - 100));
 	let isFilterDialogOpen = $state(false);
+	let dismissedOfferingsLink = $state(false);
 	const sortByTime = $derived(eventsStore.selectedSortValue === 'time_asc');
 	const sortByDistance = $derived(eventsStore.selectedSortValue === 'distance_asc');
+	const showOfferingsLink = $derived(!dismissedOfferingsLink && OfferingsFeatureFlag.isEnabled);
 
 	const startDate = $derived(eventsStore.pagination.startDate ? parseDate(eventsStore.pagination.startDate) : undefined);
 	const endDate = $derived(eventsStore.pagination.endDate ? parseDate(eventsStore.pagination.endDate) : undefined);
 
-	const resolvedCityName = $derived(eventsStore.pagination.lat && eventsStore.pagination.lng
-		? eventsStore.pagination.plzCity
-		: null);
-	const initialLocation = $derived(eventsStore.pagination.lat && eventsStore.pagination.lng
-		? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
-		: eventsStore.pagination.plzCity);
+	const resolvedCityName = $derived(
+		eventsStore.pagination.lat != null && eventsStore.pagination.lng != null
+			? eventsStore.pagination.plzCity
+			: null
+	);
+	const initialLocation = $derived(
+		eventsStore.pagination.plzCity ||
+		(eventsStore.pagination.lat != null && eventsStore.pagination.lng != null
+			? `coords:${eventsStore.pagination.lat},${eventsStore.pagination.lng}`
+			: null)
+	);
 
 	$effect(() => {
 		contentBeforeMenuHeight = document.getElementById('content-before-menu')?.clientHeight ?? 0;
@@ -44,13 +53,16 @@
 			unsubscribe();
 		}
 	})
+
 </script>
 
 <svelte:window bind:scrollY />
 
 <header
 	bind:this={headerElement}
-	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  pt-4 pb-3 max-w-3xl' ]}
+	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  pt-4 max-w-3xl', 
+		showOfferingsLink ? 'pb-0 mb-3 sm:mb-0' : 'pb-3 sm:pb-0' 
+	]}
 	id="header-controls"
 >		
 	<!-- shadow -->
@@ -66,9 +78,12 @@
 	<div class="flex w-full items-center justify-center gap-3 px-4 sm:px-0 max-w-2xl mx-auto">
 		<div class="w-full min-w-0 flex-1 md:w-auto">
 			<LocationDistanceInput
+				inputId="plzCityInput-header"
 				initialLocation={initialLocation}
 				initialDistance={eventsStore.pagination.distance}
 				resolvedCityName={resolvedCityName}
+				locationBiasLat={eventsStore.pagination.lat}
+				locationBiasLng={eventsStore.pagination.lng}
 				onChange={onLocationDistanceChange}
 			/>
 		</div>
@@ -83,6 +98,35 @@
 	<div class="flex w-full items-center gap-4 px-4 sm:px-0 max-w-2xl mx-auto">
 		<TagSelection />
 	</div>
+
+	{#if showOfferingsLink}
+		<div class="w-full flex max-w-2xl mx-auto">
+			<div class="text-base-content/80 text-xs pl-3 -mt-2 flex items-center bg-base-500 sm:bg-base-100 sm:rounded-box py-1 w-full sm:w-fit sm:-mt-4 sm:mb-3 sm:text-sm">
+				Für private Sessions und Services go to:
+				<a
+					data-sveltekit-preload-data="off" // on preloading this results in 2 requests one freezes the tab
+					href={routes.offeringsList({
+						lat: eventsStore.pagination.lat,
+						lng: eventsStore.pagination.lng,
+						distance: eventsStore.pagination.distance,
+						plzCity: eventsStore.pagination.plzCity,
+					})}
+					class="link text-base-content font-semibold px-2 items-center gap-1 flex"
+				>
+					<i class="icon-[ph--hand-heart] size-4"></i>
+					Offerings
+				</a>
+				<div class="grow"></div>
+				<button
+					class="btn btn-ghost btn-circle btn-xs mr-2 ml-1"
+					aria-label="Offerings-Hinweis ausblenden"
+					onclick={() => dismissedOfferingsLink = true}
+				>
+					<i class="icon-[ph--x] size-4"></i>
+				</button>
+			</div>
+		</div>
+	{/if}
 </header>
 
 <!-- filter dialog -->
@@ -110,9 +154,12 @@
 					<h3>Entfernung</h3>
 					<div class="w-full min-w-0">
 						<LocationDistanceInput
+							inputId="plzCityInput-dialog"
 							initialLocation={initialLocation}
 							initialDistance={eventsStore.pagination.distance}
 							resolvedCityName={resolvedCityName}
+							locationBiasLat={eventsStore.pagination.lat}
+							locationBiasLng={eventsStore.pagination.lng}
 							onChange={onLocationDistanceChange}
 						/>
 					</div>
@@ -167,9 +214,9 @@
 						</ToggleButton>
 						<ToggleButton 
 							checked={sortByDistance} 
-							tooltip={eventsStore.pagination.attendanceMode === 'online' ? 'Sortieren nach Distanz macht nur für Vorort-Events Sinn' : eventsStore.pagination.lat && eventsStore.pagination.lng ? '' : 'Setze zuerst einen Standort'}
+							tooltip={eventsStore.pagination.attendanceMode === 'online' ? 'Sortieren nach Distanz macht nur für Vorort-Events Sinn' : eventsStore.pagination.lat != null && eventsStore.pagination.lng != null ? '' : 'Setze zuerst einen Standort'}
 							onchange={() => {
-								if (eventsStore.pagination.lat && eventsStore.pagination.lng) {
+								if (eventsStore.pagination.lat != null && eventsStore.pagination.lng != null) {
 									eventsStore.handleSortChanged('distance_asc');
 								}
 							}}

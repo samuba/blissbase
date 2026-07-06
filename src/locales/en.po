@@ -11,6 +11,8 @@ msgstr ""
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
+#: src/lib/components/TabsNavDesktop.svelte
+#: src/lib/components/TabsNavDesktop.svelte
 #: src/routes/+error.svelte
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
@@ -74,7 +76,9 @@ msgid "Ue"
 msgstr "Ue"
 
 #. 0: i + 1
+#. 0: i + 1
 #: src/routes/EventDetails.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "Bild {0}"
 msgstr "Image {0}"
 
@@ -86,6 +90,9 @@ msgstr "Sold out"
 #: src/lib/components/EventCard.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
+#: src/lib/components/OfferingForm.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -155,6 +162,7 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
+#: src/lib/components/EventForm.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
@@ -276,14 +284,17 @@ msgstr "Previous image"
 msgid "Next image"
 msgstr "Next image"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort wird ermittelt..."
 msgstr "Determining location..."
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Eingabe löschen"
 msgstr "Clear input"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Aktuellen Standort verwenden"
 msgstr "Use current location"
@@ -301,6 +312,7 @@ msgid "<0/> Wird gesendet..."
 msgstr "<0/> Sending..."
 
 #: src/lib/components/PageHeader.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 #: src/routes/sources/+page.svelte
@@ -312,16 +324,19 @@ msgstr "<0/> Back"
 msgid "Hue: {0}°, Rotation: {1}°"
 msgstr "Hue: {0}°, Rotation: {1}°"
 
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Suchbegriff"
 msgstr "Search term"
 
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Suchbegriff löschen"
 msgstr "Clear search term"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Enter"
 msgstr "Enter"
 
@@ -414,6 +429,7 @@ msgstr "Delete event"
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Abbrechen"
@@ -421,6 +437,7 @@ msgstr "Cancel"
 
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Speichern"
 msgstr "Save"
@@ -454,6 +471,7 @@ msgstr "Share"
 msgid "Link kopieren"
 msgstr "Copy link"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
 msgstr "City / postal code"
@@ -474,11 +492,14 @@ msgstr "An error occurred"
 msgid "AbortError"
 msgstr "AbortError"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Dein Standort"
 msgstr "Your location"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein."
 msgstr "Location could not be retrieved. Please check your browser settings or enter a location manually."
@@ -517,14 +538,6 @@ msgstr "Reset"
 msgid "Datum"
 msgstr "Date"
 
-#: src/lib/components/EditorJs.svelte
-msgid "Unordered"
-msgstr "Unordered"
-
-#: src/lib/components/EditorJs.svelte
-msgid "Ordered"
-msgstr "Ordered"
-
 #: src/routes/edit/[id]/+page.svelte
 msgid "Failed to delete event. Please try again."
 msgstr "Failed to delete event. Please try again."
@@ -554,6 +567,7 @@ msgid "vom <0/> <1/> bis <2/> <3/><4/>"
 msgstr "from <0/> <1/> to <2/> <3/><4/>"
 
 #: src/routes/+page.svelte
+#: src/routes/offerings/+page.svelte
 msgid "Hero image"
 msgstr "Hero Image"
 
@@ -603,10 +617,14 @@ msgstr "Description *"
 msgid "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 msgstr "One or more lines, e.g. studio name, street, city"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "ArrowDown"
 msgstr "ArrowDown"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "ArrowUp"
 msgstr "ArrowUp"
@@ -620,7 +638,9 @@ msgid "Anmelde Methode auswählen"
 msgstr "Select registration method"
 
 #. 0: preview.name
+#. 0: preview.name
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Bild {0} entfernen"
 msgstr "Remove image {0}"
 
@@ -638,49 +658,63 @@ msgid "Endzeit"
 msgstr "End time"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Bilder auswählen <0>oder ablegen</0>"
 msgstr "Select images <0>or drop</0>"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Cover Bild"
 msgstr "Cover image"
 
 #. 0: i + 1
+#. 0: i + 1
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Bild #{0}"
 msgstr "Image #{0}"
 
 #. 0: preview.name
+#. 0: preview.name
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Vollbildansicht von {0} öffnen"
 msgstr "Open full-screen view of {0}"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Vollbildansicht schließen"
 msgstr "Close full-screen view"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Vollbildansicht"
 msgstr "Full-screen view"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Ausgewählte Bilder sortieren"
 msgstr "Sort selected images"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
 msgstr "Drag the image using this button to a different position to change the order."
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Nach links"
 msgstr "To the left"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Nach rechts"
 msgstr "To the right"
 
 #. 0: preview.name
+#. 0: preview.name
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Vorschau für {0}"
 msgstr "Preview for {0}"
 
@@ -690,6 +724,7 @@ msgid "<0/> Speichere..."
 msgstr "<0/> Saving..."
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Bilder auswählen oder ablegen"
 msgstr "Select or drop images"
 
@@ -698,6 +733,7 @@ msgid "Bild konnte nicht verarbeitet werden"
 msgstr "Image could not be processed"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bild konnte nicht geladen werden"
 msgstr "Image could not be loaded"
@@ -715,10 +751,12 @@ msgid "Verarbeitung fehlgeschlagen"
 msgstr "Processing failed"
 
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Wird verarbeitet"
 msgstr "Processing"
 
 #: src/routes/EventDetails.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 msgid "<0/> Bearbeiten"
 msgstr "<0/> Edit"
 
@@ -740,6 +778,7 @@ msgstr "Mobile main navigation"
 msgid "Erstellen"
 msgstr "Create"
 
+#: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 msgid "Hauptnavigation"
 msgstr "Main navigation"
@@ -816,44 +855,11 @@ msgstr "Current Favorites"
 msgid "Vergangene Favoriten"
 msgstr "Past Favorites"
 
-#: src/routes/new/+page.svelte
+#: src/lib/components/EventForm.svelte
 msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
 msgstr "No clear event was detected in the text. You can still fill out the form."
 
-#: src/routes/new/+page.svelte
-msgid "Event Importieren"
-msgstr "Import Event"
-
-#: src/routes/new/+page.svelte
-msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann importieren wir die Daten."
-msgstr "Paste an event description from WhatsApp, Telegram, etc., and we will import the data."
-
-#: src/routes/new/+page.svelte
-msgid "Event importieren"
-msgstr "Import event"
-
-#: src/routes/new/+page.svelte
-msgid "Weiter ohne importieren"
-msgstr "Continue without importing"
-
-#: src/routes/new/+page.svelte
-msgid "WhatsApp/Telegram Beschreibung einfügen…"
-msgstr "Insert WhatsApp/Telegram description…"
-
-#: src/routes/new/+page.svelte
-msgid "Optional"
-msgstr "Optional"
-
-#: src/routes/new/+page.svelte
-msgid "Fehler beim importieren. Du kannst das Formular trotzdem ausfüllen"
-msgstr "Error importing. You can still fill out the form"
-
-#. 0: result.fields.existingSource
-#: src/routes/new/+page.svelte
-msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von <b>{0}</b>. Der Event ist also schon bei uns gelistet oder wird es in kürze sein."
-msgstr "The text appears to come from an existing source. We regularly import events from <b>{0}</b>, so the event is already listed with us or will be shortly."
-
-#: src/routes/new/+page.svelte
+#: src/lib/components/EventForm.svelte
 msgid "<0/> Analysiere Text …"
 msgstr "<0/> Analyzing text …"
 
@@ -911,6 +917,7 @@ msgstr "No more events found"
 msgid "Mehr"
 msgstr "More"
 
+#: src/lib/components/tabsNav.ts
 #: src/routes/faq/+page.svelte
 msgid "FAQ"
 msgstr "FAQ"
@@ -923,6 +930,8 @@ msgstr "Answers to the most common questions about Blissbase."
 msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Don't see your question? <0>Write to me.</0>"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/TabsNavMobile.svelte
 msgid "Escape"
 msgstr "Escape"
@@ -1111,6 +1120,7 @@ msgstr "“{0}” is available."
 msgid "„{0}“ ist bereits vergeben."
 msgstr "“{0}” is already taken."
 
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Beschreibung"
@@ -1131,6 +1141,7 @@ msgstr "Select a type first"
 msgid "<0/> Bild wird hochgeladen…"
 msgstr "<0/> Uploading image…"
 
+#: src/routes/profile/offerings/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Speichern…"
 msgstr "<0/> Saving…"
@@ -1156,6 +1167,7 @@ msgid "<0/> Code senden"
 msgstr "<0/> Send code"
 
 #: src/lib/components/Login.svelte
+#: src/routes/offerings/new/OtpStep.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Einmalcode"
 msgstr "One-time code"
@@ -1169,6 +1181,7 @@ msgid "<0/> Anmelden"
 msgstr "<0/> Log in"
 
 #: src/lib/components/Login.svelte
+#: src/routes/offerings/new/OtpStep.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Use a different email"
@@ -1202,6 +1215,7 @@ msgstr "Resend code <0/>"
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
+#: src/routes/offerings/new/OtpStep.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "E-Mail bestätigen"
 msgstr "Confirm email"
@@ -1210,6 +1224,7 @@ msgstr "Confirm email"
 msgid "Code senden"
 msgstr "Send code"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Checking…"
@@ -1226,11 +1241,15 @@ msgstr "Save listing"
 msgid "<0/> Wird gespeichert…"
 msgstr "<0/> Saving…"
 
+#: src/lib/components/TextSearchInput.svelte
 #: src/lib/components/TagSelection.svelte
 msgid "Suchen"
 msgstr "Search"
 
 #: src/lib/components/HeaderControls.svelte
+#: src/lib/components/OfferingCard.svelte
+#: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/OfferingDetails.svelte
 #: src/lib/components/OfferingCard.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -1241,13 +1260,18 @@ msgstr "In-Person"
 msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
 msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
 
-#: src/lib/components/TagSelection.svelte
+#: src/lib/components/TextSearchInput.svelte
+#: src/lib/components/TextSearchInput.svelte
 msgid "Suche starten"
 msgstr "Start search"
 
-#: src/routes/profile/public/+page.svelte
-msgid "Kein Ort ausgewählt"
-msgstr "No location selected"
+#: src/routes/offerings/new/+page.svelte
+msgid "Dein aktueller Ort"
+msgstr "Your current location"
+
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
+msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
+msgstr "Add a contact link so people can reach you."
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Dein aktueller Ort"
@@ -1279,6 +1303,7 @@ msgstr "A single appointment, workshop, or circle with date and time."
 
 #: src/routes/new/+page.svelte
 #: src/routes/offerings/+page.svelte
+#: src/routes/profile/offerings/+page.svelte
 msgid "<0/> Angebot erstellen"
 msgstr "<0/> Create offering"
 
@@ -1294,6 +1319,7 @@ msgstr "Create offering <0/>"
 msgid "Weitere Wege"
 msgstr "Other ways"
 
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Persönlich an deinem Profil-Ort."
 msgstr "In person at your profile location."
@@ -1302,6 +1328,7 @@ msgstr "In person at your profile location."
 msgid "Du bietest beides an."
 msgstr "You offer both."
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte gib deine E-Mail-Adresse ein."
 msgstr "Please enter your email address."
@@ -1312,6 +1339,15 @@ msgstr "Create offering | Blissbase"
 
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/new/+page.svelte
+#: src/routes/profile/offerings/+page.svelte
+msgid "Angebot erstellen"
+msgstr "Create offering"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Titel *"
+msgstr "Title *"
+
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Angebot erstellen"
 msgstr "Create offering"
@@ -1333,6 +1369,16 @@ msgid "Profilbeschreibung"
 msgstr "Profile description"
 
 #: src/routes/offerings/new/+page.svelte
+msgid "Offline-Angebote werden über diesen Ort gefunden."
+msgstr "Offline offerings can be found via this location."
+
+#: src/lib/components/OfferingCard.svelte
+#: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "Vor Ort & Online"
+msgstr "In-person & Online"
+
+#: src/lib/components/OfferingForm.svelte
 msgid "Keine Angabe"
 msgstr "No information"
 
@@ -1441,6 +1487,61 @@ msgstr "<0/> Offerings"
 msgid "<0/> Events"
 msgstr "<0/> Events"
 
+#: src/lib/components/HeaderControls.svelte
+msgid "Offerings-Hinweis ausblenden"
+msgstr "Hide offer notice"
+
+#: src/routes/offerings/+page.svelte
+msgid "Was willst du der Community geben?"
+msgstr "What do you want to give the community?"
+
+#: src/routes/offerings/+page.svelte
+msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
+msgstr "Whether it’s a private breathwork session, coaching, massage, Reiki, or tarot readings—here you can offer it to the community."
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
+msgstr "For private sessions and services, go to: <0><0/> Offerings</0> <1/> <2/>"
+
+#. 0: normalizedSearchTerm
+#: src/routes/offerings/+page.svelte
+msgid "Keine weiteren Suchergebnisse für \"{0}\""
+msgstr "No more search results for \"{0}\""
+
+#: src/routes/+layout.ts
+msgid "Find conscious events near you."
+msgstr "Find conscious events near you."
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "<0/> Bilder werden hochgeladen…"
+msgstr "<0/> Images are being uploaded…"
+
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "Bild konnte nicht hochgeladen werden"
+msgstr "Image could not be uploaded"
+
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "Bilder"
+msgstr "Images"
+
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "Lade Bilder hoch, die dein Angebot zeigen. Das erste Bild wird als Cover verwendet. <0/>"
+msgstr "Upload images that show your offer. The first image is used as the cover. <0/>"
+
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "Upload fehlgeschlagen"
+msgstr "Upload failed"
+
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "Wird hochgeladen"
+msgstr "Uploading"
+
+#: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Bitte warte, bis alle Bilder hochgeladen sind."
+msgstr "Please wait until all images have been uploaded."
+
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
@@ -1453,6 +1554,258 @@ msgstr "Book now"
 msgid "Jetzt Buchen <0/>"
 msgstr "Book now <0/>"
 
+#: src/routes/offerings/+page.svelte
+msgid "<0/> Suchst du Events?"
+msgstr "<0/> Looking for events?"
+
+#: src/routes/offerings/+page.svelte
+msgid "Wir haben sehr viele!"
+msgstr "We have plenty!"
+
+#: src/routes/offerings/+page.svelte
+msgid "Events anzeigen <0/>"
+msgstr "Show events <0/>"
+
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "<0/>Bilder werden lokal verarbeitet und hochgeladen."
+msgstr "<0/>Images are processed locally and uploaded."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut."
+msgstr "Registration could not be confirmed. Please try again."
+
+#: src/routes/offerings/OfferingDetails.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Angebot konnte nicht gelöscht werden."
+msgstr "The listing could not be deleted."
+
+#: src/routes/offerings/OfferingDetails.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+msgstr "Permanently delete this listing? This action cannot be undone."
+
+#: src/routes/offerings/OfferingDetails.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "<0/> Löschen"
+msgstr "<0/> Delete"
+
+#: src/routes/offerings/OfferingDetails.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Angebot konnte nicht deaktiviert werden."
+msgstr "The listing could not be deactivated."
+
+#: src/routes/offerings/OfferingDetails.svelte
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Angebot konnte nicht aktiviert werden."
+msgstr "The listing could not be activated."
+
+#: src/routes/offerings/[id]/edit/+page.server.ts
+msgid "Offering not found"
+msgstr "Offering not found"
+
+#: src/routes/offerings/[id]/edit/+page.server.ts
+msgid "You are not allowed to edit this offering"
+msgstr "You are not allowed to edit this offering"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Angebot bearbeiten | Blissbase"
+msgstr "Edit listing | Blissbase"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Angebot bearbeiten"
+msgstr "Edit listing"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "<0/> Lösche…"
+msgstr "<0/> Delete…"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "<0/> Speichere…"
+msgstr "<0/> Save…"
+
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "Deaktivieren"
+msgstr "Deactivate"
+
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "Aktivieren"
+msgstr "Activate"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Deaktiviere…"
+msgstr "Deactivate…"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "Aktiviere…"
+msgstr "Activate…"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "<0/> Deaktivieren"
+msgstr "<0/> Deactivate"
+
+#: src/routes/offerings/[id]/edit/+page.svelte
+msgid "<0/> Aktivieren"
+msgstr "<0/> Activate"
+
+#: src/routes/profile/+page.svelte
+#: src/routes/profile/offerings/+page.svelte
+msgid "Meine Angebote"
+msgstr "My Offers"
+
+#: src/routes/profile/+page.svelte
+msgid "Verwalte deine Angebote und aktiviere oder deaktiviere sie."
+msgstr "Manage your offers and enable or disable them."
+
+#: src/routes/profile/+page.svelte
+msgid "Angebote verwalten"
+msgstr "Manage offers"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Meine Angebote | Blissbase"
+msgstr "My Offers | Blissbase"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Du hast keine aktiven Angebote."
+msgstr "You have no active offers."
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Du hast keine deaktivierten Angebote."
+msgstr "You have no deactivated offers."
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "<0/> Aktiv"
+msgstr "<0/> Active"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "<0/> Deaktiviert"
+msgstr "<0/> Disabled"
+
+#: src/routes/offerings/[id]/+page.svelte
+msgid "<0/> Alle Angebote"
+msgstr "<0/> All offers"
+
+#: src/routes/offerings/[id]/edit/+page.server.ts
+msgid "Invalid offering slug"
+msgstr "Invalid offering slug"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Angebot"
+msgstr "Offer"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen, dich vor der Anfrage besser einzuschätzen."
+msgstr "A complete profile builds trust. These details are shown publicly with your listing and help people assess you better before they reach out."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Möchtest du dein Profil bearbeiten? <0><0/> Profil bearbeiten</0>"
+msgstr "Do you want to edit your profile? <0><0/> Edit profile</0>"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Zurück"
+msgstr "Back"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "<0/> E-Mail wird geprüft…"
+msgstr "<0/> Email is being checked…"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Weiter"
+msgstr "Next"
+
+#: src/routes/offerings/new/OtpStep.svelte
+msgid "Code erneut senden"
+msgstr "Resend code"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail für Login *"
+msgstr "Email for login *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
+msgstr "Not public. We’ll send you a code to verify your email address."
+
+#: src/routes/offerings/new/OtpStep.svelte
+msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
+msgstr "We sent a 6-digit code to <0/>. Enter it here to confirm your email. Your offer will not go live until the confirmation is complete."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail bestätigen und Angebot veröffentlichen"
+msgstr "Confirm email and publish offer"
+
+#: src/routes/offerings/+page.svelte
+msgid "✨ Aus der Community für die Community ✨"
+msgstr "✨ From the community, for the community ✨"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Bitte füge mindestens einen Social-Link hinzu."
+msgstr "Please add at least one social link."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Social Links *"
+msgstr "Social Links *"
+
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Tab"
+msgstr "Tab"
+
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "<0/> Google Maps"
+msgstr "<0/> Google Maps"
+
+#: src/routes/offerings/+page.svelte
+msgid "Online Angebote auch anzeigen"
+msgstr "Also show online offers"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der <0>Angebote-Seite</0> sichtbar."
+msgstr "Manage your listings. Activated listings are visible to other users on the <0>Listings page</0>."
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Standort für deine Angebote"
+msgstr "Listing location"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Standort speichern"
+msgstr "Save location"
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
+msgstr "Your offers will be shown near this location. Without a location, only online offers can be found."
+
+#: src/lib/components/EventForm.svelte
+msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
+msgstr "Error while filling in automatically. You can still fill out the form."
+
+#: src/lib/components/EventForm.svelte
+msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
+msgstr "Insert WhatsApp, Telegram or other event description"
+
+#: src/lib/components/EventForm.svelte
+msgid "Daten übernehmen <0/>"
+msgstr "Use data <0/>"
+
+#. 0: result.fields.existingSource
+#: src/lib/components/EventForm.svelte
+msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+msgstr "The text appears to come from an existing source. We regularly import events from {0}. So the event is already listed with us, or will be shortly."
+
+#: src/lib/components/EventForm.svelte
+msgid "Event Beschreibung einfügen…"
+msgstr "Enter event description…"
+
+#: src/lib/components/EventForm.svelte
+msgid "Automatisch ausfüllen aus Beschreibung"
+msgstr "Automatically fill from description"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
+msgstr "An offering is permanently visible in your profile and on the offerings page."
+
+#: src/lib/components/TabsNavDesktop.svelte
+msgid "<0/> Navigation erneut laden"
+msgstr "<0/> Reload navigation"
 #~ msgid "Offerings-Hinweis ausblenden"
 #~ msgstr "Hide offer notice"
 

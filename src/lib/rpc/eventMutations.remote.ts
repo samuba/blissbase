@@ -1,7 +1,7 @@
 import { form, getRequestEvent, query } from '$app/server';
 import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import * as assets from '$lib/assets';
-import { generateSlug, randomString } from '$lib/common';
+import { deduplicateItems, generateSlug, randomString } from '$lib/common';
 import {
     EVENT_IMAGE_ACCEPTED_MIME_TYPES,
     EVENT_IMAGE_HASH_LENGTH,
@@ -52,7 +52,7 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 			...formData,
 			latitude: coords?.lat,
 			longitude: coords?.lng,
-			imageUrls,
+			imageUrls: deduplicateItems(imageUrls),
 			updatedAt: sql`now()`,
 		}).where(eq(s.events.id, eventFromDb.id));
 
@@ -108,7 +108,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 			...event,
 			source: `website-form`,
 			slug,
-			imageUrls,
+			imageUrls: deduplicateItems(imageUrls),
 			latitude: coords?.lat,
 			longitude: coords?.lng,
 			authorId: userId,
@@ -319,9 +319,10 @@ function getImagesForEventUpdate(args: GetImagesForEventUpdateArgs) {
 		imageUrls.push(...remainingNewImageUrls);
 	}
 
+	const normalizedImageUrls = deduplicateItems(imageUrls);
 	return {
-		imageUrls,
-		deletedImageUrls: args.existingImageUrls.filter((x) => !imageUrls.includes(x))
+		imageUrls: normalizedImageUrls,
+		deletedImageUrls: args.existingImageUrls.filter((x) => !normalizedImageUrls.includes(x))
 	};
 }
 

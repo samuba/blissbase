@@ -1,4 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
+import { sanitizeLocationParams } from '$lib/locationFilter';
 import type { AttendanceMode } from './server/schema';
 
 const COOKIE_NAME = 'blissbase_filters';
@@ -31,36 +32,37 @@ export type FilterCookieData = {
  * @param data - Raw data from cookie
  * @returns Validated filter data or null if invalid
  */
-function validateFilterData(data: unknown): FilterCookieData | null {
+export function validateFilterData(data: unknown): FilterCookieData | null {
     if (!data || typeof data !== 'object') return null;
 
     const filterData = data as Record<string, unknown>;
-
-    // Validate and convert lat/lng to numbers if they exist
-    const lat = filterData.lat !== undefined && filterData.lat !== null
-        ? Number(filterData.lat)
-        : null;
-    const lng = filterData.lng !== undefined && filterData.lng !== null
-        ? Number(filterData.lng)
-        : null;
-
-    // Check if lat/lng are valid numbers
-    if ((lat !== null && isNaN(lat)) || (lng !== null && isNaN(lng))) {
-        return null;
-    }
 
     // Validate tagIds array
     const tagIds = Array.isArray(filterData.tagIds)
         ? filterData.tagIds.filter((id): id is number => typeof id === 'number' && !isNaN(id))
         : null;
 
+    const location = sanitizeLocationParams({
+        plzCity: typeof filterData.plzCity === 'string' ? filterData.plzCity : null,
+        distance: typeof filterData.distance === 'string' ? filterData.distance : null,
+        lat: filterData.lat !== undefined && filterData.lat !== null ? Number(filterData.lat) : null,
+        lng: filterData.lng !== undefined && filterData.lng !== null ? Number(filterData.lng) : null
+    });
+
+    if (
+        (filterData.lat !== undefined && filterData.lat !== null && isNaN(Number(filterData.lat))) ||
+        (filterData.lng !== undefined && filterData.lng !== null && isNaN(Number(filterData.lng)))
+    ) {
+        return null;
+    }
+
     return {
         startDate: typeof filterData.startDate === 'string' ? filterData.startDate : null,
         endDate: typeof filterData.endDate === 'string' ? filterData.endDate : null,
-        plzCity: typeof filterData.plzCity === 'string' ? filterData.plzCity : null,
-        distance: typeof filterData.distance === 'string' ? filterData.distance : null,
-        lat,
-        lng,
+        plzCity: location.plzCity,
+        distance: location.distance,
+        lat: location.lat,
+        lng: location.lng,
         searchTerm: typeof filterData.searchTerm === 'string' ? filterData.searchTerm : null,
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
         sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
@@ -116,4 +118,36 @@ export function clearFiltersCookie(cookies: Cookies) {
 export function setLocationInteractedCookie() {
     if (typeof document === 'undefined') return;
     document.cookie = `${LOCATION_INTERACTED_COOKIE_NAME}=1; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
+}
+
+export function loadFiltersFromBrowserCookie(): FilterCookieData | null {
+    if (typeof document === 'undefined') return null;
+
+    const cookiePrefix = `${COOKIE_NAME}=`;
+    const rawCookie = document.cookie
+        .split(`;`)
+        .map((part) => part.trim())
+        .find((part) => part.startsWith(cookiePrefix));
+    if (!rawCookie) return null;
+
+    try {
+        const value = decodeURIComponent(rawCookie.slice(cookiePrefix.length));
+        return validateFilterData(JSON.parse(value));
+    } catch {
+        return null;
+    }
+}
+
+export function saveLocationFiltersToBrowserCookie(filters: Pick<FilterCookieData, 'plzCity' | 'distance' | 'lat' | 'lng'>) {
+    if (typeof document === 'undefined') return;
+
+    const next = {
+        ...(loadFiltersFromBrowserCookie() ?? {}),
+        plzCity: filters.plzCity,
+        distance: filters.distance,
+        lat: filters.lat,
+        lng: filters.lng,
+    };
+
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(next))}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
 }

@@ -11,12 +11,14 @@
 		kind,
 		field,
 		initialUrl,
-		onBusyChange
+		onBusyChange,
+		class: className
 	}: {
 		kind: 'profile' | 'banner';
 		field: RemoteFormField<string>;
 		initialUrl: string;
 		onBusyChange?: (busy: boolean) => void;
+		class?: string;
 	} = $props();
 
 	const targetSize = $derived(
@@ -248,7 +250,7 @@
 
 <svelte:window bind:innerHeight={windowInnerHeight} />
 
-<fieldset class="fieldset">
+<fieldset class={[`fieldset`, className]}>
 	<legend class="fieldset-legend">{kind === `profile` ? `Profilbild` : `Banner`}</legend>
 
 	{#if displayedUrl}

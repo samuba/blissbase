@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { E2E_TEST } from '$env/static/private';
 import { dev } from '$app/environment';
+import { deduplicateItems } from '$lib/common';
 
 export const POST: RequestHandler = async ({ request }) => {
 	if (E2E_TEST !== 'true' || !dev) {
@@ -23,7 +24,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					address: data.address || ['Test Address'],
 					price: data.price || 'Free',
 					priceIsHtml: false,
-					imageUrls: data.imageUrls || [],
+					imageUrls: deduplicateItems(data.imageUrls),
 					host: data.host || 'Test Host',
 					hostLink: data.hostLink || null,
 					contact: data.contact || [],

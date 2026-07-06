@@ -1,19 +1,21 @@
-import { command, form, query } from '$app/server';
-import * as assets from '$lib/assets';
-import { randomString } from '$lib/common';
-import { eventAssetsCreds } from '$lib/events.remote.shared';
-import { publicProfileFormSchema } from '$lib/rpc/profile.common';
-import { routes } from '$lib/routes';
-import { ensureUserId } from '$lib/server/common';
-import { db, s, and, eq, ne, sql } from '$lib/server/db';
+import { command, form, query } from "$app/server";
+import * as assets from "$lib/assets";
+import { randomString } from "$lib/common";
+import { eventAssetsCreds } from "$lib/events.remote.shared";
+import { publicProfileFormSchema } from "$lib/rpc/profile.common";
+import { routes } from "$lib/routes";
+import { ensureUserId } from "$lib/server/common";
+import { db, s, and, eq, ne, sql } from "$lib/server/db";
 import {
 	createPublicProfileSlug,
 	getPublicProfileBySlug,
+	hasSocialLink,
 	isPublicProfile,
-	getUpcomingEventsForPublicProfile
-} from '$lib/server/profile';
-import { error, invalid, redirect } from '@sveltejs/kit';
-import * as v from 'valibot';
+	getUpcomingEventsForPublicProfile,
+} from "$lib/server/profile";
+import { resolveProfileImageUrl, signProfileImageClaim } from "$lib/server/profileImages";
+import { error, invalid, redirect } from "@sveltejs/kit";
+import * as v from "valibot";
 
 export const getPublicProfile = query(v.object({ slug: v.pipe(v.string(), v.trim(), v.nonEmpty()) }), async ({ slug }) => {
 	const profile = await getPublicProfileBySlug({ slug });
@@ -21,7 +23,7 @@ export const getPublicProfile = query(v.object({ slug: v.pipe(v.string(), v.trim
 
 	return {
 		profile,
-		upcomingEvents: await getUpcomingEventsForPublicProfile({ authorId: profile.id })
+		upcomingEvents: await getUpcomingEventsForPublicProfile({ authorId: profile.id }),
 	};
 });
 
@@ -37,14 +39,32 @@ export const getMyPublicProfile = query(async () => {
 		socialLinks: profile.socialLinks,
 		profileImageUrl: profile.profileImageUrl ?? ``,
 		bannerImageUrl: profile.bannerImageUrl ?? ``,
-		placeId: profile.placeId,
-		isPublic: isPublicProfile(profile)
+		locationLabel: profile.locationLabel ?? ``,
+		latitude: profile.latitude,
+		longitude: profile.longitude,
+		isPublic: isPublicProfile(profile),
 	};
 });
 
+export const checkEmailProfileComplete = command(
+	v.object({
+		email: v.pipe(v.string(), v.trim(), v.email()),
+	}),
+	async ({ email }) => {
+		const rows = await db.execute<{ id: string }>(sql`select id::text as id from auth.users where lower(email) = lower(${email}) limit 1`);
+		const userId = rows[0]?.id;
+		if (!userId) return { profileComplete: false };
+
+		const profile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
+		return {
+			profileComplete: isPublicProfile(profile) && hasSocialLink(profile),
+		};
+	},
+);
+
 export const checkSlugAvailability = query(
 	v.object({
-		slug: v.pipe(v.string(), v.trim())
+		slug: v.pipe(v.string(), v.trim()),
 	}),
 	async ({ slug }) => {
 		const userId = ensureUserId();
@@ -55,14 +75,14 @@ export const checkSlugAvailability = query(
 
 		const existingProfile = await db.query.profiles.findFirst({
 			where: and(eq(s.profiles.slug, normalizedSlug), ne(s.profiles.id, userId)),
-			columns: { id: true }
+			columns: { id: true },
 		});
 
 		return {
 			slug: normalizedSlug,
-			available: !existingProfile
+			available: !existingProfile,
 		};
-	}
+	},
 );
 
 // Note: browsers upload directly to R2 using the returned presigned URL, which requires CORS
@@ -70,21 +90,26 @@ export const checkSlugAvailability = query(
 export const createProfileImageUploadUrl = command(
 	v.object({
 		type: v.picklist([`profile`, `banner`]),
-		contentType: v.picklist([`image/webp`, `image/jpeg`])
+		contentType: v.picklist([`image/webp`, `image/jpeg`]),
 	}),
 	async ({ type, contentType }) => {
-		const userId = ensureUserId();
 		// Timestamp prefix keeps keys naturally sorted; random tail avoids collisions on parallel uploads.
 		const suffix = `${Date.now().toString(36)}-${randomString(6).toLowerCase()}`;
-		const objectKey = assets.publicProfileImageObjectKey(userId, type, contentType, suffix);
+		const objectKey = assets.profileTempImageObjectKey({
+			type,
+			suffix,
+			contentType,
+		});
 		const uploadUrl = await assets.getPresignedPutUrl({ objectKey, creds: eventAssetsCreds });
+		const claimToken = signProfileImageClaim({ objectKey, type, contentType });
 		return {
 			uploadUrl,
-			publicUrl: assets.publicUrl(objectKey),
+			publicUrl: `${assets.publicUrl(objectKey)}#${claimToken}`,
 			objectKey,
-			contentType
+			contentType,
+			claimToken,
 		};
-	}
+	},
 );
 
 export const upsertPublicProfile = form(publicProfileFormSchema, async (data, issue) => {
@@ -99,24 +124,26 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 
 	const existingSlugOwner = await db.query.profiles.findFirst({
 		where: and(eq(s.profiles.slug, slug), ne(s.profiles.id, userId)),
-		columns: { id: true }
+		columns: { id: true },
 	});
 	if (existingSlugOwner) {
 		return invalid(issue.slug(`Dieser Slug ist bereits vergeben`));
 	}
 
-	const nextProfileImageUrl = assertOwnedProfileImageUrl({
+	const nextProfileImageUrl = await resolveProfileImageUrl({
 		submittedUrl: data.profileImageUrl,
 		currentUrl: currentProfile.profileImageUrl,
-		userId
+		userId,
+		expectedType: `profile`,
 	});
 	if (nextProfileImageUrl instanceof Error) {
 		return invalid(issue.profileImageUrl(nextProfileImageUrl.message));
 	}
-	const nextBannerImageUrl = assertOwnedProfileImageUrl({
+	const nextBannerImageUrl = await resolveProfileImageUrl({
 		submittedUrl: data.bannerImageUrl,
 		currentUrl: currentProfile.bannerImageUrl,
-		userId
+		userId,
+		expectedType: `banner`,
 	});
 	if (nextBannerImageUrl instanceof Error) {
 		return invalid(issue.bannerImageUrl(nextBannerImageUrl.message));
@@ -128,11 +155,10 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 			displayName: data.displayName,
 			slug,
 			bio: data.bio || null,
-			placeId: data.placeId ?? null,
 			socialLinks: data.socialLinks,
 			profileImageUrl: nextProfileImageUrl,
 			bannerImageUrl: nextBannerImageUrl,
-			updatedAt: sql`now()`
+			updatedAt: sql`now()`,
 		})
 		.where(eq(s.profiles.id, userId));
 
@@ -140,7 +166,7 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 	// This self-heals after abandoned session uploads, removed images, and failed form submissions.
 	await Promise.all([
 		sweepProfileImagePrefix({ userId, kind: `profile`, keepUrl: nextProfileImageUrl }),
-		sweepProfileImagePrefix({ userId, kind: `banner`, keepUrl: nextBannerImageUrl })
+		sweepProfileImagePrefix({ userId, kind: `banner`, keepUrl: nextBannerImageUrl }),
 	]);
 
 	getMyPublicProfile().refresh();
@@ -148,25 +174,6 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 
 	redirect(303, routes.publicProfile(slug));
 });
-
-/**
- * Validates that a submitted image URL is either empty, unchanged, or points to this user's
- * R2 upload namespace. Returns the URL to persist, or an Error describing the validation issue.
- *
- * @example
- * const next = assertOwnedProfileImageUrl({ submittedUrl, currentUrl: profile.profileImageUrl, userId });
- */
-function assertOwnedProfileImageUrl(args: AssertOwnedProfileImageUrlArgs) {
-	const submitted = args.submittedUrl?.trim() || ``;
-	if (!submitted) return null;
-	if (submitted === args.currentUrl) return submitted;
-
-	const expectedPrefix = assets.publicUrl(`profiles/${args.userId}/`);
-	if (!submitted.startsWith(expectedPrefix)) {
-		return new Error(`Bild-URL ist nicht erlaubt`);
-	}
-	return submitted;
-}
 
 /**
  * Deletes every object under `profiles/{userId}/{kind}-` except the one pointed to by `keepUrl`.
@@ -186,12 +193,6 @@ async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
 	if (!orphanKeys?.length) return;
 	await assets.deleteObjects(orphanKeys, eventAssetsCreds);
 }
-
-type AssertOwnedProfileImageUrlArgs = {
-	submittedUrl?: string | null;
-	currentUrl?: string | null;
-	userId: string;
-};
 
 type SweepProfileImagePrefixArgs = {
 	userId: string;

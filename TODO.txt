@@ -1,9 +1,13 @@
+offerings show online does not work after hovering over page menu!!
+navigating to offerings page from discover freezes tab with fork=true
+
 switch to lexical editor?
 use single flight mutations for profile and event creation
 make everything go fast - indexes? 
+run offering schema migration manually: offerings.name -> title, description -> description_html, add offering_format enum + format column
 
+scrape https://fetlife.com/ ?
 reality event have wrong time
-unify tabsnav dropdown
 scrape https://hangoutdn.com/events
 make location input editable without clicking the x
 browser back should close maximized image in event details

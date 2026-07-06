@@ -169,6 +169,61 @@ describe('Events Module - Happy Flow Tests', () => {
             expect(result[0].contact).toHaveLength(3);
         });
 
+        it(`should keep event image URLs unique on insert`, async () => {
+            const result = await upsertEvents([
+                createTestEvent({
+                    name: `Unique Image Insert Event`,
+                    startAt: new Date(`2024-12-18T19:00:00Z`),
+                    endAt: new Date(`2024-12-18T22:00:00Z`),
+                    slug: ``,
+                    imageUrls: [
+                        `https://example.com/image1.jpg`,
+                        `https://example.com/image2.jpg`,
+                        `https://example.com/image1.jpg`
+                    ]
+                })
+            ]);
+
+            expect(result[0].imageUrls).toEqual([
+                `https://example.com/image1.jpg`,
+                `https://example.com/image2.jpg`
+            ]);
+        });
+
+        it(`should keep event image URLs unique on conflicting upsert`, async () => {
+            const startAt = new Date(`2024-12-19T19:00:00Z`);
+            const endAt = new Date(`2024-12-19T22:00:00Z`);
+
+            await upsertEvents([
+                createTestEvent({
+                    name: `Unique Image Conflict Event`,
+                    startAt,
+                    endAt,
+                    slug: ``,
+                    imageUrls: [`https://example.com/original.jpg`]
+                })
+            ]);
+
+            const result = await upsertEvents([
+                createTestEvent({
+                    name: `Unique Image Conflict Event`,
+                    startAt,
+                    endAt,
+                    slug: ``,
+                    imageUrls: [
+                        `https://example.com/new.jpg`,
+                        `https://example.com/new.jpg`,
+                        `https://example.com/other.jpg`
+                    ]
+                })
+            ]);
+
+            expect(result[0].imageUrls).toEqual([
+                `https://example.com/new.jpg`,
+                `https://example.com/other.jpg`
+            ]);
+        });
+
         it.skip('should handle conflict resolution for duplicate slugs', async () => {
             // Insert both events at once to test conflict resolution
             // Since upsertEvents auto-generates slugs, we need to use the same name to get the same slug

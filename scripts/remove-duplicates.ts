@@ -3,6 +3,7 @@ import {
     db, s, sql, and, lt, eq, isNotNull, gte,
     inArray
 } from '../src/lib/server/db.script.ts';
+import { deduplicateItems } from '../src/lib/common';
 import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts';
 import { calculateHammingDistance } from '../src/lib/imageProcessing';
 import type { SelectEvent } from '../src/lib/server/schema';
@@ -207,6 +208,7 @@ async function mergeAndDeleteDuplicateEvents(args: {
         survivingSourceUrl: eventToSurvive.sourceUrl,
         deletedSourceUrl: eventToDelete.sourceUrl,
     });
+    eventToSurvive.imageUrls = deduplicateItems(eventToSurvive.imageUrls);
     console.log("Surviving event after merging:", eventToSurvive);
     const { id: _id, ...eventToSurviveWithoutId } = eventToSurvive;
     await db.transaction(async (tx) => {

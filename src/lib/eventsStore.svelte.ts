@@ -6,6 +6,7 @@ import { browser } from '$app/environment';
 import { SvelteSet } from 'svelte/reactivity';
 import type { AttendanceMode } from './server/schema';
 import { setLocationInteractedCookie } from './cookie-utils';
+import { OfferingsFeatureFlag } from '$lib/OfferingsFeatureFlag.svelte';
 
 type LoadingState = 'not-loading' | 'loading' | 'loading-more';
 
@@ -45,6 +46,7 @@ export class EventsStore {
     showTextSearch = $state(false);
 
     private finishedLoadingCallbacks = new SvelteSet<FinishedLoadingCallback>();
+    private loadRequestId = 0;
 
     // Derived reactive values
     selectedSortValue = $derived(this.getSortValue(this.pagination.sortBy, this.pagination.sortOrder));
@@ -58,7 +60,7 @@ export class EventsStore {
     );
     hasSearchFilter = $derived(Boolean(this.pagination.searchTerm?.trim()));
     hasDateFilter = $derived(this.pagination.startDate || this.pagination.endDate);
-    hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat && this.pagination.lng)));
+    hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat != null && this.pagination.lng != null)));
     hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
     hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
     hasAttendanceModeFilter = $derived(this.pagination.attendanceMode);
@@ -73,6 +75,7 @@ export class EventsStore {
         if (initialData) {
             this.events = initialData.events;
             this.pagination = initialData.pagination;
+            OfferingsFeatureFlag.updateFromPosition({ lat: initialData.pagination.lat, lng: initialData.pagination.lng });
         }
         // Bind the loadMoreEvents method to maintain this context when it is used as a callback
         this.loadMoreEvents = this.loadMoreEvents.bind(this);
@@ -82,10 +85,12 @@ export class EventsStore {
     initialize(args: { events: UiEvent[]; pagination: PaginationState }) {
         this.events = args.events;
         this.pagination = args.pagination;
+        OfferingsFeatureFlag.updateFromPosition({ lat: args.pagination.lat, lng: args.pagination.lng });
     }
 
     // Core loading function
     async loadEvents(params: Parameters<typeof fetchEventsWithCookiePersistence>[0], append?: boolean) {
+        const requestId = ++this.loadRequestId;
         const applyPagination = (params: Parameters<typeof fetchEventsWithCookiePersistence>[0]) => {
                 // Normalize undefined to null for consistency with PaginationState type
                 this.pagination = {
@@ -110,7 +115,10 @@ export class EventsStore {
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
             applyPagination(params); // optimistically set pagination state
+            OfferingsFeatureFlag.updateFromPosition({ lat: params.lat, lng: params.lng });
             const data = await fetchEventsWithCookiePersistence(params);
+
+            if (requestId !== this.loadRequestId) return;
 
             if (append) {
                 // Filter out duplicate events that may result from pagination
@@ -122,6 +130,7 @@ export class EventsStore {
             }
 
             applyPagination(data.pagination);
+            OfferingsFeatureFlag.updateFromPosition({ lat: data.pagination.lat, lng: data.pagination.lng });
         } finally {
             this.loadingState = 'not-loading';
             this.finishedLoadingCallbacks.forEach((callback) => callback(append));

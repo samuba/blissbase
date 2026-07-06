@@ -85,7 +85,7 @@
 
 	{#snippet content()}
 		<div class="z-50 flex flex-col">
-			<div class="bg-base-200 p-2 px-4 text-xs rounded-t-xl text-center">
+			<div class="bg-base-200 p-2 px-4 text-xs font-semibold rounded-t-xl text-center">
 				Zum Kalender hinzufügen
 			</div>
 			<div class="flex flex-col p-2 gap-2">

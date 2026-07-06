@@ -1,4 +1,4 @@
-import { generateSlug } from '../common';
+import { deduplicateItems, generateSlug } from '../common';
 import type { InsertEvent } from '../types';
 import { buildConflictUpdateColumns, type DB, s } from './db.shared';
 import { sql } from 'drizzle-orm';
@@ -32,6 +32,8 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		if (event.sourceUrl !== undefined) {
 			event.sourceUrl = normalizeSourceUrl(event.sourceUrl);
 		}
+
+		event.imageUrls = deduplicateItems(event.imageUrls);
 
 		event.slug = generateSlug({
 			name: event.name,

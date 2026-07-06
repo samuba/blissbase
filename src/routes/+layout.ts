@@ -59,7 +59,7 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
     // --- Meta Tags ---
     const baseUrl = new URL(url.pathname, url.origin).href
     const title = 'Blissbase'
-    const description = 'Achtsame Events in deiner Nähe.'
+    const description = 'Find conscious events near you.'
     const faviconUrl = 'https://www.blissbase.app/favicon.png'
     const posterUrl = 'https://www.blissbase.app/og-poster3.jpg'
     const baseMetaTags = Object.freeze({

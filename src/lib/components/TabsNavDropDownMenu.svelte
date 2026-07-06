@@ -18,6 +18,13 @@
 	const userId = $derived(page.data.userId);
 	const pathname = $derived(page.url.pathname);
 
+	function omitHref(props: Record<string, unknown>) {
+		const linkProps = { ...props };
+		delete linkProps.href;
+
+		return linkProps;
+	}
+
 	/** Bits UI trigger props — spread onto the trigger button/link. */
 	type TriggerSnippetProps = { props: Record<string, unknown> };
 </script>
@@ -58,7 +65,7 @@
 							</button>
 						{:else}
 							<a
-								{...args.props}
+								{...omitHref(args.props)}
 								href={item.href}
 								aria-current={isActive ? `page` : undefined}
 								class={[

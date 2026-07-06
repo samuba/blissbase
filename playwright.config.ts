@@ -60,6 +60,7 @@ export default defineConfig({
 		env: {
 			E2E_TEST: 'true',
 			GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || 'test-api-key',
+			PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY: process.env.PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY || 'test-browser-api-key',
 			PUBLIC_SUPABASE_URL: process.env.PUBLIC_SUPABASE_URL || 'http://localhost:54321',
 			PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'test-key',
 			PUBLIC_ADMIN_USER_ID: process.env.PUBLIC_ADMIN_USER_ID || 'test-admin',
