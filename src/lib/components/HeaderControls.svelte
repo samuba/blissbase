@@ -160,7 +160,7 @@
 							resolvedCityName={resolvedCityName}
 							locationBiasLat={eventsStore.pagination.lat}
 							locationBiasLng={eventsStore.pagination.lng}
-							onChange={eventsStore.handleLocationDistanceChange}
+							onChange={onLocationDistanceChange}
 						/>
 					</div>
 				</div>

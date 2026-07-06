@@ -93,6 +93,9 @@ msgstr "Sold out"
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/offerings/OfferingDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Online"
 msgstr "Online"
 
@@ -427,6 +430,7 @@ msgstr "Delete event"
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Abbrechen"
 msgstr "Cancel"
@@ -1089,6 +1093,7 @@ msgstr "Spaces are not allowed."
 msgid "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 msgstr "You have unsaved changes. Are you sure you want to leave this page?"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "blissbase.app/@/"
 msgstr "blissbase.app/@/"
@@ -1116,10 +1121,12 @@ msgid "„{0}“ ist bereits vergeben."
 msgstr "“{0}” is already taken."
 
 #: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Beschreibung"
 msgstr "Description"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Links"
 msgstr "Links"
@@ -1129,6 +1136,7 @@ msgstr "Links"
 msgid "Zuerst Typ wählen"
 msgstr "Select a type first"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Bild wird hochgeladen…"
 msgstr "<0/> Uploading image…"
@@ -1160,6 +1168,7 @@ msgstr "<0/> Send code"
 
 #: src/lib/components/Login.svelte
 #: src/routes/offerings/new/OtpStep.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Einmalcode"
 msgstr "One-time code"
 
@@ -1173,6 +1182,7 @@ msgstr "<0/> Log in"
 
 #: src/lib/components/Login.svelte
 #: src/routes/offerings/new/OtpStep.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Use a different email"
 
@@ -1206,6 +1216,7 @@ msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
 #: src/routes/offerings/new/OtpStep.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "E-Mail bestätigen"
 msgstr "Confirm email"
 
@@ -1214,6 +1225,7 @@ msgid "Code senden"
 msgstr "Send code"
 
 #: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Checking…"
 
@@ -1230,6 +1242,7 @@ msgid "<0/> Wird gespeichert…"
 msgstr "<0/> Saving…"
 
 #: src/lib/components/TextSearchInput.svelte
+#: src/lib/components/TagSelection.svelte
 msgid "Suchen"
 msgstr "Search"
 
@@ -1238,6 +1251,8 @@ msgstr "Search"
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort"
 msgstr "In-Person"
 
@@ -1257,6 +1272,26 @@ msgstr "Your current location"
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
 msgstr "Add a contact link so people can reach you."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Dein aktueller Ort"
+msgstr "Your current location"
+
+#: src/routes/profile/public/+page.svelte
+msgid "Deine Angebote werden für diesen Ort gelistet."
+msgstr "Your offerings will be listed for this location."
+
+#: src/routes/profile/public/+page.svelte
+msgid "Aktueller Ort"
+msgstr "Current location"
+
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
+msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
+msgstr "Add a contact link so people can reach you."
+
+#: src/routes/new/+page.svelte
+msgid "Was möchtest du erstellen?"
+msgstr "What would you like to create?"
 
 #: src/routes/new/+page.svelte
 msgid "<0/> Event erstellen"
@@ -1285,10 +1320,11 @@ msgid "Weitere Wege"
 msgstr "Other ways"
 
 #: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Persönlich an deinem Profil-Ort."
 msgstr "In person at your profile location."
 
-#: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Du bietest beides an."
 msgstr "You offer both."
 
@@ -1312,6 +1348,19 @@ msgid "Titel *"
 msgstr "Title *"
 
 #: src/lib/components/OfferingForm.svelte
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
+msgid "Angebot erstellen"
+msgstr "Create offering"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
+msgstr "An offer is permanently visible and can be requested directly by people through your profile."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Titel *"
+msgstr "Title *"
+
+#: src/routes/offerings/new/+page.svelte
 msgid "Format *"
 msgstr "Format *"
 
@@ -1330,12 +1379,50 @@ msgid "Vor Ort & Online"
 msgstr "In-person & Online"
 
 #: src/lib/components/OfferingForm.svelte
+msgid "Keine Angabe"
+msgstr "No information"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Offline-Angebote werden über diesen Ort gefunden."
+msgstr "Offline offerings can be found via this location."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail *"
+msgstr "Email *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
+msgstr "We’ll send you a code before your offering is saved."
+
+#: src/routes/offerings/new/OtpVerificationDialog.svelte
+msgid "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
+msgstr "To allow your offer to be created, please enter the code that we sent to <0/>."
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Vor Ort & Online"
+msgstr "In-person & Online"
+
+#: src/routes/offerings/new/+page.svelte
 msgid "Video-Call oder anderes Online-Format."
 msgstr "Video call or other online format."
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Dein Name *"
 msgstr "Your Name *"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Profil-URL *"
+msgstr "Profile URL *"
+
+#: src/routes/offerings/+page.svelte
+msgid "Da Nang"
+msgstr "Da Nang"
+
+#: src/routes/offerings/+page.svelte
+msgid "Hoi An"
+msgstr "Hoi An"
 
 #: src/routes/offerings/+page.svelte
 msgid "Angebote | Blissbase"
@@ -1353,6 +1440,27 @@ msgstr "Create the first offering for this area or check back later."
 msgid "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
 msgstr "Without a location, only your online offerings will be discoverable."
 
+#: src/routes/offerings/new/+page.svelte
+msgid "Wanna edit your profile? <0><0/> Edit profile</0>"
+msgstr "Want to edit your profile? <0><0/> Edit profile</0>"
+
+#: src/routes/offerings/+page.svelte
+msgid "Ort auswählen"
+msgstr "Select a location"
+
+#: src/routes/offerings/+page.svelte
+msgid "Ort wählen"
+msgstr "Choose a location"
+
+#: src/routes/offerings/+page.svelte
+msgid "Suche"
+msgstr "Search"
+
+#: src/routes/offerings/+page.svelte
+msgid "Titel oder Beschreibung"
+msgstr "Title or description"
+
+#: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 msgid "Suche löschen"
@@ -1698,3 +1806,36 @@ msgstr "An offering is permanently visible in your profile and on the offerings 
 #: src/lib/components/TabsNavDesktop.svelte
 msgid "<0/> Navigation erneut laden"
 msgstr "<0/> Reload navigation"
+#~ msgid "Offerings-Hinweis ausblenden"
+#~ msgstr "Hide offer notice"
+
+#: src/routes/offerings/+page.svelte
+msgid "Was willst du der Community geben?"
+msgstr "What do you want to give the community?"
+
+#: src/routes/offerings/+page.svelte
+msgid "Finde Sessions, Services und Unterstützung."
+msgstr "Find sessions, services, and support."
+
+#: src/routes/offerings/+page.svelte
+msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
+msgstr "Whether it’s a private breathwork session, coaching, massage, Reiki, or tarot readings—here you can offer it to the community."
+
+#~ msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
+#~ msgstr "For private sessions and services, go to: <0><0/> Offerings</0> <1/> <2/>"
+
+#. 0: normalizedSearchTerm
+#: src/routes/offerings/+page.svelte
+msgid "Keine weiteren Suchergebnisse für \"{0}\""
+msgstr "No more search results for \"{0}\""
+
+#: src/routes/offerings/+page.svelte
+msgid "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
+msgstr "<0/>w <1><0/> Looking for events?We have lots!Show events <0/></1>"
+
+#~ msgid "Find conscious events near you."
+#~ msgstr "Find conscious events near you."
+
+#: src/routes/+layout.ts
+msgid "Achtsame Events in deiner Nähe."
+msgstr "Conscious events near you."
