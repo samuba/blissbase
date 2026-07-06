@@ -171,6 +171,18 @@ export const getMyOfferings = query(async () => {
 	}));
 });
 
+export const userHasOfferings = query(async () => {
+	const userId = ensureUserId();
+	const offering = await db.query.offerings.findFirst({
+		where: eq(s.offerings.profileId, userId),
+		columns: {
+			id: true,
+		},
+	});
+
+	return !!offering;
+});
+
 export const updateProfileLocation = form(profileLocationFormSchema, async (data) => {
 	const userId = ensureUserId();
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
@@ -695,6 +707,7 @@ function refreshOfferingLists() {
 	getOfferings().refresh();
 	if (getRequestEvent().locals.userId) {
 		getMyOfferings().refresh();
+		userHasOfferings().refresh();
 	}
 }
 

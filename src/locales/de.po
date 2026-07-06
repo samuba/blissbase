@@ -163,7 +163,6 @@ msgstr "<0/> Website"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
@@ -424,7 +423,6 @@ msgid "Event löschen"
 msgstr "Event löschen"
 
 #: src/lib/components/ProfileImageCropInput.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/new/+page.svelte
@@ -1072,21 +1070,17 @@ msgid "Aktuell keine kommenden Events."
 msgstr "Aktuell keine kommenden Events."
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Benutzername"
 msgstr "Benutzername"
 
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Bitte einen Link-Typ wählen."
 msgstr "Bitte einen Link-Typ wählen."
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Bitte einen Wert eingeben."
 msgstr "Bitte einen Wert eingeben."
 
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Leerzeichen ist nicht erlaubt."
 msgstr "Leerzeichen ist nicht erlaubt."
@@ -1132,8 +1126,6 @@ msgstr "Links"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Zuerst Typ wählen"
 msgstr "Zuerst Typ wählen"
 
@@ -1147,16 +1139,13 @@ msgid "<0/> Speichern…"
 msgstr "<0/> Speichern…"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Link hinzufügen"
 msgstr "Link hinzufügen"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Typ wählen"
 msgstr "Typ wählen"
 
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Hinzufügen"
 msgstr "Hinzufügen"
@@ -1171,8 +1160,6 @@ msgstr "<0/> Code senden"
 
 #: src/lib/components/Login.svelte
 #: src/routes/offerings/new/OtpStep.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Einmalcode"
 msgstr "Einmalcode"
 
@@ -1186,8 +1173,6 @@ msgstr "<0/> Anmelden"
 
 #: src/lib/components/Login.svelte
 #: src/routes/offerings/new/OtpStep.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Andere E-Mail verwenden"
 
@@ -1217,12 +1202,10 @@ msgid "Code erneut senden <0/>"
 msgstr "Code erneut senden <0/>"
 
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 
 #: src/routes/offerings/new/OtpStep.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "E-Mail bestätigen"
 msgstr "E-Mail bestätigen"
 
@@ -1231,7 +1214,6 @@ msgid "Code senden"
 msgstr "Code senden"
 
 #: src/routes/offerings/new/+page.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Wird geprüft…"
 
@@ -1276,9 +1258,6 @@ msgstr "Dein aktueller Ort"
 msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
 msgstr "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
 
-#~ msgid "Was möchtest du erstellen?"
-#~ msgstr "Was möchtest du erstellen?"
-
 #: src/routes/new/+page.svelte
 msgid "<0/> Event erstellen"
 msgstr "<0/> Event erstellen"
@@ -1289,6 +1268,7 @@ msgstr "Ein einzelner Termin, Workshop oder Circle mit Datum und Uhrzeit."
 
 #: src/routes/new/+page.svelte
 #: src/routes/offerings/+page.svelte
+#: src/routes/profile/offerings/+page.svelte
 msgid "<0/> Angebot erstellen"
 msgstr "<0/> Angebot erstellen"
 
@@ -1323,7 +1303,7 @@ msgstr "Angebot erstellen | Blissbase"
 
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/new/+page.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
+#: src/routes/profile/offerings/+page.svelte
 msgid "Angebot erstellen"
 msgstr "Angebot erstellen"
 
@@ -1420,8 +1400,9 @@ msgstr "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/
 msgid "Keine weiteren Suchergebnisse für \"{0}\""
 msgstr "Keine weiteren Suchergebnisse für \"{0}\""
 
-#~ msgid "Find conscious events near you."
-#~ msgstr "Find conscious events near you."
+#: src/routes/+layout.ts
+msgid "Find conscious events near you."
+msgstr "Find conscious events near you."
 
 #: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -1717,448 +1698,3 @@ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite si
 #: src/lib/components/TabsNavDesktop.svelte
 msgid "<0/> Navigation erneut laden"
 msgstr "<0/> Navigation erneut laden"
-
-#~ msgid "LADE <0/>"
-#~ msgstr "LADE <0/>"
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von <b>{0}</b>. Der Event ist also schon bei uns gelistet oder wird es in kürze sein."
-#~ msgstr "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von <b>{0}</b>. Der Event ist also schon bei uns gelistet oder wird es in kürze sein."
-
-#~ msgid "Fehler beim importieren. Du kannst das Formular trotzdem ausfüllen"
-#~ msgstr "Fehler beim importieren. Du kannst das Formular trotzdem ausfüllen"
-
-#~ msgid "Event Importieren"
-#~ msgstr "Event Importieren"
-
-#~ msgid "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann importieren wir die Daten."
-#~ msgstr "Füge eine Event Beschreibung aus WhatsApp, Telegram etc ein, dann importieren wir die Daten."
-
-#~ msgid "WhatsApp/Telegram Beschreibung einfügen…"
-#~ msgstr "WhatsApp/Telegram Beschreibung einfügen…"
-
-#~ msgid "Optional"
-#~ msgstr "Optional"
-
-#~ msgid "Event importieren"
-#~ msgstr "Event importieren"
-
-#~ msgid "Weiter ohne importieren"
-#~ msgstr "Weiter ohne importieren"
-
-#~ msgid "Da Nang"
-#~ msgstr "Da Nang"
-
-#~ msgid "Hoi An"
-#~ msgstr "Hoi An"
-
-#~ msgid "Ort"
-#~ msgstr "Ort"
-
-#~ msgid "Ort wählen"
-#~ msgstr "Ort wählen"
-
-#~ msgid "Suche"
-#~ msgstr "Suche"
-
-#~ msgid "Unordered"
-#~ msgstr "Unordered"
-
-#~ msgid "Ordered"
-#~ msgstr "Ordered"
-
-#. 0: slugCheck.normalized
-#: src/routes/profile/public/+page.svelte
-msgid "„{0}“ ist bereits vergeben.<<<<<<< HEAD"
-msgstr "„{0}“ ist bereits vergeben.<<<<<<< HEAD"
-
-#~ msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen<<<<<<< HEAD"
-#~ msgstr "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen<<<<<<< HEAD"
-
-#~ msgid "Code senden<<<<<<< HEAD"
-#~ msgstr "Code senden<<<<<<< HEAD"
-
-#~ msgid "<0/> Wird gespeichert…<<<<<<< HEAD"
-#~ msgstr "<0/> Wird gespeichert…<<<<<<< HEAD"
-
-#: src/routes/profile/public/+page.svelte
-msgid "Kein Ort ausgewählt"
-msgstr "Kein Ort ausgewählt"
-
-#: src/routes/profile/public/+page.svelte
-msgid "Deine Angebote werden für diesen Ort gelistet."
-msgstr "Deine Angebote werden für diesen Ort gelistet."
-
-#: src/routes/profile/public/+page.svelte
-msgid "Aktueller Ort"
-msgstr "Aktueller Ort"
-
-#~ msgid "Weitere Wege<<<<<<< HEAD"
-#~ msgstr "Weitere Wege<<<<<<< HEAD"
-
-#~ msgid "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden.<<<<<<< HEAD"
-#~ msgstr "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden.<<<<<<< HEAD"
-
-#~ msgid "Keine Angabe"
-#~ msgstr "Keine Angabe"
-
-#~ msgid "Offline-Angebote werden über diesen Ort gefunden.<<<<<<< HEAD"
-#~ msgstr "Offline-Angebote werden über diesen Ort gefunden.<<<<<<< HEAD"
-
-#~ msgid "E-Mail *"
-#~ msgstr "E-Mail *"
-
-#~ msgid "Wir senden dir einen Code, bevor dein Angebot gespeichert wird.>>>>>>> 9c82422 (icons for date/time)"
-#~ msgstr "Wir senden dir einen Code, bevor dein Angebot gespeichert wird.>>>>>>> 9c82422 (icons for date/time)"
-
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
-msgid "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
-msgstr "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
-
-#~ msgid "Dein Name *<<<<<<< HEAD======="
-#~ msgstr "Dein Name *<<<<<<< HEAD======="
-
-#~ msgid "Profil-URL *>>>>>>> 9c82422 (icons for date/time)"
-#~ msgstr "Profil-URL *>>>>>>> 9c82422 (icons for date/time)"
-
-#~ msgid "Ohne Ort werden nur deine Online-Angebote auffindbar sein.<<<<<<< HEAD"
-#~ msgstr "Ohne Ort werden nur deine Online-Angebote auffindbar sein.<<<<<<< HEAD"
-
-#~ msgid "Wanna edit your profile? <0><0/> Edit profile</0>"
-#~ msgstr "Wanna edit your profile? <0><0/> Edit profile</0>"
-
-#~ msgid "Ort auswählen>>>>>>> 9c82422 (icons for date/time)"
-#~ msgstr "Ort auswählen>>>>>>> 9c82422 (icons for date/time)"
-
-#~ msgid "Suche<<<<<<< HEAD"
-#~ msgstr "Suche<<<<<<< HEAD"
-
-#~ msgid "Titel oder Beschreibung"
-#~ msgstr "Titel oder Beschreibung"
-
-#: src/routes/@/[slug]/+page.svelte
-msgid "<0/> Events<<<<<<< HEAD======="
-msgstr "<0/> Events<<<<<<< HEAD======="
-
-#~ msgid "Was willst du der Community geben?<<<<<<< HEAD"
-#~ msgstr "Was willst du der Community geben?<<<<<<< HEAD"
-
-#~ msgid "Finde Sessions, Services und Unterstützung.>>>>>>> 9c82422 (icons for date/time)"
-#~ msgstr "Finde Sessions, Services und Unterstützung.>>>>>>> 9c82422 (icons for date/time)"
-
-#~ msgid "Keine weiteren Suchergebnisse für \"{0}\"<<<<<<< HEAD"
-#~ msgstr "Keine weiteren Suchergebnisse für \"{0}\"<<<<<<< HEAD"
-
-#~ msgid "Find conscious events near you.>>>>>>> 9c82422 (icons for date/time)"
-#~ msgstr "Find conscious events near you.>>>>>>> 9c82422 (icons for date/time)"
-
-#~ msgid "Angebot erstellt!"
-#~ msgstr "Angebot erstellt!"
-
-#~ msgid "Angebot wurde gelöscht."
-#~ msgstr "Angebot wurde gelöscht."
-
-#~ msgid "Invalid offering ID"
-#~ msgstr "Invalid offering ID"
-
-#~ msgid "Angebot wurde aktiviert"
-#~ msgstr "Angebot wurde aktiviert"
-
-#~ msgid "Es ist jetzt für andere Nutzer sichtbar."
-#~ msgstr "Es ist jetzt für andere Nutzer sichtbar."
-
-#~ msgid "Angebot wurde deaktiviert"
-#~ msgstr "Angebot wurde deaktiviert"
-
-#~ msgid "Du kannst es in deinem Profil wieder aktivieren."
-#~ msgstr "Du kannst es in deinem Profil wieder aktivieren."
-
-#~ msgid "Aktiv"
-#~ msgstr "Aktiv"
-
-#~ msgid "Deaktiviert"
-#~ msgstr "Deaktiviert"
-
-#~ msgid "a"
-#~ msgstr "a"
-
-#~ msgid "adsasda sda s"
-#~ msgstr "adsasda sda s"
-
-#~ msgid "Verwalte deine Angebote. Sie werden"
-#~ msgstr "Verwalte deine Angebote. Sie werden"
-
-#~ msgid "Verwalte deine Angebote. Aktivierte Angebote"
-#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote"
-
-#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer"
-#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer"
-
-#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in d"
-#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in d"
-
-#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der Angebot Seite sichtbar."
-#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der Angebot Seite sichtbar."
-
-#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebot Seite</0> sichtbar."
-#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebot Seite</0> sichtbar."
-
-#: src/routes/profile/offerings/+page.svelte
-msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seite</0> sichtbar."
-msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seite</0> sichtbar."
-
-#~ msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seitesichtbar.</0>"
-#~ msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer in auf der <0>Angebote Seitesichtbar.</0>"
-
-#~ msgid "E-Mail konnte nicht geprüft werden."
-#~ msgstr "E-Mail konnte nicht geprüft werden."
-
-#~ msgid "Wir prüfen kurz, ob dein Profil schon vollständig ist, und senden später einen Code."
-#~ msgstr "Wir prüfen kurz, ob dein Profil schon vollständig ist, und senden später einen Code."
-
-#~ msgid "<0/> Profil wird geprüft…"
-#~ msgstr "<0/> Profil wird geprüft…"
-
-#~ msgid "Dein Profil ist vollständig. Du kannst den Profil-Schritt überspringen."
-#~ msgstr "Dein Profil ist vollständig. Du kannst den Profil-Schritt überspringen."
-
-#~ msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, damit wir dein Angebot sicher deinem Profil zuordnen können."
-#~ msgstr "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, damit wir dein Angebot sicher deinem Profil zuordnen können."
-
-#~ msgid "Login E-Mail *"
-#~ msgstr "Login E-Mail *"
-
-#~ msgid "E-Mail for Login *"
-#~ msgstr "E-Mail for Login *"
-
-#~ msgid "We ."
-#~ msgstr "We ."
-
-#~ msgid "We'll send you a code to verify your email address."
-#~ msgstr "We'll send you a code to verify your email address."
-
-#~ msgid "Not pubWe'll send you a code to verify your email address."
-#~ msgstr "Not pubWe'll send you a code to verify your email address."
-
-#~ msgid "Not publicWe'll send you a code to verify your email address."
-#~ msgstr "Not publicWe'll send you a code to verify your email address."
-
-#~ msgid "Not public.We'll send you a code to verify your email address."
-#~ msgstr "Not public.We'll send you a code to verify your email address."
-
-#~ msgid "E-Mail (für Login *"
-#~ msgstr "E-Mail (für Login *"
-
-#~ msgid "E-Mail (Für Login *"
-#~ msgstr "E-Mail (Für Login *"
-
-#~ msgid "E-Mail (Für Login) *"
-#~ msgstr "E-Mail (Für Login) *"
-
-#~ msgid "E-Mail (Für Login)"
-#~ msgstr "E-Mail (Für Login)"
-
-#~ msgid "E-Mail* (Für Login)"
-#~ msgstr "E-Mail* (Für Login)"
-
-#~ msgid "E-Mail (Für Login)*"
-#~ msgstr "E-Mail (Für Login)*"
-
-#~ msgid "E-Mail für Login*"
-#~ msgstr "E-Mail für Login*"
-
-#~ msgid "Community Angebote"
-#~ msgstr "Community Angebote"
-
-#~ msgid "Sessions, Services und Unterstützung"
-#~ msgstr "Sessions, Services und Unterstützung"
-
-#~ msgid "✨ D ✨"
-#~ msgstr "✨ D ✨"
-
-#~ msgid "✨ Auser Community für die Community ✨"
-#~ msgstr "✨ Auser Community für die Community ✨"
-
-#~ msgid "Blissbase ist eine Community für die Community. Hier kannst du Angebote für die Community erstellen."
-#~ msgstr "Blissbase ist eine Community für die Community. Hier kannst du Angebote für die Community erstellen."
-
-#~ msgid "Links *"
-#~ msgstr "Links *"
-
-#~ msgid "Google Maps"
-#~ msgstr "Google Maps"
-
-#~ msgid "<0/> Google Maps======="
-#~ msgstr "<0/> Google Maps======="
-
-#~ msgid "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
-#~ msgstr "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
-
-#~ msgid "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
-#~ msgstr "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
-
-#~ msgid "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
-#~ msgstr "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
-
-#~ msgid "Profil-URL *"
-#~ msgstr "Profil-URL *"
-
-#~ msgid "Ort auswählen"
-#~ msgstr "Ort auswählen"
-
-#~ msgid "Finde Sessions, Services und Unterstützung."
-#~ msgstr "Finde Sessions, Services und Unterstützung."
-
-#: src/routes/+layout.ts
-msgid "Achtsame Events in deiner Nähe."
-msgstr "Achtsame Events in deiner Nähe."
-
-#~ msgid "Suche starten<<<<<<< HEAD======="
-#~ msgstr "Suche starten<<<<<<< HEAD======="
-
-#~ msgid "Dein aktueller Ort<<<<<<< HEAD======="
-#~ msgstr "Dein aktueller Ort<<<<<<< HEAD======="
-
-#~ msgid "Profilbeschreibung<<<<<<< HEAD======="
-#~ msgstr "Profilbeschreibung<<<<<<< HEAD======="
-
-#~ msgid "✨ Aus der Community für die Community ✨<<<<<<< HEAD======="
-#~ msgstr "✨ Aus der Community für die Community ✨<<<<<<< HEAD======="
-
-#~ msgid "<0/> Google Maps<<<<<<< HEAD"
-#~ msgstr "<0/> Google Maps<<<<<<< HEAD"
-
-#~ msgid "Achtsame Events in deiner Nähe.======="
-#~ msgstr "Achtsame Events in deiner Nähe.======="
-
-#: src/routes/profile/public/+page.svelte
-msgid "Deine Angebote werden in der Nähe dieses Orts gefunden."
-msgstr "Deine Angebote werden in der Nähe dieses Orts gefunden."
-
-#~ msgid "Format"
-#~ msgstr "Format"
-
-#~ msgid "<0/> Online"
-#~ msgstr "<0/> Online"
-
-#~ msgid "Ändere deine Suche, deaktiviere den Online-Filter oder lösche den Suchbegriff."
-#~ msgstr "Ändere deine Suche, deaktiviere den Online-Filter oder lösche den Suchbegriff."
-
-#~ msgid "Deaktiviere den Online-Filter, um auch Vor-Ort-Angebote zu sehen."
-#~ msgstr "Deaktiviere den Online-Filter, um auch Vor-Ort-Angebote zu sehen."
-
-#~ msgid "Online-Filter aus"
-#~ msgstr "Online-Filter aus"
-
-#~ msgid "Online Angebote auch anzeigen!"
-#~ msgstr "Online Angebote auch anzeigen!"
-
-#~ msgid "Online Angebote auch anzeigen«>>>>>>> 10db09b (wip)"
-#~ msgstr "Online Angebote auch anzeigen«>>>>>>> 10db09b (wip)"
-
-#: src/routes/profile/offerings/+page.svelte
-msgid "Du hast keine deaktivierten Angebote.<<<<<<< HEAD======="
-msgstr "Du hast keine deaktivierten Angebote.<<<<<<< HEAD======="
-
-#~ msgid "Online Angebote auch anzeigen======="
-#~ msgstr "Online Angebote auch anzeigen======="
-
-#~ msgid "Deine Angebote werden in der Nähe dieses Orts gefunden.>>>>>>> e5ebc52 (wip)"
-#~ msgstr "Deine Angebote werden in der Nähe dieses Orts gefunden.>>>>>>> e5ebc52 (wip)"
-
-#: src/routes/profile/offerings/+page.svelte
-msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.>>>>>>> e5ebc52 (wip)"
-msgstr "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.>>>>>>> e5ebc52 (wip)"
-
-#~ msgid "Ort<<<<<<< HEAD"
-#~ msgstr "Ort<<<<<<< HEAD"
-
-#~ msgid "Online Angebote auch anzeigen«"
-#~ msgstr "Online Angebote auch anzeigen«"
-
-#~ msgid "Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-#~ msgstr "Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-
-#~ msgid "Standort gespeichert"
-#~ msgstr "Standort gespeichert"
-
-#~ msgid "De Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-#~ msgstr "De Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-
-#~ msgid "Deine Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-#~ msgstr "Deine Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-
-#~ msgid "Deine Angebote werden in der Nähe dieses Orts gefunden. Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-#~ msgstr "Deine Angebote werden in der Nähe dieses Orts gefunden. Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-
-#~ msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-#~ msgstr "Deine Angebote werden in der Nähe dieses Orts angezeigt. Offline-Angebote werden Nutzern in der Nähe dieses Orts auf der Angebote-Seite angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-
-#~ msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen.<<<<<<< HEAD"
-#~ msgstr "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen.<<<<<<< HEAD"
-
-#: src/routes/profile/offerings/+page.svelte
-msgid "Standort für deine Angebote=======>>>>>>> 13fd996 (wip)"
-msgstr "Standort für deine Angebote=======>>>>>>> 13fd996 (wip)"
-
-#: src/routes/profile/offerings/+page.svelte
-msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.<<<<<<< HEAD"
-msgstr "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.<<<<<<< HEAD"
-
-#~ msgid "Automatisch ausfüllen aus Beschreibung>>>>>>> 13fd996 (wip)"
-#~ msgstr "Automatisch ausfüllen aus Beschreibung>>>>>>> 13fd996 (wip)"
-
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
-msgid "Angebot erstellen<<<<<<< HEAD======="
-msgstr "Angebot erstellen<<<<<<< HEAD======="
-
-#: src/lib/components/EventForm.svelte
-msgid "Automatisch ausfüllen aus Beschreibung<<<<<<< HEAD"
-msgstr "Automatisch ausfüllen aus Beschreibung<<<<<<< HEAD"
-
-#~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.>>>>>>> c02f005 (wip)"
-#~ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.>>>>>>> c02f005 (wip)"
-
-#~ msgid "Automatisch ausfüllen aus Beschreibung>>>>>>> 13fd996 (wip)======="
-#~ msgstr "Automatisch ausfüllen aus Beschreibung>>>>>>> 13fd996 (wip)======="
-
-#~ msgid "Ein Angebot ist dauerhaft sichtbar und kann"
-#~ msgstr "Ein Angebot ist dauerhaft sichtbar und kann"
-
-#~ msgid "Ein Angebot ist dauerhaft"
-#~ msgstr "Ein Angebot ist dauerhaft"
-
-#~ msgid "Ein Angebot ist dauerhaft in d"
-#~ msgstr "Ein Angebot ist dauerhaft in d"
-
-#~ msgid "Ein Angebot ist dauerhaft in deinem Profil"
-#~ msgstr "Ein Angebot ist dauerhaft in deinem Profil"
-
-#~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf e"
-#~ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf e"
-
-#~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite"
-#~ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite"
-
-#~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar"
-#~ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar"
-
-#~ msgid "Online Angebote auch anzeigen>>>>>>> 7dab5fb (wip)"
-#~ msgstr "Online Angebote auch anzeigen>>>>>>> 7dab5fb (wip)"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.<<<<<<< HEAD"
-msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.<<<<<<< HEAD"
-
-#~ msgid "LADE <0/>>>>>>>> 7dab5fb (wip)"
-#~ msgstr "LADE <0/>>>>>>>> 7dab5fb (wip)"
-
-#~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar======="
-#~ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar======="
-te-Seite sichtbar.<<<<<<< HEAD"
-msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.<<<<<<< HEAD"
-
-#~ msgid "LADE <0/>>>>>>>> 7dab5fb (wip)"
-#~ msgstr "LADE <0/>>>>>>>> 7dab5fb (wip)"
-
-#~ msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar======="
-#~ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar======="
