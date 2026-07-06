@@ -8,7 +8,6 @@ import {
 } from "$lib/rpc/offerings.common";
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
-import { loadOfferingsList } from "$lib/server/offeringsList";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 import { routes, safeReturnToPath } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
