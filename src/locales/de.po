@@ -94,8 +94,6 @@ msgstr "Ausgebucht"
 #: src/routes/EventDetails.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/new/+page.svelte
 msgid "Online"
 msgstr "Online"
 
@@ -1093,7 +1091,6 @@ msgstr "Leerzeichen ist nicht erlaubt."
 msgid "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 msgstr "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "blissbase.app/@/"
 msgstr "blissbase.app/@/"
@@ -1121,12 +1118,10 @@ msgid "„{0}“ ist bereits vergeben."
 msgstr "„{0}“ ist bereits vergeben."
 
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Beschreibung"
 msgstr "Beschreibung"
 
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Links"
 msgstr "Links"
@@ -1136,7 +1131,6 @@ msgstr "Links"
 msgid "Zuerst Typ wählen"
 msgstr "Zuerst Typ wählen"
 
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Bild wird hochgeladen…"
 msgstr "<0/> Bild wird hochgeladen…"
@@ -1168,7 +1162,6 @@ msgstr "<0/> Code senden"
 
 #: src/lib/components/Login.svelte
 #: src/routes/offerings/new/OtpStep.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Einmalcode"
 msgstr "Einmalcode"
 
@@ -1182,7 +1175,6 @@ msgstr "<0/> Anmelden"
 
 #: src/lib/components/Login.svelte
 #: src/routes/offerings/new/OtpStep.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Andere E-Mail verwenden"
 
@@ -1216,7 +1208,6 @@ msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 
 #: src/routes/offerings/new/OtpStep.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "E-Mail bestätigen"
 msgstr "E-Mail bestätigen"
 
@@ -1225,7 +1216,6 @@ msgid "Code senden"
 msgstr "Code senden"
 
 #: src/routes/offerings/new/+page.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Wird geprüft…"
 
@@ -1242,7 +1232,6 @@ msgid "<0/> Wird gespeichert…"
 msgstr "<0/> Wird gespeichert…"
 
 #: src/lib/components/TextSearchInput.svelte
-#: src/lib/components/TagSelection.svelte
 msgid "Suchen"
 msgstr "Suchen"
 
@@ -1251,8 +1240,6 @@ msgstr "Suchen"
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/lib/components/OfferingCard.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/new/+page.svelte
 msgid "Vor Ort"
 msgstr "Vor Ort"
 
@@ -1272,26 +1259,6 @@ msgstr "Dein aktueller Ort"
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
 msgstr "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Dein aktueller Ort"
-msgstr "Dein aktueller Ort"
-
-#: src/routes/profile/public/+page.svelte
-msgid "Deine Angebote werden für diesen Ort gelistet."
-msgstr "Deine Angebote werden für diesen Ort gelistet."
-
-#: src/routes/profile/public/+page.svelte
-msgid "Aktueller Ort"
-msgstr "Aktueller Ort"
-
-#: src/lib/components/PublicProfileSocialLinksEditor.svelte
-msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
-msgstr "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
-
-#: src/routes/new/+page.svelte
-msgid "Was möchtest du erstellen?"
-msgstr "Was möchtest du erstellen?"
 
 #: src/routes/new/+page.svelte
 msgid "<0/> Event erstellen"
@@ -1320,11 +1287,10 @@ msgid "Weitere Wege"
 msgstr "Weitere Wege"
 
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/new/+page.svelte
 msgid "Persönlich an deinem Profil-Ort."
 msgstr "Persönlich an deinem Profil-Ort."
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/OfferingForm.svelte
 msgid "Du bietest beides an."
 msgstr "Du bietest beides an."
 
@@ -1340,8 +1306,6 @@ msgstr "Angebot erstellen | Blissbase"
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/offerings/+page.svelte
-#: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
 msgid "Angebot erstellen"
 msgstr "Angebot erstellen"
 
@@ -1349,15 +1313,7 @@ msgstr "Angebot erstellen"
 msgid "Titel *"
 msgstr "Titel *"
 
-#: src/routes/offerings/new/+page.svelte
-msgid "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
-msgstr "Ein Angebot ist dauerhaft sichtbar und kann von Menschen direkt über dein Profil angefragt werden."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Titel *"
-msgstr "Titel *"
-
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/OfferingForm.svelte
 msgid "Format *"
 msgstr "Format *"
 
@@ -1376,50 +1332,12 @@ msgid "Vor Ort & Online"
 msgstr "Vor Ort & Online"
 
 #: src/lib/components/OfferingForm.svelte
-msgid "Keine Angabe"
-msgstr "Keine Angabe"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Offline-Angebote werden über diesen Ort gefunden."
-msgstr "Offline-Angebote werden über diesen Ort gefunden."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "E-Mail *"
-msgstr "E-Mail *"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
-msgstr "Wir senden dir einen Code, bevor dein Angebot gespeichert wird."
-
-#: src/routes/offerings/new/OtpVerificationDialog.svelte
-msgid "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
-msgstr "Damit dein Angebot erstellt werden kann, gib bitte den Code ein, den wir an <0/> geschickt haben."
-
-#: src/lib/components/OfferingCard.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/new/+page.svelte
-msgid "Vor Ort & Online"
-msgstr "Vor Ort & Online"
-
-#: src/routes/offerings/new/+page.svelte
 msgid "Video-Call oder anderes Online-Format."
 msgstr "Video-Call oder anderes Online-Format."
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Dein Name *"
 msgstr "Dein Name *"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Profil-URL *"
-msgstr "Profil-URL *"
-
-#: src/routes/offerings/+page.svelte
-msgid "Da Nang"
-msgstr "Da Nang"
-
-#: src/routes/offerings/+page.svelte
-msgid "Hoi An"
-msgstr "Hoi An"
 
 #: src/routes/offerings/+page.svelte
 msgid "Angebote | Blissbase"
@@ -1437,27 +1355,6 @@ msgstr "Erstelle das erste Angebot für diesen Bereich oder schau später wieder
 msgid "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
 msgstr "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
 
-#: src/routes/offerings/new/+page.svelte
-msgid "Wanna edit your profile? <0><0/> Edit profile</0>"
-msgstr "Wanna edit your profile? <0><0/> Edit profile</0>"
-
-#: src/routes/offerings/+page.svelte
-msgid "Ort auswählen"
-msgstr "Ort auswählen"
-
-#: src/routes/offerings/+page.svelte
-msgid "Ort wählen"
-msgstr "Ort wählen"
-
-#: src/routes/offerings/+page.svelte
-msgid "Suche"
-msgstr "Suche"
-
-#: src/routes/offerings/+page.svelte
-msgid "Titel oder Beschreibung"
-msgstr "Titel oder Beschreibung"
-
-#: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 msgid "Suche löschen"
@@ -1764,10 +1661,6 @@ msgid "Standort für deine Angebote"
 msgstr "Standort für deine Angebote"
 
 #: src/routes/profile/offerings/+page.svelte
-msgid "Standort speichern"
-msgstr "Standort speichern"
-
-#: src/routes/profile/offerings/+page.svelte
 msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
 msgstr "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
 
@@ -1803,36 +1696,19 @@ msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite si
 #: src/lib/components/TabsNavDesktop.svelte
 msgid "<0/> Navigation erneut laden"
 msgstr "<0/> Navigation erneut laden"
-#~ msgid "Offerings-Hinweis ausblenden"
-#~ msgstr "Offerings-Hinweis ausblenden"
 
-#: src/routes/offerings/+page.svelte
-msgid "Was willst du der Community geben?"
-msgstr "Was willst du der Community geben?"
+#: src/lib/components/LocationAutocompleteInput.svelte
+msgid "<0/> Suche…"
+msgstr "<0/> Suche…"
 
-#: src/routes/offerings/+page.svelte
-msgid "Finde Sessions, Services und Unterstützung."
-msgstr "Finde Sessions, Services und Unterstützung."
+#: src/lib/components/LocationAutocompleteInput.svelte
+msgid "Tippen für Vorschläge"
+msgstr "Tippen für Vorschläge"
 
-#: src/routes/offerings/+page.svelte
-msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
-msgstr "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
+#: src/lib/components/LocationAutocompleteInput.svelte
+msgid "Ort mit diesem Namen nicht gefunden"
+msgstr "Ort mit diesem Namen nicht gefunden"
 
-#~ msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
-#~ msgstr "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
-
-#. 0: normalizedSearchTerm
-#: src/routes/offerings/+page.svelte
-msgid "Keine weiteren Suchergebnisse für \"{0}\""
-msgstr "Keine weiteren Suchergebnisse für \"{0}\""
-
-#: src/routes/offerings/+page.svelte
-msgid "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
-msgstr "<0/>w <1><0/> Suchst du Events?Wir haben sehr viele!Events anzeigen <0/></1>"
-
-#~ msgid "Find conscious events near you."
-#~ msgstr "Find conscious events near you."
-
-#: src/routes/+layout.ts
-msgid "Achtsame Events in deiner Nähe."
-msgstr "Achtsame Events in deiner Nähe."
+#: src/lib/components/LocationAutocompleteInput.svelte
+msgid "<0/> Vorschläge werden geladen…"
+msgstr "<0/> Vorschläge werden geladen…"

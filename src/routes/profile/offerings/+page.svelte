@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
-	import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 	import { getMyOfferings, updateProfileLocation } from "$lib/rpc/offerings.remote";
 	import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 	import { routes } from "$lib/routes";
@@ -13,7 +11,6 @@
 	const offerings = $derived(await getMyOfferings());
 	const activeOfferings = $derived(offerings.filter((offering) => offering.listed));
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
-	const locationPreflight = $derived(updateProfileLocation.preflight(profileLocationFormSchema));
 
 	let selectedTab = $state<`active` | `inactive`>(`active`);
 
@@ -23,6 +20,22 @@
 
 	function openOfferingDetails(offering: (typeof offerings)[number]) {
 		showOfferingDetailsDialog(offering, { returnTo: routes.currentPath(page.url) });
+	}
+
+	async function handleLocationSelect(event: {
+		locationLabel: string | null;
+		latitude: number | null;
+		longitude: number | null;
+	}) {
+		await updateProfileLocation({
+			locationLabel: event.locationLabel ?? ``,
+			latitude: event.latitude == null ? `` : String(event.latitude),
+			longitude: event.longitude == null ? `` : String(event.longitude),
+		});
+
+		profile.locationLabel = event.locationLabel?.trim() || null;
+		profile.latitude = event.latitude;
+		profile.longitude = event.longitude;
 	}
 </script>
 
@@ -39,10 +52,7 @@
 		<a href={routes.offeringsList()} class="link">Angebote-Seite</a> sichtbar.
 	</p>
 
-	<form
-		{...locationPreflight}
-		class="card bg-base-100 mt-4 shadow"
-	>
+	<div class="card bg-base-100 mt-4 shadow">
 		<div class="card-body gap-3">
 			<fieldset class="fieldset">
 				<legend class="fieldset-legend peer-aria-invalid:text-red-600">
@@ -52,36 +62,27 @@
 					Deine Angebote werden in der Nähe dieses Orts angezeigt.
 					Ohne Standort sind nur Online-Angebote auffindbar.
 				</p>
-				<LocationAutocompleteInput
-					inputId="offeringsProfileLocationInput"
-					initialLabel={profile.locationLabel}
-					initialLat={profile.latitude}
-					initialLng={profile.longitude}
-					locationLabelField={updateProfileLocation.fields.locationLabel}
-					latitudeField={updateProfileLocation.fields.latitude}
-					longitudeField={updateProfileLocation.fields.longitude}
-				/>
-				<FormFieldIssues field={updateProfileLocation.fields.locationLabel} />
-				<FormFieldIssues field={updateProfileLocation.fields.latitude} />
-				<FormFieldIssues field={updateProfileLocation.fields.longitude} />
-			</fieldset>
-
-			<div class="flex justify-end">
-				<button
-					type="submit"
-					class="btn btn-primary btn-sm"
-					disabled={updateProfileLocation.pending > 0}
-				>
+				<div class="flex items-center gap-2">
+					<div class="min-w-0 flex-1">
+						<LocationAutocompleteInput
+							inputId="offeringsProfileLocationInput"
+							initialLabel={profile.locationLabel}
+							initialLat={profile.latitude}
+							initialLng={profile.longitude}
+							onSelect={handleLocationSelect}
+							disabled={updateProfileLocation.pending > 0}
+						/>
+					</div>
 					{#if updateProfileLocation.pending > 0}
-						<span class="loading loading-spinner loading-sm"></span>
-						Speichern…
-					{:else}
-						Standort speichern
+						<span class="text-base-content/60 flex shrink-0 items-center gap-1.5 text-sm">
+							<span class="loading loading-spinner loading-xs"></span>
+							Speichern…
+						</span>
 					{/if}
-				</button>
-			</div>
+				</div>
+			</fieldset>
 		</div>
-	</form>
+	</div>
 
 	<div class=" my-4">
 		<a href={newOfferingHref()} class="btn btn-primary w-full sm:w-auto">

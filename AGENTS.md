@@ -33,6 +33,7 @@ Always use string interpolation when possible instead of concatenating strings. 
 When a function has 3 parameters or more use an object named 'args' instead of individual parameters with type inlined.
 Always place type definitions at the bottom of the file unless the type is only used inside a function/context then leave it there.  
 Never type a variable if typescript can infer the type correctly on its own.
+Always inline types when feasible.
 Always check if an array is defined and has values like this: `arr?.length` not `arr && arr.length > 0`
 Only create doc comments when the complexity of the function calls for it or the semantics/context is needed to understand.
 

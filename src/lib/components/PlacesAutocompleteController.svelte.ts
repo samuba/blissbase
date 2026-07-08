@@ -19,6 +19,8 @@ export class PlacesAutocompleteController {
 	suggestions = $state<PlaceSuggestion[]>([]);
 	highlightedIndex = $state(-1);
 	isOpen = $state(false);
+	keepPanelOpen = $state(false);
+	hasSearched = $state(false);
 
 	private sessionToken: google.maps.places.AutocompleteSessionToken | null = null;
 	private requestId = 0;
@@ -63,7 +65,12 @@ export class PlacesAutocompleteController {
 
 		const trimmed = args.input.trim();
 		if (trimmed.length < MIN_INPUT_LENGTH) {
-			this.close();
+			this.hasSearched = false;
+			this.suggestions = [];
+			this.highlightedIndex = -1;
+			if (!this.keepPanelOpen) {
+				this.close();
+			}
 			return;
 		}
 
@@ -84,13 +91,19 @@ export class PlacesAutocompleteController {
 
 		const trimmed = args.input.trim();
 		if (trimmed.length < MIN_INPUT_LENGTH) {
-			this.close();
+			this.hasSearched = false;
+			this.suggestions = [];
+			this.highlightedIndex = -1;
+			if (!this.keepPanelOpen) {
+				this.close();
+			}
 			return;
 		}
 
 		this.ensureSessionToken();
 		const currentRequestId = ++this.requestId;
 		this.isLoading = true;
+		this.hasSearched = false;
 
 		try {
 			const request: google.maps.places.AutocompleteRequest = {
@@ -120,7 +133,8 @@ export class PlacesAutocompleteController {
 				}));
 
 			this.highlightedIndex = this.suggestions.length > 0 ? 0 : -1;
-			this.isOpen = this.suggestions.length > 0;
+			this.hasSearched = true;
+			this.isOpen = this.suggestions.length > 0 || this.keepPanelOpen;
 		} catch (error) {
 			if (currentRequestId !== this.requestId) return;
 			console.error(`Places autocomplete request failed:`, error);
@@ -180,11 +194,18 @@ export class PlacesAutocompleteController {
 		return this.suggestions[this.highlightedIndex];
 	}
 
+	openPanel() {
+		this.keepPanelOpen = true;
+		this.isOpen = true;
+	}
+
 	close() {
 		this.cancelScheduledFetch();
+		this.keepPanelOpen = false;
 		this.isOpen = false;
 		this.suggestions = [];
 		this.highlightedIndex = -1;
+		this.hasSearched = false;
 		this.requestId++;
 	}
 

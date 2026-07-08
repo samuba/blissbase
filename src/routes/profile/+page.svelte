@@ -101,7 +101,7 @@
 							Verwalte deine Angebote und aktiviere oder deaktiviere sie.
 						</p>
 						<div class="card-actions pt-1">
-							<a href={routes.myOfferings()} class="btn btn-primary">
+							<a href={routes.myOfferings()} class="btn">
 								Angebote verwalten
 							</a>
 						</div>

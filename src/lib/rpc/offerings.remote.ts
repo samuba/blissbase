@@ -182,7 +182,7 @@ export const userHasOfferings = query(async () => {
 	return !!offering;
 });
 
-export const updateProfileLocation = form(profileLocationFormSchema, async (data) => {
+export const updateProfileLocation = command(profileLocationFormSchema, async (data) => {
 	const userId = ensureUserId();
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
 	if (!currentProfile) throw error(404, `Profile not found`);

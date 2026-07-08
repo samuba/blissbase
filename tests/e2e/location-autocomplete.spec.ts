@@ -136,14 +136,19 @@ test.describe('Location autocomplete', () => {
 	});
 
 	test('manual Enter search works when Google is unavailable', async ({ page }) => {
+		await page.addInitScript(() => {
+			// @ts-expect-error test mock
+			delete window.google;
+		});
 		await gotoHomeAndWait(page);
 
 		const headerInput = page.locator(`#plzCityInput-header`);
-		await headerInput.fill(`Berlin`);
+		await headerInput.click();
+		await headerInput.pressSequentially(`Berlin`);
 		await headerInput.press(`Enter`);
 
-		await expect(headerInput).toHaveValue(`Berlin`);
 		await expect(page.locator(`#plzCityInput-header-distance`)).toHaveValue(`50`);
+		await expect(headerInput).toHaveValue(`Berlin`);
 	});
 
 	test('filter dialog input works with unique id', async ({ page }) => {

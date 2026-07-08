@@ -71,8 +71,8 @@ test.describe('Source-Dependent Rendering', () => {
 
 		// Source label (Quelle:/Source:) section should be visible with source link
 		await expect(page.getByRole('link', { name: 'Tribehaus' })).toBeVisible();
-		// Registration link should be visible (translated: Anmelden → Register)
-		await expect(page.getByRole('link', { name: /Anmelden|Register/i })).toBeVisible();
+		// Registration link should be visible (translated: Jetzt Buchen → Book now)
+		await expect(page.getByRole('link', { name: /Jetzt Buchen|Book now/i })).toBeVisible();
 	});
 
 	test('heilnetz source shows source link instead of registration button', async ({ page }) => {
@@ -82,9 +82,9 @@ test.describe('Source-Dependent Rendering', () => {
 		await page.goto(`/${event.slug}`);
 		await page.waitForSelector('h1', { timeout: 15000 });
 
-		// The action button should be "Quelle/Source" (not "Anmelden/Register") for heilnetz
+		// The action button should be "Quelle/Source" (not "Jetzt Buchen/Book now") for heilnetz
 		await expect(page.getByRole('link', { name: /Quelle|Source/i }).first()).toBeVisible();
-		await expect(page.getByRole('link', { name: /Anmelden|Register/i })).not.toBeVisible();
+		await expect(page.getByRole('link', { name: /Jetzt Buchen|Book now/i })).not.toBeVisible();
 		// Source label should show "Heilnetz"
 		await expect(page.getByRole('link', { name: 'Heilnetz' })).toBeVisible();
 	});

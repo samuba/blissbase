@@ -20,6 +20,7 @@
 		latitudeField?: RemoteFormField<string>;
 		longitudeField?: RemoteFormField<string>;
 		onChange?: (event: LocationAutocompleteChangeEvent) => void;
+		onSelect?: (event: LocationAutocompleteChangeEvent) => void;
 		disabled?: boolean;
 	}
 
@@ -32,6 +33,7 @@
 		latitudeField,
 		longitudeField,
 		onChange,
+		onSelect,
 		disabled,
 	}: LocationAutocompleteInputProps = $props();
 
@@ -70,12 +72,31 @@
 	let isLoadingLocation = $state(false);
 	let displayLocationText = $state(``);
 	let blurCloseTimer: ReturnType<typeof setTimeout> | null = null;
+	let isInputFocused = $state(false);
 	let lastInitialLabel = $state<string | null | undefined>(undefined);
 	let lastInitialLat = $state<number | null | undefined>(undefined);
 	let lastInitialLng = $state<number | null | undefined>(undefined);
 
 	let inputLocationText = $derived(usingCurrentLocation ? displayLocationText : typedLocation);
 	let useGoogleAutocomplete = $derived((autocomplete?.isAvailable ?? false) && !usingCurrentLocation);
+	let showAutocompletePanel = $derived(
+		isInputFocused && (autocomplete?.keepPanelOpen ?? false) && !usingCurrentLocation,
+	);
+	let showGoogleLoadingHint = $derived(showAutocompletePanel && !autocomplete?.isAvailable);
+	let showTypeForSuggestionsHint = $derived(
+		showAutocompletePanel &&
+			autocomplete?.isAvailable &&
+			!autocomplete.isLoading &&
+			!autocomplete.hasSearched &&
+			typedLocation.trim().length < 2,
+	);
+	let showNoResultsHint = $derived(
+		showAutocompletePanel &&
+			autocomplete?.isAvailable &&
+			!autocomplete.isLoading &&
+			autocomplete.hasSearched &&
+			!autocomplete.suggestions.length,
+	);
 
 	$effect(() => {
 		if (initialLabel === lastInitialLabel && initialLat === lastInitialLat && initialLng === lastInitialLng) return;
@@ -129,7 +150,7 @@
 	}
 
 	$effect(() => {
-		if (!autocomplete?.isOpen) return;
+		if (!showAutocompletePanel) return;
 
 		updateDropdownPosition();
 		const onReposition = () => updateDropdownPosition();
@@ -157,6 +178,11 @@
 		});
 	}
 
+	function notifySelect(args: LocationAutocompleteChangeEvent) {
+		syncFormFields(args);
+		onSelect?.(args);
+	}
+
 	function applySelectedPlace(args: {
 		displayName: string;
 		latitude: number;
@@ -167,7 +193,7 @@
 		resolvedLng = args.longitude;
 		typedLocation = args.displayName;
 
-		syncFormFields({
+		notifySelect({
 			locationLabel: args.displayName,
 			latitude: args.latitude,
 			longitude: args.longitude,
@@ -219,7 +245,7 @@
 			resolvedLng = longitude;
 			displayLocationText = `Dein Standort`;
 
-			syncFormFields({
+			notifySelect({
 				locationLabel: `Dein Standort`,
 				latitude,
 				longitude,
@@ -243,7 +269,7 @@
 		resolvedLng = null;
 		typedLocation = ``;
 		displayLocationText = ``;
-		syncFormFields({ locationLabel: null, latitude: null, longitude: null });
+		notifySelect({ locationLabel: null, latitude: null, longitude: null });
 		locationInput?.focus();
 	}
 
@@ -258,6 +284,7 @@
 		typedLocation = value;
 
 		void ensureAutocomplete().then((controller) => {
+			if (isInputFocused) controller.openPanel();
 			controller.scheduleFetch({
 				input: value,
 				biasLat: initialLat,
@@ -268,7 +295,16 @@
 
 	function handleInputFocus() {
 		cancelBlurClose();
+		isInputFocused = true;
 		prepareAutocomplete();
+		void ensureAutocomplete().then((controller) => {
+			controller.openPanel();
+			controller.scheduleFetch({
+				input: typedLocation,
+				biasLat: initialLat,
+				biasLng: initialLng,
+			});
+		});
 	}
 
 	function cancelBlurClose() {
@@ -281,6 +317,7 @@
 	function scheduleBlurClose() {
 		cancelBlurClose();
 		blurCloseTimer = setTimeout(() => {
+			isInputFocused = false;
 			autocomplete?.close();
 		}, 200);
 	}
@@ -340,7 +377,7 @@
 				type="text"
 				id={inputId}
 				role="combobox"
-				aria-expanded={autocomplete?.isOpen ?? false}
+				aria-expanded={showAutocompletePanel}
 				aria-controls="{inputId}-listbox"
 				aria-autocomplete="list"
 				aria-activedescendant={autocomplete && autocomplete.highlightedIndex >= 0
@@ -359,7 +396,7 @@
 			/>
 		</label>
 
-		{#if autocomplete?.isOpen && useGoogleAutocomplete}
+		{#if showAutocompletePanel}
 			<ul
 				id="{inputId}-listbox"
 				role="listbox"
@@ -370,27 +407,45 @@
 				style:width="{dropdownPosition.width}px"
 				onmousedown={cancelBlurClose}
 			>
-					{#each autocomplete.suggestions as suggestion, index (suggestion.text)}
-						{@const controller = autocomplete}
-						<li
-							id="{inputId}-option-{index}"
-							role="option"
-							aria-selected={controller.highlightedIndex === index}
-							class={[
-								`cursor-pointer px-3 py-2 text-sm border-base-300`,
-								controller.highlightedIndex === index && `bg-primary/20`,
-							]}
-							onmouseenter={() => {
-								controller.highlightedIndex = index;
-							}}
-						onmousedown={(event) => {
-							event.preventDefault();
-							void handleSuggestionSelect(index);
-						}}
-					>
-						{suggestion.text}
+				{#if showGoogleLoadingHint}
+					<li class="text-base-content/60 flex items-center gap-2 px-3 py-2 text-sm">
+						<span class="loading loading-spinner loading-xs"></span>
+						Vorschläge werden geladen…
 					</li>
-				{/each}
+				{:else if autocomplete?.isLoading}
+					<li class="text-base-content/60 flex items-center gap-2 px-3 py-2 text-sm">
+						<span class="loading loading-spinner loading-xs"></span>
+						Suche…
+					</li>
+				{:else if showTypeForSuggestionsHint}
+					<li class="text-base-content/60 px-3 py-2 text-sm">Tippen für Vorschläge</li>
+				{:else if showNoResultsHint}
+					<li class="text-base-content/60 px-3 py-2 text-sm">Ort mit diesem Namen nicht gefunden</li>
+				{:else}
+					{#each autocomplete?.suggestions ?? [] as suggestion, index (suggestion.text)}
+						{@const controller = autocomplete}
+						{#if controller}
+							<li
+								id="{inputId}-option-{index}"
+								role="option"
+								aria-selected={controller.highlightedIndex === index}
+								class={[
+									`cursor-pointer px-3 py-2 text-sm border-base-300`,
+									controller.highlightedIndex === index && `bg-primary/20`,
+								]}
+								onmouseenter={() => {
+									controller.highlightedIndex = index;
+								}}
+								onmousedown={(event) => {
+									event.preventDefault();
+									void handleSuggestionSelect(index);
+								}}
+							>
+								{suggestion.text}
+							</li>
+						{/if}
+					{/each}
+				{/if}
 				<li class="border-base-300 text-base-content/60 border-t px-3 py-1.5 text-xs">
 					<span class="flex items-center gap-1">
 						<i class="icon-[ph--map-trifold] size-3.5"></i>
