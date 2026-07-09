@@ -233,7 +233,17 @@ export function normalizeDescription(args: { description: string; name: string |
 		description: args.description,
 		name: args.name
 	});
-	return linkifyBareUrls(descriptionWithoutName);
+	return lineBreaksToBr(linkifyBareUrls(descriptionWithoutName));
+}
+
+/**
+ * Converts plain-text line breaks to `<br>` but not more than 2 consecutive <br> tags.
+ */
+export function lineBreaksToBr(text: string): string {
+	return text
+		.replace(/\r\n?/g, `\n`)
+		.replaceAll(`\n`, `<br>`)
+		.replace(/<br>(\s*<br>){2,}/g, `<br><br>`);
 }
 
 const LEADING_NAME_SEPARATOR_REGEX = /^(?:\s*\n+|\s*[:.\-–—]\s*)/;

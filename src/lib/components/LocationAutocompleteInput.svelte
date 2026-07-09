@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RemoteFormField } from '@sveltejs/kit';
 	import { isTouchDevice } from '$lib/common';
+	import { reverseGeocodeCity } from '$lib/rpc/places.remote';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import type { PlacesAutocompleteController } from './PlacesAutocompleteController.svelte';
@@ -20,7 +21,7 @@
 		latitudeField?: RemoteFormField<string>;
 		longitudeField?: RemoteFormField<string>;
 		onChange?: (event: LocationAutocompleteChangeEvent) => void;
-		onSelect?: (event: LocationAutocompleteChangeEvent) => void;
+		onSelect?: (event: LocationAutocompleteChangeEvent) => void | Promise<void>;
 		disabled?: boolean;
 	}
 
@@ -70,12 +71,25 @@
 	let resolvedLat = $state<number | null>(null);
 	let resolvedLng = $state<number | null>(null);
 	let isLoadingLocation = $state(false);
+	let selectBusy = $state(false);
 	let displayLocationText = $state(``);
 	let blurCloseTimer: ReturnType<typeof setTimeout> | null = null;
 	let isInputFocused = $state(false);
 	let lastInitialLabel = $state<string | null | undefined>(undefined);
 	let lastInitialLat = $state<number | null | undefined>(undefined);
 	let lastInitialLng = $state<number | null | undefined>(undefined);
+	let selectGeneration = 0;
+	let selectQueue: Promise<void> = Promise.resolve();
+	let confirmedSnapshot: ConfirmedLocationSnapshot = {
+		locationLabel: null,
+		latitude: null,
+		longitude: null,
+		usingCurrentLocation: false,
+		displayLocationText: ``,
+		typedLocation: ``,
+	};
+
+	let inputDisabled = $derived(isLoadingLocation || disabled || selectBusy);
 
 	let inputLocationText = $derived(usingCurrentLocation ? displayLocationText : typedLocation);
 	let useGoogleAutocomplete = $derived((autocomplete?.isAvailable ?? false) && !usingCurrentLocation);
@@ -107,8 +121,14 @@
 		if (initialLabel?.trim()) {
 			usingCurrentLocation = false;
 			typedLocation = initialLabel;
+			displayLocationText = ``;
 			resolvedLat = initialLat ?? null;
 			resolvedLng = initialLng ?? null;
+			saveConfirmedSnapshot({
+				locationLabel: initialLabel,
+				latitude: initialLat ?? null,
+				longitude: initialLng ?? null,
+			});
 			syncFormFields({
 				locationLabel: initialLabel,
 				latitude: initialLat ?? null,
@@ -122,6 +142,7 @@
 		displayLocationText = ``;
 		resolvedLat = null;
 		resolvedLng = null;
+		saveConfirmedSnapshot({ locationLabel: null, latitude: null, longitude: null });
 		syncFormFields({ locationLabel: null, latitude: null, longitude: null });
 	});
 
@@ -170,6 +191,30 @@
 		onChange?.(args);
 	}
 
+	function saveConfirmedSnapshot(args: LocationAutocompleteChangeEvent) {
+		confirmedSnapshot = {
+			locationLabel: args.locationLabel,
+			latitude: args.latitude,
+			longitude: args.longitude,
+			usingCurrentLocation,
+			displayLocationText,
+			typedLocation: usingCurrentLocation ? `` : (args.locationLabel ?? ``),
+		};
+	}
+
+	function revertToConfirmedSnapshot() {
+		usingCurrentLocation = confirmedSnapshot.usingCurrentLocation;
+		displayLocationText = confirmedSnapshot.displayLocationText;
+		typedLocation = confirmedSnapshot.typedLocation;
+		resolvedLat = confirmedSnapshot.latitude;
+		resolvedLng = confirmedSnapshot.longitude;
+		syncFormFields({
+			locationLabel: confirmedSnapshot.locationLabel,
+			latitude: confirmedSnapshot.latitude,
+			longitude: confirmedSnapshot.longitude,
+		});
+	}
+
 	function notifyChange() {
 		syncFormFields({
 			locationLabel: typedLocation || null,
@@ -178,12 +223,41 @@
 		});
 	}
 
-	function notifySelect(args: LocationAutocompleteChangeEvent) {
+	async function notifySelect(args: LocationAutocompleteChangeEvent) {
 		syncFormFields(args);
-		onSelect?.(args);
+
+		if (!onSelect) {
+			saveConfirmedSnapshot(args);
+			return;
+		}
+
+		const generation = ++selectGeneration;
+		selectBusy = true;
+
+		const run = async () => {
+			if (generation !== selectGeneration) return;
+
+			try {
+				await onSelect(args);
+				if (generation !== selectGeneration) return;
+				saveConfirmedSnapshot(args);
+			} catch (error) {
+				if (generation === selectGeneration) revertToConfirmedSnapshot();
+				throw error;
+			} finally {
+				if (generation === selectGeneration) selectBusy = false;
+			}
+		};
+
+		const queued = selectQueue.then(run, run);
+		selectQueue = queued.then(
+			() => undefined,
+			() => undefined,
+		);
+		await queued;
 	}
 
-	function applySelectedPlace(args: {
+	async function applySelectedPlace(args: {
 		displayName: string;
 		latitude: number;
 		longitude: number;
@@ -193,11 +267,15 @@
 		resolvedLng = args.longitude;
 		typedLocation = args.displayName;
 
-		notifySelect({
-			locationLabel: args.displayName,
-			latitude: args.latitude,
-			longitude: args.longitude,
-		});
+		try {
+			await notifySelect({
+				locationLabel: args.displayName,
+				latitude: args.latitude,
+				longitude: args.longitude,
+			});
+		} catch {
+			// onSelect failed — notifySelect already reverted the UI
+		}
 
 		autocomplete?.close();
 		if (isTouchDevice()) locationInput?.blur();
@@ -211,14 +289,17 @@
 	}
 
 	async function handleSuggestionSelect(suggestionIndex: number) {
+		if (inputDisabled) return;
+
 		const controller = await ensureAutocomplete();
 		const suggestion = controller.suggestions[suggestionIndex];
 		if (!suggestion) return;
 
 		const place = await controller.selectSuggestion(suggestion);
 		if (!place) return;
+		if (inputDisabled) return;
 
-		applySelectedPlace({
+		await applySelectedPlace({
 			displayName: place.displayName || place.formattedAddress,
 			latitude: place.latitude,
 			longitude: place.longitude,
@@ -226,7 +307,7 @@
 	}
 
 	async function handleUseCurrentLocationClick() {
-		if (disabled || isLoadingLocation) return;
+		if (inputDisabled) return;
 
 		autocomplete?.close();
 		isLoadingLocation = true;
@@ -234,42 +315,65 @@
 		typedLocation = ``;
 		displayLocationText = `Standort wird ermittelt...`;
 
+		let latitude: number;
+		let longitude: number;
 		try {
 			const position = await new Promise<GeolocationPosition>((resolve, reject) => {
 				navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 12000 });
 			});
-
-			const latitude = position.coords.latitude;
-			const longitude = position.coords.longitude;
-			resolvedLat = latitude;
-			resolvedLng = longitude;
-			displayLocationText = `Dein Standort`;
-
-			notifySelect({
-				locationLabel: `Dein Standort`,
-				latitude,
-				longitude,
-			});
+			latitude = position.coords.latitude;
+			longitude = position.coords.longitude;
 		} catch (error) {
 			console.error(`Error getting location:`, error);
 			usingCurrentLocation = false;
 			displayLocationText = ``;
+			isLoadingLocation = false;
 			alert(
 				`Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein.`,
 			);
+			return;
+		}
+
+		resolvedLat = latitude;
+		resolvedLng = longitude;
+
+		let locationLabel = ``;
+		try {
+			const cityName = await reverseGeocodeCity({ latitude, longitude });
+			if (cityName?.trim()) locationLabel = cityName.trim();
+		} catch (error) {
+			console.error(`Error reverse geocoding location:`, error);
 		} finally {
 			isLoadingLocation = false;
 		}
+
+		displayLocationText = locationLabel;
+
+		try {
+			await notifySelect({
+				locationLabel: locationLabel || null,
+				latitude,
+				longitude,
+			});
+		} catch {
+			// onSelect failed — notifySelect already reverted the UI
+		}
 	}
 
-	function handleResetLocationClick() {
+	async function handleResetLocationClick() {
+		if (inputDisabled) return;
+
 		autocomplete?.close();
 		usingCurrentLocation = false;
 		resolvedLat = null;
 		resolvedLng = null;
 		typedLocation = ``;
 		displayLocationText = ``;
-		notifySelect({ locationLabel: null, latitude: null, longitude: null });
+		try {
+			await notifySelect({ locationLabel: null, latitude: null, longitude: null });
+		} catch {
+			// onSelect failed — notifySelect already reverted the UI
+		}
 		locationInput?.focus();
 	}
 
@@ -282,6 +386,11 @@
 		resolvedLat = null;
 		resolvedLng = null;
 		typedLocation = value;
+		syncFormFields({
+			locationLabel: value.trim() || null,
+			latitude: null,
+			longitude: null,
+		});
 
 		void ensureAutocomplete().then((controller) => {
 			if (isInputFocused) controller.openPanel();
@@ -364,6 +473,15 @@
 			handleInputCommit();
 		}
 	}
+
+	type ConfirmedLocationSnapshot = {
+		locationLabel: string | null;
+		latitude: number | null;
+		longitude: number | null;
+		usingCurrentLocation: boolean;
+		displayLocationText: string;
+		typedLocation: string;
+	};
 </script>
 
 <div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-autocomplete-input">
@@ -386,7 +504,7 @@
 				placeholder="Stadt / PLZ"
 				class="w-full"
 				value={inputLocationText}
-				disabled={isLoadingLocation || disabled}
+				disabled={inputDisabled}
 				oninput={(event) => handleInputChange(event.currentTarget.value)}
 				onchange={handleInputCommit}
 				onkeydown={handleInputKeydown}
@@ -463,6 +581,7 @@
 					title="Eingabe löschen"
 					class="btn-ghost bg-base-100 text-base-600 flex h-full items-center justify-center px-1"
 					onclick={handleResetLocationClick}
+					disabled={inputDisabled}
 				>
 					<i class="icon-[ph--x] size-5"></i>
 				</button>
@@ -472,7 +591,7 @@
 				class={[`btn btn-xs mr-0.5 flex h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden`, usingCurrentLocation && `bg-base-100`]}
 				title="Aktuellen Standort verwenden"
 				onclick={usingCurrentLocation && !isLoadingLocation ? handleResetLocationClick : handleUseCurrentLocationClick}
-				disabled={isLoadingLocation || disabled}
+				disabled={inputDisabled}
 			>
 				{#if isLoadingLocation}
 					<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>

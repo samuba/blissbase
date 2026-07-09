@@ -8,7 +8,7 @@ import type { TelegramScrapingTarget } from "../src/lib/server/schema";
 import { generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 import { TotalList } from "telegram/Helpers";
-import { aiExtractEventData } from "../src/lib/server/ai";
+import { aiExtractEventData, lineBreaksToBr } from "../src/lib/server/ai";
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
 import type { Entity } from "telegram/define";
@@ -772,7 +772,7 @@ async function validateAndBuildEventBase(args: {
         longitude,
         price: aiAnswer.price,
         description: aiAnswer.description,
-        descriptionOriginal,
+        descriptionOriginal: lineBreaksToBr(descriptionOriginal),
         host: telegramAuthor?.name,
         hostLink: telegramAuthor?.link,
         sourceUrl: aiAnswer.url,

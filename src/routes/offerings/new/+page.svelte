@@ -10,7 +10,7 @@
 	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
 	import PublicProfileSocialLinksEditor from "$lib/components/PublicProfileSocialLinksEditor.svelte";
 	import { verifyEmailOtp } from "$lib/rpc/auth.remote";
-	import type { OfferingFormat } from "$lib/rpc/offerings.common";
+	import { offeringNeedsLocation, type OfferingFormat } from "$lib/rpc/offerings.common";
 	import { createOffering } from "$lib/rpc/offerings.remote";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import { checkEmailProfileComplete, getMyPublicProfile } from "$lib/rpc/profile.remote";
@@ -31,16 +31,15 @@
 	};
 
 	const isSignedIn = Boolean(page.data.userId);
-	const profile = isSignedIn ? await getMyPublicProfile() : null;
+	let profile = $state(isSignedIn ? await getMyPublicProfile() : null);
 	const EMAIL_CHECK_DEBOUNCE_MS = 500;
 	const missingDisplayName = !profile?.displayName?.trim();
 	const missingProfileImageUrl = !profile?.profileImageUrl?.trim();
 	const missingBannerImageUrl = !profile?.bannerImageUrl?.trim();
 	const missingBio = !profile?.bio?.trim();
-	const missingLocation = !hasValidCoordinates({ lat: profile?.latitude, lng: profile?.longitude });
 	const missingSocialLinks = !profile?.socialLinks?.some((link) => link.value?.trim());
 	const signedInProfileIncomplete =
-		missingDisplayName || missingProfileImageUrl || missingBannerImageUrl || missingBio || missingLocation || missingSocialLinks;
+		missingDisplayName || missingProfileImageUrl || missingBannerImageUrl || missingBio || missingSocialLinks;
 
 	let requestedStep = $state<WizardStep>(`offering`);
 	let format = $state<OfferingFormat>(`offline`);
@@ -61,6 +60,7 @@
 	let authVerified = $state(isSignedIn);
 	let offeringSubmitAuthToken = $state(``);
 	let submitError = $state(``);
+	let locationError = $state(``);
 	let profileSocialLinkError = $state(``);
 	let socialLinks = $state([...(profile?.socialLinks ?? [])] as PublicProfileSocialLinks);
 
@@ -71,10 +71,8 @@
 		const lngValue = createOffering.fields.profile.longitude.value();
 		const lat = latValue === `` ? null : Number(latValue);
 		const lng = lngValue === `` ? null : Number(lngValue);
-		if (hasValidCoordinates({ lat, lng })) return true;
-		return hasValidCoordinates({ lat: profile?.latitude, lng: profile?.longitude });
+		return hasValidCoordinates({ lat, lng });
 	});
-	const showLocationWarning = $derived(!hasSelectedLocation && format !== `online`);
 	const profileFieldIssues = $derived(hasProfileFieldIssues());
 	const profileStepApplies = $derived(
 		isSignedIn ? signedInProfileIncomplete || profileFieldIssues : emailProfileComplete !== true || profileFieldIssues,
@@ -103,7 +101,9 @@
 	const renderProfileFields = $derived(profileStepApplies);
 	const profileFieldsHidden = $derived(currentStep !== `profile`);
 	const showOtpStep = $derived(currentStep === `otp` && !isSignedIn);
-	const primaryBusy = $derived(createOffering.pending > 0 || authBusy || emailCheckBusy || anyImageUploadInFlight);
+	const primaryBusy = $derived(
+		createOffering.pending > 0 || authBusy || emailCheckBusy || anyImageUploadInFlight,
+	);
 	const returnHref = $derived(
 		safeReturnToPath({
 			returnTo: page.url.searchParams.get(`returnTo`),
@@ -157,6 +157,19 @@
 
 		profileSocialLinkError = `Bitte füge mindestens einen Social-Link hinzu.`;
 		return false;
+	}
+
+	function validateOfferingLocation() {
+		if (!offeringNeedsLocation(format)) {
+			locationError = ``;
+			return true;
+		}
+		if (!hasSelectedLocation) {
+			locationError = `Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`;
+			return false;
+		}
+		locationError = ``;
+		return true;
 	}
 
 	function hasSocialLink(links: PublicProfileSocialLinks) {
@@ -310,6 +323,7 @@
 			authError = `Bitte gib den 6-stelligen Code ein.`;
 			return;
 		}
+		if (!validateOfferingLocation()) return;
 
 		authBusy = true;
 		authError = ``;
@@ -357,6 +371,7 @@
 		}
 		if (currentStep === `offering`) {
 			if (!validateCurrentStep()) return;
+			if (!validateOfferingLocation()) return;
 			if (!isSignedIn) {
 				const trimmed = email.trim();
 				const hasCachedEmailCheck = checkedEmail === trimmed && emailProfileComplete !== null;
@@ -383,6 +398,7 @@
 		if (currentStep === `profile`) {
 			if (!validateCurrentStep()) return;
 			if (!validateProfileSocialLinks()) return;
+			if (!validateOfferingLocation()) return;
 			if (!isSignedIn) {
 				await enterOtpStep();
 				return;
@@ -406,7 +422,13 @@
 			submitError = `Bitte warte, bis alle Bilder hochgeladen sind.`;
 			return;
 		}
-		if (authVerified && (page.data.userId || offeringSubmitAuthToken)) return;
+		if (authVerified && (page.data.userId || offeringSubmitAuthToken)) {
+			if (!validateOfferingLocation()) {
+				event.preventDefault();
+				return;
+			}
+			return;
+		}
 		event.preventDefault();
 		void goNext();
 	}
@@ -475,6 +497,39 @@
 					</fieldset>
 				{/if}
 
+				{#if offeringNeedsLocation(format) && currentStep === `offering`}
+					<fieldset class="fieldset" data-wizard-step="offering">
+						<legend class="fieldset-legend peer-aria-invalid:text-red-600">Standort für deine Angebote</legend>
+						<p class="text-base-content/70 mb-1 text-sm leading-relaxed">
+						    Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote!
+						</p>
+						<div class="min-w-0 flex-1">
+							{#if isSignedIn && profile?.displayName}
+								<input
+									type="hidden"
+									{...createOffering.fields.profile.displayName.as(`text`)}
+									value={profile.displayName}
+								/>
+							{/if}
+							<LocationAutocompleteInput
+								inputId="offeringNewLocationInput"
+								initialLabel={profile?.locationLabel}
+								initialLat={profile?.latitude}
+								initialLng={profile?.longitude}
+								locationLabelField={createOffering.fields.profile.locationLabel}
+								latitudeField={createOffering.fields.profile.latitude}
+								longitudeField={createOffering.fields.profile.longitude}
+							/>
+						</div>
+						{#if locationError}
+							<p class="text-error text-sm">{locationError}</p>
+						{/if}
+						<FormFieldIssues field={createOffering.fields.profile.locationLabel} />
+						<FormFieldIssues field={createOffering.fields.profile.latitude} />
+						<FormFieldIssues field={createOffering.fields.profile.longitude} />
+					</fieldset>
+				{/if}
+
 				{#if renderProfileFields}
 					<section class={[`flex flex-col gap-5`, profileFieldsHidden && `hidden`]} data-wizard-step="profile">
 						<div class="alert alert-info alert-soft">
@@ -522,30 +577,6 @@
 							<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profilbeschreibung</legend>
 							<FormFieldIssues field={createOffering.fields.profile.bio} />
 						</fieldset>
-
-						<fieldset class={[`fieldset`, !missingLocation && `hidden`]}>
-							<legend class="fieldset-legend peer-aria-invalid:text-red-600">Dein aktueller Ort</legend>
-							<LocationAutocompleteInput
-								inputId="offeringProfileLocationInput"
-								initialLabel={profile?.locationLabel}
-								initialLat={profile?.latitude}
-								initialLng={profile?.longitude}
-								locationLabelField={createOffering.fields.profile.locationLabel}
-								latitudeField={createOffering.fields.profile.latitude}
-								longitudeField={createOffering.fields.profile.longitude}
-							/>
-							<p class="label">Offline-Angebote werden über diesen Ort gefunden.</p>
-							<FormFieldIssues field={createOffering.fields.profile.locationLabel} />
-							<FormFieldIssues field={createOffering.fields.profile.latitude} />
-							<FormFieldIssues field={createOffering.fields.profile.longitude} />
-						</fieldset>
-
-						{#if showLocationWarning}
-							<div class="alert alert-warning alert-soft">
-								<i class="icon-[ph--warning-circle] size-5"></i>
-								<span>Ohne Ort werden nur deine Online-Angebote auffindbar sein.</span>
-							</div>
-						{/if}
 
 						<fieldset class={[`fieldset`, !missingSocialLinks && `hidden`]}>
 							<legend class="fieldset-legend">Social Links *</legend>

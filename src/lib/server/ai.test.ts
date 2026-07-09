@@ -46,8 +46,17 @@ Join us for a WhatsApp-only event.`,
 		});
 
 		expect(result).toBe(
-			`Already <a href="https://example.com">https://example.com</a>\nMore: <a href="https://else.test">https://else.test</a>.`
+			`Already <a href="https://example.com">https://example.com</a><br>More: <a href="https://else.test">https://else.test</a>.`
 		);
+	});
+
+	it(`converts plain-text line breaks to br tags`, () => {
+		const result = normalizeDescription({
+			description: `Line 1\nLine 2\n\n\nLine 3`,
+			name: null
+		});
+
+		expect(result).toBe(`Line 1<br>Line 2<br><br>Line 3`);
 	});
 
 	it(`preserves already encoded entities and strips broader trailing punctuation`, () => {

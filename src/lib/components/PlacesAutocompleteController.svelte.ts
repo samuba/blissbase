@@ -61,20 +61,27 @@ export class PlacesAutocompleteController {
 			return;
 		}
 
-		if (this.debounceTimer) clearTimeout(this.debounceTimer);
+		if (this.debounceTimer) {
+			clearTimeout(this.debounceTimer);
+			this.debounceTimer = null;
+		}
 
 		const trimmed = args.input.trim();
 		if (trimmed.length < MIN_INPUT_LENGTH) {
+			this.requestId++;
 			this.hasSearched = false;
 			this.suggestions = [];
 			this.highlightedIndex = -1;
+			this.isLoading = false;
 			if (!this.keepPanelOpen) {
 				this.close();
 			}
 			return;
 		}
 
+		this.isLoading = true;
 		this.debounceTimer = setTimeout(() => {
+			this.debounceTimer = null;
 			void this.fetchSuggestions(args);
 		}, DEBOUNCE_MS);
 	}
@@ -83,6 +90,7 @@ export class PlacesAutocompleteController {
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = null;
+			this.isLoading = false;
 		}
 	}
 
@@ -141,7 +149,7 @@ export class PlacesAutocompleteController {
 			this.close();
 		} finally {
 			if (currentRequestId === this.requestId) {
-				this.isLoading = false;
+				this.isLoading = this.debounceTimer != null;
 			}
 		}
 	}
@@ -206,6 +214,7 @@ export class PlacesAutocompleteController {
 		this.suggestions = [];
 		this.highlightedIndex = -1;
 		this.hasSearched = false;
+		this.isLoading = false;
 		this.requestId++;
 	}
 

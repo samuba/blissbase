@@ -1,3 +1,5 @@
+offerings: make sure texts are correct
+enbable fork=true when it does not produce bugs anymore see repro
 offerings show online does not work after hovering over page menu!!
 navigating to offerings page from discover freezes tab with fork=true
 

@@ -381,7 +381,16 @@ async function reverseGeocodeCity(lat: number, lng: number, apiKey: string): Pro
 				component.types.includes(`administrative_area_level_1`)
 			);
 
-			return locality?.long_name ?? administrativeArea?.long_name ?? null;
+			let result = ""
+			if (locality?.long_name) {
+				result = locality.long_name;
+				if (administrativeArea?.short_name && administrativeArea?.long_name !== result) {
+					result += `, ${administrativeArea.short_name}`;
+				}
+			} else {
+				return administrativeArea?.long_name ?? null;
+			}
+			return result;
 		}
 
 		console.error(`Reverse geocoding failed or no results:`, data.status, data.error_message);

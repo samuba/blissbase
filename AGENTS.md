@@ -36,6 +36,7 @@ Never type a variable if typescript can infer the type correctly on its own.
 Always inline types when feasible.
 Always check if an array is defined and has values like this: `arr?.length` not `arr && arr.length > 0`
 Only create doc comments when the complexity of the function calls for it or the semantics/context is needed to understand.
+Stay true to YAGNI principle.
 
 ## i18n
 Wuchale is used for i18n.
@@ -49,3 +50,6 @@ Do not pass params to functions on the server when instead we could get the data
 
 # Sveltekit
 Instead of resolve() use routes object. Ignore warnings/errors/autofixer reports about having to use resolve().
+
+# Svelte
+Only use $effect as a last resort when its not feasible to use $derived.

@@ -4,6 +4,7 @@ import { randomString, slugify } from "$lib/common";
 import {
 	OFFERING_IMAGE_MAX_COUNT,
 	offeringFormSchema,
+	offeringNeedsLocation,
 	updateOfferingFormSchema,
 } from "$lib/rpc/offerings.common";
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
@@ -24,7 +25,7 @@ import * as v from "valibot";
 import { setFlash } from "$lib/server/flash";
 import type { OfferingsFilter } from '$lib/offeringsFilter';
 import { filterOfferingsByIncludeOnline, shouldIncludeOfferingInLocationFilter } from '$lib/offeringsFilter';
-import { sanitizeLocationParams } from '$lib/locationFilter';
+import { sanitizeLocationParams, hasValidCoordinates } from '$lib/locationFilter';
 import { resolveOfferingsFilterCoordinates } from '$lib/server/offeringsFilter';
 
 const offeringImageUploadSchema = v.object({
@@ -283,6 +284,9 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	if (!isPublicProfile(nextProfile)) {
 		return invalid(issue.profile.displayName(`Bitte vervollständige dein öffentliches Profil.`));
 	}
+	if (offeringNeedsLocation(data.format) && !hasValidCoordinates({ lat: nextProfile.latitude, lng: nextProfile.longitude })) {
+		return invalid(issue.profile.locationLabel(`Bitte wähle einen Ort für dein Angebot aus.`));
+	}
 
 	const imageClaims = verifyOfferingImageClaims(data.imageClaims);
 	if (imageClaims instanceof Error) {
@@ -539,43 +543,57 @@ function getOfferingImageSuffixFromObjectKey(objectKey: string) {
  */
 async function updateProfileFromOfferingForm(args: UpdateProfileFromOfferingFormArgs) {
 	const currentSlug = args.currentProfile.slug?.trim();
+	const displayName = (args.data.displayName?.trim() || args.currentProfile.displayName) ?? `profile`;
 	const slug =
 		currentSlug ||
 		(await createAvailableProfileSlug({
-			displayName: args.data.displayName,
+			displayName,
 			profileId: args.currentProfile.id,
 		}));
 
-	const nextProfileImageUrl = await resolveProfileImageUrl({
-		submittedUrl: args.data.profileImageUrl,
-		currentUrl: args.currentProfile.profileImageUrl,
-		userId: args.currentProfile.id,
-		expectedType: `profile`,
-	});
+	const submittedProfileImageUrl = args.data.profileImageUrl?.trim();
+	const nextProfileImageUrl = submittedProfileImageUrl
+		? await resolveProfileImageUrl({
+				submittedUrl: submittedProfileImageUrl,
+				currentUrl: args.currentProfile.profileImageUrl,
+				userId: args.currentProfile.id,
+				expectedType: `profile`,
+			})
+		: args.currentProfile.profileImageUrl;
 	if (nextProfileImageUrl instanceof Error) {
 		return invalid(args.issue.profile.profileImageUrl(nextProfileImageUrl.message));
 	}
 
-	const nextBannerImageUrl = await resolveProfileImageUrl({
-		submittedUrl: args.data.bannerImageUrl,
-		currentUrl: args.currentProfile.bannerImageUrl,
-		userId: args.currentProfile.id,
-		expectedType: `banner`,
-	});
+	const submittedBannerImageUrl = args.data.bannerImageUrl?.trim();
+	const nextBannerImageUrl = submittedBannerImageUrl
+		? await resolveProfileImageUrl({
+				submittedUrl: submittedBannerImageUrl,
+				currentUrl: args.currentProfile.bannerImageUrl,
+				userId: args.currentProfile.id,
+				expectedType: `banner`,
+			})
+		: args.currentProfile.bannerImageUrl;
 	if (nextBannerImageUrl instanceof Error) {
 		return invalid(args.issue.profile.bannerImageUrl(nextBannerImageUrl.message));
 	}
 
+	const submittedLocationLabel = args.data.locationLabel?.trim();
+	const hasSubmittedLocation =
+		Boolean(submittedLocationLabel) || args.data.latitude != null || args.data.longitude != null;
+	const socialLinks = args.data.socialLinks?.some((link) => link.value?.trim())
+		? args.data.socialLinks
+		: args.currentProfile.socialLinks;
+
 	const [updatedProfile] = await db
 		.update(s.profiles)
 		.set({
-			displayName: args.data.displayName,
+			displayName,
 			slug,
-			bio: args.data.bio || null,
-			locationLabel: args.data.locationLabel?.trim() || null,
-			latitude: args.data.latitude ?? null,
-			longitude: args.data.longitude ?? null,
-			socialLinks: args.data.socialLinks,
+			bio: args.data.bio?.trim() || args.currentProfile.bio || null,
+			locationLabel: hasSubmittedLocation ? submittedLocationLabel || null : args.currentProfile.locationLabel,
+			latitude: hasSubmittedLocation ? (args.data.latitude ?? null) : args.currentProfile.latitude,
+			longitude: hasSubmittedLocation ? (args.data.longitude ?? null) : args.currentProfile.longitude,
+			socialLinks,
 			profileImageUrl: nextProfileImageUrl,
 			bannerImageUrl: nextBannerImageUrl,
 			updatedAt: sql`now()`,

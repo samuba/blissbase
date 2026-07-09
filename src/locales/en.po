@@ -490,8 +490,6 @@ msgstr "An error occurred"
 msgid "AbortError"
 msgstr "AbortError"
 
-#: src/lib/components/LocationAutocompleteInput.svelte
-#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Dein Standort"
@@ -1252,10 +1250,6 @@ msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
 msgid "Suche starten"
 msgstr "Start search"
 
-#: src/routes/offerings/new/+page.svelte
-msgid "Dein aktueller Ort"
-msgstr "Your current location"
-
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 msgid "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
 msgstr "Add a contact link so people can reach you."
@@ -1321,10 +1315,6 @@ msgstr "Format *"
 msgid "Profilbeschreibung"
 msgstr "Profile description"
 
-#: src/routes/offerings/new/+page.svelte
-msgid "Offline-Angebote werden über diesen Ort gefunden."
-msgstr "Offline offerings can be found via this location."
-
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/offerings/OfferingDetails.svelte
@@ -1350,10 +1340,6 @@ msgstr "No offerings here yet"
 #: src/routes/offerings/+page.svelte
 msgid "Erstelle das erste Angebot für diesen Bereich oder schau später wieder vorbei."
 msgstr "Create the first offering for this area or check back later."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Ohne Ort werden nur deine Online-Angebote auffindbar sein."
-msgstr "Without a location, only your online offerings will be discoverable."
 
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
@@ -1656,13 +1642,14 @@ msgstr "Also show online offers"
 msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der <0>Angebote-Seite</0> sichtbar."
 msgstr "Manage your listings. Activated listings are visible to other users on the <0>Listings page</0>."
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/offerings/+page.svelte
 msgid "Standort für deine Angebote"
-msgstr "Listing location"
+msgstr "Offerings location"
 
 #: src/routes/profile/offerings/+page.svelte
 msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-msgstr "Your offers will be shown near this location. Without a location, only online offers can be found."
+msgstr "Your offers will be shown near this location. Without a location, only online offerings can be found."
 
 #: src/lib/components/EventForm.svelte
 msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
@@ -1712,3 +1699,23 @@ msgstr "Location with this name not found"
 #: src/lib/components/LocationAutocompleteInput.svelte
 msgid "<0/> Vorschläge werden geladen…"
 msgstr "<0/> Loading suggestions…"
+
+#~ msgid "Bitte warte, bis der Standort gespeichert ist."
+#~ msgstr "Please wait until the location has been saved."
+
+#~ msgid "Bitte wähle einen Ort für dein Angebot aus."
+#~ msgstr "Please select a location for your offering."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote!"
+msgstr "Your in-person offers are shown to others near this location. The location applies to all your offers!"
+
+#~ msgid "Standort konnte nicht gespeichert werden. Bitte versuche es erneut."
+#~ msgstr "Location could not be saved. Please try again."
+
+#~ msgid "<0/> Standort wird gespeichert…"
+#~ msgstr "<0/> Location is being saved…"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
+msgstr "Please choose a location from the suggestions or use your current location."

@@ -38,3 +38,7 @@ export const updateOfferingFormSchema = v.object({
 export type OfferingForm = v.InferOutput<typeof offeringFormSchema>;
 export type UpdateOfferingForm = v.InferOutput<typeof updateOfferingFormSchema>;
 export type OfferingFormat = (typeof OFFERING_FORMATS)[number];
+
+export function offeringNeedsLocation(format: OfferingFormat) {
+	return format === `offline` || format === `offline+online`;
+}
