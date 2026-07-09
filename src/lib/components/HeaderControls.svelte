@@ -109,7 +109,7 @@
 						lat: eventsStore.pagination.lat,
 						lng: eventsStore.pagination.lng,
 						distance: eventsStore.pagination.distance,
-						plzCity: eventsStore.pagination.plzCity,
+						location: eventsStore.pagination.plzCity,
 					})}
 					class="link text-base-content font-semibold px-2 items-center gap-1 flex"
 				>

@@ -67,6 +67,7 @@ function toRadians(value: number) {
 }
 
 export function sanitizeLocationParams<T extends {
+	location?: string | null;
 	plzCity?: string | null;
 	distance?: string | null;
 	lat?: number | null;

@@ -34,15 +34,15 @@
 	const showShadow = $derived(scrollY > (headerElement?.offsetHeight ?? 50) + contentBeforeMenuHeight - 100);
 
 	const resolvedCityName = $derived(
-		filter.lat != null && filter.lng != null ? filter.plzCity : null,
+		filter.lat != null && filter.lng != null ? filter.location : null,
 	);
 	const initialLocation = $derived(
-		filter.plzCity ||
+		filter.location ||
 		(filter.lat != null && filter.lng != null ? `coords:${filter.lat},${filter.lng}` : null),
 	);
 
 	const ctaHref = $derived(
-		filter.plzCity ? routes.eventList({ searchTerm: filter.plzCity }) : routes.eventList(),
+		filter.location ? routes.eventList({ searchTerm: filter.location }) : routes.eventList(),
 	);
 
 	$effect(() => {
@@ -59,7 +59,7 @@
 	async function navigateWithFilter(nextFilter: Partial<OfferingsFilter>) {
 		loading = true;
 		const nextOfferingsFilter = {
-			plzCity: `plzCity` in nextFilter ? nextFilter.plzCity ?? null : filter.plzCity,
+			location: `location` in nextFilter ? nextFilter.location ?? null : filter.location,
 			distance: `distance` in nextFilter ? nextFilter.distance ?? null : filter.distance,
 			lat: `lat` in nextFilter ? nextFilter.lat ?? null : filter.lat,
 			lng: `lng` in nextFilter ? nextFilter.lng ?? null : filter.lng,
@@ -94,7 +94,7 @@
 		});
 
 		navigateWithFilter({
-			plzCity: event.location,
+			location: event.location,
 			distance: event.distance,
 			lat: event.latitude ?? null,
 			lng: event.longitude ?? null,

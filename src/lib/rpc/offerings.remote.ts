@@ -47,7 +47,7 @@ export const getOfferings = query(async () => {
 	const args = parseOfferingsFilterFromUrl(url)
 	const sanitized = sanitizeLocationParams(args);
 	const filter: OfferingsFilter = {
-		plzCity: sanitized.plzCity ?? null,
+		location: sanitized.location ?? null,
 		distance: sanitized.distance ?? null,
 		lat: sanitized.lat ?? null,
 		lng: sanitized.lng ?? null,

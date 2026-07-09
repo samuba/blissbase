@@ -13,17 +13,26 @@ import { shouldIncludeOfferingInLocationFilter } from '$lib/offeringsFilter';
 describe('parseOfferingsFilterFromUrl', () => {
 	it('parses location and search params', () => {
 		const filter = parseOfferingsFilterFromUrl(
-			new URL(`https://blissbase.app/offerings?lat=52.5&lng=13.4&distance=50&plzCity=Berlin&searchTerm=yoga`),
+			new URL(`https://blissbase.app/offerings?lat=52.5&lng=13.4&distance=50&location=Berlin&searchTerm=yoga`),
 		);
 
 		expect(filter).toEqual({
 			lat: 52.5,
 			lng: 13.4,
 			distance: `50`,
-			plzCity: `Berlin`,
+			location: `Berlin`,
 			searchTerm: `yoga`,
 			includeOnline: false,
 		});
+	});
+
+	it('falls back to legacy plzCity query param', () => {
+		const filter = parseOfferingsFilterFromUrl(
+			new URL(`https://blissbase.app/offerings?plzCity=Berlin&distance=50`),
+		);
+
+		expect(filter.location).toBe(`Berlin`);
+		expect(filter.distance).toBe(`50`);
 	});
 
 	it('parses includeOnline param', () => {
@@ -39,7 +48,7 @@ describe('parseOfferingsFilterFromUrl', () => {
 			lat: null,
 			lng: null,
 			distance: null,
-			plzCity: null,
+			location: null,
 			searchTerm: null,
 			includeOnline: false,
 		});
@@ -48,17 +57,17 @@ describe('parseOfferingsFilterFromUrl', () => {
 
 describe('hasOfferingsLocationParams', () => {
 	it('detects any location param', () => {
-		expect(hasOfferingsLocationParams({ plzCity: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(false);
-		expect(hasOfferingsLocationParams({ plzCity: `Berlin`, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(true);
-		expect(hasOfferingsLocationParams({ plzCity: null, distance: `50`, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(true);
-		expect(hasOfferingsLocationParams({ plzCity: null, distance: null, lat: 1, lng: 2, searchTerm: null, includeOnline: false })).toBe(true);
+		expect(hasOfferingsLocationParams({ location: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(false);
+		expect(hasOfferingsLocationParams({ location: `Berlin`, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(true);
+		expect(hasOfferingsLocationParams({ location: null, distance: `50`, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(true);
+		expect(hasOfferingsLocationParams({ location: null, distance: null, lat: 1, lng: 2, searchTerm: null, includeOnline: false })).toBe(true);
 	});
 });
 
 describe('buildOfferingsFilterSearchParams', () => {
 	it('omits empty values', () => {
 		const params = buildOfferingsFilterSearchParams({
-			plzCity: `Berlin`,
+			location: `Berlin`,
 			distance: `50`,
 			lat: 52.5,
 			lng: 13.4,
@@ -66,12 +75,12 @@ describe('buildOfferingsFilterSearchParams', () => {
 			includeOnline: false,
 		});
 
-		expect(params.toString()).toBe(`plzCity=Berlin&distance=50&lat=52.5&lng=13.4`);
+		expect(params.toString()).toBe(`location=Berlin&distance=50&lat=52.5&lng=13.4`);
 	});
 
 	it('includes includeOnline when enabled', () => {
 		const params = buildOfferingsFilterSearchParams({
-			plzCity: null,
+			location: null,
 			distance: null,
 			lat: null,
 			lng: null,

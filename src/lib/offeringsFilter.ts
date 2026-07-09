@@ -3,7 +3,7 @@ import type { OfferingFormat } from '$lib/rpc/offerings.common';
 import { hasValidCoordinates, isWithinDistanceKm, sanitizeLocationParams } from '$lib/locationFilter';
 
 export type OfferingsFilter = {
-	plzCity: string | null;
+	location: string | null;
 	distance: string | null;
 	lat: number | null;
 	lng: number | null;
@@ -16,8 +16,8 @@ export function parseOfferingsFilterFromUrl(url: URL): OfferingsFilter {
 	const lngParam = url.searchParams.get(`lng`);
 	const searchTerm = url.searchParams.get(`searchTerm`)?.trim() || null;
 
-	const location = sanitizeLocationParams({
-		plzCity: url.searchParams.get(`plzCity`),
+	const sanitized = sanitizeLocationParams({
+		plzCity: url.searchParams.get(`location`) ?? url.searchParams.get(`plzCity`),
 		distance: url.searchParams.get(`distance`),
 		lat: latParam != null ? Number(latParam) : null,
 		lng: lngParam != null ? Number(lngParam) : null,
@@ -26,10 +26,10 @@ export function parseOfferingsFilterFromUrl(url: URL): OfferingsFilter {
 	const includeOnlineParam = url.searchParams.get(`includeOnline`) ?? url.searchParams.get(`onlineOnly`);
 
 	return {
-		plzCity: location.plzCity ?? null,
-		distance: location.distance ?? null,
-		lat: location.lat ?? null,
-		lng: location.lng ?? null,
+		location: sanitized.plzCity ?? null,
+		distance: sanitized.distance ?? null,
+		lat: sanitized.lat ?? null,
+		lng: sanitized.lng ?? null,
 		searchTerm,
 		includeOnline: includeOnlineParam === `1` || includeOnlineParam === `true`,
 	};
@@ -37,7 +37,7 @@ export function parseOfferingsFilterFromUrl(url: URL): OfferingsFilter {
 
 export function hasOfferingsLocationParams(filter: OfferingsFilter) {
 	return Boolean(
-		filter.plzCity?.trim() ||
+		filter.location?.trim() ||
 		filter.distance ||
 		(filter.lat != null && filter.lng != null),
 	);
@@ -46,7 +46,7 @@ export function hasOfferingsLocationParams(filter: OfferingsFilter) {
 export function buildOfferingsFilterSearchParams(filter: OfferingsFilter) {
 	const params = new URLSearchParams();
 
-	if (filter.plzCity?.trim()) params.set(`plzCity`, filter.plzCity.trim());
+	if (filter.location?.trim()) params.set(`location`, filter.location.trim());
 	if (filter.distance) params.set(`distance`, filter.distance);
 	if (filter.lat != null) params.set(`lat`, String(filter.lat));
 	if (filter.lng != null) params.set(`lng`, String(filter.lng));

@@ -17,7 +17,7 @@ export const routes = {
     offeringsList: (args: Partial<OfferingsFilter> = {}) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
         const params = buildOfferingsFilterSearchParams({
-            plzCity: args.plzCity ?? null,
+            location: args.location ?? null,
             distance: args.distance ?? null,
             lat: args.lat ?? null,
             lng: args.lng ?? null,
