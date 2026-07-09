@@ -193,7 +193,7 @@
 
 			{#if offering.descriptionHtml?.trim()}
 				<div class="prose max-w-none">
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -- offering descriptions are stored from the trusted EditorJS form. -->
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- offering descriptions are stored from the trusted Lexical form. -->
 					{@html offering.descriptionHtml}
 				</div>
 			{/if}

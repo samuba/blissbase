@@ -16,7 +16,7 @@
 	import type { CreateEventPrefillFields } from '$lib/server/mapAiAnswerToCreateEventPrefill';
 	import { useDuplicateEventDraftToast } from '$lib/eventDuplicateDraftToast.svelte';
 	import TagsInput from '$lib/components/TagsInput.svelte';
-	import EditorJs from '$lib/components/EditorJs.svelte';
+	import LexicalEditor from '$lib/components/LexicalEditor.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import type { RemoteFormFields } from '@sveltejs/kit';
@@ -285,7 +285,10 @@
 	</div>
 
 	<fieldset class="fieldset md:col-span-2">
-		<EditorJs field={remoteForm.fields.description} />
+		<LexicalEditor
+			field={remoteForm.fields.description}
+			placeholder="Beschreibe deinen Event"
+		/>
 		<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung *</legend>
 		<FormFieldIssues field={remoteForm.fields.description} />
 	</fieldset>

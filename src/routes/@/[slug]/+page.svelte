@@ -104,7 +104,7 @@
 				<div class=" gap-6 pt-0 sm:mx-4">
 					{#if profile.bio?.trim()}
 						<div class={['prose max-w-none', profile.bio.length < 180 && `text-center`]}>
-							<!-- eslint-disable-next-line svelte/no-at-html-tags -- public profile bio is stored from the trusted EditorJS form. -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -- public profile bio is stored from the trusted Lexical form. -->
 							{@html profile.bio}
 						</div>
 					{/if}

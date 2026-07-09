@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slugify } from '$lib/common';
-	import EditorJs from '$lib/components/EditorJs.svelte';
+	import LexicalEditor from '$lib/components/LexicalEditor.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import ProfileImageCropInput from '$lib/components/ProfileImageCropInput.svelte';
 	import PublicProfileSocialLinksEditor from '$lib/components/PublicProfileSocialLinksEditor.svelte';
@@ -68,16 +68,14 @@
 	}
 
 	let isDirty = $state(false);
-	// EditorJS fires DOM input events on its contenteditable while it asynchronously
-	// renders the initial value, and ProfileImageCropInput may emit an initial busy change.
+	// Lexical and ProfileImageCropInput may emit initial updates while hydrating.
 	// We arm dirty tracking only after those settle, so opening the page doesn't count as edits.
 	let dirtyArmed = $state(false);
 
 	onMount(() => {
-		// EditorJS onReady awaits renderFromHTML, sleep(300), save, re-render; ~500-800ms in practice.
 		const timeout = setTimeout(() => {
 			dirtyArmed = true;
-		}, 1000);
+		}, 500);
 		return () => clearTimeout(timeout);
 	});
 
@@ -215,7 +213,11 @@
 		</div>
 
 		<fieldset class="fieldset">
-			<EditorJs field={upsertPublicProfile.fields.bio} value={profile.bio} />
+			<LexicalEditor
+				field={upsertPublicProfile.fields.bio}
+				value={profile.bio}
+				placeholder="Erzähl etwas über dich…"
+			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={upsertPublicProfile.fields.bio} />
 		</fieldset>

@@ -1719,3 +1719,97 @@ msgstr "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
 msgstr "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Fett"
+msgstr "Fett"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Kursiv"
+msgstr "Kursiv"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Hervorheben"
+msgstr "Hervorheben"
+
+#: src/lib/components/LexicalEditor.svelte
+#: src/lib/components/LexicalEditor.svelte
+msgid "Link"
+msgstr "Link"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Überschrift"
+msgstr "Überschrift"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Liste"
+msgstr "Liste"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Nummerierte Liste"
+msgstr "Nummerierte Liste"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Link einfügen"
+msgstr "Link einfügen"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Bold"
+msgstr "Bold"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Italic"
+msgstr "Italic"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Highlight"
+msgstr "Highlight"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Heading"
+msgstr "Heading"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Bullet list"
+msgstr "Bullet list"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Numbered list"
+msgstr "Numbered list"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Add a link"
+msgstr "Add a link"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "BlissbaseEditor"
+msgstr "BlissbaseEditor"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Textformatierung"
+msgstr "Textformatierung"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Rückgängig"
+msgstr "Rückgängig"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Undo"
+msgstr "Undo"
+
+#~ msgid "Was beinhaltet das Angebot?"
+#~ msgstr "Was beinhaltet das Angebot?"
+
+#~ msgid "Was erwartet die Teilnehmer bei dem Event?"
+#~ msgstr "Was erwartet die Teilnehmer bei dem Event?"
+
+#: src/lib/components/EventForm.svelte
+msgid "Beschreibe deinen Event"
+msgstr "Beschreibe deinen Event"
+
+#~ msgid "Beschreibe dein Angebot?"
+#~ msgstr "Beschreibe dein Angebot?"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Beschreibe dein Angebot"
+msgstr "Beschreibe dein Angebot"

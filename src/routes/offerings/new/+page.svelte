@@ -4,7 +4,7 @@
 	import { onDestroy } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
-	import EditorJs from "$lib/components/EditorJs.svelte";
+	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
 	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
@@ -573,7 +573,11 @@
 						</div>
 
 						<fieldset class={[`fieldset`, !missingBio && `hidden`]}>
-							<EditorJs field={createOffering.fields.profile.bio} value={profile?.bio ?? ``} />
+							<LexicalEditor
+								field={createOffering.fields.profile.bio}
+								value={profile?.bio ?? ``}
+								placeholder="Erzähl etwas über dich…"
+							/>
 							<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profilbeschreibung</legend>
 							<FormFieldIssues field={createOffering.fields.profile.bio} />
 						</fieldset>

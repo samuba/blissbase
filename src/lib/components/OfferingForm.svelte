@@ -2,7 +2,7 @@
 	import type { RemoteFormFields } from "@sveltejs/kit";
 	import type { Snippet } from "svelte";
 	import * as v from "valibot";
-	import EditorJs from "$lib/components/EditorJs.svelte";
+	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import OfferingImageUploadInput from "$lib/components/OfferingImageUploadInput.svelte";
 	import { OFFERING_FORMATS, offeringFormSchema, updateOfferingFormSchema, type OfferingFormat } from "$lib/rpc/offerings.common";
@@ -77,7 +77,10 @@
 		</fieldset>
 
 		<fieldset class="fieldset">
-			<EditorJs field={remoteForm.fields.descriptionHtml} />
+			<LexicalEditor
+				field={remoteForm.fields.descriptionHtml}
+				placeholder="Beschreibe dein Angebot"
+			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={remoteForm.fields.descriptionHtml} />
 		</fieldset>
