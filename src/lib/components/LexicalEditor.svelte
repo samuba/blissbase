@@ -264,10 +264,10 @@
 		const baseToolbarBottom = toolbarRect.bottom - appliedToolbarOffset;
 		const containerBottom = nextToolbarEl.parentElement?.getBoundingClientRect().bottom ?? baseToolbarBottom;
 
-		// Clamp the visual correction to the sticky containing block so the toolbar still scrolls away with the editor.
-		const maxToolbarOffset = Math.max(0, containerBottom - baseToolbarBottom);
+		// End compensation 30px before the containing block, including shifting CSS sticky upward at its lower boundary.
+		const maxToolbarOffset = containerBottom - baseToolbarBottom - 30;
 		const calculatedToolbarOffset = Math.min(Math.max(0, targetTop - baseToolbarTop), maxToolbarOffset);
-		const nextToolbarOffset = calculatedToolbarOffset > 0.5 ? calculatedToolbarOffset : 0;
+		const nextToolbarOffset = Math.abs(calculatedToolbarOffset) > 0.5 ? calculatedToolbarOffset : 0;
 		const toolbarOffsetChanged =
 			nextToolbarOffset === 0 ? appliedToolbarOffset !== 0 : Math.abs(nextToolbarOffset - appliedToolbarOffset) > 0.5;
 
@@ -548,15 +548,11 @@
 		{/if}
 		<div
 			bind:this={editorEl}
-			class="prose textarea lexical-editor min-h-32 w-full max-w-none rounded-t-none! border-t-0"
+			class="prose textarea lexical-editor py-1 min-h-32 w-full max-w-none rounded-t-none! border-t-0"
 			contenteditable="true"
 			aria-placeholder={placeholder}
-			onfocus={() => {
-				isEditorFocused = true;
-			}}
-			onblur={() => {
-				isEditorFocused = false;
-			}}
+			onfocus={() => isEditorFocused = true}
+			onblur={() => isEditorFocused = false}
 		></div>
 	</div>
 
