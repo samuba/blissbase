@@ -54,13 +54,14 @@
 	let editor: LexicalEditor | undefined = $state(undefined);
 	let editorEl: HTMLElement | undefined = $state(undefined);
 	let toolbarEl: HTMLElement | undefined = $state(undefined);
-	let toolbarSentinelEl: HTMLElement | undefined = $state(undefined);
 	let isToolbarStuck = $state(false);
 	let editorValue = $state(``);
 	let isEmpty = $state(true);
 	let isEditorReady = $state(false);
 	let lastRenderedExternalValue = ``;
 	let applyingExternalHtml = false;
+	let cachedToolbarStickyTop: number | undefined;
+	let appliedToolbarOffset = 0;
 
 	let isEditorFocused = $state(false);
 	let isBold = $state(false);
@@ -250,18 +251,39 @@
 	}
 
 	function updateToolbarPosition() {
-		if (!toolbarEl || !toolbarSentinelEl) return;
+		const nextToolbarEl = toolbarEl;
+		if (!nextToolbarEl) return;
+
 		// Mobile keyboards pan the visual viewport, while CSS sticky remains tied to the layout viewport.
-		toolbarEl.style.removeProperty(`--visual-viewport-offset`);
-		const stickyTop = parseFloat(getComputedStyle(toolbarEl).top) || 0;
+		// Cache the CSS sticky inset between layout resizes, then read all geometry before writing the transform.
+		const stickyTop = cachedToolbarStickyTop ?? (cachedToolbarStickyTop = parseFloat(getComputedStyle(nextToolbarEl).top) || 0);
 		const visualViewportTop = window.visualViewport?.offsetTop ?? 0;
 		const targetTop = visualViewportTop + stickyTop;
-		const toolbarTop = toolbarEl.getBoundingClientRect().top;
-		const visualViewportOffset = Math.max(0, targetTop - toolbarTop);
-		if (visualViewportOffset > 0.5) {
-			toolbarEl.style.setProperty(`--visual-viewport-offset`, `${visualViewportOffset}px`);
+		const toolbarRect = nextToolbarEl.getBoundingClientRect();
+		const baseToolbarTop = toolbarRect.top - appliedToolbarOffset;
+		const baseToolbarBottom = toolbarRect.bottom - appliedToolbarOffset;
+		const containerBottom = nextToolbarEl.parentElement?.getBoundingClientRect().bottom ?? baseToolbarBottom;
+
+		// Clamp the visual correction to the sticky containing block so the toolbar still scrolls away with the editor.
+		const maxToolbarOffset = Math.max(0, containerBottom - baseToolbarBottom);
+		const calculatedToolbarOffset = Math.min(Math.max(0, targetTop - baseToolbarTop), maxToolbarOffset);
+		const nextToolbarOffset = calculatedToolbarOffset > 0.5 ? calculatedToolbarOffset : 0;
+		const toolbarOffsetChanged =
+			nextToolbarOffset === 0 ? appliedToolbarOffset !== 0 : Math.abs(nextToolbarOffset - appliedToolbarOffset) > 0.5;
+
+		if (toolbarOffsetChanged) {
+			appliedToolbarOffset = nextToolbarOffset;
+			if (nextToolbarOffset === 0) {
+				nextToolbarEl.style.removeProperty(`transform`);
+			} else {
+				nextToolbarEl.style.transform = `translate3d(0, ${nextToolbarOffset}px, 0)`;
+			}
 		}
-		isToolbarStuck = toolbarSentinelEl.getBoundingClientRect().bottom <= targetTop + 0.5;
+
+		const nextIsToolbarStuck = baseToolbarTop <= targetTop + 0.5;
+		if (nextIsToolbarStuck !== isToolbarStuck) {
+			isToolbarStuck = nextIsToolbarStuck;
+		}
 	}
 
 	function toggleLink() {
@@ -288,30 +310,37 @@
 	onMount(() => {
 		const visualViewport = window.visualViewport;
 		let toolbarUpdateFrame: number | undefined;
-		// Viewport scroll and resize events are frequent, so coalesce toolbar updates into one animation frame.
+		// Layout scrolling and VisualViewport keyboard events can overlap, so coalesce them into one frame.
 		const applyToolbarPosition = () => {
 			toolbarUpdateFrame = undefined;
 			updateToolbarPosition();
 		};
-		const onScrollOrResize = () => {
+		const scheduleToolbarUpdate = () => {
 			if (toolbarUpdateFrame !== undefined) return;
 			toolbarUpdateFrame = window.requestAnimationFrame(applyToolbarPosition);
 		};
+		const onWindowResize = () => {
+			// CSS breakpoints can change the sticky top; keyboard-only visual viewport resizes cannot.
+			cachedToolbarStickyTop = undefined;
+			scheduleToolbarUpdate();
+		};
 		const cleanupToolbarPosition = () => {
-			window.removeEventListener(`scroll`, onScrollOrResize, true);
-			window.removeEventListener(`resize`, onScrollOrResize);
-			visualViewport?.removeEventListener(`scroll`, onScrollOrResize);
-			visualViewport?.removeEventListener(`resize`, onScrollOrResize);
+			window.removeEventListener(`scroll`, scheduleToolbarUpdate, true);
+			window.removeEventListener(`resize`, onWindowResize);
+			visualViewport?.removeEventListener(`scroll`, scheduleToolbarUpdate);
+			visualViewport?.removeEventListener(`resize`, scheduleToolbarUpdate);
 			if (toolbarUpdateFrame !== undefined) {
 				window.cancelAnimationFrame(toolbarUpdateFrame);
 			}
-			// Remove the inline visual-viewport compensation along with listeners and pending work.
-			toolbarEl?.style.removeProperty(`--visual-viewport-offset`);
+			// Remove inline compensation and reset non-reactive caches along with pending work.
+			toolbarEl?.style.removeProperty(`transform`);
+			cachedToolbarStickyTop = undefined;
+			appliedToolbarOffset = 0;
 		};
-		window.addEventListener(`scroll`, onScrollOrResize, { passive: true, capture: true });
-		window.addEventListener(`resize`, onScrollOrResize);
-		visualViewport?.addEventListener(`scroll`, onScrollOrResize, { passive: true });
-		visualViewport?.addEventListener(`resize`, onScrollOrResize);
+		window.addEventListener(`scroll`, scheduleToolbarUpdate, { passive: true, capture: true });
+		window.addEventListener(`resize`, onWindowResize);
+		visualViewport?.addEventListener(`scroll`, scheduleToolbarUpdate, { passive: true });
+		visualViewport?.addEventListener(`resize`, scheduleToolbarUpdate);
 		updateToolbarPosition();
 
 		if (!editorEl) {
@@ -400,7 +429,6 @@
 </script>
 
 <div class="lexical-editor-root w-full">
-	<div bind:this={toolbarSentinelEl} class="pointer-events-none h-px w-full" aria-hidden="true"></div>
 	<div
 		bind:this={toolbarEl}
 		class={[
@@ -542,8 +570,9 @@
 		outline: none;
 	}
 
+	/* Keep frequent keyboard compensation on a compositor-friendly transform. */
 	.lexical-toolbar {
-		transform: translateY(var(--visual-viewport-offset, 0px));
+		transform: translate3d(0, 0, 0);
 	}
 
 	/* Highlight isn't covered by typography — keep marker readable in the editor. */
