@@ -9,9 +9,11 @@
 		$getSelection as getSelection,
 		$insertNodes as insertNodes,
 		$isRangeSelection as isRangeSelection,
+		CAN_REDO_COMMAND,
 		CAN_UNDO_COMMAND,
 		COMMAND_PRIORITY_LOW,
 		FORMAT_TEXT_COMMAND,
+		REDO_COMMAND,
 		SELECTION_CHANGE_COMMAND,
 		UNDO_COMMAND,
 		createEditor,
@@ -69,6 +71,7 @@
 	let isBulletList = $state(false);
 	let isNumberedList = $state(false);
 	let canUndo = $state(false);
+	let canRedo = $state(false);
 
 	const labels = $derived(
 		localeStore.locale === `de`
@@ -82,6 +85,7 @@
 					numberedList: `Nummerierte Liste`,
 					linkPrompt: `Link einfügen`,
 					undo: `Rückgängig`,
+					redo: `Wiederholen`,
 				}
 			: {
 					bold: `Bold`,
@@ -93,6 +97,7 @@
 					numberedList: `Numbered list`,
 					linkPrompt: `Add a link`,
 					undo: `Undo`,
+					redo: `Redo`,
 				},
 	);
 
@@ -204,6 +209,10 @@
 
 	function undo() {
 		editor?.dispatchCommand(UNDO_COMMAND, undefined);
+	}
+
+	function redo() {
+		editor?.dispatchCommand(REDO_COMMAND, undefined);
 	}
 
 	function toggleHeading() {
@@ -335,6 +344,14 @@
 				},
 				COMMAND_PRIORITY_LOW,
 			),
+			nextEditor.registerCommand(
+				CAN_REDO_COMMAND,
+				(payload) => {
+					canRedo = payload;
+					return false;
+				},
+				COMMAND_PRIORITY_LOW,
+			),
 		);
 
 		editor = nextEditor;
@@ -358,7 +375,7 @@
 	<div
 		bind:this={toolbarEl}
 		class={[
-			`bg-base-200 sticky top-0 z-40 mb-0 flex flex-wrap flex-wrap justify-center border-2 py-1 sm:justify-start sm:p-2 md:top-20`,
+			`bg-base-200 sticky top-0 z-40 mb-0 flex flex-wrap sm:flex-nowrap justify-center overflow-clip border-2 sm:justify-start md:top-19`,
 			isToolbarStuck ? `rounded-t-none` : `rounded-t-2xl`,
 			isEditorFocused ? `border-neutral border-b-base-500` : `border-base-500`,
 		]}
@@ -369,87 +386,99 @@
 			e.preventDefault();
 		}}
 	>
-		<div class="join flex flex-wrap">
+		<div class="flex w-full flex-wrap justify-center sm:justify-start [&>button]:border-0 [&>button]:rounded-none">
 			<button
 				type="button"
-				class={["btn btn-sm join-item rounded-l-lg", isBold && `btn-active`]}
+				class={["btn btn-square btn-sm sm:btn-md", isBold && `btn-active`]}
 				aria-label={labels.bold}
 				title={labels.bold}
 				aria-pressed={isBold}
 				onclick={() => formatText(`bold`)}
 			>
-				<i class="icon-[ph--text-b] size-4"></i>
+				<i class="icon-[ph--text-b] size-4 sm:size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-sm join-item", isItalic && `btn-active`]}
+				class={["btn btn-square btn-sm sm:btn-md", isItalic && `btn-active`]}
 				aria-label={labels.italic}
 				title={labels.italic}
 				aria-pressed={isItalic}
 				onclick={() => formatText(`italic`)}
 			>
-				<i class="icon-[ph--text-italic] size-4"></i>
+				<i class="icon-[ph--text-italic] size-4 sm:size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-sm join-item", isHighlight && `btn-active`]}
-				aria-label={labels.highlight}
-				title={labels.highlight}
-				aria-pressed={isHighlight}
-				onclick={() => formatText(`highlight`)}
-			>
-				<i class="icon-[ph--highlighter] size-4"></i>
-			</button>
-			<button
-				type="button"
-				class={["btn btn-sm join-item", isLink && `btn-active`]}
+				class={["btn btn-square btn-sm sm:btn-md", isLink && `btn-active`]}
 				aria-label={labels.link}
 				title={labels.link}
 				aria-pressed={isLink}
 				onclick={toggleLink}
 			>
-				<i class="icon-[ph--link] size-4"></i>
+				<i class="icon-[ph--link] size-4 sm:size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-sm join-item", isHeading && `btn-active`]}
+				class={["btn btn-square btn-sm sm:btn-md", isHeading && `btn-active`]}
 				aria-label={labels.heading}
 				title={labels.heading}
 				aria-pressed={isHeading}
 				onclick={toggleHeading}
 			>
-				<i class="icon-[ph--text-h] size-4"></i>
+				<i class="icon-[ph--text-h] size-4 sm:size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-sm join-item", isBulletList && `btn-active`]}
+				class={["btn btn-square btn-sm sm:btn-md", isBulletList && `btn-active`]}
 				aria-label={labels.bulletList}
 				title={labels.bulletList}
 				aria-pressed={isBulletList}
 				onclick={toggleBulletList}
 			>
-				<i class="icon-[ph--list-bullets] size-4"></i>
+				<i class="icon-[ph--list-bullets] size-4 sm:size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-sm join-item", isNumberedList && `btn-active`]}
+				class={["btn btn-square btn-sm sm:btn-md", isNumberedList && `btn-active`]}
 				aria-label={labels.numberedList}
 				title={labels.numberedList}
 				aria-pressed={isNumberedList}
 				onclick={toggleNumberedList}
 			>
-				<i class="icon-[ph--list-numbers] size-4"></i>
+				<i class="icon-[ph--list-numbers] size-4 sm:size-5"></i>
 			</button>
-			<button 
-				type="button" 
-				class="btn btn-sm join-item rounded-r-lg" 
+			<button
+				type="button"
+				class={["btn btn-square btn-sm sm:btn-md", isHighlight && `btn-active`]}
+				aria-label={labels.highlight}
+				title={labels.highlight}
+				aria-pressed={isHighlight}
+				onclick={() => formatText(`highlight`)}
+			>
+				<i class="icon-[ph--highlighter] size-4 sm:size-5"></i>
+			</button>
+			<div class="hidden sm:block sm:flex-1" aria-hidden="true"></div>
+			<button
+				type="button"
+				class="btn btn-square btn-sm sm:btn-md"
 				title={labels.undo}
-				aria-label={labels.undo} 
-				aria-disabled={!canUndo} 
+				aria-label={labels.undo}
+				aria-disabled={!canUndo}
 				onclick={undo}
 				disabled={!canUndo}
 			>
-				<i class="icon-[ph--arrow-u-up-left] size-4"></i>
+				<i class="icon-[ph--arrow-u-up-left] size-4 sm:size-5"></i>
+			</button>
+			<button
+				type="button"
+				class="btn btn-square btn-sm sm:btn-md"
+				title={labels.redo}
+				aria-label={labels.redo}
+				aria-disabled={!canRedo}
+				onclick={redo}
+				disabled={!canRedo}
+			>
+				<i class="icon-[ph--arrow-u-up-right] size-4 sm:size-5"></i>
 			</button>
 		</div>
 	</div>
@@ -476,7 +505,6 @@
 
 	<textarea {...field.as("text")} class="peer hidden" aria-hidden="true" value={editorValue}></textarea>
 </div>
-
 <style>
 	@reference '../../app.css';
 

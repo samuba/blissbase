@@ -10,6 +10,7 @@
 	const pathname = $derived(page.url.pathname);
 </script>
 
+<!-- when changing height of the nav we need to also change sticky-top position in LexicalEditor.svelte for non-mobile -->
 <svelte:boundary>
 	<nav class={['hidden md:block md:shrink-0 bg-base-200', rest.class]} aria-label="Hauptnavigation">
 		<div class="flex w-3xl ">

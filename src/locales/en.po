@@ -1700,21 +1700,9 @@ msgstr "Location with this name not found"
 msgid "<0/> Vorschläge werden geladen…"
 msgstr "<0/> Loading suggestions…"
 
-#~ msgid "Bitte warte, bis der Standort gespeichert ist."
-#~ msgstr "Please wait until the location has been saved."
-
-#~ msgid "Bitte wähle einen Ort für dein Angebot aus."
-#~ msgstr "Please select a location for your offering."
-
 #: src/routes/offerings/new/+page.svelte
 msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote!"
 msgstr "Your in-person offers are shown to others near this location. The location applies to all your offers!"
-
-#~ msgid "Standort konnte nicht gespeichert werden. Bitte versuche es erneut."
-#~ msgstr "Location could not be saved. Please try again."
-
-#~ msgid "<0/> Standort wird gespeichert…"
-#~ msgstr "<0/> Location is being saved…"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
@@ -1797,19 +1785,23 @@ msgstr "Undo"
 msgid "Undo"
 msgstr "Undo"
 
-#~ msgid "Was beinhaltet das Angebot?"
-#~ msgstr "What does the offer include?"
-
-#~ msgid "Was erwartet die Teilnehmer bei dem Event?"
-#~ msgstr "What can participants expect at the event?"
-
 #: src/lib/components/EventForm.svelte
 msgid "Beschreibe deinen Event"
 msgstr "Describe your event"
 
-#~ msgid "Beschreibe dein Angebot?"
-#~ msgstr "Describe your offer?"
-
 #: src/lib/components/OfferingForm.svelte
 msgid "Beschreibe dein Angebot"
 msgstr "Describe your offer"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Wiederholen"
+msgstr "Repeat"
+
+#: src/lib/components/LexicalEditor.svelte
+msgid "Redo"
+msgstr "Redo"
+
+#: src/routes/offerings/new/+page.svelte
+#: src/routes/profile/public/+page.svelte
+msgid "Erzähl etwas über dich…"
+msgstr "Tell me something about yourself…"
