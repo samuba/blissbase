@@ -432,7 +432,7 @@
 	<div
 		bind:this={toolbarEl}
 		class={[
-			`lexical-toolbar bg-base-200 sticky top-0 z-40 mb-0 flex flex-wrap justify-center overflow-clip border-2 sm:flex-nowrap sm:justify-start md:top-19`,
+			`lexical-toolbar bg-base-100 sticky top-0 z-40 mb-0 flex flex-wrap justify-center overflow-clip border-2 sm:flex-nowrap sm:justify-start md:top-19`,
 			isToolbarStuck ? `rounded-t-none` : `rounded-t-2xl`,
 			isEditorFocused ? `border-neutral border-b-base-500` : `border-base-500`,
 		]}
@@ -443,99 +443,99 @@
 			e.preventDefault();
 		}}
 	>
-		<div class="flex w-full flex-wrap justify-center sm:justify-start [&>button]:rounded-none [&>button]:border-0">
+		<div class="flex w-full flex-wrap justify-center sm:justify-start">
 			<button
 				type="button"
-				class={["btn btn-square btn-sm sm:btn-md", isBold && `btn-active`]}
+				class={["toolbar-button", isBold && `toolbar-button-active`]}
 				aria-label={labels.bold}
 				title={labels.bold}
 				aria-pressed={isBold}
 				onclick={() => formatText(`bold`)}
 			>
-				<i class="icon-[ph--text-b] size-4 sm:size-5"></i>
+				<i class="icon-[ph--text-b] size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-square btn-sm sm:btn-md", isItalic && `btn-active`]}
+				class={["toolbar-button", isItalic && `toolbar-button-active`]}
 				aria-label={labels.italic}
 				title={labels.italic}
 				aria-pressed={isItalic}
 				onclick={() => formatText(`italic`)}
 			>
-				<i class="icon-[ph--text-italic] size-4 sm:size-5"></i>
+				<i class="icon-[ph--text-italic] size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-square btn-sm sm:btn-md", isLink && `btn-active`]}
+				class={["toolbar-button", isLink && `toolbar-button-active`]}
 				aria-label={labels.link}
 				title={labels.link}
 				aria-pressed={isLink}
 				onclick={toggleLink}
 			>
-				<i class="icon-[ph--link] size-4 sm:size-5"></i>
+				<i class="icon-[ph--link] size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-square btn-sm sm:btn-md", isHeading && `btn-active`]}
+				class={["toolbar-button", isHeading && `toolbar-button-active`]}
 				aria-label={labels.heading}
 				title={labels.heading}
 				aria-pressed={isHeading}
 				onclick={toggleHeading}
 			>
-				<i class="icon-[ph--text-h] size-4 sm:size-5"></i>
+				<i class="icon-[ph--text-h] size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-square btn-sm sm:btn-md", isBulletList && `btn-active`]}
+				class={["toolbar-button", isBulletList && `toolbar-button-active`]}
 				aria-label={labels.bulletList}
 				title={labels.bulletList}
 				aria-pressed={isBulletList}
 				onclick={toggleBulletList}
 			>
-				<i class="icon-[ph--list-bullets] size-4 sm:size-5"></i>
+				<i class="icon-[ph--list-bullets] size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-square btn-sm sm:btn-md", isNumberedList && `btn-active`]}
+				class={["toolbar-button", isNumberedList && `toolbar-button-active`]}
 				aria-label={labels.numberedList}
 				title={labels.numberedList}
 				aria-pressed={isNumberedList}
 				onclick={toggleNumberedList}
 			>
-				<i class="icon-[ph--list-numbers] size-4 sm:size-5"></i>
+				<i class="icon-[ph--list-numbers] size-5"></i>
 			</button>
 			<button
 				type="button"
-				class={["btn btn-square btn-sm sm:btn-md", isHighlight && `btn-active`]}
+				class={["toolbar-button", isHighlight && `toolbar-button-active`]}
 				aria-label={labels.highlight}
 				title={labels.highlight}
 				aria-pressed={isHighlight}
 				onclick={() => formatText(`highlight`)}
 			>
-				<i class="icon-[ph--highlighter] size-4 sm:size-5"></i>
+				<i class="icon-[ph--highlighter] size-5"></i>
 			</button>
 			<div class="hidden sm:block sm:flex-1" aria-hidden="true"></div>
 			<button
 				type="button"
-				class="btn btn-square btn-sm sm:btn-md"
+				class="toolbar-button"
 				title={labels.undo}
 				aria-label={labels.undo}
 				aria-disabled={!canUndo}
 				onclick={undo}
 				disabled={!canUndo}
 			>
-				<i class="icon-[ph--arrow-u-up-left] size-4 sm:size-5"></i>
+				<i class="icon-[ph--arrow-u-up-left] size-5"></i>
 			</button>
 			<button
 				type="button"
-				class="btn btn-square btn-sm sm:btn-md"
+				class="toolbar-button"
 				title={labels.redo}
 				aria-label={labels.redo}
 				aria-disabled={!canRedo}
 				onclick={redo}
 				disabled={!canRedo}
 			>
-				<i class="icon-[ph--arrow-u-up-right] size-4 sm:size-5"></i>
+				<i class="icon-[ph--arrow-u-up-right] size-5"></i>
 			</button>
 		</div>
 	</div>
@@ -566,6 +566,13 @@
 <style>
 	@reference '../../app.css';
 
+	.toolbar-button {
+		@apply bg-base-100 rounded-none p-2 hover:bg-base-200 cursor-pointer flex items-center justify-center disabled:opacity-35 disabled:hover:bg-base-100 disabled:cursor-auto;
+	}
+
+	.toolbar-button-active {
+		@apply bg-base-300!;
+	}
 	.lexical-editor:focus {
 		outline: none;
 	}
