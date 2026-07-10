@@ -249,10 +249,19 @@
 		nextEditor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
 	}
 
-	function updateToolbarStuck() {
+	function updateToolbarPosition() {
 		if (!toolbarEl || !toolbarSentinelEl) return;
+		// Mobile keyboards pan the visual viewport, while CSS sticky remains tied to the layout viewport.
+		toolbarEl.style.removeProperty(`--visual-viewport-offset`);
 		const stickyTop = parseFloat(getComputedStyle(toolbarEl).top) || 0;
-		isToolbarStuck = toolbarSentinelEl.getBoundingClientRect().bottom <= stickyTop + 0.5;
+		const visualViewportTop = window.visualViewport?.offsetTop ?? 0;
+		const targetTop = visualViewportTop + stickyTop;
+		const toolbarTop = toolbarEl.getBoundingClientRect().top;
+		const visualViewportOffset = Math.max(0, targetTop - toolbarTop);
+		if (visualViewportOffset > 0.5) {
+			toolbarEl.style.setProperty(`--visual-viewport-offset`, `${visualViewportOffset}px`);
+		}
+		isToolbarStuck = toolbarSentinelEl.getBoundingClientRect().bottom <= targetTop + 0.5;
 	}
 
 	function toggleLink() {
@@ -277,16 +286,36 @@
 	});
 
 	onMount(() => {
-		const onScrollOrResize = () => updateToolbarStuck();
+		const visualViewport = window.visualViewport;
+		let toolbarUpdateFrame: number | undefined;
+		// Viewport scroll and resize events are frequent, so coalesce toolbar updates into one animation frame.
+		const applyToolbarPosition = () => {
+			toolbarUpdateFrame = undefined;
+			updateToolbarPosition();
+		};
+		const onScrollOrResize = () => {
+			if (toolbarUpdateFrame !== undefined) return;
+			toolbarUpdateFrame = window.requestAnimationFrame(applyToolbarPosition);
+		};
+		const cleanupToolbarPosition = () => {
+			window.removeEventListener(`scroll`, onScrollOrResize, true);
+			window.removeEventListener(`resize`, onScrollOrResize);
+			visualViewport?.removeEventListener(`scroll`, onScrollOrResize);
+			visualViewport?.removeEventListener(`resize`, onScrollOrResize);
+			if (toolbarUpdateFrame !== undefined) {
+				window.cancelAnimationFrame(toolbarUpdateFrame);
+			}
+			// Remove the inline visual-viewport compensation along with listeners and pending work.
+			toolbarEl?.style.removeProperty(`--visual-viewport-offset`);
+		};
 		window.addEventListener(`scroll`, onScrollOrResize, { passive: true, capture: true });
 		window.addEventListener(`resize`, onScrollOrResize);
-		updateToolbarStuck();
+		visualViewport?.addEventListener(`scroll`, onScrollOrResize, { passive: true });
+		visualViewport?.addEventListener(`resize`, onScrollOrResize);
+		updateToolbarPosition();
 
 		if (!editorEl) {
-			return () => {
-				window.removeEventListener(`scroll`, onScrollOrResize, true);
-				window.removeEventListener(`resize`, onScrollOrResize);
-			};
+			return cleanupToolbarPosition;
 		}
 
 		const nextEditor = createEditor({
@@ -361,8 +390,7 @@
 		isEditorReady = true;
 
 		return () => {
-			window.removeEventListener(`scroll`, onScrollOrResize, true);
-			window.removeEventListener(`resize`, onScrollOrResize);
+			cleanupToolbarPosition();
 			unregister();
 			nextEditor.setRootElement(null);
 			editor = undefined;
@@ -370,12 +398,13 @@
 		};
 	});
 </script>
+
 <div class="lexical-editor-root w-full">
 	<div bind:this={toolbarSentinelEl} class="pointer-events-none h-px w-full" aria-hidden="true"></div>
 	<div
 		bind:this={toolbarEl}
 		class={[
-			`bg-base-200 sticky top-0 z-40 mb-0 flex flex-wrap sm:flex-nowrap justify-center overflow-clip border-2 sm:justify-start md:top-19`,
+			`lexical-toolbar bg-base-200 sticky top-0 z-40 mb-0 flex flex-wrap justify-center overflow-clip border-2 sm:flex-nowrap sm:justify-start md:top-19`,
 			isToolbarStuck ? `rounded-t-none` : `rounded-t-2xl`,
 			isEditorFocused ? `border-neutral border-b-base-500` : `border-base-500`,
 		]}
@@ -386,7 +415,7 @@
 			e.preventDefault();
 		}}
 	>
-		<div class="flex w-full flex-wrap justify-center sm:justify-start [&>button]:border-0 [&>button]:rounded-none">
+		<div class="flex w-full flex-wrap justify-center sm:justify-start [&>button]:rounded-none [&>button]:border-0">
 			<button
 				type="button"
 				class={["btn btn-square btn-sm sm:btn-md", isBold && `btn-active`]}
@@ -505,11 +534,16 @@
 
 	<textarea {...field.as("text")} class="peer hidden" aria-hidden="true" value={editorValue}></textarea>
 </div>
+
 <style>
 	@reference '../../app.css';
 
 	.lexical-editor:focus {
 		outline: none;
+	}
+
+	.lexical-toolbar {
+		transform: translateY(var(--visual-viewport-offset, 0px));
 	}
 
 	/* Highlight isn't covered by typography — keep marker readable in the editor. */
