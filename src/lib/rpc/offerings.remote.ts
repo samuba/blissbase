@@ -268,15 +268,19 @@ export const getOfferingForDialog = query(offeringBySlugSchema, async ({ slug })
 });
 
 export const createOffering = form(offeringFormSchema, async (data, issue) => {
-	const userId = getOfferingSubmitUserId(data.authToken);
+	const sessionUserId = getRequestEvent().locals.userId;
+	const userId = sessionUserId ? sessionUserId : verifyOfferingSubmitAuthToken(data.authToken);
+
 	if (!userId) return invalid(issue.email(`Bitte bestätige deine E-Mail erneut.`));
 
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
 	if (!currentProfile) throw error(404, `Profile not found`);
 
-	const nextProfile = data.profile
-		? await updateProfileFromOfferingForm({ currentProfile, data: data.profile, issue })
-		: await ensureOfferingProfileSlug(currentProfile);
+	const nextProfile = await mergeProfileFromOfferingForm({
+		currentProfile,
+		data: data.profile ?? {},
+		issue,
+	});
 
 	if (!hasSocialLink(nextProfile)) {
 		return invalid(issue.profile.socialLinks(`Bitte füge mindestens einen Social-Link hinzu.`));
@@ -292,6 +296,8 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	if (imageClaims instanceof Error) {
 		return invalid(issue.imageClaims(imageClaims.message));
 	}
+
+	await saveOfferingProfile(nextProfile);
 
 	const slug = `${randomString(6).toLowerCase()}-${slugify(data.title)}`;
 
@@ -338,9 +344,22 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	});
 	if (!offering) throw error(404, `Offering not found`);
 
+	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
+	if (!currentProfile) throw error(404, `Profile not found`);
+	const nextProfile = data.profile
+		? await mergeProfileFromOfferingForm({ currentProfile, data: data.profile, issue })
+		: currentProfile;
+	if (offeringNeedsLocation(data.format) && !hasValidCoordinates({ lat: nextProfile.latitude, lng: nextProfile.longitude })) {
+		return invalid(issue.profile.locationLabel(`Bitte wähle einen Ort für dein Angebot aus.`));
+	}
+
 	const imageClaims = verifyOfferingImageClaims(data.imageClaims);
 	if (imageClaims instanceof Error) {
 		return invalid(issue.imageClaims(imageClaims.message));
+	}
+
+	if (data.profile) {
+		await saveOfferingProfile(nextProfile);
 	}
 
 	const uploadedImageUrls = await finalizeOfferingImageClaims({
@@ -375,6 +394,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 
 	if (!offering.slug) throw error(500, `Offering is missing a slug`);
 
+	getMyPublicProfile().refresh();
 	refreshOfferingLists();
 	setFlash(`offeringUpdated`);
 	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(offering.slug), offeringSlug: offering.slug }));
@@ -536,18 +556,18 @@ function getOfferingImageSuffixFromObjectKey(objectKey: string) {
 }
 
 /**
- * Updates only the profile fields collected during offering onboarding.
+ * Merges the submitted offering profile patch into the authenticated profile.
  *
  * @example
- * await updateProfileFromOfferingForm({ currentProfile, data, issue });
+ * await mergeProfileFromOfferingForm({ currentProfile, data, issue });
  */
-async function updateProfileFromOfferingForm(args: UpdateProfileFromOfferingFormArgs) {
+async function mergeProfileFromOfferingForm(args: UpdateProfileFromOfferingFormArgs) {
 	const currentSlug = args.currentProfile.slug?.trim();
-	const displayName = (args.data.displayName?.trim() || args.currentProfile.displayName) ?? `profile`;
+	const displayName = args.data.displayName?.trim() ?? args.currentProfile.displayName;
 	const slug =
 		currentSlug ||
 		(await createAvailableProfileSlug({
-			displayName,
+			displayName: displayName,
 			profileId: args.currentProfile.id,
 		}));
 
@@ -579,65 +599,58 @@ async function updateProfileFromOfferingForm(args: UpdateProfileFromOfferingForm
 
 	const submittedLocationLabel = args.data.locationLabel?.trim();
 	const hasSubmittedLocation =
-		Boolean(submittedLocationLabel) || args.data.latitude != null || args.data.longitude != null;
-	const socialLinks = args.data.socialLinks?.some((link) => link.value?.trim())
-		? args.data.socialLinks
-		: args.currentProfile.socialLinks;
+		`locationLabel` in args.data || `latitude` in args.data || `longitude` in args.data;
 
-	const [updatedProfile] = await db
-		.update(s.profiles)
-		.set({
-			displayName,
-			slug,
-			bio: args.data.bio?.trim() || args.currentProfile.bio || null,
-			locationLabel: hasSubmittedLocation ? submittedLocationLabel || null : args.currentProfile.locationLabel,
-			latitude: hasSubmittedLocation ? (args.data.latitude ?? null) : args.currentProfile.latitude,
-			longitude: hasSubmittedLocation ? (args.data.longitude ?? null) : args.currentProfile.longitude,
-			socialLinks,
-			profileImageUrl: nextProfileImageUrl,
-			bannerImageUrl: nextBannerImageUrl,
-			updatedAt: sql`now()`,
-		})
-		.where(eq(s.profiles.id, args.currentProfile.id))
-		.returning();
-
-	await Promise.all([
-		sweepProfileImagePrefix({
-			userId: args.currentProfile.id,
-			kind: `profile`,
-			keepUrl: nextProfileImageUrl,
-		}),
-		sweepProfileImagePrefix({
-			userId: args.currentProfile.id,
-			kind: `banner`,
-			keepUrl: nextBannerImageUrl,
-		}),
-	]);
-
-	return updatedProfile;
+	return {
+		...args.currentProfile,
+		displayName,
+		slug,
+		bio: `bio` in args.data ? args.data.bio?.trim() || null : args.currentProfile.bio,
+		locationLabel: hasSubmittedLocation ? submittedLocationLabel || null : args.currentProfile.locationLabel,
+		latitude: hasSubmittedLocation ? (args.data.latitude ?? null) : args.currentProfile.latitude,
+		longitude: hasSubmittedLocation ? (args.data.longitude ?? null) : args.currentProfile.longitude,
+		socialLinks: args.data.socialLinks ?? args.currentProfile.socialLinks,
+		profileImageUrl: nextProfileImageUrl,
+		bannerImageUrl: nextBannerImageUrl,
+	};
 }
 
-async function ensureOfferingProfileSlug(profile: Profile) {
-	if (profile.slug?.trim()) return profile;
-	const slug = await createAvailableProfileSlug({
-		displayName: profile.displayName ?? `profile`,
-		profileId: profile.id,
-	});
-
+async function saveOfferingProfile(profile: Profile) {
 	const [updatedProfile] = await db
 		.update(s.profiles)
 		.set({
-			slug,
+			displayName: profile.displayName,
+			slug: profile.slug,
+			bio: profile.bio,
+			locationLabel: profile.locationLabel,
+			latitude: profile.latitude,
+			longitude: profile.longitude,
+			socialLinks: profile.socialLinks,
+			profileImageUrl: profile.profileImageUrl,
+			bannerImageUrl: profile.bannerImageUrl,
 			updatedAt: sql`now()`,
 		})
 		.where(eq(s.profiles.id, profile.id))
 		.returning();
 
+	await Promise.all([
+		sweepProfileImagePrefix({
+			userId: profile.id,
+			kind: `profile`,
+			keepUrl: profile.profileImageUrl,
+		}),
+		sweepProfileImagePrefix({
+			userId: profile.id,
+			kind: `banner`,
+			keepUrl: profile.bannerImageUrl,
+		}),
+	]);
+
 	return updatedProfile ?? profile;
 }
 
 async function createAvailableProfileSlug(args: { displayName: string; profileId: string }) {
-	const baseSlug = createPublicProfileSlug({ displayName: args.displayName }) || `profile`;
+	const baseSlug = createPublicProfileSlug(args.displayName);
 	for (let attempt = 0; attempt < 100; attempt++) {
 		const suffix = attempt === 0 ? `` : `-${randomString(2).toLowerCase()}`;
 		const slug = `${baseSlug.slice(0, 80 - suffix.length)}${suffix}`;
@@ -747,12 +760,6 @@ function isOfferingFormHref(args: { href: string; origin: string }) {
 	if (!pathname.startsWith(`/offerings/`)) return false;
 
 	return pathname.endsWith(`/edit`);
-}
-
-function getOfferingSubmitUserId(authToken: string | undefined) {
-	const sessionUserId = getRequestEvent().locals.userId;
-	if (sessionUserId) return sessionUserId;
-	return verifyOfferingSubmitAuthToken(authToken);
 }
 
 async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {

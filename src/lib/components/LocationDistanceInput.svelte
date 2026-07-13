@@ -438,7 +438,7 @@
 					id="{inputId}-listbox"
 					role="listbox"
 					data-testid="location-suggestions"
-					class="bg-base-100 border-base-300 fixed z-[200] max-h-64 overflow-y-auto rounded-box border shadow-lg"
+					class="bg-base-100 border-base-300 fixed z-200 max-h-64 overflow-y-auto rounded-box border shadow-lg"
 					style:top="{dropdownPosition.top}px"
 					style:left="{dropdownPosition.left}px"
 					style:width="{dropdownPosition.width}px"

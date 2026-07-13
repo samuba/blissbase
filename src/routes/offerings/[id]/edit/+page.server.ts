@@ -8,6 +8,16 @@ export async function load({ locals, params: { id: slug } }) {
 
 	const offering = await db.query.offerings.findFirst({
 		where: eq(s.offerings.slug, slug),
+		with: {
+			profile: {
+				columns: {
+					displayName: true,
+					locationLabel: true,
+					latitude: true,
+					longitude: true,
+				},
+			},
+		},
 	});
 	if (!offering) {
 		error(404, `Offering not found`);
@@ -26,6 +36,12 @@ export async function load({ locals, params: { id: slug } }) {
 			existingImageUrls: offering.imageUrls ?? [],
 			imageOrder: offering.imageUrls ?? [],
 			imageClaims: [],
+			profile: {
+				displayName: offering.profile.displayName ?? ``,
+				locationLabel: offering.profile.locationLabel ?? ``,
+				latitude: offering.profile.latitude == null ? `` : String(offering.profile.latitude),
+				longitude: offering.profile.longitude == null ? `` : String(offering.profile.longitude),
+			},
 		},
 	};
 }

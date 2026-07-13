@@ -1,8 +1,27 @@
-import { offeringProfileFormSchema } from '$lib/rpc/profile.common';
+import {
+	isValidProfileLocation,
+	profileLocationCheckMessage,
+	profileLocationFields,
+	publicProfileFields,
+} from '$lib/rpc/profile.common';
 import * as v from 'valibot';
 
 export const OFFERING_FORMATS = ['offline', 'online', 'offline+online'] as const;
 export const OFFERING_IMAGE_MAX_COUNT = 12;
+
+export const offeringProfileFormSchema = v.pipe(
+	v.partial(
+		v.object({
+			displayName: publicProfileFields.displayName,
+			bio: publicProfileFields.bio,
+			profileImageUrl: publicProfileFields.profileImageUrl,
+			bannerImageUrl: publicProfileFields.bannerImageUrl,
+			socialLinks: publicProfileFields.socialLinks,
+			...profileLocationFields,
+		}),
+	),
+	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
+);
 
 const offeringFormEntries = {
 	title: v.pipe(

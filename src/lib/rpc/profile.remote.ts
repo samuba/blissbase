@@ -68,7 +68,7 @@ export const checkSlugAvailability = query(
 	}),
 	async ({ slug }) => {
 		const userId = ensureUserId();
-		const normalizedSlug = slug ? createPublicProfileSlug({ displayName: slug }) : ``;
+		const normalizedSlug = createPublicProfileSlug(slug);
 		if (!normalizedSlug) {
 			return { slug: normalizedSlug, available: false };
 		}

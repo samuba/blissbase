@@ -7,13 +7,11 @@ import type { Profile } from "$lib/server/schema";
 import { type ProfileSocialType } from "$lib/socialLinks";
 
 /**
- * Builds the editable/public slug for a profile.
- *
  * @example
  * createPublicProfileSlug({ displayName: `Anna Müller` });
  */
-export function createPublicProfileSlug(args: { displayName: string }) {
-	const slug = slugify(args.displayName)
+export function createPublicProfileSlug(displayName: string) {
+	const slug = slugify(displayName || `profile`)
 		.replace(/^-+|-+$/g, ``)
 		.slice(0, 80);
 	return slug;

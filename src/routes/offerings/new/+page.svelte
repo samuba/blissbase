@@ -3,7 +3,6 @@
 	import { page } from "$app/state";
 	import { onDestroy } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
-	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
 	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
@@ -19,6 +18,7 @@
 	import { getSupabaseBrowserClient } from "$lib/supabase";
 	import { localeStore } from "../../../locales/localeStore.svelte";
 	import OtpStep from "./OtpStep.svelte";
+	import { loadFiltersFromBrowserCookie } from "$lib/cookie-utils";
 
 	type WizardStep = `offering` | `profile` | `otp`;
 	type WizardStepItem = {
@@ -111,6 +111,25 @@
 			origin: page.url.origin,
 		}),
 	);
+
+	let hasMountedWizardStep = false;
+	function scrollToTopOnStepChange() {
+		if (!hasMountedWizardStep) {
+			hasMountedWizardStep = true;
+			return;
+		}
+		window.scrollTo({ top: 0, behavior: `instant` });
+	}
+
+	const initialLocation = $derived.by(() => {
+		if (profile?.latitude && profile?.longitude) {
+			return { lat: profile.latitude, lng: profile.longitude, label: profile.locationLabel };
+		}
+		const filters = loadFiltersFromBrowserCookie();
+		if (filters?.lat && filters?.lng) {
+			return { lat: filters.lat, lng: filters.lng, label: filters.plzCity };
+		}
+	});
 
 	function fieldHasIssues(field: FormFieldWithIssues) {
 		return Boolean(field.issues?.()?.length || field.allIssues?.()?.length);
@@ -471,6 +490,10 @@
 				returnTo={returnHref}
 				bind:format
 				{fieldsHidden}
+				initialLocationLabel={initialLocation?.label}
+				initialLocationLat={initialLocation?.lat}
+				initialLocationLng={initialLocation?.lng}
+				{locationError}
 				onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
 				onsubmit={onSubmit}
 			>
@@ -489,44 +512,11 @@
 							onblur={onEmailBlur}
 						/>
 						<legend class="fieldset-legend peer-aria-invalid:text-red-600">E-Mail für Login * </legend>
-						<p class="label">Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren. </p>
+						<p class="label whitespace-pre-line">Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren. </p>
 						<FormFieldIssues field={createOffering.fields.email} />
 						{#if emailCheckError}
 							<p class="text-error text-xs">{emailCheckError}</p>
 						{/if}
-					</fieldset>
-				{/if}
-
-				{#if offeringNeedsLocation(format) && currentStep === `offering`}
-					<fieldset class="fieldset" data-wizard-step="offering">
-						<legend class="fieldset-legend peer-aria-invalid:text-red-600">Standort für deine Angebote</legend>
-						<p class="text-base-content/70 mb-1 text-sm leading-relaxed">
-						    Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote!
-						</p>
-						<div class="min-w-0 flex-1">
-							{#if isSignedIn && profile?.displayName}
-								<input
-									type="hidden"
-									{...createOffering.fields.profile.displayName.as(`text`)}
-									value={profile.displayName}
-								/>
-							{/if}
-							<LocationAutocompleteInput
-								inputId="offeringNewLocationInput"
-								initialLabel={profile?.locationLabel}
-								initialLat={profile?.latitude}
-								initialLng={profile?.longitude}
-								locationLabelField={createOffering.fields.profile.locationLabel}
-								latitudeField={createOffering.fields.profile.latitude}
-								longitudeField={createOffering.fields.profile.longitude}
-							/>
-						</div>
-						{#if locationError}
-							<p class="text-error text-sm">{locationError}</p>
-						{/if}
-						<FormFieldIssues field={createOffering.fields.profile.locationLabel} />
-						<FormFieldIssues field={createOffering.fields.profile.latitude} />
-						<FormFieldIssues field={createOffering.fields.profile.longitude} />
 					</fieldset>
 				{/if}
 
@@ -656,3 +646,7 @@
 		</div>
 	</div>
 </div>
+
+{#key currentStep}
+	<div hidden {@attach scrollToTopOnStepChange}></div>
+{/key}

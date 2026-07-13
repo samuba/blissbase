@@ -9,7 +9,7 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	return v.union([v.pipe(v.literal(``), v.transform(() => undefined)), schema]);
 }
 
-const profileLocationFields = {
+export const profileLocationFields = {
 	locationLabel: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(200, `Ort ist zu lang`)), ``),
 	latitude: v.optional(
 		v.pipe(
@@ -31,10 +31,10 @@ const profileLocationFields = {
 	),
 } satisfies v.ObjectEntries;
 
-function isValidProfileLocation(data: {
+export function isValidProfileLocation(data: {
 	locationLabel?: string;
-	latitude: number | null;
-	longitude: number | null;
+	latitude?: number | null;
+	longitude?: number | null;
 }) {
 	const hasLabel = Boolean(data.locationLabel?.trim());
 	const hasCoords = hasValidCoordinates({ lat: data.latitude, lng: data.longitude });
@@ -42,7 +42,7 @@ function isValidProfileLocation(data: {
 	return hasLabel && hasCoords;
 }
 
-const profileLocationCheckMessage =
+export const profileLocationCheckMessage =
 	`Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`;
 
 export const profileLocationFormSchema = v.pipe(
@@ -50,7 +50,7 @@ export const profileLocationFormSchema = v.pipe(
 	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
 );
 
-const publicProfileFields = {
+export const publicProfileFields = {
 	displayName: v.pipe(v.string(), v.trim(), v.nonEmpty(`Name muss ausgefüllt werden`), v.maxLength(120, `Name ist zu lang`)),
 	slug: v.optional(
 		emptyStringIsUndefined(
@@ -197,14 +197,6 @@ const publicProfileFields = {
 } satisfies v.ObjectEntries;
 
 export const publicProfileFormSchema = v.object(publicProfileFields);
-
-export const offeringProfileFormSchema = v.pipe(
-	v.object({
-		...publicProfileFields,
-		...profileLocationFields,
-	}),
-	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
-);
 
 /**
  * Converts stored social links into button-ready href entries.
