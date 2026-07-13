@@ -486,7 +486,7 @@
 
 <div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-autocomplete-input">
 	<div bind:this={container} class="relative min-w-0 flex-1">
-		<label class={[`input peer group w-full`, usingCurrentLocation && !isLoadingLocation && `active`]}>
+		<label class="input peer group w-full">
 			<div class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex">
 				<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
 			</div>
@@ -588,7 +588,7 @@
 			{/if}
 			<button
 				type="button"
-				class={[`btn btn-xs mr-0.5 flex h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden`, usingCurrentLocation && `bg-base-100`]}
+				class="btn btn-xs mr-0.5 flex h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden"
 				title="Aktuellen Standort verwenden"
 				onclick={usingCurrentLocation && !isLoadingLocation ? handleResetLocationClick : handleUseCurrentLocationClick}
 				disabled={inputDisabled}

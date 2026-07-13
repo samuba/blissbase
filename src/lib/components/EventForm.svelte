@@ -395,7 +395,7 @@
 				</div>
 			{/if}
 		</div>
-		<p class="label wrap-break-words whitespace-pre-line">
+		<p class="label whitespace-pre-line">
 			Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Telegram, etc.
 		</p>
 		<FormFieldIssues field={remoteForm.fields.contact} />

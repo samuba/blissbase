@@ -148,8 +148,17 @@
 				</div>
 			</div>
 			<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-				<span class="badge badge-ghost shrink-0">
-					{offering.format === `online` ? `Online` : offering.format === `offline` ? `Vor Ort` : `Vor Ort & Online`}
+				<span class="badge badge-ghost flex shrink-0 items-center gap-1.5 leading-none">
+					{#if offering.format === `online`}
+						<i class="icon-[ph--globe] size-4.5"></i>
+						Online
+					{:else if offering.format === `offline`}
+						<i class="icon-[ph--users] size-4.5"></i>
+						Vor Ort
+					{:else}
+						<i class="icon-[ph--users] size-4.5"></i>
+						Vor Ort / Online
+					{/if}
 				</span>
 				<div class="sm:grow"></div>
 

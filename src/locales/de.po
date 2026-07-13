@@ -89,10 +89,7 @@ msgstr "Ausgebucht"
 
 #: src/lib/components/EventCard.svelte
 #: src/lib/components/HeaderControls.svelte
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/EventDetails.svelte
 msgid "Online"
 msgstr "Online"
@@ -1234,10 +1231,7 @@ msgid "Suchen"
 msgstr "Suchen"
 
 #: src/lib/components/HeaderControls.svelte
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/OfferingDetails.svelte
-#: src/lib/components/OfferingCard.svelte
 msgid "Vor Ort"
 msgstr "Vor Ort"
 
@@ -1280,14 +1274,6 @@ msgstr "Angebot erstellen <0/>"
 msgid "Weitere Wege"
 msgstr "Weitere Wege"
 
-#: src/lib/components/OfferingForm.svelte
-msgid "Persönlich an deinem Profil-Ort."
-msgstr "Persönlich an deinem Profil-Ort."
-
-#: src/lib/components/OfferingForm.svelte
-msgid "Du bietest beides an."
-msgstr "Du bietest beides an."
-
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte gib deine E-Mail-Adresse ein."
@@ -1315,9 +1301,7 @@ msgstr "Format *"
 msgid "Profilbeschreibung"
 msgstr "Profilbeschreibung"
 
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/OfferingDetails.svelte
 msgid "Vor Ort & Online"
 msgstr "Vor Ort & Online"
 
@@ -1642,7 +1626,7 @@ msgstr "Online Angebote auch anzeigen"
 msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der <0>Angebote-Seite</0> sichtbar."
 msgstr "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der <0>Angebote-Seite</0> sichtbar."
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/profile/offerings/+page.svelte
 msgid "Standort für deine Angebote"
 msgstr "Standort für deine Angebote"
@@ -1699,10 +1683,6 @@ msgstr "Ort mit diesem Namen nicht gefunden"
 #: src/lib/components/LocationAutocompleteInput.svelte
 msgid "<0/> Vorschläge werden geladen…"
 msgstr "<0/> Vorschläge werden geladen…"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote!"
-msgstr "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote!"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
@@ -1805,3 +1785,30 @@ msgstr "Redo"
 #: src/routes/profile/public/+page.svelte
 msgid "Erzähl etwas über dich…"
 msgstr "Erzähl etwas über dich…"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Persönlich an dem angegebenen Ort."
+msgstr "Persönlich an dem angegebenen Ort."
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Online"
+msgstr "<0/> Online"
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Vor Ort"
+msgstr "<0/> Vor Ort"
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Vor Ort / Online"
+msgstr "<0/> Vor Ort / Online"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote."
+msgstr "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote."
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Du bietest beide Optionen an."
+msgstr "Du bietest beide Optionen an."

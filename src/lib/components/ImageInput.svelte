@@ -700,7 +700,7 @@
 		</div>
 	</div>
 
-	<p class="label pt-0 wrap-break-words whitespace-pre-line">
+	<p class="label pt-0 whitespace-pre-line">
 		Lade Bilder hoch die deinen Event illustrieren.
 		{#if hasProcessingInFlight}
 			\nBilder werden vor dem Upload lokal verarbeitet.

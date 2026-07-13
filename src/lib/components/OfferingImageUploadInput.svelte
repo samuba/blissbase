@@ -698,7 +698,7 @@
 		</div>
 	</div>
 
-	<p class="label wrap-break-words pt-0 whitespace-pre-line">
+	<p class="label pt-0 whitespace-pre-line">
 		Lade Bilder hoch, die dein Angebot zeigen. Das erste Bild wird als Cover verwendet.
 		{#if busy}
 			<br />Bilder werden lokal verarbeitet und hochgeladen.

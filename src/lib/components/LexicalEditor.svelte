@@ -542,7 +542,7 @@
 
 	<div class="relative">
 		{#if isEmpty}
-			<div class="text-base-content/40 pointer-events-none absolute inset-0 z-10 px-4 py-4 text-base" aria-hidden="true">
+			<div class="text-base-content/40 pointer-events-none absolute inset-0 z-10 px-4 py-3 text-base" aria-hidden="true">
 				{placeholder}
 			</div>
 		{/if}

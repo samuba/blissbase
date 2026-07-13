@@ -89,10 +89,7 @@ msgstr "Sold out"
 
 #: src/lib/components/EventCard.svelte
 #: src/lib/components/HeaderControls.svelte
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/EventDetails.svelte
-#: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/EventDetails.svelte
 msgid "Online"
 msgstr "Online"
@@ -1234,10 +1231,7 @@ msgid "Suchen"
 msgstr "Search"
 
 #: src/lib/components/HeaderControls.svelte
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/OfferingDetails.svelte
-#: src/lib/components/OfferingCard.svelte
 msgid "Vor Ort"
 msgstr "In-Person"
 
@@ -1280,14 +1274,6 @@ msgstr "Create offering <0/>"
 msgid "Weitere Wege"
 msgstr "Other ways"
 
-#: src/lib/components/OfferingForm.svelte
-msgid "Persönlich an deinem Profil-Ort."
-msgstr "In person at your profile location."
-
-#: src/lib/components/OfferingForm.svelte
-msgid "Du bietest beides an."
-msgstr "You offer both."
-
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte gib deine E-Mail-Adresse ein."
@@ -1315,9 +1301,7 @@ msgstr "Format *"
 msgid "Profilbeschreibung"
 msgstr "Profile description"
 
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/routes/offerings/OfferingDetails.svelte
 msgid "Vor Ort & Online"
 msgstr "In-person & Online"
 
@@ -1407,7 +1391,7 @@ msgstr "Images"
 
 #: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Lade Bilder hoch, die dein Angebot zeigen. Das erste Bild wird als Cover verwendet. <0/>"
-msgstr "Upload images that show your offer. The first image is used as the cover. <0/>"
+msgstr "Upload images that illustrate your offer. The first image is used as the cover. <0/>"
 
 #: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Upload fehlgeschlagen"
@@ -1489,11 +1473,11 @@ msgstr "You are not allowed to edit this offering"
 
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "Angebot bearbeiten | Blissbase"
-msgstr "Edit listing | Blissbase"
+msgstr "Edit offering | Blissbase"
 
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "Angebot bearbeiten"
-msgstr "Edit listing"
+msgstr "Edit offering"
 
 #: src/routes/offerings/[id]/edit/+page.svelte
 msgid "<0/> Lösche…"
@@ -1574,7 +1558,7 @@ msgstr "Offer"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen, dich vor der Anfrage besser einzuschätzen."
-msgstr "A complete profile builds trust. These details are shown publicly with your listing and help people assess you better before they reach out."
+msgstr "A complete profile builds trust. These details are shown publicly with your offering and help people assess you better before they reach out."
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Möchtest du dein Profil bearbeiten? <0><0/> Profil bearbeiten</0>"
@@ -1640,9 +1624,9 @@ msgstr "Also show online offers"
 
 #: src/routes/profile/offerings/+page.svelte
 msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der <0>Angebote-Seite</0> sichtbar."
-msgstr "Manage your listings. Activated listings are visible to other users on the <0>Listings page</0>."
+msgstr "Manage your Offerings. Activated offerings are visible to other users on the <0>Offerings page</0>."
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/OfferingForm.svelte
 #: src/routes/profile/offerings/+page.svelte
 msgid "Standort für deine Angebote"
 msgstr "Offerings location"
@@ -1699,10 +1683,6 @@ msgstr "Location with this name not found"
 #: src/lib/components/LocationAutocompleteInput.svelte
 msgid "<0/> Vorschläge werden geladen…"
 msgstr "<0/> Loading suggestions…"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote!"
-msgstr "Your in-person offers are shown to others near this location. The location applies to all your offers!"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
@@ -1805,3 +1785,30 @@ msgstr "Redo"
 #: src/routes/profile/public/+page.svelte
 msgid "Erzähl etwas über dich…"
 msgstr "Tell me something about yourself…"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Persönlich an dem angegebenen Ort."
+msgstr "Personally at the specified location."
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Online"
+msgstr "<0/> Online"
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Vor Ort"
+msgstr "<0/> In person"
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Vor Ort / Online"
+msgstr "<0/> In person / Online"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote."
+msgstr "Your In person offers will be shown to others nearby this location. The location applies to all of your offers."
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Du bietest beide Optionen an."
+msgstr "You offer both options."
