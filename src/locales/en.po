@@ -1643,9 +1643,8 @@ msgstr "Error while filling in automatically. You can still fill out the form."
 msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
 msgstr "Insert WhatsApp, Telegram or other event description"
 
-#: src/lib/components/EventForm.svelte
-msgid "Daten übernehmen <0/>"
-msgstr "Use data <0/>"
+#~ msgid "Daten übernehmen <0/>"
+#~ msgstr "Use data <0/>"
 
 #. 0: result.fields.existingSource
 #: src/lib/components/EventForm.svelte
@@ -1812,3 +1811,7 @@ msgstr "Your In person offers will be shown to others nearby this location. The 
 #: src/lib/components/OfferingForm.svelte
 msgid "Du bietest beide Optionen an."
 msgstr "You offer both options."
+
+#: src/lib/components/EventForm.svelte
+msgid "Felder ausfüllen <0/>"
+msgstr "Fill in the fields <0/>"

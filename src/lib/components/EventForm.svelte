@@ -218,7 +218,7 @@
 									<span class="loading loading-spinner loading-sm"></span>
 									Analysiere Text …
 								{:else}
-									Daten übernehmen
+									Felder ausfüllen
 									<i class="icon-[ph--sparkle] size-5"></i>
 								{/if}
 							</button>

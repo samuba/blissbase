@@ -1643,9 +1643,8 @@ msgstr "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem au
 msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
 msgstr "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
 
-#: src/lib/components/EventForm.svelte
-msgid "Daten übernehmen <0/>"
-msgstr "Daten übernehmen <0/>"
+#~ msgid "Daten übernehmen <0/>"
+#~ msgstr "Daten übernehmen <0/>"
 
 #. 0: result.fields.existingSource
 #: src/lib/components/EventForm.svelte
@@ -1812,3 +1811,7 @@ msgstr "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt
 #: src/lib/components/OfferingForm.svelte
 msgid "Du bietest beide Optionen an."
 msgstr "Du bietest beide Optionen an."
+
+#: src/lib/components/EventForm.svelte
+msgid "Felder ausfüllen <0/>"
+msgstr "Felder ausfüllen <0/>"
