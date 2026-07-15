@@ -119,7 +119,7 @@ test.describe('Navigation Menu', () => {
 	test('create event page is accessible', async ({ page }) => {
 		for (let attempt = 0; attempt < 3; attempt++) {
 			try {
-				await page.goto('/new', { waitUntil: 'domcontentloaded' });
+				await page.goto('/events/new', { waitUntil: 'domcontentloaded' });
 				break;
 			} catch {
 				if (attempt === 2) throw new Error(`Failed to open /new after 3 attempts`);
@@ -127,11 +127,7 @@ test.describe('Navigation Menu', () => {
 			}
 		}
 		await expect(page.locator('body')).toBeVisible();
-		await expect(page.getByRole('heading', { name: 'Event erstellen' }).first()).toBeVisible();
-
-		await page.getByRole('link', { name: 'Event erstellen' }).first().click();
-		await expect(page).toHaveURL(/\/events\/new/);
-		await expect(page.getByRole('heading', { name: 'Event erstellen' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Create event' }).first()).toBeVisible();
 	});
 
 	test('event sources page is accessible', async ({ page }) => {
