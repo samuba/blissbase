@@ -51,7 +51,7 @@
 		</div>
 
 		<div class="flex justify-center p-4">
-			<a href={routes.newEvent()} class="btn-sm btn">
+			<a href={routes.createHub()} class="btn-sm btn">
 				<i class="icon-[ph--arrow-left] size-5"></i>
 				Zurück
 			</a>

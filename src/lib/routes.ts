@@ -13,7 +13,8 @@ export const routes = {
     sources: () => resolve(`/sources`) ,
     about: () => resolve(`/about`) ,
     faq: () => resolve(`/faq`) ,
-    newEvent: () => resolve(`/new`) ,
+    newEvent: () => resolve(`/events/new`) ,
+    createHub: () => resolve(`/new`) ,
     offeringsList: (args: Partial<OfferingsFilter> = {}) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
         const params = buildOfferingsFilterSearchParams({
@@ -50,6 +51,7 @@ export const routes = {
 
 export const BASE_URL = "https://blissbase.app" as const
 export const OFFERING_SLUG_QUERY = `offeringSlug` as const
+export const EVENT_SLUG_QUERY = `eventSlug` as const
 
 export function absoluteUrl(path: string) {
     return new URL(path, BASE_URL).toString();
@@ -86,6 +88,23 @@ export function takeOfferingSlugQuery(url: URL) {
 
     url.searchParams.delete(OFFERING_SLUG_QUERY);
     return offeringSlug;
+}
+
+/** Home (or other host) URL that opens the event details dialog after load. */
+export function withEventSlug(args: { path?: string; eventSlug: string }) {
+    const path = normalizeReturnToPath(args.path ?? routes.root(), BASE_URL) ?? routes.root();
+    const url = new URL(path, BASE_URL);
+    url.searchParams.set(EVENT_SLUG_QUERY, args.eventSlug);
+    return relativeUrl(url);
+}
+
+/** Reads and removes `eventSlug` from `url` (mutates search params). */
+export function takeEventSlugQuery(url: URL) {
+    const eventSlug = url.searchParams.get(EVENT_SLUG_QUERY)?.trim();
+    if (!eventSlug) return null;
+
+    url.searchParams.delete(EVENT_SLUG_QUERY);
+    return eventSlug;
 }
 
 export function safeReturnToPath(args: { returnTo?: string | null; fallback: string; origin?: string }) {

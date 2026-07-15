@@ -306,6 +306,7 @@ msgstr "<0/> Wird gesendet..."
 
 #: src/lib/components/PageHeader.svelte
 #: src/routes/EventDetailsDialog.svelte
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -423,15 +424,14 @@ msgstr "Event löschen"
 #: src/lib/components/ProfileImageCropInput.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/edit/[id]/+page.svelte
-#: src/routes/new/+page.svelte
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
-#: src/routes/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Abbrechen"
 msgstr "Abbrechen"
 
 #: src/routes/edit/[id]/+page.svelte
-#: src/routes/new/+page.svelte
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Speichern"
@@ -442,7 +442,7 @@ msgstr "Speichern"
 msgid "<0/> Alle Events"
 msgstr "<0/> Alle Events"
 
-#: src/routes/new/+page.svelte
+#: src/routes/events/new/+page.svelte
 msgid "Event erstellen"
 msgstr "Event erstellen"
 
@@ -714,7 +714,7 @@ msgid "Vorschau für {0}"
 msgstr "Vorschau für {0}"
 
 #: src/routes/edit/[id]/+page.svelte
-#: src/routes/new/+page.svelte
+#: src/routes/events/new/+page.svelte
 msgid "<0/> Speichere..."
 msgstr "<0/> Speichere..."
 

@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	let event = $state<UiEvent | undefined>(undefined);
 	let open = $derived(!!event);
+	let openingEventSlug = $state<string | undefined>(undefined);
 
 	export function showEventDetailsDialog(eventToShow: UiEvent) {
 		event = eventToShow;
@@ -18,8 +19,11 @@
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
-	import { pushState } from '$app/navigation';
+	import { pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { getEventBySlug } from '$lib/rpc/events.remote';
+	import { routes, takeEventSlugQuery } from '$lib/routes';
+	import { onMount } from 'svelte';
 
 	$effect(() => {
 		// close dialog if user clicked browser back button
@@ -27,6 +31,36 @@
 			closeGracefully();
 		}
 	});
+
+	onMount(() => {
+		void maybeOpenFromEventSlugQuery(new URL(window.location.href));
+
+		navigation.addEventListener(`navigate`, onUrlChanged);
+		return () => {
+			navigation.removeEventListener(`navigate`, ∑);
+		};
+	});
+
+	function onUrlChanged(e: { destination: NavigationDestination }) {
+		void maybeOpenFromEventSlugQuery(new URL(e.destination.url));
+	}
+
+	async function maybeOpenFromEventSlugQuery(url: URL) {
+		const eventSlug = takeEventSlugQuery(url);
+		if (!eventSlug) return;
+		if (openingEventSlug === eventSlug || event?.slug === eventSlug) return;
+
+		openingEventSlug = eventSlug;
+		try {
+			replaceState(routes.currentPath(url), {});
+			const eventToShow = await getEventBySlug({ slug: eventSlug });
+			if (openingEventSlug !== eventSlug) return;
+			if (!eventToShow) return;
+			showEventDetailsDialog(eventToShow);
+		} finally {
+			if (openingEventSlug === eventSlug) openingEventSlug = undefined;
+		}
+	}
 
 	function handleClose() {
 		if (!browser) return;

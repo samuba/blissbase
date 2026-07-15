@@ -6,6 +6,7 @@ import { ensureUserId, posthogCapture } from "$lib/server/common";
 import { db, s } from '$lib/server/db';
 import { and, asc, desc, eq, lt, gte, sql } from 'drizzle-orm';
 import { eventWith, prepareEventsForUi } from '$lib/server/events';
+import * as v from 'valibot';
 
 // using `command` instead of `query` cuz query does not allow setting cookies
 export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, async (params) => {
@@ -117,3 +118,17 @@ export const getMyAuthoredPastEvents = query(async () => {
 
 	return prepareEventsForUi(events);
 });
+
+export const getEventBySlug = query(
+	v.object({
+		slug: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+	}),
+	async ({ slug }) => {
+		const event = await db.query.events.findFirst({
+			where: eq(s.events.slug, slug),
+			with: eventWith,
+		});
+		if (!event) return null;
+		return prepareEventsForUi([event])[0] ?? null;
+	},
+);

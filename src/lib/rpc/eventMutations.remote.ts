@@ -10,7 +10,7 @@ import {
 } from '$lib/eventImageProcessing.shared';
 import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from '$lib/events.remote.common';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
-import { routes } from '$lib/routes';
+import { routes, withEventSlug } from '$lib/routes';
 import { ensureUserId } from '$lib/server/common';
 import { db, eq, s, sql } from '$lib/server/db';
 import { sendEventCreatedEmail } from '$lib/server/email';
@@ -136,7 +136,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	});
 
 	console.timeEnd('createEvent');
-	redirect(303, routes.eventDetails(createdEvent!.slug));
+	redirect(303, withEventSlug({ eventSlug: createdEvent!.slug }));
 });
 
 export const getExistingEventForDraft = query(v.object({

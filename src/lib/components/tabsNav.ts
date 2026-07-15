@@ -13,7 +13,7 @@ export function getAppNavItems(): AppNavItem[] {
 		},
 		{
 			label: /* @wc-include */ `Erstellen`,
-			href: resolve(`/new`),
+			href: routes.createHub(),
 			icon: `icon-[ph--plus-circle]`,
 			iconActive: `icon-[ph--plus-circle-fill]`,
 			requireLogin: true,
@@ -66,6 +66,9 @@ export function isActiveAppTab(pathname: string, href: string) {
 	}
 	if (href === routes.profile()) {
 		return pathname === href || (pathname.startsWith(`${href}/`) && pathname !== routes.favorites());
+	}
+	if (href === routes.createHub()) {
+		return pathname === href || pathname.startsWith(`/events/`);
 	}
 	return pathname === href;
 }

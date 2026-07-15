@@ -28,11 +28,15 @@
 	let {
 		remoteForm,
 		initialExistingImageUrls = [],
-		showAutofillControl = false
+		showAutofillControl = false,
+		onDirty,
+		onSuccess,
 	}: {
 		remoteForm: EventFormRemoteForm;
 		initialExistingImageUrls?: string[];
 		showAutofillControl?: boolean;
+		onDirty?: () => void;
+		onSuccess?: () => void | Promise<void>;
 	} = $props();
 
 	function isUpdateEventForm(remoteForm: EventFormRemoteForm): remoteForm is UpdateEventForm {
@@ -43,12 +47,17 @@
 		return !isUpdateEventForm(remoteForm);
 	}
 
-	let preflight = $derived.by(() => {
-		if (isUpdateEventForm(remoteForm)) {
-			return remoteForm.preflight(updateEventSchema);
-		}
+	let formProps = $derived.by(() => {
+		const form = isUpdateEventForm(remoteForm)
+			? remoteForm.preflight(updateEventSchema)
+			: remoteForm.preflight(createEventSchema);
+		if (!onSuccess) return form;
 
-		return remoteForm.preflight(createEventSchema);
+		return form.enhance(async ({ submit }) => {
+			if (await submit()) {
+				await onSuccess();
+			}
+		});
 	});
 	let updateFields = $derived(remoteForm.fields as Partial<UpdateOnlyFields>);
 	let selectedContactMethod = $derived(
@@ -63,7 +72,14 @@
 	useDuplicateEventDraftToast(() => remoteForm);
 </script>
 
-<form {...preflight} enctype="multipart/form-data" class="flex flex-col gap-5" id="event-form">
+<form
+	{...formProps}
+	enctype="multipart/form-data"
+	class="flex flex-col gap-5"
+	id="event-form"
+	oninput={() => onDirty?.()}
+	onchange={() => onDirty?.()}
+>
 	{#if showAutofillControl && isCreateEventForm(remoteForm)}
 		<EventAutofill {remoteForm} />
 	{/if}
@@ -106,6 +122,7 @@
 		<LexicalEditor
 			field={remoteForm.fields.description}
 			placeholder="Beschreibe deinen Event"
+			{onDirty}
 		/>
 		<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung *</legend>
 		<FormFieldIssues field={remoteForm.fields.description} />
@@ -165,7 +182,10 @@
 			<Select
 				bind:value={() => remoteForm.fields.contactMethod.value(), (v) => remoteForm.fields.contactMethod.set(v)}
 				placeholder="Anmelde Methode auswählen"
-				onValueChange={() => remoteForm.fields.contact.set('')}
+				onValueChange={() => {
+					remoteForm.fields.contact.set('');
+					onDirty?.();
+				}}
 				remoteFunctionField={remoteForm.fields.contactMethod}
 				triggerProps={{ class: `rounded-l-full ${!selectedContactMethod || selectedContactMethod === 'none' ? 'rounded-r-full' : ''} ` }}
 				options={[

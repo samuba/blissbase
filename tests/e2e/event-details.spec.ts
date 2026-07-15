@@ -127,7 +127,11 @@ test.describe('Navigation Menu', () => {
 			}
 		}
 		await expect(page.locator('body')).toBeVisible();
-		await expect(page.locator('h1, h2').first()).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Event erstellen' }).first()).toBeVisible();
+
+		await page.getByRole('link', { name: 'Event erstellen' }).first().click();
+		await expect(page).toHaveURL(/\/events\/new/);
+		await expect(page.getByRole('heading', { name: 'Event erstellen' })).toBeVisible();
 	});
 
 	test('event sources page is accessible', async ({ page }) => {

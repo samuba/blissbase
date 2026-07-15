@@ -115,7 +115,7 @@ const supabaseAuth: Handle = async ({ event, resolve }) => {
 
 const guardRoutesWithLogin: Handle = async ({ event, resolve }) => {
     const { userId } = event.locals;
-    ["/new", "/profile"].forEach(route => {
+    ["/new", "/events", "/profile"].forEach(route => {
         if (event.url.pathname.startsWith(route) && !userId) {
             redirect(302, resolveRoute('/auth/login'));
         }
