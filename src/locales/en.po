@@ -1082,7 +1082,7 @@ msgstr "Please enter a value."
 msgid "Leerzeichen ist nicht erlaubt."
 msgstr "Spaces are not allowed."
 
-#: src/routes/profile/public/+page.svelte
+#: src/lib/unsavedChangesGuard.svelte.ts
 msgid "Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?"
 msgstr "You have unsaved changes. Are you sure you want to leave this page?"
 

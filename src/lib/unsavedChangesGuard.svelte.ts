@@ -1,7 +1,6 @@
 import { beforeNavigate } from "$app/navigation";
 import { onMount } from "svelte";
 
-const DEFAULT_CONFIRM_MESSAGE = `Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?`;
 const DEFAULT_ARM_DELAY_MS = 500;
 
 /** Call during component init — registers `beforeNavigate` and arms after a short hydration delay. */
@@ -11,7 +10,7 @@ export class UnsavedChangesGuard {
 
 	constructor(args: { armDelayMs?: number; confirmMessage?: string } = {}) {
 		const armDelayMs = args.armDelayMs ?? DEFAULT_ARM_DELAY_MS;
-		const confirmMessage = args.confirmMessage ?? DEFAULT_CONFIRM_MESSAGE;
+		const confirmMessage = args.confirmMessage ?? /* wc-include */ `Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?`;
 
 		onMount(() => {
 			const timeout = setTimeout(() => {
