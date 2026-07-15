@@ -45,10 +45,12 @@
 		field,
 		value,
 		placeholder,
+		onDirty,
 	}: {
 		field: RemoteFormField<string>;
 		value?: string;
 		placeholder: string;
+		onDirty?: () => void;
 	} = $props();
 
 	let editor: LexicalEditor | undefined = $state(undefined);
@@ -118,9 +120,11 @@
 	function setHtmlFromEditor(nextEditor: LexicalEditor) {
 		nextEditor.getEditorState().read(() => {
 			const html = normalizeExportedHtml(generateHtmlFromNodes(nextEditor, null));
+			const changed = html !== editorValue;
 			editorValue = html;
 			lastRenderedExternalValue = html;
 			isEmpty = !html;
+			if (changed) onDirty?.();
 		});
 	}
 

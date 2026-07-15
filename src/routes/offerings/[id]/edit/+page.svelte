@@ -6,6 +6,7 @@
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "$lib/rpc/offerings.remote";
 	import { routes, safeReturnToPath } from "$lib/routes";
+	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
 	import { toast } from "svelte-sonner";
 	import type { PageProps } from "./$types";
 
@@ -31,6 +32,8 @@
 		}),
 	);
 
+	const unsaved = new UnsavedChangesGuard();
+
 	$effect(() => {
 		if (initializedFormOfferingId === offering.id) return;
 		updateOffering.fields.set(editFormValues);
@@ -39,6 +42,7 @@
 	});
 
 	async function handleSaveSuccess() {
+		unsaved.clear();
 		showFlashToast(`offeringUpdated`);
 		await goto(returnHref, { replaceState: true });
 	}
@@ -53,6 +57,7 @@
 		try {
 			isDeletingOffering = true;
 			await deleteOffering({ offeringId: offering.id });
+			unsaved.clear();
 			await goto(routes.offeringsList());
 		} catch (error) {
 			console.error(`Failed to delete offering:`, error);
@@ -97,6 +102,8 @@
 	<title>Angebot bearbeiten | Blissbase</title>
 </svelte:head>
 
+<svelte:window onbeforeunload={unsaved.handleBeforeUnload} />
+
 <div class="mx-auto w-full max-w-3xl px-0 pb-6 sm:px-4">
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body gap-6 p-4 sm:p-6">
@@ -116,6 +123,7 @@
 					initialExistingImageUrls={editFormValues.existingImageUrls}
 					returnTo={returnHref}
 					bind:format
+					onDirty={unsaved.markDirty}
 					onImageBusyChange={(busy) => (imageBusy = busy)}
 					onSuccess={handleSaveSuccess}
 				/>

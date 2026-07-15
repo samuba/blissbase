@@ -26,6 +26,7 @@
 		remoteForm,
 		initialExistingImageUrls = [],
 		onImageBusyChange,
+		onDirty,
 		formId = `offering-form`,
 		returnTo = ``,
 		format = $bindable<OfferingFormat>(`offline`),
@@ -34,6 +35,8 @@
 		initialLocationLat,
 		initialLocationLng,
 		locationError = ``,
+		oninput,
+		onchange,
 		onsubmit,
 		onSuccess,
 		children,
@@ -41,6 +44,7 @@
 		remoteForm: OfferingRemoteForm;
 		initialExistingImageUrls?: string[];
 		onImageBusyChange?: (busy: boolean) => void;
+		onDirty?: () => void;
 		formId?: string;
 		returnTo?: string;
 		format?: OfferingFormat;
@@ -49,6 +53,8 @@
 		initialLocationLat?: number | null;
 		initialLocationLng?: number | null;
 		locationError?: string;
+		oninput?: (event: Event) => void;
+		onchange?: (event: Event) => void;
 		onsubmit?: (event: SubmitEvent) => void;
 		onSuccess?: () => void | Promise<void>;
 		children?: Snippet;
@@ -101,7 +107,20 @@
 	}
 </script>
 
-<form {...formProps} class="flex flex-col gap-3" id={formId} {onsubmit}>
+<form
+	{...formProps}
+	class="flex flex-col gap-3"
+	id={formId}
+	oninput={(event) => {
+		oninput?.(event);
+		onDirty?.();
+	}}
+	onchange={(event) => {
+		onchange?.(event);
+		onDirty?.();
+	}}
+	{onsubmit}
+>
 	<section class={[`grid gap-4`, fieldsHidden && `hidden`]} data-wizard-step="offering">
 		<OfferingImageUploadInput
 			field={remoteForm.fields.imageClaims}
@@ -109,6 +128,7 @@
 			imageOrderField={updateFields.imageOrder}
 			{initialExistingImageUrls}
 			onBusyChange={onImageBusyChange}
+			{onDirty}
 		/>
 
 		<fieldset class="fieldset">
@@ -121,6 +141,7 @@
 			<LexicalEditor
 				field={remoteForm.fields.descriptionHtml}
 				placeholder="Beschreibe dein Angebot"
+				{onDirty}
 			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={remoteForm.fields.descriptionHtml} />
@@ -168,6 +189,7 @@
 						locationLabelField={remoteForm.fields.profile.locationLabel}
 						latitudeField={remoteForm.fields.profile.latitude}
 						longitudeField={remoteForm.fields.profile.longitude}
+						onChange={() => onDirty?.()}
 					/>
 				</div>
 				<p class="label whitespace-pre-line">

@@ -24,6 +24,7 @@
 		imageOrderField,
 		initialExistingImageUrls = [],
 		onBusyChange,
+		onDirty,
 		class: className,
 	}: {
 		field: RemoteFormField<string[]>;
@@ -31,6 +32,7 @@
 		imageOrderField?: RemoteFormField<string[]>;
 		initialExistingImageUrls?: string[];
 		onBusyChange?: (busy: boolean) => void;
+		onDirty?: () => void;
 		class?: string;
 	} = $props();
 
@@ -233,6 +235,7 @@
 			preview: createPendingImagePreview({ file }),
 		}));
 		previewItems = [...previewItems, ...pendingPreviews.map((x) => x.preview)];
+		onDirty?.();
 		reportBusy(true);
 
 		for (const pendingPreview of pendingPreviews) {
@@ -520,6 +523,7 @@
 
 		reorderedItems.splice(nextIndex, 0, movedItem);
 		previewItems = reorderedItems;
+		onDirty?.();
 	}
 
 	/**
@@ -531,6 +535,7 @@
 		if (busy) return;
 		clearObjectUrlForPreview(args.previewId);
 		previewItems = previewItems.filter((x) => x.id !== args.previewId);
+		onDirty?.();
 	}
 
 	/**
@@ -716,6 +721,7 @@
 		onfinalize={(event) => {
 			if (busy) return;
 			previewItems = event.detail.items;
+			onDirty?.();
 		}}
 	>
 		{#each previewItems as preview, i (preview.id)}

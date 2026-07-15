@@ -16,6 +16,7 @@
 	import { hasValidCoordinates } from "$lib/locationFilter";
 	import { routes, safeReturnToPath } from "$lib/routes";
 	import { getSupabaseBrowserClient } from "$lib/supabase";
+	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
 	import { localeStore } from "../../../locales/localeStore.svelte";
 	import OtpStep from "./OtpStep.svelte";
 	import { loadFiltersFromBrowserCookie } from "$lib/cookie-utils";
@@ -111,6 +112,8 @@
 		}),
 	);
 
+	const unsaved = new UnsavedChangesGuard();
+
 	let hasMountedWizardStep = false;
 	function scrollToTopOnStepChange() {
 		if (!hasMountedWizardStep) {
@@ -200,6 +203,7 @@
 
 	function setSocialLinks(nextSocialLinks: PublicProfileSocialLinks) {
 		socialLinks = nextSocialLinks;
+		unsaved.markDirty();
 		if (!hasSocialLink(nextSocialLinks)) return;
 		profileSocialLinkError = ``;
 	}
@@ -445,6 +449,7 @@
 				event.preventDefault();
 				return;
 			}
+			unsaved.clear();
 			return;
 		}
 		event.preventDefault();
@@ -477,6 +482,8 @@
 	<title>Angebot erstellen | Blissbase</title>
 </svelte:head>
 
+<svelte:window onbeforeunload={unsaved.handleBeforeUnload} />
+
 <div class="mx-auto w-full max-w-3xl px-0 pb-6 sm:px-4">
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body gap-6 p-4 sm:p-6">
@@ -501,6 +508,7 @@
 					initialLocationLat={initialLocation?.lat}
 					initialLocationLng={initialLocation?.lng}
 					{locationError}
+					onDirty={unsaved.markDirty}
 					onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
 					onsubmit={onSubmit}
 				>
@@ -557,7 +565,10 @@
 									kind="profile"
 									field={createOffering.fields.profile.profileImageUrl}
 									initialUrl={profile?.profileImageUrl ?? ``}
-									onBusyChange={(busy) => (profileImageBusy = busy)}
+									onBusyChange={(busy) => {
+										profileImageBusy = busy;
+										if (busy) unsaved.markDirty();
+									}}
 								/>
 
 								<ProfileImageCropInput
@@ -565,12 +576,20 @@
 									kind="banner"
 									field={createOffering.fields.profile.bannerImageUrl}
 									initialUrl={profile?.bannerImageUrl ?? ``}
-									onBusyChange={(busy) => (bannerImageBusy = busy)}
+									onBusyChange={(busy) => {
+										bannerImageBusy = busy;
+										if (busy) unsaved.markDirty();
+									}}
 								/>
 							</div>
 
 							<fieldset class={[`fieldset`, !missingBio && `hidden`]}>
-								<LexicalEditor field={createOffering.fields.profile.bio} value={profile?.bio ?? ``} placeholder="Erzähl etwas über dich…" />
+								<LexicalEditor
+									field={createOffering.fields.profile.bio}
+									value={profile?.bio ?? ``}
+									placeholder="Erzähl etwas über dich…"
+									onDirty={unsaved.markDirty}
+								/>
 								<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profilbeschreibung</legend>
 								<FormFieldIssues field={createOffering.fields.profile.bio} />
 							</fieldset>
@@ -580,6 +599,7 @@
 								<PublicProfileSocialLinksEditor
 									bind:socialLinks={getSocialLinks, setSocialLinks}
 									field={createOffering.fields.profile.socialLinks}
+									markDirty={unsaved.markDirty}
 								/>
 								{#if profileSocialLinkError}
 									<p class="text-error text-sm">{profileSocialLinkError}</p>

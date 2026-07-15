@@ -11,9 +11,8 @@
 		upsertPublicProfile
 	} from '$lib/rpc/profile.remote';
 	import { routes } from '$lib/routes';
+	import { UnsavedChangesGuard } from '$lib/unsavedChangesGuard.svelte';
 	import { resolve } from '$app/paths';
-	import { beforeNavigate } from '$app/navigation';
-	import { onMount } from 'svelte';
 
 	const profile = $state(await getMyPublicProfile());
 
@@ -67,47 +66,10 @@
 		}
 	}
 
-	let isDirty = $state(false);
-	// Lexical and ProfileImageCropInput may emit initial updates while hydrating.
-	// We arm dirty tracking only after those settle, so opening the page doesn't count as edits.
-	let dirtyArmed = $state(false);
-
-	onMount(() => {
-		const timeout = setTimeout(() => {
-			dirtyArmed = true;
-		}, 500);
-		return () => clearTimeout(timeout);
-	});
-
-	function markDirty() {
-		if (!dirtyArmed) return;
-		isDirty = true;
-	}
-
-	function onFormSubmit() {
-		// The server action redirects on success, so we release the guard here.
-		// If submission fails and the user edits again, `markDirty` will re-arm it.
-		isDirty = false;
-	}
-
-	beforeNavigate((navigation) => {
-		if (!isDirty) return;
-		if (navigation.willUnload) return; // handled by the beforeunload listener below
-		const leave = confirm(
-			`Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?`
-		);
-		if (!leave) navigation.cancel();
-	});
-
-	$effect(() => {
-		if (!isDirty) return;
-		function handleBeforeUnload(event: BeforeUnloadEvent) {
-			event.preventDefault();
-		}
-		window.addEventListener(`beforeunload`, handleBeforeUnload);
-		return () => window.removeEventListener(`beforeunload`, handleBeforeUnload);
-	});
+	const unsaved = new UnsavedChangesGuard();
 </script>
+
+<svelte:window onbeforeunload={unsaved.handleBeforeUnload} />
 
 <div class="mx-auto w-full max-w-3xl pt-4 md:pt-0">
 	<div class="mb-3 flex flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between">
@@ -128,9 +90,9 @@
 			'card bg-base-100 relative flex flex-col gap-5 rounded-none border-0 p-4 shadow sm:p-6 md:rounded-(--radius-box)'
 		]}
 		id="public-profile-form"
-		oninput={markDirty}
-		onchange={markDirty}
-		onsubmit={onFormSubmit}
+		oninput={unsaved.markDirty}
+		onchange={unsaved.markDirty}
+		onsubmit={unsaved.clear}
 	>
 		{#if currentSlug}
 			<a
@@ -198,7 +160,7 @@
 				initialUrl={profile.profileImageUrl}
 				onBusyChange={(b) => {
 					profileImageBusy = b;
-					markDirty();
+					unsaved.markDirty();
 				}}
 			/>
 			<ProfileImageCropInput
@@ -207,7 +169,7 @@
 				initialUrl={profile.bannerImageUrl}
 				onBusyChange={(b) => {
 					bannerImageBusy = b;
-					markDirty();
+					unsaved.markDirty();
 				}}
 			/>
 		</div>
@@ -217,6 +179,7 @@
 				field={upsertPublicProfile.fields.bio}
 				value={profile.bio}
 				placeholder="Erzähl etwas über dich…"
+				onDirty={unsaved.markDirty}
 			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={upsertPublicProfile.fields.bio} />
@@ -227,7 +190,7 @@
 			<PublicProfileSocialLinksEditor
 				bind:socialLinks={profile.socialLinks}
 				field={upsertPublicProfile.fields.socialLinks}
-				{markDirty}
+				markDirty={unsaved.markDirty}
 			/>
 		</fieldset>
 
