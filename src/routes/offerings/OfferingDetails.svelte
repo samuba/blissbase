@@ -140,14 +140,19 @@
 	{/if}
 
 	<div class="flex flex-col gap-6 p-4 sm:p-6">
-		<div class="flex flex-col gap-2">
-			<div class="flex items-start justify-between gap-4">
-				<h1 class="text-2xl leading-tight font-bold sm:text-3xl">{offering.title}</h1>
-				<div class="flex shrink-0 items-center gap-2">
-					<div class="h-10 w-16" aria-hidden="true"></div>
-				</div>
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-1">
+				<h1 class="text-2xl leading-tight font-bold sm:text-3xl">
+					{offering.title}
+				</h1>
+				{#if offering.format !== `online`}
+					<span class="line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word">
+						<i class="icon-[ph--map-pin] size-4.5"></i>
+						{offering.profile.locationLabel}
+					</span>
+				{/if}
 			</div>
-			<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+			<div class="flex flex-wrap gap-4 sm:flex-row sm:items-center">
 				<span class="badge badge-ghost flex shrink-0 items-center gap-1.5 leading-none">
 					{#if offering.format === `online`}
 						<i class="icon-[ph--globe] size-4.5"></i>
