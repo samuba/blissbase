@@ -580,6 +580,7 @@
 					data-testid="clear-location-button"
 					title="Eingabe löschen"
 					class="btn-ghost bg-base-100 text-base-600 flex h-full items-center justify-center px-1"
+					onmousedown={(event) => event.preventDefault()}
 					onclick={handleResetLocationClick}
 					disabled={inputDisabled}
 				>
@@ -590,6 +591,9 @@
 				type="button"
 				class="btn btn-xs mr-0.5 flex h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden"
 				title="Aktuellen Standort verwenden"
+				onmousedown={(event) => {
+					if (usingCurrentLocation && !isLoadingLocation) event.preventDefault();
+				}}
 				onclick={usingCurrentLocation && !isLoadingLocation ? handleResetLocationClick : handleUseCurrentLocationClick}
 				disabled={inputDisabled}
 			>

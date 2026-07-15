@@ -1,4 +1,6 @@
 import { command, form, query } from "$app/server";
+import { dev } from "$app/environment";
+import { E2E_TEST } from "$env/static/private";
 import * as assets from "$lib/assets";
 import { randomString } from "$lib/common";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
@@ -6,6 +8,7 @@ import { publicProfileFormSchema } from "$lib/rpc/profile.common";
 import { routes } from "$lib/routes";
 import { ensureUserId } from "$lib/server/common";
 import { db, s, and, eq, ne, sql } from "$lib/server/db";
+import { getE2EUserIdForEmail } from "$lib/server/e2eAuth";
 import {
 	createPublicProfileSlug,
 	getPublicProfileBySlug,
@@ -16,6 +19,8 @@ import {
 import { resolveProfileImageUrl, signProfileImageClaim } from "$lib/server/profileImages";
 import { error, invalid, redirect } from "@sveltejs/kit";
 import * as v from "valibot";
+
+const isE2eTestMode = E2E_TEST === `true` && dev;
 
 export const getPublicProfile = query(v.object({ slug: v.pipe(v.string(), v.trim(), v.nonEmpty()) }), async ({ slug }) => {
 	const profile = await getPublicProfileBySlug({ slug });
@@ -51,6 +56,15 @@ export const checkEmailProfileComplete = command(
 		email: v.pipe(v.string(), v.trim(), v.email()),
 	}),
 	async ({ email }) => {
+		if (isE2eTestMode) {
+			const profile = await db.query.profiles.findFirst({
+				where: eq(s.profiles.id, getE2EUserIdForEmail(email)),
+			});
+			return {
+				profileComplete: isPublicProfile(profile) && hasSocialLink(profile),
+			};
+		}
+
 		const rows = await db.execute<{ id: string }>(sql`select id::text as id from auth.users where lower(email) = lower(${email}) limit 1`);
 		const userId = rows[0]?.id;
 		if (!userId) return { profileComplete: false };
@@ -100,8 +114,18 @@ export const createProfileImageUploadUrl = command(
 			suffix,
 			contentType,
 		});
-		const uploadUrl = await assets.getPresignedPutUrl({ objectKey, creds: eventAssetsCreds });
 		const claimToken = signProfileImageClaim({ objectKey, type, contentType });
+		if (isE2eTestMode) {
+			return {
+				uploadUrl: `/api/test/offering-image-upload`,
+				publicUrl: `${assets.publicUrl(objectKey)}#${claimToken}`,
+				objectKey,
+				contentType,
+				claimToken,
+			};
+		}
+
+		const uploadUrl = await assets.getPresignedPutUrl({ objectKey, creds: eventAssetsCreds });
 		return {
 			uploadUrl,
 			publicUrl: `${assets.publicUrl(objectKey)}#${claimToken}`,
@@ -183,6 +207,8 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
  * await sweepProfileImagePrefix({ userId: `u1`, kind: `profile`, keepUrl: `https://.../profile-xyz.webp` });
  */
 async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
+	if (isE2eTestMode) return;
+
 	// No trailing dash so this also matches any legacy `profiles/{userId}/{kind}.ext` keys
 	// that were stored before timestamp suffixes were introduced. The prefix still cannot
 	// cross over to the other kind (e.g. `profile` does not match `banner-*`).

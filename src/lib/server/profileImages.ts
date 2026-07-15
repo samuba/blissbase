@@ -1,4 +1,6 @@
 import * as assets from "$lib/assets";
+import { dev } from "$app/environment";
+import { E2E_TEST } from "$env/static/private";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -34,6 +36,7 @@ export async function resolveProfileImageUrl(args: ResolveProfileImageUrlArgs) {
 	const finalObjectKey = assets.publicProfileImageObjectKey(args.userId, args.expectedType, claim.contentType, suffix);
 	const finalUrl = assets.publicUrl(finalObjectKey);
 	if (finalUrl === args.currentUrl) return finalUrl;
+	if (E2E_TEST === `true` && dev) return finalUrl;
 
 	try {
 		return await assets.finalizeProfileImage({
@@ -53,11 +56,7 @@ export async function resolveProfileImageUrl(args: ResolveProfileImageUrlArgs) {
  * @example
  * signProfileImageClaim({ objectKey: `profiles/temp/profile-b.webp`, type: `profile`, contentType: `image/webp` });
  */
-export function signProfileImageClaim(args: {
-	objectKey: string;
-	type: ProfileImageType;
-	contentType: ProfileImageContentType;
-}) {
+export function signProfileImageClaim(args: { objectKey: string; type: ProfileImageType; contentType: ProfileImageContentType }) {
 	const payload = encodeClaimPayload({
 		objectKey: args.objectKey,
 		type: args.type,

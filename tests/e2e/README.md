@@ -5,22 +5,25 @@ This directory contains end-to-end tests for the Blissbase application using Pla
 ## Architecture
 
 - **Database**: E2E tests use PGlite (in-memory PostgreSQL) instead of a real database
-- **Auth**: Supabase is still used for authentication (requires Supabase env vars)
+- **Auth**: Signed-in tests use E2E cookies. Anonymous offering tests use a dev/E2E-only fixed OTP (`123456`) while still exercising the server verification and submit-token flow.
 - **External Services**: Google Maps API, S3, and other services use test/mock values
 
 ## Setup
 
 1. Install dependencies:
+
 ```bash
 bun install
 ```
 
 2. Install Playwright browsers:
+
 ```bash
 bunx playwright install chromium
 ```
 
 3. Create a `.env` file (optional - E2E tests work with defaults):
+
 ```bash
 # Only needed if you want to override defaults
 GOOGLE_MAPS_API_KEY=your-api-key
@@ -31,26 +34,31 @@ PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-key
 ## Running Tests
 
 ### Run all E2E tests:
+
 ```bash
 bun run test:e2e
 ```
 
 ### Run tests with UI mode (for debugging):
+
 ```bash
 bun run test:e2e:ui
 ```
 
 ### Run specific test file:
+
 ```bash
 bun run test:e2e -- homepage.spec.ts
 ```
 
 ### Run tests matching a pattern:
+
 ```bash
 bun run test:e2e -- --grep "filter modal"
 ```
 
 ### Debug mode:
+
 ```bash
 bun run test:e2e:debug
 ```
@@ -60,6 +68,11 @@ bun run test:e2e:debug
 - `homepage.spec.ts` - Tests for homepage features (hero, search, category filters, event cards)
 - `filters.spec.ts` - Tests for filter modal functionality
 - `event-details.spec.ts` - Tests for event detail modal and navigation
+- `edit-event-images.spec.ts` - Tests event image editing
+- `location-autocomplete.spec.ts` - Tests the Google Places autocomplete UI
+- `offerings-create.spec.ts` - Tests signed-in and anonymous offering creation, validation, OTP, profile completion, and images
+- `offerings-discovery.spec.ts` - Tests offering eligibility, search, location/online filters, dialogs, and return navigation
+- `offerings-lifecycle.spec.ts` - Tests edit permissions, image editing, activation, deactivation, owner visibility, and deletion
 - `helpers/seed.ts` - Test data seeding utilities
 
 ## Test Data
@@ -67,7 +80,7 @@ bun run test:e2e:debug
 Tests use the `/api/test/seed` endpoint to create isolated test data:
 
 ```typescript
-import { createEvent, clearTestEvents, createMeditationEvent } from './helpers/seed';
+import { createEvent, clearTestEvents, createMeditationEvent } from "./helpers/seed";
 
 // In test setup:
 await clearTestEvents(page);
@@ -75,10 +88,15 @@ await createEvent(page, createMeditationEvent());
 ```
 
 Available factory functions:
+
 - `createMeditationEvent(overrides?)` - Creates a meditation event
 - `createYogaEvent(overrides?)` - Creates a yoga event
 - `createOnlineEvent(overrides?)` - Creates an online event
 - `createMultiDayEvent(overrides?)` - Creates a multi-day event
+- `createCompleteProfile(overrides?)` / `createOtherCompleteProfile(overrides?)` - Create owner fixtures
+- `createOfflineOffering(overrides?)` / `createOnlineOffering(overrides?)` - Create offering fixtures
+
+Offering tests seed matching profile IDs before using `signInAsE2EUser`. All profile, offering, OTP, and image-upload shortcuts are gated by both development/E2E routes or `E2E_TEST`, so production behavior is unchanged.
 
 ## How It Works
 
@@ -90,6 +108,7 @@ Available factory functions:
 ## CI/CD
 
 Tests run automatically on GitHub Actions for pull requests. The workflow:
+
 1. Runs unit tests first
 2. Then runs E2E tests with PGlite
 3. Uploads test results and artifacts on failure
@@ -104,24 +123,25 @@ See `.github/workflows/e2e-tests.yml` for details.
 4. Handle CI slowness with appropriate timeouts
 
 Example:
+
 ```typescript
-import { test, expect } from '@playwright/test';
-import { createEvent, clearTestEvents, createMeditationEvent } from './helpers/seed';
+import { test, expect } from "@playwright/test";
+import { createEvent, clearTestEvents, createMeditationEvent } from "./helpers/seed";
 
-test.describe('Feature Name', () => {
-  test.beforeEach(async ({ page }) => {
-    await clearTestEvents(page);
-    await createEvent(page, createMeditationEvent());
-    await page.goto('/');
-    await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
-  });
+test.describe("Feature Name", () => {
+	test.beforeEach(async ({ page }) => {
+		await clearTestEvents(page);
+		await createEvent(page, createMeditationEvent());
+		await page.goto("/");
+		await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
+	});
 
-  test.afterEach(async ({ page }) => {
-    await clearTestEvents(page);
-  });
+	test.afterEach(async ({ page }) => {
+		await clearTestEvents(page);
+	});
 
-  test('should do something', async ({ page }) => {
-    // Test code here
-  });
+	test("should do something", async ({ page }) => {
+		// Test code here
+	});
 });
 ```

@@ -20,6 +20,10 @@ export async function createPgliteDrizzle() {
 		extensions: { cube, earthdistance, pg_trgm }
 	});
 
+    await client.exec('CREATE EXTENSION IF NOT EXISTS cube;')
+    await client.exec('CREATE EXTENSION IF NOT EXISTS earthdistance;')
+    await client.exec('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
+
 	await migratePglite(client);
 	console.log(`E2E test database migrated`);
 

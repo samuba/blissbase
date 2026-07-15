@@ -1,9 +1,12 @@
-import { command, getRequestEvent, query } from '$app/server';
-import { resolveSupportedLocale } from '$lib/common';
-import { refreshAuthLocalsFromSupabase } from '$lib/server/authLocals';
-import { db, s } from '$lib/server/db';
-import { signOfferingSubmitAuthToken } from '$lib/server/offeringSubmitAuth';
-import * as v from 'valibot';
+import { command, getRequestEvent, query } from "$app/server";
+import { dev } from "$app/environment";
+import { E2E_TEST } from "$env/static/private";
+import { resolveSupportedLocale } from "$lib/common";
+import { refreshAuthLocalsFromSupabase } from "$lib/server/authLocals";
+import { db, s } from "$lib/server/db";
+import { E2E_OTP_CODE, getE2EUserIdForEmail } from "$lib/server/e2eAuth";
+import { signOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
+import * as v from "valibot";
 
 export const getUserSession = query(async () => {
 	const { supabase } = getRequestEvent().locals;
@@ -14,7 +17,7 @@ export const getUserSession = query(async () => {
 
 const verifyEmailOtpInputSchema = v.object({
 	email: v.pipe(v.string(), v.trim(), v.email()),
-	token: v.pipe(v.string(), v.trim(), v.nonEmpty()) // normalized to 6 digits in handler
+	token: v.pipe(v.string(), v.trim(), v.nonEmpty()), // normalized to 6 digits in handler
 });
 
 /**
@@ -27,11 +30,26 @@ export const verifyEmailOtp = command(verifyEmailOtpInputSchema, async ({ email,
 		return { ok: false as const, message: `Bitte gib den 6-stelligen Code ein.` };
 	}
 
+	if (E2E_TEST === `true` && dev) {
+		if (normalized !== E2E_OTP_CODE) {
+			return { ok: false as const, message: `Der Code ist falsch oder abgelaufen.` };
+		}
+
+		const userId = getE2EUserIdForEmail(email);
+		await db.insert(s.profiles).values({ id: userId, locale: `en` }).onConflictDoNothing({
+			target: s.profiles.id,
+		});
+		return {
+			ok: true as const,
+			offeringSubmitAuthToken: signOfferingSubmitAuthToken({ userId }),
+		};
+	}
+
 	const { supabase } = getRequestEvent().locals;
 	const { data, error: verifyError } = await supabase.auth.verifyOtp({
 		email,
 		token: normalized,
-		type: `email`
+		type: `email`,
 	});
 
 	if (verifyError) {
@@ -48,12 +66,12 @@ export const verifyEmailOtp = command(verifyEmailOtpInputSchema, async ({ email,
 	await db.insert(s.profiles).values({ id: data.user.id, locale }).onConflictDoUpdate({
 		target: s.profiles.id,
 		set: {
-			locale
-		}
+			locale,
+		},
 	});
 	return {
 		ok: true as const,
-		offeringSubmitAuthToken: signOfferingSubmitAuthToken({ userId: data.user.id })
+		offeringSubmitAuthToken: signOfferingSubmitAuthToken({ userId: data.user.id }),
 	};
 });
 

@@ -76,8 +76,9 @@ test.describe('Location autocomplete', () => {
 	async function typeForSuggestions(page: import('@playwright/test').Page, value: string) {
 		const headerInput = page.locator(`#plzCityInput-header`);
 		await headerInput.click();
+		await page.waitForFunction(() => typeof window.google?.maps?.importLibrary === `function`);
 		await headerInput.fill(value);
-		await page.waitForTimeout(500);
+		await expect(headerInput).toHaveValue(value);
 	}
 
 	test('typing opens suggestions when Google is available', async ({ page }) => {

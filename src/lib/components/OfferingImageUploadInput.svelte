@@ -43,6 +43,7 @@
 	let previewItems = $state<OfferingImagePreviewItem[]>([]);
 	let objectUrlsByPreviewId = new SvelteMap<string, string>();
 	let newImageOccurrenceByFingerprint = new SvelteMap<string, number>();
+	let lastReportedBusy = false;
 	const previewFlipDurationMs = 220;
 	const busy = $derived(previewItems.some((x) => x.uploadState === `processing` || x.uploadState === `uploading`));
 	const submittedExistingImageUrls = $derived(
@@ -64,24 +65,6 @@
 			.filter((value): value is string => Boolean(value));
 	});
 
-	$effect(() => {
-		onBusyChange?.(busy);
-	});
-
-	$effect(() => {
-		field.set(submittedClaimTokens);
-	});
-
-	$effect(() => {
-		if (!existingImageUrlsField || !hasInitializedPreviews) return;
-		existingImageUrlsField.set(submittedExistingImageUrls);
-	});
-
-	$effect(() => {
-		if (!imageOrderField || !hasInitializedPreviews) return;
-		imageOrderField.set(submittedImageOrder);
-	});
-
 	onMount(() => {
 		const mediaQuery = window.matchMedia(`(min-width: 640px) and (hover: hover) and (pointer: fine)`);
 		const updateIsDesktop = () => {
@@ -95,9 +78,15 @@
 		return () => {
 			mediaQuery.removeEventListener(`change`, updateIsDesktop);
 			revokeObjectUrls();
-			onBusyChange?.(false);
+			reportBusy(false);
 		};
 	});
+
+	function reportBusy(nextBusy: boolean) {
+		if (lastReportedBusy === nextBusy) return;
+		lastReportedBusy = nextBusy;
+		onBusyChange?.(nextBusy);
+	}
 
 	/**
 	 * Initializes edit previews from existing image URLs once the form is mounted.
@@ -244,6 +233,7 @@
 			preview: createPendingImagePreview({ file }),
 		}));
 		previewItems = [...previewItems, ...pendingPreviews.map((x) => x.preview)];
+		reportBusy(true);
 
 		for (const pendingPreview of pendingPreviews) {
 			await processAndUploadSelectedImage({
@@ -344,6 +334,7 @@
 				error: args.error,
 			};
 		});
+		reportBusy(busy);
 	}
 
 	/**
@@ -806,11 +797,11 @@
 						<p class="text-base-content/60 text-xs">{preview.sizeLabel}</p>
 					</div>
 
-					<div class="flex items-center gap-1">
+					<div class="relative flex items-center gap-1">
 						<button
 							data-testid="offering-image-preview-move-left"
 							type="button"
-							class="sr-only"
+							class="sr-only top-0 left-0 z-20"
 							aria-label={`${preview.name} nach links verschieben`}
 							disabled={i === 0 || busy}
 							onmousedown={(e) => e.stopPropagation()}
@@ -824,7 +815,7 @@
 						<button
 							data-testid="offering-image-preview-move-right"
 							type="button"
-							class="sr-only"
+							class="sr-only top-0 left-1 z-20"
 							aria-label={`${preview.name} nach rechts verschieben`}
 							disabled={i === previewItems.length - 1 || busy}
 							onmousedown={(e) => e.stopPropagation()}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from "$app/navigation";
 	import { page } from "$app/state";
-	import { onDestroy } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
@@ -42,6 +42,7 @@
 		missingDisplayName || missingProfileImageUrl || missingBannerImageUrl || missingBio || missingSocialLinks;
 
 	let requestedStep = $state<WizardStep>(`offering`);
+	let clientReady = $state(false);
 	let format = $state<OfferingFormat>(`offline`);
 	let offeringImagesBusy = $state(false);
 	let profileImageBusy = $state(false);
@@ -101,9 +102,7 @@
 	const renderProfileFields = $derived(profileStepApplies);
 	const profileFieldsHidden = $derived(currentStep !== `profile`);
 	const showOtpStep = $derived(currentStep === `otp` && !isSignedIn);
-	const primaryBusy = $derived(
-		createOffering.pending > 0 || authBusy || emailCheckBusy || anyImageUploadInFlight,
-	);
+	const primaryBusy = $derived(createOffering.pending > 0 || authBusy || emailCheckBusy || anyImageUploadInFlight);
 	const returnHref = $derived(
 		safeReturnToPath({
 			returnTo: page.url.searchParams.get(`returnTo`),
@@ -452,7 +451,16 @@
 		void goNext();
 	}
 
+	onMount(() => {
+		void initializeClient();
+	});
+
 	onDestroy(clearEmailProfileCheckDebounce);
+
+	async function initializeClient() {
+		await getSupabaseBrowserClient().auth.getSession();
+		clientReady = true;
+	}
 
 	type EmailProfileCheckResult =
 		| {
@@ -475,9 +483,7 @@
 			<div class="flex flex-wrap items-start justify-between gap-3">
 				<div>
 					<h1 class="text-2xl font-bold">Angebot erstellen</h1>
-					<p class="text-base-content/70 mt-1 text-sm">
-						Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar. 
-					</p>
+					<p class="text-base-content/70 mt-1 text-sm">Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.</p>
 				</div>
 				<a href={returnHref} class="btn btn-ghost btn-sm">
 					<i class="icon-[ph--arrow-left] size-4"></i>
@@ -485,133 +491,135 @@
 				</a>
 			</div>
 
-			<OfferingForm
-				remoteForm={createOffering}
-				returnTo={returnHref}
-				bind:format
-				{fieldsHidden}
-				initialLocationLabel={initialLocation?.label}
-				initialLocationLat={initialLocation?.lat}
-				initialLocationLng={initialLocation?.lng}
-				{locationError}
-				onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
-				onsubmit={onSubmit}
-			>
-				<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={offeringSubmitAuthToken} />
+			{#if clientReady}
+				<OfferingForm
+					remoteForm={createOffering}
+					returnTo={returnHref}
+					bind:format
+					{fieldsHidden}
+					initialLocationLabel={initialLocation?.label}
+					initialLocationLat={initialLocation?.lat}
+					initialLocationLng={initialLocation?.lng}
+					{locationError}
+					onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
+					onsubmit={onSubmit}
+				>
+					<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={offeringSubmitAuthToken} />
 
-				{#if showAnonymousEmailField}
-					<fieldset class="fieldset" data-wizard-step="offering">
-						<input
-							class="input peer w-full"
-							{...createOffering.fields.email.as(`email`)}
-							bind:value={email}
-							autocomplete="email"
-							required
-							placeholder="deine@email.de"
-							oninput={onEmailInput}
-							onblur={onEmailBlur}
-						/>
-						<legend class="fieldset-legend peer-aria-invalid:text-red-600">E-Mail für Login * </legend>
-						<p class="label whitespace-pre-line">Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren. </p>
-						<FormFieldIssues field={createOffering.fields.email} />
-						{#if emailCheckError}
-							<p class="text-error text-xs">{emailCheckError}</p>
-						{/if}
-					</fieldset>
-				{/if}
-
-				{#if renderProfileFields}
-					<section class={[`flex flex-col gap-5`, profileFieldsHidden && `hidden`]} data-wizard-step="profile">
-						<div class="alert alert-info alert-soft">
-							<i class="icon-[ph--shield-check] size-5"></i>
-							<span>
-								Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen, dich
-								vor der Anfrage besser einzuschätzen.
-							</span>
-						</div>
-
-						<div class="grid gap-5 sm:grid-cols-2">
-							<fieldset class={[`fieldset`, !missingDisplayName && `hidden`]}>
-								<input
-									class="input peer w-full"
-									{...createOffering.fields.profile.displayName.as(`text`)}
-									value={profile?.displayName ?? ``}
-									autocomplete="name"
-									required
-								/>
-								<legend class="fieldset-legend peer-aria-invalid:text-red-600">Dein Name *</legend>
-								<FormFieldIssues field={createOffering.fields.profile.displayName} />
-							</fieldset>
-						</div>
-
-						<div class={[`grid gap-6 sm:grid-cols-2`, !missingProfileImageUrl && !missingBannerImageUrl && `hidden`]}>
-							<ProfileImageCropInput
-								class={!missingProfileImageUrl ? `hidden` : ``}
-								kind="profile"
-								field={createOffering.fields.profile.profileImageUrl}
-								initialUrl={profile?.profileImageUrl ?? ``}
-								onBusyChange={(busy) => (profileImageBusy = busy)}
+					{#if showAnonymousEmailField}
+						<fieldset class="fieldset" data-wizard-step="offering">
+							<input
+								class="input peer w-full"
+								{...createOffering.fields.email.as(`email`)}
+								bind:value={email}
+								autocomplete="email"
+								required
+								placeholder="deine@email.de"
+								oninput={onEmailInput}
+								onblur={onEmailBlur}
 							/>
-
-							<ProfileImageCropInput
-								class={!missingBannerImageUrl ? `hidden` : ``}
-								kind="banner"
-								field={createOffering.fields.profile.bannerImageUrl}
-								initialUrl={profile?.bannerImageUrl ?? ``}
-								onBusyChange={(busy) => (bannerImageBusy = busy)}
-							/>
-						</div>
-
-						<fieldset class={[`fieldset`, !missingBio && `hidden`]}>
-							<LexicalEditor
-								field={createOffering.fields.profile.bio}
-								value={profile?.bio ?? ``}
-								placeholder="Erzähl etwas über dich…"
-							/>
-							<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profilbeschreibung</legend>
-							<FormFieldIssues field={createOffering.fields.profile.bio} />
-						</fieldset>
-
-						<fieldset class={[`fieldset`, !missingSocialLinks && `hidden`]}>
-							<legend class="fieldset-legend">Social Links *</legend>
-							<PublicProfileSocialLinksEditor
-								bind:socialLinks={getSocialLinks, setSocialLinks}
-								field={createOffering.fields.profile.socialLinks}
-							/>
-							{#if profileSocialLinkError}
-								<p class="text-error text-sm">{profileSocialLinkError}</p>
+							<legend class="fieldset-legend peer-aria-invalid:text-red-600">E-Mail für Login * </legend>
+							<p class="label whitespace-pre-line">Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren.</p>
+							<FormFieldIssues field={createOffering.fields.email} />
+							{#if emailCheckError}
+								<p class="text-error text-xs">{emailCheckError}</p>
 							{/if}
 						</fieldset>
-					</section>
-				{:else if isSignedIn && currentStep === `offering`}
-					<div class="alert">
-						Möchtest du dein Profil bearbeiten?
-						<a href={routes.editPublicProfile()} class="btn">
-							<i class="icon-[ph--arrow-right] size-4"></i>
-							Profil bearbeiten
-						</a>
-					</div>
-				{/if}
+					{/if}
 
-				{#if showOtpStep}
-					<OtpStep
-						{pendingEmail}
-						bind:otpCode
-						{authBusy}
-						{authError}
-						onVerify={verifyCodeAndSubmit}
-						onUseAnotherEmail={useAnotherEmail}
-						onResendCode={resendCode}
-					/>
-				{/if}
+					{#if renderProfileFields}
+						<section class={[`flex flex-col gap-5`, profileFieldsHidden && `hidden`]} data-wizard-step="profile">
+							<div class="alert alert-info alert-soft">
+								<i class="icon-[ph--shield-check] size-5"></i>
+								<span>
+									Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen,
+									dich vor der Anfrage besser einzuschätzen.
+								</span>
+							</div>
 
-				{#if submitError}
-					<div class="alert alert-error bg-error/60">
-						<i class="icon-[ph--warning] size-6"></i>
-						<span>{submitError}</span>
-					</div>
-				{/if}
-			</OfferingForm>
+							<div class="grid gap-5 sm:grid-cols-2">
+								<fieldset class={[`fieldset`, !missingDisplayName && `hidden`]}>
+									<input
+										class="input peer w-full"
+										{...createOffering.fields.profile.displayName.as(`text`)}
+										value={profile?.displayName ?? ``}
+										autocomplete="name"
+										required
+									/>
+									<legend class="fieldset-legend peer-aria-invalid:text-red-600">Dein Name *</legend>
+									<FormFieldIssues field={createOffering.fields.profile.displayName} />
+								</fieldset>
+							</div>
+
+							<div class={[`grid gap-6 sm:grid-cols-2`, !missingProfileImageUrl && !missingBannerImageUrl && `hidden`]}>
+								<ProfileImageCropInput
+									class={!missingProfileImageUrl ? `hidden` : ``}
+									kind="profile"
+									field={createOffering.fields.profile.profileImageUrl}
+									initialUrl={profile?.profileImageUrl ?? ``}
+									onBusyChange={(busy) => (profileImageBusy = busy)}
+								/>
+
+								<ProfileImageCropInput
+									class={!missingBannerImageUrl ? `hidden` : ``}
+									kind="banner"
+									field={createOffering.fields.profile.bannerImageUrl}
+									initialUrl={profile?.bannerImageUrl ?? ``}
+									onBusyChange={(busy) => (bannerImageBusy = busy)}
+								/>
+							</div>
+
+							<fieldset class={[`fieldset`, !missingBio && `hidden`]}>
+								<LexicalEditor field={createOffering.fields.profile.bio} value={profile?.bio ?? ``} placeholder="Erzähl etwas über dich…" />
+								<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profilbeschreibung</legend>
+								<FormFieldIssues field={createOffering.fields.profile.bio} />
+							</fieldset>
+
+							<fieldset class={[`fieldset`, !missingSocialLinks && `hidden`]}>
+								<legend class="fieldset-legend">Social Links *</legend>
+								<PublicProfileSocialLinksEditor
+									bind:socialLinks={getSocialLinks, setSocialLinks}
+									field={createOffering.fields.profile.socialLinks}
+								/>
+								{#if profileSocialLinkError}
+									<p class="text-error text-sm">{profileSocialLinkError}</p>
+								{/if}
+							</fieldset>
+						</section>
+					{:else if isSignedIn && currentStep === `offering`}
+						<div class="alert">
+							Möchtest du dein Profil bearbeiten?
+							<a href={routes.editPublicProfile()} class="btn">
+								<i class="icon-[ph--arrow-right] size-4"></i>
+								Profil bearbeiten
+							</a>
+						</div>
+					{/if}
+
+					{#if showOtpStep}
+						<OtpStep
+							{pendingEmail}
+							bind:otpCode
+							{authBusy}
+							{authError}
+							onVerify={verifyCodeAndSubmit}
+							onUseAnotherEmail={useAnotherEmail}
+							onResendCode={resendCode}
+						/>
+					{/if}
+
+					{#if submitError}
+						<div class="alert alert-error bg-error/60">
+							<i class="icon-[ph--warning] size-6"></i>
+							<span>{submitError}</span>
+						</div>
+					{/if}
+				</OfferingForm>
+			{:else}
+				<div class="flex min-h-48 items-center justify-center" role="status" aria-busy="true">
+					<span class="loading loading-spinner loading-lg"></span>
+				</div>
+			{/if}
 
 			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 				{#if isFirstStep}
@@ -619,7 +627,7 @@
 				{:else}
 					<button type="button" class="btn btn-ghost" disabled={primaryBusy} onclick={goBack}>Zurück</button>
 				{/if}
-				<button type="button" class="btn btn-primary" disabled={primaryBusy} onclick={goNext}>
+				<button type="button" class="btn btn-primary" disabled={!clientReady || primaryBusy} onclick={goNext}>
 					{#if anyImageUploadInFlight}
 						<span class="loading loading-spinner loading-sm"></span>
 						Bilder werden hochgeladen…

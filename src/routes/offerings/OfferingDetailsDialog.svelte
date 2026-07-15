@@ -7,15 +7,26 @@
 	let offering = $state<Offering | undefined>(undefined);
 	let offeringReturnTo = $state<string | undefined>(undefined);
 	let open = $state(false);
+	let isClosing = $state(false);
+	let closeTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	export function showOfferingDetailsDialog(offeringToShow: Offering, args: { returnTo?: string } = {}) {
 		if (!offeringToShow.slug) return;
+		cancelPendingClose();
 		offering = offeringToShow;
 		offeringReturnTo = args.returnTo;
 		open = true;
 		pushState(routes.offeringDetails(offeringToShow.slug), {
 			selectedOfferingId: offeringToShow.id,
 		});
+	}
+
+	function cancelPendingClose() {
+		if (closeTimeout) {
+			clearTimeout(closeTimeout);
+			closeTimeout = undefined;
+		}
+		isClosing = false;
 	}
 
 	type Offering = {
@@ -37,7 +48,6 @@
 			locationLabel?: string | null;
 		};
 	};
-
 </script>
 
 <script lang="ts">
@@ -46,19 +56,20 @@
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from "$lib/common";
 	import { Dialog } from "$lib/components/dialog";
 	import { getOfferingForDialog } from "$lib/rpc/offerings.remote";
-	import { replaceState } from "$app/navigation";
+	import { afterNavigate, replaceState } from "$app/navigation";
 	import OfferingDetails from "./OfferingDetails.svelte";
 
 	let openingOfferingSlug = $state<string | undefined>(undefined);
-	let isClosing = $state(false);
 
-	$effect(() => {
-		const offeringSlug = page.url.searchParams.get(`offering`);
+	afterNavigate(() => {
+		const pageUrl = page.url;
+		const authoritativeUrl = browser ? new URL(window.location.href) : pageUrl;
+		const offeringSlug = authoritativeUrl.searchParams.get(`offering`);
 
 		if (!page.state.selectedOfferingId && offering && !isClosing) {
 			closeGracefully();
 			if (offeringSlug) {
-				replaceState(offeringReturnTo ?? urlWithoutOfferingDialogParam(page.url), {});
+				replaceState(offeringReturnTo ?? urlWithoutOfferingDialogParam(authoritativeUrl), {});
 			}
 			return;
 		}
@@ -67,19 +78,19 @@
 			return;
 		}
 
-		queueMicrotask(() => void openOfferingFromUrl(offeringSlug));
+		queueMicrotask(() => void openOfferingFromUrl({ offeringSlug, url: authoritativeUrl }));
 	});
 
-	async function openOfferingFromUrl(offeringSlug: string) {
+	async function openOfferingFromUrl(args: { offeringSlug: string; url: URL }) {
+		const { offeringSlug, url } = args;
 		if (isClosing || openingOfferingSlug === offeringSlug) return;
 		if (offering?.slug === offeringSlug) return;
 		openingOfferingSlug = offeringSlug;
+		const returnTo = urlWithoutOfferingDialogParam(url);
+		replaceState(returnTo, {});
 		try {
 			const offeringToShow = await getOfferingForDialog({ slug: offeringSlug });
-			if (isClosing || page.url.searchParams.get(`offering`) !== offeringSlug) return;
-
-			const returnTo = urlWithoutOfferingDialogParam(page.url);
-			replaceState(returnTo, {});
+			if (isClosing || openingOfferingSlug !== offeringSlug) return;
 			if (!offeringToShow) return;
 
 			showOfferingDetailsDialog(offeringToShow, { returnTo });
@@ -91,17 +102,18 @@
 	function handleClose() {
 		if (!browser) return;
 		closeGracefully();
-		replaceState(offeringReturnTo ?? urlWithoutOfferingDialogParam(page.url), {});
+		history.back();
 	}
 
 	function closeGracefully() {
 		if (!offering || isClosing) return;
 		isClosing = true;
 		open = false;
-		setTimeout(() => {
+		closeTimeout = setTimeout(() => {
 			offering = undefined;
 			offeringReturnTo = undefined;
 			isClosing = false;
+			closeTimeout = undefined;
 		}, 200); // delayed to not have layout shift during closing animation
 	}
 
@@ -116,6 +128,8 @@
 		handleClose();
 	}
 </script>
+
+<svelte:window onpopstate={closeGracefully} />
 
 <Dialog.Root {open} {onOpenChange}>
 	<Dialog.Portal>
@@ -155,4 +169,3 @@
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
-

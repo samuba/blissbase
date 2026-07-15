@@ -1,12 +1,8 @@
 import { command, form, getRequestEvent, query } from "$app/server";
+import { dev } from "$app/environment";
 import * as assets from "$lib/assets";
 import { randomString, slugify } from "$lib/common";
-import {
-	OFFERING_IMAGE_MAX_COUNT,
-	offeringFormSchema,
-	offeringNeedsLocation,
-	updateOfferingFormSchema,
-} from "$lib/rpc/offerings.common";
+import { OFFERING_IMAGE_MAX_COUNT, offeringFormSchema, offeringNeedsLocation, updateOfferingFormSchema } from "$lib/rpc/offerings.common";
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
@@ -23,10 +19,10 @@ import { error, invalid, redirect } from "@sveltejs/kit";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import * as v from "valibot";
 import { setFlash } from "$lib/server/flash";
-import type { OfferingsFilter } from '$lib/offeringsFilter';
-import { filterOfferingsByIncludeOnline, shouldIncludeOfferingInLocationFilter } from '$lib/offeringsFilter';
-import { sanitizeLocationParams, hasValidCoordinates } from '$lib/locationFilter';
-import { resolveOfferingsFilterCoordinates } from '$lib/server/offeringsFilter';
+import type { OfferingsFilter } from "$lib/offeringsFilter";
+import { filterOfferingsByIncludeOnline, shouldIncludeOfferingInLocationFilter } from "$lib/offeringsFilter";
+import { sanitizeLocationParams, hasValidCoordinates } from "$lib/locationFilter";
+import { resolveOfferingsFilterCoordinates } from "$lib/server/offeringsFilter";
 
 const offeringImageUploadSchema = v.object({
 	contentType: v.picklist([`image/webp`, `image/jpeg`]),
@@ -41,10 +37,11 @@ const offeringBySlugSchema = v.object({
 });
 
 const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
+const isE2eTestMode = E2E_TEST === `true` && dev;
 
 export const getOfferings = query(async () => {
 	const { url } = getRequestEvent();
-	const args = parseOfferingsFilterFromUrl(url)
+	const args = parseOfferingsFilterFromUrl(url);
 	const sanitized = sanitizeLocationParams(args);
 	const filter: OfferingsFilter = {
 		location: sanitized.location ?? null,
@@ -207,13 +204,23 @@ export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, a
 		suffix: `${Date.now().toString(36)}-${randomString(8).toLowerCase()}`,
 		contentType,
 	});
+	const claimToken = signOfferingImageClaim({ objectKey, contentType });
+	if (isE2eTestMode) {
+		return {
+			uploadUrl: `/api/test/offering-image-upload`,
+			publicUrl: assets.publicUrl(objectKey),
+			objectKey,
+			claimToken,
+		};
+	}
+
 	const uploadUrl = await assets.getPresignedPutUrl({ objectKey, creds: eventAssetsCreds });
 
 	return {
 		uploadUrl,
 		publicUrl: assets.publicUrl(objectKey),
 		objectKey,
-		claimToken: signOfferingImageClaim({ objectKey, contentType }),
+		claimToken,
 	};
 });
 
@@ -334,7 +341,14 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	refreshOfferingLists();
 	setFlash(`offeringCreated`);
 
-	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(slug), offeringSlug: slug }));
+	redirect(
+		303,
+		offeringRedirectHref({
+			returnTo: data.returnTo,
+			fallback: routes.offeringDetails(slug),
+			offeringSlug: slug,
+		}),
+	);
 });
 
 export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {
@@ -346,9 +360,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
 	if (!currentProfile) throw error(404, `Profile not found`);
-	const nextProfile = data.profile
-		? await mergeProfileFromOfferingForm({ currentProfile, data: data.profile, issue })
-		: currentProfile;
+	const nextProfile = data.profile ? await mergeProfileFromOfferingForm({ currentProfile, data: data.profile, issue }) : currentProfile;
 	if (offeringNeedsLocation(data.format) && !hasValidCoordinates({ lat: nextProfile.latitude, lng: nextProfile.longitude })) {
 		return invalid(issue.profile.locationLabel(`Bitte wähle einen Ort für dein Angebot aus.`));
 	}
@@ -388,7 +400,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 		})
 		.where(and(eq(s.offerings.id, offering.id), eq(s.offerings.profileId, userId)));
 
-	if (deletedImageUrls?.length && E2E_TEST !== `true`) {
+	if (deletedImageUrls?.length && !isE2eTestMode) {
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
 	}
 
@@ -397,7 +409,14 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	getMyPublicProfile().refresh();
 	refreshOfferingLists();
 	setFlash(`offeringUpdated`);
-	redirect(303, offeringRedirectHref({ returnTo: data.returnTo, fallback: routes.offeringDetails(offering.slug), offeringSlug: offering.slug }));
+	redirect(
+		303,
+		offeringRedirectHref({
+			returnTo: data.returnTo,
+			fallback: routes.offeringDetails(offering.slug),
+			offeringSlug: offering.slug,
+		}),
+	);
 });
 
 export const unlistOffering = command(offeringMutationSchema, async ({ offeringId }) => {
@@ -444,7 +463,7 @@ export const deleteOffering = command(offeringMutationSchema, async ({ offeringI
 		.returning({ id: s.offerings.id, imageUrls: s.offerings.imageUrls });
 
 	if (!offering) throw error(404, `Offering not found`);
-	if (offering.imageUrls?.length && E2E_TEST !== `true`) {
+	if (offering.imageUrls?.length && !isE2eTestMode) {
 		await assets.deleteObjects(offering.imageUrls, eventAssetsCreds);
 	}
 
@@ -462,6 +481,13 @@ export const deleteOffering = command(offeringMutationSchema, async ({ offeringI
  */
 async function finalizeOfferingImageClaims(args: FinalizeOfferingImageClaimsArgs) {
 	if (!args.claims?.length) return [];
+	if (isE2eTestMode) {
+		return args.claims.map((claim, index) => {
+			const suffix = getOfferingImageSuffixFromObjectKey(claim.objectKey) ?? `image-${index}`;
+			return `https://assets.blissbase.app/e2e/offerings/${args.userId}/${args.offeringId}/${index}-${suffix}.webp`;
+		});
+	}
+
 	const imageUrls: string[] = [];
 	for (const claim of args.claims) {
 		const suffix = getOfferingImageSuffixFromObjectKey(claim.objectKey);
@@ -567,7 +593,7 @@ async function mergeProfileFromOfferingForm(args: UpdateProfileFromOfferingFormA
 	const slug =
 		currentSlug ||
 		(await createAvailableProfileSlug({
-			displayName: displayName,
+			displayName: displayName ?? ``,
 			profileId: args.currentProfile.id,
 		}));
 
@@ -598,8 +624,7 @@ async function mergeProfileFromOfferingForm(args: UpdateProfileFromOfferingFormA
 	}
 
 	const submittedLocationLabel = args.data.locationLabel?.trim();
-	const hasSubmittedLocation =
-		`locationLabel` in args.data || `latitude` in args.data || `longitude` in args.data;
+	const hasSubmittedLocation = `locationLabel` in args.data || `latitude` in args.data || `longitude` in args.data;
 
 	return {
 		...args.currentProfile,
@@ -741,7 +766,11 @@ function refreshOfferingLists() {
 	}
 }
 
-function offeringRedirectHref(args: { returnTo?: string | null; fallback: ReturnType<typeof routes.offeringDetails>; offeringSlug: string }) {
+function offeringRedirectHref(args: {
+	returnTo?: string | null;
+	fallback: ReturnType<typeof routes.offeringDetails>;
+	offeringSlug: string;
+}) {
 	const { url } = getRequestEvent();
 	const href = safeReturnToPath({
 		returnTo: args.returnTo,
@@ -749,9 +778,8 @@ function offeringRedirectHref(args: { returnTo?: string | null; fallback: Return
 		origin: url.origin,
 	});
 	if (isOfferingFormHref({ href, origin: url.origin })) return args.fallback;
-	if (args.returnTo) return routes.offeringDialog({ returnTo: href, offeringSlug: args.offeringSlug });
 
-	return href;
+	return routes.offeringDialog({ returnTo: href, offeringSlug: args.offeringSlug });
 }
 
 function isOfferingFormHref(args: { href: string; origin: string }) {
@@ -763,6 +791,8 @@ function isOfferingFormHref(args: { href: string; origin: string }) {
 }
 
 async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
+	if (isE2eTestMode) return;
+
 	const prefix = `profiles/${args.userId}/${args.kind}`;
 	const keepKey = assets.objectKeyFromPublicUrl(args.keepUrl);
 	const allKeys = await assets.listObjectKeysByPrefix({ prefix, creds: eventAssetsCreds });
