@@ -157,7 +157,7 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
@@ -630,8 +630,10 @@ msgstr "Enter a contact method, e.g., email, phone, website, WhatsApp, Telegram,
 msgid "Anmelde Methode auswählen"
 msgstr "Select registration method"
 
+#. 0: image.file.name
 #. 0: preview.name
 #. 0: preview.name
+#: src/lib/components/EventAutofill.svelte
 #: src/lib/components/ImageInput.svelte
 #: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Bild {0} entfernen"
@@ -848,13 +850,11 @@ msgstr "Current Favorites"
 msgid "Vergangene Favoriten"
 msgstr "Past Favorites"
 
-#: src/lib/components/EventForm.svelte
-msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
-msgstr "No clear event was detected in the text. You can still fill out the form."
+#~ msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
+#~ msgstr "No clear event was detected in the text. You can still fill out the form."
 
-#: src/lib/components/EventForm.svelte
-msgid "<0/> Analysiere Text …"
-msgstr "<0/> Analyzing text …"
+#~ msgid "<0/> Analysiere Text …"
+#~ msgstr "<0/> Analyzing text …"
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
 msgid "Anmeldung fehlgeschlagen"
@@ -1635,29 +1635,25 @@ msgstr "Offerings location"
 msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
 msgstr "Your offers will be shown near this location. Without a location, only online offerings can be found."
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
 msgstr "Error while filling in automatically. You can still fill out the form."
 
-#: src/lib/components/EventForm.svelte
-msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
-msgstr "Insert WhatsApp, Telegram or other event description"
+#~ msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
+#~ msgstr "Insert WhatsApp, Telegram or other event description"
 
 #~ msgid "Daten übernehmen <0/>"
 #~ msgstr "Use data <0/>"
 
-#. 0: result.fields.existingSource
-#: src/lib/components/EventForm.svelte
-msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
-msgstr "The text appears to come from an existing source. We regularly import events from {0}. So the event is already listed with us, or will be shortly."
+#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+#~ msgstr "The text appears to come from an existing source. We regularly import events from {0}. So the event is already listed with us, or will be shortly."
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 msgid "Event Beschreibung einfügen…"
 msgstr "Enter event description…"
 
-#: src/lib/components/EventForm.svelte
-msgid "Automatisch ausfüllen aus Beschreibung"
-msgstr "Automatically fill from description"
+#~ msgid "Automatisch ausfüllen aus Beschreibung"
+#~ msgstr "Automatically fill from description"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
@@ -1812,6 +1808,62 @@ msgstr "Your In person offers will be shown to others nearby this location. The 
 msgid "Du bietest beide Optionen an."
 msgstr "You offer both options."
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 msgid "Felder ausfüllen <0/>"
 msgstr "Fill in the fields <0/>"
+
+#. 0: result.fields.existingSource
+#: src/lib/components/EventAutofill.svelte
+msgid "Die Eingabe scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+msgstr "The input seems to come from an existing source. We regularly import events from {0}. So the event is already listed with us or will be shortly."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Es wurde kein klarer Event erkannt. Du kannst das Formular trotzdem ausfüllen."
+msgstr "No clear event was recognized. You can still fill out the form."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Maximal 3 Bilder erlaubt."
+msgstr "A maximum of 3 images allowed."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Nur JPEG, PNG, WebP oder GIF sind erlaubt."
+msgstr "Only JPEG, PNG, WebP, or GIF are allowed."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Bilder dürfen maximal 10MB groß sein."
+msgstr "Images may be up to 10MB in size."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Automatisch ausfüllen"
+msgstr "Auto-fill"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Text oder Flyer-Bild aus WhatsApp, Telegram & Co. nutzen"
+msgstr "Use text or a flyer image from WhatsApp, Telegram & Co."
+
+#~ msgid "Text"
+#~ msgstr "Text"
+
+#~ msgid "Bild"
+#~ msgstr "Image"
+
+#~ msgid "Bis zu 3 Flyer- oder Event-Bilder (max. 10MB)"
+#~ msgstr "Up to 3 flyer or event images (max. 10MB)"
+
+#~ msgid "Analysiere Bild …"
+#~ msgstr "Analyze image …"
+
+#~ msgid "Analysiere Text …"
+#~ msgstr "Analyze text …"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "<0/> Bilder aussuchen"
+msgstr "<0/> Select images"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Bis zu 3 Bilder (max. 10MB)"
+msgstr "Up to 3 images (max. 10MB)"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "<0/> Analysiere …"
+msgstr "<0/> Analyzing …"

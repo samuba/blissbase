@@ -157,7 +157,7 @@ msgstr "<0/> Email"
 msgid "<0/> Website"
 msgstr "<0/> Website"
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
@@ -630,8 +630,10 @@ msgstr "Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Te
 msgid "Anmelde Methode auswählen"
 msgstr "Anmelde Methode auswählen"
 
+#. 0: image.file.name
 #. 0: preview.name
 #. 0: preview.name
+#: src/lib/components/EventAutofill.svelte
 #: src/lib/components/ImageInput.svelte
 #: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Bild {0} entfernen"
@@ -848,13 +850,11 @@ msgstr "Aktuelle Favoriten"
 msgid "Vergangene Favoriten"
 msgstr "Vergangene Favoriten"
 
-#: src/lib/components/EventForm.svelte
-msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
-msgstr "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
+#~ msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
+#~ msgstr "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
 
-#: src/lib/components/EventForm.svelte
-msgid "<0/> Analysiere Text …"
-msgstr "<0/> Analysiere Text …"
+#~ msgid "<0/> Analysiere Text …"
+#~ msgstr "<0/> Analysiere Text …"
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
 msgid "Anmeldung fehlgeschlagen"
@@ -1635,29 +1635,25 @@ msgstr "Standort für deine Angebote"
 msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
 msgstr "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
 msgstr "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
 
-#: src/lib/components/EventForm.svelte
-msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
-msgstr "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
+#~ msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
+#~ msgstr "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
 
 #~ msgid "Daten übernehmen <0/>"
 #~ msgstr "Daten übernehmen <0/>"
 
-#. 0: result.fields.existingSource
-#: src/lib/components/EventForm.svelte
-msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
-msgstr "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+#~ msgstr "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 msgid "Event Beschreibung einfügen…"
 msgstr "Event Beschreibung einfügen…"
 
-#: src/lib/components/EventForm.svelte
-msgid "Automatisch ausfüllen aus Beschreibung"
-msgstr "Automatisch ausfüllen aus Beschreibung"
+#~ msgid "Automatisch ausfüllen aus Beschreibung"
+#~ msgstr "Automatisch ausfüllen aus Beschreibung"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
@@ -1812,6 +1808,62 @@ msgstr "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt
 msgid "Du bietest beide Optionen an."
 msgstr "Du bietest beide Optionen an."
 
-#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventAutofill.svelte
 msgid "Felder ausfüllen <0/>"
 msgstr "Felder ausfüllen <0/>"
+
+#. 0: result.fields.existingSource
+#: src/lib/components/EventAutofill.svelte
+msgid "Die Eingabe scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+msgstr "Die Eingabe scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Es wurde kein klarer Event erkannt. Du kannst das Formular trotzdem ausfüllen."
+msgstr "Es wurde kein klarer Event erkannt. Du kannst das Formular trotzdem ausfüllen."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Maximal 3 Bilder erlaubt."
+msgstr "Maximal 3 Bilder erlaubt."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Nur JPEG, PNG, WebP oder GIF sind erlaubt."
+msgstr "Nur JPEG, PNG, WebP oder GIF sind erlaubt."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Bilder dürfen maximal 10MB groß sein."
+msgstr "Bilder dürfen maximal 10MB groß sein."
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Automatisch ausfüllen"
+msgstr "Automatisch ausfüllen"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Text oder Flyer-Bild aus WhatsApp, Telegram & Co. nutzen"
+msgstr "Text oder Flyer-Bild aus WhatsApp, Telegram & Co. nutzen"
+
+#~ msgid "Text"
+#~ msgstr "Text"
+
+#~ msgid "Bild"
+#~ msgstr "Bild"
+
+#~ msgid "Bis zu 3 Flyer- oder Event-Bilder (max. 10MB)"
+#~ msgstr "Bis zu 3 Flyer- oder Event-Bilder (max. 10MB)"
+
+#~ msgid "Analysiere Bild …"
+#~ msgstr "Analysiere Bild …"
+
+#~ msgid "Analysiere Text …"
+#~ msgstr "Analysiere Text …"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "<0/> Bilder aussuchen"
+msgstr "<0/> Bilder aussuchen"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "Bis zu 3 Bilder (max. 10MB)"
+msgstr "Bis zu 3 Bilder (max. 10MB)"
+
+#: src/lib/components/EventAutofill.svelte
+msgid "<0/> Analysiere …"
+msgstr "<0/> Analysiere …"

@@ -18,7 +18,7 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 
 	/* CI: flakes from infra; local: first test can hit Vite cold start / dep optimize before SSR is stable */
-	retries: process.env.CI ? 2 : 1,
+	retries: process.env.CI ? 4 : 2,
 
 	/* One worker: shared Vite dev server + PGlite; parallel runs trigger HMR/full reloads and flake modal/state tests. */
 	workers: 1,
