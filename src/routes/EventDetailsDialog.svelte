@@ -37,7 +37,7 @@
 
 		navigation.addEventListener(`navigate`, onUrlChanged);
 		return () => {
-			navigation.removeEventListener(`navigate`, ∑);
+			navigation.removeEventListener(`navigate`, onUrlChanged);
 		};
 	});
 
