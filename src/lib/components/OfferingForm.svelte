@@ -35,6 +35,7 @@
 		initialLocationLng,
 		locationError = ``,
 		onsubmit,
+		onSuccess,
 		children,
 	}: {
 		remoteForm: OfferingRemoteForm;
@@ -49,6 +50,7 @@
 		initialLocationLng?: number | null;
 		locationError?: string;
 		onsubmit?: (event: SubmitEvent) => void;
+		onSuccess?: () => void | Promise<void>;
 		children?: Snippet;
 	} = $props();
 
@@ -68,9 +70,17 @@
 		return `Du bietest beide Optionen an.`;
 	}
 
-	const preflight = $derived.by(() => {
-		if (isUpdateOfferingForm(remoteForm)) return remoteForm.preflight(updateOfferingFormSchema);
-		return remoteForm.preflight(offeringFormSchema);
+	const formProps = $derived.by(() => {
+		const form = isUpdateOfferingForm(remoteForm)
+			? remoteForm.preflight(updateOfferingFormSchema)
+			: remoteForm.preflight(offeringFormSchema);
+		if (!onSuccess) return form;
+
+		return form.enhance(async ({ submit }) => {
+			if (await submit()) {
+				await onSuccess();
+			}
+		});
 	});
 	const updateFields = $derived(remoteForm.fields as Partial<UpdateOnlyFields>);
 	const resolvedLocationLabel = $derived(
@@ -91,7 +101,7 @@
 	}
 </script>
 
-<form {...preflight} class="flex flex-col gap-3" id={formId} {onsubmit}>
+<form {...formProps} class="flex flex-col gap-3" id={formId} {onsubmit}>
 	<section class={[`grid gap-4`, fieldsHidden && `hidden`]} data-wizard-step="offering">
 		<OfferingImageUploadInput
 			field={remoteForm.fields.imageClaims}

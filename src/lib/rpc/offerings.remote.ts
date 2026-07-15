@@ -1,4 +1,4 @@
-import { command, form, getRequestEvent, query } from "$app/server";
+import { command, form, getRequestEvent, query, requested } from "$app/server";
 import { dev } from "$app/environment";
 import * as assets from "$lib/assets";
 import { randomString, slugify } from "$lib/common";
@@ -6,11 +6,11 @@ import { OFFERING_IMAGE_MAX_COUNT, offeringFormSchema, offeringNeedsLocation, up
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
-import { routes, safeReturnToPath } from "$lib/routes";
+import { BASE_URL, routes, safeReturnToPath } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
-import { and, db, eq, ne, or, s, sql } from "$lib/server/db";
+import { and, db, eq, ne, s, sql } from "$lib/server/db";
 import { verifyOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
 import { createPublicProfileSlug, hasSocialLink, isPublicProfile } from "$lib/server/profile";
 import { resolveProfileImageUrl } from "$lib/server/profileImages";
@@ -24,6 +24,15 @@ import { filterOfferingsByIncludeOnline, shouldIncludeOfferingInLocationFilter }
 import { sanitizeLocationParams, hasValidCoordinates } from "$lib/locationFilter";
 import { resolveOfferingsFilterCoordinates } from "$lib/server/offeringsFilter";
 
+const offeringsFilterSchema = v.object({
+	location: v.nullable(v.string()),
+	distance: v.nullable(v.string()),
+	lat: v.nullable(v.number()),
+	lng: v.nullable(v.number()),
+	searchTerm: v.nullable(v.string()),
+	includeOnline: v.boolean(),
+});
+
 const offeringImageUploadSchema = v.object({
 	contentType: v.picklist([`image/webp`, `image/jpeg`]),
 });
@@ -32,17 +41,16 @@ const offeringMutationSchema = v.object({
 	offeringId: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
 
-const offeringBySlugSchema = v.object({
-	slug: v.pipe(v.string(), v.trim(), v.nonEmpty()),
-});
-
 const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
 const isE2eTestMode = E2E_TEST === `true` && dev;
 
-export const getOfferings = query(async () => {
-	const { url } = getRequestEvent();
-	const args = parseOfferingsFilterFromUrl(url);
-	const sanitized = sanitizeLocationParams(args);
+export const getOfferings = query(offeringsFilterSchema, async (args) => {
+	const sanitized = sanitizeLocationParams({
+		location: args.location,
+		distance: args.distance,
+		lat: args.lat,
+		lng: args.lng,
+	});
 	const filter: OfferingsFilter = {
 		location: sanitized.location ?? null,
 		distance: sanitized.distance ?? null,
@@ -224,56 +232,6 @@ export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, a
 	};
 });
 
-export const getOfferingForDialog = query(offeringBySlugSchema, async ({ slug }) => {
-	const userId = getRequestEvent().locals.userId;
-	const offering = await db.query.offerings.findFirst({
-		where: userId
-			? and(eq(s.offerings.slug, slug), or(eq(s.offerings.listed, true), eq(s.offerings.profileId, userId)))
-			: and(eq(s.offerings.slug, slug), eq(s.offerings.listed, true)),
-		columns: {
-			id: true,
-			slug: true,
-			title: true,
-			descriptionHtml: true,
-			format: true,
-			imageUrls: true,
-			listed: true,
-		},
-		with: {
-			profile: {
-				columns: {
-					id: true,
-					slug: true,
-					displayName: true,
-					bio: true,
-					profileImageUrl: true,
-					bannerImageUrl: true,
-					socialLinks: true,
-					locationLabel: true,
-					latitude: true,
-					longitude: true,
-				},
-			},
-		},
-	});
-
-	if (!offering?.profile) return null;
-
-	return {
-		...offering,
-		descriptionHtml: offering.descriptionHtml ?? ``,
-		imageUrls: offering.imageUrls ?? [],
-		canManage: userId === offering.profile.id,
-		profile: {
-			...offering.profile,
-			bio: offering.profile.bio ?? ``,
-			profileImageUrl: offering.profile.profileImageUrl ?? ``,
-			bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
-			locationLabel: offering.profile.locationLabel ?? ``,
-		},
-	};
-});
-
 export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	const sessionUserId = getRequestEvent().locals.userId;
 	const userId = sessionUserId ? sessionUserId : verifyOfferingSubmitAuthToken(data.authToken);
@@ -338,17 +296,10 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	}
 
 	getMyPublicProfile().refresh();
-	refreshOfferingLists();
+	refreshOfferingLists({ returnTo: data.returnTo });
 	setFlash(`offeringCreated`);
 
-	redirect(
-		303,
-		offeringRedirectHref({
-			returnTo: data.returnTo,
-			fallback: routes.offeringDetails(slug),
-			offeringSlug: slug,
-		}),
-	);
+	redirect(303, routes.offeringDetails(slug));
 });
 
 export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {
@@ -407,16 +358,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	if (!offering.slug) throw error(500, `Offering is missing a slug`);
 
 	getMyPublicProfile().refresh();
-	refreshOfferingLists();
-	setFlash(`offeringUpdated`);
-	redirect(
-		303,
-		offeringRedirectHref({
-			returnTo: data.returnTo,
-			fallback: routes.offeringDetails(offering.slug),
-			offeringSlug: offering.slug,
-		}),
-	);
+	refreshOfferingLists({ returnTo: data.returnTo });
 });
 
 export const unlistOffering = command(offeringMutationSchema, async ({ offeringId }) => {
@@ -758,36 +700,28 @@ function addUniqueImageUrl(args: { imageUrls: string[]; url: string }) {
 	args.imageUrls.push(args.url);
 }
 
-function refreshOfferingLists() {
-	getOfferings().refresh();
-	if (getRequestEvent().locals.userId) {
+function refreshOfferingLists(args: { returnTo?: string | null } = {}) {
+	const event = getRequestEvent();
+	const filterHref = args.returnTo
+		? safeReturnToPath({
+				returnTo: args.returnTo,
+				fallback: routes.offeringsList(),
+				origin: event.url.origin,
+			})
+		: `${event.url.pathname}${event.url.search}`;
+	const filterUrl = new URL(filterHref, event.url.origin);
+	const offeringsListPath = new URL(routes.offeringsList(), BASE_URL).pathname;
+
+	if (filterUrl.pathname === offeringsListPath) {
+		getOfferings(parseOfferingsFilterFromUrl(filterUrl)).refresh();
+	}
+
+	void requested(getOfferings, 5).refreshAll();
+
+	if (event.locals.userId) {
 		getMyOfferings().refresh();
 		userHasOfferings().refresh();
 	}
-}
-
-function offeringRedirectHref(args: {
-	returnTo?: string | null;
-	fallback: ReturnType<typeof routes.offeringDetails>;
-	offeringSlug: string;
-}) {
-	const { url } = getRequestEvent();
-	const href = safeReturnToPath({
-		returnTo: args.returnTo,
-		fallback: args.fallback,
-		origin: url.origin,
-	});
-	if (isOfferingFormHref({ href, origin: url.origin })) return args.fallback;
-
-	return routes.offeringDialog({ returnTo: href, offeringSlug: args.offeringSlug });
-}
-
-function isOfferingFormHref(args: { href: string; origin: string }) {
-	const { pathname } = new URL(args.href, args.origin);
-	if (pathname === routes.newOffering()) return true;
-	if (!pathname.startsWith(`/offerings/`)) return false;
-
-	return pathname.endsWith(`/edit`);
 }
 
 async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {

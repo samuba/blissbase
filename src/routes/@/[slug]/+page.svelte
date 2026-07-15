@@ -4,8 +4,7 @@
 	import ProfileContactButtons from '$lib/components/ProfileContactButtons.svelte';
 	import { routes } from '$lib/routes';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { showOfferingDetailsDialog } from '../../offerings/OfferingDetailsDialog.svelte';
+	import OfferingDetailsDialog, { showOfferingDetailsDialog } from '../../offerings/OfferingDetailsDialog.svelte';
 	import { fade } from 'svelte/transition';
 
 	let { data } = $props();
@@ -21,11 +20,6 @@
 
 	function selectTab(tab: ProfileTab) {
 		selectedTab = tab;
-	}
-
-	function openOfferingDetails(offering: (typeof publicOfferings)[number]) {
-		selectedTab = `offerings`;
-		showOfferingDetailsDialog(offering, { returnTo: routes.currentPath(page.url) });
 	}
 
 	type ProfileTab = `events` | `offerings`;
@@ -153,7 +147,11 @@
 			{#if publicOfferings?.length}
 				<div class="mt-4 flex w-full flex-col gap-4">
 					{#each publicOfferings as offering (offering.id)}
-						<OfferingCard {offering} showAuthor={false} onclick={() => openOfferingDetails(offering)} />
+						<OfferingCard
+							{offering}
+							showAuthor={false}
+							onclick={() => showOfferingDetailsDialog(offering.slug)}
+						/>
 					{/each}
 				</div>
 			{:else}
@@ -170,6 +168,10 @@
 		</a>
 	</div>
 </div>
+
+{#if publicOfferings?.length}
+	<OfferingDetailsDialog offerings={publicOfferings} />
+{/if}
 
 <style>
 	:global(.prose a) {

@@ -10,7 +10,7 @@ import {
 	createProfile,
 	E2E_DEFAULT_USER_ID,
 } from "./helpers/seed";
-import { setGermanLocale } from "./helpers/offering-test-utils";
+import { setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const farUserId = `00000000-0000-4000-8000-000000000003`;
 const incompleteUserId = `00000000-0000-4000-8000-000000000004`;
@@ -153,10 +153,11 @@ test.describe("Offering discovery and details", () => {
 		const offering = await createOffering(page, createOfflineOffering({ title: `Dialog Offering`, slug: `dialog` }));
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 		await page.goto(listUrl);
+		await waitForClientHydration(page);
 
 		await page.locator(`[data-offering-id="${offering.id}"]`).click();
-		await expect(page.getByRole(`dialog`)).toBeVisible();
 		await expect(page).toHaveURL(new RegExp(`/offerings/${offering.slug}$`));
+		await expect(page.getByRole(`dialog`)).toBeVisible();
 		await page.getByRole(`button`, { name: `Schließen` }).click();
 		await expect(page).toHaveURL(listUrl);
 
@@ -166,22 +167,29 @@ test.describe("Offering discovery and details", () => {
 		await expect(page).toHaveURL(listUrl);
 	});
 
-	test("post-create returnTo opens the offering dialog once and closing returns to the list", async ({ page }) => {
+	test("cold visit to offering details opens as a full page without dialog", async ({ page }) => {
+		await createProfile(page, createCompleteProfile());
+		const offering = await createOffering(page, createOfflineOffering({ title: `Cold Page Offering`, slug: `cold-page` }));
+
+		await page.goto(`/offerings/${offering.slug}`);
+		await expect(page.getByRole(`dialog`)).toHaveCount(0);
+		await expect(page.getByRole(`heading`, { name: `Cold Page Offering` })).toBeVisible();
+		await expect(page.getByRole(`link`, { name: `Alle Angebote` })).toBeVisible();
+	});
+
+	test("post-create opens the offering as a full page", async ({ page }) => {
 		await createProfile(page, createCompleteProfile());
 		await signInAsE2EUser(page);
 		const returnTo = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 		await page.goto(`/offerings/new?returnTo=${encodeURIComponent(returnTo)}`);
 		await expect(page.getByRole(`heading`, { name: `Angebot erstellen` })).toBeVisible();
 		await expect(page.getByRole(`combobox`)).toHaveValue(`Berlin`);
-		await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(`Return Dialog Offering`);
+		await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(`Return Page Offering`);
 		await page.getByRole(`button`, { name: `Angebot speichern` }).click();
 
 		await expect(page).toHaveURL(/\/offerings\/[^/?]+$/);
-		const offeringDialog = page.getByRole(`dialog`);
-		await expect(offeringDialog).toBeVisible();
-		await expect(offeringDialog.getByRole(`heading`, { name: `Return Dialog Offering` })).toBeVisible();
-		await page.getByRole(`button`, { name: `Schließen` }).click();
-		await expect(page).toHaveURL(returnTo);
 		await expect(page.getByRole(`dialog`)).toHaveCount(0);
+		await expect(page.getByRole(`heading`, { name: `Return Page Offering` })).toBeVisible();
+		await expect(page.getByRole(`link`, { name: `Alle Angebote` })).toBeVisible();
 	});
 });

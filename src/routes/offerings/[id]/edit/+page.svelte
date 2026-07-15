@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from "$app/navigation";
 	import { page } from "$app/state";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
+	import { showFlashToast } from "$lib/flashToast.svelte";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "$lib/rpc/offerings.remote";
 	import { routes, safeReturnToPath } from "$lib/routes";
@@ -19,7 +20,9 @@
 	let isChangingListing = $state(false);
 	let isSubmitting = $derived(updateOffering.pending > 0);
 	let actionsDisabled = $derived(isSubmitting || isDeletingOffering || isChangingListing || imageBusy);
-	const fallbackReturnHref = routes.offeringsList();
+	const fallbackReturnHref = $derived(
+		offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList(),
+	);
 	let returnHref = $derived(
 		safeReturnToPath({
 			returnTo: page.url.searchParams.get(`returnTo`),
@@ -35,8 +38,13 @@
 		initializedFormOfferingId = offering.id;
 	});
 
+	async function handleSaveSuccess() {
+		showFlashToast(`offeringUpdated`);
+		await goto(returnHref, { replaceState: true });
+	}
+
 	function handleCancel() {
-		void goto(returnHref);
+		void goto(returnHref, { replaceState: true });
 	}
 
 	async function handleDeleteOffering() {
@@ -96,7 +104,7 @@
 				<div>
 					<h1 class="text-2xl font-bold">Angebot bearbeiten</h1>
 				</div>
-				<a href={returnHref} class="btn btn-ghost btn-sm">
+				<a href={returnHref} class="btn btn-ghost btn-sm" onclick={(e) => { e.preventDefault(); handleCancel(); }}>
 					<i class="icon-[ph--arrow-left] size-4"></i>
 					Zurück
 				</a>
@@ -109,6 +117,7 @@
 					returnTo={returnHref}
 					bind:format
 					onImageBusyChange={(busy) => (imageBusy = busy)}
+					onSuccess={handleSaveSuccess}
 				/>
 			{/if}
 

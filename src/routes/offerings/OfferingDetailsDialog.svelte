@@ -1,35 +1,39 @@
 <script lang="ts" module>
-	import { pushState } from "$app/navigation";
+	import { pushState, replaceState } from "$app/navigation";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-	import { routes } from "$lib/routes";
+	import {
+		BASE_URL,
+		parseOfferingDetailsSlugFromUrl,
+		routes,
+		takeOfferingSlugQuery,
+		withOfferingSlug,
+	} from "$lib/routes";
 
-	let offering = $state<Offering | undefined>(undefined);
-	let offeringReturnTo = $state<string | undefined>(undefined);
+	let editReturnTo = $state<string | undefined>(undefined);
 	let open = $state(false);
-	let isClosing = $state(false);
-	let closeTimeout: ReturnType<typeof setTimeout> | undefined;
+	let activeSlug = $state<string | null>(null);
 
-	export function showOfferingDetailsDialog(offeringToShow: Offering, args: { returnTo?: string } = {}) {
-		if (!offeringToShow.slug) return;
-		cancelPendingClose();
-		offering = offeringToShow;
-		offeringReturnTo = args.returnTo;
-		open = true;
-		pushState(routes.offeringDetails(offeringToShow.slug), {
-			selectedOfferingId: offeringToShow.id,
+	export function showOfferingDetailsDialog(slug: string) {
+		editReturnTo = withOfferingSlug({
+			path: dialogHostPath(new URL(window.location.href)),
+			offeringSlug: slug,
 		});
+		pushState(routes.offeringDetails(slug), {});
+		activeSlug = slug;
+		open = true;
 	}
 
-	function cancelPendingClose() {
-		if (closeTimeout) {
-			clearTimeout(closeTimeout);
-			closeTimeout = undefined;
-		}
-		isClosing = false;
+	function dialogHostPath(url: URL) {
+		if (!parseOfferingDetailsSlugFromUrl(url)) return routes.currentPath(url);
+		if (!editReturnTo) return routes.offeringsList();
+
+		const returnUrl = new URL(editReturnTo, BASE_URL);
+		takeOfferingSlugQuery(returnUrl);
+		return routes.currentPath(returnUrl);
 	}
 
-	type Offering = {
+	type OfferingDetailsDialogOffering = {
 		id: number;
 		slug: string | null;
 		title: string;
@@ -51,85 +55,87 @@
 </script>
 
 <script lang="ts">
-	import { browser } from "$app/environment";
-	import { page } from "$app/state";
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from "$lib/common";
 	import { Dialog } from "$lib/components/dialog";
-	import { getOfferingForDialog } from "$lib/rpc/offerings.remote";
-	import { afterNavigate, replaceState } from "$app/navigation";
 	import OfferingDetails from "./OfferingDetails.svelte";
+	import { onMount } from "svelte";
 
-	let openingOfferingSlug = $state<string | undefined>(undefined);
+	let { offerings }: { offerings: OfferingDetailsDialogOffering[] } = $props();
 
-	afterNavigate(() => {
-		const pageUrl = page.url;
-		const authoritativeUrl = browser ? new URL(window.location.href) : pageUrl;
-		const offeringSlug = authoritativeUrl.searchParams.get(`offering`);
+	let isClosing = $state(false);
+	let closeTimeout: ReturnType<typeof setTimeout> | undefined;
 
-		if (!page.state.selectedOfferingId && offering && !isClosing) {
-			closeGracefully();
-			if (offeringSlug) {
-				replaceState(offeringReturnTo ?? urlWithoutOfferingDialogParam(authoritativeUrl), {});
-			}
-			return;
+	const offering = $derived(offerings.find((item) => item.slug === activeSlug));
+
+	onMount(() => {
+		const url = new URL(window.location.href);
+		const offeringSlug = takeOfferingSlugQuery(url);
+		if (offeringSlug) {
+			const hostPath = routes.currentPath(url);
+			editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
+			// Replace `?offeringSlug=` with the host page, then push the dialog URL so
+			// history.back() closes to the list instead of returning to /edit.
+			replaceState(hostPath, {});
+			pushState(routes.offeringDetails(offeringSlug), {});
+			activeSlug = offeringSlug;
+			open = true;
+		} else {
+			syncFromUrl(url);
 		}
 
-		if (!offeringSlug || isClosing || offering?.slug === offeringSlug || openingOfferingSlug === offeringSlug) {
-			return;
-		}
-
-		queueMicrotask(() => void openOfferingFromUrl({ offeringSlug, url: authoritativeUrl }));
+		navigation.addEventListener(`navigate`, onUrlChanged);
+		return () => {
+			navigation.removeEventListener(`navigate`, onUrlChanged);
+		};
 	});
 
-	async function openOfferingFromUrl(args: { offeringSlug: string; url: URL }) {
-		const { offeringSlug, url } = args;
-		if (isClosing || openingOfferingSlug === offeringSlug) return;
-		if (offering?.slug === offeringSlug) return;
-		openingOfferingSlug = offeringSlug;
-		const returnTo = urlWithoutOfferingDialogParam(url);
-		replaceState(returnTo, {});
-		try {
-			const offeringToShow = await getOfferingForDialog({ slug: offeringSlug });
-			if (isClosing || openingOfferingSlug !== offeringSlug) return;
-			if (!offeringToShow) return;
+	function onUrlChanged(e: { destination: NavigationDestination }) {
+		syncFromUrl(new URL(e.destination.url));
+	}
 
-			showOfferingDetailsDialog(offeringToShow, { returnTo });
-		} finally {
-			openingOfferingSlug = undefined;
+	function syncFromUrl(url: URL) {
+		const slug = parseOfferingDetailsSlugFromUrl(url);
+		if (slug) {
+			cancelPendingClose();
+			activeSlug = slug;
+			open = true;
+			return;
 		}
+
+		if (!open && !activeSlug) return;
+		closeGracefully();
+	}
+
+	function cancelPendingClose() {
+		if (closeTimeout) {
+			clearTimeout(closeTimeout);
+			closeTimeout = undefined;
+		}
+		isClosing = false;
 	}
 
 	function handleClose() {
-		if (!browser) return;
 		closeGracefully();
-		history.back();
+		if (parseOfferingDetailsSlugFromUrl(new URL(window.location.href))) {
+			history.back();
+		}
 	}
 
 	function closeGracefully() {
-		if (!offering || isClosing) return;
+		if (isClosing) return;
 		isClosing = true;
 		open = false;
 		closeTimeout = setTimeout(() => {
-			offering = undefined;
-			offeringReturnTo = undefined;
+			activeSlug = null;
 			isClosing = false;
 			closeTimeout = undefined;
-		}, 200); // delayed to not have layout shift during closing animation
-	}
-
-	function urlWithoutOfferingDialogParam(url: URL) {
-		const nextUrl = new URL(url);
-		nextUrl.searchParams.delete(`offering`);
-		return routes.currentPath(nextUrl);
+		}, 200);
 	}
 
 	function onOpenChange(shouldOpen: boolean) {
-		if (shouldOpen) return;
-		handleClose();
+		if (!shouldOpen) handleClose();
 	}
 </script>
-
-<svelte:window onpopstate={closeGracefully} />
 
 <Dialog.Root {open} {onOpenChange}>
 	<Dialog.Portal>
@@ -156,14 +162,14 @@
 
 			{#if offering}
 				{#key offering.id}
-					<OfferingDetails {offering} editReturnTo={offeringReturnTo} onManaged={handleClose} />
+					<OfferingDetails {offering} {editReturnTo} onManaged={handleClose} />
 				{/key}
 			{/if}
 
 			<div class="mt-2 flex w-full justify-center gap-6 pb-6 md:hidden">
 				<button type="button" class="btn btn-sm" onclick={handleClose}>
 					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
-					Zurück zur Übersicht
+					Zurück
 				</button>
 			</div>
 		</Dialog.Content>

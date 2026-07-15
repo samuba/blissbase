@@ -12,6 +12,7 @@ export async function setGermanLocale(page: Page) {
 }
 
 export async function waitForClientHydration(page: Page) {
+	await page.waitForLoadState(`networkidle`);
 	await page.evaluate(
 		() =>
 			new Promise<void>((resolve) => {

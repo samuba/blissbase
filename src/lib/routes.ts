@@ -29,12 +29,6 @@ export const routes = {
         }
         return relativeUrl(url) ;
     } ,
-    offeringDialog: (args: { returnTo: string; offeringSlug: string }) => {
-        const returnToPath = normalizeReturnToPath(args.returnTo, BASE_URL) ?? routes.offeringsList();
-        const url = new URL(returnToPath, BASE_URL);
-        url.searchParams.set(`offering`, args.offeringSlug);
-        return relativeUrl(url) ;
-    },
     currentPath: (url: URL) => `${url.pathname}${url.search}${url.hash}` ,
     newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/new`) , args.returnTo),
     offeringDetails: (slug: string) => resolve(`/offerings/[id]`, { id: slug }) ,
@@ -55,9 +49,43 @@ export const routes = {
 }
 
 export const BASE_URL = "https://blissbase.app" as const
+export const OFFERING_SLUG_QUERY = `offeringSlug` as const
 
 export function absoluteUrl(path: string) {
     return new URL(path, BASE_URL).toString();
+}
+
+const RESERVED_OFFERING_DETAIL_SLUGS = new Set([`new`]);
+
+/** Returns the offering slug when the URL is `/offerings/{slug}` (not list, new, or nested edit). */
+export function parseOfferingDetailsSlugFromUrl(url: URL) {
+    const pathname = url.pathname.replace(/\/+$/, ``) || `/`;
+    const prefix = `/offerings/`;
+    if (!pathname.startsWith(prefix)) return null;
+
+    const rest = pathname.slice(prefix.length);
+    if (!rest || rest.includes(`/`)) return null;
+
+    const slug = decodeURIComponent(rest);
+    if (!slug || RESERVED_OFFERING_DETAIL_SLUGS.has(slug)) return null;
+    return slug;
+}
+
+/** Appends `offeringSlug` so host pages can reopen the offering dialog after navigation. */
+export function withOfferingSlug(args: { path: string; offeringSlug: string }) {
+    const path = normalizeReturnToPath(args.path, BASE_URL) ?? routes.offeringsList();
+    const url = new URL(path, BASE_URL);
+    url.searchParams.set(OFFERING_SLUG_QUERY, args.offeringSlug);
+    return relativeUrl(url);
+}
+
+/** Reads and removes `offeringSlug` from `url` (mutates search params). */
+export function takeOfferingSlugQuery(url: URL) {
+    const offeringSlug = url.searchParams.get(OFFERING_SLUG_QUERY)?.trim();
+    if (!offeringSlug) return null;
+
+    url.searchParams.delete(OFFERING_SLUG_QUERY);
+    return offeringSlug;
 }
 
 export function safeReturnToPath(args: { returnTo?: string | null; fallback: string; origin?: string }) {

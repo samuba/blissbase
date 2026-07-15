@@ -5,7 +5,7 @@
 	import { getMyOfferings, updateProfileLocation } from "$lib/rpc/offerings.remote";
 	import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 	import { routes } from "$lib/routes";
-	import { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
+	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
 
 	const profile = $state(await getMyPublicProfile());
 	const offerings = $derived(await getMyOfferings());
@@ -16,10 +16,6 @@
 
 	function newOfferingHref() {
 		return routes.newOffering({ returnTo: routes.currentPath(page.url) });
-	}
-
-	function openOfferingDetails(offering: (typeof offerings)[number]) {
-		showOfferingDetailsDialog(offering, { returnTo: routes.currentPath(page.url) });
 	}
 
 	async function handleLocationSelect(event: {
@@ -115,7 +111,11 @@
 		{#if activeOfferings.length}
 			<div class="mt-4 flex w-full flex-col gap-4">
 				{#each activeOfferings as offering (offering.id)}
-					<OfferingCard {offering} showAuthor={false} onclick={() => openOfferingDetails(offering)} />
+					<OfferingCard
+						{offering}
+						showAuthor={false}
+						onclick={() => showOfferingDetailsDialog(offering.slug)}
+					/>
 				{/each}
 			</div>
 		{:else}
@@ -130,7 +130,11 @@
 		{#if inactiveOfferings.length}
 			<div class="mt-4 flex w-full flex-col gap-4">
 				{#each inactiveOfferings as offering (offering.id)}
-					<OfferingCard {offering} showAuthor={false} onclick={() => openOfferingDetails(offering)} />
+					<OfferingCard
+						{offering}
+						showAuthor={false}
+						onclick={() => showOfferingDetailsDialog(offering.slug)}
+					/>
 				{/each}
 			</div>
 		{:else}
@@ -138,4 +142,6 @@
 		{/if}
 	</div>
 </div>
+
+<OfferingDetailsDialog {offerings} />
 

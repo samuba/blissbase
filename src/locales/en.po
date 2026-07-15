@@ -166,10 +166,8 @@ msgstr "<0/> Website"
 msgid "Schließen"
 msgstr "Close"
 
-#: src/routes/EventDetailsDialog.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
-msgid "<0/> Zurück zur Übersicht"
-msgstr "<0/> Back to overview"
+#~ msgid "<0/> Zurück zur Übersicht"
+#~ msgstr "<0/> Back to overview"
 
 #: src/lib/components/DateRangePicker.svelte
 msgid "Diese Woche"
@@ -307,6 +305,8 @@ msgid "<0/> Wird gesendet..."
 msgstr "<0/> Sending..."
 
 #: src/lib/components/PageHeader.svelte
+#: src/routes/EventDetailsDialog.svelte
+#: src/routes/offerings/OfferingDetailsDialog.svelte
 #: src/routes/offerings/[id]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/public/+page.svelte

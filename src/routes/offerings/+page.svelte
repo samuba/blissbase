@@ -6,17 +6,18 @@
 	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
 	import TabsNavDesktop from "$lib/components/TabsNavDesktop.svelte";
 	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
-	import { filterOfferingsBySearchTerm } from "$lib/offeringsFilter";
+	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveLocationFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
 	import { OfferingsFeatureFlag } from "$lib/OfferingsFeatureFlag.svelte";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
-	import { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
+	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 
-	const offeringsResult = $derived(await (page.url.search, getOfferings()));
+	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
+	const offeringsResult = $derived(await getOfferings(filterFromUrl));
 	let loading = $state(false); // can not use getOfferings().loading as its broken: https://github.com/sveltejs/kit/issues/14915
 	const filter = $derived(offeringsResult.filter);
 	const offerings = $derived(offeringsResult.offerings);
@@ -78,7 +79,7 @@
 		)
 
 		try {
-			await getOfferings().refresh()
+			await getOfferings(nextOfferingsFilter).refresh()
 		} finally {
 			loading = false;
 		}
@@ -126,7 +127,8 @@
 	}
 
 	function openOfferingDetails(offering: (typeof offerings)[number]) {
-		showOfferingDetailsDialog(offering, { returnTo: routes.currentPath(page.url) });
+		if (!offering.slug) return;
+		showOfferingDetailsDialog(offering.slug);
 	}
 
 	const normalizedSearchTerm = $derived(filter.searchTerm?.trim() ?? ``);
@@ -288,3 +290,5 @@
 		</div>
 	</div>
 </div>
+
+<OfferingDetailsDialog {offerings} />

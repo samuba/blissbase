@@ -81,7 +81,7 @@
 			<div class="md:hidden flex w-full justify-center gap-6 pb-6">
 				<button type="button" class="btn btn-sm" onclick={handleClose}>
 					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
-					Zurück zur Übersicht
+					Zurück
 				</button>
 			</div>
 		</Dialog.Content>

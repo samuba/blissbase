@@ -114,7 +114,7 @@ test.describe("Offering lifecycle and access control", () => {
 		expect((await getOfferingById(page, offering.id)).format).toBe(`online`);
 	});
 
-	test("finishing a dialog edit reopens it once and closing returns to the list", async ({ page }) => {
+	test("finishing a dialog edit returns to the previous list page", async ({ page }) => {
 		const offering = await createOffering(page, createOfflineOffering({ title: `Dialog Edit Offering`, slug: `dialog-edit` }));
 		await signInAsE2EUser(page);
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
@@ -125,16 +125,16 @@ test.describe("Offering lifecycle and access control", () => {
 		await expect(page.getByRole(`dialog`)).toBeVisible();
 		await page.getByRole(`link`, { name: `Bearbeiten` }).click();
 		await expect(page.getByRole(`heading`, { name: `Angebot bearbeiten` })).toBeVisible();
-		await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(`Edited Dialog Offering`);
+		await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(`Edited Page Offering`);
 		await page.getByRole(`button`, { name: `Speichern`, exact: true }).click();
 
 		await expect(page).toHaveURL(`/offerings/${offering.slug}`);
-		const offeringDialog = page.getByRole(`dialog`);
-		await expect(offeringDialog).toBeVisible();
-		await expect(offeringDialog.getByRole(`heading`, { name: `Edited Dialog Offering` })).toBeVisible();
-		await page.getByRole(`button`, { name: `Schließen` }).click();
-		await expect(page).toHaveURL(listUrl);
+		await expect(page.getByRole(`dialog`)).toBeVisible();
+		await expect(page.getByRole(`heading`, { name: `Edited Page Offering` })).toBeVisible();
+
+		await page.getByRole(`dialog`).getByRole(`button`, { name: `Schließen` }).click();
 		await expect(page.getByRole(`dialog`)).toHaveCount(0);
+		await expect(page).toHaveURL(listUrl);
 	});
 
 	test("non-owner cannot open the edit route", async ({ page }) => {
@@ -176,8 +176,10 @@ test.describe("Offering lifecycle and access control", () => {
 
 		await expect(page.getByRole(`heading`, { name: `Active Profile Offering` })).toBeVisible();
 		await page.locator(`[data-offering-id="${offering.id}"]`).click();
+		await expect(page.getByRole(`dialog`)).toBeVisible();
 		await expect(page).toHaveURL(`/offerings/${offering.slug}`);
-		await page.getByRole(`link`, { name: `Bearbeiten` }).click();
+		await page.getByRole(`dialog`).getByRole(`link`, { name: `Bearbeiten` }).click();
+		await expect(page.getByRole(`dialog`)).toHaveCount(0);
 		await expect(page.getByTestId(`offering-image-input`)).toBeAttached();
 		const deactivateButton = page.getByRole(`button`, { name: `Deaktivieren`, exact: true });
 		await expect(deactivateButton).toBeEnabled();
@@ -186,6 +188,7 @@ test.describe("Offering lifecycle and access control", () => {
 		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(false);
 
 		await page.goto(`/profile/offerings`);
+		await waitForClientHydration(page);
 		await page.getByRole(`tab`, { name: `Deaktiviert` }).click();
 		await expect(page.getByRole(`heading`, { name: `Active Profile Offering` })).toBeVisible();
 	});

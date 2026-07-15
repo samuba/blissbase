@@ -20,7 +20,6 @@
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
 	import { isActiveAppTab } from '$lib/components/tabsNav';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
-	import OfferingDetailsDialog from './offerings/OfferingDetailsDialog.svelte';
 	import { routes } from '$lib/routes';
 
 	let { data, children } = $props();
@@ -113,4 +112,3 @@
 <LoginDialog />
 
 <EventDetailsDialog />
-<OfferingDetailsDialog />

@@ -220,7 +220,5 @@ async function enterOtp(page: Page, code: string) {
 
 function getCreatedSlugFromUrl(page: Page) {
 	const url = new URL(page.url());
-	const dialogSlug = url.searchParams.get(`offering`);
-	if (dialogSlug) return dialogSlug;
 	return url.pathname.split(`/`).filter(Boolean).at(-1)!;
 }
