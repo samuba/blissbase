@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { signInAsE2EUser } from './helpers/auth';
 import { createEvent, clearTestEvents, createMeditationEvent, createYogaEvent, createTelegramEvent } from './helpers/seed';
+import { waitForClientHydration } from './helpers/offering-test-utils';
 
 test.describe('Event Details Modal', () => {
 	test.beforeEach(async ({ page }) => {
@@ -8,6 +9,7 @@ test.describe('Event Details Modal', () => {
 		await createEvent(page, createMeditationEvent());
 		await page.goto('/');
 		await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
+		await waitForClientHydration(page);
 	});
 
 	test.afterEach(async ({ page }) => {
@@ -19,10 +21,9 @@ test.describe('Event Details Modal', () => {
 		await expect(firstCard).toBeVisible();
 
 		await firstCard.click();
-		await page.waitForTimeout(2000);
-
-		const title = page.locator('h1').first();
-		await expect(title).toBeVisible();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.locator('h1').first()).toBeVisible();
 	});
 
 	test('event details show price information', async ({ page }) => {
@@ -45,12 +46,11 @@ test.describe('Event Details Modal', () => {
 	test('modal closes with Escape key', async ({ page }) => {
 		const firstCard = page.locator('[data-testid="event-card"]').first();
 		await firstCard.click();
-		await page.waitForTimeout(2000);
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 15000 });
 
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(1000);
-
-		await expect(page.locator('body')).toBeVisible();
+		await expect(dialog).toBeHidden({ timeout: 15000 });
 	});
 });
 

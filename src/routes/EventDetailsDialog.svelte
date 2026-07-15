@@ -1,49 +1,50 @@
 <script lang="ts" module>
+	import type { UiEvent } from '$lib/server/events';
+	import { pushState, replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { routes, takeEventSlugQuery } from '$lib/routes';
+	import { ShallowDialogState } from '$lib/shallowDialog.svelte';
+
+	const dialog = new ShallowDialogState();
 	let event = $state<UiEvent | undefined>(undefined);
-	let open = $derived(!!event);
 	let openingEventSlug = $state<string | undefined>(undefined);
 
 	export function showEventDetailsDialog(eventToShow: UiEvent) {
 		event = eventToShow;
+		dialog.show();
 		pushState(resolve('/[slug]', { slug: eventToShow.slug }), {
 			selectedEventId: eventToShow.id,
 		});
 	}
+
+	function clearEvent() {
+		event = undefined;
+	}
 </script>
 
 <script lang="ts">
-	import type { UiEvent } from '$lib/server/events';
 	import { Dialog } from '$lib/components/dialog';
 	import EventDetails from './EventDetails.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
-	import { pushState, replaceState } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { getEventBySlug } from '$lib/rpc/events.remote';
-	import { routes, takeEventSlugQuery } from '$lib/routes';
+	import { onNavigationUrlChange } from '$lib/shallowDialog.svelte';
 	import { onMount } from 'svelte';
 
 	$effect(() => {
 		// close dialog if user clicked browser back button
-		if (!page.state.selectedEventId) {
-			closeGracefully();
-		}
+		if (page.state.selectedEventId) return;
+		dialog.closeGracefully(clearEvent);
 	});
 
 	onMount(() => {
 		void maybeOpenFromEventSlugQuery(new URL(window.location.href));
-
-		navigation.addEventListener(`navigate`, onUrlChanged);
-		return () => {
-			navigation.removeEventListener(`navigate`, onUrlChanged);
-		};
+		return onNavigationUrlChange((url) => {
+			void maybeOpenFromEventSlugQuery(url);
+		});
 	});
-
-	function onUrlChanged(e: { destination: NavigationDestination }) {
-		void maybeOpenFromEventSlugQuery(new URL(e.destination.url));
-	}
 
 	async function maybeOpenFromEventSlugQuery(url: URL) {
 		const eventSlug = takeEventSlugQuery(url);
@@ -64,13 +65,8 @@
 
 	function handleClose() {
 		if (!browser) return;
-		closeGracefully();
+		dialog.closeGracefully(clearEvent);
 		history.back();
-	}
-
-	function closeGracefully() {
-		open = false;
-		setTimeout(() => event = undefined, 200); // delayed to not have layout shift during closing animation
 	}
 
 	function onOpenChange(shouldOpen: boolean) {
@@ -79,7 +75,7 @@
 	}
 </script>
 
-<Dialog.Root open={open} onOpenChange={onOpenChange}>
+<Dialog.Root open={dialog.open} {onOpenChange}>
 	<Dialog.Portal>
 		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 
@@ -87,7 +83,7 @@
 			role="dialog"
 			class={[
 				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
-				dialogContentAnimationClasses
+				dialogContentAnimationClasses,
 			]}
 			style="scrollbar-width: thin"
 			onOpenAutoFocus={(e) => {
@@ -95,7 +91,7 @@
 			}}
 		>
 			<div class="sticky top-0 right-0 z-20 ml-auto h-0 w-max">
-				<Dialog.Close  class="rounded-full p-4 block" aria-label="Schließen">
+				<Dialog.Close class="block rounded-full p-4" aria-label="Schließen">
 					<div class="btn btn-circle btn-primary shadow-lg drop-shadow-2xl">
 						<i class="icon-[ph--x] size-5"></i>
 					</div>

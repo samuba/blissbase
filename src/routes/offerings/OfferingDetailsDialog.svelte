@@ -1,17 +1,18 @@
 <script lang="ts" module>
-	import { pushState, replaceState } from "$app/navigation";
-	import type { OfferingFormat } from "$lib/rpc/offerings.common";
-	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+	import { pushState, replaceState } from '$app/navigation';
+	import type { OfferingFormat } from '$lib/rpc/offerings.common';
+	import type { PublicProfileSocialLinks } from '$lib/rpc/profile.common';
 	import {
 		BASE_URL,
 		parseOfferingDetailsSlugFromUrl,
 		routes,
 		takeOfferingSlugQuery,
 		withOfferingSlug,
-	} from "$lib/routes";
+	} from '$lib/routes';
+	import { ShallowDialogState } from '$lib/shallowDialog.svelte';
 
+	const dialog = new ShallowDialogState();
 	let editReturnTo = $state<string | undefined>(undefined);
-	let open = $state(false);
 	let activeSlug = $state<string | null>(null);
 
 	export function showOfferingDetailsDialog(slug: string) {
@@ -21,7 +22,7 @@
 		});
 		pushState(routes.offeringDetails(slug), {});
 		activeSlug = slug;
-		open = true;
+		dialog.show();
 	}
 
 	function dialogHostPath(url: URL) {
@@ -31,6 +32,10 @@
 		const returnUrl = new URL(editReturnTo, BASE_URL);
 		takeOfferingSlugQuery(returnUrl);
 		return routes.currentPath(returnUrl);
+	}
+
+	function clearActiveSlug() {
+		activeSlug = null;
 	}
 
 	type OfferingDetailsDialogOffering = {
@@ -55,15 +60,13 @@
 </script>
 
 <script lang="ts">
-	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from "$lib/common";
-	import { Dialog } from "$lib/components/dialog";
-	import OfferingDetails from "./OfferingDetails.svelte";
-	import { onMount } from "svelte";
+	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
+	import { Dialog } from '$lib/components/dialog';
+	import OfferingDetails from './OfferingDetails.svelte';
+	import { onNavigationUrlChange } from '$lib/shallowDialog.svelte';
+	import { onMount } from 'svelte';
 
 	let { offerings }: { offerings: OfferingDetailsDialogOffering[] } = $props();
-
-	let isClosing = $state(false);
-	let closeTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	const offering = $derived(offerings.find((item) => item.slug === activeSlug));
 
@@ -78,58 +81,31 @@
 			replaceState(hostPath, {});
 			pushState(routes.offeringDetails(offeringSlug), {});
 			activeSlug = offeringSlug;
-			open = true;
+			dialog.show();
 		} else {
 			syncFromUrl(url);
 		}
 
-		navigation.addEventListener(`navigate`, onUrlChanged);
-		return () => {
-			navigation.removeEventListener(`navigate`, onUrlChanged);
-		};
+		return onNavigationUrlChange(syncFromUrl);
 	});
-
-	function onUrlChanged(e: { destination: NavigationDestination }) {
-		syncFromUrl(new URL(e.destination.url));
-	}
 
 	function syncFromUrl(url: URL) {
 		const slug = parseOfferingDetailsSlugFromUrl(url);
 		if (slug) {
-			cancelPendingClose();
 			activeSlug = slug;
-			open = true;
+			dialog.show();
 			return;
 		}
 
-		if (!open && !activeSlug) return;
-		closeGracefully();
-	}
-
-	function cancelPendingClose() {
-		if (closeTimeout) {
-			clearTimeout(closeTimeout);
-			closeTimeout = undefined;
-		}
-		isClosing = false;
+		if (!dialog.open && !activeSlug) return;
+		dialog.closeGracefully(clearActiveSlug);
 	}
 
 	function handleClose() {
-		closeGracefully();
+		dialog.closeGracefully(clearActiveSlug);
 		if (parseOfferingDetailsSlugFromUrl(new URL(window.location.href))) {
 			history.back();
 		}
-	}
-
-	function closeGracefully() {
-		if (isClosing) return;
-		isClosing = true;
-		open = false;
-		closeTimeout = setTimeout(() => {
-			activeSlug = null;
-			isClosing = false;
-			closeTimeout = undefined;
-		}, 200);
 	}
 
 	function onOpenChange(shouldOpen: boolean) {
@@ -137,14 +113,14 @@
 	}
 </script>
 
-<Dialog.Root {open} {onOpenChange}>
+<Dialog.Root open={dialog.open} {onOpenChange}>
 	<Dialog.Portal>
-		<Dialog.Overlay class={[`fixed inset-0 z-50 bg-stone-800/90 transition-opacity`, dialogOverlayAnimationClasses]} />
+		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
 
 		<Dialog.Content
 			role="dialog"
 			class={[
-				`bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl`,
+				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
 				dialogContentAnimationClasses,
 			]}
 			style="scrollbar-width: thin"

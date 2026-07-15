@@ -161,6 +161,7 @@ msgstr "<0/> Website"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
+#: src/lib/components/dialog/ShallowDetailsDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
@@ -305,6 +306,7 @@ msgid "<0/> Wird gesendet..."
 msgstr "<0/> Wird gesendet..."
 
 #: src/lib/components/PageHeader.svelte
+#: src/lib/components/dialog/ShallowDetailsDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
