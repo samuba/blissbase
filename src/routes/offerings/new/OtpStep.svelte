@@ -3,7 +3,6 @@
 
 	let {
 		otpCode = $bindable(),
-		pendingEmail,
 		authBusy,
 		authError,
 		onVerify,
@@ -11,7 +10,6 @@
 		onResendCode,
 	}: {
 		otpCode: string;
-		pendingEmail: string;
 		authBusy: boolean;
 		authError: string;
 		onVerify: () => void | Promise<void>;
@@ -21,14 +19,6 @@
 </script>
 
 <section class="flex flex-col gap-5">
-	<div class="rounded-box bg-base-200/70 flex flex-col gap-2 p-4">
-		<h2 class="text-lg font-semibold">E-Mail bestätigen</h2>
-		<p class="text-base-content/70 text-sm">
-			Wir haben einen 6-stelligen Code an <b>{pendingEmail}</b> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht
-			erst live, wenn die Bestätigung abgeschlossen ist.
-		</p>
-	</div>
-
 	<PinInput.Root
 		bind:value={otpCode}
 		maxlength={6}
@@ -72,6 +62,6 @@
 
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<button type="button" class="btn btn-ghost btn-sm" disabled={authBusy} onclick={onUseAnotherEmail}> Andere E-Mail verwenden </button>
-		<button type="button" class="btn btn-link btn-sm" disabled={authBusy} onclick={onResendCode}> Code erneut senden </button>
+		<button type="button" class="btn btn-ghost btn-sm" disabled={authBusy} onclick={onResendCode}> Code erneut senden </button>
 	</div>
 </section>

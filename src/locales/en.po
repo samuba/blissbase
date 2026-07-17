@@ -1190,13 +1190,9 @@ msgstr "Resend code <0/>"
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
-#: src/routes/offerings/new/OtpStep.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "E-Mail bestätigen"
 msgstr "Confirm email"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Code senden"
-msgstr "Send code"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "<0/> Wird geprüft…"
@@ -1542,10 +1538,6 @@ msgid "Angebot"
 msgstr "Offer"
 
 #: src/routes/offerings/new/+page.svelte
-msgid "Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen, dich vor der Anfrage besser einzuschätzen."
-msgstr "A complete profile builds trust. These details are shown publicly with your offering and help people assess you better before they reach out."
-
-#: src/routes/offerings/new/+page.svelte
 msgid "Möchtest du dein Profil bearbeiten? <0><0/> Profil bearbeiten</0>"
 msgstr "Do you want to edit your profile? <0><0/> Edit profile</0>"
 
@@ -1557,6 +1549,7 @@ msgstr "Back"
 msgid "<0/> E-Mail wird geprüft…"
 msgstr "<0/> Email is being checked…"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Weiter"
 msgstr "Next"
@@ -1573,7 +1566,7 @@ msgstr "Email for login *"
 msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
 msgstr "Not public. We’ll send you a code to verify your email address."
 
-#: src/routes/offerings/new/OtpStep.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
 msgstr "We sent a 6-digit code to <0/>. Enter it here to confirm your email. Your offer will not go live until the confirmation is complete."
 
@@ -1771,7 +1764,7 @@ msgstr "<0/> In person / Online"
 
 #: src/lib/components/OfferingForm.svelte
 msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote."
-msgstr "Your In person offers will be shown to others nearby this location. The location applies to all of your offers."
+msgstr "Your In-Person offers will be shown to others nearby this location. The location applies to all of your offers."
 
 #: src/lib/components/OfferingForm.svelte
 msgid "Du bietest beide Optionen an."
@@ -1825,3 +1818,11 @@ msgstr "<0/> Analyzing …"
 #: src/routes/offerings/new/+page.svelte
 msgid "Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. Jeder kann es in deinem Profil und auf der Angebote-Seite sehen."
 msgstr "An offering is a service you provide on request. Everyone can see it in your profile and on the offerings page."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Fülle dein Profil aus"
+msgstr "Fill out your profile"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen. Dein Profil wird unter jedem deiner Angebote angezeigt."
+msgstr "A complete profile helps customers trust you more and get a better sense of who you are. Your profile will be displayed with each of your offerings."

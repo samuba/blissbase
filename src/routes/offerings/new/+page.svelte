@@ -488,11 +488,25 @@
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body gap-6 p-4 sm:p-6">
 			<div class="flex flex-col gap-2">
-				<h1 class="text-xl sm:text-2xl font-bold">Angebot erstellen</h1>
-				<p class="text-base-content/70 text-sm">
-					Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. 
-					Jeder kann es in deinem Profil und auf der Angebote-Seite sehen.
-				</p>
+				{#if currentStep === `profile`}
+					<h1 class="text-xl sm:text-2xl font-bold">Fülle dein Profil aus</h1>
+					<p class="text-base-content/70 text-sm">
+						Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen.
+						Dein Profil wird unter jedem deiner Angebote angezeigt.
+					</p>
+				{:else if currentStep === `otp`}
+					<h1 class="text-xl sm:text-2xl font-bold">E-Mail bestätigen</h1>
+					<p class="text-base-content/70 text-sm">
+						Wir haben einen 6-stelligen Code an <b>{pendingEmail}</b> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht
+						erst live, wenn die Bestätigung abgeschlossen ist.
+					</p>
+				{:else}
+					<h1 class="text-xl sm:text-2xl font-bold">Angebot erstellen</h1>
+					<p class="text-base-content/70 text-sm">
+						Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst.
+						Jeder kann es in deinem Profil und auf der Angebote-Seite sehen.
+					</p>
+				{/if}
 			</div>
 
 			{#if clientReady}
@@ -534,14 +548,6 @@
 
 					{#if renderProfileFields}
 						<section class={[`flex flex-col gap-5`, profileFieldsHidden && `hidden`]} data-wizard-step="profile">
-							<div class="alert alert-info alert-soft">
-								<i class="icon-[ph--shield-check] size-5"></i>
-								<span>
-									Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen,
-									dich vor der Anfrage besser einzuschätzen.
-								</span>
-							</div>
-
 							<div class="grid gap-5 sm:grid-cols-2">
 								<fieldset class={[`fieldset`, !missingDisplayName && `hidden`]}>
 									<input
@@ -615,7 +621,6 @@
 
 					{#if showOtpStep}
 						<OtpStep
-							{pendingEmail}
 							bind:otpCode
 							{authBusy}
 							{authError}
@@ -662,7 +667,7 @@
 					{:else if isLastStep}
 						Angebot erstellen
 					{:else if currentStep === `profile` && !isSignedIn}
-						Code senden
+						Weiter
 					{:else}
 						Weiter
 					{/if}

@@ -1190,13 +1190,9 @@ msgstr "Code erneut senden <0/>"
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 
-#: src/routes/offerings/new/OtpStep.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "E-Mail bestätigen"
 msgstr "E-Mail bestätigen"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Code senden"
-msgstr "Code senden"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "<0/> Wird geprüft…"
@@ -1542,10 +1538,6 @@ msgid "Angebot"
 msgstr "Angebot"
 
 #: src/routes/offerings/new/+page.svelte
-msgid "Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen, dich vor der Anfrage besser einzuschätzen."
-msgstr "Ein vollständiges Profil schafft Vertrauen. Diese Angaben erscheinen öffentlich bei deinem Angebot und helfen Menschen, dich vor der Anfrage besser einzuschätzen."
-
-#: src/routes/offerings/new/+page.svelte
 msgid "Möchtest du dein Profil bearbeiten? <0><0/> Profil bearbeiten</0>"
 msgstr "Möchtest du dein Profil bearbeiten? <0><0/> Profil bearbeiten</0>"
 
@@ -1557,6 +1549,7 @@ msgstr "Zurück"
 msgid "<0/> E-Mail wird geprüft…"
 msgstr "<0/> E-Mail wird geprüft…"
 
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Weiter"
 msgstr "Weiter"
@@ -1573,7 +1566,7 @@ msgstr "E-Mail für Login *"
 msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
 msgstr "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
 
-#: src/routes/offerings/new/OtpStep.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
 msgstr "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
 
@@ -1825,3 +1818,11 @@ msgstr "<0/> Analysiere …"
 #: src/routes/offerings/new/+page.svelte
 msgid "Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. Jeder kann es in deinem Profil und auf der Angebote-Seite sehen."
 msgstr "Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. Jeder kann es in deinem Profil und auf der Angebote-Seite sehen."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Fülle dein Profil aus"
+msgstr "Fülle dein Profil aus"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen. Dein Profil wird unter jedem deiner Angebote angezeigt."
+msgstr "Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen. Dein Profil wird unter jedem deiner Angebote angezeigt."
