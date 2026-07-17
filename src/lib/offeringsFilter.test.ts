@@ -3,12 +3,15 @@ import {
 	buildOfferingsFilterSearchParams,
 	filterOfferingsByIncludeOnline,
 	filterOfferingsBySearchTerm,
+	hasOfferingsFilterParams,
+	hasOfferingsFilterUrlParams,
 	hasOfferingsLocationParams,
 	isOfferingAvailableOnline,
+	offeringsFilterFromCookie,
 	parseOfferingsFilterFromUrl,
+	shouldIncludeOfferingInLocationFilter,
 } from '$lib/offeringsFilter';
 import { getDistanceInKm, isWithinDistanceKm } from '$lib/locationFilter';
-import { shouldIncludeOfferingInLocationFilter } from '$lib/offeringsFilter';
 
 describe('parseOfferingsFilterFromUrl', () => {
 	it('parses location and search params', () => {
@@ -61,6 +64,57 @@ describe('hasOfferingsLocationParams', () => {
 		expect(hasOfferingsLocationParams({ location: `Berlin`, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(true);
 		expect(hasOfferingsLocationParams({ location: null, distance: `50`, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(true);
 		expect(hasOfferingsLocationParams({ location: null, distance: null, lat: 1, lng: 2, searchTerm: null, includeOnline: false })).toBe(true);
+	});
+});
+
+describe('hasOfferingsFilterParams', () => {
+	it('detects search and includeOnline without location', () => {
+		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: `yoga`, includeOnline: false })).toBe(true);
+		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: true })).toBe(true);
+		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(false);
+	});
+});
+
+describe('hasOfferingsFilterUrlParams', () => {
+	it('detects explicit filter query keys', () => {
+		expect(hasOfferingsFilterUrlParams(new URL(`https://blissbase.app/offerings`))).toBe(false);
+		expect(hasOfferingsFilterUrlParams(new URL(`https://blissbase.app/offerings?searchTerm=yoga`))).toBe(true);
+		expect(hasOfferingsFilterUrlParams(new URL(`https://blissbase.app/offerings?includeOnline=1`))).toBe(true);
+		expect(hasOfferingsFilterUrlParams(new URL(`https://blissbase.app/offerings?location=Berlin`))).toBe(true);
+	});
+});
+
+describe('offeringsFilterFromCookie', () => {
+	it('maps offerings-specific cookie fields', () => {
+		expect(
+			offeringsFilterFromCookie({
+				plzCity: `Berlin`,
+				distance: `50`,
+				lat: 52.5,
+				lng: 13.4,
+				searchTerm: `events-search`,
+				offeringsSearchTerm: `yoga`,
+				includeOnline: true,
+			}),
+		).toEqual({
+			location: `Berlin`,
+			distance: `50`,
+			lat: 52.5,
+			lng: 13.4,
+			searchTerm: `yoga`,
+			includeOnline: true,
+		});
+	});
+
+	it('defaults when cookie is missing', () => {
+		expect(offeringsFilterFromCookie(null)).toEqual({
+			location: null,
+			distance: null,
+			lat: null,
+			lng: null,
+			searchTerm: null,
+			includeOnline: false,
+		});
 	});
 });
 

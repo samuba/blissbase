@@ -5,7 +5,12 @@
 	import { showFlashToast } from "$lib/flashToast.svelte";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "$lib/rpc/offerings.remote";
-	import { routes, safeReturnToPath } from "$lib/routes";
+	import {
+		parseOfferingDetailsSlugFromUrl,
+		routes,
+		safeReturnToPath,
+		takeOfferingSlugQuery,
+	} from "$lib/routes";
 	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
 	import { toast } from "svelte-sonner";
 	import type { PageProps } from "./$types";
@@ -31,6 +36,7 @@
 			origin: page.url.origin,
 		}),
 	);
+	const deleteReturnHref = $derived(getDeleteReturnHref(page.url.searchParams.get(`returnTo`)));
 
 	const unsaved = new UnsavedChangesGuard();
 
@@ -58,13 +64,25 @@
 			isDeletingOffering = true;
 			await deleteOffering({ offeringId: offering.id });
 			unsaved.clear();
-			await goto(routes.offeringsList());
+			await goto(deleteReturnHref, { replaceState: true });
 		} catch (error) {
 			console.error(`Failed to delete offering:`, error);
 			toast.error(managementErrorMessage(`delete`));
 		} finally {
 			isDeletingOffering = false;
 		}
+	}
+
+	function getDeleteReturnHref(returnTo: string | null) {
+		const path = safeReturnToPath({
+			returnTo,
+			fallback: routes.offeringsList(),
+			origin: page.url.origin,
+		});
+		const url = new URL(path, page.url.origin);
+		takeOfferingSlugQuery(url);
+		if (parseOfferingDetailsSlugFromUrl(url)) return routes.offeringsList();
+		return routes.currentPath(url);
 	}
 
 	async function handleToggleListing() {
@@ -107,15 +125,7 @@
 <div class="mx-auto w-full max-w-3xl px-0 pb-6 sm:px-4">
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body gap-6 p-4 sm:p-6">
-			<div class="flex flex-wrap items-start justify-between gap-3">
-				<div>
-					<h1 class="text-2xl font-bold">Angebot bearbeiten</h1>
-				</div>
-				<a href={returnHref} class="btn btn-ghost btn-sm" onclick={(e) => { e.preventDefault(); handleCancel(); }}>
-					<i class="icon-[ph--arrow-left] size-4"></i>
-					Zurück
-				</a>
-			</div>
+			<h1 class="text-xl sm:text-2xl font-bold">Angebot bearbeiten</h1>
 
 			{#if initializedFormOfferingId === offering.id}
 				<OfferingForm

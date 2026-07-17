@@ -1,18 +1,13 @@
 <script lang="ts">
-	import { slugify } from '$lib/common';
-	import LexicalEditor from '$lib/components/LexicalEditor.svelte';
-	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
-	import ProfileImageCropInput from '$lib/components/ProfileImageCropInput.svelte';
-	import PublicProfileSocialLinksEditor from '$lib/components/PublicProfileSocialLinksEditor.svelte';
-	import { publicProfileFormSchema } from '$lib/rpc/profile.common';
-	import {
-		checkSlugAvailability,
-		getMyPublicProfile,
-		upsertPublicProfile
-	} from '$lib/rpc/profile.remote';
-	import { routes } from '$lib/routes';
-	import { UnsavedChangesGuard } from '$lib/unsavedChangesGuard.svelte';
-	import { resolve } from '$app/paths';
+	import { slugify } from "$lib/common";
+	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
+	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
+	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
+	import PublicProfileSocialLinksEditor from "$lib/components/PublicProfileSocialLinksEditor.svelte";
+	import { publicProfileFormSchema } from "$lib/rpc/profile.common";
+	import { checkSlugAvailability, getMyPublicProfile, upsertPublicProfile } from "$lib/rpc/profile.remote";
+	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
+	import { resolve } from "$app/paths";
 
 	const profile = $state(await getMyPublicProfile());
 
@@ -29,9 +24,7 @@
 	const hasInitialSlug = Boolean(profile.slug?.trim());
 	let slugManuallyEdited = $state(hasInitialSlug);
 
-	let slugCheck = $state<
-		`idle` | `checking` | { available: boolean; normalized: string } | `error`
-	>(`idle`);
+	let slugCheck = $state<`idle` | `checking` | { available: boolean; normalized: string } | `error`>(`idle`);
 
 	const preflight = $derived(upsertPublicProfile.preflight(publicProfileFormSchema));
 
@@ -71,41 +64,24 @@
 
 <svelte:window onbeforeunload={unsaved.handleBeforeUnload} />
 
-<div class="mx-auto w-full max-w-3xl pt-4 md:pt-0">
-	<div class="mb-3 flex flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between">
-		<div class="min-w-0 flex-1">
-			<div class="flex items-center justify-between gap-2">
-				<h1 class="text-xl font-bold">Öffentliches Profil</h1>
-				<a href={routes.profile()} class="btn btn-ghost btn-sm">
-					<i class="icon-[ph--arrow-left] mr-1 size-4"></i>
-					Zurück
-				</a>
-			</div>
-		</div>
-	</div>
-
+<div class="mx-auto w-full max-w-3xl">
 	<form
 		{...preflight}
-		class={[
-			'card bg-base-100 relative flex flex-col gap-5 rounded-none border-0 p-4 shadow sm:p-6 md:rounded-(--radius-box)'
-		]}
+		class={["card bg-base-100 relative flex flex-col gap-5 rounded-none border-0 p-4 shadow sm:p-6 md:rounded-(--radius-box)"]}
 		id="public-profile-form"
 		oninput={unsaved.markDirty}
 		onchange={unsaved.markDirty}
 		onsubmit={unsaved.clear}
 	>
+		<h1 class="text-xl sm:text-2xl font-bold">Öffentliches Profil</h1>
+
 		{#if currentSlug}
-			<a
-				href={resolve(`/@/[slug]`, { slug: currentSlug })}
-				class="btn btn-ghost btn-sm absolute top-3 right-4 sm:top-4 sm:right-6"
-			>
+			<a href={resolve(`/@/[slug]`, { slug: currentSlug })} class="btn btn-ghost btn-sm absolute top-3 right-4 sm:top-4 sm:right-6">
 				<i class="icon-[ph--eye] size-4"></i>
 				Profil ansehen
 			</a>
 		{/if}
-		<div
-			class={[`grid gap-5 sm:grid-cols-2 sm:items-start sm:gap-4`, currentSlug && `mt-1 sm:mt-2`]}
-		>
+		<div class={[`grid gap-5 sm:grid-cols-2 sm:items-start sm:gap-4`, currentSlug && `mt-1 sm:mt-2`]}>
 			<fieldset class="fieldset min-w-0">
 				<input
 					class="input peer w-full"
@@ -120,9 +96,7 @@
 
 			<fieldset class="fieldset min-w-0">
 				<label class="input w-full pl-0">
-					<div
-						class="bg-base-200 border-base-300 flex h-full items-center justify-center rounded-l-full border-r-2 py-0 pr-1 pl-3 text-sm"
-					>
+					<div class="bg-base-200 border-base-300 flex h-full items-center justify-center rounded-l-full border-r-2 py-0 pr-1 pl-3 text-sm">
 						blissbase.app/@/
 					</div>
 					<input
@@ -195,11 +169,7 @@
 		</fieldset>
 
 		<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-			<button
-				type="submit"
-				class="btn btn-primary"
-				disabled={upsertPublicProfile.pending > 0 || anyImageUploadInFlight}
-			>
+			<button type="submit" class="btn btn-primary" disabled={upsertPublicProfile.pending > 0 || anyImageUploadInFlight}>
 				{#if anyImageUploadInFlight}
 					<span class="loading loading-spinner loading-sm"></span>
 					Bild wird hochgeladen…

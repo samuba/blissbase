@@ -487,15 +487,9 @@
 <div class="mx-auto w-full max-w-3xl px-0 pb-6 sm:px-4">
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body gap-6 p-4 sm:p-6">
-			<div class="flex flex-wrap items-start justify-between gap-3">
-				<div>
-					<h1 class="text-2xl font-bold">Angebot erstellen</h1>
-					<p class="text-base-content/70 mt-1 text-sm">Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.</p>
-				</div>
-				<a href={returnHref} class="btn btn-ghost btn-sm">
-					<i class="icon-[ph--arrow-left] size-4"></i>
-					Zurück
-				</a>
+			<div class="flex flex-col gap-2">
+				<h1 class="text-xl sm:text-2xl font-bold">Angebot erstellen</h1>
+				<p class="text-base-content/70 text-sm">Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.</p>
 			</div>
 
 			{#if clientReady}

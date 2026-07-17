@@ -8,17 +8,21 @@
 		offering,
 		onclick,
 		showAuthor = true,
+		returnTo,
 		class: className,
 	}: {
 		offering: OfferingCardOffering;
 		onclick?: () => void;
 		showAuthor?: boolean;
+		returnTo?: string | null;
 		class?: string;
 	} = $props();
 
 	const preview = $derived(trimAllWhitespaces(stripHtml(offering.descriptionHtml)) ?? ``);
 	const imageUrl = $derived(offering.imageUrls?.[0]);
-	const href = $derived(offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList());
+	const href = $derived(
+		offering.slug ? routes.offeringDetails(offering.slug, { returnTo }) : routes.offeringsList(),
+	);
 
 	function handleClick(event: MouseEvent) {
 		if (!onclick) return;

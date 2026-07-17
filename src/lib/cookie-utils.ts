@@ -21,6 +21,9 @@ export type FilterCookieData = {
     lat?: number | null;
     lng?: number | null;
     searchTerm?: string | null;
+    /** Offerings list search — kept separate from events `searchTerm`. */
+    offeringsSearchTerm?: string | null;
+    includeOnline?: boolean | null;
     sortBy?: string | null;
     sortOrder?: string | null;
     tagIds?: number[] | null;
@@ -64,6 +67,8 @@ export function validateFilterData(data: unknown): FilterCookieData | null {
         lat: location.lat,
         lng: location.lng,
         searchTerm: typeof filterData.searchTerm === 'string' ? filterData.searchTerm : null,
+        offeringsSearchTerm: typeof filterData.offeringsSearchTerm === 'string' ? filterData.offeringsSearchTerm : null,
+        includeOnline: typeof filterData.includeOnline === 'boolean' ? filterData.includeOnline : null,
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
         sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
         tagIds: tagIds?.length ? tagIds : null,
@@ -139,14 +144,18 @@ export function loadFiltersFromBrowserCookie(): FilterCookieData | null {
 }
 
 export function saveLocationFiltersToBrowserCookie(filters: Pick<FilterCookieData, 'plzCity' | 'distance' | 'lat' | 'lng'>) {
+    saveOfferingsFiltersToBrowserCookie(filters);
+}
+
+/** Persists offerings filters after a manual change. Merges into the shared filters cookie. */
+export function saveOfferingsFiltersToBrowserCookie(
+    filters: Pick<FilterCookieData, 'plzCity' | 'distance' | 'lat' | 'lng' | 'offeringsSearchTerm' | 'includeOnline'>,
+) {
     if (typeof document === 'undefined') return;
 
     const next = {
         ...(loadFiltersFromBrowserCookie() ?? {}),
-        plzCity: filters.plzCity,
-        distance: filters.distance,
-        lat: filters.lat,
-        lng: filters.lng,
+        ...filters,
     };
 
     document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(next))}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;

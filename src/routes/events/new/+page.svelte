@@ -32,7 +32,7 @@
 		<div class="card-body gap-6 p-4 sm:p-6">
 			<div class="flex flex-wrap items-start justify-between gap-3">
 				<div>
-					<h1 class="text-2xl font-bold">Event erstellen</h1>
+					<h1 class="text-xl sm:text-2xl font-bold">Event erstellen</h1>
 				</div>
 				<a
 					href={routes.createHub()}

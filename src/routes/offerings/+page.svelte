@@ -8,7 +8,7 @@
 	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
 	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
-	import { saveLocationFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
+	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
 	import { OfferingsFeatureFlag } from "$lib/OfferingsFeatureFlag.svelte";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
@@ -68,6 +68,8 @@
 			includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? false : filter.includeOnline,
 		};
 
+		persistOfferingsFilters(nextOfferingsFilter);
+
 		OfferingsFeatureFlag.updateFromPosition({
 			lat: nextOfferingsFilter.lat,
 			lng: nextOfferingsFilter.lng,
@@ -85,15 +87,19 @@
 		}
 	}
 
+	function persistOfferingsFilters(nextFilter: OfferingsFilter) {
+		saveOfferingsFiltersToBrowserCookie({
+			plzCity: nextFilter.location,
+			distance: nextFilter.distance,
+			lat: nextFilter.lat,
+			lng: nextFilter.lng,
+			offeringsSearchTerm: nextFilter.searchTerm,
+			includeOnline: nextFilter.includeOnline,
+		});
+	}
+
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
 		setLocationInteractedCookie();
-		saveLocationFiltersToBrowserCookie({
-			plzCity: event.location,
-			distance: event.distance,
-			lat: event.latitude ?? null,
-			lng: event.longitude ?? null,
-		});
-
 		navigateWithFilter({
 			location: event.location,
 			distance: event.distance,
@@ -237,7 +243,11 @@
 					</div>
 					{#each filteredOfferings as offering (offering.id)}
 						<div class="h-full" animate:flip={{ duration: 200 }} out:fade={{ duration: 200 }} in:fade={{ duration: 200 }}>
-							<OfferingCard {offering} onclick={() => openOfferingDetails(offering)} />
+							<OfferingCard
+								{offering}
+								returnTo={routes.currentPath(page.url)}
+								onclick={() => openOfferingDetails(offering)}
+							/>
 						</div>
 					{/each}
 				</div>

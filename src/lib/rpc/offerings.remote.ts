@@ -299,7 +299,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	refreshOfferingLists({ returnTo: data.returnTo });
 	setFlash(`offeringCreated`);
 
-	redirect(303, routes.offeringDetails(slug));
+	redirect(303, routes.offeringDetails(slug, { returnTo: data.returnTo }));
 });
 
 export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {

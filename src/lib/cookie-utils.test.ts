@@ -18,10 +18,29 @@ describe(`cookie filter validation`, () => {
 			lat: 0,
 			lng: 0,
 			searchTerm: null,
+			offeringsSearchTerm: null,
+			includeOnline: null,
 			sortBy: null,
 			sortOrder: null,
 			tagIds: null,
 			attendanceMode: null
+		});
+	});
+
+	it(`keeps offerings-specific filter fields`, () => {
+		expect(
+			validateFilterData({
+				plzCity: `Berlin`,
+				distance: `50`,
+				lat: 52.5,
+				lng: 13.4,
+				offeringsSearchTerm: `yoga`,
+				includeOnline: true,
+			})
+		).toMatchObject({
+			plzCity: `Berlin`,
+			offeringsSearchTerm: `yoga`,
+			includeOnline: true,
 		});
 	});
 

@@ -1,4 +1,5 @@
 import { stripHtml, trimAllWhitespaces } from '$lib/common';
+import type { FilterCookieData } from '$lib/cookie-utils';
 import type { OfferingFormat } from '$lib/rpc/offerings.common';
 import { hasValidCoordinates, isWithinDistanceKm, sanitizeLocationParams } from '$lib/locationFilter';
 
@@ -10,6 +11,17 @@ export type OfferingsFilter = {
 	searchTerm: string | null;
 	includeOnline: boolean;
 };
+
+const OFFERINGS_FILTER_URL_KEYS = [
+	`location`,
+	`plzCity`,
+	`distance`,
+	`lat`,
+	`lng`,
+	`searchTerm`,
+	`includeOnline`,
+	`onlineOnly`,
+] as const;
 
 export function parseOfferingsFilterFromUrl(url: URL): OfferingsFilter {
 	const latParam = url.searchParams.get(`lat`);
@@ -41,6 +53,26 @@ export function hasOfferingsLocationParams(filter: OfferingsFilter) {
 		filter.distance ||
 		(filter.lat != null && filter.lng != null),
 	);
+}
+
+export function hasOfferingsFilterParams(filter: OfferingsFilter) {
+	return hasOfferingsLocationParams(filter) || Boolean(filter.searchTerm?.trim()) || filter.includeOnline;
+}
+
+/** True when the URL explicitly carries any offerings filter query key. */
+export function hasOfferingsFilterUrlParams(url: URL) {
+	return OFFERINGS_FILTER_URL_KEYS.some((key) => url.searchParams.has(key));
+}
+
+export function offeringsFilterFromCookie(cookie: FilterCookieData | null | undefined): OfferingsFilter {
+	return {
+		location: cookie?.plzCity ?? null,
+		distance: cookie?.distance ?? null,
+		lat: cookie?.lat ?? null,
+		lng: cookie?.lng ?? null,
+		searchTerm: cookie?.offeringsSearchTerm ?? null,
+		includeOnline: cookie?.includeOnline === true,
+	};
 }
 
 export function buildOfferingsFilterSearchParams(filter: OfferingsFilter) {

@@ -32,7 +32,7 @@ export const routes = {
     } ,
     currentPath: (url: URL) => `${url.pathname}${url.search}${url.hash}` ,
     newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/new`) , args.returnTo),
-    offeringDetails: (slug: string) => resolve(`/offerings/[id]`, { id: slug }) ,
+    offeringDetails: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[id]`, { id: slug }) , args.returnTo),
     editOffering: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[id]/edit`, { id: slug }) , args.returnTo),
     profile: () => resolve(`/profile`) ,
     myOfferings: () => resolve(`/profile/offerings`) ,
@@ -110,6 +110,21 @@ export function takeEventSlugQuery(url: URL) {
 export function safeReturnToPath(args: { returnTo?: string | null; fallback: string; origin?: string }) {
     const returnTo = normalizeReturnToPath(args.returnTo, args.origin ?? BASE_URL);
     return returnTo ?? args.fallback;
+}
+
+/** Offerings list path from `returnTo`, keeping filter params and dropping dialog/detail targets. */
+export function offeringsListFromReturnTo(args: { returnTo?: string | null; origin?: string }) {
+    const origin = args.origin ?? BASE_URL;
+    const path = safeReturnToPath({
+        returnTo: args.returnTo,
+        fallback: routes.offeringsList(),
+        origin,
+    });
+    const url = new URL(path, origin);
+    takeOfferingSlugQuery(url);
+    const offeringsListPath = new URL(routes.offeringsList(), BASE_URL).pathname;
+    if (url.pathname === offeringsListPath) return routes.currentPath(url);
+    return routes.offeringsList();
 }
 
 function relativeUrl(url: URL) {

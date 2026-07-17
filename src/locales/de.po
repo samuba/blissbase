@@ -310,9 +310,6 @@ msgstr "<0/> Wird gesendet..."
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
-#: src/routes/offerings/new/+page.svelte
-#: src/routes/profile/public/+page.svelte
 #: src/routes/sources/+page.svelte
 msgid "<0/> Zurück"
 msgstr "<0/> Zurück"

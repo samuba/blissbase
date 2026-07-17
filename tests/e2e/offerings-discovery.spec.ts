@@ -187,9 +187,10 @@ test.describe("Offering discovery and details", () => {
 		await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(`Return Page Offering`);
 		await page.getByRole(`button`, { name: `Angebot speichern` }).click();
 
-		await expect(page).toHaveURL(/\/offerings\/[^/?]+$/);
+		await expect(page).toHaveURL(new RegExp(`/offerings/[^/?]+\\?returnTo=`));
 		await expect(page.getByRole(`dialog`)).toHaveCount(0);
 		await expect(page.getByRole(`heading`, { name: `Return Page Offering` })).toBeVisible();
-		await expect(page.getByRole(`link`, { name: `Alle Angebote` })).toBeVisible();
+		await page.getByRole(`link`, { name: `Alle Angebote` }).click();
+		await expect(page).toHaveURL(returnTo);
 	});
 });
