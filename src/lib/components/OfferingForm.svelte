@@ -132,7 +132,7 @@
 		/>
 
 		<fieldset class="fieldset">
-			<input class="input peer w-full" {...remoteForm.fields.title.as(`text`)} required placeholder="z.B. Atemarbeit 1:1 Session" />
+			<input class="input peer w-full" {...remoteForm.fields.title.as(`text`)} required placeholder="z.B. Private Couching Session" />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Titel *</legend>
 			<FormFieldIssues field={remoteForm.fields.title} />
 		</fieldset>

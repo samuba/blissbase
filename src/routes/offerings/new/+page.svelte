@@ -489,7 +489,10 @@
 		<div class="card-body gap-6 p-4 sm:p-6">
 			<div class="flex flex-col gap-2">
 				<h1 class="text-xl sm:text-2xl font-bold">Angebot erstellen</h1>
-				<p class="text-base-content/70 text-sm">Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar.</p>
+				<p class="text-base-content/70 text-sm">
+					Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. 
+					Jeder kann es in deinem Profil und auf der Angebote-Seite sehen.
+				</p>
 			</div>
 
 			{#if clientReady}

@@ -161,14 +161,10 @@ msgstr "<0/> Website"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/lib/components/dialog/ShallowDetailsDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
 msgstr "Schließen"
-
-#~ msgid "<0/> Zurück zur Übersicht"
-#~ msgstr "<0/> Zurück zur Übersicht"
 
 #: src/lib/components/DateRangePicker.svelte
 msgid "Diese Woche"
@@ -306,7 +302,6 @@ msgid "<0/> Wird gesendet..."
 msgstr "<0/> Wird gesendet..."
 
 #: src/lib/components/PageHeader.svelte
-#: src/lib/components/dialog/ShallowDetailsDialog.svelte
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
@@ -848,12 +843,6 @@ msgstr "Aktuelle Favoriten"
 #: src/routes/profile/favorites/+page.svelte
 msgid "Vergangene Favoriten"
 msgstr "Vergangene Favoriten"
-
-#~ msgid "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
-#~ msgstr "Es wurde kein klarer Event in dem Text erkannt. Du kannst das Formular trotzdem ausfüllen."
-
-#~ msgid "<0/> Analysiere Text …"
-#~ msgstr "<0/> Analysiere Text …"
 
 #: src/lib/authCallbackFeedbackToast.svelte.ts
 msgid "Anmeldung fehlgeschlagen"
@@ -1638,25 +1627,9 @@ msgstr "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort 
 msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
 msgstr "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
 
-#~ msgid "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
-#~ msgstr "WhatsApp, Telegram oder andere Event-Beschreibung einfügen"
-
-#~ msgid "Daten übernehmen <0/>"
-#~ msgstr "Daten übernehmen <0/>"
-
-#~ msgid "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
-#~ msgstr "Der Text scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von {0}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein."
-
 #: src/lib/components/EventAutofill.svelte
 msgid "Event Beschreibung einfügen…"
 msgstr "Event Beschreibung einfügen…"
-
-#~ msgid "Automatisch ausfüllen aus Beschreibung"
-#~ msgstr "Automatisch ausfüllen aus Beschreibung"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
-msgstr "Ein Angebot ist dauerhaft in deinem Profil und auf der Angebote-Seite sichtbar."
 
 #: src/lib/components/TabsNavDesktop.svelte
 msgid "<0/> Navigation erneut laden"
@@ -1840,21 +1813,6 @@ msgstr "Automatisch ausfüllen"
 msgid "Text oder Flyer-Bild aus WhatsApp, Telegram & Co. nutzen"
 msgstr "Text oder Flyer-Bild aus WhatsApp, Telegram & Co. nutzen"
 
-#~ msgid "Text"
-#~ msgstr "Text"
-
-#~ msgid "Bild"
-#~ msgstr "Bild"
-
-#~ msgid "Bis zu 3 Flyer- oder Event-Bilder (max. 10MB)"
-#~ msgstr "Bis zu 3 Flyer- oder Event-Bilder (max. 10MB)"
-
-#~ msgid "Analysiere Bild …"
-#~ msgstr "Analysiere Bild …"
-
-#~ msgid "Analysiere Text …"
-#~ msgstr "Analysiere Text …"
-
 #: src/lib/components/EventAutofill.svelte
 msgid "<0/> Bilder aussuchen"
 msgstr "<0/> Bilder aussuchen"
@@ -1866,3 +1824,7 @@ msgstr "Bis zu 3 Bilder (max. 10MB)"
 #: src/lib/components/EventAutofill.svelte
 msgid "<0/> Analysiere …"
 msgstr "<0/> Analysiere …"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. Jeder kann es in deinem Profil und auf der Angebote-Seite sehen."
+msgstr "Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. Jeder kann es in deinem Profil und auf der Angebote-Seite sehen."
