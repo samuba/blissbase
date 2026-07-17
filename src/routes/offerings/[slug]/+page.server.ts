@@ -3,7 +3,7 @@ import { and, db, eq, or, s } from "$lib/server/db";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
-export const load = (async ({ locals, params: { id: slug }, url }) => {
+export const load = (async ({ locals, params: { slug }, url }) => {
 	const offering = await db.query.offerings.findFirst({
 		where: locals.userId
 			? and(eq(s.offerings.slug, slug), or(eq(s.offerings.listed, true), eq(s.offerings.profileId, locals.userId)))

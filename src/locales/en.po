@@ -419,14 +419,14 @@ msgstr "Delete event"
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/events/new/+page.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Abbrechen"
 msgstr "Cancel"
 
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/events/new/+page.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Speichern"
 msgstr "Save"
@@ -1361,7 +1361,7 @@ msgstr "No more search results for \"{0}\""
 msgid "Find conscious events near you."
 msgstr "Find conscious events near you."
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "<0/> Bilder werden hochgeladen…"
 msgstr "<0/> Images are being uploaded…"
@@ -1424,51 +1424,51 @@ msgid "Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut."
 msgstr "Registration could not be confirmed. Please try again."
 
 #: src/routes/offerings/OfferingDetails.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot konnte nicht gelöscht werden."
 msgstr "The listing could not be deleted."
 
 #: src/routes/offerings/OfferingDetails.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 msgstr "Permanently delete this listing? This action cannot be undone."
 
 #: src/routes/offerings/OfferingDetails.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "<0/> Löschen"
 msgstr "<0/> Delete"
 
 #: src/routes/offerings/OfferingDetails.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot konnte nicht deaktiviert werden."
 msgstr "The listing could not be deactivated."
 
 #: src/routes/offerings/OfferingDetails.svelte
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot konnte nicht aktiviert werden."
 msgstr "The listing could not be activated."
 
-#: src/routes/offerings/[id]/edit/+page.server.ts
+#: src/routes/offerings/[slug]/edit/+page.server.ts
 msgid "Offering not found"
 msgstr "Offering not found"
 
-#: src/routes/offerings/[id]/edit/+page.server.ts
+#: src/routes/offerings/[slug]/edit/+page.server.ts
 msgid "You are not allowed to edit this offering"
 msgstr "You are not allowed to edit this offering"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot bearbeiten | Blissbase"
 msgstr "Edit offering | Blissbase"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot bearbeiten"
 msgstr "Edit offering"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "<0/> Lösche…"
 msgstr "<0/> Delete…"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "<0/> Speichere…"
 msgstr "<0/> Save…"
 
@@ -1480,19 +1480,19 @@ msgstr "Deactivate"
 msgid "Aktivieren"
 msgstr "Activate"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Deaktiviere…"
 msgstr "Deactivate…"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Aktiviere…"
 msgstr "Activate…"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "<0/> Deaktivieren"
 msgstr "<0/> Deactivate"
 
-#: src/routes/offerings/[id]/edit/+page.svelte
+#: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "<0/> Aktivieren"
 msgstr "<0/> Activate"
 
@@ -1529,11 +1529,11 @@ msgstr "<0/> Active"
 msgid "<0/> Deaktiviert"
 msgstr "<0/> Disabled"
 
-#: src/routes/offerings/[id]/+page.svelte
+#: src/routes/offerings/[slug]/+page.svelte
 msgid "<0/> Alle Angebote"
 msgstr "<0/> All offers"
 
-#: src/routes/offerings/[id]/edit/+page.server.ts
+#: src/routes/offerings/[slug]/edit/+page.server.ts
 msgid "Invalid offering slug"
 msgstr "Invalid offering slug"
 

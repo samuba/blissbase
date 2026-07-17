@@ -141,7 +141,7 @@
 
 			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
 				<div class="flex flex-row items-center join w-full sm:w-auto ">
-					<button type="button" onclick={handleDeleteOffering} disabled={actionsDisabled} class="btn join-item disabled:text-warning-content grow">
+					<button type="button" onclick={handleDeleteOffering} disabled={actionsDisabled} class="btn join-item grow">
 						{#if isDeletingOffering}
 							<span class="loading loading-spinner loading-sm"></span>
 							Lösche…

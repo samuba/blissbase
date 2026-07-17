@@ -213,7 +213,7 @@
 			{/if}
 
 			{#if offering.profile.slug && offering.profile.displayName}
-				<PublicProfileCard profile={offering.profile}>
+				<PublicProfileCard profile={offering.profile} class="-mx-4 sm:mx-auto rounded-none sm:rounded-2xl">
 					<ProfileContactButtons socialLinks={offering.profile.socialLinks} class="sm:items-start" />
 				</PublicProfileCard>
 			{/if}

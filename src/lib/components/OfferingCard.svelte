@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { stripHtml, trimAllWhitespaces } from "$lib/common";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { routes } from "$lib/routes";
-	import RandomPlaceholderImg from "./RandomPlaceholderImg.svelte";
 
 	let {
 		offering,
@@ -18,7 +16,7 @@
 		class?: string;
 	} = $props();
 
-	const preview = $derived(trimAllWhitespaces(stripHtml(offering.descriptionHtml)) ?? ``);
+	const preview = $derived(htmlToPreviewText(offering.descriptionHtml));
 	const imageUrl = $derived(offering.imageUrls?.[0]);
 	const href = $derived(
 		offering.slug ? routes.offeringDetails(offering.slug, { returnTo }) : routes.offeringsList(),
@@ -30,6 +28,17 @@
 		if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 		event.preventDefault();
 		onclick();
+	}
+
+	function htmlToPreviewText(html: string | undefined) {
+		if (!html) return ``;
+		return html
+			.replace(/<br\s*\/?>/gi, `\n`)
+			.replace(/<\/p>/gi, `\n`)
+			.replace(/<[^>]*>?/g, ``)
+			.replace(/&nbsp;/gi, ` `)
+			.replace(/[^\S\n]+/g, ` `)
+			.trim();
 	}
 
 	type OfferingCardOffering = {
@@ -82,11 +91,11 @@
 				</div>
 			{/if}
 
-			<div class="card-body flex flex-col gap-4 p-5">
-				<h3 class="card-title line-clamp-2 leading-snug tracking-tight">{offering.title}</h3>
+			<div class="card-body flex min-w-0 flex-col gap-4 p-5">
+				<h3 class="card-title line-clamp-2 overflow-hidden leading-snug tracking-tight wrap-break-word">{offering.title}</h3>
 
 				{#if preview}
-					<p class="text-base-content/75 line-clamp-3 text-sm leading-relaxed">
+					<p class="text-base-content/75 line-clamp-3 overflow-hidden text-sm leading-relaxed whitespace-pre-line wrap-break-word">
 						{preview}
 					</p>
 				{/if}

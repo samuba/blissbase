@@ -20,13 +20,13 @@
 </script>
 
 <div class="container mx-auto max-w-3xl">
-	<div class="bg-base-100 sm:rounded-box overflow-hidden shadow">
+	<div class="bg-base-100 sm:rounded-box overflow-hidden sm:shadow">
 		{#key offering.id}
 			<OfferingDetails {offering} {editReturnTo} />
 		{/key}
 	</div>
 
-	<div class="flex w-full justify-center gap-6 py-3">
+	<div class="flex w-full justify-center py-6 bg-base-100 sm:bg-transparent">
 		<a href={offeringsListHref} class="btn btn-sm">
 			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 			Alle Angebote

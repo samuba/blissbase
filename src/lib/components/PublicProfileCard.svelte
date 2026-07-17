@@ -4,7 +4,7 @@
 	import type { Profile } from "$lib/server/schema";
 	import type { Snippet } from "svelte";
 
-	let { profile, children }: { profile: Simplify<Pick<Profile, "slug" | "displayName" | "bio" | "profileImageUrl">>; children?: Snippet } =
+	let { profile, children, class: className }: { profile: Simplify<Pick<Profile, "slug" | "displayName" | "bio" | "profileImageUrl">>; children?: Snippet; class?: string } =
 		$props();
 
 	const bioPreview = $derived(profile.bio ? trimAllWhitespaces(stripHtml(profile.bio)) : undefined);
@@ -15,6 +15,7 @@
 	class={[
 		`group bg-base-200 hover:bg-base-200/80 border-base-200 flex flex-col gap-3 rounded-2xl border p-3 transition-colors`,
 		`no-underline`,
+		className,
 	]}
 >
 	<div class="flex w-full flex-row items-center gap-3">
@@ -30,7 +31,7 @@
 			<p class="text-base-content text-lg leading-tight font-semibold">{profile.displayName}</p>
 			{#if bioPreview}
 				<div class="relative mt-0.5">
-					<p class={[`text-base-content/70 line-clamp-2 text-sm leading-snug`]}>
+					<p class={[`text-base-content/70 line-clamp-3 sm:line-clamp-2 text-sm leading-snug`]}>
 						{bioPreview}
 					</p>
 				</div>
