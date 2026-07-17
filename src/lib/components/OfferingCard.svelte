@@ -84,7 +84,7 @@
 							<img
 								src={imageUrl}
 								alt="illustration for offering: {offering.title}"
-								class="h-full max-h-72 max-w-full object-cover sm:max-h-54"
+								class="h-full max-h-72 max-w-full object-cover"
 							/>
 						</figure>
 					</div>

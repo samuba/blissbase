@@ -1,7 +1,7 @@
 import { db, eq, s } from "$lib/server/db";
 import { error } from "@sveltejs/kit";
 
-export async function load({ locals, params: { id: slug } }) {
+export async function load({ locals, params: { slug } }) {
 	if (!slug?.trim()) {
 		error(400, `Invalid offering slug`);
 	}

@@ -28,6 +28,11 @@
 		const rawUrl = offering.imageUrls?.[selectedImageIndex] ?? ``;
 		return imageLoadError ? (rawUrl.split(`https:`)?.[2] ?? ``) : rawUrl;
 	});
+	const locationMapsUrl = $derived(
+		offering.profile.locationLabel
+			? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(offering.profile.locationLabel)}`
+			: undefined,
+	);
 
 	function selectImage(index: number) {
 		selectedImageIndex = index;
@@ -146,10 +151,25 @@
 					{offering.title}
 				</h1>
 				{#if offering.format !== `online`}
-					<span class="line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word">
-						<i class="icon-[ph--map-pin] size-4.5"></i>
-						{offering.profile.locationLabel}
-					</span>
+					{#if offering.profile.locationLabel}
+						<a
+							href={locationMapsUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							class={[
+								`line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word`,
+								`no-underline text-inherit`,
+							]}
+						>
+							<i class="icon-[ph--map-pin] size-4.5"></i>
+							{offering.profile.locationLabel}
+						</a>
+					{:else}
+						<span class="line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word">
+							<i class="icon-[ph--map-pin] size-4.5"></i>
+							{offering.profile.locationLabel}
+						</span>
+					{/if}
 				{/if}
 			</div>
 			<div class="flex flex-wrap gap-4 sm:flex-row sm:items-center">
