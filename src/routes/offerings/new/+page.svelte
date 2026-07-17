@@ -660,7 +660,7 @@
 					{:else if showOtpStep}
 						E-Mail bestätigen und Angebot veröffentlichen
 					{:else if isLastStep}
-						Angebot speichern
+						Angebot erstellen
 					{:else if currentStep === `profile` && !isSignedIn}
 						Code senden
 					{:else}

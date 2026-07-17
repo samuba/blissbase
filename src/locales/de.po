@@ -1207,10 +1207,6 @@ msgid "Angebote"
 msgstr "Angebote"
 
 #: src/routes/offerings/new/+page.svelte
-msgid "Angebot speichern"
-msgstr "Angebot speichern"
-
-#: src/routes/offerings/new/+page.svelte
 msgid "<0/> Wird gespeichert…"
 msgstr "<0/> Wird gespeichert…"
 
@@ -1272,6 +1268,7 @@ msgid "Angebot erstellen | Blissbase"
 msgstr "Angebot erstellen | Blissbase"
 
 #: src/routes/offerings/+page.svelte
+#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/offerings/+page.svelte
 msgid "Angebot erstellen"
