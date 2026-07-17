@@ -63,7 +63,7 @@
 					{/if}
 
 					<div
-						class="bg-base-100 rounded-box relative -ml-6 flex w-fit max-w-[calc(100%-6.5rem)] min-w-0 flex-none flex-col items-start justify-center gap-3 rounded-l-none px-5 py-4 pl-10 text-left sm:max-w-md"
+						class="bg-base-100 rounded-box relative -ml-16 flex min-w-0 max-w-[calc(100%-4rem)] flex-1 flex-col items-start justify-center gap-3 rounded-l-none px-5 py-4 pl-19 text-left sm:w-fit sm:max-w-md sm:flex-none"
 					>
 						<div class="flex w-full items-start justify-between gap-2">
 							<div class="flex min-w-0 flex-col items-start gap-1">
