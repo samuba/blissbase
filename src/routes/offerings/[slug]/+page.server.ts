@@ -43,7 +43,7 @@ export const load = (async ({ locals, params: { slug }, url }) => {
 		...offering,
 		descriptionHtml: offering.descriptionHtml ?? ``,
 		imageUrls: offering.imageUrls ?? [],
-		canManage: locals.userId === offering.profile.id,
+		canManage: locals.userId === offering.profile.id || locals.isAdminSession,
 		profile: {
 			...offering.profile,
 			bio: offering.profile.bio ?? ``,

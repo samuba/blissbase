@@ -55,6 +55,8 @@
 			bannerImageUrl: string;
 			socialLinks: PublicProfileSocialLinks;
 			locationLabel?: string | null;
+			latitude?: number | null;
+			longitude?: number | null;
 		};
 	};
 </script>

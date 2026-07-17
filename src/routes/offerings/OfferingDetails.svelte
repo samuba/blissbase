@@ -29,8 +29,8 @@
 		return imageLoadError ? (rawUrl.split(`https:`)?.[2] ?? ``) : rawUrl;
 	});
 	const locationMapsUrl = $derived(
-		offering.profile.locationLabel
-			? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(offering.profile.locationLabel)}`
+		offering.profile.latitude != null && offering.profile.longitude != null
+			? `https://www.google.com/maps/search/?api=1&query=${offering.profile.latitude},${offering.profile.longitude}`
 			: undefined,
 	);
 
@@ -99,6 +99,8 @@
 			bannerImageUrl: string;
 			socialLinks: PublicProfileSocialLinks;
 			locationLabel?: string | null;
+			latitude?: number | null;
+			longitude?: number | null;
 		};
 	};
 
@@ -150,8 +152,8 @@
 				<h1 class="text-2xl leading-tight font-bold sm:text-3xl">
 					{offering.title}
 				</h1>
-				{#if offering.format !== `online`}
-					{#if offering.profile.locationLabel}
+				{#if offering.format !== `online` && offering.profile.locationLabel}
+					{#if locationMapsUrl}
 						<a
 							href={locationMapsUrl}
 							target="_blank"

@@ -14,7 +14,7 @@
 	href={resolve(`/@/[slug]`, { slug: profile.slug! })}
 	class={[
 		`group bg-base-200 hover:bg-base-200/80 border-base-200 flex flex-col gap-3 rounded-2xl border p-3 transition-colors`,
-		`no-underline`,
+		`no-underline w-full`,
 		className,
 	]}
 >

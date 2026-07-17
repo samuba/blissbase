@@ -62,6 +62,7 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 	const currentUserId = getRequestEvent().locals.userId;
 	const filterCoords = await resolveOfferingsFilterCoordinates(filter);
 	const distanceKm = filter.distance ? parseFloat(filter.distance) : null;
+	const isAdminSession = getRequestEvent().locals.isAdminSession;
 
 	const offerings = await db.query.offerings.findMany({
 		where: eq(s.offerings.listed, true),
@@ -122,7 +123,7 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 						bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
 						locationLabel: offering.profile.locationLabel ?? ``,
 					},
-					canManage: currentUserId === offering.profile.id,
+					canManage: currentUserId === offering.profile.id || isAdminSession,
 				})),
 			includeOnline: filter.includeOnline,
 		}),
@@ -303,13 +304,11 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 });
 
 export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {
-	const userId = ensureUserId();
-	const offering = await db.query.offerings.findFirst({
-		where: and(eq(s.offerings.id, data.offeringId), eq(s.offerings.profileId, userId)),
-	});
-	if (!offering) throw error(404, `Offering not found`);
+	const offering = await assertOfferingExists(data.offeringId);
+	assertCanManageOffering(offering);
 
-	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
+	const ownerId = offering.profileId;
+	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, ownerId) });
 	if (!currentProfile) throw error(404, `Profile not found`);
 	const nextProfile = data.profile ? await mergeProfileFromOfferingForm({ currentProfile, data: data.profile, issue }) : currentProfile;
 	if (offeringNeedsLocation(data.format) && !hasValidCoordinates({ lat: nextProfile.latitude, lng: nextProfile.longitude })) {
@@ -327,7 +326,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 
 	const uploadedImageUrls = await finalizeOfferingImageClaims({
 		claims: imageClaims,
-		userId,
+		userId: ownerId,
 		offeringId: offering.id,
 	});
 	const submittedClaimTokens = getUniqueOfferingImageClaimTokens(data.imageClaims);
@@ -349,7 +348,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 			imageUrls: nextImageUrls,
 			updatedAt: sql`now()`,
 		})
-		.where(and(eq(s.offerings.id, offering.id), eq(s.offerings.profileId, userId)));
+		.where(eq(s.offerings.id, offering.id));
 
 	if (deletedImageUrls?.length && !isE2eTestMode) {
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
@@ -362,14 +361,16 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 });
 
 export const unlistOffering = command(offeringMutationSchema, async ({ offeringId }) => {
-	const userId = ensureUserId();
+	const existing = await assertOfferingExists(offeringId);
+	assertCanManageOffering(existing);
+
 	const [offering] = await db
 		.update(s.offerings)
 		.set({
 			listed: false,
 			updatedAt: sql`now()`,
 		})
-		.where(and(eq(s.offerings.id, offeringId), eq(s.offerings.profileId, userId)))
+		.where(eq(s.offerings.id, offeringId))
 		.returning({ id: s.offerings.id });
 
 	if (!offering) throw error(404, `Offering not found`);
@@ -380,14 +381,16 @@ export const unlistOffering = command(offeringMutationSchema, async ({ offeringI
 });
 
 export const listOffering = command(offeringMutationSchema, async ({ offeringId }) => {
-	const userId = ensureUserId();
+	const existing = await assertOfferingExists(offeringId);
+	assertCanManageOffering(existing);
+
 	const [offering] = await db
 		.update(s.offerings)
 		.set({
 			listed: true,
 			updatedAt: sql`now()`,
 		})
-		.where(and(eq(s.offerings.id, offeringId), eq(s.offerings.profileId, userId)))
+		.where(eq(s.offerings.id, offeringId))
 		.returning({ id: s.offerings.id });
 
 	if (!offering) throw error(404, `Offering not found`);
@@ -398,10 +401,12 @@ export const listOffering = command(offeringMutationSchema, async ({ offeringId 
 });
 
 export const deleteOffering = command(offeringMutationSchema, async ({ offeringId }) => {
-	const userId = ensureUserId();
+	const existing = await assertOfferingExists(offeringId);
+	assertCanManageOffering(existing);
+
 	const [offering] = await db
 		.delete(s.offerings)
-		.where(and(eq(s.offerings.id, offeringId), eq(s.offerings.profileId, userId)))
+		.where(eq(s.offerings.id, offeringId))
 		.returning({ id: s.offerings.id, imageUrls: s.offerings.imageUrls });
 
 	if (!offering) throw error(404, `Offering not found`);
@@ -414,6 +419,20 @@ export const deleteOffering = command(offeringMutationSchema, async ({ offeringI
 
 	return { success: true };
 });
+
+async function assertOfferingExists(offeringId: number) {
+	const offering = await db.query.offerings.findFirst({
+		where: eq(s.offerings.id, offeringId),
+	});
+	if (!offering) throw error(404, `Offering not found`);
+	return offering;
+}
+
+function assertCanManageOffering(offering: { profileId: string }) {
+	const userId = ensureUserId();
+	if (userId === offering.profileId || getRequestEvent().locals.isAdminSession) return;
+	throw error(403, `You are not allowed to manage this offering`);
+}
 
 /**
  * Verifies and moves temporary offering image uploads into the final offering prefix.

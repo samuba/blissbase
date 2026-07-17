@@ -22,7 +22,7 @@ export async function load({ locals, params: { slug } }) {
 	if (!offering) {
 		error(404, `Offering not found`);
 	}
-	if (offering.profileId !== locals.userId) {
+	if (offering.profileId !== locals.userId && !locals.isAdminSession) {
 		error(403, `You are not allowed to edit this offering`);
 	}
 
