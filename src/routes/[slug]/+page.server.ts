@@ -20,9 +20,9 @@ export const load = (async ({ params: { slug }, url }) => {
         event: prepareEventsForUi([event])[0],
         pageMetaTags: getPageMetaTags({
             name: event.name,
-            description: event.startAt.toLocaleDateString('de-DE', {
+            description: event.startAt.toLocaleDateString('en-US', {
                 year: 'numeric',
-                month: 'numeric',
+                month: 'long',
                 day: 'numeric'
             }) + " - " + event.description,
             imageUrl: event.imageUrls?.[0],
