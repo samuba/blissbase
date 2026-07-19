@@ -1,13 +1,9 @@
-import { loadFiltersFromCookie } from '$lib/cookie-utils';
-import {
-	hasOfferingsFilterParams,
-	hasOfferingsFilterUrlParams,
-	offeringsFilterFromCookie,
-} from '$lib/offeringsFilter';
-import { OFFERING_SLUG_QUERY, routes, withOfferingSlug } from '$lib/routes';
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { getPageMetaTags } from '$lib/common';
+import { loadFiltersFromCookie } from "$lib/cookie-utils";
+import { hasOfferingsFilterParams, hasOfferingsFilterUrlParams, offeringsFilterFromCookie } from "$lib/offeringsFilter";
+import { OFFERING_SLUG_QUERY, routes, withOfferingSlug } from "$lib/routes";
+import { redirect } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
+import { getPageMetaTags } from "$lib/common";
 
 export const load = (async ({ url, cookies }) => {
 	// URL filters win; never write the cookie from a URL visit.
@@ -20,12 +16,14 @@ export const load = (async ({ url, cookies }) => {
 		}
 	}
 
-	const sourceUrl = 'https://www.blissbase.app/offerings';
-	return { pageMetaTags: getPageMetaTags({
-		name: 'Blissbase Offerings',
-		description: 'Find conscious offerings near you.',
-		imageUrl: 'https://www.blissbase.app/og-poster-offerings.jpg',
-		url: new URL(sourceUrl),
-		sourceUrl
-	}) };
+	const sourceUrl = "https://www.blissbase.app/offerings";
+	return {
+		pageMetaTags: getPageMetaTags({
+			name: "Blissbase Offerings",
+			description: "Find conscious offerings near you.",
+			imageUrl: "https://www.blissbase.app/og-poster-offerings.jpg",
+			url: new URL(sourceUrl),
+			sourceUrl,
+		}),
+	};
 }) satisfies PageServerLoad;
