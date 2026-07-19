@@ -28,11 +28,6 @@
 		const rawUrl = offering.imageUrls?.[selectedImageIndex] ?? ``;
 		return imageLoadError ? (rawUrl.split(`https:`)?.[2] ?? ``) : rawUrl;
 	});
-	const locationMapsUrl = $derived(
-		offering.profile.latitude != null && offering.profile.longitude != null
-			? `https://www.google.com/maps/search/?api=1&query=${offering.profile.latitude},${offering.profile.longitude}`
-			: undefined,
-	);
 
 	function selectImage(index: number) {
 		selectedImageIndex = index;
@@ -148,30 +143,30 @@
 
 	<div class="flex flex-col gap-6 p-4 sm:p-6">
 		<div class="flex flex-col gap-4">
-			<div class="flex flex-col gap-1">
-				<h1 class="text-2xl leading-tight font-bold sm:text-3xl">
+			<div class="flex flex-col gap-3">
+				<h1 class="text-2xl leading-none font-bold sm:text-3xl">
 					{offering.title}
 				</h1>
-				{#if offering.format !== `online` && offering.profile.locationLabel}
-					{#if locationMapsUrl}
-						<a
-							href={locationMapsUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							class={[
-								`line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word`,
-								`no-underline text-inherit`,
-							]}
-						>
-							<i class="icon-[ph--map-pin] size-4.5"></i>
-							{offering.profile.locationLabel}
-						</a>
-					{:else}
-						<span class="line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word">
-							<i class="icon-[ph--map-pin] size-4.5"></i>
-							{offering.profile.locationLabel}
-						</span>
-					{/if}
+				{#if offering.format !== `online`}
+					<a
+						href={`https://www.google.com/maps/search/?api=1&query=${offering.profile.latitude},${offering.profile.longitude}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						class={[
+							`line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word`,
+							`no-underline text-inherit`,
+						]}
+					>
+						<i class="icon-[ph--map-pin] size-4.5"></i>
+						{offering.profile.locationLabel}
+					</a>
+
+				{/if}
+				{#if !offering.listed}
+					<span class="badge badge-soft badge-warning w-fit gap-1">
+						<i class="icon-[ph--eye-slash] size-3.5"></i>
+						Deaktiviert — nicht für andere sichtbar
+					</span>
 				{/if}
 			</div>
 			<div class="flex flex-wrap gap-4 sm:flex-row sm:items-center">

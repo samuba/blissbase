@@ -10,7 +10,7 @@ import { BASE_URL, routes, safeReturnToPath } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
-import { and, db, eq, ne, s, sql } from "$lib/server/db";
+import { and, db, eq, ne, or, s, sql } from "$lib/server/db";
 import { verifyOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
 import { createPublicProfileSlug, hasSocialLink, isPublicProfile } from "$lib/server/profile";
 import { resolveProfileImageUrl } from "$lib/server/profileImages";
@@ -65,7 +65,9 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 	const isAdminSession = getRequestEvent().locals.isAdminSession;
 
 	const offerings = await db.query.offerings.findMany({
-		where: eq(s.offerings.listed, true),
+		where: currentUserId
+			? or(eq(s.offerings.listed, true), eq(s.offerings.profileId, currentUserId))
+			: eq(s.offerings.listed, true),
 		columns: {
 			id: true,
 			slug: true,

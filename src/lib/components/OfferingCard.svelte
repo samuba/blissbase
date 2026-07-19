@@ -18,6 +18,7 @@
 
 	const preview = $derived(htmlToPreviewText(offering.descriptionHtml));
 	const imageUrl = $derived(offering.imageUrls?.[0]);
+	const isDisabled = $derived(offering.listed === false);
 	const href = $derived(
 		offering.slug ? routes.offeringDetails(offering.slug, { returnTo }) : routes.offeringsList(),
 	);
@@ -48,6 +49,7 @@
 		descriptionHtml: string;
 		format: OfferingFormat;
 		imageUrls?: string[];
+		listed?: boolean;
 		profile: {
 			displayName: string | null;
 			profileImageUrl: string;
@@ -59,6 +61,7 @@
 	{href}
 	class={[
 		`card bg-base-100 group h-full w-full cursor-pointer rounded-2xl text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`,
+		isDisabled && `opacity-75`,
 		className,
 	]}
 	data-sveltekit-preload-data="false"
@@ -72,6 +75,7 @@
 					class={[
 						`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
 						`rounded-t-lg sm:rounded-tl-lg`,
+						isDisabled && `grayscale`,
 					]}
 				>
 					<div class={[`h-full bg-cover bg-center`, `rounded-t-lg sm:rounded-tl-lg`]} style="background-image: url({imageUrl})">
@@ -92,7 +96,15 @@
 			{/if}
 
 			<div class="card-body flex min-w-0 flex-col gap-4 p-5">
-				<h3 class="card-title line-clamp-2 overflow-hidden leading-snug tracking-tight wrap-break-word">{offering.title}</h3>
+				<h3 class="card-title line-clamp-2 overflow-hidden leading-snug tracking-tight wrap-break-word">
+					{offering.title}
+				</h3>
+				{#if isDisabled}
+					<span class="badge badge-soft badge-warning w-fit gap-1">
+						<i class="icon-[ph--eye-slash] size-3.5"></i>
+						Deaktiviert — nicht für andere sichtbar
+					</span>
+				{/if}
 
 				{#if preview}
 					<p class="text-base-content/75 line-clamp-3 overflow-hidden text-sm leading-relaxed whitespace-pre-line wrap-break-word">

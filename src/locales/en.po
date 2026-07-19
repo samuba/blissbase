@@ -1826,3 +1826,11 @@ msgstr "Fill out your profile"
 #: src/routes/offerings/new/+page.svelte
 msgid "Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen. Dein Profil wird unter jedem deiner Angebote angezeigt."
 msgstr "A complete profile helps customers trust you more and get a better sense of who you are. Your profile will be displayed with each of your offerings."
+
+#~ msgid "<0/> Deaktiviert — nur für dich sichtbar"
+#~ msgstr "<0/> Disabled — visible only to you"
+
+#: src/lib/components/OfferingCard.svelte
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Deaktiviert — nicht für andere sichtbar"
+msgstr "<0/> Disabled — not visible to others"
