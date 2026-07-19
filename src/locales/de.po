@@ -1834,3 +1834,40 @@ msgstr "Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich b
 #: src/routes/offerings/OfferingDetails.svelte
 msgid "<0/> Deaktiviert — nicht für andere sichtbar"
 msgstr "<0/> Deaktiviert — nicht für andere sichtbar"
+
+#: src/lib/flashToast.svelte.ts
+msgid "Angebot erstellt!"
+msgstr "Angebot erstellt!"
+
+#: src/lib/flashToast.svelte.ts
+msgid "Angebot wurde aktiviert"
+msgstr "Angebot wurde aktiviert"
+
+#: src/lib/flashToast.svelte.ts
+msgid "Es ist jetzt für andere Nutzer sichtbar."
+msgstr "Es ist jetzt für andere Nutzer sichtbar."
+
+#: src/lib/flashToast.svelte.ts
+msgid "Angebot wurde deaktiviert"
+msgstr "Angebot wurde deaktiviert"
+
+#~ msgid "Du kannst es in deinem Profil wieder aktivieren."
+#~ msgstr "Du kannst es in deinem Profil wieder aktivieren."
+
+#: src/lib/flashToast.svelte.ts
+msgid "Angebot wurde gelöscht."
+msgstr "Angebot wurde gelöscht."
+
+#: src/lib/flashToast.svelte.ts
+msgid "Angebot wurde aktualisiert."
+msgstr "Angebot wurde aktualisiert."
+
+#~ msgid "Andere können es"
+#~ msgstr "Andere können es"
+
+#~ msgid "Andere können es nicht mehr sehen"
+#~ msgstr "Andere können es nicht mehr sehen"
+
+#: src/lib/flashToast.svelte.ts
+msgid "Andere können es nicht mehr sehen."
+msgstr "Andere können es nicht mehr sehen."
