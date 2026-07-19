@@ -84,7 +84,7 @@
 
 	type OfferingDetailsOffering = {
 		id: number;
-		slug: string | null;
+		slug: string;
 		title: string;
 		descriptionHtml: string;
 		format: OfferingFormat;
@@ -191,16 +191,6 @@
 
 				{#if offering.canManage}
 					<div class="join flex w-full items-center justify-center sm:w-auto">
-						<button type="button" class="btn btn-sm join-item" onclick={manageListingState} disabled={Boolean(pendingManagementAction)}>
-							{#if pendingManagementAction === `unlist` || pendingManagementAction === `list`}
-								<span class="loading loading-spinner loading-xs"></span>
-							{:else if offering.listed}
-								<i class="icon-[ph--eye-slash] size-4"></i>
-							{:else}
-								<i class="icon-[ph--eye] size-4"></i>
-							{/if}
-							{offering.listed ? `Deaktivieren` : `Aktivieren`}
-						</button>
 						<button
 							type="button"
 							class="btn btn-sm join-item"
@@ -214,15 +204,23 @@
 							{/if}
 							Löschen
 						</button>
-						{#if offering.slug}
-							<a
-								href={pendingManagementAction ? "#" : routes.editOffering(offering.slug, { returnTo: editReturnTo })}
-								class={["btn btn-sm join-item", pendingManagementAction && `btn-disabled`]}
-							>
-								<i class="icon-[ph--pencil-simple] size-4"></i>
-								Bearbeiten
-							</a>
-						{/if}
+						<button type="button" class="btn btn-sm join-item" onclick={manageListingState} disabled={Boolean(pendingManagementAction)}>
+							{#if pendingManagementAction === `unlist` || pendingManagementAction === `list`}
+								<span class="loading loading-spinner loading-xs"></span>
+							{:else if offering.listed}
+								<i class="icon-[ph--eye-slash] size-4"></i>
+							{:else}
+								<i class="icon-[ph--eye] size-4"></i>
+							{/if}
+							{offering.listed ? `Deaktivieren` : `Aktivieren`}
+						</button>
+						<a
+							href={pendingManagementAction ? "#" : routes.editOffering(offering.slug, { returnTo: editReturnTo })}
+							class={["btn btn-sm join-item", pendingManagementAction && `btn-disabled`]}
+						>
+							<i class="icon-[ph--pencil-simple] size-4"></i>
+							Bearbeiten
+						</a>
 					</div>
 				{/if}
 			</div>
