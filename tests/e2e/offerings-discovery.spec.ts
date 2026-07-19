@@ -177,20 +177,65 @@ test.describe("Offering discovery and details", () => {
 		await expect(page.getByRole(`link`, { name: `Alle Angebote` })).toBeVisible();
 	});
 
-	test("post-create opens the offering as a full page", async ({ page }) => {
+	test("post-create opens the offering in a dialog on the filtered list", async ({ page }) => {
 		await createProfile(page, createCompleteProfile());
 		await signInAsE2EUser(page);
-		const returnTo = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
-		await page.goto(`/offerings/new?returnTo=${encodeURIComponent(returnTo)}`);
+		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
+		await page.context().addCookies([
+			{
+				name: `blissbase_filters`,
+				value: encodeURIComponent(
+					JSON.stringify({
+						plzCity: `Berlin`,
+						distance: `50`,
+						lat: 52.52,
+						lng: 13.405,
+					}),
+				),
+				domain: `localhost`,
+				path: `/`,
+			},
+		]);
+		await page.goto(listUrl);
+		await waitForClientHydration(page);
+		await page.getByRole(`link`, { name: /Angebot erstellen/i }).first().click();
 		await expect(page.getByRole(`heading`, { name: `Angebot erstellen` })).toBeVisible();
-		await expect(page.getByRole(`combobox`)).toHaveValue(`Berlin`);
-		await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(`Return Page Offering`);
-		await page.getByRole(`button`, { name: `Angebot speichern` }).click();
+		await page.getByPlaceholder(`z.B. Private Couching Session`).fill(`Return Page Offering`);
+		await page.getByRole(`button`, { name: `Angebot erstellen` }).click();
 
-		await expect(page).toHaveURL(new RegExp(`/offerings/[^/?]+\\?returnTo=`));
-		await expect(page.getByRole(`dialog`)).toHaveCount(0);
-		await expect(page.getByRole(`heading`, { name: `Return Page Offering` })).toBeVisible();
-		await page.getByRole(`link`, { name: `Alle Angebote` }).click();
-		await expect(page).toHaveURL(returnTo);
+		const dialog = page.getByRole(`dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByRole(`heading`, { name: `Return Page Offering` })).toBeVisible();
+		await expect(page).toHaveURL(new RegExp(`/offerings/[^/?]+$`));
+		await page.getByRole(`button`, { name: `Schließen` }).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(listUrl);
+	});
+
+	test("post-edit opens the offering in a dialog on the filtered list", async ({ page }) => {
+		await createProfile(page, createCompleteProfile());
+		const offering = await createOffering(
+			page,
+			createOfflineOffering({ title: `Edit Return Offering`, slug: `edit-return` }),
+		);
+		await signInAsE2EUser(page);
+		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
+		await page.goto(listUrl);
+		await waitForClientHydration(page);
+
+		await page.locator(`[data-offering-id="${offering.id}"]`).click();
+		const dialog = page.getByRole(`dialog`);
+		await expect(dialog).toBeVisible();
+		await dialog.getByRole(`link`, { name: `Bearbeiten` }).click();
+		await expect(page.getByRole(`heading`, { name: `Angebot bearbeiten` })).toBeVisible();
+		await page.getByPlaceholder(`z.B. Private Couching Session`).fill(`Edited Return Offering`);
+		await page.getByRole(`button`, { name: `Speichern`, exact: true }).click();
+
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByRole(`heading`, { name: `Edited Return Offering` })).toBeVisible();
+		await expect(page).toHaveURL(new RegExp(`/offerings/${offering.slug}$`));
+		await page.getByRole(`button`, { name: `Schließen` }).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(listUrl);
 	});
 });

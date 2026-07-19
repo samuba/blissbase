@@ -37,6 +37,7 @@ Always inline types when feasible.
 Always check if an array is defined and has values like this: `arr?.length` not `arr && arr.length > 0`
 Only create doc comments when the complexity of the function calls for it or the semantics/context is needed to understand.
 Stay true to YAGNI principle.
+Prefer elegant, simple solutions.
 
 ## i18n
 Wuchale is used for i18n.
@@ -53,3 +54,6 @@ Instead of resolve() use routes object. Ignore warnings/errors/autofixer reports
 
 # Svelte
 Only use $effect as a last resort when its not feasible to use $derived.
+
+# Playwright
+Prefer getByTestId() to identify elements.

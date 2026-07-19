@@ -3,11 +3,13 @@ const CLOSE_ANIMATION_MS = 200;
 /** Shared open/close timing for shallow-routed details dialogs. */
 export class ShallowDialogState {
 	open = $state(false);
+	noEnterAnimation = $state(false);
 	#isClosing = false;
 	#closeTimeout: ReturnType<typeof setTimeout> | undefined;
 
-	show() {
+	show(args?: { noEnterAnimation?: boolean }) {
 		this.cancelPendingClose();
+		this.noEnterAnimation = args?.noEnterAnimation ?? false;
 		this.open = true;
 	}
 

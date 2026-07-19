@@ -9,9 +9,9 @@
 	let event = $state<UiEvent | undefined>(undefined);
 	let openingEventSlug = $state<string | undefined>(undefined);
 
-	export function showEventDetailsDialog(eventToShow: UiEvent) {
+	export function showEventDetailsDialog(eventToShow: UiEvent, args?: { noEnterAnimation?: boolean }) {
 		event = eventToShow;
-		dialog.show();
+		dialog.show({ noEnterAnimation: args?.noEnterAnimation });
 		pushState(resolve('/[slug]', { slug: eventToShow.slug }), {
 			selectedEventId: eventToShow.id,
 		});
@@ -26,7 +26,12 @@
 	import { Dialog } from '$lib/components/dialog';
 	import EventDetails from './EventDetails.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
+	import {
+		dialogContentAnimationClasses,
+		dialogContentExitAnimationClasses,
+		dialogOverlayAnimationClasses,
+		dialogOverlayExitAnimationClasses,
+	} from '$lib/common';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
 	import { getEventBySlug } from '$lib/rpc/events.remote';
@@ -57,7 +62,7 @@
 			const eventToShow = await getEventBySlug({ slug: eventSlug });
 			if (openingEventSlug !== eventSlug) return;
 			if (!eventToShow) return;
-			showEventDetailsDialog(eventToShow);
+			showEventDetailsDialog(eventToShow, { noEnterAnimation: true });
 		} finally {
 			if (openingEventSlug === eventSlug) openingEventSlug = undefined;
 		}
@@ -77,13 +82,18 @@
 
 <Dialog.Root open={dialog.open} {onOpenChange}>
 	<Dialog.Portal>
-		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
+		<Dialog.Overlay
+			class={[
+				'fixed inset-0 z-50 bg-stone-800/90 transition-opacity',
+				dialog.noEnterAnimation ? dialogOverlayExitAnimationClasses : dialogOverlayAnimationClasses,
+			]}
+		/>
 
 		<Dialog.Content
 			role="dialog"
 			class={[
 				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
-				dialogContentAnimationClasses,
+				dialog.noEnterAnimation ? dialogContentExitAnimationClasses : dialogContentAnimationClasses,
 			]}
 			style="scrollbar-width: thin"
 			onOpenAutoFocus={(e) => {

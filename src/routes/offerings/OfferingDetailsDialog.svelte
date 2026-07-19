@@ -20,9 +20,9 @@
 			path: dialogHostPath(new URL(window.location.href)),
 			offeringSlug: slug,
 		});
-		pushState(routes.offeringDetails(slug), {});
 		activeSlug = slug;
 		dialog.show();
+		pushState(routes.offeringDetails(slug), {});
 	}
 
 	function dialogHostPath(url: URL) {
@@ -62,48 +62,92 @@
 </script>
 
 <script lang="ts">
-	import { dialogContentAnimationClasses, dialogOverlayAnimationClasses } from '$lib/common';
+	import {
+		dialogContentAnimationClasses,
+		dialogContentExitAnimationClasses,
+		dialogOverlayAnimationClasses,
+		dialogOverlayExitAnimationClasses,
+	} from '$lib/common';
 	import { Dialog } from '$lib/components/dialog';
+	import { getOfferingBySlug } from '$lib/rpc/offerings.remote';
 	import OfferingDetails from './OfferingDetails.svelte';
 	import { onNavigationUrlChange } from '$lib/shallowDialog.svelte';
 	import { onMount } from 'svelte';
 
 	let { offerings }: { offerings: OfferingDetailsDialogOffering[] } = $props();
 
-	const offering = $derived(offerings.find((item) => item.slug === activeSlug));
+	let fetchedOffering = $state<OfferingDetailsDialogOffering | null>(null);
+	let fetchingSlug = $state<string | null>(null);
+
+	const offeringFromList = $derived(offerings.find((item) => item.slug === activeSlug));
+	const offering = $derived(
+		offeringFromList ?? (fetchedOffering?.slug === activeSlug ? fetchedOffering : undefined),
+	);
 
 	onMount(() => {
-		const url = new URL(window.location.href);
-		const offeringSlug = takeOfferingSlugQuery(url);
-		if (offeringSlug) {
-			const hostPath = routes.currentPath(url);
-			editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
-			// Replace `?offeringSlug=` with the host page, then push the dialog URL so
-			// history.back() closes to the list instead of returning to /edit.
-			replaceState(hostPath, {});
-			pushState(routes.offeringDetails(offeringSlug), {});
-			activeSlug = offeringSlug;
-			dialog.show();
-		} else {
-			syncFromUrl(url);
-		}
-
-		return onNavigationUrlChange(syncFromUrl);
+		void openFromOfferingSlugQuery(new URL(window.location.href));
+		return onNavigationUrlChange((url) => {
+			void syncFromUrl(url);
+		});
 	});
 
-	function syncFromUrl(url: URL) {
+	async function openFromOfferingSlugQuery(url: URL) {
+		const offeringSlug = takeOfferingSlugQuery(url);
+		if (!offeringSlug) {
+			await syncFromUrl(url);
+			return;
+		}
+
+		const hostPath = routes.currentPath(url);
+		editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
+		// Replace `?offeringSlug=` with the host page, then push the dialog URL so
+		// history.back() closes to the list instead of returning to /edit.
+		replaceState(hostPath, {});
+		await ensureOfferingLoaded(offeringSlug);
+		if (fetchedOffering?.slug !== offeringSlug && !offerings.some((item) => item.slug === offeringSlug)) {
+			return;
+		}
+
+		pushState(routes.offeringDetails(offeringSlug), {});
+		activeSlug = offeringSlug;
+		dialog.show({ noEnterAnimation: true });
+	}
+
+	async function syncFromUrl(url: URL) {
 		const slug = parseOfferingDetailsSlugFromUrl(url);
 		if (slug) {
 			activeSlug = slug;
-			dialog.show();
+			await ensureOfferingLoaded(slug);
+			// Card click already called show() before pushState; don't override its enter animation.
+			if (dialog.open) return;
+			dialog.show({ noEnterAnimation: true });
 			return;
 		}
 
 		if (!dialog.open && !activeSlug) return;
+		fetchedOffering = null;
 		dialog.closeGracefully(clearActiveSlug);
 	}
 
+	async function ensureOfferingLoaded(slug: string) {
+		if (offerings.some((item) => item.slug === slug)) {
+			fetchedOffering = null;
+			return;
+		}
+		if (fetchedOffering?.slug === slug || fetchingSlug === slug) return;
+
+		fetchingSlug = slug;
+		try {
+			const loaded = await getOfferingBySlug({ slug });
+			if (fetchingSlug !== slug) return;
+			fetchedOffering = loaded;
+		} finally {
+			if (fetchingSlug === slug) fetchingSlug = null;
+		}
+	}
+
 	function handleClose() {
+		fetchedOffering = null;
 		dialog.closeGracefully(clearActiveSlug);
 		if (parseOfferingDetailsSlugFromUrl(new URL(window.location.href))) {
 			history.back();
@@ -117,13 +161,18 @@
 
 <Dialog.Root open={dialog.open} {onOpenChange}>
 	<Dialog.Portal>
-		<Dialog.Overlay class={['fixed inset-0 z-50 bg-stone-800/90 transition-opacity', dialogOverlayAnimationClasses]} />
+		<Dialog.Overlay
+			class={[
+				'fixed inset-0 z-50 bg-stone-800/90 transition-opacity',
+				dialog.noEnterAnimation ? dialogOverlayExitAnimationClasses : dialogOverlayAnimationClasses,
+			]}
+		/>
 
 		<Dialog.Content
 			role="dialog"
 			class={[
 				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
-				dialogContentAnimationClasses,
+				dialog.noEnterAnimation ? dialogContentExitAnimationClasses : dialogContentAnimationClasses,
 			]}
 			style="scrollbar-width: thin"
 			onOpenAutoFocus={(e) => {

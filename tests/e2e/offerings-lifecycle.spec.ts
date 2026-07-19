@@ -60,7 +60,7 @@ test.describe("Offering lifecycle and access control", () => {
 		await page.getByRole(`button`, { name: `Bild #1 nach rechts verschieben` }).press(`Enter`);
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(3);
 		await expect(page.getByTestId(`offering-image-preview-item`).first()).toContainText(`Bild #3`);
-		await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(`Edited Offering`);
+		await page.getByPlaceholder(`z.B. Private Couching Session`).fill(`Edited Offering`);
 		await page.getByRole(`button`, { name: `Speichern`, exact: true }).click();
 
 		await expect(page.getByText(`Angebot wurde aktualisiert.`)).toBeVisible({ timeout: 15000 });
@@ -133,16 +133,26 @@ test.describe("Offering lifecycle and access control", () => {
 		await expect(page.getByRole(`button`, { name: `Aktivieren`, exact: true })).toBeVisible();
 		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(false);
 
-		await page.goto(`/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`);
+		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
+		await page.goto(listUrl);
+		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toBeVisible();
+		await expect(page.getByText(`Deaktiviert — nicht für andere sichtbar`)).toBeVisible();
+
+		await page.context().clearCookies();
+		await setGermanLocale(page);
+		await page.goto(listUrl);
 		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toHaveCount(0);
 
+		await signInAsE2EUser(page);
+		await setGermanLocale(page);
 		await page.goto(`/offerings/${offering.slug}`);
 		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toBeVisible();
 		await page.getByRole(`button`, { name: `Aktivieren`, exact: true }).click();
 		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(true);
 
-		await page.goto(`/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`);
+		await page.goto(listUrl);
 		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toBeVisible();
+		await expect(page.getByText(`Deaktiviert — nicht für andere sichtbar`)).toHaveCount(0);
 	});
 
 	test("profile offerings tabs separate active and inactive offerings", async ({ page }) => {

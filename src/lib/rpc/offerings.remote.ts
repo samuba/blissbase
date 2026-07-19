@@ -6,7 +6,7 @@ import { OFFERING_IMAGE_MAX_COUNT, offeringFormSchema, offeringNeedsLocation, up
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
-import { BASE_URL, routes, safeReturnToPath } from "$lib/routes";
+import { BASE_URL, routes, safeReturnToPath, withOfferingSlug } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
@@ -131,6 +131,61 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 		}),
 	};
 });
+
+export const getOfferingBySlug = query(
+	v.object({
+		slug: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+	}),
+	async ({ slug }) => {
+		const currentUserId = getRequestEvent().locals.userId;
+		const isAdminSession = getRequestEvent().locals.isAdminSession;
+		const offering = await db.query.offerings.findFirst({
+			where: currentUserId
+				? and(eq(s.offerings.slug, slug), or(eq(s.offerings.listed, true), eq(s.offerings.profileId, currentUserId)))
+				: and(eq(s.offerings.slug, slug), eq(s.offerings.listed, true)),
+			columns: {
+				id: true,
+				slug: true,
+				title: true,
+				descriptionHtml: true,
+				format: true,
+				imageUrls: true,
+				listed: true,
+			},
+			with: {
+				profile: {
+					columns: {
+						id: true,
+						slug: true,
+						displayName: true,
+						bio: true,
+						profileImageUrl: true,
+						bannerImageUrl: true,
+						socialLinks: true,
+						locationLabel: true,
+						latitude: true,
+						longitude: true,
+					},
+				},
+			},
+		});
+		if (!offering?.profile) return null;
+
+		return {
+			...offering,
+			descriptionHtml: offering.descriptionHtml ?? ``,
+			imageUrls: offering.imageUrls ?? [],
+			canManage: currentUserId === offering.profile.id || isAdminSession,
+			profile: {
+				...offering.profile,
+				bio: offering.profile.bio ?? ``,
+				profileImageUrl: offering.profile.profileImageUrl ?? ``,
+				bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
+				locationLabel: offering.profile.locationLabel ?? ``,
+			},
+		};
+	},
+);
 
 export const getMyOfferings = query(async () => {
 	const userId = ensureUserId();
@@ -302,7 +357,16 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	refreshOfferingLists({ returnTo: data.returnTo });
 	setFlash(`offeringCreated`);
 
-	redirect(303, routes.offeringDetails(slug, { returnTo: data.returnTo }));
+	redirect(
+		303,
+		withOfferingSlug({
+			path: safeReturnToPath({
+				returnTo: data.returnTo,
+				fallback: routes.offeringsList(),
+			}),
+			offeringSlug: slug,
+		}),
+	);
 });
 
 export const updateOffering = form(updateOfferingFormSchema, async (data, issue) => {

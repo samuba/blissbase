@@ -39,11 +39,14 @@ test.describe("Offering creation", () => {
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(1);
 		await expect(page.getByTestId(`offering-image-preview-remove`)).toBeEnabled({ timeout: 30000 });
 
-		await clickWizardPrimary(page, /Angebot speichern/i);
+		await clickWizardPrimary(page, /Angebot erstellen/i);
 		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
-		await expect(page.getByRole(`heading`, { name: `E2E Online Mentoring` })).toBeVisible();
+		const dialog = page.getByRole(`dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByRole(`heading`, { name: `E2E Online Mentoring` })).toBeVisible();
 
 		const slug = getCreatedSlugFromUrl(page);
+		await expect(page).toHaveURL(new RegExp(`/offerings/${slug}$`));
 		const offering = await getOfferingBySlug(page, slug);
 		expect(offering).toMatchObject({
 			title: `E2E Online Mentoring`,
@@ -62,10 +65,10 @@ test.describe("Offering creation", () => {
 
 		await fillOfferingBasics(page, { title: `E2E Hybrid Mentoring`, format: `offline+online` });
 		await expect(page.locator(`#offering-form-location`)).toHaveValue(`Berlin`);
-		await clickWizardPrimary(page, /Angebot speichern/i);
-		await expect(page.getByRole(`heading`, { name: `E2E Hybrid Mentoring`, level: 1 })).toBeVisible({
-			timeout: 15000,
-		});
+		await clickWizardPrimary(page, /Angebot erstellen/i);
+		const dialog = page.getByRole(`dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByRole(`heading`, { name: `E2E Hybrid Mentoring`, level: 1 })).toBeVisible();
 
 		const offering = await getOfferingBySlug(page, getCreatedSlugFromUrl(page));
 		expect(offering).toMatchObject({
@@ -83,14 +86,14 @@ test.describe("Offering creation", () => {
 		await page.goto(`/offerings/new`);
 
 		await fillOfferingBasics(page, { title: `E2E Berlin Bodywork`, format: `offline` });
-		await clickWizardPrimary(page, /Angebot speichern/i);
+		await clickWizardPrimary(page, /Angebot erstellen/i);
 		await expect(page.getByText(/Bitte wähle einen Ort aus den Vorschlägen/i)).toBeVisible();
 
 		await chooseLocation(page, { inputId: `offering-form-location` });
-		await clickWizardPrimary(page, /Angebot speichern/i);
-		await expect(page.getByRole(`heading`, { name: `E2E Berlin Bodywork`, level: 1 })).toBeVisible({
-			timeout: 15000,
-		});
+		await clickWizardPrimary(page, /Angebot erstellen/i);
+		const dialog = page.getByRole(`dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByRole(`heading`, { name: `E2E Berlin Bodywork`, level: 1 })).toBeVisible();
 		expect(await getProfileById(page, E2E_DEFAULT_USER_ID)).toMatchObject({
 			locationLabel: `Berlin`,
 			latitude: 52.52,
@@ -113,12 +116,12 @@ test.describe("Offering creation", () => {
 
 		await fillOfferingBasics(page, { title: `E2E Profile Completion`, format: `online` });
 		await clickWizardPrimary(page, /Weiter/i);
-		await expect(page.getByText(/Ein vollständiges Profil schafft Vertrauen/i)).toBeVisible();
+		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible();
 		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Completed User`);
-		await page.locator(`[data-wizard-step="profile"] [contenteditable="true"]`).fill(`Completed bio`);
+		await fillProfileBio(page, `Completed bio`);
 		await addSocialLink(page);
 
-		await clickWizardPrimary(page, /Angebot speichern/i);
+		await clickWizardPrimary(page, /Angebot erstellen/i);
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const slug = getCreatedSlugFromUrl(page);
 		expect((await getOfferingBySlug(page, slug)).title).toBe(`E2E Profile Completion`);
@@ -138,14 +141,14 @@ test.describe("Offering creation", () => {
 		await page.getByPlaceholder(`deine@email.de`).fill(anonymousNewEmail);
 		await clickWizardPrimary(page, /Weiter/i);
 
-		await expect(page.getByText(/Ein vollständiges Profil schafft Vertrauen/i)).toBeVisible({
+		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible({
 			timeout: 10000,
 		});
 		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Anonymous User`);
 		await uploadRequiredProfileImages(page);
-		await page.locator(`[data-wizard-step="profile"] [contenteditable="true"]`).fill(`Anonymous bio`);
+		await fillProfileBio(page, `Anonymous bio`);
 		await addSocialLink(page);
-		await clickWizardPrimary(page, /Code senden/i);
+		await clickWizardPrimary(page, /Weiter/i);
 
 		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toBeVisible();
 		await enterOtp(page, `000000`);
@@ -175,7 +178,7 @@ test.describe("Offering creation", () => {
 		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toBeVisible({
 			timeout: 10000,
 		});
-		await expect(page.getByText(/Ein vollständiges Profil schafft Vertrauen/i)).toHaveCount(0);
+		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toHaveCount(0);
 		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const slug = getCreatedSlugFromUrl(page);
@@ -185,10 +188,19 @@ test.describe("Offering creation", () => {
 
 async function fillOfferingBasics(page: Page, args: { title: string; format: `offline` | `online` | `offline+online` }) {
 	await expect(page.getByRole(`heading`, { name: `Angebot erstellen` })).toBeVisible();
-	await page.getByPlaceholder(`z.B. Atemarbeit 1:1 Session`).fill(args.title);
+	await page.getByPlaceholder(`z.B. Private Couching Session`).fill(args.title);
 	const radio = page.locator(`input[type="radio"][value="${args.format}"]`);
 	await radio.locator(`xpath=ancestor::label`).click();
 	await expect(radio).toBeChecked();
+}
+
+async function fillProfileBio(page: Page, text: string) {
+	const bioEditor = page.locator(`[data-wizard-step="profile"] [contenteditable="true"]`);
+	await bioEditor.click();
+	await page.keyboard.press(`ControlOrMeta+A`);
+	await page.keyboard.type(text);
+	// Lexical syncs into the hidden field on a short debounce.
+	await expect(page.locator(`[data-wizard-step="profile"] textarea`)).toHaveValue(new RegExp(text));
 }
 
 async function clickWizardPrimary(page: Page, name: RegExp) {
@@ -220,5 +232,11 @@ async function enterOtp(page: Page, code: string) {
 
 function getCreatedSlugFromUrl(page: Page) {
 	const url = new URL(page.url());
-	return url.pathname.split(`/`).filter(Boolean).at(-1)!;
+	const fromQuery = url.searchParams.get(`offeringSlug`)?.trim();
+	if (fromQuery) return fromQuery;
+
+	const pathSlug = url.pathname.replace(/\/+$/, ``).split(`/`).filter(Boolean).at(-1);
+	if (pathSlug && pathSlug !== `offerings`) return pathSlug;
+
+	throw new Error(`Could not resolve created offering slug from ${url.toString()}`);
 }
