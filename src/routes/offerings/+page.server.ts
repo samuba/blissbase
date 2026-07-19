@@ -16,14 +16,12 @@ export const load = (async ({ url, cookies }) => {
 		}
 	}
 
-	const sourceUrl = "https://www.blissbase.app/offerings";
 	return {
 		pageMetaTags: getPageMetaTags({
 			name: "Blissbase Offerings",
 			description: "Find conscious offerings near you.",
 			imageUrl: "https://www.blissbase.app/og-poster-offerings.jpg",
-			url: new URL(sourceUrl),
-			sourceUrl,
+			url,
 		}),
 	};
 }) satisfies PageServerLoad;
