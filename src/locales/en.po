@@ -1313,16 +1313,16 @@ msgstr "Clear search"
 
 #: src/routes/offerings/+page.svelte
 msgid "Keine passenden Angebote"
-msgstr "No matching offers"
+msgstr "No matching offerings"
 
 #: src/routes/offerings/+page.svelte
 #: src/routes/offerings/+page.svelte
 msgid "Ändere deine Suche oder lösche den Suchbegriff, um wieder alle Angebote zu sehen."
-msgstr "Change your search or delete the search term to see all offers again."
+msgstr "Change your search or delete the search term to see all offerings again."
 
 #: src/routes/@/[slug]/+page.svelte
 msgid "Aktuell keine Angebote."
-msgstr "No offers available."
+msgstr "No offerings available."
 
 #: src/routes/@/[slug]/+page.svelte
 msgid "<0/> Angebote"
@@ -1495,39 +1495,36 @@ msgstr "<0/> Activate"
 #: src/routes/profile/+page.svelte
 #: src/routes/profile/offerings/+page.svelte
 msgid "Meine Angebote"
-msgstr "My Offers"
+msgstr "My offerings"
 
 #: src/routes/profile/+page.svelte
 msgid "Verwalte deine Angebote und aktiviere oder deaktiviere sie."
-msgstr "Manage your offers and enable or disable them."
+msgstr "Manage your offerings and enable or disable them."
 
 #: src/routes/profile/+page.svelte
 msgid "Angebote verwalten"
-msgstr "Manage offers"
+msgstr "Manage offerings"
 
 #: src/routes/profile/offerings/+page.svelte
 msgid "Meine Angebote | Blissbase"
-msgstr "My Offers | Blissbase"
+msgstr "My offerings | Blissbase"
 
 #: src/routes/profile/offerings/+page.svelte
 msgid "Du hast keine aktiven Angebote."
-msgstr "You have no active offers."
+msgstr "You have no active offerings."
 
-#: src/routes/profile/offerings/+page.svelte
-msgid "Du hast keine deaktivierten Angebote."
-msgstr "You have no deactivated offers."
+#~ msgid "Du hast keine deaktivierten Angebote."
+#~ msgstr "You have no deactivated offerings."
 
-#: src/routes/profile/offerings/+page.svelte
-msgid "<0/> Aktiv"
-msgstr "<0/> Active"
+#~ msgid "<0/> Aktiv"
+#~ msgstr "<0/> Active"
 
-#: src/routes/profile/offerings/+page.svelte
-msgid "<0/> Deaktiviert"
-msgstr "<0/> Disabled"
+#~ msgid "<0/> Deaktiviert"
+#~ msgstr "<0/> Disabled"
 
 #: src/routes/offerings/[slug]/+page.svelte
 msgid "<0/> Alle Angebote"
-msgstr "<0/> All offers"
+msgstr "<0/> All offerings"
 
 #: src/routes/offerings/[slug]/edit/+page.server.ts
 msgid "Invalid offering slug"
@@ -1598,7 +1595,7 @@ msgstr "<0/> Google Maps"
 
 #: src/routes/offerings/+page.svelte
 msgid "Online Angebote auch anzeigen"
-msgstr "Also show online offers"
+msgstr "Also show online offerings"
 
 #: src/routes/profile/offerings/+page.svelte
 msgid "Verwalte deine Angebote. Aktivierte Angebote sind für andere Nutzer auf der <0>Angebote-Seite</0> sichtbar."
@@ -1611,7 +1608,7 @@ msgstr "Offerings location"
 
 #: src/routes/profile/offerings/+page.svelte
 msgid "Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar."
-msgstr "Your offers will be shown near this location. Without a location, only online offerings can be found."
+msgstr "Your offerings will be shown near this location. Without a location, only online offerings can be found."
 
 #: src/lib/components/EventAutofill.svelte
 msgid "Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen."
@@ -1764,7 +1761,7 @@ msgstr "<0/> In person / Online"
 
 #: src/lib/components/OfferingForm.svelte
 msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote."
-msgstr "Your In-Person offers will be shown to others nearby this location. The location applies to all of your offers."
+msgstr "Your In-Person offerings will be shown to others nearby this location. The location applies to all of your offerings."
 
 #: src/lib/components/OfferingForm.svelte
 msgid "Du bietest beide Optionen an."
@@ -1871,3 +1868,7 @@ msgstr "Offering has been updated."
 #: src/lib/flashToast.svelte.ts
 msgid "Andere können es nicht mehr sehen."
 msgstr "Others can no longer see it."
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Deaktivierte Angebote"
+msgstr "Disabled offerings"

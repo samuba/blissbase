@@ -1513,17 +1513,14 @@ msgstr "Meine Angebote | Blissbase"
 msgid "Du hast keine aktiven Angebote."
 msgstr "Du hast keine aktiven Angebote."
 
-#: src/routes/profile/offerings/+page.svelte
-msgid "Du hast keine deaktivierten Angebote."
-msgstr "Du hast keine deaktivierten Angebote."
+#~ msgid "Du hast keine deaktivierten Angebote."
+#~ msgstr "Du hast keine deaktivierten Angebote."
 
-#: src/routes/profile/offerings/+page.svelte
-msgid "<0/> Aktiv"
-msgstr "<0/> Aktiv"
+#~ msgid "<0/> Aktiv"
+#~ msgstr "<0/> Aktiv"
 
-#: src/routes/profile/offerings/+page.svelte
-msgid "<0/> Deaktiviert"
-msgstr "<0/> Deaktiviert"
+#~ msgid "<0/> Deaktiviert"
+#~ msgstr "<0/> Deaktiviert"
 
 #: src/routes/offerings/[slug]/+page.svelte
 msgid "<0/> Alle Angebote"
@@ -1871,3 +1868,7 @@ msgstr "Angebot wurde aktualisiert."
 #: src/lib/flashToast.svelte.ts
 msgid "Andere können es nicht mehr sehen."
 msgstr "Andere können es nicht mehr sehen."
+
+#: src/routes/profile/offerings/+page.svelte
+msgid "Deaktivierte Angebote"
+msgstr "Deaktivierte Angebote"

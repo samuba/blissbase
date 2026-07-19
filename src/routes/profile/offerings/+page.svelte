@@ -12,8 +12,6 @@
 	const activeOfferings = $derived(offerings.filter((offering) => offering.listed));
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
 
-	let selectedTab = $state<`active` | `inactive`>(`active`);
-
 	function newOfferingHref() {
 		return routes.newOffering({ returnTo: routes.currentPath(page.url) });
 	}
@@ -80,67 +78,42 @@
 		</div>
 	</div>
 
-	<div class=" my-4">
+	<div class="my-4">
 		<a href={newOfferingHref()} class="btn btn-primary w-full sm:w-auto">
 			<i class="icon-[ph--plus] size-4"></i>
 			Angebot erstellen
 		</a>
 	</div>
 
-	<div role="tablist" class="tabs tabs-box bg-base-300 mt-3 flex flex-row justify-center">
-		<button
-			role="tab"
-			class={[`tab flex-1 basis-0`, selectedTab === `active` && `tab-active`]}
-			onclick={() => (selectedTab = `active`)}
-		>
-			<i class="icon-[ph--eye] size-4 mr-2"></i>
-			Aktiv
-		</button>
+	{#if activeOfferings.length}
+		<div class="mt-4 flex w-full flex-col gap-4">
+			{#each activeOfferings as offering (offering.id)}
+				<OfferingCard
+					{offering}
+					showAuthor={false}
+					onclick={() => showOfferingDetailsDialog(offering.slug)}
+				/>
+			{/each}
+		</div>
+	{:else}
+		<div class="text-base-content/60 mt-12 flex flex-col items-center gap-3 text-center">
+			<span>Du hast keine aktiven Angebote.</span>
+			<a href={newOfferingHref()} class="btn btn-primary btn-sm w-fit">Angebot erstellen</a>
+		</div>
+	{/if}
 
-		<button
-			role="tab"
-			class={[`tab flex-1 basis-0`, selectedTab === `inactive` && `tab-active`]}
-			onclick={() => (selectedTab = `inactive`)}
-		>
-			<i class="icon-[ph--eye-slash] size-4 mr-2"></i>
-			Deaktiviert
-		</button>
-	</div>
-
-	<div class={[selectedTab !== `active` && `hidden`]}>
-		{#if activeOfferings.length}
-			<div class="mt-4 flex w-full flex-col gap-4">
-				{#each activeOfferings as offering (offering.id)}
-					<OfferingCard
-						{offering}
-						showAuthor={false}
-						onclick={() => showOfferingDetailsDialog(offering.slug)}
-					/>
-				{/each}
-			</div>
-		{:else}
-			<div class="text-base-content/60 mt-12 flex flex-col items-center gap-3 text-center">
-				<span>Du hast keine aktiven Angebote.</span>
-				<a href={newOfferingHref()} class="btn btn-primary btn-sm w-fit">Angebot erstellen</a>
-			</div>
-		{/if}
-	</div>
-
-	<div class={[selectedTab !== `inactive` && `hidden`]}>
-		{#if inactiveOfferings.length}
-			<div class="mt-4 flex w-full flex-col gap-4">
-				{#each inactiveOfferings as offering (offering.id)}
-					<OfferingCard
-						{offering}
-						showAuthor={false}
-						onclick={() => showOfferingDetailsDialog(offering.slug)}
-					/>
-				{/each}
-			</div>
-		{:else}
-			<div class="text-base-content/60 mt-12 text-center">Du hast keine deaktivierten Angebote.</div>
-		{/if}
-	</div>
+	{#if inactiveOfferings.length}
+		<h2 class="mt-10 text-lg font-semibold">Deaktivierte Angebote</h2>
+		<div class="mt-3 flex w-full flex-col gap-4">
+			{#each inactiveOfferings as offering (offering.id)}
+				<OfferingCard
+					{offering}
+					showAuthor={false}
+					onclick={() => showOfferingDetailsDialog(offering.slug)}
+				/>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <OfferingDetailsDialog {offerings} />

@@ -155,7 +155,7 @@ test.describe("Offering lifecycle and access control", () => {
 		await expect(page.getByText(`Deaktiviert — nicht für andere sichtbar`)).toHaveCount(0);
 	});
 
-	test("profile offerings tabs separate active and inactive offerings", async ({ page }) => {
+	test("profile offerings lists inactive offerings below active ones", async ({ page }) => {
 		const offering = await createOffering(page, createOfflineOffering({ title: `Active Profile Offering`, slug: `profile-active` }));
 		await signInAsE2EUser(page);
 		await page.goto(`/profile/offerings`);
@@ -176,7 +176,7 @@ test.describe("Offering lifecycle and access control", () => {
 
 		await page.goto(`/profile/offerings`);
 		await waitForClientHydration(page);
-		await page.getByRole(`tab`, { name: `Deaktiviert` }).click();
+		await expect(page.getByRole(`heading`, { name: `Deaktivierte Angebote` })).toBeVisible();
 		await expect(page.getByRole(`heading`, { name: `Active Profile Offering` })).toBeVisible();
 	});
 
