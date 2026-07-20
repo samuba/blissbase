@@ -170,14 +170,20 @@
 		return true;
 	}
 
-	function validateProfileSocialLinks() {
-		if (profileHasSocialLink) {
-			profileSocialLinkError = ``;
-			return true;
+	/**
+	 * Profile-step checks: at least one social link (not in preflight schema — server merges
+	 * existing profile links), then schema preflight for format / other profile fields.
+	 */
+	async function validateProfileStep() {
+		if (!profileHasSocialLink) {
+			profileSocialLinkError = `Bitte füge mindestens einen Social-Link hinzu.`;
+			return false;
 		}
+		profileSocialLinkError = ``;
 
-		profileSocialLinkError = `Bitte füge mindestens einen Social-Link hinzu.`;
-		return false;
+		createOffering.fields.profile.socialLinks.set(socialLinks);
+		await createOffering.validate({ includeUntouched: true, preflightOnly: true });
+		return !hasProfileFieldIssues();
 	}
 
 	function validateOfferingLocation() {
@@ -419,8 +425,8 @@
 		}
 		if (currentStep === `profile`) {
 			if (!validateCurrentStep()) return;
-			if (!validateProfileSocialLinks()) return;
 			if (!validateOfferingLocation()) return;
+			if (!(await validateProfileStep())) return;
 			if (!isSignedIn) {
 				await enterOtpStep();
 				return;
@@ -603,6 +609,7 @@
 									bind:socialLinks={getSocialLinks, setSocialLinks}
 									field={createOffering.fields.profile.socialLinks}
 									markDirty={unsaved.markDirty}
+									revalidate={() => createOffering.validate({ preflightOnly: true })}
 								/>
 								{#if profileSocialLinkError}
 									<p class="text-error text-sm">{profileSocialLinkError}</p>

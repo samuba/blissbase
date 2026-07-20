@@ -165,6 +165,7 @@
 				bind:socialLinks={profile.socialLinks}
 				field={upsertPublicProfile.fields.socialLinks}
 				markDirty={unsaved.markDirty}
+				revalidate={() => upsertPublicProfile.validate({ preflightOnly: true })}
 			/>
 		</fieldset>
 

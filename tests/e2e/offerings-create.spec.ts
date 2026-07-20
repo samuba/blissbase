@@ -134,6 +134,48 @@ test.describe("Offering creation", () => {
 		expect(profile.bio).toContain(`Completed bio`);
 	});
 
+	test("removing an invalid social link clears the validation error so the user can proceed", async ({ page }) => {
+		await createProfile(
+			page,
+			createCompleteProfile({
+				slug: null,
+				displayName: null,
+				bio: null,
+				socialLinks: [],
+			}),
+		);
+		await signInAsE2EUser(page);
+		await page.goto(`/offerings/new`);
+
+		await fillOfferingBasics(page, { title: `E2E Social Link Fix`, format: `online` });
+		await clickWizardPrimary(page, /Weiter/i);
+		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible();
+		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Social Fix User`);
+		await fillProfileBio(page, `Social fix bio`);
+		await addSocialLink(page, `not-a-domain`);
+
+		await clickWizardPrimary(page, /Angebot erstellen/i);
+		const websiteError = page.getByText(`Website ist keine gültige URL`);
+		await expect(websiteError.first()).toBeVisible();
+
+		await page.getByRole(`button`, { name: `Website entfernen` }).click();
+		await expect(websiteError).toHaveCount(0);
+
+		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await expect(page.getByText(`Bitte füge mindestens einen Social-Link hinzu.`)).toBeVisible();
+		await expect(websiteError).toHaveCount(0);
+
+		await addSocialLink(page, `https://example.com/social-fix`);
+		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
+
+		const profile = await getProfileById(page, E2E_DEFAULT_USER_ID);
+		expect(profile).toMatchObject({
+			displayName: `Social Fix User`,
+			socialLinks: [{ type: `website`, value: `https://example.com/social-fix` }],
+		});
+	});
+
 	test("anonymous new email completes profile, rejects an invalid OTP, then creates", async ({ page }) => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
@@ -158,6 +200,35 @@ test.describe("Offering creation", () => {
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const slug = getCreatedSlugFromUrl(page);
 		expect((await getOfferingBySlug(page, slug)).title).toBe(`E2E Anonymous Offering`);
+	});
+
+	test("anonymous profile step shows social link errors on Weiter before OTP", async ({ page }) => {
+		await mockSupabaseOtpRequest(page);
+		await page.goto(`/offerings/new`);
+		await fillOfferingBasics(page, { title: `E2E Social Preflight`, format: `online` });
+		await page.getByPlaceholder(`deine@email.de`).fill(anonymousNewEmail);
+		await clickWizardPrimary(page, /Weiter/i);
+
+		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible({
+			timeout: 10000,
+		});
+		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Anonymous Preflight`);
+		await uploadRequiredProfileImages(page);
+		await fillProfileBio(page, `Anonymous preflight bio`);
+		await addSocialLink(page, `not-a-domain`);
+
+		await clickWizardPrimary(page, /Weiter/i);
+		const websiteError = page.getByText(`Website ist keine gültige URL`);
+		await expect(websiteError.first()).toBeVisible();
+		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toHaveCount(0);
+
+		await page.getByRole(`button`, { name: `Website entfernen` }).click();
+		await expect(websiteError).toHaveCount(0);
+		await addSocialLink(page, `https://example.com/preflight`);
+		await clickWizardPrimary(page, /Weiter/i);
+
+		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toBeVisible();
+		await expect(websiteError).toHaveCount(0);
 	});
 
 	test("anonymous complete profile skips the profile step and creates after OTP", async ({ page }) => {
@@ -207,11 +278,12 @@ async function clickWizardPrimary(page: Page, name: RegExp) {
 	await page.getByRole(`button`, { name }).click();
 }
 
-async function addSocialLink(page: Page) {
+async function addSocialLink(page: Page, value = `https://example.com/e2e-user`) {
 	await page.getByRole(`button`, { name: /Social-Link hinzufügen/i }).click();
 	const dialog = page.getByRole(`dialog`, { name: /Link hinzufügen/i });
-	await dialog.locator(`input:not([type="hidden"])`).last().fill(`https://example.com/e2e-user`);
+	await dialog.locator(`input:not([type="hidden"])`).last().fill(value);
 	await dialog.getByRole(`button`, { name: `Hinzufügen` }).click();
+	await expect(dialog).toBeHidden();
 }
 
 async function uploadRequiredProfileImages(page: Page) {

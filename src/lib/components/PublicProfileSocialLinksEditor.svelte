@@ -19,10 +19,12 @@
 		socialLinks = $bindable(),
 		field,
 		markDirty,
+		revalidate,
 	}: {
 		socialLinks: PublicProfileSocialLinks;
 		field: PublicProfileSocialLinksField;
 		markDirty?: () => void;
+		revalidate?: () => void | Promise<void>;
 	} = $props();
 
 	let addLinkDialogOpen = $state(false);
@@ -45,6 +47,13 @@
 		if (type === `email`) return `z.B. name@example.com`;
 		if (type === `website`) return `z.B. https://beispiel.de`;
 		return `Benutzername`;
+	}
+
+	function syncSocialLinks(next: PublicProfileSocialLinks) {
+		socialLinks = next;
+		field.set(next);
+		markDirty?.();
+		void revalidate?.();
 	}
 
 	function resetAddLinkDialogForm() {
@@ -90,15 +99,13 @@
 			addLinkError = `Leerzeichen ist nicht erlaubt.`;
 			return;
 		}
-		socialLinks = [...socialLinks, { type, value: next }];
-		markDirty?.();
+		syncSocialLinks([...socialLinks, { type, value: next }]);
 		addLinkDialogOpen = false;
 		resetAddLinkDialogForm();
 	}
 
 	function removeSocialLink(index: number) {
-		socialLinks = socialLinks.filter((_, i) => i !== index);
-		markDirty?.();
+		syncSocialLinks(socialLinks.filter((_, i) => i !== index));
 	}
 
 	function onSocialLinkValueInput(args: { index: number; value: string }) {
@@ -106,11 +113,12 @@
 		if (!link) return;
 		if (link.value === args.value) return;
 
-		socialLinks = socialLinks.map((existingLink, i) => {
-			if (i !== args.index) return existingLink;
-			return { ...existingLink, value: args.value };
-		});
-		markDirty?.();
+		syncSocialLinks(
+			socialLinks.map((existingLink, i) => {
+				if (i !== args.index) return existingLink;
+				return { ...existingLink, value: args.value };
+			}),
+		);
 	}
 
 	function getHtmlInputType(type: ProfileSocialType) {
@@ -124,6 +132,7 @@
 			type: RemoteFormField<ProfileSocialType>;
 			value: RemoteFormField<string>;
 		};
+		set: (value: PublicProfileSocialLinks) => PublicProfileSocialLinks;
 		issues?: () => RemoteFormIssue[] | undefined;
 		allIssues?: () => RemoteFormIssue[] | undefined;
 	};

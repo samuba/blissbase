@@ -76,6 +76,7 @@ export const publicProfileFields = {
 		value: v.pipe(v.string(), v.trim(), v.maxLength(1000, `Link ist zu lang`),
 	)
 	})), []),
+		v.filterItems((link) => Boolean(link.value?.trim())),
 		v.mapItems((link) => {
 			if (link.type === `telegram`) {
 				link.value = link.value.replace(`@`, ``);
