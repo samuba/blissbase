@@ -53,7 +53,7 @@ describe(`publicProfileFormSchema`, () => {
 
 		expect(result.success).toBe(false);
 		if (result.success) return;
-		expect(result.issues.some((issue) => issue.message === `Website ist keine gültige URL`)).toBe(true);
+		expect(result.issues.some((issue) => issue.message === `Website is not a valid URL`)).toBe(true);
 	});
 
 	it(`rejects an invalid telegram social link`, () => {
@@ -64,6 +64,6 @@ describe(`publicProfileFormSchema`, () => {
 
 		expect(result.success).toBe(false);
 		if (result.success) return;
-		expect(result.issues.some((issue) => issue.message === `Telegram Benutzername ungültig`)).toBe(true);
+		expect(result.issues.some((issue) => issue.message === `Telegram username is invalid`)).toBe(true);
 	});
 });

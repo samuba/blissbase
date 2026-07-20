@@ -11,7 +11,7 @@
 	import { verifyEmailOtp } from "$lib/rpc/auth.remote";
 	import { offeringNeedsLocation, type OfferingFormat } from "$lib/rpc/offerings.common";
 	import { createOffering } from "$lib/rpc/offerings.remote";
-	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+	import { profileLocationCheckMessage, type PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 	import { checkEmailProfileComplete, getMyPublicProfile } from "$lib/rpc/profile.remote";
 	import { hasValidCoordinates } from "$lib/locationFilter";
 	import { routes, safeReturnToPath } from "$lib/routes";
@@ -192,7 +192,7 @@
 			return true;
 		}
 		if (!hasSelectedLocation) {
-			locationError = `Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`;
+			locationError = profileLocationCheckMessage;
 			return false;
 		}
 		locationError = ``;

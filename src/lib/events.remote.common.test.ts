@@ -60,7 +60,7 @@ describe(`event schemas`, () => {
 		}));
 
 		expect(result.success).toBe(false);
-		expect(result.issues?.some((issue) => issue.message === `Startdatum muss in der Zukunft liegen`)).toBe(true);
+		expect(result.issues?.some((issue) => issue.message === `Start date must be in the future`)).toBe(true);
 	});
 
 	it(`allows updating an event that already started`, () => {

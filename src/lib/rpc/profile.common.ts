@@ -10,13 +10,13 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 }
 
 export const profileLocationFields = {
-	locationLabel: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(200, `Ort ist zu lang`)), ``),
+	locationLabel: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(200, /* @wc-include */ `Location is too long`)), ``),
 	latitude: v.optional(
 		v.pipe(
 			v.string(),
 			v.trim(),
 			v.transform((value) => (value === `` ? null : Number(value))),
-			v.check((value) => value === null || isValidLatitude(value), `Breitengrad ist ungültig`),
+			v.check((value) => value === null || isValidLatitude(value), /* @wc-include */ `Latitude is invalid`),
 		),
 		``,
 	),
@@ -25,7 +25,7 @@ export const profileLocationFields = {
 			v.string(),
 			v.trim(),
 			v.transform((value) => (value === `` ? null : Number(value))),
-			v.check((value) => value === null || isValidLongitude(value), `Längengrad ist ungültig`),
+			v.check((value) => value === null || isValidLongitude(value), /* @wc-include */ `Longitude is invalid`),
 		),
 		``,
 	),
@@ -43,7 +43,7 @@ export function isValidProfileLocation(data: {
 }
 
 export const profileLocationCheckMessage =
-	`Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort.`;
+	`Please select a location from the suggestions or use your current location.`;
 
 export const profileLocationFormSchema = v.pipe(
 	v.object(profileLocationFields),
@@ -51,29 +51,29 @@ export const profileLocationFormSchema = v.pipe(
 );
 
 export const publicProfileFields = {
-	displayName: v.pipe(v.string(), v.trim(), v.nonEmpty(`Name muss ausgefüllt werden`), v.maxLength(120, `Name ist zu lang`)),
+	displayName: v.pipe(v.string(), v.trim(), v.nonEmpty(`Name is required`), v.maxLength(120, `Name is too long`)),
 	slug: v.optional(
 		emptyStringIsUndefined(
 			v.pipe(
 				v.string(),
 				v.trim(),
-				v.maxLength(80, `Profil-URL ist zu lang`),
-				v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, `Profil-URL darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten`)
+				v.maxLength(80, `Profile URL is too long`),
+				v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, `Profile URL may only contain lowercase letters, numbers, and hyphens`)
 			)
 		)
 	),
-	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio ist zu lang`)), ``),
+	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio is too long`)), ``),
 	profileImageUrl: v.optional(
-		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profilbild-URL ist ungültig`))),
+		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profile image URL is invalid`))),
 		``
 	),
 	bannerImageUrl: v.optional(
-		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Bannerbild-URL ist ungültig`))),
+		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Banner image URL is invalid`))),
 		``
 	),
 	socialLinks: v.pipe(v.optional(v.array(v.object({
-		type: v.picklist(PROFILE_SOCIAL_TYPES, `Link-Typ ist ungültig`),
-		value: v.pipe(v.string(), v.trim(), v.maxLength(1000, `Link ist zu lang`),
+		type: v.picklist(PROFILE_SOCIAL_TYPES, `Link type is invalid`),
+		value: v.pipe(v.string(), v.trim(), v.maxLength(1000, `Link is too long`),
 	)
 	})), []),
 		v.filterItems((link) => Boolean(link.value?.trim())),
@@ -86,15 +86,15 @@ export const publicProfileFields = {
 		v.checkItems((link) => {
 			if (link.type === `email`) return !!link.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 			return true;
-		}, 'E-Mail Adresse ungültig'),
+		}, `Email address is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `phone`) return !!link.value.match(/^\+?[0-9]+$/);
 			return true;
-		}, 'Telefonnummer ungültig'),
+		}, `Phone number is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `whatsapp`) return !!link.value.match(/^\+?[0-9]+$/);
 			return true;
-		}, 'WhatsApp Nummer ungültig'),
+		}, `WhatsApp number is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `telegram`) {
 				const value = link.value
@@ -113,7 +113,7 @@ export const publicProfileFields = {
 				return true;
 			}
 			return true;
-		}, 'Telegram Benutzername ungültig'),
+		}, `Telegram username is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `youtube`) {
 				const value = link.value.trim();
@@ -130,7 +130,7 @@ export const publicProfileFields = {
 				return true;
 			}
 			return true;
-		}, 'YouTube Benutzername ungültig'),
+		}, `YouTube username is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `instagram`) {
 				// Letters, numbers, . and _
@@ -149,7 +149,7 @@ export const publicProfileFields = {
 				return true;
 			}
 			return true;
-		}, 'Instagram Benutzername ungültig'),
+		}, `Instagram username is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `facebook`) {
 				const value = link.value.trim();
@@ -163,7 +163,7 @@ export const publicProfileFields = {
 				return true;
 			}
 			return true;
-		}, 'Facebook Benutzername ungültig'),
+		}, `Facebook username is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `tiktok`) {
 				const value = link.value.trim();
@@ -178,7 +178,7 @@ export const publicProfileFields = {
 				return true;
 			}
 			return true;
-		}, 'TikTok Benutzername ungültig'),
+		}, `TikTok username is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `website`) {
 				if (!link.value.startsWith("https://")) {
@@ -193,7 +193,7 @@ export const publicProfileFields = {
 				}
 			}
 			return true;
-		}, 'Website ist keine gültige URL')
+		}, `Website is not a valid URL`)
 	),
 } satisfies v.ObjectEntries;
 

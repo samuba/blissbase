@@ -87,7 +87,7 @@ test.describe("Offering creation", () => {
 
 		await fillOfferingBasics(page, { title: `E2E Berlin Bodywork`, format: `offline` });
 		await clickWizardPrimary(page, /Angebot erstellen/i);
-		await expect(page.getByText(/Bitte wähle einen Ort aus den Vorschlägen/i)).toBeVisible();
+		await expect(page.getByText(/Please select a location from the suggestions/i)).toBeVisible();
 
 		await chooseLocation(page, { inputId: `offering-form-location` });
 		await clickWizardPrimary(page, /Angebot erstellen/i);
@@ -155,7 +155,7 @@ test.describe("Offering creation", () => {
 		await addSocialLink(page, `not-a-domain`);
 
 		await clickWizardPrimary(page, /Angebot erstellen/i);
-		const websiteError = page.getByText(`Website ist keine gültige URL`);
+		const websiteError = page.getByText(`Website is not a valid URL`);
 		await expect(websiteError.first()).toBeVisible();
 
 		await page.getByRole(`button`, { name: `Website entfernen` }).click();
@@ -218,7 +218,7 @@ test.describe("Offering creation", () => {
 		await addSocialLink(page, `not-a-domain`);
 
 		await clickWizardPrimary(page, /Weiter/i);
-		const websiteError = page.getByText(`Website ist keine gültige URL`);
+		const websiteError = page.getByText(`Website is not a valid URL`);
 		await expect(websiteError.first()).toBeVisible();
 		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toHaveCount(0);
 

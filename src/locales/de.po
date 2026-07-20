@@ -1513,15 +1513,6 @@ msgstr "Meine Angebote | Blissbase"
 msgid "Du hast keine aktiven Angebote."
 msgstr "Du hast keine aktiven Angebote."
 
-#~ msgid "Du hast keine deaktivierten Angebote."
-#~ msgstr "Du hast keine deaktivierten Angebote."
-
-#~ msgid "<0/> Aktiv"
-#~ msgstr "<0/> Aktiv"
-
-#~ msgid "<0/> Deaktiviert"
-#~ msgstr "<0/> Deaktiviert"
-
 #: src/routes/offerings/[slug]/+page.svelte
 msgid "<0/> Alle Angebote"
 msgstr "<0/> Alle Angebote"
@@ -1637,10 +1628,6 @@ msgstr "Ort mit diesem Namen nicht gefunden"
 #: src/lib/components/LocationAutocompleteInput.svelte
 msgid "<0/> Vorschläge werden geladen…"
 msgstr "<0/> Vorschläge werden geladen…"
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
-msgstr "Bitte wähle einen Ort aus den Vorschlägen oder nutze deinen aktuellen Standort."
 
 #: src/lib/components/LexicalEditor.svelte
 msgid "Fett"
@@ -1824,9 +1811,6 @@ msgstr "Fülle dein Profil aus"
 msgid "Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen. Dein Profil wird unter jedem deiner Angebote angezeigt."
 msgstr "Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen. Dein Profil wird unter jedem deiner Angebote angezeigt."
 
-#~ msgid "<0/> Deaktiviert — nur für dich sichtbar"
-#~ msgstr "<0/> Deaktiviert — nur für dich sichtbar"
-
 #: src/lib/components/OfferingCard.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 msgid "<0/> Deaktiviert — nicht für andere sichtbar"
@@ -1848,9 +1832,6 @@ msgstr "Es ist jetzt für andere Nutzer sichtbar."
 msgid "Angebot wurde deaktiviert"
 msgstr "Angebot wurde deaktiviert"
 
-#~ msgid "Du kannst es in deinem Profil wieder aktivieren."
-#~ msgstr "Du kannst es in deinem Profil wieder aktivieren."
-
 #: src/lib/flashToast.svelte.ts
 msgid "Angebot wurde gelöscht."
 msgstr "Angebot wurde gelöscht."
@@ -1858,12 +1839,6 @@ msgstr "Angebot wurde gelöscht."
 #: src/lib/flashToast.svelte.ts
 msgid "Angebot wurde aktualisiert."
 msgstr "Angebot wurde aktualisiert."
-
-#~ msgid "Andere können es"
-#~ msgstr "Andere können es"
-
-#~ msgid "Andere können es nicht mehr sehen"
-#~ msgstr "Andere können es nicht mehr sehen"
 
 #: src/lib/flashToast.svelte.ts
 msgid "Andere können es nicht mehr sehen."
