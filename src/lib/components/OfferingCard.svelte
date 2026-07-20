@@ -34,8 +34,8 @@
 	function htmlToPreviewText(html: string | undefined) {
 		if (!html) return ``;
 		return html
-			.replace(/<br\s*\/?>/gi, `\n`)
-			.replace(/<\/p>/gi, `\n`)
+			.replace(/<br\s*\/?>/gi, ` `)
+			.replace(/<\/p>/gi, ` `)
 			.replace(/<[^>]*>?/g, ``)
 			.replace(/&nbsp;/gi, ` `)
 			.replace(/[^\S\n]+/g, ` `)

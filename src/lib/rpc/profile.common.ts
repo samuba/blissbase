@@ -97,7 +97,7 @@ export const publicProfileFields = {
 		v.checkItems((link) => {
 			if (link.type === `telegram`) {
 				const value = link.value
-				if (value.length < 5 || value.length > 32 ) {
+				if (value.length < 3 || value.length > 32 ) {
 					return false;
 				}
 				// Only Latin letters, numbers and underscores, 5-32 chars
@@ -132,13 +132,13 @@ export const publicProfileFields = {
 		}, 'YouTube Benutzername ungültig'),
 		v.checkItems((link) => {
 			if (link.type === `instagram`) {
-				// Lowercase letters, numbers, . and _
+				// Letters, numbers, . and _
 				// Max 30 chars, no spaces, symbols, @, no consecutive . or _, can't start with .
 				const value = link.value.trim();
 				if (
 					value.length === 0 ||
 					value.length >= 30 ||
-					!/^[a-z0-9._]+$/.test(value) ||
+					!/^[A-Za-z0-9._]+$/.test(value) ||
 					/[\s@&+]/.test(value) || // forbidden chars
 					/\.\.|__|_\./.test(value) || // consecutive . or _
 					value[0] === '.' // can't start with .
@@ -155,7 +155,7 @@ export const publicProfileFields = {
 				// Facebook usernames: at least 5 chars, alphanum and periods only
 				if (
 					value.length < 5 ||
-					!/^[a-z0-9.]+$/i.test(value)
+					!/^[A-Za-z0-9.]+$/i.test(value)
 				) {
 					return false;
 				}
