@@ -22,7 +22,7 @@ export const load = (async ({ params: { slug }, url }) => {
             name: event.name,
             description: event.startAt.toLocaleDateString('en-US', {
                 year: 'numeric',
-                month: 'long',
+                month: 'short',
                 day: 'numeric'
             }) + " - " + event.description,
             imageUrl: event.imageUrls?.[0],
