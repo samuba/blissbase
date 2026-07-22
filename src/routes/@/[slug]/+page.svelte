@@ -41,7 +41,7 @@
 				]}
 			>
 				<div
-					class="relative flex w-full max-w-sm flex-row items-center justify-center drop-shadow sm:w-fit sm:max-w-none"
+					class={["relative flex w-full max-w-sm flex-row items-center justify-center sm:w-fit sm:max-w-none", profile.bannerImageUrl && "drop-shadow" ]}
 				>
 					{#if profile.profileImageUrl}
 						<img
