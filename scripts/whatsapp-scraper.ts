@@ -19,8 +19,16 @@ const sqliteObjectKey = `whatsapp.sqlite`
 const maxSecondsBetweenMessagesForSameEvent = 20 * 60
 /** Max messages loaded on first scrape per chat (latest N by time). Incremental runs load all messages since the stored cursor. */
 const initialMessagesPerChat = 50
+/** Only scrape messages younger than this many months. */
+const maxMessageAgeMonths = 8
 const sqliteDownloadTimeoutMs = 20_000
 const sqliteDownloadRetryCount = 3
+
+function getMessageAgeCutoffUnix() {
+    const cutoff = new Date()
+    cutoff.setMonth(cutoff.getMonth() - maxMessageAgeMonths)
+    return Math.floor(cutoff.getTime() / 1000)
+}
 
 /**
  * Loads the R2 creds used by the whatsapp2sqlite pipeline.
@@ -191,15 +199,18 @@ function getMessagesForTarget(args: { sqliteDb: Database; target: WhatsappScrapi
     const params: Array<string | number> = [target.chatJid]
     let where = `chat_jid = ?`
 
+    const cutoffUnix = getMessageAgeCutoffUnix()
     const lastTimestamp = target.lastMessageTimestamp
         ? Math.floor(new Date(target.lastMessageTimestamp).getTime() / 1000)
         : undefined
 
-    if (lastTimestamp !== undefined) {
-        // Always replay the cursor second so same-second messages cannot be skipped.
-        where += ` AND timestamp >= ?`
-        params.push(lastTimestamp)
-    }
+    // Always apply the age cutoff; on incremental runs also replay the cursor second
+    // so same-second messages cannot be skipped.
+    const minTimestamp = lastTimestamp !== undefined
+        ? Math.max(lastTimestamp, cutoffUnix)
+        : cutoffUnix
+    where += ` AND timestamp >= ?`
+    params.push(minTimestamp)
 
     const isFirstRunForChat = lastTimestamp === undefined
     const orderBy = isFirstRunForChat

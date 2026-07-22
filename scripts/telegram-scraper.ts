@@ -7,7 +7,6 @@ import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";
 import { generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
-import { TotalList } from "telegram/Helpers";
 import { aiExtractEventData, lineBreaksToBr } from "../src/lib/server/ai";
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
@@ -22,6 +21,14 @@ const sessionAuthKey = new StringSession(sessionAuthKeyString);
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
 
 const maxSecondsBetweenMessagesForSameEvent = 20 * 60; // 20 minutes
+/** Only scrape messages younger than this many months. */
+const maxMessageAgeMonths = 8;
+
+function getMessageAgeCutoffUnix() {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - maxMessageAgeMonths);
+    return Math.floor(cutoff.getTime() / 1000);
+}
 
 function getTelegramOriginalAuthorId(message: Api.Message) {
     if (message.fwdFrom?.fromId) {
@@ -849,15 +856,24 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
         }
         console.log(`Found ${messages.length} new messages`);
 
+        const cutoffUnix = getMessageAgeCutoffUnix();
+        const messagesToProcess = messages.filter((message) => message.date >= cutoffUnix);
+        const skippedOldCount = messages.length - messagesToProcess.length;
+        if (skippedOldCount > 0) {
+            console.log(`Skipped ${skippedOldCount} message(s) older than ${maxMessageAgeMonths} months`);
+        }
+
         let scrapedEventsCount = 0;
         if (messages.length > 0) {
-            ({ scrapedEventsCount } = await processMessages(
-                messages,
-                resolvedRoomId,
-                client,
-                target.defaultTimezone,
-                target.hasOnlyConsciousEvents
-            ));
+            if (messagesToProcess.length > 0) {
+                ({ scrapedEventsCount } = await processMessages(
+                    messagesToProcess,
+                    resolvedRoomId,
+                    client,
+                    target.defaultTimezone,
+                    target.hasOnlyConsciousEvents
+                ));
+            }
             messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
             const latestMsgId = BigInt(messages[0].id);
             const latestMsgTime = new Date(messages[0].date * 1000);
@@ -920,7 +936,7 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
  * Processes messages and returns the newest message ID
  */
 async function processMessages(
-    messages: TotalList<Api.Message>,
+    messages: Api.Message[],
     chatId: string,
     client: TelegramClient,
     defaultTimezone: string,
