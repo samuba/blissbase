@@ -19,9 +19,7 @@
 	const preview = $derived(htmlToPreviewText(offering.descriptionHtml));
 	const imageUrl = $derived(offering.imageUrls?.[0]);
 	const isDisabled = $derived(offering.listed === false);
-	const href = $derived(
-		offering.slug ? routes.offeringDetails(offering.slug, { returnTo }) : routes.offeringsList(),
-	);
+	const href = $derived(offering.slug ? routes.offeringDetails(offering.slug, { returnTo }) : routes.offeringsList());
 
 	function handleClick(event: MouseEvent) {
 		if (!onclick) return;
@@ -51,6 +49,7 @@
 		imageUrls?: string[];
 		listed?: boolean;
 		profile: {
+			locationLabel: string;
 			displayName: string | null;
 			profileImageUrl: string;
 		};
@@ -60,7 +59,7 @@
 <a
 	{href}
 	class={[
-		`card bg-base-100 group h-full w-full cursor-pointer rounded-2xl text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`,
+		`card bg-base-100 group h-full w-full min-w-0 cursor-pointer overflow-hidden rounded-2xl text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`,
 		isDisabled && `opacity-75`,
 		className,
 	]}
@@ -68,8 +67,8 @@
 	onclick={handleClick}
 	data-offering-id={offering.id}
 >
-	<article class="flex h-full flex-col">
-		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
+	<article class="flex h-full min-w-0 flex-col">
+		<div class="flex min-w-0 flex-1 flex-col overflow-hidden sm:flex-row">
 			{#if imageUrl}
 				<div
 					class={[
@@ -85,29 +84,38 @@
 								`rounded-t-lg sm:rounded-tl-lg`,
 							]}
 						>
-							<img
-								src={imageUrl}
-								alt="illustration for offering: {offering.title}"
-								class="h-full max-h-72 max-w-full object-cover"
-							/>
+							<img src={imageUrl} alt="illustration for offering: {offering.title}" class="h-full max-h-72 max-w-full object-cover" />
 						</figure>
 					</div>
 				</div>
 			{/if}
 
-			<div class="card-body flex min-w-0 flex-col gap-4 p-5">
+			<div class="card-body flex min-w-0 flex-1 flex-col gap-2 overflow-hidden p-5">
 				<h3 class="card-title line-clamp-2 overflow-hidden leading-snug tracking-tight wrap-break-word">
 					{offering.title}
 				</h3>
+				<div class="text-base-content/75 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-1.5 py-1 leading-none">
+					{#if offering.format === `online`}
+						<i class="icon-[ph--globe] size-4"></i>
+						<span class="truncate">Online</span>
+					{:else if offering.format === `offline`}
+						<i class="icon-[ph--map-pin] size-4"></i>
+						<span class="truncate">{offering.profile.locationLabel}</span>
+					{:else if offering.format === `offline+online`}
+						<i class="icon-[ph--map-pin] size-4"></i>
+						<span class="truncate">Online oder in {offering.profile.locationLabel}</span>
+					{/if}
+				</div>
+
 				{#if isDisabled}
-					<span class="badge badge-soft badge-warning w-fit gap-1">
+					<span class="badge badge-soft badge-warning my-2 w-fit gap-1">
 						<i class="icon-[ph--eye-slash] size-3.5"></i>
 						Deaktiviert — nicht für andere sichtbar
 					</span>
 				{/if}
 
 				{#if preview}
-					<p class="text-base-content/75 line-clamp-3 overflow-hidden text-sm leading-relaxed whitespace-pre-line wrap-break-word">
+					<p class="text-base-content/75 line-clamp-3 grow-0! overflow-hidden text-sm leading-relaxed wrap-break-word whitespace-pre-line">
 						{preview}
 					</p>
 				{/if}
@@ -123,22 +131,10 @@
 								</div>
 							{/if}
 							<span class="text-base-content/80 min-w-0 truncate text-sm font-medium">
-								{offering.profile.displayName ?? `Blissbase`}
+								{offering.profile.displayName}
 							</span>
 						</div>
 					{/if}
-					<span class="badge badge-ghost flex items-center gap-1.5 shrink-0 leading-none">
-						{#if offering.format === `online`}
-							<i class="icon-[ph--globe] size-4.5"></i>
-							Online
-						{:else if offering.format === `offline`}
-							<i class="icon-[ph--users] size-4.5"></i>
-							Vor Ort
-						{:else}
-							<i class="icon-[ph--users] size-4.5"></i>
-							Vor Ort / Online
-						{/if}
-					</span>
 				</div>
 			</div>
 		</div>

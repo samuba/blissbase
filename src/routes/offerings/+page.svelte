@@ -242,7 +242,7 @@
 						</a>
 					</div>
 					{#each filteredOfferings as offering (offering.id)}
-						<div class="h-full" animate:flip={{ duration: 200 }} out:fade={{ duration: 200 }} in:fade={{ duration: 200 }}>
+						<div class="h-full min-w-0" animate:flip={{ duration: 200 }} out:fade={{ duration: 200 }} in:fade={{ duration: 200 }}>
 							<OfferingCard
 								{offering}
 								returnTo={routes.currentPath(page.url)}

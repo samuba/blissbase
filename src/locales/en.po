@@ -7,7 +7,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
@@ -89,6 +88,7 @@ msgstr "Sold out"
 
 #: src/lib/components/EventCard.svelte
 #: src/lib/components/HeaderControls.svelte
+#: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
 #: src/routes/EventDetails.svelte
 msgid "Online"
@@ -1731,20 +1731,9 @@ msgstr "Tell me something about yourself…"
 msgid "Persönlich an dem angegebenen Ort."
 msgstr "Personally at the specified location."
 
-#: src/lib/components/OfferingCard.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 msgid "<0/> Online"
 msgstr "<0/> Online"
-
-#: src/lib/components/OfferingCard.svelte
-#: src/routes/offerings/OfferingDetails.svelte
-msgid "<0/> Vor Ort"
-msgstr "<0/> In person"
-
-#: src/lib/components/OfferingCard.svelte
-#: src/routes/offerings/OfferingDetails.svelte
-msgid "<0/> Vor Ort / Online"
-msgstr "<0/> In person / Online"
 
 #: src/lib/components/OfferingForm.svelte
 msgid "Deine Vor-Ort-Angebote werden anderen in der Nähe dieses Orts angezeigt. Der Standort gilt für alle deine Angebote."
@@ -1847,3 +1836,13 @@ msgstr "Others can no longer see it."
 #: src/routes/profile/offerings/+page.svelte
 msgid "Deaktivierte Angebote"
 msgstr "Disabled offerings"
+
+#. 0: offering.profile.locationLabel
+#: src/routes/offerings/OfferingDetails.svelte
+msgid "<0/> Online oder in {0}"
+msgstr "<0/> Online or in {0}"
+
+#. 0: offering.profile.locationLabel
+#: src/lib/components/OfferingCard.svelte
+msgid "Online oder in {0}"
+msgstr "Online or in {0}"

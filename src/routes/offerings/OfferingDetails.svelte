@@ -147,91 +147,93 @@
 				<h1 class="text-2xl leading-none font-bold sm:text-3xl">
 					{offering.title}
 				</h1>
-				{#if offering.format !== `online`}
-					<a
-						href={`https://www.google.com/maps/search/?api=1&query=${offering.profile.latitude},${offering.profile.longitude}`}
-						target="_blank"
-						rel="noopener noreferrer"
-						class={[
-							`line-clamp-3 flex h-auto min-w-0 shrink-0 items-center gap-1.5 py-1 text-sm leading-none wrap-break-word`,
-							`no-underline text-inherit`,
-						]}
-					>
-						<i class="icon-[ph--map-pin] size-4.5"></i>
-						{offering.profile.locationLabel}
-					</a>
 
-				{/if}
+				<div class="text-base-content/75 flex items-center h-auto min-w-0 shrink-0 flex-wrap gap-1.5 py-1 leading-none wrap-break-word">
+					{#if offering.format === `online`}
+						<i class="icon-[ph--globe] size-4.5"></i>
+						Online
+					{:else if offering.format === `offline`}
+						<a
+							href={`https://www.google.com/maps/search/?api=1&query=${offering.profile.latitude},${offering.profile.longitude}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="flex items-center gap-1.5"
+						>
+							<i class="icon-[ph--map-pin] size-4.5 min-w-4.5"></i>
+							{offering.profile.locationLabel}
+						</a>
+					{:else if offering.format === `offline+online`}
+						<a
+							href={`https://www.google.com/maps/search/?api=1&query=${offering.profile.latitude},${offering.profile.longitude}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="flex items-center gap-1.5"
+						>
+							<i class="icon-[ph--map-pin] size-4.5 min-w-4.5"></i>
+							Online oder in
+							{offering.profile.locationLabel}
+						</a>
+					{/if}
+				</div>
+
 				{#if !offering.listed}
 					<span class="badge badge-soft badge-warning w-fit gap-1">
 						<i class="icon-[ph--eye-slash] size-3.5"></i>
 						Deaktiviert — nicht für andere sichtbar
 					</span>
 				{/if}
-			</div>
-			<div class="flex flex-wrap gap-4 sm:flex-row sm:items-center">
-				<span class="badge badge-ghost flex shrink-0 items-center gap-1.5 leading-none">
-					{#if offering.format === `online`}
-						<i class="icon-[ph--globe] size-4.5"></i>
-						Online
-					{:else if offering.format === `offline`}
-						<i class="icon-[ph--users] size-4.5"></i>
-						Vor Ort
-					{:else}
-						<i class="icon-[ph--users] size-4.5"></i>
-						Vor Ort / Online
-					{/if}
-				</span>
-				<div class="sm:grow"></div>
+				<div class="flex flex-wrap gap-4 sm:flex-row sm:items-center">
 
-				{#if offering.canManage}
-					<div class="join flex w-full items-center justify-center sm:w-auto">
-						<button
-							type="button"
-							class="btn btn-sm join-item"
-							onclick={() => void manageOffering(`delete`)}
-							disabled={Boolean(pendingManagementAction)}
-						>
-							{#if pendingManagementAction === `delete`}
-								<span class="loading loading-spinner loading-xs"></span>
-							{:else}
-								<i class="icon-[ph--trash] size-4"></i>
-							{/if}
-							Löschen
-						</button>
-						<button type="button" class="btn btn-sm join-item" onclick={manageListingState} disabled={Boolean(pendingManagementAction)}>
-							{#if pendingManagementAction === `unlist` || pendingManagementAction === `list`}
-								<span class="loading loading-spinner loading-xs"></span>
-							{:else if offering.listed}
-								<i class="icon-[ph--eye-slash] size-4"></i>
-							{:else}
-								<i class="icon-[ph--eye] size-4"></i>
-							{/if}
-							{offering.listed ? `Deaktivieren` : `Aktivieren`}
-						</button>
-						<a
-							href={pendingManagementAction ? "#" : routes.editOffering(offering.slug, { returnTo: editReturnTo })}
-							class={["btn btn-sm join-item", pendingManagementAction && `btn-disabled`]}
-						>
-							<i class="icon-[ph--pencil-simple] size-4"></i>
-							Bearbeiten
-						</a>
+
+					{#if offering.canManage}
+						<div class="join flex w-full items-center justify-center sm:w-auto">
+							<button
+								type="button"
+								class="btn btn-sm join-item"
+								onclick={() => void manageOffering(`delete`)}
+								disabled={Boolean(pendingManagementAction)}
+							>
+								{#if pendingManagementAction === `delete`}
+									<span class="loading loading-spinner loading-xs"></span>
+								{:else}
+									<i class="icon-[ph--trash] size-4"></i>
+								{/if}
+								Löschen
+							</button>
+							<button type="button" class="btn btn-sm join-item" onclick={manageListingState} disabled={Boolean(pendingManagementAction)}>
+								{#if pendingManagementAction === `unlist` || pendingManagementAction === `list`}
+									<span class="loading loading-spinner loading-xs"></span>
+								{:else if offering.listed}
+									<i class="icon-[ph--eye-slash] size-4"></i>
+								{:else}
+									<i class="icon-[ph--eye] size-4"></i>
+								{/if}
+								{offering.listed ? `Deaktivieren` : `Aktivieren`}
+							</button>
+							<a
+								href={pendingManagementAction ? "#" : routes.editOffering(offering.slug, { returnTo: editReturnTo })}
+								class={["btn btn-sm join-item", pendingManagementAction && `btn-disabled`]}
+							>
+								<i class="icon-[ph--pencil-simple] size-4"></i>
+								Bearbeiten
+							</a>
+						</div>
+					{/if}
+				</div>
+
+				{#if offering.descriptionHtml?.trim()}
+					<div class="prose max-w-none">
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- offering descriptions are stored from the trusted Lexical form. -->
+						{@html offering.descriptionHtml}
 					</div>
 				{/if}
+
+				{#if offering.profile.slug && offering.profile.displayName}
+					<PublicProfileCard profile={offering.profile} class="-mx-4 rounded-none sm:mx-auto sm:rounded-2xl">
+						<ProfileContactButtons socialLinks={offering.profile.socialLinks} class="sm:items-start" />
+					</PublicProfileCard>
+				{/if}
 			</div>
-
-			{#if offering.descriptionHtml?.trim()}
-				<div class="prose max-w-none">
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -- offering descriptions are stored from the trusted Lexical form. -->
-					{@html offering.descriptionHtml}
-				</div>
-			{/if}
-
-			{#if offering.profile.slug && offering.profile.displayName}
-				<PublicProfileCard profile={offering.profile} class="-mx-4 sm:mx-auto rounded-none sm:rounded-2xl">
-					<ProfileContactButtons socialLinks={offering.profile.socialLinks} class="sm:items-start" />
-				</PublicProfileCard>
-			{/if}
 		</div>
 	</div>
 </article>
