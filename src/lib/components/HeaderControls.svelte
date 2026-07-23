@@ -62,7 +62,7 @@
 	bind:this={headerElement}
 	class={[
 		`z-10 w-full bg-base-200 sticky top-0 pt-4`,
-		showOfferingsLink ? `pb-0 mb-3 sm:mb-0` : `pb-3 sm:pb-0`
+		showOfferingsLink ? `pb-0 mb-3 sm:mb-0` : ` pb-1`
 	]}
 	id="header-controls"
 >
@@ -74,7 +74,7 @@
 		></div>
 	{/if}
 
-	<div class="mx-auto flex w-full max-w-3xl flex-col justify-center gap-3">
+	<div class="mx-auto flex w-full max-w-3xl flex-col justify-center gap-3 ">
 		<TabsNavDesktop />
 
 		<div class="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-4 sm:px-0">

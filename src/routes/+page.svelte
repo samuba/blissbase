@@ -7,9 +7,24 @@
 	import { browser } from '$app/environment';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
 	import { setLocationInteractedCookie } from '$lib/cookie-utils';
+	import { addHours } from '$lib/common';
+	import { now } from '$lib/now.svelte';
 
 	const { data } = $props();
 	const { autoDetectedCity } = $derived(data);
+
+	function isEventMostlyElapsed(args: { startAt: Date; endAt?: Date | null }) {
+		const endTime = args.endAt ?? addHours(args.startAt, 4);
+		const totalDuration = endTime.getTime() - args.startAt.getTime();
+		const elapsed = now.value.getTime() - args.startAt.getTime();
+		return elapsed / totalDuration > 0.3;
+	}
+
+	const visibleEvents = $derived(
+		eventsStore.events.filter(
+			(event) => !isEventMostlyElapsed({ startAt: event.startAt, endAt: event.endAt }),
+		),
+	);
 
 	let contentBeforeMenu = $state<HTMLElement | null>(null);
 	let dismissedAutoLocationHint = $state(false);
@@ -110,7 +125,6 @@
 					<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
 						<i class="icon-[ph--map-pin] size-10  block"></i>
 						<span>
-
 							Ort <b>"{eventsStore.pagination.plzCity}"</b> nicht gefunden
 						</span>
 					</div>
@@ -118,9 +132,9 @@
 			{:else if eventsStore.hasEvents}
 				<div class="fade-in flex w-full flex-col gap-4">
 					<div class="grid gap-4 min-[920px]:grid-cols-2">
-						{#each eventsStore.events as event (event.id)}
+						{#each visibleEvents as event (event.id)}
 							<div class="h-full min-w-0">
-								<EventCard {event} hidePastEvent />
+								<EventCard {event} />
 							</div>
 						{/each}
 					</div>

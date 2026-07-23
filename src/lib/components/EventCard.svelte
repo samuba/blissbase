@@ -13,13 +13,11 @@
 		class: className,
 		onAddFavorite,
 		onRemoveFavorite,
-		hidePastEvent,
 	}: {
 		event: UiEvent;
 		class?: string;
 		onAddFavorite?: (eventId: number) => void | undefined;
 		onRemoveFavorite?: (eventId: number) => void | undefined;
-		hidePastEvent?: boolean;
 	} = $props();
 
 	let imageLoadError = $state(false);
@@ -27,15 +25,6 @@
 
 	const isPast = $derived((event.endAt ?? addHours(event.startAt, 4)) < now.value);
 	const isOngoing = $derived(event.startAt < now.value && (event.endAt ?? addHours(event.startAt, 4) > now.value));
-	const hideEvent = $derived.by(() => {
-		if (!hidePastEvent) return false;
-
-		// hide events that have elapsed for more than 30% of their duration or 4 hours after start if no end time is set
-		const endTime = event.endAt ?? addHours(event.startAt, 4);
-		const totalDuration = endTime.getTime() - event.startAt.getTime();
-		const elapsed = now.value.getTime() - event.startAt.getTime();
-		return elapsed / totalDuration > 0.3;
-	});
 
 	function handleClick(e: MouseEvent) {
 		e.preventDefault();
@@ -53,134 +42,132 @@
 	});
 </script>
 
-{#if !hideEvent}
-	<a href={resolve("/[slug]", { slug: event.slug })} class=" w-full" data-sveltekit-preload-data="false" onclick={handleClick}>
-		<article
-			class={[
-				`card bg-base-100 fade-out-0 flex flex-col rounded-lg transition-all`,
-				event.spotlight
-					? [`ring-primary/60 ring-1`, `shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`]
-					: `shadow-sm`,
-				className,
-			]}
-			data-event-id={event.id}
-			data-testid="event-card"
-		>
-			{#if event.spotlight}
-				<div
-					class="bg-primary/60 text-primary-content w-full rounded-t-lg px-3 py-1.5 text-center text-[0.65rem] font-semibold tracking-wider uppercase"
-				>
-					Empfohlener Event
-				</div>
-			{/if}
-			<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
-				<div
-					class={[
-						`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
-						event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
-					]}
-				>
-					<FavoriteButton eventId={event.id} class="absolute right-2 bottom-2 z-5" {onAddFavorite} {onRemoveFavorite} />
+<a href={resolve("/[slug]", { slug: event.slug })} class=" w-full" data-sveltekit-preload-data="false" onclick={handleClick}>
+	<article
+		class={[
+			`card bg-base-100 fade-out-0 flex flex-col rounded-lg transition-all`,
+			event.spotlight
+				? [`ring-primary/60 ring-1`, `shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`]
+				: `shadow-sm`,
+			className,
+		]}
+		data-event-id={event.id}
+		data-testid="event-card"
+	>
+		{#if event.spotlight}
+			<div
+				class="bg-primary/60 text-primary-content w-full rounded-t-lg px-3 py-1.5 text-center text-[0.65rem] font-semibold tracking-wider uppercase"
+			>
+				Empfohlener Event
+			</div>
+		{/if}
+		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
+			<div
+				class={[
+					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+				]}
+			>
+				<FavoriteButton eventId={event.id} class="absolute right-2 bottom-2 z-5" {onAddFavorite} {onRemoveFavorite} />
 
-					{#if imageUrl}
-						<div
-							class={[`h-full bg-cover bg-center`, event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`]}
-							style="background-image: url({imageUrl})"
-						>
-							<figure
-								class={[
-									`h-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
-									event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
-								]}
-							>
-								<img
-									src={imageUrl}
-									alt="illustration for event: {event.name}"
-									class="h-full max-h-72 max-w-full object-cover sm:max-h-54"
-									onerror={() => (imageLoadError = true)}
-								/>
-							</figure>
-						</div>
-					{:else}
-						<RandomPlaceholderImg
-							seed={event.name}
+				{#if imageUrl}
+					<div
+						class={[`h-full bg-cover bg-center`, event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`]}
+						style="background-image: url({imageUrl})"
+					>
+						<figure
 							class={[
-								`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+								`h-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
 								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 							]}
-						/>
-					{/if}
-				</div>
-
-				<div class="card-body flex flex-col gap-2 pt-4.5 md:pt-6">
-					<h3 class="card-title leading-snug tracking-tight">
-						{event.name}
-
-						{#if event.soldOut}
-							<span class="badge badge-sm badge-ghost ml-1">Ausgebucht</span>
-						{/if}
-					</h3>
-
-					<div class="flex flex-wrap items-center gap-1">
-						<i class="icon-[ph--calendar-dots] size-4 min-w-4"></i>
-						<span>
-							{formatDatesStr(event.startAt, event.endAt, localeStore.locale, true)}
-						</span>
-						{#if formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
-							<i class="inline-block icon-[ph--clock] size-4 min-w-4 ml-2"></i>
-							<span>
-								{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
-							</span>
-						{/if}
-
-						{#if isPast}
-							<div class="badge badge-secondary badge-sm ml-2">Vorbei</div>
-						{:else if isOngoing}
-							<div class="badge badge-ghost badge-sm ml-2">
-								<div class="bg-success h-2 w-2 rounded-full"></div>
-								Läuft
-							</div>
-						{/if}
+						>
+							<img
+								src={imageUrl}
+								alt="illustration for event: {event.name}"
+								class="h-full max-h-72 max-w-full object-cover sm:max-h-54"
+								onerror={() => (imageLoadError = true)}
+							/>
+						</figure>
 					</div>
+				{:else}
+					<RandomPlaceholderImg
+						seed={event.name}
+						class={[
+							`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+						]}
+					/>
+				{/if}
+			</div>
 
-					{#if event.attendanceMode === "online"}
-						<div class="flex items-center gap-1.5 text-sm">
-							<i class="icon-[ph--globe] size-4 min-w-4"></i>
-							<span class="leading-tight">Online</span>
-						</div>
-					{:else if event.address?.length}
-						<div class="flex items-center gap-1.5 text-sm">
-							<div class="flex items-center gap-1">
-								{#if event.attendanceMode === "offline+online"}
-									<i class="icon-[ph--globe] size-4 min-w-4"></i>
-								{/if}
-								<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
-							</div>
+			<div class="card-body flex flex-col gap-2 pt-4.5 md:pt-6">
+				<h3 class="card-title leading-snug tracking-tight">
+					{event.name}
 
-							<div class="leading-tight">
-								{#if event.distanceKm}
-									<span class="font-medium">
-										{event.distanceKm} km entfernt
-									</span>
-								{/if}
-								<div title={event.address?.join(", ")} class="truncate-2lines">
-									{formatAddress(event.address)}
-								</div>
-							</div>
-						</div>
+					{#if event.soldOut}
+						<span class="badge badge-sm badge-ghost ml-1">Ausgebucht</span>
+					{/if}
+				</h3>
+
+				<div class="flex flex-wrap items-center gap-1">
+					<i class="icon-[ph--calendar-dots] size-4 min-w-4"></i>
+					<span>
+						{formatDatesStr(event.startAt, event.endAt, localeStore.locale, true)}
+					</span>
+					{#if formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+						<i class="inline-block icon-[ph--clock] size-4 min-w-4 ml-2"></i>
+						<span>
+							{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+						</span>
 					{/if}
 
-					{#if tags.length}
-						<div class="mt-1 flex flex-wrap gap-1 text-xs">
-							{#each tags as tag}
-								<button class="badge badge-sm badge-ghost">
-									{tag}
-								</button>
-							{/each}
+					{#if isPast}
+						<div class="badge badge-secondary badge-sm ml-2">Vorbei</div>
+					{:else if isOngoing}
+						<div class="badge badge-ghost badge-sm ml-2">
+							<div class="bg-success h-2 w-2 rounded-full"></div>
+							Läuft
 						</div>
 					{/if}
 				</div>
+
+				{#if event.attendanceMode === "online"}
+					<div class="flex items-center gap-1.5 text-sm">
+						<i class="icon-[ph--globe] size-4 min-w-4"></i>
+						<span class="leading-tight">Online</span>
+					</div>
+				{:else if event.address?.length}
+					<div class="flex items-center gap-1.5 text-sm">
+						<div class="flex items-center gap-1">
+							{#if event.attendanceMode === "offline+online"}
+								<i class="icon-[ph--globe] size-4 min-w-4"></i>
+							{/if}
+							<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
+						</div>
+
+						<div class="leading-tight">
+							{#if event.distanceKm}
+								<span class="font-medium">
+									{event.distanceKm} km entfernt
+								</span>
+							{/if}
+							<div title={event.address?.join(", ")} class="truncate-2lines">
+								{formatAddress(event.address)}
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				{#if tags.length}
+					<div class="mt-1 flex flex-wrap gap-1 text-xs">
+						{#each tags as tag}
+							<button class="badge badge-sm badge-ghost">
+								{tag}
+							</button>
+						{/each}
+					</div>
+				{/if}
 			</div>
-		</article>
-	</a>
-{/if}
+		</div>
+	</article>
+</a>
