@@ -76,83 +76,81 @@
 	</div>
 </div>
 	
-<div class="container mx-auto flex flex-col items-center justify-center pb-4 sm:w-2xl">
+<div class="flex w-full flex-col items-center justify-center pb-4">
+	{#if showAutoLocationHint}
+		<div class="mx-auto mt-4 w-full max-w-3xl px-4">
+			<div class="alert bg-base-100 mb-2 relative alert-horizontal">
+				<i class="icon-[ph--info] size-6 shrink-0"></i>
+				<span class="w-full">
+					Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
+					Wenn das nicht dein Standort ist, ändere ihn unten.
+				</span>
+				<button
+					class="btn btn-circle btn-ghost btn-sm p-0.25"
+					aria-label="Hinweis schließen"
+					onclick={() => {
+						dismissedAutoLocationHint = true;
+						setLocationInteractedCookie();
+					}}
+				>
+					<i class="icon-[ph--x] size-4"></i>
+				</button>
+			</div>
+		</div>
+	{/if}
 
-	<div class="contents md:flex gap-4">
-		<div class="contents md:block">
-			{#if showAutoLocationHint}
-				<div class="px-4 w-full mt-4">
-					<div class="alert bg-base-100 mb-2 relative alert-horizontal">
-						<i class="icon-[ph--info] size-6 shrink-0"></i>
-						<span class="w-full">
-							Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
-							Wenn das nicht dein Standort ist, ändere ihn unten.
+	<HeaderControls onLocationDistanceChange={handleLocationDistanceChange} />
+
+	<svelte:boundary>
+		<div class="mx-auto mb-2 w-full max-w-5xl px-4 pt-4 sm:mb-4">
+			{#if eventsStore.isLoading}
+				{@render loading(true)}
+			{:else if (eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat)}
+				<div class={noResultsContainerClasses}>
+					<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
+						<i class="icon-[ph--map-pin] size-10  block"></i>
+						<span>
+
+							Ort <b>"{eventsStore.pagination.plzCity}"</b> nicht gefunden
 						</span>
-						<button
-							class="btn btn-circle btn-ghost btn-sm p-0.25"
-							aria-label="Hinweis schließen"
-							onclick={() => {
-								dismissedAutoLocationHint = true;
-								setLocationInteractedCookie();
-							}}
-						>
-							<i class="icon-[ph--x] size-4"></i>
-						</button>
 					</div>
 				</div>
-			{/if}
-		
-			<HeaderControls onLocationDistanceChange={handleLocationDistanceChange} />
-		
-			<svelte:boundary>
-				<div class="px-4 md:px-0 max-w-2xl mx-auto">
-					{#if eventsStore.isLoading}
-						{@render loading(true)}
-					{:else if (eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat)}
-						<div class={noResultsContainerClasses}>
-							<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
-								<i class="icon-[ph--map-pin] size-10  block"></i>
-								<span>
-		
-									Ort <b>"{eventsStore.pagination.plzCity}"</b> nicht gefunden
-								</span>
-							</div>
-						</div>
-					{:else if eventsStore.hasEvents}
-						<div class="fade-in flex w-full flex-col items-center gap-4">
-							{#each eventsStore.events as event, i (event.id)}
+			{:else if eventsStore.hasEvents}
+				<div class="fade-in flex w-full flex-col gap-4">
+					<div class="grid gap-4 min-[920px]:grid-cols-2">
+						{#each eventsStore.events as event (event.id)}
+							<div class="h-full min-w-0">
 								<EventCard {event} hidePastEvent />
-							{/each}
-			
-							<div
-								{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
-								class="-translate-y-72"
-							/>
-			
-							{#if eventsStore.isLoadingMore}
-								{@render loading(false)}
-							{:else}
-								{@render noResults(true)}
-							{/if}
-						</div>
+							</div>
+						{/each}
+					</div>
+
+					<div
+						{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
+						class="-translate-y-72"
+					></div>
+
+					{#if eventsStore.isLoadingMore}
+						{@render loading(false)}
 					{:else}
-						{@render noResults(false)}
+						{@render noResults(true)}
 					{/if}
 				</div>
-		
-				{#snippet failed(error, reset)}
-					<div role="alert" class="alert alert-error">
-						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-						</svg>
-						<b>Fehler beim Laden der Events:</b>
-						{error instanceof Error ? error.message : String(error)}
-					</div>
-				{/snippet}
-			</svelte:boundary>
+			{:else}
+				{@render noResults(false)}
+			{/if}
 		</div>
-	</div>
-	
+
+		{#snippet failed(error, reset)}
+			<div role="alert" class="alert alert-error">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+				</svg>
+				<b>Fehler beim Laden der Events:</b>
+				{error instanceof Error ? error.message : String(error)}
+			</div>
+		{/snippet}
+	</svelte:boundary>
 </div>
 
 {#snippet loading(reserveVerticalSpace: boolean)}

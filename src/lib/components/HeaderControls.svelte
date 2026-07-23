@@ -60,11 +60,12 @@
 
 <header
 	bind:this={headerElement}
-	class={[ 'z-10 w-full flex justify-center flex-col gap-3 bg-base-200 sticky top-0  pt-4 max-w-3xl', 
-		showOfferingsLink ? 'pb-0 mb-3 sm:mb-0' : 'pb-3 sm:pb-0' 
+	class={[
+		`z-10 w-full bg-base-200 sticky top-0 pt-4`,
+		showOfferingsLink ? `pb-0 mb-3 sm:mb-0` : `pb-3 sm:pb-0`
 	]}
 	id="header-controls"
->		
+>
 	<!-- shadow -->
 	{#if showShadow}
 		<div
@@ -72,61 +73,62 @@
 			style="top: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, transparent 100%);"
 		></div>
 	{/if}
-	
-	<TabsNavDesktop />
 
-	<div class="flex w-full items-center justify-center gap-3 px-4 sm:px-0 max-w-2xl mx-auto">
-		<div class="w-full min-w-0 flex-1 md:w-auto">
-			<LocationDistanceInput
-				inputId="plzCityInput-header"
-				initialLocation={initialLocation}
-				initialDistance={eventsStore.pagination.distance}
-				resolvedCityName={resolvedCityName}
-				locationBiasLat={eventsStore.pagination.lat}
-				locationBiasLng={eventsStore.pagination.lng}
-				onChange={onLocationDistanceChange}
-			/>
-		</div>
+	<div class="mx-auto flex w-full max-w-3xl flex-col justify-center gap-3">
+		<TabsNavDesktop />
 
-		<button class={['btn relative  btn-circle sm:w-fit sm:px-4', eventsStore.hasFilterBehindButton && 'active']} onclick={() => isFilterDialogOpen = true}>		
-			<i class="icon-[ph--sliders] size-5"></i>
-			<span class="hidden sm:block">Filter</span>
-		</button>
-	</div>
-
-
-	<div class="flex w-full items-center gap-4 px-4 sm:px-0 max-w-2xl mx-auto">
-		<TagSelection />
-	</div>
-
-	{#if showOfferingsLink}
-		<div class="w-full flex max-w-2xl mx-auto">
-			<div class="text-base-content/80 text-xs pl-3 -mt-2 flex items-center bg-base-500 sm:bg-base-100 sm:rounded-box py-1 w-full sm:w-fit sm:-mt-4 sm:mb-3 sm:text-sm">
-				Für private Sessions und Services go to:
-				<a
-					data-sveltekit-preload-data="off" // on preloading this results in 2 requests one freezes the tab
-					href={routes.offeringsList({
-						lat: eventsStore.pagination.lat,
-						lng: eventsStore.pagination.lng,
-						distance: eventsStore.pagination.distance,
-						location: eventsStore.pagination.plzCity,
-					})}
-					class="link text-base-content font-semibold px-2 items-center gap-1 flex"
-				>
-					<i class="icon-[ph--hand-heart] size-4"></i>
-					Offerings
-				</a>
-				<div class="grow"></div>
-				<button
-					class="btn btn-ghost btn-circle btn-xs mr-2 ml-1"
-					aria-label="Offerings-Hinweis ausblenden"
-					onclick={() => dismissedOfferingsLink = true}
-				>
-					<i class="icon-[ph--x] size-4"></i>
-				</button>
+		<div class="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-4 sm:px-0">
+			<div class="w-full min-w-0 flex-1 md:w-auto">
+				<LocationDistanceInput
+					inputId="plzCityInput-header"
+					initialLocation={initialLocation}
+					initialDistance={eventsStore.pagination.distance}
+					resolvedCityName={resolvedCityName}
+					locationBiasLat={eventsStore.pagination.lat}
+					locationBiasLng={eventsStore.pagination.lng}
+					onChange={onLocationDistanceChange}
+				/>
 			</div>
+
+			<button class={[`btn relative btn-circle sm:w-fit sm:px-4`, eventsStore.hasFilterBehindButton && `active`]} onclick={() => isFilterDialogOpen = true}>
+				<i class="icon-[ph--sliders] size-5"></i>
+				<span class="hidden sm:block">Filter</span>
+			</button>
 		</div>
-	{/if}
+
+		<div class="mx-auto flex w-full max-w-2xl items-center gap-4 px-4 sm:px-0">
+			<TagSelection />
+		</div>
+
+		{#if showOfferingsLink}
+			<div class="mx-auto flex w-full max-w-2xl">
+				<div class="text-base-content/80 text-xs pl-3 -mt-2 flex items-center bg-base-500 sm:bg-base-100 sm:rounded-box py-1 w-full sm:w-fit sm:-mt-4 sm:mb-3 sm:text-sm">
+					Für private Sessions und Services go to:
+					<a
+						data-sveltekit-preload-data="off" // on preloading this results in 2 requests one freezes the tab
+						href={routes.offeringsList({
+							lat: eventsStore.pagination.lat,
+							lng: eventsStore.pagination.lng,
+							distance: eventsStore.pagination.distance,
+							location: eventsStore.pagination.plzCity,
+						})}
+						class="link text-base-content font-semibold px-2 items-center gap-1 flex"
+					>
+						<i class="icon-[ph--hand-heart] size-4"></i>
+						Offerings
+					</a>
+					<div class="grow"></div>
+					<button
+						class="btn btn-ghost btn-circle btn-xs mr-2 ml-1"
+						aria-label="Offerings-Hinweis ausblenden"
+						onclick={() => dismissedOfferingsLink = true}
+					>
+						<i class="icon-[ph--x] size-4"></i>
+					</button>
+				</div>
+			</div>
+		{/if}
+	</div>
 </header>
 
 <!-- filter dialog -->
