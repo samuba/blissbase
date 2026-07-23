@@ -161,6 +161,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		end: string;
 	}): Promise<ScrapedEvent[]> {
 		const { listing, token, start, end } = args;
+		const category = listing.attributes.publicData?.categoryLevel1?.toLowerCase();
+		if (category === `yoga`) return [];
+
 		const timeslots = await this.fetchTimeslots({ listingId: listing.id, token, start, end });
 		if (!timeslots?.length) return [];
 
@@ -323,10 +326,13 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	private extractTagsFromListing(listing: ListingWithIncludes): string[] {
 		const tags: string[] = [];
 		const pd = listing.attributes.publicData;
-		if (pd?.categoryLevel1) tags.push(pd.categoryLevel1);
-		if (pd?.mode === `online`) tags.push(`online`);
+		if (pd?.categoryLevel1) tags.push(humanizeTag(pd.categoryLevel1));
+		if (pd?.mode === `online`) tags.push(`Online`);
 		if (pd?.language?.length) {
-			tags.push(...pd.language.filter((lang) => lang.toLowerCase() !== `english`));
+			for (const lang of pd.language) {
+				if (lang.toLowerCase() === `english`) continue;
+				tags.push(humanizeTag(lang));
+			}
 		}
 		return [...new Set(tags.filter(Boolean))];
 	}
@@ -375,6 +381,17 @@ function slugify(text: string): string {
 		.replace(/^-+|-+$/g, ``)
 		.slice(0, 80);
 	return slug || `listing`;
+}
+
+/** camelCase / lowercase → Title Case words, e.g. spiritualGuidance → Spiritual Guidance */
+function humanizeTag(tag: string): string {
+	return tag
+		.replace(/([a-z])([A-Z])/g, `$1 $2`)
+		.replace(/[_-]+/g, ` `)
+		.trim()
+		.split(/\s+/)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		.join(` `);
 }
 
 function escapeHtml(text: string): string {
