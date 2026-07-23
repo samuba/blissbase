@@ -317,10 +317,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	private extractHostLinkFromListing(listing: ListingWithIncludes): string | null {
-		const displayName = listing.author?.attributes.profile.displayName;
-		if (displayName) return `${SITE_BASE}/u/${slugify(displayName)}`;
-		if (listing.author?.id) return `${SITE_BASE}/u/${listing.author.id}`;
-		return null;
+		if (!listing.author?.id) return null;
+		return `${SITE_BASE}/u/${listing.author.id}`;
 	}
 
 	private extractTagsFromListing(listing: ListingWithIncludes): string[] {
