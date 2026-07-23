@@ -85,7 +85,7 @@
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
-	let dontShowSource = $derived(['megatix_indonesia', "telegram", "whatsapp", "website-form"].includes(event.source));
+	let hideSource = $derived(['theubudian', 'soulwise', 'megatix_indonesia', "telegram", "whatsapp", "website-form"].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
@@ -443,7 +443,7 @@
 			</div>
 		{/if}
 
-		{#if !dontShowSource && event.sourceUrl}
+		{#if !hideSource && event.sourceUrl}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 			>
