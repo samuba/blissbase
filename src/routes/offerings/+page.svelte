@@ -231,12 +231,12 @@
 				</div>
 			{:else if filteredOfferings.length}
 				<div class="grid gap-4 min-[920px]:grid-cols-2">
-					<div class="border-primary rounded-box bg-primary/20 flex flex-col gap-2 border-2 border-dashed p-4">
-						<span class="md:card-title text-primary-content mt-2">Was willst du der Community geben?</span>
+					<div class="border-primary rounded-box bg-primary/20 flex flex-col justify-center gap-2 border-2 border-dashed p-4">
+						<span class="md:card-title text-primary-content">Was willst du der Community geben?</span>
 						<p class="text-primary-content/80 hidden md:block">
 							Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten.
 						</p>
-						<a href={newOfferingHref()} class="btn btn-primary mt-2 w-fit">
+						<a href={newOfferingHref()} class="btn btn-primary w-fit">
 							<i class="icon-[ph--plus] size-5"></i>
 							Angebot erstellen
 						</a>
