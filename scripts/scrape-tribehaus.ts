@@ -1,399 +1,394 @@
 /**
- * Fetches event pages from tribehaus.org (starting from https://tribehaus.org/events)
- * iterates through all pagination pages, and extracts all events as JSON according to the ScrapedEvent interface.
- * 
- * Requires Bun (https://bun.sh/).
+ * Scrapes events from tribehaus.app via the public Supabase REST API.
+ *
+ * No browser needed — the site's Next.js frontend reads the same `events`
+ * table (joined with `creator_profiles`) that we query here.
  *
  * Usage:
- *   To scrape from the web: bun run scripts/scrape-tribehaus.ts > events.json
- *   To parse a local files:  bun run scripts/scrape-tribehaus.ts <path_to_html_file> <path_to_html_file> > event.json
+ *   bun run scripts/scrape-tribehaus.ts
  */
-import { ScrapedEvent } from "../src/lib/types.ts"; // Import shared interface
-import * as cheerio from 'cheerio';
+import { ScrapedEvent } from "../src/lib/types.ts";
 import {
-    customFetch,
-    parseGermanDateTime,
-    REQUEST_DELAY_MS,
-    WebsiteScraperInterface,
-    makeAbsoluteUrl as commonMakeAbsoluteUrl,
-    superTrim,
-    cleanProseHtml
+	WebsiteScraperInterface,
+	cleanProseHtml,
+	dateToIsoStr,
+	sleep,
 } from "./common.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.script.ts";
 
-const BASE_URL = 'https://tribehaus.org';
-
-// Helper function to make URLs absolute, specific to this scraper if needed, or use common.
-function makeAbsoluteUrl(url: string | undefined): string | undefined {
-    if (!url) return undefined;
-    return commonMakeAbsoluteUrl(url, BASE_URL);
-}
+const SITE_BASE = `https://tribehaus.app`;
+const SUPABASE_URL = `https://fwmypbssafwsovnyruit.supabase.co`;
+const SUPABASE_KEY = `sb_publishable_wnr2rf_udjvYgCR3ocIiXg_FodT5GZT`;
+const PAGE_SIZE = 100;
+const DEFAULT_TIMEZONE = `Europe/Berlin`;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
-    // Parses a listing page to get event permalinks and the next page URL
-    private parseEventList(html: string): { permalinks: string[], nextPageUrl: string | null } {
-        const $ = cheerio.load(html);
-        const permalinks: string[] = [];
-        let potentialNextPageUrl: string | null = null;
+	async scrapeWebsite(): Promise<ScrapedEvent[]> {
+		const allEvents: ScrapedEvent[] = [];
+		console.error(`Fetching published events from Tribehaus Supabase...`);
+		const rows = await this.fetchAllUpcomingEvents();
+		console.error(`Found ${rows.length} upcoming published events. Mapping...`);
 
-        // Extract permalinks from the search result items
-        $('.jq-result-list-item').each((_index, element) => {
-            const link = $(element).find('.jq-link-entry-page').attr('href');
-            if (link) {
-                const absoluteLink = makeAbsoluteUrl(link);
-                if (absoluteLink) {
-                    permalinks.push(absoluteLink);
-                }
-            }
-        });
+		for (const row of rows) {
+			try {
+				const event = await this.eventToScrapedEvent(row);
+				if (!event) continue;
+				allEvents.push(event);
+			} catch (error) {
+				console.error(`Failed to process event ${row.id} (${row.title}):`, error);
+			}
+		}
 
-        // Find next page link
-        const nextPageLink = $('.page-next > a').attr('href');
-        if (nextPageLink && nextPageLink !== '#') {
-            potentialNextPageUrl = nextPageLink;
-        }
+		console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
+		return allEvents;
+	}
 
-        const rawNextPageUrl = potentialNextPageUrl ? makeAbsoluteUrl(potentialNextPageUrl) : null;
-        const nextPageUrl = rawNextPageUrl === undefined ? null : rawNextPageUrl;
+	async scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]> {
+		throw new Error(`Method not implemented.` + filePath);
+	}
 
-        return { permalinks, nextPageUrl };
-    }
+	async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
+		throw new Error(`Method not implemented.` + html + url);
+	}
 
-    extractName(html: string): string | undefined {
-        const $ = cheerio.load(html);
-        const name = superTrim($('h1').first().text());
-        return name || undefined;
-    }
+	extractName(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractStartAt(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractEndAt(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractAddress(html: string): string[] | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractPrice(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractDescription(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractImageUrls(html: string): string[] | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractHost(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractHostLink(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractTags(html: string): string[] | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
 
-    extractStartAt(html: string) {
-        const $ = cheerio.load(html);
-        const dateElement = $('.ep3001112').first();
-        const timeElement = $('.ep3001113 span').first();
-        if (!dateElement.length) throw new Error('No date element found');
+	private async fetchAllUpcomingEvents(): Promise<TribehausEvent[]> {
+		const events: TribehausEvent[] = [];
+		const today = new Date().toISOString().slice(0, 10);
+		let offset = 0;
 
-        const dateStr = dateElement.text().trim();
-        const timeStr = timeElement.length ? timeElement.text().trim() : undefined;
+		while (true) {
+			const params = new URLSearchParams({
+				select: `*,creator_profiles(id,slug,display_name,website)`,
+				status: `eq.published`,
+				or: `(end_date.gte.${today},and(end_date.is.null,start_date.gte.${today}))`,
+				order: `start_date.asc`,
+				limit: String(PAGE_SIZE),
+				offset: String(offset),
+			});
 
-        // Check for range format "11.05.2025 bis 14.12.2025"
-        const dateRangeMatch = dateStr.match(/(\d{2}\.\d{2}\.\d{4})\s*bis\s*(\d{2}\.\d{2}\.\d{4})/);
-        if (dateRangeMatch) {
-            // Use the start date of the range
-            return parseGermanDateTime(dateRangeMatch[1], timeStr);
-        }
+			const res = await fetch(`${SUPABASE_URL}/rest/v1/events?${params}`, {
+				headers: {
+					apikey: SUPABASE_KEY,
+					Authorization: `Bearer ${SUPABASE_KEY}`,
+					Accept: `application/json`,
+				},
+			});
+			if (!res.ok) {
+				throw new Error(`Tribehaus events query failed: ${res.status} ${await res.text()}`);
+			}
 
-        return parseGermanDateTime(dateStr, timeStr);
-    }
+			const page = (await res.json()) as TribehausEvent[];
+			if (!page?.length) break;
 
-    extractEndAt(html: string) {
-        const $ = cheerio.load(html);
-        const dateElement = $('.ep3001112').first();
-        const timeElement = $('.ep3001113 span').first();
-        if (!dateElement.length) throw new Error('No date element found');
+			events.push(...page);
+			console.error(`  offset ${offset} — ${events.length} events so far`);
+			if (page.length < PAGE_SIZE) break;
 
-        const dateStr = dateElement.text().trim();
-        const timeStr = timeElement.length ? timeElement.text().trim() : undefined;
+			offset += PAGE_SIZE;
+			await sleep(100);
+		}
 
-        // Check for range format "11.05.2025 bis 14.12.2025"
-        const dateRangeMatch = dateStr.match(/(\d{2}\.\d{2}\.\d{4})\s*bis\s*(\d{2}\.\d{2}\.\d{4})/);
-        if (dateRangeMatch) {
-            // Use the end date of the range
-            return parseGermanDateTime(dateRangeMatch[2], timeStr);
-        }
+		return events;
+	}
 
-        // Check for end time in range format "13:00 - 17:00" on the *same* day
-        const timeRangeMatch = timeStr?.match(/\d{2}:\d{2}\s*-\s*(\d{2}:\d{2})/);
-        if (timeRangeMatch) {
-            return parseGermanDateTime(dateStr, timeRangeMatch[1]);
-        }
+	private async eventToScrapedEvent(event: TribehausEvent): Promise<ScrapedEvent | undefined> {
+		const name = this.extractNameFromEvent(event);
+		if (!name) {
+			console.error(`Skipping event ${event.id} due to missing name.`);
+			return undefined;
+		}
 
-        return parseGermanDateTime(dateStr, timeStr);
-    }
+		const startAt = this.extractStartAtFromEvent(event);
+		if (!startAt) {
+			console.error(`Skipping event ${event.id} (${name}) due to missing start date.`);
+			return undefined;
+		}
 
-    extractAddress(html: string): string[] | undefined {
-        const $ = cheerio.load(html);
-        const addressParts: string[] = [];
-        $('.epl33 li').each((_, li) => {
-            const strongText = $(li).find('strong').text().trim();
-            const spanText = $(li).find('span:not([data-spec])').text().trim();
-            const linkText = $(li).find('a').text().trim();
-            const textToAdd = spanText || linkText;
-            if (textToAdd && strongText !== 'Postleitzahl:') {
-                addressParts.push(textToAdd);
-            }
-            if (strongText === 'Postleitzahl:' && linkText) {
-                addressParts.push(linkText.replace('PLZ ', ''));
-            }
-        });
-        const plzLink = $('.epl33 li:contains("Postleitzahl:") a').text().trim().replace('PLZ ', '');
-        if (plzLink && !addressParts.some(p => p === plzLink)) {
-            addressParts.push(plzLink);
-        }
-        return addressParts.filter(part => part && part.trim() !== '');
-    }
+		const address = this.extractAddressFromEvent(event);
+		const latitude = typeof event.lat === `number` ? event.lat : null;
+		const longitude = typeof event.lng === `number` ? event.lng : null;
 
-    extractPrice(html: string): string | undefined {
-        const $ = cheerio.load(html);
-        const priceElement = $('li[data-property="Preis"] span').first();
-        if (priceElement.length) {
-            return priceElement.text().trim();
-        }
-        // Fallback: Check JSON-LD priceRange
-        const jsonLdScript = $('script[type="application/ld+json"]').html();
-        if (jsonLdScript) {
-            try {
-                const jsonData = JSON.parse(jsonLdScript);
-                if (jsonData.priceRange) {
-                    return jsonData.priceRange;
-                }
-                // Check offers
-                if (jsonData.offers && jsonData.offers.price) {
-                    return jsonData.offers.price + (jsonData.offers.priceCurrency ? " " + jsonData.offers.priceCurrency : "");
-                }
-                if (Array.isArray(jsonData.offers) && jsonData.offers[0] && jsonData.offers[0].price) {
-                    return jsonData.offers[0].price + (jsonData.offers[0].priceCurrency ? " " + jsonData.offers[0].priceCurrency : "");
-                }
+		let timezone: string | null = event.country_code === `DE` ? DEFAULT_TIMEZONE : null;
+		if ((!latitude || !longitude || !timezone) && address?.length) {
+			try {
+				const geocoded = await geocodeAddressCached({
+					addressLines: address,
+					apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+				});
+				timezone = timezone ?? geocoded?.timezone ?? null;
+			} catch (error) {
+				console.error(`Geocoding failed for ${event.id}:`, error);
+			}
+		}
+		timezone = timezone ?? DEFAULT_TIMEZONE;
 
-            } catch (error) { void error; }
-        }
-        return undefined;
-    }
+		return {
+			name,
+			startAt,
+			endAt: this.extractEndAtFromEvent(event),
+			address,
+			price: this.extractPriceFromEvent(event),
+			priceIsHtml: false,
+			description: this.extractDescriptionFromEvent(event),
+			imageUrls: this.extractImageUrlsFromEvent(event),
+			host: this.extractHostFromEvent(event),
+			hostLink: this.extractHostLinkFromEvent(event),
+			contact: this.extractContactFromEvent(event),
+			latitude,
+			longitude,
+			timezone,
+			tags: this.extractTagsFromEvent(event),
+			sourceUrl: this.buildEventUrl(event),
+			source: `tribehaus`,
+		} satisfies ScrapedEvent;
+	}
 
-    extractDescription(html: string): string | undefined {
-        const $ = cheerio.load(html);
-        const description = $('#description blockquote.readmore').html()?.trim();
-        return cleanProseHtml(description);
-    }
+	private extractNameFromEvent(event: TribehausEvent): string | undefined {
+		const title = event.title?.trim();
+		return title || undefined;
+	}
 
-    extractImageUrls(html: string): string[] | undefined {
-        const $ = cheerio.load(html);
-        const imageUrls: string[] = [];
-        $('.cb-slider-inner .item img').each((_, img) => {
-            const src = $(img).attr('src') || $(img).attr('srcset')?.split(' ')[0];
-            if (src) {
-                const fullUrl = makeAbsoluteUrl(src)?.split('?')[0];
-                if (fullUrl && !imageUrls.includes(fullUrl)) {
-                    imageUrls.push(fullUrl);
-                }
-            }
-        });
-        $('.eph521:not(.eph521--map):not(.eph521--ratings) img').each((_, img) => {
-            const src = $(img).attr('src') || $(img).attr('srcset')?.split(' ')[0];
-            if (src) {
-                const fullUrl = makeAbsoluteUrl(src)?.split('?')[0];
-                if (fullUrl && !imageUrls.includes(fullUrl)) {
-                    imageUrls.push(fullUrl);
-                }
-            }
-        });
-        return imageUrls.length > 0 ? imageUrls : undefined;
-    }
+	private extractStartAtFromEvent(event: TribehausEvent): string | undefined {
+		return this.toIsoDateTime({
+			date: event.start_date,
+			time: event.start_time,
+		});
+	}
 
-    extractHost(html: string): string | undefined {
-        const $ = cheerio.load(html);
-        const memberLinkElement = $('li[data-property="Veranstalter"] a.jq-link-entry-page');
-        if (memberLinkElement.length) {
-            return memberLinkElement.text().trim();
-        }
-        const artistElement = $('li[data-property="Knstlername"] span').first();
-        if (artistElement.length) {
-            return artistElement.text().trim();
-        }
-        return undefined;
-    }
+	private extractEndAtFromEvent(event: TribehausEvent): string | undefined {
+		const endDate = event.end_date || event.start_date;
+		const endTime = event.end_time;
+		if (!endDate || !endTime) return undefined;
+		return this.toIsoDateTime({ date: endDate, time: endTime });
+	}
 
-    extractHostLink(html: string): string | undefined {
-        const $ = cheerio.load(html);
-        const memberLinkElement = $('li[data-property="Veranstalter"] a.jq-link-entry-page');
-        let link = memberLinkElement.attr('href');
+	private extractAddressFromEvent(event: TribehausEvent): string[] {
+		const parts: string[] = [];
+		if (event.street?.trim()) parts.push(event.street.trim());
 
-        if (!link) link = $('a.jq-link-to-website').attr('href');
+		const cityLine = [event.zip_code?.trim(), event.city?.trim()].filter(Boolean).join(` `);
+		if (cityLine) parts.push(cityLine);
 
-        if (!link) return undefined;
+		if (event.country_code?.trim() && event.country_code !== `DE`) {
+			parts.push(event.country_code.trim());
+		}
 
-        return makeAbsoluteUrl(link);
-    }
+		if (parts?.length) return parts;
 
-    extractTags(html: string): string[] | undefined {
-        const $ = cheerio.load(html);
-        const tagsSet = new Set<string>();
-        $('li[data-property="Rubrik"] div.available').each((_, div) => {
-            const tagText = $(div).text().trim();
-            if (tagText) {
-                tagsSet.add(tagText);
-            }
-        });
-        return tagsSet.size > 0 ? Array.from(tagsSet) : undefined;
-    }
+		const raw = event.raw_address?.trim() || event.address?.trim();
+		if (!raw) return [];
+		return raw.split(`,`).map((part) => part.trim()).filter(Boolean);
+	}
 
-    extractCoordinates(html: string): { latitude: number | null, longitude: number | null } {
-        const $ = cheerio.load(html);
-        const jsonLdScript = $('script[type="application/ld+json"]').html();
-        let latitude: number | null = null;
-        let longitude: number | null = null;
+	private extractPriceFromEvent(event: TribehausEvent): string | undefined {
+		const priceType = event.price_type === `fixed` || event.price_type === `donation` || event.price_type === `free`
+			? event.price_type
+			: `free`;
 
-        if (jsonLdScript) {
-            try {
-                const jsonData = JSON.parse(jsonLdScript);
+		if (priceType === `free`) return `Kostenlos`;
 
-                // Check direct geo property
-                if (jsonData.geo) {
-                    if (jsonData.geo.latitude) {
-                        const lat = parseFloat(jsonData.geo.latitude);
-                        latitude = !isNaN(lat) ? lat : null;
-                    }
-                    if (jsonData.geo.longitude) {
-                        const lng = parseFloat(jsonData.geo.longitude);
-                        longitude = !isNaN(lng) ? lng : null;
-                    }
-                }
+		const amount = event.price;
+		if (amount == null || Number.isNaN(Number(amount))) {
+			return priceType === `donation` ? `Spendenbasis` : undefined;
+		}
 
-                // Check location.geo property if direct geo wasn't found
-                if ((!latitude || !longitude) && jsonData.location && jsonData.location.geo) {
-                    if (!latitude && jsonData.location.geo.latitude) {
-                        const lat = parseFloat(jsonData.location.geo.latitude);
-                        latitude = !isNaN(lat) ? lat : null;
-                    }
-                    if (!longitude && jsonData.location.geo.longitude) {
-                        const lng = parseFloat(jsonData.location.geo.longitude);
-                        longitude = !isNaN(lng) ? lng : null;
-                    }
-                }
-            } catch (error) { void error; }
-        }
+		const formatted = formatEuro(Number(amount));
+		if (priceType === `donation`) return `Spende ab ${formatted}`;
+		return formatted;
+	}
 
-        return { latitude, longitude };
-    }
+	private extractDescriptionFromEvent(event: TribehausEvent): string | undefined {
+		const raw = event.description?.trim();
+		if (!raw) return undefined;
+		const html = raw
+			.split(/\r?\n+/)
+			.map((line) => line.trim())
+			.filter(Boolean)
+			.map((line) => `<p>${escapeHtml(line)}</p>`)
+			.join(``);
+		return cleanProseHtml(html) || undefined;
+	}
 
+	private extractImageUrlsFromEvent(event: TribehausEvent): string[] {
+		const urls: string[] = [];
+		if (event.image_url?.trim()) urls.push(event.image_url.trim());
+		for (const url of event.gallery ?? []) {
+			if (!url?.trim()) continue;
+			if (urls.includes(url.trim())) continue;
+			urls.push(url.trim());
+		}
+		return urls;
+	}
 
-    async extractEventData(html: string, permalink: string): Promise<ScrapedEvent | undefined> {
-        const name = this.extractName(html);
-        if (!name) {
-            console.error(`Skipping event from ${permalink} due to missing name.`);
-            return undefined;
-        }
+	private extractHostFromEvent(event: TribehausEvent): string | undefined {
+		const creatorName = event.creator_profiles?.display_name?.trim();
+		if (creatorName) return creatorName;
 
-        const startAt = this.extractStartAt(html);
-        if (!startAt) {
-            console.error(`Invalid start date found for ${permalink} (name: ${name}). Skipping event.`);
-            return undefined;
-        }
+		const hostName = event.host_name?.trim();
+		if (!hostName) return undefined;
+		if (hostName.toLowerCase() === `me`) return undefined;
+		return hostName;
+	}
 
-        const address = this.extractAddress(html) || [];
-        const { latitude, longitude } = this.extractCoordinates(html);
-        const geocodedLocation = address.length
-            ? await geocodeAddressCached({
-                addressLines: address,
-                apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
-            })
-            : null;
+	private extractHostLinkFromEvent(event: TribehausEvent): string | undefined {
+		const profile = event.creator_profiles;
+		if (!profile?.id) return undefined;
+		const slug = profile.slug?.trim() || `creator`;
+		return `${SITE_BASE}/creator/${slugify(slug)}-${profile.id}`;
+	}
 
-        return {
-            name,
-            startAt,
-            endAt: this.extractEndAt(html),
-            address,
-            price: this.extractPrice(html),
-            priceIsHtml: false,
-            description: this.extractDescription(html) || '',
-            imageUrls: this.extractImageUrls(html) || [],
-            host: this.extractHost(html),
-            hostLink: this.extractHostLink(html),
-            sourceUrl: permalink,
-            latitude: latitude ?? geocodedLocation?.lat ?? null,
-            longitude: longitude ?? geocodedLocation?.lng ?? null,
-            timezone: geocodedLocation?.timezone ?? null,
-            tags: this.extractTags(html) || [],
-            source: 'tribehaus',
-        };
-    }
+	private extractContactFromEvent(event: TribehausEvent): string[] {
+		const contacts: string[] = [];
+		if (event.ticket_link?.trim()) contacts.push(event.ticket_link.trim());
+		if (event.creator_profiles?.website?.trim()) contacts.push(event.creator_profiles.website.trim());
+		return [...new Set(contacts)];
+	}
 
+	private extractTagsFromEvent(event: TribehausEvent): string[] {
+		const tags = new Set<string>();
+		for (const category of event.categories ?? []) {
+			if (typeof category !== `string`) continue;
+			const trimmed = category.trim();
+			if (trimmed) tags.add(trimmed);
+		}
+		for (const tag of event.tags ?? []) {
+			if (typeof tag !== `string`) continue;
+			const trimmed = tag.trim();
+			if (trimmed) tags.add(trimmed);
+		}
+		return [...tags];
+	}
 
-    async scrapeWebsite(startUrl: string = `${BASE_URL}/events`): Promise<ScrapedEvent[]> {
-        const allEvents: ScrapedEvent[] = [];
-        let allPermalinks: string[] = [];
-        let currentListUrl: string | null = startUrl;
-        let pageCount = 1;
+	private buildEventUrl(event: TribehausEvent): string {
+		const slug = event.slug?.trim() || slugify(event.title || `tribehaus`);
+		return `${SITE_BASE}/events/${slug}-${event.id}`;
+	}
 
-        console.error("--- Starting Phase 1: Collecting Permalinks ---");
-        while (currentListUrl) {
-            try {
-                const listHtml = await customFetch(currentListUrl, { returnType: 'text' });
-                const { permalinks, nextPageUrl } = this.parseEventList(listHtml);
+	private toIsoDateTime(args: { date: string | null | undefined; time: string | null | undefined }): string | undefined {
+		const { date, time } = args;
+		if (!date) return undefined;
 
-                if (permalinks.length === 0 && pageCount > 1) {
-                    console.error(`No permalinks found on list page ${pageCount} (${currentListUrl}), stopping list pagination.`);
-                    currentListUrl = null;
-                } else if (permalinks.length === 0 && pageCount === 1) {
-                    console.error(`No permalinks found on the first list page (${currentListUrl}), stopping.`);
-                    currentListUrl = null;
-                }
-                else {
-                    allPermalinks = allPermalinks.concat(permalinks);
-                    currentListUrl = nextPageUrl;
-                    pageCount++;
-                    await Bun.sleep(REQUEST_DELAY_MS);
-                }
-            } catch (error) {
-                console.error(`Error processing list page ${currentListUrl}:`, error);
-                currentListUrl = null;
-            }
-        }
-        console.error(`--- Finished Phase 1: Collected ${allPermalinks.length} permalinks ---`);
+		const dateMatch = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+		if (!dateMatch) return undefined;
 
-        console.error("--- Starting Phase 2: Fetching Event Details ---");
-        let detailCount = 0;
-        for (const permalink of allPermalinks) {
-            detailCount++;
-            console.error(`Fetching detail ${detailCount}/${allPermalinks.length}: ${permalink}...`);
-            try {
-                const eventHtml = await customFetch(permalink, { returnType: 'text' });
-                const eventDetail = await this.extractEventData(eventHtml, permalink);
-                console.error(eventDetail);
-                if (eventDetail) {
-                    allEvents.push(eventDetail);
-                }
-            } catch (error) {
-                console.error(`Failed to process event detail ${permalink}:`, error);
-            }
-            await Bun.sleep(REQUEST_DELAY_MS);
-        }
-        console.error(`--- Finished Phase 2: Successfully parsed ${allEvents.length} events ---`);
-        return allEvents;
-    }
+		const year = Number(dateMatch[1]);
+		const month = Number(dateMatch[2]);
+		const day = Number(dateMatch[3]);
 
-    async scrapeHtmlFiles(filePaths: string[]): Promise<ScrapedEvent[]> {
-        console.error(`Processing ${filePaths.length} HTML file(s)...`);
-        const allEvents: ScrapedEvent[] = [];
+		let hour = 0;
+		let minute = 0;
+		if (time) {
+			const timeMatch = time.match(/^(\d{2}):(\d{2})/);
+			if (timeMatch) {
+				hour = Number(timeMatch[1]);
+				minute = Number(timeMatch[2]);
+			}
+		}
 
-        for (const filePath of filePaths) {
-            console.error(`Processing HTML file: ${filePath}...`);
-            try {
-                const htmlContent = await Bun.file(filePath).text();
-                const event = await this.extractEventData(htmlContent, `file://${filePath}`);
-                if (event) {
-                    allEvents.push(event);
-                }
-            } catch (error) {
-                console.error(`Error processing file ${filePath}:`, error);
-            }
-        }
-        console.error(`--- File processing finished. Total events collected: ${allEvents.length} ---`);
-        return allEvents;
-    }
+		return dateToIsoStr(year, month, day, hour, minute, DEFAULT_TIMEZONE, false);
+	}
 }
 
+function formatEuro(amount: number) {
+	const value = Number.isInteger(amount) ? String(amount) : amount.toFixed(2).replace(`.`, `,`);
+	return `${value}€`;
+}
 
-// Main execution
+function escapeHtml(text: string) {
+	return text
+		.replaceAll(`&`, `&amp;`)
+		.replaceAll(`<`, `&lt;`)
+		.replaceAll(`>`, `&gt;`)
+		.replaceAll(`"`, `&quot;`);
+}
+
+function slugify(value: string) {
+	return value
+		.toLowerCase()
+		.trim()
+		.replace(/ä/g, `ae`)
+		.replace(/ö/g, `oe`)
+		.replace(/ü/g, `ue`)
+		.replace(/ß/g, `ss`)
+		.replace(/[^a-z0-9]+/g, `-`)
+		.replace(/^-+|-+$/g, ``)
+		.replace(/-+/g, `-`) || `tribehaus`;
+}
+
 if (import.meta.main) {
-    try {
-        const scraper = new WebsiteScraper();
-        if (process.argv.length > 2) {
-            console.log(await scraper.scrapeHtmlFiles(process.argv.slice(2)))
-        } else {
-            console.log(await scraper.scrapeWebsite())
-        }
-    } catch (error) {
-        console.error("Unhandled error in main execution:", error);
-        process.exit(1);
-    }
+	try {
+		const scraper = new WebsiteScraper();
+		const events = await scraper.scrapeWebsite();
+		console.log(JSON.stringify(events, null, 2));
+	} catch (error) {
+		console.error(`Unhandled error in main execution:`, error);
+		process.exit(1);
+	}
 }
+
+type TribehausCreatorProfile = {
+	id: string;
+	slug?: string | null;
+	display_name?: string | null;
+	website?: string | null;
+};
+
+type TribehausEvent = {
+	id: string;
+	title?: string | null;
+	slug?: string | null;
+	description?: string | null;
+	host_name?: string | null;
+	start_date?: string | null;
+	end_date?: string | null;
+	start_time?: string | null;
+	end_time?: string | null;
+	raw_address?: string | null;
+	address?: string | null;
+	city?: string | null;
+	street?: string | null;
+	zip_code?: string | null;
+	country_code?: string | null;
+	lat?: number | null;
+	lng?: number | null;
+	price?: number | null;
+	price_type?: string | null;
+	categories?: string[] | null;
+	tags?: string[] | null;
+	image_url?: string | null;
+	gallery?: string[] | null;
+	ticket_link?: string | null;
+	status?: string | null;
+	creator_profiles?: TribehausCreatorProfile | null;
+};
