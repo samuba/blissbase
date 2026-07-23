@@ -41,7 +41,7 @@ bun run scripts/scrape-seijetzt.ts <path_to_html_file> > event.json
 
 ### scrape-tribehaus.ts
 
-Scrapes events from tribehaus.org with two-phase approach: collect permalinks, then process events.
+Scrapes events from tribehaus.app via the public Supabase REST API (no browser).
 
 ```bash
 bun run scripts/scrape-tribehaus.ts > events.json

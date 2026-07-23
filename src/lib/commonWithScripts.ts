@@ -1,5 +1,5 @@
 export const WEBSITE_SCRAPER_CONFIG = {
-    tribehaus: { module: './scrape-tribehaus.ts', label: 'Tribehaus', url: 'https://tribehaus.org' },
+    tribehaus: { module: './scrape-tribehaus.ts', label: 'Tribehaus', url: 'https://tribehaus.app' },
     heilnetz: { module: './scrape-heilnetz.ts', label: 'Heilnetz', url: 'https://heilnetz.de' },
     heilnetzowl: { module: './scrape-heilnetzowl.ts', label: 'Heilnetz OWL', url: 'https://www.heilnetz-owl.de' },
     seijetzt: { module: './scrape-seijetzt.ts', label: 'Sei.Jetzt', url: 'https://sei.jetzt' },
