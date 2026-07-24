@@ -32,6 +32,7 @@ declare global {
 		}
 		interface PageState {
 			selectedEventId?: number;
+			selectedOfferingSlug?: string;
 		}
 		interface Platform {
 			caches: CacheStorage & { default: Cache };

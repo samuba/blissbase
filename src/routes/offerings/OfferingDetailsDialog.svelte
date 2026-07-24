@@ -25,7 +25,7 @@
 		activeSlug = slug;
 		consumedQuerySlug = slug;
 		dialog.show();
-		pushState(routes.offeringDetails(slug), {});
+		pushState(routes.offeringDetails(slug), { selectedOfferingSlug: slug });
 	}
 
 	function dialogHostPath(url: URL) {
@@ -88,6 +88,12 @@
 	);
 
 	$effect(() => {
+		// close dialog if user clicked browser back button
+		if (page.state.selectedOfferingSlug) return;
+		dialog.closeGracefully(clearActiveSlug);
+	});
+
+	$effect(() => {
 		const href = page.url.href;
 		untrack(() => {
 			void openFromOfferingSlugQuery(new URL(href));
@@ -109,6 +115,8 @@
 			return;
 		}
 
+		if (activeSlug === offeringSlug && dialog.open) return;
+
 		consumedQuerySlug = offeringSlug;
 		editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
 		// Replace `?offeringSlug=` with the host page, then push the dialog URL so
@@ -119,25 +127,23 @@
 			return;
 		}
 
-		pushState(routes.offeringDetails(offeringSlug), {});
+		pushState(routes.offeringDetails(offeringSlug), { selectedOfferingSlug: offeringSlug });
 		activeSlug = offeringSlug;
 		dialog.show({ noEnterAnimation: true });
 	}
 
 	async function syncFromUrl(url: URL) {
 		const slug = parseOfferingDetailsSlugFromUrl(url);
-		if (slug) {
-			activeSlug = slug;
-			await ensureOfferingLoaded(slug);
-			// Card click already called show() before pushState; don't override its enter animation.
-			if (dialog.open) return;
-			dialog.show({ noEnterAnimation: true });
-			return;
-		}
+		if (!slug) return;
 
-		if (!dialog.open && !activeSlug) return;
-		fetchedOffering = null;
-		dialog.closeGracefully(clearActiveSlug);
+		activeSlug = slug;
+		await ensureOfferingLoaded(slug);
+		// Card click already called show() before pushState; don't override its enter animation.
+		if (dialog.open) return;
+		if (!page.state.selectedOfferingSlug) {
+			replaceState(routes.currentPath(url), { selectedOfferingSlug: slug });
+		}
+		dialog.show({ noEnterAnimation: true });
 	}
 
 	async function ensureOfferingLoaded(slug: string) {
