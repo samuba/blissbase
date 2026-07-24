@@ -47,6 +47,7 @@ export const routes = {
         return relativeUrl(url) ;
     },
     favorites: () => resolve(`/profile/favorites`) ,
+    admin: () => resolve(`/admin`) ,
 }
 
 export const BASE_URL = "https://blissbase.app" as const

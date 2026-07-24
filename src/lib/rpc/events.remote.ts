@@ -10,11 +10,13 @@ import * as v from 'valibot';
 
 // using `command` instead of `query` cuz query does not allow setting cookies
 export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, async (params) => {
-    const { cookies } = getRequestEvent();
+    const { cookies, locals } = getRequestEvent();
+    const source = locals.isAdminSession ? (params.source?.trim() || null) : null;
+    const fetchParams = { ...params, source };
 
     if (!cookies) {
         // Fallback to regular fetchEvents if no cookies context
-        return prepareEventsResultForUi(await fetchEvents(params));
+        return prepareEventsResultForUi(await fetchEvents(fetchParams));
     }
 
     // Load saved filters from cookie
@@ -32,11 +34,12 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         params.sortBy !== savedFilters.sortBy ||
         params.sortOrder !== savedFilters.sortOrder ||
         JSON.stringify(params.tagIds) !== JSON.stringify(savedFilters.tagIds) ||
-        params.attendanceMode !== savedFilters.attendanceMode
+        params.attendanceMode !== savedFilters.attendanceMode ||
+        source !== (savedFilters.source ?? null)
     ) : true;
 
     // Fetch events with current params
-    const result = prepareEventsResultForUi(await fetchEvents(params));
+    const result = prepareEventsResultForUi(await fetchEvents(fetchParams));
 
     const coarseCoords = coarseLatLngForAnalytics({
         lat: result.pagination.lat,
@@ -53,12 +56,14 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         sortBy: result.pagination.sortBy,
         sortOrder: result.pagination.sortOrder,
         tagIds: result.pagination.tagIds,
-        attendanceMode: result.pagination.attendanceMode
+        attendanceMode: result.pagination.attendanceMode,
+        source: result.pagination.source
     })
 
     // Save to cookie only if params have changed (and not on pagination)
     if (hasChanged && params.page === 1) {
-        const filterData = {
+        saveFiltersToCookie(cookies, {
+            ...(savedFilters ?? {}),
             startDate: params.startDate,
             endDate: params.endDate,
             plzCity: params.plzCity,
@@ -69,10 +74,9 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
             sortBy: params.sortBy,
             sortOrder: params.sortOrder,
             tagIds: params.tagIds,
-            attendanceMode: params.attendanceMode
-        };
-
-        saveFiltersToCookie(cookies, filterData);
+            attendanceMode: params.attendanceMode,
+            source: locals.isAdminSession ? source : (savedFilters?.source ?? null),
+        });
     }
 
     nothing().refresh()

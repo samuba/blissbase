@@ -1846,3 +1846,63 @@ msgstr "<0/> Online oder in {0}"
 #: src/lib/components/OfferingCard.svelte
 msgid "Online oder in {0}"
 msgstr "Online oder in {0}"
+
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Google Maps Autocomplete konnte nicht geladen werden."
+msgstr "Google Maps Autocomplete konnte nicht geladen werden."
+
+#: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "<0/> Erneut laden"
+msgstr "<0/> Erneut laden"
+
+#: src/routes/admin/+page.svelte
+#: src/routes/profile/+page.svelte
+msgid "Admin"
+msgstr "Admin"
+
+#: src/routes/profile/+page.svelte
+msgid "Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen."
+msgstr "Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen."
+
+#: src/routes/profile/+page.svelte
+msgid "Admin öffnen"
+msgstr "Admin öffnen"
+
+#: src/routes/admin/+page.svelte
+#: src/routes/admin/+page.svelte
+msgid "All"
+msgstr "All"
+
+#: src/routes/admin/+page.svelte
+msgid "Failed to save source filter"
+msgstr "Failed to save source filter"
+
+#: src/routes/admin/+page.svelte
+msgid "Wähle, welche Event-Quellen auf der Startseite angezeigt werden."
+msgstr "Wähle, welche Event-Quellen auf der Startseite angezeigt werden."
+
+#~ msgid "Event Quelle"
+#~ msgstr "Event Quelle"
+
+#: src/routes/admin/+page.svelte
+msgid "Wird gespeichert..."
+msgstr "Wird gespeichert..."
+
+#: src/routes/admin/+page.svelte
+msgid "Es werden Events aus allen Quellen angezeigt."
+msgstr "Es werden Events aus allen Quellen angezeigt."
+
+#. 0: getSourceLabel(selectedSource)
+#: src/routes/admin/+page.svelte
+msgid "Es werden nur Events aus „{0}“ angezeigt."
+msgstr "Es werden nur Events aus „{0}“ angezeigt."
+
+#: src/routes/admin/+page.svelte
+msgid "<0/> Zur Event-Liste"
+msgstr "<0/> Zur Event-Liste"
+
+#: src/routes/admin/+page.svelte
+msgid "Event Quelle Filter"
+msgstr "Event Quelle Filter"

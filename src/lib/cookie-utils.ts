@@ -4,6 +4,7 @@ import type { AttendanceMode } from './server/schema';
 
 const COOKIE_NAME = 'blissbase_filters';
 export const LOCATION_INTERACTED_COOKIE_NAME = 'blissbase_location_set';
+export const ALL_EVENT_SOURCES_VALUE = `all`;
 const COOKIE_OPTIONS = {
     path: '/',
     maxAge: 60 * 60 * 24 * 365, // 1 year
@@ -28,6 +29,8 @@ export type FilterCookieData = {
     sortOrder?: string | null;
     tagIds?: number[] | null;
     attendanceMode?: AttendanceMode | null;
+    /** Admin-only: filter events list by `events.source`. `null` means all sources. */
+    source?: string | null;
 };
 
 /**
@@ -72,7 +75,8 @@ export function validateFilterData(data: unknown): FilterCookieData | null {
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
         sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
         tagIds: tagIds?.length ? tagIds : null,
-        attendanceMode: typeof filterData.attendanceMode === 'string' ? filterData.attendanceMode as AttendanceMode : null
+        attendanceMode: typeof filterData.attendanceMode === 'string' ? filterData.attendanceMode as AttendanceMode : null,
+        source: typeof filterData.source === 'string' && filterData.source.trim() ? filterData.source.trim() : null,
     };
 }
 

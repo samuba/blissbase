@@ -7,6 +7,7 @@
 	import { getMyPublicProfile } from '$lib/rpc/profile.remote';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import { routes } from '$lib/routes';
+	import { user } from '$lib/user.svelte';
 
 	let isLoggingOut = $state(false);
 	const myPublic = await getMyPublicProfile();
@@ -103,6 +104,29 @@
 						<div class="card-actions pt-1">
 							<a href={routes.myOfferings()} class="btn">
 								Angebote verwalten
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	{#if user.isAdmin}
+		<div class="card bg-base-100 mt-4 shadow">
+			<div class="card-body gap-4">
+				<div class="flex items-start gap-3">
+					<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
+						<i class="icon-[ph--shield-star] size-7"></i>
+					</div>
+					<div class="min-w-0 flex-1 space-y-2">
+						<h3 class="text-lg font-semibold">Admin</h3>
+						<p class="text-base-content/80 text-sm leading-relaxed">
+							Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen.
+						</p>
+						<div class="card-actions pt-1">
+							<a href={routes.admin()} class="btn">
+								Admin öffnen
 							</a>
 						</div>
 					</div>

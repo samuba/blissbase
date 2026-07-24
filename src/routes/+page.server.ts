@@ -17,6 +17,11 @@ export const load = (async ({ cookies, locals }) => {
     };
 
     let params: LoadEventsParams = savedFilters ? { ...defaultParams, ...savedFilters } : defaultParams;
+    // Source filter is admin-only; ignore cookie value for non-admins
+    params = {
+        ...params,
+        source: locals.isAdminSession ? (params.source?.trim() || null) : null,
+    };
     const hasSavedLocation = Boolean(
         savedFilters?.plzCity?.trim() ||
         (savedFilters?.lat != null && savedFilters?.lng != null)
@@ -43,7 +48,8 @@ export const load = (async ({ cookies, locals }) => {
         plzCity: pagination.plzCity,
         distance: pagination.distance,
         lat: pagination.lat,
-        lng: pagination.lng
+        lng: pagination.lng,
+        source: locals.isAdminSession ? (pagination.source ?? null) : (savedFilters?.source ?? null),
     });
 
     const tags = await getTags(); // cant do this in TagSelection.svelte cuz it get rerendered via 'if' in template and refetches from server then. Also having it in one component up the tree caused the popover to not be able to close on SSR'd page

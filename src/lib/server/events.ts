@@ -110,6 +110,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 	let sortBy = params.sortBy === 'distance' ? 'distance' : 'time';
 	const sortOrder = params.sortOrder === 'desc' ? 'desc' : 'asc';
 	const offset = (page - 1) * limit;
+	const source = params.source?.trim() || null;
 
 	const now = new Date();
 	const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
@@ -162,6 +163,10 @@ export async function fetchEvents(params: LoadEventsParams) {
 	);
 	const dateCondition = or(startsInRange, endsInRange, spansRange);
 	const allConditions = [and(s.events.listed), dateCondition];
+
+	if (source) {
+		allConditions.push(eq(s.events.source, source));
+	}
 
 	if (!attendanceMode || attendanceMode === 'offline+online') {
 		allConditions.push(or(
@@ -321,7 +326,8 @@ export async function fetchEvents(params: LoadEventsParams) {
 			sortBy,
 			sortOrder,
 			tagIds,
-			attendanceMode
+			attendanceMode,
+			source
 		} satisfies LoadEventsParams & { totalEvents: number; totalPages: number }
 	};
 }
@@ -398,6 +404,7 @@ export const loadEventsParamsSchema = v.partial(
 		tagIds: v.nullable(v.array(v.number())),
 		onlyOnlineEvents: v.nullable(v.boolean()), // TODO: remove after some time
 		attendanceMode: v.nullable(v.picklist(attendanceModeEnum)),
+		source: v.nullable(v.string()),
 		// these are not used as params but are returned in the pagination object
 		totalEvents: v.nullable(v.number()),
 		totalPages: v.nullable(v.number())

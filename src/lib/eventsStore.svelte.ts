@@ -24,6 +24,7 @@ type PaginationState = {
     sortOrder?: string | null;
     tagIds?: number[] | null;
     attendanceMode?: AttendanceMode | null;
+    source?: string | null;
     totalEvents?: number | null;
     totalPages?: number | null;
 };
@@ -107,6 +108,7 @@ export class EventsStore {
                     sortOrder: params.sortOrder ?? null,
                     tagIds: params.tagIds ?? null,
                     attendanceMode: params.attendanceMode ?? null,
+                    source: params.source ?? null,
                     totalEvents: params.totalEvents ?? null,
                     totalPages: params.totalPages ?? null,
                 };
@@ -155,7 +157,8 @@ export class EventsStore {
                 sortBy: this.pagination.sortBy,
                 sortOrder: this.pagination.sortOrder,
                 tagIds: this.pagination.tagIds,
-                attendanceMode: this.pagination.attendanceMode
+                attendanceMode: this.pagination.attendanceMode,
+                source: this.pagination.source
             },
             true
         );
@@ -232,7 +235,15 @@ export class EventsStore {
         setLocationInteractedCookie();
         this.hasAnyFilter = false
         this.showTextSearch = false;
-        return this.loadEvents(initialPagination());
+        return this.loadEvents({
+            ...initialPagination(),
+            source: this.pagination.source,
+        });
+    }
+
+    /** Clears cached events so the next home visit re-initializes from server data. */
+    clearCachedEvents() {
+        this.events = [];
     }
 
     // Refresh current page
