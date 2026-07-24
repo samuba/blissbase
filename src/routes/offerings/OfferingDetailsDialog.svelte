@@ -14,6 +14,8 @@
 	const dialog = new ShallowDialogState();
 	let editReturnTo = $state<string | undefined>(undefined);
 	let activeSlug = $state<string | null>(null);
+	/** Set when a slug was opened from `?offeringSlug=`; blocks reopen after dismiss. */
+	let consumedQuerySlug: string | null = null;
 
 	export function showOfferingDetailsDialog(slug: string) {
 		editReturnTo = withOfferingSlug({
@@ -21,6 +23,7 @@
 			offeringSlug: slug,
 		});
 		activeSlug = slug;
+		consumedQuerySlug = slug;
 		dialog.show();
 		pushState(routes.offeringDetails(slug), {});
 	}
@@ -62,6 +65,7 @@
 </script>
 
 <script lang="ts">
+	import { page } from '$app/state';
 	import {
 		dialogContentAnimationClasses,
 		dialogContentExitAnimationClasses,
@@ -71,8 +75,7 @@
 	import { Dialog } from '$lib/components/dialog';
 	import { getOfferingBySlug } from '$lib/rpc/offerings.remote';
 	import OfferingDetails from './OfferingDetails.svelte';
-	import { onNavigationUrlChange } from '$lib/shallowDialog.svelte';
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 
 	let { offerings }: { offerings: OfferingDetailsDialogOffering[] } = $props();
 
@@ -84,10 +87,10 @@
 		offeringFromList ?? (fetchedOffering?.slug === activeSlug ? fetchedOffering : undefined),
 	);
 
-	onMount(() => {
-		void openFromOfferingSlugQuery(new URL(window.location.href));
-		return onNavigationUrlChange((url) => {
-			void syncFromUrl(url);
+	$effect(() => {
+		const href = page.url.href;
+		untrack(() => {
+			void openFromOfferingSlugQuery(new URL(href));
 		});
 	});
 
@@ -99,6 +102,14 @@
 		}
 
 		const hostPath = routes.currentPath(url);
+		// After dismiss, history.back() can restore a stale `?offeringSlug=` in page.url;
+		// strip it without reopening. Still allow reopen when returning from edit (dialog still open).
+		if (consumedQuerySlug === offeringSlug && !dialog.open) {
+			replaceState(hostPath, {});
+			return;
+		}
+
+		consumedQuerySlug = offeringSlug;
 		editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
 		// Replace `?offeringSlug=` with the host page, then push the dialog URL so
 		// history.back() closes to the list instead of returning to /edit.

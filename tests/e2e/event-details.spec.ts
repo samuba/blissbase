@@ -155,4 +155,23 @@ test.describe('Event Deep Linking', () => {
 		await expect(page.locator('body')).toBeVisible();
 		await expect(page.locator('h1').first()).toBeVisible();
 	});
+
+	test('eventSlug query opens a dialog and dismissing does not reopen it', async ({ page }) => {
+		await clearTestEvents(page);
+		const { event } = await createEvent(page, createMeditationEvent({ slug: 'query-dismiss-event' }));
+
+		await page.goto(`/?eventSlug=${encodeURIComponent(event.slug)}`);
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.locator('h1').first()).toBeVisible();
+		await expect(page).toHaveURL(new RegExp(`/${event.slug}$`));
+
+		await page.keyboard.press('Escape');
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL('/');
+		// Stay closed after history/query sync settles (reopen regression).
+		await page.waitForTimeout(500);
+		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect(page).toHaveURL('/');
+	});
 });

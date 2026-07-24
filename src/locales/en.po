@@ -354,9 +354,8 @@ msgstr "Websites"
 msgid "sei.jetzt"
 msgstr "sei.jetzt"
 
-#: src/routes/sources/+page.svelte
-msgid "tribehaus.org"
-msgstr "tribehaus.org"
+#~ msgid "tribehaus.org"
+#~ msgstr "tribehaus.org"
 
 #: src/routes/sources/+page.svelte
 msgid "heilnetz.de"
@@ -1906,3 +1905,7 @@ msgstr "<0/> To the event list"
 #: src/routes/admin/+page.svelte
 msgid "Event Quelle Filter"
 msgstr "Event source filter"
+
+#: src/routes/sources/+page.svelte
+msgid "tribehaus.app"
+msgstr "tribehaus.app"

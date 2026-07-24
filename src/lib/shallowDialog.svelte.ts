@@ -38,12 +38,3 @@ export class ShallowDialogState {
 		}, CLOSE_ANIMATION_MS);
 	}
 }
-
-/** Subscribe to Navigation API URL changes; returns an unsubscribe. */
-export function onNavigationUrlChange(handler: (url: URL) => void) {
-	const onUrlChanged = (e: { destination: NavigationDestination }) => {
-		handler(new URL(e.destination.url));
-	};
-	navigation.addEventListener(`navigate`, onUrlChanged);
-	return () => navigation.removeEventListener(`navigate`, onUrlChanged);
-}

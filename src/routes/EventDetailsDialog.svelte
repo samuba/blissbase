@@ -8,9 +8,12 @@
 	const dialog = new ShallowDialogState();
 	let event = $state<UiEvent | undefined>(undefined);
 	let openingEventSlug = $state<string | undefined>(undefined);
+	/** Set when a slug was opened from `?eventSlug=`; blocks reopen after dismiss. */
+	let consumedQuerySlug: string | null = null;
 
 	export function showEventDetailsDialog(eventToShow: UiEvent, args?: { noEnterAnimation?: boolean }) {
 		event = eventToShow;
+		consumedQuerySlug = eventToShow.slug;
 		dialog.show({ noEnterAnimation: args?.noEnterAnimation });
 		pushState(resolve('/[slug]', { slug: eventToShow.slug }), {
 			selectedEventId: eventToShow.id,
@@ -35,8 +38,7 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
 	import { getEventBySlug } from '$lib/rpc/events.remote';
-	import { onNavigationUrlChange } from '$lib/shallowDialog.svelte';
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 
 	$effect(() => {
 		// close dialog if user clicked browser back button
@@ -44,21 +46,31 @@
 		dialog.closeGracefully(clearEvent);
 	});
 
-	onMount(() => {
-		void maybeOpenFromEventSlugQuery(new URL(window.location.href));
-		return onNavigationUrlChange((url) => {
-			void maybeOpenFromEventSlugQuery(url);
+	$effect(() => {
+		const href = page.url.href;
+		untrack(() => {
+			void maybeOpenFromEventSlugQuery(new URL(href));
 		});
 	});
 
 	async function maybeOpenFromEventSlugQuery(url: URL) {
 		const eventSlug = takeEventSlugQuery(url);
 		if (!eventSlug) return;
+
+		const hostPath = routes.currentPath(url);
+		// After dismiss, history.back() can restore a stale `?eventSlug=` in page.url;
+		// strip it without reopening.
+		if (consumedQuerySlug === eventSlug && !dialog.open) {
+			replaceState(hostPath, {});
+			return;
+		}
+
 		if (openingEventSlug === eventSlug || event?.slug === eventSlug) return;
 
 		openingEventSlug = eventSlug;
 		try {
-			replaceState(routes.currentPath(url), {});
+			consumedQuerySlug = eventSlug;
+			replaceState(hostPath, {});
 			const eventToShow = await getEventBySlug({ slug: eventSlug });
 			if (openingEventSlug !== eventSlug) return;
 			if (!eventToShow) return;

@@ -30,9 +30,31 @@ test.describe("Offering creation", () => {
 	});
 
 	test("signed-in user creates an online offering with an image", async ({ page }) => {
+		await page.addInitScript(() => {
+			try {
+				Reflect.deleteProperty(window, `navigation`);
+			} catch {
+				// Fall through to shadowing a non-configurable descriptor.
+			}
+			if (typeof window.navigation === `undefined`) return;
+
+			try {
+				Object.defineProperty(window, `navigation`, {
+					configurable: true,
+					value: undefined,
+				});
+			} catch {
+				try {
+					Reflect.set(window, `navigation`, undefined);
+				} catch {
+					// The assertion below reports browsers where neither override works.
+				}
+			}
+		});
 		await createProfile(page, createCompleteProfile());
 		await signInAsE2EUser(page);
 		await page.goto(`/offerings/new`);
+		expect(await page.evaluate(() => typeof window.navigation)).toBe(`undefined`);
 
 		await fillOfferingBasics(page, { title: `E2E Online Mentoring`, format: `online` });
 		await page.getByTestId(`offering-image-input`).setInputFiles(`static/pwa-192-maskable.png`);
@@ -56,6 +78,11 @@ test.describe("Offering creation", () => {
 		});
 		expect(offering.imageUrls).toHaveLength(1);
 		expect(offering.imageUrls[0]).toContain(`/e2e/offerings/`);
+
+		const offeringsHostUrl = new URL(`/offerings`, page.url()).href;
+		await page.goBack();
+		await expect(dialog).toBeHidden();
+		await expect(page).toHaveURL(offeringsHostUrl);
 	});
 
 	test("signed-in user creates a hybrid offering with their profile location", async ({ page }) => {

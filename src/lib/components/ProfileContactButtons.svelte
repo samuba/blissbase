@@ -81,7 +81,7 @@
 {/snippet}
 
 {#if socialLinks?.length}
-	<div class={[`flex flex-col items-center gap-2 sm:hidden`, className]}>
+	<div class={[`flex flex-col flex-wrap items-center gap-2 sm:hidden`, className]}>
 		{#each socialLinkRowsMobile as row, rowIndex (rowIndex)}
 			<div class={["flex justify-center gap-2", className2]}>
 				{#each row as link, i (`${link.type}-${rowIndex}-${i}`)}
@@ -90,7 +90,7 @@
 			</div>
 		{/each}
 	</div>
-	<div class={[`hidden flex-col items-center gap-2 sm:flex`, className]}>
+	<div class={[`hidden flex-col flex-wrap items-center gap-2 sm:flex`, className]}>
 		{#each socialLinkRowsDesktop as row, rowIndex (rowIndex)}
 			<div class={["flex justify-center gap-4", className2]}>
 				{#each row as link, i (`${link.type}-${rowIndex}-${i}`)}
