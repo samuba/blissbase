@@ -12,6 +12,7 @@ const FRAME_POSITION_RATIO = 0.2
  * const frame = await extractVideoFrame({ videoBuffer })
  */
 export async function extractVideoFrame(args: { videoBuffer: Buffer }): Promise<Buffer | undefined> {
+	console.log(`[extractVideoFrame] Extracting frame from video buffer...`)
 	const { videoBuffer } = args
 	if (!videoBuffer?.byteLength) return undefined
 
