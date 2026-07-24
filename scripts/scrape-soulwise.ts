@@ -178,6 +178,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const hostLink = this.extractHostLinkFromListing(listing);
 		const tags = this.extractTagsFromListing(listing);
 		const listingUrl = this.buildListingUrl(listing);
+		const isUnifiedHealing = isSchoolOfUnifiedHealing(host);
+		const contact = isUnifiedHealing ? [`https://www.unifiedhealingbali.com/`] : [];
 		const timezone =
 			listing.attributes.availabilityPlan?.timezone ??
 			(await this.lookupTimezone(address));
@@ -203,12 +205,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 					priceIsHtml: false,
 					host,
 					hostLink,
-					contact: [],
+					contact,
 					latitude,
 					longitude,
 					timezone,
 					tags,
-					sourceUrl: `${listingUrl}?timeslotStart=${encodeURIComponent(startAt)}&timeslotEnd=${encodeURIComponent(endAt)}`,
+					sourceUrl: isUnifiedHealing
+						? ``
+						: `${listingUrl}?timeslotStart=${encodeURIComponent(startAt)}&timeslotEnd=${encodeURIComponent(endAt)}`,
 					source: `soulwise`,
 				} satisfies ScrapedEvent);
 			} catch (error) {
@@ -368,6 +372,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			return undefined;
 		}
 	}
+}
+
+function isSchoolOfUnifiedHealing(host: string | null | undefined): boolean {
+	return host?.toLowerCase().includes(`school of unified healing`) ?? false;
 }
 
 function slugify(text: string): string {
