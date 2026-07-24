@@ -93,7 +93,7 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 				},
 			},
 		},
-		orderBy: (offerings, { desc }) => [desc(offerings.createdAt)],
+		orderBy: (offerings, { desc }) => [desc(offerings.updatedAt)],
 	});
 
 	return {
