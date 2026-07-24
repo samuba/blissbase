@@ -16,6 +16,7 @@ export type SelectedPlace = {
 export class PlacesAutocompleteController {
 	isLoading = $state(false);
 	isAvailable = $state(false);
+	loadFailed = $state(false);
 	suggestions = $state<PlaceSuggestion[]>([]);
 	highlightedIndex = $state(-1);
 	isOpen = $state(false);
@@ -27,24 +28,41 @@ export class PlacesAutocompleteController {
 	private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 	private AutocompleteSuggestion: typeof google.maps.places.AutocompleteSuggestion | null = null;
 	private AutocompleteSessionToken: typeof google.maps.places.AutocompleteSessionToken | null = null;
+	private initPromise: Promise<void> | null = null;
 
 	private pendingFetch: { input: string; biasLat?: number | null; biasLng?: number | null } | null =
 		null;
 
 	prepare() {
-		void this.init();
+		return this.init();
 	}
 
 	async init() {
 		if (this.isAvailable) return;
+		if (this.initPromise) return this.initPromise;
+
+		this.initPromise = this.loadLibrary();
+		try {
+			await this.initPromise;
+		} finally {
+			this.initPromise = null;
+		}
+	}
+
+	private async loadLibrary() {
+		this.loadFailed = false;
 
 		const { loadGoogleMapsPlaces } = await import(`$lib/googleMapsLoader`);
 		const places = await loadGoogleMapsPlaces();
-		if (!places) return;
+		if (!places) {
+			this.loadFailed = true;
+			return;
+		}
 
 		this.AutocompleteSuggestion = places.AutocompleteSuggestion;
 		this.AutocompleteSessionToken = places.AutocompleteSessionToken;
 		this.isAvailable = true;
+		this.loadFailed = false;
 		this.ensureSessionToken();
 
 		if (this.pendingFetch) {

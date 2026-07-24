@@ -13,6 +13,10 @@ export function loadGoogleMapsPlaces() {
 	return placesLibraryPromise;
 }
 
+export function resetGoogleMapsPlacesLoader() {
+	placesLibraryPromise = null;
+}
+
 async function loadPlacesLibrary(): Promise<google.maps.PlacesLibrary | null> {
 	try {
 		if (typeof google !== `undefined` && google.maps?.importLibrary) {

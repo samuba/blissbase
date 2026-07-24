@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RemoteFormField } from '@sveltejs/kit';
 	import { isTouchDevice } from '$lib/common';
+	import { resetGoogleMapsPlacesLoader } from '$lib/googleMapsLoader';
 	import { reverseGeocodeCity } from '$lib/rpc/places.remote';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
@@ -59,6 +60,14 @@
 		void ensureAutocomplete().then((controller) => controller.prepare());
 	}
 
+	async function retryGoogleAutocomplete() {
+		resetGoogleMapsPlacesLoader();
+		autocomplete = null;
+		autocompletePromise = null;
+		const controller = await ensureAutocomplete();
+		await controller.prepare();
+	}
+
 	onMount(() => {
 		const timer = setTimeout(prepareAutocomplete, 2000);
 		return () => clearTimeout(timer);
@@ -96,7 +105,9 @@
 	let showAutocompletePanel = $derived(
 		isInputFocused && (autocomplete?.keepPanelOpen ?? false) && !usingCurrentLocation,
 	);
-	let showGoogleLoadingHint = $derived(showAutocompletePanel && !autocomplete?.isAvailable);
+	let showGoogleLoadingHint = $derived(
+		showAutocompletePanel && !autocomplete?.isAvailable && !autocomplete?.loadFailed,
+	);
 	let showTypeForSuggestionsHint = $derived(
 		showAutocompletePanel &&
 			autocomplete?.isAvailable &&
@@ -484,35 +495,55 @@
 	};
 </script>
 
-<div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-autocomplete-input">
-	<div bind:this={container} class="relative min-w-0 flex-1">
-		<label class="input peer group w-full">
-			<div class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex">
-				<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
-			</div>
-			<input
-				bind:this={locationInput}
-				type="text"
-				id={inputId}
-				role="combobox"
-				aria-expanded={showAutocompletePanel}
-				aria-controls="{inputId}-listbox"
-				aria-autocomplete="list"
-				aria-activedescendant={autocomplete && autocomplete.highlightedIndex >= 0
-					? `${inputId}-option-${autocomplete.highlightedIndex}`
-					: undefined}
-				placeholder="Stadt / PLZ"
-				class="w-full"
-				value={inputLocationText}
-				disabled={inputDisabled}
-				oninput={(event) => handleInputChange(event.currentTarget.value)}
-				onchange={handleInputCommit}
-				onkeydown={handleInputKeydown}
-				onfocus={handleInputFocus}
-				onblur={scheduleBlurClose}
-				in:fade={{ duration: 280 }}
-			/>
-		</label>
+{#snippet googleAutocompleteError(retry: () => void)}
+	<div class="flex min-w-0 items-center gap-2" data-testid="google-autocomplete-error">
+		<span class="text-error truncate text-xs">
+			Google Maps Autocomplete konnte nicht geladen werden.
+		</span>
+		<button type="button" onclick={retry} class="btn btn-xs text-error shrink-0">
+			<i class="icon-[ph--arrow-clockwise] size-4 shrink-0"></i>
+			Erneut laden
+		</button>
+	</div>
+{/snippet}
+
+<svelte:boundary
+	onerror={(error) => {
+		console.error(`Google Maps Autocomplete Fehler:`, error);
+	}}
+>
+	{#if autocomplete?.loadFailed}
+		{@render googleAutocompleteError(retryGoogleAutocomplete)}
+	{:else}
+		<div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-autocomplete-input">
+			<div bind:this={container} class="relative min-w-0 flex-1">
+				<label class="input peer group w-full">
+					<div class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex">
+						<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
+					</div>
+					<input
+						bind:this={locationInput}
+						type="text"
+						id={inputId}
+						role="combobox"
+						aria-expanded={showAutocompletePanel}
+						aria-controls="{inputId}-listbox"
+						aria-autocomplete="list"
+						aria-activedescendant={autocomplete && autocomplete.highlightedIndex >= 0
+							? `${inputId}-option-${autocomplete.highlightedIndex}`
+							: undefined}
+						placeholder="Stadt / PLZ"
+						class="w-full"
+						value={inputLocationText}
+						disabled={inputDisabled}
+						oninput={(event) => handleInputChange(event.currentTarget.value)}
+						onchange={handleInputCommit}
+						onkeydown={handleInputKeydown}
+						onfocus={handleInputFocus}
+						onblur={scheduleBlurClose}
+						in:fade={{ duration: 280 }}
+					/>
+				</label>
 
 		{#if showAutocompletePanel}
 			<ul
@@ -617,4 +648,13 @@
 	{#if longitudeField}
 		<input type="hidden" {...longitudeField.as(`text`)} value={longitudeField.value() ?? ``} />
 	{/if}
-</div>
+		</div>
+	{/if}
+
+	{#snippet failed(_error, reset)}
+		{@render googleAutocompleteError(() => {
+			resetGoogleMapsPlacesLoader();
+			reset();
+		})}
+	{/snippet}
+</svelte:boundary>

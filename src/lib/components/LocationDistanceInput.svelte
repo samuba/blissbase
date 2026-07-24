@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isTouchDevice } from '$lib/common';
+	import { resetGoogleMapsPlacesLoader } from '$lib/googleMapsLoader';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import type { PlacesAutocompleteController } from './PlacesAutocompleteController.svelte';
@@ -53,6 +54,14 @@
 
 	function prepareAutocomplete() {
 		void ensureAutocomplete().then((controller) => controller.prepare());
+	}
+
+	async function retryGoogleAutocomplete() {
+		resetGoogleMapsPlacesLoader();
+		autocomplete = null;
+		autocompletePromise = null;
+		const controller = await ensureAutocomplete();
+		await controller.prepare();
 	}
 
 	onMount(() => {
@@ -391,47 +400,67 @@
 	}
 </script>
 
-<div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-distance-input">
-	<div
-		bind:this={joinContainer}
-		class="form-control join flex min-w-0 grow items-center p-0"
-		in:fade={{ duration: 280 }}
-	>
-		<div class="relative min-w-0 flex-1" bind:clientWidth={inputWidth}>
-			<label
-				class={[
-					`input join-item peer group w-full`,
-					usingCurrentLocation && !isLoadingLocation && `active`
-				]}
+{#snippet googleAutocompleteError(retry: () => void)}
+	<div class="flex min-w-0 items-center gap-2" data-testid="google-autocomplete-error">
+		<span class="text-error truncate text-xs">
+			Google Maps Autocomplete konnte nicht geladen werden.
+		</span>
+		<button type="button" onclick={retry} class="btn btn-xs text-error shrink-0">
+			<i class="icon-[ph--arrow-clockwise] size-4 shrink-0"></i>
+			Erneut laden
+		</button>
+	</div>
+{/snippet}
+
+<svelte:boundary
+	onerror={(error) => {
+		console.error(`Google Maps Autocomplete Fehler:`, error);
+	}}
+>
+	{#if autocomplete?.loadFailed}
+		{@render googleAutocompleteError(retryGoogleAutocomplete)}
+	{:else}
+		<div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-distance-input">
+			<div
+				bind:this={joinContainer}
+				class="form-control join flex min-w-0 grow items-center p-0"
+				in:fade={{ duration: 280 }}
 			>
-				<div
-					class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex"
-				>
-					<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
-				</div>
-				<input
-					bind:this={plzCityInput}
-					type="text"
-					id={inputId}
-					role="combobox"
-					aria-expanded={autocomplete?.isOpen ?? false}
-					aria-controls="{inputId}-listbox"
-					aria-autocomplete="list"
-					aria-activedescendant={autocomplete && autocomplete.highlightedIndex >= 0
-						? `${inputId}-option-${autocomplete.highlightedIndex}`
-						: undefined}
-					placeholder="Stadt / PLZ"
-					class={[`w-full`]}
-					value={inputLocationText}
-					disabled={isLoadingLocation || disabled}
-					oninput={(event) => handleInputChange(event.currentTarget.value)}
-					onchange={handleFilterInputChange}
-					onkeydown={handleInputKeydown}
-					onfocus={handleInputFocus}
-					onblur={scheduleBlurClose}
-					in:fade={{ duration: 280 }}
-				/>
-			</label>
+				<div class="relative min-w-0 flex-1" bind:clientWidth={inputWidth}>
+					<label
+						class={[
+							`input join-item peer group w-full`,
+							usingCurrentLocation && !isLoadingLocation && `active`
+						]}
+					>
+						<div
+							class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex"
+						>
+							<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
+						</div>
+						<input
+							bind:this={plzCityInput}
+							type="text"
+							id={inputId}
+							role="combobox"
+							aria-expanded={autocomplete?.isOpen ?? false}
+							aria-controls="{inputId}-listbox"
+							aria-autocomplete="list"
+							aria-activedescendant={autocomplete && autocomplete.highlightedIndex >= 0
+								? `${inputId}-option-${autocomplete.highlightedIndex}`
+								: undefined}
+							placeholder="Stadt / PLZ"
+							class={[`w-full`]}
+							value={inputLocationText}
+							disabled={isLoadingLocation || disabled}
+							oninput={(event) => handleInputChange(event.currentTarget.value)}
+							onchange={handleFilterInputChange}
+							onkeydown={handleInputKeydown}
+							onfocus={handleInputFocus}
+							onblur={scheduleBlurClose}
+							in:fade={{ duration: 280 }}
+						/>
+					</label>
 
 			{#if autocomplete?.isOpen && useGoogleAutocomplete}
 				<ul
@@ -529,5 +558,14 @@
 				{/each}
 			</select>
 		{/if}
-	</div>
-</div>
+			</div>
+		</div>
+	{/if}
+
+	{#snippet failed(_error, reset)}
+		{@render googleAutocompleteError(() => {
+			resetGoogleMapsPlacesLoader();
+			reset();
+		})}
+	{/snippet}
+</svelte:boundary>
