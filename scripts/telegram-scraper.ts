@@ -13,6 +13,7 @@ import { resizeCoverImage } from '../src/lib/imageProcessing';
 import type { Entity } from "telegram/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml } from "../src/lib/telegramCommon";
+import { extractVideoFrame } from "./extractVideoFrame";
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
@@ -164,27 +165,57 @@ type TelegramAuthor = {
     username: string | undefined;
 }
 
+function getDocumentMimeType(message: Api.Message): string | undefined {
+    if (message.media?.className !== `MessageMediaDocument`) return undefined;
+    const doc = (message.media as Api.MessageMediaDocument).document as unknown as { mimeType?: string } | undefined;
+    return doc?.mimeType;
+}
+
 function isImageMedia(message: Api.Message): boolean {
     if (!message.media) return false;
-    if (message.media.className === 'MessageMediaPhoto') return true;
-    if (message.media.className === 'MessageMediaDocument') {
-        const doc = (message.media as Api.MessageMediaDocument).document as unknown as { mimeType?: string } | undefined;
-        return !!doc?.mimeType && doc.mimeType.startsWith('image/');
+    if (message.media.className === `MessageMediaPhoto`) return true;
+    const mimeType = getDocumentMimeType(message);
+    return !!mimeType?.startsWith(`image/`);
+}
+
+function isVideoMedia(message: Api.Message): boolean {
+    if (!message.media) return false;
+    const mimeType = getDocumentMimeType(message);
+    return !!mimeType?.startsWith(`video/`);
+}
+
+function isIllustrationMedia(message: Api.Message): boolean {
+    return isImageMedia(message) || isVideoMedia(message);
+}
+
+/**
+ * Downloads message media and returns an image buffer (video → frame at 20%).
+ */
+async function getImageBufferFromMessage(message: Api.Message, client: TelegramClient): Promise<Buffer | undefined> {
+    const mediaBuffer = await client.downloadMedia(message, {});
+    if (!mediaBuffer) return undefined;
+
+    const buffer = Buffer.isBuffer(mediaBuffer)
+        ? mediaBuffer
+        : Buffer.from(mediaBuffer, `binary`);
+    if (!buffer.byteLength) return undefined;
+
+    if (isVideoMedia(message)) {
+        return await extractVideoFrame({ videoBuffer: buffer });
     }
-    return false;
+
+    return buffer;
 }
 
 async function extractPhotoFromMessage(message: Api.Message, client: TelegramClient, slug: string) {
-    if (!isImageMedia(message)) return undefined;
+    if (!isIllustrationMedia(message)) return undefined;
 
     try {
-        console.log("extracting photo from message", message.id)
-        // const photo = message.media.photo as tl.Api.Photo;
-        const imageBuffer = await client.downloadMedia(message, {
-            // thumb: photo?.sizes[photo.sizes.length - 1], // use second biggest photo
-        });
+        console.log(`extracting illustration from message`, message.id);
+        const imageBuffer = await getImageBufferFromMessage(message, client);
+        if (!imageBuffer) return undefined;
 
-        const { buffer: resizedBuffer, phash: hash } = await resizeCoverImage(imageBuffer!)
+        const { buffer: resizedBuffer, phash: hash } = await resizeCoverImage(imageBuffer);
         const alreadyCachedImage = await db.query.imageCacheMap.findFirst({
             where: and(
                 eq(s.imageCacheMap.originalUrl, `tg:${hash}:${slug}`),
@@ -192,28 +223,28 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
             )
         });
         if (alreadyCachedImage) {
-            console.log("Image already cached, not uploading again", `tg:${hash}:${slug}`);
+            console.log(`Image already cached, not uploading again`, `tg:${hash}:${slug}`);
             return alreadyCachedImage.url;
         }
 
-        console.log("Uploading resized file to R2:", `${slug}/${hash}`);
+        console.log(`Uploading resized file to R2:`, `${slug}/${hash}`);
         const imgUrl = await assets.uploadEventImage(resizedBuffer, slug, hash, assets.loadCreds());
         await db.insert(s.imageCacheMap).values({
             originalUrl: `tg:${hash}:${slug}`,
             eventSlug: slug,
             url: imgUrl
         });
-        console.log("Successfully uploaded photo to R2:", imgUrl);
+        console.log(`Successfully uploaded photo to R2:`, imgUrl);
         return imgUrl;
     } catch (error) {
-        console.error("Error extracting photo from message", message.id, ":", error);
-        if (error instanceof Error && error.message.includes("FILE_REFERENCE_EXPIRED")) {
-            throw new Error("telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT");
+        console.error(`Error extracting photo from message`, message.id, `:`, error);
+        if (error instanceof Error && error.message.includes(`FILE_REFERENCE_EXPIRED`)) {
+            throw new Error(`telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT`);
         }
 
         // Provide more specific error information
         if (error instanceof Error) {
-            console.error("Error details:", {
+            console.error(`Error details:`, {
                 message: error.message,
                 name: error.name,
                 // @ts-expect-error -  error might have http_code
@@ -225,19 +256,19 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
     }
 }
 
-// Returns a resized image buffer for a Telegram photo message
+// Returns a resized image buffer for a Telegram photo/video message
 async function getResizedImageBufferFromMessage(message: Api.Message, client: TelegramClient): Promise<Buffer | undefined> {
-    if (!isImageMedia(message)) return undefined;
+    if (!isIllustrationMedia(message)) return undefined;
 
     try {
-        const imageBuffer = await client.downloadMedia(message, {});
+        const imageBuffer = await getImageBufferFromMessage(message, client);
         if (!imageBuffer) return undefined;
         const resize = await resizeCoverImage(imageBuffer);
         return resize.buffer;
     } catch (error) {
-        console.error("Error downloading media from message", message.id, ":", error);
-        if (error instanceof Error && error.message.includes("FILE_REFERENCE_EXPIRED")) {
-            throw new Error("telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT");
+        console.error(`Error downloading media from message`, message.id, `:`, error);
+        if (error instanceof Error && error.message.includes(`FILE_REFERENCE_EXPIRED`)) {
+            throw new Error(`telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT`);
         }
         throw error;
     }
@@ -286,7 +317,7 @@ async function findAdjacentImageMessages(
         const timeDiff = Math.abs(message.date - currentMessageTime);
         if (timeDiff > maxSecondsBetweenMessagesForSameEvent) continue;
 
-        if (isImageMedia(message)) {
+        if (isIllustrationMedia(message)) {
             const messageIndex = sortedMessages.findIndex(msg => msg.id === message.id);
             if (messageIndex === -1) continue;
 
@@ -297,13 +328,13 @@ async function findAdjacentImageMessages(
                 currentAuthorId
             );
             if (hasText) {
-                console.log(`Skipping image from message ${message.id}: text message found between event and image`);
+                console.log(`Skipping illustration from message ${message.id}: text message found between event and media`);
                 continue;
             }
 
             adjacentMessages.push(message);
             messageIds.push(message.id);
-            console.log(`Found adjacent image (message ${message.id}, time diff: ${timeDiff}s)`);
+            console.log(`Found adjacent illustration (message ${message.id}, time diff: ${timeDiff}s)`);
         }
     }
 
@@ -440,9 +471,9 @@ async function extractEventDataFromImageMessage(
     author: TelegramAuthor | undefined,
     eventIsDefinitelyConscious: boolean
 ): Promise<{ event: InsertEvent; adjacentMessageIds: number[] } | undefined> {
-    if (message.media?.className !== 'MessageMediaPhoto') return undefined;
+    if (!isIllustrationMedia(message)) return undefined;
 
-    console.log("Processing image-only message for event data:", message.id);
+    console.log(`Processing illustration-only message for event data:`, message.id);
 
     const imageInput = await getAiImageInputFromMessage(message, client);
     if (!imageInput) {
@@ -970,9 +1001,9 @@ async function processMessages(
                 result.adjacentMessageIds.forEach(id => processedMessageIds.add(id));
             }
         }
-        // Handle image-only messages that might contain event flyers
-        else if (isImageMedia(message) && (!msg || msg.length <= 30)) {
-            console.log(`Processing image-only message ${message.id} for potential event data`);
+        // Handle image/video-only messages that might contain event flyers
+        else if (isIllustrationMedia(message) && (!msg || msg.length <= 30)) {
+            console.log(`Processing illustration-only message ${message.id} for potential event data`);
             const result = await extractEventDataFromImageMessage(message, chatId, client, allMessages, defaultTimezone, author, eventIsDefinitelyConscious);
             if (result) {
                 events.push(result.event);
@@ -981,8 +1012,8 @@ async function processMessages(
                 result.adjacentMessageIds.forEach(id => processedMessageIds.add(id));
             }
         }
-        // Log other photo messages that are part of text messages
-        else if (isImageMedia(message)) {
+        // Log other illustration messages that are part of text messages
+        else if (isIllustrationMedia(message)) {
             console.log(`${message.media?.className} from ${getTelegramOriginalAuthorId(message)}`);
         }
     }

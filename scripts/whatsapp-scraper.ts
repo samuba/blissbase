@@ -13,6 +13,7 @@ import { geocodeAddressCached } from "../src/lib/server/google.script.ts"
 import { resizeCoverImage } from "../src/lib/imageProcessing"
 import type { WhatsappScrapingTarget } from "../src/lib/server/schema" 
 import * as assets from "../src/lib/assets"
+import { extractVideoFrame } from "./extractVideoFrame"
 
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!
 const sqliteObjectKey = `whatsapp.sqlite`
@@ -55,6 +56,27 @@ function isImageMessage(message: WhatsappSyncMessage) {
     if (message.mediaType?.toLowerCase().includes(`image`)) return true
     if (message.messageType?.toLowerCase().includes(`image`)) return true
     return false
+}
+
+/**
+ * Returns true when the synced WhatsApp row points at a video attachment.
+ * @example
+ * isVideoMessage({ mediaMimeType: `video/mp4`, mediaType: null } as WhatsappSyncMessage)
+ */
+function isVideoMessage(message: WhatsappSyncMessage) {
+    if (message.mediaMimeType?.startsWith(`video/`)) return true
+    if (message.mediaType?.toLowerCase().includes(`video`)) return true
+    if (message.messageType?.toLowerCase().includes(`video`)) return true
+    return false
+}
+
+/**
+ * Returns true when the message can be used as an event illustration (image or video).
+ * @example
+ * isIllustrationMessage({ mediaMimeType: `video/mp4` } as WhatsappSyncMessage)
+ */
+function isIllustrationMessage(message: WhatsappSyncMessage) {
+    return isImageMessage(message) || isVideoMessage(message)
 }
 
 /**
@@ -289,7 +311,7 @@ function getChatName(args: { sqliteDb: Database; chatJid: string }) {
  */
 async function downloadMessageMedia(args: { message: WhatsappSyncMessage; s3: S3Client }) {
     const { message, s3 } = args
-    if (!isImageMessage(message)) return undefined
+    if (!isIllustrationMessage(message)) return undefined
     if (!message.mediaPath?.startsWith(`r2://`)) return undefined
 
     const location = parseR2ObjectUri(message.mediaPath)
@@ -309,6 +331,22 @@ async function downloadMessageMedia(args: { message: WhatsappSyncMessage; s3: S3
         )
         return undefined
     }
+}
+
+/**
+ * Downloads message media and returns an image buffer (video → frame at 20%).
+ * @example
+ * const imageBuffer = await getImageBufferFromMessage({ message, s3 })
+ */
+async function getImageBufferFromMessage(args: { message: WhatsappSyncMessage; s3: S3Client }) {
+    const mediaBuffer = await downloadMessageMedia(args)
+    if (!mediaBuffer) return undefined
+
+    if (isVideoMessage(args.message)) {
+        return await extractVideoFrame({ videoBuffer: mediaBuffer })
+    }
+
+    return mediaBuffer
 }
 
 /**
@@ -333,7 +371,7 @@ function isMissingObjectError(error: unknown) {
  * const resized = await getResizedImageBufferFromMessage({ message, s3 })
  */
 async function getResizedImageBufferFromMessage(args: { message: WhatsappSyncMessage; s3: S3Client }) {
-    const imageBuffer = await downloadMessageMedia(args)
+    const imageBuffer = await getImageBufferFromMessage(args)
     if (!imageBuffer) return undefined
 
     const resize = await resizeCoverImage(imageBuffer)
@@ -362,10 +400,10 @@ async function getAiImageInputFromMessage(args: { message: WhatsappSyncMessage; 
  */
 async function extractPhotoFromMessage(args: { message: WhatsappSyncMessage; slug: string; s3: S3Client }) {
     const { message, slug, s3 } = args
-    if (!isImageMessage(message)) return undefined
+    if (!isIllustrationMessage(message)) return undefined
 
     try {
-        const imageBuffer = await downloadMessageMedia({ message, s3 })
+        const imageBuffer = await getImageBufferFromMessage({ message, s3 })
         if (!imageBuffer) return undefined
 
         const { buffer: resizedBuffer, phash: hash } = await resizeCoverImage(imageBuffer)
@@ -408,7 +446,7 @@ function findAdjacentImageMessages(args: { currentMessage: WhatsappSyncMessage; 
 
     for (const message of allMessages) {
         if (message.senderJid !== currentAuthorId) continue
-        if (!isImageMessage(message)) continue
+        if (!isIllustrationMessage(message)) continue
 
         const timeDiff = Math.abs(message.timestamp - currentMessage.timestamp)
         if (timeDiff > maxSecondsBetweenMessagesForSameEvent) continue
@@ -547,9 +585,9 @@ async function extractEventDataFromImageMessage(args: {
     target: WhatsappScrapingTarget
     s3: S3Client
 }) {
-    if (!isImageMessage(args.message)) return undefined
+    if (!isIllustrationMessage(args.message)) return undefined
 
-    console.log(`[whatsapp] Processing image message for event extraction: ${args.message.messageId}`)
+    console.log(`[whatsapp] Processing illustration message for event extraction: ${args.message.messageId}`)
     const imageInput = await getAiImageInputFromMessage({ message: args.message, s3: args.s3 })
     if (!imageInput) {
         console.log(`[whatsapp] Could not build AI image input for message ${args.message.messageId}`)
@@ -990,9 +1028,11 @@ async function processMessages(args: {
         const messagePreview = messageText?.replace(/\s+/g, ` `).slice(0, 50) ?? ``
         const kind = (messageText?.length ?? 0) > 30
             ? `text`
-            : isImageMessage(message)
-                ? `image`
-                : `skip`
+            : isVideoMessage(message)
+                ? `video`
+                : isImageMessage(message)
+                    ? `image`
+                    : `skip`
         console.log(
             `[whatsapp] msg ${message.messageId}: ${kind}${messageText?.length ? ` (${messageText.length} chars)` : ``} @ ${messageTimestampIso} "${messagePreview}"`
         )
@@ -1017,7 +1057,7 @@ async function processMessages(args: {
             continue
         }
 
-        if (!isImageMessage(message)) continue
+        if (!isIllustrationMessage(message)) continue
         const result = await extractEventDataFromImageMessage({
             message,
             allMessages: args.messages,
@@ -1026,11 +1066,11 @@ async function processMessages(args: {
             s3: args.s3
         })
         if (!result) {
-            console.log(`[whatsapp] No event extracted from image message ${message.messageId}`)
+            console.log(`[whatsapp] No event extracted from illustration message ${message.messageId}`)
             continue
         }
 
-        console.log(`[whatsapp] Event candidate from image: slug ${result.event.slug}`)
+        console.log(`[whatsapp] Event candidate from illustration: slug ${result.event.slug}`)
         events.push(result.event)
         processedMessageIds.add(message.messageId)
         result.adjacentMessageIds.forEach((id) => processedMessageIds.add(id))

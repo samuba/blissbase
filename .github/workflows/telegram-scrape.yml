@@ -31,6 +31,9 @@ jobs:
       - name: Install cloudflare worker dependencies
         run: bun install --cwd blissbase-telegram-entry
 
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: scrape
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
