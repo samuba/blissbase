@@ -23,7 +23,8 @@ describe(`cookie filter validation`, () => {
 			sortBy: null,
 			sortOrder: null,
 			tagIds: null,
-			attendanceMode: null
+			attendanceMode: null,
+			source: null
 		});
 	});
 
