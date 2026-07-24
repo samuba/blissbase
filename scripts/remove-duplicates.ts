@@ -188,7 +188,8 @@ async function mergeAndDeleteDuplicateEvents(args: {
     }
     // merge array properties
     eventToSurvive.tags = mergeArrayDeduplicated(eventToSurvive.tags, eventToDelete.tags)
-    eventToSurvive.telegramRoomIds = mergeArrayDeduplicated(eventToSurvive.telegramRoomIds, eventToDelete.telegramRoomIds)
+    eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsTelegram, eventToDelete.sourceChatIdsTelegram)
+    eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsWhatsapp, eventToDelete.sourceChatIdsWhatsapp)
     if (eventToDelete.imageUrls?.length) {
         // Only add entries to imageUrls that have a hammingDistance of less than 5 to any of the already existing images in the array
         for (const toDelUrl of eventToDelete.imageUrls) {
@@ -452,22 +453,36 @@ export function mergeArrayDeduplicated(arrayA: string[] | null, arrayB: string[]
 
 /**
  * Builds the update payload for the preferred-source fast path while keeping
- * legacy `events.tags` in sync with the relational `event_tags` merge.
+ * legacy `events.tags` and chat provenance in sync with the deleted event.
  *
  * @example
  * preparePreferredSourceEventUpdate({
- *   eventToSurvive: { tags: [`music`] },
- *   eventToDelete: { tags: [`workshop`] },
+ *   eventToSurvive: { tags: [`music`], sourceChatIdsTelegram: null, sourceChatIdsWhatsapp: null },
+ *   eventToDelete: { tags: [`workshop`], sourceChatIdsTelegram: [`room1`], sourceChatIdsWhatsapp: null },
  * });
  */
-export function preparePreferredSourceEventUpdate<TEvent extends { tags: string[] | null }>(args: {
+export function preparePreferredSourceEventUpdate<TEvent extends {
+    tags: string[] | null
+    sourceChatIdsTelegram: string[] | null
+    sourceChatIdsWhatsapp: string[] | null
+}>(args: {
     eventToSurvive: TEvent,
     eventToDelete: TEvent,
 }) {
     args.eventToSurvive.tags = mergeArrayDeduplicated(args.eventToSurvive.tags, args.eventToDelete.tags);
+    args.eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(
+        args.eventToSurvive.sourceChatIdsTelegram,
+        args.eventToDelete.sourceChatIdsTelegram,
+    );
+    args.eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(
+        args.eventToSurvive.sourceChatIdsWhatsapp,
+        args.eventToDelete.sourceChatIdsWhatsapp,
+    );
 
     return {
         tags: args.eventToSurvive.tags,
+        sourceChatIdsTelegram: args.eventToSurvive.sourceChatIdsTelegram,
+        sourceChatIdsWhatsapp: args.eventToSurvive.sourceChatIdsWhatsapp,
     };
 }
 

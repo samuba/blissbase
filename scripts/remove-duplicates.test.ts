@@ -61,14 +61,18 @@ describe(`processDuplicates`, () => {
 });
 
 describe(`preparePreferredSourceEventUpdate`, () => {
-    it(`preserves legacy tags on the surviving preferred-source event`, () => {
+    it(`preserves legacy tags and chat provenance on the surviving preferred-source event`, () => {
         const eventToSurvive = {
             id: 2,
             tags: [`music`],
+            sourceChatIdsTelegram: [`room1`],
+            sourceChatIdsWhatsapp: null as string[] | null,
         };
         const eventToDelete = {
             id: 1,
             tags: [`workshop`, `music`],
+            sourceChatIdsTelegram: [`room2`],
+            sourceChatIdsWhatsapp: [`120363@g.us`],
         };
 
         const update = preparePreferredSourceEventUpdate({
@@ -78,8 +82,12 @@ describe(`preparePreferredSourceEventUpdate`, () => {
 
         expect(update).toEqual({
             tags: [`music`, `workshop`],
+            sourceChatIdsTelegram: [`room1`, `room2`],
+            sourceChatIdsWhatsapp: [`120363@g.us`],
         });
         expect(eventToSurvive.tags).toEqual([`music`, `workshop`]);
+        expect(eventToSurvive.sourceChatIdsTelegram).toEqual([`room1`, `room2`]);
+        expect(eventToSurvive.sourceChatIdsWhatsapp).toEqual([`120363@g.us`]);
     });
 });
 

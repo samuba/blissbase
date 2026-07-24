@@ -14,6 +14,7 @@ const blackListWords = [
     'yin-yoga',
     'yoga im ',
     'yoga für ',
+    'kids yoga',
     'vinyasa',
     'ashtanga',
     'gentle flow',

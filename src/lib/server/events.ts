@@ -346,7 +346,7 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 			// filter ASI rooms
 			// .filter(event => {
 			//     const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
-			//     if (event.telegramRoomIds?.every(roomId => ASI_ROOMS.includes(roomId))) {
+			//     if (event.sourceChatIdsTelegram?.every(roomId => ASI_ROOMS.includes(roomId))) {
 			//         return false;
 			//     }
 			//     return true;

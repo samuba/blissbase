@@ -99,6 +99,28 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 							from unnest(${s.events.tags} || excluded.tags) as merged_tags(tag)
 						)
 					end
+				`,
+				// Preserve existing Telegram chat IDs when a scrape has none, otherwise merge both sides.
+				sourceChatIdsTelegram: sql`
+					case
+						when excluded.source_chat_ids_telegram is null or coalesce(array_length(excluded.source_chat_ids_telegram, 1), 0) = 0 then ${s.events.sourceChatIdsTelegram}
+						when ${s.events.sourceChatIdsTelegram} is null or coalesce(array_length(${s.events.sourceChatIdsTelegram}, 1), 0) = 0 then excluded.source_chat_ids_telegram
+						else array(
+							select distinct chat_id
+							from unnest(${s.events.sourceChatIdsTelegram} || excluded.source_chat_ids_telegram) as merged_chat_ids(chat_id)
+						)
+					end
+				`,
+				// Preserve existing WhatsApp chat IDs when a scrape has none, otherwise merge both sides.
+				sourceChatIdsWhatsapp: sql`
+					case
+						when excluded.source_chat_ids_whatsapp is null or coalesce(array_length(excluded.source_chat_ids_whatsapp, 1), 0) = 0 then ${s.events.sourceChatIdsWhatsapp}
+						when ${s.events.sourceChatIdsWhatsapp} is null or coalesce(array_length(${s.events.sourceChatIdsWhatsapp}, 1), 0) = 0 then excluded.source_chat_ids_whatsapp
+						else array(
+							select distinct chat_id
+							from unnest(${s.events.sourceChatIdsWhatsapp} || excluded.source_chat_ids_whatsapp) as merged_chat_ids(chat_id)
+						)
+					end
 				`
 			}
 		})

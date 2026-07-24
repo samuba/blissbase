@@ -551,8 +551,8 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
             // Merge tags
             const tags = mergeUniqueStrings(existing.tags, event.tags);
 
-            // Merge telegramRoomIds
-            const telegramRoomIds = mergeUniqueStrings(existing.telegramRoomIds, event.telegramRoomIds);
+            // Merge sourceChatIdsTelegram
+            const sourceChatIdsTelegram = mergeUniqueStrings(existing.sourceChatIdsTelegram, event.sourceChatIdsTelegram);
             const coords = mergeCoords({
                 preferredLatitude: existing.latitude,
                 preferredLongitude: existing.longitude,
@@ -566,7 +566,7 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 description,
                 imageUrls,
                 tags,
-                telegramRoomIds,
+                sourceChatIdsTelegram,
                 latitude: coords.latitude,
                 longitude: coords.longitude,
                 listed: mergeListedValue({
@@ -595,7 +595,7 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
     merged.slug = existingEvent.slug;
     merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls);
     merged.tags = mergeUniqueStrings(existingEvent.tags, merged.tags);
-    merged.telegramRoomIds = mergeUniqueStrings(existingEvent.telegramRoomIds, merged.telegramRoomIds);
+    merged.sourceChatIdsTelegram = mergeUniqueStrings(existingEvent.sourceChatIdsTelegram, merged.sourceChatIdsTelegram);
     const coords = mergeCoords({
         preferredLatitude: merged.latitude,
         preferredLongitude: merged.longitude,
@@ -988,7 +988,7 @@ async function processMessages(
     }
 
     events = mergeDuplicateEvents(events);
-    events.forEach(x => x.telegramRoomIds = Array.from(new Set([chatId, ...(x.telegramRoomIds ?? [])])))
+    events.forEach(x => x.sourceChatIdsTelegram = Array.from(new Set([chatId, ...(x.sourceChatIdsTelegram ?? [])])))
 
     if (events.length > 0) {
         console.log("inserting into db:", events)
