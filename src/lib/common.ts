@@ -252,7 +252,8 @@ export const trimAllWhitespaces = (text: string | undefined) => {
 }
 
 export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null }) {
-    const descriptionTeaser = trimAllWhitespaces(stripHtml(description?.slice(0, 140) ?? '')) + "…"
+    let descriptionTeaser = trimAllWhitespaces(stripHtml(description ?? '')) ?? ''
+    descriptionTeaser = descriptionTeaser.length > 140 ? descriptionTeaser.slice(0, 140) + "…" : descriptionTeaser
     const eventIsFromDifferentWebsite = (sourceUrl?.trim()?.length ?? 0) > 0
     return {
         title: `${name} | Blissbase`,

@@ -16,10 +16,14 @@ export const load = (async ({ url, cookies }) => {
 		}
 	}
 
+	const location = url.searchParams.get("location")?.trim();
+	const name = location ? `${location}'s Conscious Offerings` : "Conscious Offerings";
+	const description = location ? `Discover conscious offerings in ${location}.` : "Find conscious offerings near you.";
+
 	return {
 		pageMetaTags: getPageMetaTags({
-			name: "Blissbase Offerings",
-			description: "Find conscious offerings near you.",
+			name,
+			description,
 			imageUrl: "https://www.blissbase.app/og-poster-offerings.jpg",
 			url,
 		}),
