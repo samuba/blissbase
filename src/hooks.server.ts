@@ -6,6 +6,7 @@ import { dev } from '$app/environment';
 import { waitUntil } from '@vercel/functions';
 import { createSupabaseServerClient } from '$lib/server/supabase';
 import { refreshAuthLocalsFromSupabase, setAuthLocalsFromClaims } from '$lib/server/authLocals';
+import { posthogDistinctId } from '$lib/server/common';
 import * as main from './locales/main.loader.server.svelte.js'
 import * as js from './locales/js.loader.server.js'
 import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
@@ -128,7 +129,7 @@ export const handleError: HandleServerError = async ({ error, status, event: { l
     console.error(error);
 
     if (!dev) {
-        posthog.captureException(error, locals.userId ?? locals.posthogDistinctId);
+        posthog.captureException(error, posthogDistinctId({ locals }));
         await posthog.shutdown();
     }
 };
