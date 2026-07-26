@@ -236,6 +236,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const addImageUrl = (src: string | undefined) => {
             if (!src?.length) return;
             if (src.startsWith(`data:`) || src.includes(`placeholder`) || src.includes(`-thumb`)) return;
+            // Site logo / brand assets — never use as event image
+            if (src.includes(`/build/assets/`) || src.includes(`sei.jetzt.text`)) return;
+            // Only real uploaded event media lives under /storage/
+            if (!src.includes(`/storage/`)) return;
             if (src.length >= 1200) return;
             try {
                 imageUrlsSet.add(new URL(src, this.baseUrl).toString());
@@ -256,7 +260,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
             });
         }
 
-        // Fallback: og:image, prefer preview conversion over thumb
+        // Fallback: og:image only when it is uploaded event media (not the site logo)
         if (!imageUrlsSet.size) {
             const ogImage = $(`meta[property="og:image"]`).attr(`content`);
             if (ogImage) {
