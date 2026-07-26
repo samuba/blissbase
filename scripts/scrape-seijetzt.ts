@@ -5,6 +5,7 @@
  * When scraping from sei.jetzt:
  * - Iterates through pagination pages (currently configured for first page, but adaptable).
  * - Fetches each event's detail page after parsing from list pages.
+ * - Expands recurring series pages into individual occurrence URLs before extracting.
  * - Extracts event data as JSON according to the ScrapedEvent interface.
  *
  * When a local HTML file path is provided:
@@ -101,9 +102,29 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         const dateElement = $('[x-data]')
             .toArray()
             .find(el => $(el).attr('x-data')?.includes('new Date'));
-        if (!dateElement) throw new Error('No startAt elements found in HTML');
+        if (!dateElement) return undefined;
 
         return this._extractDateFromXDataElement($, dateElement);
+    }
+
+    /**
+     * Recurring series pages list upcoming dates as links to
+     * `/event/{slug}/{YYYY-MM-DD}` occurrence pages (which have real start/end times).
+     */
+    extractOccurrenceUrls(html: string): string[] {
+        const $ = cheerio.load(html);
+        const urls = new Set<string>();
+
+        $(`a[href*="/event/"]`).each((_i, el) => {
+            const href = $(el).attr(`href`);
+            if (!href) return;
+            if (!/\/event\/[^/]+\/\d{4}-\d{2}-\d{2}\/?$/.test(href)) return;
+            try {
+                urls.add(new URL(href, this.baseUrl).toString().replace(/\/$/, ``));
+            } catch { /* ignore */ }
+        });
+
+        return Array.from(urls);
     }
 
     extractEndAt(html: string) {
@@ -303,8 +324,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         let endAt = this.extractEndAt(html);
         if (!name || !startAt) return undefined;
 
-        if (endAt && startAt && (endAt < startAt)) {
-            console.warn(`Event ${name} has endAt (${endAt}) before startAt (${startAt}). Setting endAt to undefined.`);
+        if (endAt && startAt && (endAt <= startAt)) {
+            if (endAt < startAt) {
+                console.warn(`Event ${name} has endAt (${endAt}) before startAt (${startAt}). Setting endAt to undefined.`);
+            }
             endAt = undefined;
         }
 
@@ -373,12 +396,34 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                             continue;
                         }
 
-                        const event = await this.extractEventData(html, eventUrl);
-                        console.error(event);
-                        if (event) {
-                            allEvents.push(event);
-                        } else {
-                            console.warn(`Failed to get complete details for event: ${eventUrl}`);
+                        const occurrenceUrls = this.extractOccurrenceUrls(html);
+                        const detailUrls = occurrenceUrls.length > 0 ? occurrenceUrls : [eventUrl];
+                        if (occurrenceUrls.length > 0) {
+                            console.error(`  Recurring series ${eventUrl}: ${occurrenceUrls.length} occurrences`);
+                        }
+
+                        for (const detailUrl of detailUrls) {
+                            try {
+                                let detailHtml = html;
+                                if (detailUrl !== eventUrl) {
+                                    await sleep(this.requestDelayMs);
+                                    detailHtml = await customFetch(detailUrl, { returnType: 'text' });
+                                    if (!detailHtml) {
+                                        console.error(`Failed to fetch occurrence: ${detailUrl}. Skipping.`);
+                                        continue;
+                                    }
+                                }
+
+                                const event = await this.extractEventData(detailHtml, detailUrl);
+                                console.error(event);
+                                if (event) {
+                                    allEvents.push(event);
+                                } else {
+                                    console.warn(`Failed to get complete details for event: ${detailUrl}`);
+                                }
+                            } catch (error) {
+                                console.error(`Error processing event item "${detailUrl}":`, error);
+                            }
                         }
                     } catch (error) {
                         console.error(`Error processing event item "${eventUrl}":`, error);
