@@ -91,7 +91,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			const params = new URLSearchParams({
 				select: `*,creator_profiles(id,slug,display_name,website)`,
 				status: `eq.published`,
-				or: `(end_date.gte.${today},and(end_date.is.null,start_date.gte.${today}))`,
+				// Only upcoming / still-running events — never past-only rows.
+				or: `(start_date.gte.${today},end_date.gte.${today})`,
 				order: `start_date.asc`,
 				limit: String(PAGE_SIZE),
 				offset: String(offset),
