@@ -8,6 +8,7 @@ const blackListWords = [
     "escape room",
     "escape rooms",
     "machine learning",
+    // no "normal" yoga classes
     'hatha yoga',
     'hatha-yoga',
     'hatha flow',
@@ -15,8 +16,10 @@ const blackListWords = [
     'yin-yoga',
     'yin flow',
     'yoga im ',
+    'yoga am ',
     'yoga für ',
     'kids yoga',
+    'sanftes yoga',
     'vinyasa',
     'ashtanga',
     'gentle flow',
@@ -67,4 +70,5 @@ export const whiteListSources = [
     'ciglobalcalendar',
     'vortexapp',
     'soulwise',
+    'theyogabarn',
 ] satisfies WebsiteScrapeSourceName[];
