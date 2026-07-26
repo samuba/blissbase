@@ -3,6 +3,9 @@
 	import type { DialogTriggerProps } from 'bits-ui';
 	import type { Snippet } from 'svelte';
 
+	const VIEWPORT_NO_ZOOM = `width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no`;
+	const VIEWPORT_ALLOW_ZOOM = `width=device-width, initial-scale=1, viewport-fit=cover`;
+
 	let {
 		imageUrls = [],
 		alt,
@@ -21,6 +24,17 @@
 	let touchStartX: number | null = null;
 	let touchStartY: number | null = null;
 
+	function setViewportZoom(allowed: boolean) {
+		const viewport = document.querySelector(`meta[name="viewport"]`);
+		if (!viewport) return;
+
+		// Replace the node — iOS often ignores content updates on the existing meta tag
+		const next = document.createElement(`meta`);
+		next.setAttribute(`name`, `viewport`);
+		next.setAttribute(`content`, allowed ? VIEWPORT_ALLOW_ZOOM : VIEWPORT_NO_ZOOM);
+		viewport.replaceWith(next);
+	}
+
 	function goToPrevious() {
 		if (imageUrls.length <= 1) return;
 		currentIndex = currentIndex > 0 ? currentIndex - 1 : imageUrls.length - 1;
@@ -31,17 +45,16 @@
 		currentIndex = currentIndex < imageUrls.length - 1 ? currentIndex + 1 : 0;
 	}
 
-	/**
-	 * Handle touch start for swipe gestures
-	 */
+	function onOpenChange(shouldOpen: boolean) {
+		open = shouldOpen;
+		setViewportZoom(shouldOpen);
+	}
+
 	function handleTouchStart(event: TouchEvent) {
 		touchStartX = event.touches[0].clientX;
 		touchStartY = event.touches[0].clientY;
 	}
 
-	/**
-	 * Handle touch end for swipe gestures
-	 */
 	function handleTouchEnd(event: TouchEvent) {
 		if (touchStartX === null || touchStartY === null) return;
 
@@ -66,29 +79,25 @@
 			}
 		}
 
-		// Reset touch coordinates
 		touchStartX = null;
 		touchStartY = null;
 	}
 
-	/**
-	 * Handle keyboard navigation
-	 */
 	function handleKeydown(event: KeyboardEvent) {
 		if (!open) return;
 
 		switch (event.key) {
-			case 'ArrowLeft':
+			case `ArrowLeft`:
 				event.preventDefault();
 				goToPrevious();
 				break;
-			case 'ArrowRight':
+			case `ArrowRight`:
 				event.preventDefault();
 				goToNext();
 				break;
-			case 'Escape':
+			case `Escape`:
 				event.preventDefault();
-				open = false;
+				onOpenChange(false);
 				break;
 		}
 	}
@@ -101,25 +110,9 @@
 			currentIndex = 0;
 		}
 	});
-
-	// allow zooming when image is visible
-	$effect(() => {
-		const viewport = document.querySelector('meta[name="viewport"]');
-		if (open) {
-			const prevContent = viewport?.getAttribute('content');
-			const newContent = prevContent
-				?.replace(', maximum-scale=1,', '')
-				.replace('user-scalable=no', '')
-				.trim();
-			viewport?.setAttribute('content', newContent ?? '');
-		} else if (!viewport?.getAttribute('content')?.includes('maximum-scale=1')) {
-			const prevContent = viewport?.getAttribute('content');
-			viewport?.setAttribute('content', `${prevContent}, maximum-scale=1, user-scalable=no`);
-		}
-	});
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root {open} {onOpenChange}>
 	<Dialog.Trigger {...triggerProps}>
 		{@render children()}
 	</Dialog.Trigger>
@@ -127,13 +120,18 @@
 		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
-			onclick={() => (open = false)}
+			onclick={() => onOpenChange(false)}
 			onkeydown={handleKeydown}
 			ontouchstart={handleTouchStart}
 			ontouchend={handleTouchEnd}
 			tabindex={-1}
 		>
-			<div class="relative max-h-full max-w-full" onclick={(e) => e.stopPropagation()}>
+			<div
+				class="relative max-h-full max-w-full"
+				role="presentation"
+				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+			>
 				{#if imageUrls.length > 0}
 					<img
 						src={imageUrls[currentIndex]}
@@ -164,10 +162,10 @@
 				{/if}
 			</div>
 
-		<Dialog.Close class="btn btn-circle absolute top-4 right-4 shadow-lg">
-			<i class="icon-[ph--x] size-5"></i>
-			<span class="sr-only">Close</span>
-		</Dialog.Close>
+			<Dialog.Close class="btn btn-circle absolute top-4 right-4 shadow-lg">
+				<i class="icon-[ph--x] size-5"></i>
+				<span class="sr-only">Close</span>
+			</Dialog.Close>
 		</Dialog.ContentAnimated>
 	</Dialog.Portal>
 </Dialog.Root>

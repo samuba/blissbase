@@ -721,7 +721,6 @@ msgid "Bild konnte nicht verarbeitet werden"
 msgstr "Image could not be processed"
 
 #: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bild konnte nicht geladen werden"
 msgstr "Image could not be loaded"
