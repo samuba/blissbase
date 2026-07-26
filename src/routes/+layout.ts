@@ -4,8 +4,8 @@ import { browser, dev } from '$app/environment';
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import type { LayoutLoad } from './$types';
-import { PUBLIC_ADMIN_USER_ID } from '$env/static/public';
 import { user } from '$lib/user.svelte';
+import { syncPosthogIdentity } from '$lib/posthog';
 
 import { locales } from '../locales/data.js'
 import { loadLocale } from 'wuchale/load-utils'
@@ -47,12 +47,17 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
             posthog.init('phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ', {
                 api_host: 'https://igel.blissbase.app',
                 defaults: '2025-05-24',
-                person_profiles: 'always', // or 'always' to create profiles for anonymous users as well
+                person_profiles: 'always',
             });
             posthogClientInitialized = true;
         }
-        if (isAdminSession) posthog.identify(PUBLIC_ADMIN_USER_ID)
-        else if (userId) posthog.identify(userId);
+
+        syncPosthogIdentity({
+            userId,
+            email: jwtClaims?.email,
+            displayName: jwtClaims?.user_metadata?.display_name,
+            isAdminSession,
+        });
     }
 
 

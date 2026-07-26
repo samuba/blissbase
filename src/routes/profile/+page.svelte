@@ -8,6 +8,7 @@
 	import EventCard from '$lib/components/EventCard.svelte';
 	import { routes } from '$lib/routes';
 	import { user } from '$lib/user.svelte';
+	import { resetPosthogIdentity } from '$lib/posthog';
 
 	let isLoggingOut = $state(false);
 	const myPublic = await getMyPublicProfile();
@@ -41,6 +42,7 @@
 		try {
 			const supabase = getSupabaseBrowserClient();
 			await supabase.auth.signOut();
+			resetPosthogIdentity();
 		} catch (error) {
 			console.error(`Logout error:`, error);
 		} finally {

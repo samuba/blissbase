@@ -123,12 +123,12 @@ const guardRoutesWithLogin: Handle = async ({ event, resolve }) => {
     return resolve(event);
 }
 
-export const handleError: HandleServerError = async ({ error, status }) => {
+export const handleError: HandleServerError = async ({ error, status, event: { locals } }) => {
     if (status === 404) return; // ignore 404 errors
     console.error(error);
 
     if (!dev) {
-        posthog.captureException(error);
+        posthog.captureException(error, locals.userId ?? locals.posthogDistinctId);
         await posthog.shutdown();
     }
 };

@@ -6,7 +6,7 @@ import { randomString } from "$lib/common";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { publicProfileFormSchema } from "$lib/rpc/profile.common";
 import { routes } from "$lib/routes";
-import { ensureUserId } from "$lib/server/common";
+import { ensureUserId, locals } from "$lib/server/common";
 import { db, s, and, eq, ne, sql } from "$lib/server/db";
 import { getE2EUserIdForEmail } from "$lib/server/e2eAuth";
 import {
@@ -186,6 +186,10 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 		})
 		.where(eq(s.profiles.id, userId));
 
+	if (!isE2eTestMode && currentProfile.displayName !== data.displayName) {
+		await syncDisplayNameToAuthUser(data.displayName);
+	}
+
 	// Sweep both image prefixes: delete anything in R2 that isn't the newly-saved image.
 	// This self-heals after abandoned session uploads, removed images, and failed form submissions.
 	await Promise.all([
@@ -198,6 +202,27 @@ export const upsertPublicProfile = form(publicProfileFormSchema, async (data, is
 
 	redirect(303, routes.publicProfile(slug));
 });
+
+/**
+ * Mirrors the display name into the auth user so it ends up in the JWT claims,
+ * which is where the client and server read it from for analytics identity.
+ */
+async function syncDisplayNameToAuthUser(displayName: string) {
+	const { supabase } = locals();
+	const { error: updateUserError } = await supabase.auth.updateUser({
+		data: { display_name: displayName },
+	});
+	if (updateUserError) {
+		console.error(`Failed to sync display_name to auth user_metadata`, updateUserError);
+		return;
+	}
+
+	// updateUser does not reissue the JWT; refresh so claims include display_name
+	const { error: refreshError } = await supabase.auth.refreshSession();
+	if (refreshError) {
+		console.error(`Failed to refresh session after display_name update`, refreshError);
+	}
+}
 
 /**
  * Deletes every object under `profiles/{userId}/{kind}-` except the one pointed to by `keepUrl`.

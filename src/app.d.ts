@@ -64,6 +64,8 @@ declare global {
 		  email_verified: boolean
 		  phone_verified: boolean
 		  sub: string
+		  display_name?: string
+		  locale?: string
 		}
 		role: string
 		aal: string
