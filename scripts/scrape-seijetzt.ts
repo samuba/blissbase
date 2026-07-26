@@ -211,15 +211,37 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     extractImageUrls(html: string): string[] | undefined {
         const $ = cheerio.load(html, { decodeEntities: true });
         const imageUrlsSet = new Set<string>();
-        $('.h-20 img').each((_i, img) => {
-            const src = $(img).attr('src') || $(img).attr('data-src') || $(img).attr('data-lazy-src');
-            console.error({src});
-            if (src && !src.startsWith('data:') && !src.includes('placeholder') && !src.includes('-thumb') && src.length < 1200) {
-                try {
-                    imageUrlsSet.add(new URL(src, this.baseUrl).toString());
-                } catch { /* ignore */ }
-            }
+
+        const addImageUrl = (src: string | undefined) => {
+            if (!src?.length) return;
+            if (src.startsWith(`data:`) || src.includes(`placeholder`) || src.includes(`-thumb`)) return;
+            if (src.length >= 1200) return;
+            try {
+                imageUrlsSet.add(new URL(src, this.baseUrl).toString());
+            } catch { /* ignore */ }
+        };
+
+        // Event's own gallery carousel (related-events carousel uses a different embla without rounded-2xl)
+        $(`.embla.rounded-2xl img`).each((_i, img) => {
+            addImageUrl($(img).attr(`src`) || $(img).attr(`data-src`) || $(img).attr(`data-lazy-src`));
         });
+
+        // Single-image hero (mobile/desktop layouts), skip related-event thumbs
+        if (!imageUrlsSet.size) {
+            $(`main .aspect-square img`).each((_i, img) => {
+                const $img = $(img);
+                if ($img.closest(`.embla__slide__img`).length) return;
+                addImageUrl($img.attr(`src`) || $img.attr(`data-src`) || $img.attr(`data-lazy-src`));
+            });
+        }
+
+        // Fallback: og:image, prefer preview conversion over thumb
+        if (!imageUrlsSet.size) {
+            const ogImage = $(`meta[property="og:image"]`).attr(`content`);
+            if (ogImage) {
+                addImageUrl(ogImage.replace(/-thumb(\.[a-zA-Z0-9]+)$/, `-preview$1`));
+            }
+        }
 
         return imageUrlsSet.size > 0 ? Array.from(imageUrlsSet) : undefined;
     }
