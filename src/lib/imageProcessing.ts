@@ -1,20 +1,20 @@
 import sharp from 'sharp'; // blows bundle size by 15MB!!!!
 import {
-	EVENT_IMAGE_MAX_DIMENSION,
-	EVENT_IMAGE_OUTPUT_QUALITY,
+	IMAGE_UPLOAD_MAX_DIMENSION,
+	IMAGE_UPLOAD_OUTPUT_QUALITY,
 	getPerceptualHash
-} from './eventImageProcessing.shared';
+} from './imageUpload.shared';
 
 export async function resizeCoverImage(input: sharp.SharpInput | Array<sharp.SharpInput>): Promise<{ buffer: Buffer, phash: string }> {
 	if (!input) throw new Error(`Input cannot be null or undefined`);
 
 	try {
 		const result = await sharp(input)
-			.resize(EVENT_IMAGE_MAX_DIMENSION, EVENT_IMAGE_MAX_DIMENSION, {
+			.resize(IMAGE_UPLOAD_MAX_DIMENSION, IMAGE_UPLOAD_MAX_DIMENSION, {
 				fit: `inside`,
 				withoutEnlargement: true
 			})
-			.webp({ quality: Math.round(EVENT_IMAGE_OUTPUT_QUALITY * 100) })
+			.webp({ quality: Math.round(IMAGE_UPLOAD_OUTPUT_QUALITY * 100) })
 			.toBuffer();
 
 		if (!result || result.length === 0) {

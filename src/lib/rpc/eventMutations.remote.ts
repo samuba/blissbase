@@ -3,11 +3,11 @@ import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import * as assets from '$lib/assets';
 import { deduplicateItems, generateSlug, randomString } from '$lib/common';
 import {
-    EVENT_IMAGE_ACCEPTED_MIME_TYPES,
-    EVENT_IMAGE_HASH_LENGTH,
+    IMAGE_UPLOAD_ACCEPTED_MIME_TYPES,
+    IMAGE_UPLOAD_HASH_LENGTH,
     getProcessedImageHashFromFileName,
     getStableContentHash
-} from '$lib/eventImageProcessing.shared';
+} from '$lib/imageUpload.shared';
 import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from '$lib/events.remote.common';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import { routes, withEventSlug } from '$lib/routes';
@@ -247,13 +247,13 @@ async function uploadImages(args: UploadImagesArgs) {
 		let imageHash: string | undefined = undefined;
 
 		try {
-			if (!EVENT_IMAGE_ACCEPTED_MIME_TYPES.includes(file.type as (typeof EVENT_IMAGE_ACCEPTED_MIME_TYPES)[number])) {
+			if (!IMAGE_UPLOAD_ACCEPTED_MIME_TYPES.includes(file.type as (typeof IMAGE_UPLOAD_ACCEPTED_MIME_TYPES)[number])) {
 				throw new Error(`Expected processed image upload (WebP or JPEG), received ${file.type || `unknown`}`);
 			}
 
 			const bytes = new Uint8Array(await file.arrayBuffer());
 			imageHash = getProcessedImageHashFromFileName({ fileName: file.name }) ?? await getStableContentHash({ bytes });
-			if (!imageHash || imageHash.length !== EVENT_IMAGE_HASH_LENGTH) {
+			if (!imageHash || imageHash.length !== IMAGE_UPLOAD_HASH_LENGTH) {
 				throw new Error(`Missing processed image hash`);
 			}
 
@@ -285,7 +285,7 @@ function getE2EImageUrls(args: UploadImagesArgs) {
 
 	return args.files.map((file, index) => {
 		const safeFileName = file.name
-			.replace(new RegExp(`^[A-Za-z0-9_-]{${EVENT_IMAGE_HASH_LENGTH}}-`), ``)
+			.replace(new RegExp(`^[A-Za-z0-9_-]{${IMAGE_UPLOAD_HASH_LENGTH}}-`), ``)
 			.replace(/[^a-zA-Z0-9.\-_]/g, `-`);
 		return `https://assets.blissbase.app/e2e/${args.slug}/${index}-${safeFileName}`;
 	});

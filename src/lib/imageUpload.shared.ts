@@ -1,14 +1,14 @@
 import { bmvbhash } from 'blockhash-core';
 
-export const EVENT_IMAGE_MAX_DIMENSION = 850;
-export const EVENT_IMAGE_OUTPUT_MIME_TYPE = `image/webp`;
-export const EVENT_IMAGE_OUTPUT_EXTENSION = `webp`;
-export const EVENT_IMAGE_ACCEPTED_MIME_TYPES = [`image/webp`, `image/jpeg`] as const;
-export const EVENT_IMAGE_OUTPUT_QUALITY = 0.86;
-export const EVENT_IMAGE_MAX_SIZE_MB = 0.35;
-export const EVENT_IMAGE_HASH_PREFIX_BYTES = 8;
-export const EVENT_IMAGE_HASH_LENGTH = 11;
-export const EVENT_IMAGE_PHASH_BITS = 8;
+export const IMAGE_UPLOAD_MAX_DIMENSION = 850;
+export const IMAGE_UPLOAD_OUTPUT_MIME_TYPE = `image/webp`;
+export const IMAGE_UPLOAD_OUTPUT_EXTENSION = `webp`;
+export const IMAGE_UPLOAD_ACCEPTED_MIME_TYPES = [`image/webp`, `image/jpeg`] as const;
+export const IMAGE_UPLOAD_OUTPUT_QUALITY = 0.86;
+export const IMAGE_UPLOAD_MAX_SIZE_MB = 0.35;
+export const IMAGE_UPLOAD_HASH_PREFIX_BYTES = 8;
+export const IMAGE_UPLOAD_HASH_LENGTH = 11;
+export const IMAGE_UPLOAD_PHASH_BITS = 8;
 
 /**
  * Creates a stable short content hash from processed image bytes.
@@ -20,7 +20,7 @@ export async function getStableContentHash(args: { bytes: ArrayBuffer | Uint8Arr
 	const bytes = args.bytes instanceof Uint8Array ? args.bytes : new Uint8Array(args.bytes);
 	const digestInput = Uint8Array.from(bytes);
 	const digestBuffer = await crypto.subtle.digest(`SHA-256`, digestInput);
-	const digestBytes = new Uint8Array(digestBuffer).slice(0, EVENT_IMAGE_HASH_PREFIX_BYTES);
+	const digestBytes = new Uint8Array(digestBuffer).slice(0, IMAGE_UPLOAD_HASH_PREFIX_BYTES);
 	return toBase64Url(digestBytes);
 }
 
@@ -31,7 +31,7 @@ export async function getStableContentHash(args: { bytes: ArrayBuffer | Uint8Arr
  * const hash = getPerceptualHash({ imageData });
  */
 export function getPerceptualHash(args: { imageData: HashImageData }) {
-	const hexHash = bmvbhash(args.imageData, EVENT_IMAGE_PHASH_BITS);
+	const hexHash = bmvbhash(args.imageData, IMAGE_UPLOAD_PHASH_BITS);
 	return hexToBase64Url(hexHash);
 }
 
@@ -43,7 +43,7 @@ export function getPerceptualHash(args: { imageData: HashImageData }) {
  * getProcessedImageFileName({ hash: `abc123def45`, originalFileName: `cover.png`, extension: `jpg` });
  */
 export function getProcessedImageFileName(args: { hash: string; originalFileName: string; extension?: string }) {
-	const ext = args.extension ?? EVENT_IMAGE_OUTPUT_EXTENSION;
+	const ext = args.extension ?? IMAGE_UPLOAD_OUTPUT_EXTENSION;
 	const safeBaseName = sanitizeFileBaseName(stripFileExtension(args.originalFileName));
 	if (!safeBaseName) return `${args.hash}.${ext}`;
 	return `${args.hash}-${safeBaseName}.${ext}`;
@@ -56,7 +56,7 @@ export function getProcessedImageFileName(args: { hash: string; originalFileName
  * getProcessedImageHashFromFileName({ fileName: `abc123def45-cover.webp` });
  */
 export function getProcessedImageHashFromFileName(args: { fileName: string }) {
-	const match = args.fileName.match(new RegExp(`^([A-Za-z0-9_-]{${EVENT_IMAGE_HASH_LENGTH}})(?:[.-]|$)`));
+	const match = args.fileName.match(new RegExp(`^([A-Za-z0-9_-]{${IMAGE_UPLOAD_HASH_LENGTH}})(?:[.-]|$)`));
 	return match?.[1];
 }
 

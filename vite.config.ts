@@ -70,4 +70,8 @@ export default defineConfig({
 	server: {
 		allowedHosts: ["localdev.soulspots.app", "localhost", "127.0.0.1", "blissbase.app", "blissbase.vercel.app"],
 	},
+	optimizeDeps: {
+		// jSquash WASM fails under Vite's dependency optimizer (Invalid URL / wasm fetch).
+		exclude: ["@jsquash/webp"],
+	},
 });

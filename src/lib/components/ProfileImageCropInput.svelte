@@ -2,7 +2,7 @@
 	import type { RemoteFormField } from '@sveltejs/kit';
 	import Cropper from 'svelte-easy-crop';
 	import type { CropArea } from 'svelte-easy-crop';
-	import imageCompression from 'browser-image-compression';
+	import { processImageDataToWebPFile } from '$lib/imageUpload';
 	import { toast } from 'svelte-sonner';
 	import { Dialog } from '$lib/components/dialog';
 	import { createProfileImageUploadUrl } from '$lib/rpc/profile.remote';
@@ -26,8 +26,6 @@
 	);
 	const aspect = $derived(targetSize.width / targetSize.height);
 	const cropShape = $derived(kind === `profile` ? `round` : `rect`);
-	const maxSizeMB = 0.35;
-	const outputQuality = 0.88;
 
 	// svelte-ignore state_referenced_locally
 	let previewUrl = $state(initialUrl);
@@ -92,7 +90,7 @@
 	}
 
 	/**
-	 * Confirms the current crop: compresses, uploads to R2 and stores the public URL on the form field.
+	 * Confirms the current crop: encodes to WebP, uploads to R2 and stores the public URL on the form field.
 	 * @example await confirmCrop();
 	 */
 	async function confirmCrop() {
@@ -101,25 +99,25 @@
 		const previousPreviewUrl = previewUrl;
 		let localPreviewUrl = ``;
 		try {
-			const blob = await renderCroppedBlob({
+			const file = await renderCroppedBlob({
 				image: originalImage,
 				pixels: croppedPixels
 			});
 
-			localPreviewUrl = URL.createObjectURL(blob);
+			localPreviewUrl = URL.createObjectURL(file);
 			previewUrl = localPreviewUrl;
 			uploading = true;
 			dialogOpen = false;
 
 			const { uploadUrl, publicUrl } = await createProfileImageUploadUrl({
 				type: kind,
-				contentType: blob.type === `image/webp` ? `image/webp` : `image/jpeg`
+				contentType: file.type === `image/webp` ? `image/webp` : `image/jpeg`
 			});
 
 			const response = await fetch(uploadUrl, {
 				method: `PUT`,
-				body: blob,
-				headers: { 'Content-Type': blob.type }
+				body: file,
+				headers: { 'Content-Type': file.type }
 			});
 			if (!response.ok) {
 				throw new Error(`Upload fehlgeschlagen (HTTP ${response.status})`);
@@ -138,8 +136,8 @@
 	}
 
 	/**
-	 * Renders the selected crop area into a WebP (or JPEG fallback) blob at the target size.
-	 * @example const blob = await renderCroppedBlob({ image, pixels });
+	 * Renders the selected crop area into a WebP upload file at the target size.
+	 * @example const file = await renderCroppedBlob({ image, pixels });
 	 */
 	async function renderCroppedBlob(args: { image: HTMLImageElement; pixels: CropArea }) {
 		const canvas = document.createElement(`canvas`);
@@ -160,41 +158,10 @@
 			targetSize.height
 		);
 
-		const webpBlob = await canvasToBlob({ canvas, type: `image/webp`, quality: outputQuality });
-		if (webpBlob && webpBlob.type === `image/webp` && webpBlob.size <= maxSizeMB * 1024 * 1024) {
-			return webpBlob;
-		}
-
-		if (webpBlob && webpBlob.type === `image/webp`) {
-			return await imageCompression(blobToFile(webpBlob, `crop.webp`), {
-				maxSizeMB,
-				maxWidthOrHeight: Math.max(targetSize.width, targetSize.height),
-				fileType: `image/webp`,
-				initialQuality: outputQuality,
-				useWebWorker: true
-			});
-		}
-
-		const jpegBlob = await canvasToBlob({ canvas, type: `image/jpeg`, quality: outputQuality });
-		if (!jpegBlob) throw new Error(`JPEG-Kodierung fehlgeschlagen`);
-		if (jpegBlob.size <= maxSizeMB * 1024 * 1024) return jpegBlob;
-
-		return await imageCompression(blobToFile(jpegBlob, `crop.jpg`), {
-			maxSizeMB,
-			maxWidthOrHeight: Math.max(targetSize.width, targetSize.height),
-			fileType: `image/jpeg`,
-			initialQuality: outputQuality,
-			useWebWorker: true
-		});
-	}
-
-	/**
-	 * Wraps canvas.toBlob in a Promise, resolving `null` when the browser cannot encode the requested type.
-	 * @example const blob = await canvasToBlob({ canvas, type: `image/webp`, quality: 0.9 });
-	 */
-	function canvasToBlob(args: { canvas: HTMLCanvasElement; type: string; quality: number }) {
-		return new Promise<Blob | null>((resolve) => {
-			args.canvas.toBlob((blob) => resolve(blob), args.type, args.quality);
+		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		return await processImageDataToWebPFile({
+			imageData,
+			originalFileName: `${kind}.webp`
 		});
 	}
 
@@ -222,14 +189,6 @@
 			image.onerror = () => reject(new Error(`Bild konnte nicht geladen werden`));
 			image.src = url;
 		});
-	}
-
-	/**
-	 * Wraps a Blob in a File so browser-image-compression can accept it.
-	 * @example const file = blobToFile(blob, `crop.webp`);
-	 */
-	function blobToFile(blob: Blob, name: string) {
-		return new File([blob], name, { type: blob.type, lastModified: Date.now() });
 	}
 
 	/**

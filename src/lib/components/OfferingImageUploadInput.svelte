@@ -1,19 +1,11 @@
 <script lang="ts">
 	import type { RemoteFormField } from "@sveltejs/kit";
-	import imageCompression from "browser-image-compression";
 	import { flip } from "svelte/animate";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import { dragHandle, dragHandleZone } from "svelte-dnd-action";
 	import { fade } from "svelte/transition";
-	import {
-		EVENT_IMAGE_MAX_DIMENSION,
-		EVENT_IMAGE_MAX_SIZE_MB,
-		EVENT_IMAGE_OUTPUT_MIME_TYPE,
-		EVENT_IMAGE_OUTPUT_QUALITY,
-		getProcessedImageFileName,
-		getPerceptualHash,
-	} from "$lib/eventImageProcessing.shared";
+	import { processImageUploadFile } from "$lib/imageUpload";
 	import { OFFERING_IMAGE_MAX_COUNT } from "$lib/rpc/offerings.common";
 	import { createOfferingImageUploadUrl } from "$lib/rpc/offerings.remote";
 	import PopOver from "./PopOver.svelte";
@@ -260,7 +252,7 @@
 		});
 
 		try {
-			const processedFile = await processImageFile({
+			const processedFile = await processImageUploadFile({
 				file: args.file,
 				onProgress: (progress) => {
 					updatePreviewState({
@@ -338,160 +330,6 @@
 			};
 		});
 		reportBusy(busy);
-	}
-
-	/**
-	 * Converts a selected image into the normalized upload file.
-	 * @example
-	 * const processed = await processImageFile({ file });
-	 */
-	async function processImageFile(args: ProcessImageFileArgs) {
-		args.onProgress?.(10);
-		const compressedFile = await imageCompression(args.file, {
-			maxSizeMB: EVENT_IMAGE_MAX_SIZE_MB,
-			maxWidthOrHeight: EVENT_IMAGE_MAX_DIMENSION,
-			useWebWorker: true,
-			fileType: EVENT_IMAGE_OUTPUT_MIME_TYPE,
-			initialQuality: EVENT_IMAGE_OUTPUT_QUALITY,
-			onProgress: (progress: number) => {
-				args.onProgress?.(Math.min(70, Math.max(10, progress * 0.7)));
-			},
-		});
-		args.onProgress?.(72);
-
-		const outputFile = await ensureCompressedFormat({ file: compressedFile });
-		args.onProgress?.(80);
-
-		const imageData = await createImageDataFromFile({ file: outputFile });
-		args.onProgress?.(92);
-
-		const hash = getPerceptualHash({ imageData });
-		const extension = outputFile.type === JPEG_FALLBACK_MIME ? `jpg` : undefined;
-		const fileName = getProcessedImageFileName({
-			hash,
-			originalFileName: args.file.name,
-			extension,
-		});
-
-		args.onProgress?.(100);
-		return new File([outputFile], fileName, {
-			type: outputFile.type,
-			lastModified: args.file.lastModified,
-		});
-	}
-
-	const WEBP_MAGIC_BYTES = [0x52, 0x49, 0x46, 0x46];
-	const JPEG_FALLBACK_MIME = `image/jpeg`;
-
-	/**
-	 * Verifies WebP output and re-encodes as JPEG if the browser fell back.
-	 * @example
-	 * const file = await ensureCompressedFormat({ file: compressedFile });
-	 */
-	async function ensureCompressedFormat(args: { file: File }) {
-		if (await isWebP({ file: args.file })) return args.file;
-
-		const image = await loadImageFromFile({ file: args.file });
-		try {
-			const size = getContainedImageSize({
-				width: image.naturalWidth,
-				height: image.naturalHeight,
-			});
-			const canvas = document.createElement(`canvas`);
-			canvas.width = size.width;
-			canvas.height = size.height;
-
-			const ctx = canvas.getContext(`2d`);
-			if (!ctx) throw new Error(`Canvas Kontext konnte nicht erstellt werden`);
-			ctx.drawImage(image, 0, 0, size.width, size.height);
-
-			const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, JPEG_FALLBACK_MIME, EVENT_IMAGE_OUTPUT_QUALITY));
-			if (!blob) throw new Error(`JPEG-Fallback-Kodierung fehlgeschlagen`);
-
-			return new File([blob], args.file.name.replace(/\.\w+$/, `.jpg`), {
-				type: JPEG_FALLBACK_MIME,
-				lastModified: args.file.lastModified,
-			});
-		} finally {
-			image.remove();
-		}
-	}
-
-	/**
-	 * Checks the RIFF magic bytes to detect real WebP output.
-	 * @example
-	 * const webp = await isWebP({ file });
-	 */
-	async function isWebP(args: { file: File }) {
-		if (args.file.size < 12) return false;
-		const header = new Uint8Array(await args.file.slice(0, 4).arrayBuffer());
-		return WEBP_MAGIC_BYTES.every((b, i) => header[i] === b);
-	}
-
-	/**
-	 * Loads a browser image from a selected file.
-	 * @example
-	 * const image = await loadImageFromFile({ file });
-	 */
-	function loadImageFromFile(args: { file: File }) {
-		return new Promise<HTMLImageElement>((resolve, reject) => {
-			const image = new Image();
-			const objectUrl = URL.createObjectURL(args.file);
-
-			image.onload = () => {
-				URL.revokeObjectURL(objectUrl);
-				resolve(image);
-			};
-			image.onerror = () => {
-				URL.revokeObjectURL(objectUrl);
-				reject(new Error(`Bild konnte nicht geladen werden`));
-			};
-			image.src = objectUrl;
-		});
-	}
-
-	/**
-	 * Calculates a contain-fit size for local image processing.
-	 * @example
-	 * const size = getContainedImageSize({ width: 1600, height: 900 });
-	 */
-	function getContainedImageSize(args: { width: number; height: number }) {
-		if (!args.width || !args.height) {
-			throw new Error(`Bildabmessungen sind ungültig`);
-		}
-
-		const scale = Math.min(1, EVENT_IMAGE_MAX_DIMENSION / args.width, EVENT_IMAGE_MAX_DIMENSION / args.height);
-		return {
-			width: Math.max(1, Math.round(args.width * scale)),
-			height: Math.max(1, Math.round(args.height * scale)),
-		};
-	}
-
-	/**
-	 * Creates image data from a processed file for perceptual hashing.
-	 * @example
-	 * const imageData = await createImageDataFromFile({ file });
-	 */
-	async function createImageDataFromFile(args: { file: File }) {
-		const image = await loadImageFromFile({ file: args.file });
-
-		try {
-			const size = getContainedImageSize({
-				width: image.naturalWidth,
-				height: image.naturalHeight,
-			});
-			const canvas = document.createElement(`canvas`);
-			canvas.width = size.width;
-			canvas.height = size.height;
-
-			const context = canvas.getContext(`2d`);
-			if (!context) throw new Error(`Canvas Kontext konnte nicht erstellt werden`);
-
-			context.drawImage(image, 0, 0, size.width, size.height);
-			return context.getImageData(0, 0, size.width, size.height);
-		} finally {
-			image.remove();
-		}
 	}
 
 	/**
@@ -630,11 +468,6 @@
 		url?: string;
 		claimToken?: string;
 		error?: string;
-	};
-
-	type ProcessImageFileArgs = {
-		file: File;
-		onProgress?: (progress: number) => void;
 	};
 
 	type UploadState = `ready` | `processing` | `uploading` | `error`;
