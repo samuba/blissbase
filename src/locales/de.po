@@ -164,6 +164,8 @@ msgstr "<0/> Email"
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
 msgstr "Schließen"
@@ -426,6 +428,7 @@ msgid "Abbrechen"
 msgstr "Abbrechen"
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/events/new/+page.svelte
@@ -1939,7 +1942,6 @@ msgid "<0/> Zurück zu Admin"
 msgstr "<0/> Zurück zu Admin"
 
 #: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
 msgid "Neues Target hinzufügen"
 msgstr "Neues Target hinzufügen"
 
@@ -1961,10 +1963,12 @@ msgstr "roomId *"
 
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 msgid "defaultTimezone *"
 msgstr "defaultTimezone *"
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "hasOnlyConsciousEvents <0>Wenn aktiv, wird der Consciousness-Check übersprungen.</0>"
 msgstr "hasOnlyConsciousEvents <0>Wenn aktiv, wird der Consciousness-Check übersprungen.</0>"
@@ -2023,15 +2027,18 @@ msgstr "nein"
 
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 msgid "defaultAddress"
 msgstr "defaultAddress"
 
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 msgid "Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 msgstr "Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse."
 msgstr "Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse."
@@ -2045,7 +2052,6 @@ msgid "Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics."
 msgstr "Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics."
 
 #: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
 msgid "Targets hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
 msgstr "Targets hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
 
@@ -2055,11 +2061,11 @@ msgid "Target bearbeiten"
 msgstr "Target bearbeiten"
 
 #: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
 msgid "Neu"
 msgstr "Neu"
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "<0/> Wird gespeichert..."
 msgstr "<0/> Wird gespeichert..."
@@ -2121,3 +2127,39 @@ msgstr "<0/> WhatsApp Scraping"
 
 #~ msgid "Für Gruppen: Invite-Link aus der Gruppen-Info — öffnet WhatsApp mit diesem Chat. Bei 1:1 reicht die chatJid (`wa.me`)."
 #~ msgstr "Für Gruppen: Invite-Link aus der Gruppen-Info — öffnet WhatsApp mit diesem Chat. Bei 1:1 reicht die chatJid (`wa.me`)."
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
+msgstr "Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "<0/> Hinzufügen"
+msgstr "<0/> Hinzufügen"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Wähle einen Chat aus, der noch kein Scraping-Target ist."
+msgstr "Wähle einen Chat aus, der noch kein Scraping-Target ist."
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Chat suchen…"
+msgstr "Chat suchen…"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Keine verfügbaren Chats. Alle bekannten Chats sind bereits Targets."
+msgstr "Keine verfügbaren Chats. Alle bekannten Chats sind bereits Targets."
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Keine Chats für diese Suche."
+msgstr "Keine Chats für diese Suche."
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Ändern"
+msgstr "Ändern"
+
+#~ msgid "Einfügen"
+#~ msgstr "Einfügen"
+
+#. 0: formatDate(chat.lastMessageTime)
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Letzte Nachricht: {0}"
+msgstr "Letzte Nachricht: {0}"

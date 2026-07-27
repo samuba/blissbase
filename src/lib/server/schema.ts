@@ -142,7 +142,8 @@ export const whatsappChats = pgTable("whatsapp_chats", {
 	chatJid: text().primaryKey(),
 	name: text().notNull(),
 	lastMessageTime: timestamp(),
-	updatedAt: timestamp().notNull().defaultNow(),
+	createdAt: timestamp().notNull().defaultNow(),
+	updatedAt: timestamp(),
 });
 
 export type WhatsappChat = typeof whatsappChats.$inferSelect;

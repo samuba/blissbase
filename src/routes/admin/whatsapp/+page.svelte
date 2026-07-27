@@ -1,13 +1,16 @@
 <script lang="ts">
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
+	import { Dialog } from '$lib/components/dialog';
 	import { routes } from '$lib/routes';
 	import {
+		getAvailableWhatsappChats,
 		getWhatsappScrapingTargets,
 		saveWhatsappScrapingTarget,
 	} from '$lib/rpc/adminWhatsapp.remote';
 	import { toast } from 'svelte-sonner';
 
 	const targets = $derived(await getWhatsappScrapingTargets());
+	const availableChats = $derived(await getAvailableWhatsappChats());
 	const defaultFormValues = {
 		originalChatJid: ``,
 		chatJid: ``,
@@ -17,27 +20,39 @@
 		hasOnlyConsciousEvents: false,
 	};
 
+	let isAddDialogOpen = $state(false);
+	let isEditDialogOpen = $state(false);
 	let selectedChatJid = $state<string | null>(null);
-	const isEditing = $derived(!!selectedChatJid);
+	let selectedChatForAdd = $state<{ chatJid: string; name: string } | null>(null);
+	let chatFilter = $state(``);
+
+	const filteredAvailableChats = $derived.by(() => {
+		const query = chatFilter.trim().toLowerCase();
+		if (!query) return availableChats;
+		return availableChats.filter((chat) => {
+			return (
+				chat.name.toLowerCase().includes(query) ||
+				chat.chatJid.toLowerCase().includes(query)
+			);
+		});
+	});
 
 	saveWhatsappScrapingTarget.fields.set(defaultFormValues);
 
 	const formProps = saveWhatsappScrapingTarget.enhance(async (form) => {
-		const ok = await form.submit().updates(getWhatsappScrapingTargets);
+		const ok = await form.submit().updates(getWhatsappScrapingTargets, getAvailableWhatsappChats);
 		if (!ok) return;
 
 		const result = form.result;
 		const name = result?.name;
 		if (result?.action === `updated`) {
 			toast.success(name ? `Target „${name}“ aktualisiert` : `Target aktualisiert`);
-			selectedChatJid = result.chatJid;
-			saveWhatsappScrapingTarget.fields.originalChatJid.set(result.chatJid);
-			saveWhatsappScrapingTarget.fields.chatJid.set(result.chatJid);
+			onEditDialogOpenChange(false);
 			return;
 		}
 
 		toast.success(name ? `Target „${name}“ hinzugefügt` : `Target hinzugefügt`);
-		resetForm();
+		closeAddDialog();
 	});
 
 	const sortColumns: { key: SortKey; label: string }[] = [
@@ -63,8 +78,39 @@
 		return [...targets].sort((a, b) => compareTargets({ a, b, key: sortKey }) * dir);
 	});
 
-	function resetForm() {
-		selectedChatJid = null;
+	function openAddDialog() {
+		selectedChatForAdd = null;
+		chatFilter = ``;
+		saveWhatsappScrapingTarget.fields.set(defaultFormValues);
+		isAddDialogOpen = true;
+	}
+
+	function closeAddDialog() {
+		isAddDialogOpen = false;
+		selectedChatForAdd = null;
+		chatFilter = ``;
+		saveWhatsappScrapingTarget.fields.set(defaultFormValues);
+	}
+
+	function onAddDialogOpenChange(open: boolean) {
+		if (open) {
+			isAddDialogOpen = true;
+			return;
+		}
+		closeAddDialog();
+	}
+
+	function selectChatForAdd(chat: AvailableChat) {
+		selectedChatForAdd = { chatJid: chat.chatJid, name: chat.name };
+		saveWhatsappScrapingTarget.fields.set({
+			...defaultFormValues,
+			chatJid: chat.chatJid,
+			name: chat.name,
+		});
+	}
+
+	function clearSelectedChatForAdd() {
+		selectedChatForAdd = null;
 		saveWhatsappScrapingTarget.fields.set(defaultFormValues);
 	}
 
@@ -78,6 +124,14 @@
 			defaultTimezone: target.defaultTimezone,
 			hasOnlyConsciousEvents: target.hasOnlyConsciousEvents,
 		});
+		isEditDialogOpen = true;
+	}
+
+	function onEditDialogOpenChange(open: boolean) {
+		isEditDialogOpen = open;
+		if (open) return;
+		selectedChatJid = null;
+		saveWhatsappScrapingTarget.fields.set(defaultFormValues);
 	}
 
 	function formatAddress(address: string[] | null | undefined) {
@@ -198,6 +252,7 @@
 	}
 
 	type Target = (typeof targets)[number];
+	type AvailableChat = (typeof availableChats)[number];
 	type SortKey =
 		| `name`
 		| `chatJid`
@@ -216,118 +271,18 @@
 		<div class="space-y-1">
 			<h1 class="text-lg font-semibold">WhatsApp Scraping Targets</h1>
 			<p class="text-base-content/80 text-sm leading-relaxed">
-				Targets hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten.
+				Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten.
 			</p>
 		</div>
-		<a href={routes.admin()} class="btn btn-ghost btn-sm">
-			<i class="icon-[ph--arrow-left] size-4"></i>
-			Zurück zu Admin
-		</a>
-	</div>
-
-	<div class="card bg-base-100 mx-auto w-full max-w-5xl shadow">
-		<div class="card-body gap-4">
-			<div class="flex flex-wrap items-center justify-between gap-2">
-				<h2 class="card-title text-base">
-					{#if isEditing}
-						Target bearbeiten
-					{:else}
-						Neues Target hinzufügen
-					{/if}
-				</h2>
-				{#if isEditing}
-					<button type="button" class="btn btn-ghost btn-sm" onclick={resetForm}>
-						Neu
-					</button>
-				{/if}
-			</div>
-
-			<form {...formProps} class="grid grid-cols-1 gap-4 md:grid-cols-2">
-				<input type="hidden" {...saveWhatsappScrapingTarget.fields.originalChatJid.as(`text`)} />
-
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">chatJid *</legend>
-					<input
-						class="input w-full peer font-mono"
-						{...saveWhatsappScrapingTarget.fields.chatJid.as(`text`)}
-						required
-						placeholder="z.B. 120363…@g.us oder 49123…@s.whatsapp.net"
-					/>
-					<FormFieldIssues field={saveWhatsappScrapingTarget.fields.chatJid} />
-				</fieldset>
-
-				<fieldset class="fieldset">
-					<label class="label cursor-pointer justify-start gap-2">
-						<input
-							class="checkbox"
-							{...saveWhatsappScrapingTarget.fields.hasOnlyConsciousEvents.as(`checkbox`)}
-						/>
-						<span class="font-bold text-base-content">
-							hasOnlyConsciousEvents
-							<span class="block text-xs text-base-content/65 font-normal">
-								Wenn aktiv, wird der Consciousness-Check übersprungen.
-							</span>
-						</span>
-					</label>
-					<FormFieldIssues field={saveWhatsappScrapingTarget.fields.hasOnlyConsciousEvents} />
-				</fieldset>
-
-				<fieldset class="fieldset md:col-span-2">
-					<legend class="fieldset-legend">Name</legend>
-					<input
-						class="input w-full peer"
-						{...saveWhatsappScrapingTarget.fields.name.as(`text`)}
-						placeholder="Anzeigename der Gruppe / des Chats"
-					/>
-					<FormFieldIssues field={saveWhatsappScrapingTarget.fields.name} />
-				</fieldset>
-
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">defaultAddress</legend>
-					<textarea
-						class="textarea min-h-20 w-full peer"
-						{...saveWhatsappScrapingTarget.fields.defaultAddress.as(`text`)}
-						placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-					></textarea>
-					<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
-					<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultAddress} />
-				</fieldset>
-
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">defaultTimezone *</legend>
-					<input
-						class="input w-full peer"
-						{...saveWhatsappScrapingTarget.fields.defaultTimezone.as(`text`)}
-						required
-					/>
-					<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultTimezone} />
-				</fieldset>
-
-				{#if saveWhatsappScrapingTarget.fields.allIssues()?.length}
-					<div class="md:col-span-2 flex flex-col gap-1">
-						{#each saveWhatsappScrapingTarget.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
-							<div class="text-error text-xs">{issue.message}</div>
-						{/each}
-					</div>
-				{/if}
-
-				<div class="md:col-span-2 flex flex-wrap gap-2">
-					<button
-						type="submit"
-						class="btn btn-primary"
-						disabled={saveWhatsappScrapingTarget.pending > 0}
-					>
-						{#if saveWhatsappScrapingTarget.pending > 0}
-							<span class="loading loading-spinner loading-sm"></span>
-							Wird gespeichert...
-						{:else if isEditing}
-							Speichern
-						{:else}
-							Target hinzufügen
-						{/if}
-					</button>
-				</div>
-			</form>
+		<div class="flex flex-wrap items-center gap-2">
+			<button type="button" class="btn btn-primary btn-sm" onclick={openAddDialog}>
+				<i class="icon-[ph--plus] size-4"></i>
+				Hinzufügen
+			</button>
+			<a href={routes.admin()} class="btn btn-ghost btn-sm">
+				<i class="icon-[ph--arrow-left] size-4"></i>
+				Zurück zu Admin
+			</a>
 		</div>
 	</div>
 
@@ -343,7 +298,7 @@
 			{#if !targets.length}
 				<p class="text-base-content/70 text-sm">Noch keine WhatsApp Scraping Targets.</p>
 			{:else}
-				<div class="flex max-h-[min(70vh,40rem)] w-full flex-col">
+				<div class="flex max-h-[calc(100dvh-12rem)] w-full flex-col md:max-h-[calc(100dvh-10rem)]">
 					<div
 						{@attach tableScrollAttach}
 						class="targets-table-scroll min-h-0 w-full flex-1 overflow-auto"
@@ -447,6 +402,252 @@
 		</div>
 	</div>
 </div>
+
+<Dialog.Root open={isAddDialogOpen} onOpenChange={onAddDialogOpenChange}>
+	<Dialog.Portal>
+		<Dialog.OverlayAnimated />
+		<Dialog.ContentAnimated
+			class="bg-base-100 fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg shadow-xl"
+		>
+			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">
+				Target hinzufügen
+			</Dialog.Title>
+
+			{#if isAddDialogOpen}
+				{#if !selectedChatForAdd}
+					<div class="flex flex-col gap-3 px-6 py-4">
+						<p class="text-base-content/70 text-sm">
+							Wähle einen Chat aus, der noch kein Scraping-Target ist.
+						</p>
+						<input
+							class="input w-full"
+							type="search"
+							placeholder="Chat suchen…"
+							bind:value={chatFilter}
+						/>
+						{#if !availableChats.length}
+							<p class="text-base-content/70 text-sm">
+								Keine verfügbaren Chats. Alle bekannten Chats sind bereits Targets.
+							</p>
+						{:else if !filteredAvailableChats.length}
+							<p class="text-base-content/70 text-sm">Keine Chats für diese Suche.</p>
+						{:else}
+							<div class="bg-base-200 max-h-[70vh] overflow-y-auto overscroll-contain rounded-box p-1">
+								<ul class="flex w-full flex-col">
+									{#each filteredAvailableChats as chat (chat.chatJid)}
+										<li class="w-full min-w-0">
+											<button
+												type="button"
+												class="hover:bg-base-content/10 flex w-full min-w-0 flex-col items-start gap-0.5 rounded-field px-3 py-1.5 text-start"
+												onclick={() => selectChatForAdd(chat)}
+											>
+												<span class="w-full truncate text-sm font-medium">{chat.name}</span>
+												<span class="w-full break-all font-mono text-xs opacity-70">{chat.chatJid}</span>
+												<span class="text-xs opacity-60">
+													Letzte Nachricht: {formatDate(chat.lastMessageTime)}
+												</span>
+											</button>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+					</div>
+				{:else}
+					<form {...formProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+						<input type="hidden" {...saveWhatsappScrapingTarget.fields.originalChatJid.as(`text`)} />
+						<input type="hidden" {...saveWhatsappScrapingTarget.fields.chatJid.as(`text`)} />
+						<input type="hidden" {...saveWhatsappScrapingTarget.fields.name.as(`text`)} />
+
+						<div class="bg-base-200 flex items-start justify-between gap-2 rounded-box p-3">
+							<div class="min-w-0 space-y-0.5">
+								<p class="truncate font-medium">{selectedChatForAdd.name}</p>
+								<p class="font-mono text-xs opacity-70 break-all">{selectedChatForAdd.chatJid}</p>
+							</div>
+							<button type="button" class="btn btn-ghost btn-sm shrink-0" onclick={clearSelectedChatForAdd}>
+								Ändern
+							</button>
+						</div>
+
+						<fieldset class="fieldset">
+							<label class="label cursor-pointer justify-start gap-2">
+								<input
+									class="checkbox"
+									{...saveWhatsappScrapingTarget.fields.hasOnlyConsciousEvents.as(`checkbox`)}
+								/>
+								<span class="font-bold text-base-content">
+									hasOnlyConsciousEvents
+									<span class="block text-xs text-base-content/65 font-normal">
+										Wenn aktiv, wird der Consciousness-Check übersprungen.
+									</span>
+								</span>
+							</label>
+							<FormFieldIssues field={saveWhatsappScrapingTarget.fields.hasOnlyConsciousEvents} />
+						</fieldset>
+
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">defaultAddress</legend>
+							<textarea
+								class="textarea min-h-20 w-full peer"
+								{...saveWhatsappScrapingTarget.fields.defaultAddress.as(`text`)}
+								placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+							></textarea>
+							<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
+							<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultAddress} />
+						</fieldset>
+
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">defaultTimezone *</legend>
+							<input
+								class="input w-full peer"
+								{...saveWhatsappScrapingTarget.fields.defaultTimezone.as(`text`)}
+								required
+							/>
+							<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultTimezone} />
+						</fieldset>
+
+						{#if saveWhatsappScrapingTarget.fields.allIssues()?.length}
+							<div class="flex flex-col gap-1">
+								{#each saveWhatsappScrapingTarget.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
+									<div class="text-error text-xs">{issue.message}</div>
+								{/each}
+							</div>
+						{/if}
+
+						<div class="flex flex-wrap gap-2 pt-2">
+							<button
+								type="submit"
+								class="btn btn-primary"
+								disabled={saveWhatsappScrapingTarget.pending > 0}
+							>
+								{#if saveWhatsappScrapingTarget.pending > 0}
+									<span class="loading loading-spinner loading-sm"></span>
+									Wird gespeichert...
+								{:else}
+									Speichern
+								{/if}
+							</button>
+						</div>
+					</form>
+				{/if}
+			{/if}
+
+			<Dialog.Close
+				class="hover:bg-base-200 absolute top-4 right-4 flex size-8 items-center justify-center rounded-full transition-colors"
+				aria-label="Schließen"
+			>
+				<i class="icon-[ph--x] size-6"></i>
+			</Dialog.Close>
+		</Dialog.ContentAnimated>
+	</Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root open={isEditDialogOpen} onOpenChange={onEditDialogOpenChange}>
+	<Dialog.Portal>
+		<Dialog.OverlayAnimated />
+		<Dialog.ContentAnimated
+			class="bg-base-100 fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg shadow-xl"
+		>
+			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">
+				Target bearbeiten
+			</Dialog.Title>
+
+			{#if isEditDialogOpen}
+				<form {...formProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+					<input type="hidden" {...saveWhatsappScrapingTarget.fields.originalChatJid.as(`text`)} />
+
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend">chatJid *</legend>
+						<input
+							class="input w-full peer font-mono"
+							{...saveWhatsappScrapingTarget.fields.chatJid.as(`text`)}
+							required
+							placeholder="z.B. 120363…@g.us oder 49123…@s.whatsapp.net"
+						/>
+						<FormFieldIssues field={saveWhatsappScrapingTarget.fields.chatJid} />
+					</fieldset>
+
+					<fieldset class="fieldset">
+						<label class="label cursor-pointer justify-start gap-2">
+							<input
+								class="checkbox"
+								{...saveWhatsappScrapingTarget.fields.hasOnlyConsciousEvents.as(`checkbox`)}
+							/>
+							<span class="font-bold text-base-content">
+								hasOnlyConsciousEvents
+								<span class="block text-xs text-base-content/65 font-normal">
+									Wenn aktiv, wird der Consciousness-Check übersprungen.
+								</span>
+							</span>
+						</label>
+						<FormFieldIssues field={saveWhatsappScrapingTarget.fields.hasOnlyConsciousEvents} />
+					</fieldset>
+
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend">Name</legend>
+						<input
+							class="input w-full peer"
+							{...saveWhatsappScrapingTarget.fields.name.as(`text`)}
+							placeholder="Anzeigename der Gruppe / des Chats"
+						/>
+						<FormFieldIssues field={saveWhatsappScrapingTarget.fields.name} />
+					</fieldset>
+
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend">defaultAddress</legend>
+						<textarea
+							class="textarea min-h-20 w-full peer"
+							{...saveWhatsappScrapingTarget.fields.defaultAddress.as(`text`)}
+							placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+						></textarea>
+						<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
+						<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultAddress} />
+					</fieldset>
+
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend">defaultTimezone *</legend>
+						<input
+							class="input w-full peer"
+							{...saveWhatsappScrapingTarget.fields.defaultTimezone.as(`text`)}
+							required
+						/>
+						<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultTimezone} />
+					</fieldset>
+
+					{#if saveWhatsappScrapingTarget.fields.allIssues()?.length}
+						<div class="flex flex-col gap-1">
+							{#each saveWhatsappScrapingTarget.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
+								<div class="text-error text-xs">{issue.message}</div>
+							{/each}
+						</div>
+					{/if}
+
+					<div class="flex flex-wrap gap-2 pt-2">
+						<button
+							type="submit"
+							class="btn btn-primary"
+							disabled={saveWhatsappScrapingTarget.pending > 0}
+						>
+							{#if saveWhatsappScrapingTarget.pending > 0}
+								<span class="loading loading-spinner loading-sm"></span>
+								Wird gespeichert...
+							{:else}
+								Speichern
+							{/if}
+						</button>
+					</div>
+				</form>
+			{/if}
+
+			<Dialog.Close
+				class="hover:bg-base-200 absolute top-4 right-4 flex size-8 items-center justify-center rounded-full transition-colors"
+				aria-label="Schließen"
+			>
+				<i class="icon-[ph--x] size-6"></i>
+			</Dialog.Close>
+		</Dialog.ContentAnimated>
+	</Dialog.Portal>
+</Dialog.Root>
 
 <style>
 	.targets-table-scroll {

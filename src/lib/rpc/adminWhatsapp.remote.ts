@@ -1,6 +1,6 @@
 import { form, query, requested } from '$app/server';
 import { error, invalid } from '@sveltejs/kit';
-import { asc } from 'drizzle-orm';
+import { asc, desc, notInArray } from 'drizzle-orm';
 import * as v from 'valibot';
 import { isAdminSession } from '$lib/server/admin';
 import { db, eq, s } from '$lib/server/db';
@@ -30,6 +30,30 @@ export const getWhatsappScrapingTargets = query(async () => {
 
 	return db.query.whatsappScrapingTargets.findMany({
 		orderBy: [asc(s.whatsappScrapingTargets.name), asc(s.whatsappScrapingTargets.chatJid)],
+	});
+});
+
+export const getAvailableWhatsappChats = query(async () => {
+	assertAdmin();
+
+	const targets = await db.query.whatsappScrapingTargets.findMany({
+		columns: { chatJid: true },
+	});
+	const targetJids = targets.map((target) => target.chatJid);
+
+	const orderBy = [
+		desc(s.whatsappChats.createdAt),
+		asc(s.whatsappChats.name),
+		asc(s.whatsappChats.chatJid),
+	];
+
+	if (!targetJids.length) {
+		return db.query.whatsappChats.findMany({ orderBy });
+	}
+
+	return db.query.whatsappChats.findMany({
+		where: notInArray(s.whatsappChats.chatJid, targetJids),
+		orderBy,
 	});
 });
 
@@ -105,6 +129,8 @@ export const saveWhatsappScrapingTarget = form(saveWhatsappScrapingTargetSchema,
 function refreshWhatsappScrapingTargets() {
 	getWhatsappScrapingTargets().refresh();
 	void requested(getWhatsappScrapingTargets, 1).refreshAll();
+	getAvailableWhatsappChats().refresh();
+	void requested(getAvailableWhatsappChats, 1).refreshAll();
 }
 
 function assertAdmin() {
