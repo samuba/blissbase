@@ -14,7 +14,7 @@
  *   image/description/dates/price prefer Megatix payload
  *
  * Usage:
- *   bun run scripts/scrape-theyogabarn.ts
+ *   bun run scripts/scrape-yogabarn.ts
  */
 import { ScrapedEvent } from "../src/lib/types.ts";
 import {
@@ -210,7 +210,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			longitude: LONGITUDE,
 			tags: [],
 			sourceUrl,
-			source: `theyogabarn`,
+			source: `yogabarn`,
 		};
 	}
 

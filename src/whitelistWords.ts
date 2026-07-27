@@ -71,5 +71,5 @@ export const whiteListSources = [
     'ciglobalcalendar',
     'vortexapp',
     'soulwise',
-    'theyogabarn',
+    'yogabarn',
 ] satisfies WebsiteScrapeSourceName[];

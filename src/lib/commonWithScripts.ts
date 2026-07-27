@@ -12,7 +12,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     whatsupdanang: { module: './scrape-whatsupdanang.ts', label: 'WhatsUpDaNang', url: 'https://whatsupdanang.com' },
     soulwise: { module: './scrape-soulwise.ts', label: 'Soulwise', url: 'https://soulwise.io' },
     balievents: { module: './scrape-balievents.ts', label: 'BaliEvents.co', url: 'https://www.balievents.co' },
-    theyogabarn: { module: './scrape-theyogabarn.ts', label: 'The Yoga Barn', url: 'https://theyogabarn.com' },
+    yogabarn: { module: './scrape-yogabarn.ts', label: 'The Yoga Barn', url: 'https://theyogabarn.com' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string, label: string, url: string }>;
 
