@@ -164,7 +164,7 @@ function refreshTelegramScrapingTargets() {
 }
 
 /**
- * Resolves via the split `/admin/telegram/resolve` function so GramJS never
+ * Resolves via the split `/admin/telegram/resolve` function so teleproto never
  * lands in the shared remotes/catchall bundle.
  */
 async function resolveTelegramRoom({ roomId }: { roomId: string }) {

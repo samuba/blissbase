@@ -4,7 +4,7 @@ import type { RequestHandler } from './$types';
 import { resolveTelegramScrapingTarget } from '$lib/server/telegramClient';
 
 export const config: Config = {
-	// GramJS (`telegram`) is heavy — keep it out of the shared remotes/catchall function
+	// teleproto is heavy — keep it out of the shared remotes/catchall function
 	split: true,
 };
 

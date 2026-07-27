@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { extractTelegramRoomIdFromInput } from '$lib/telegramCommon';
-import { TelegramClient } from 'telegram';
-import { StringSession } from 'telegram/sessions';
+import { TelegramClient } from 'teleproto';
+import { StringSession } from 'teleproto/sessions';
 
 /**
  * Confirms a Telegram room/channel exists for the scraper session and returns its display name.
@@ -30,7 +30,7 @@ export async function resolveTelegramScrapingTarget({ roomId }: { roomId: string
 			);
 		}
 
-		// Warm entity cache so numeric IDs can be resolved (GramJS needs access hashes).
+		// Warm entity cache so numeric IDs can be resolved (teleproto needs access hashes).
 		const dialogs = await client.getDialogs({});
 
 		let resolvedRoomId = normalizedRoomId;

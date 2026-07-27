@@ -6,7 +6,7 @@ import type { Update } from "telegraf/types";
 import { anyOf, channelPost, message } from "telegraf/filters";
 import type { MsgAnalysisAnswer } from "./server/ai";
 import type { Context } from "telegraf";
-import type { Api } from "telegram";
+import type { Api } from "teleproto";
 
 export const msgFilters = anyOf(
     message('text'),

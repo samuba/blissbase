@@ -1,5 +1,5 @@
-import { Api, TelegramClient } from "telegram";
-import { StringSession } from "telegram/sessions";
+import { Api, TelegramClient } from "teleproto";
+import { StringSession } from "teleproto/sessions";
 import readline from "readline";
 import 'dotenv/config'
 import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
@@ -10,7 +10,7 @@ import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 import { aiExtractEventData, lineBreaksToBr } from "../src/lib/server/ai";
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
-import type { Entity } from "telegram/define";
+import type { Entity } from "teleproto/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml } from "../src/lib/telegramCommon";
 import { extractVideoFrame } from "./extractVideoFrame";
