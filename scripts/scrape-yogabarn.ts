@@ -9,9 +9,9 @@
  *   GET megatix.co.id/api/v2/events/{slug}  — cover, description, dates, tickets
  *     (white-label booking links are rewritten to /events/{slug})
  *
- * When a Megatix link exists:
- *   sourceUrl → https://megatix.co.id/events/{slug}
- *   image/description/dates/price prefer Megatix payload
+ * sourceUrl prefers a booking link from the description (Buy Ticket / Book Now / etc).
+ * Megatix white-label links are rewritten to /events/{slug}.
+ * image/description/dates/price prefer Megatix payload when available.
  *
  * Usage:
  *   bun run scripts/scrape-yogabarn.ts
@@ -204,7 +204,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			priceFromMegatixTickets(megatix?.tickets) ||
 			extractPriceFromText(wp?.rawText || card.bodyText || ``) ||
 			null;
+		const bookingFromDescription =
+			bookingUrlFromHtml(megatix?.description) ||
+			bookingUrlFromHtml(wp?.description) ||
+			undefined;
 		const sourceUrl =
+			normalizeBookingSourceUrl(bookingFromDescription) ||
 			megatixEventUrl ||
 			card.detailUrl ||
 			wp?.link ||
@@ -607,6 +612,51 @@ function megatixSlugFromUrl(url: string): string | undefined {
 
 function megatixEventsUrl(slug: string): string {
 	return `${MEGATIX_BASE}/events/${slug}`;
+}
+
+/** Finds Buy Ticket / Book Now / Megatix-style booking links in description HTML. */
+function bookingUrlFromHtml(html: string | null | undefined): string | undefined {
+	if (!html) return undefined;
+
+	const $ = cheerio.load(html);
+	let found: string | undefined;
+
+	$(`a[href]`).each((_, el) => {
+		if (found) return false;
+		try {
+			const href = $(el).attr(`href`)?.trim()?.replace(/&amp;/g, `&`);
+			if (!href) return;
+			if (href.startsWith(`mailto:`) || href.startsWith(`tel:`)) return;
+
+			const absolute = absoluteUrl(href);
+			if (!absolute.startsWith(`http`)) return;
+			const lower = absolute.toLowerCase();
+			if (lower.includes(`forms.gle`)) return;
+			if (lower.includes(`theyogabarn.com/contact`)) return;
+
+			const text = $(el).text().replace(/\s+/g, ` `).trim();
+			const isMegatix = /megatix\.co\.id\/(?:white-label|events)\//i.test(absolute);
+			const isBookingText =
+				/\b(buy\s*ticket|book\s*now|learn\s*more\s*&\s*book|book\s*your|ticket\s*now|register|sign\s*up)\b/i.test(
+					text,
+				);
+			if (!isMegatix && !isBookingText) return;
+
+			found = absolute;
+			return false;
+		} catch (error) {
+			console.error(`Failed to parse booking link:`, error);
+		}
+	});
+
+	return found;
+}
+
+function normalizeBookingSourceUrl(url: string | undefined): string | undefined {
+	if (!url) return undefined;
+	const slug = megatixSlugFromUrl(url);
+	if (slug) return megatixEventsUrl(slug);
+	return url;
 }
 
 function stripSeasonalSlugSuffix(slug: string): string {

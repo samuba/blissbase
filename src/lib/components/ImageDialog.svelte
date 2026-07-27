@@ -23,7 +23,7 @@
 	let open = $state(false);
 	let touchStartX: number | null = null;
 	let touchStartY: number | null = null;
-	let suppressClick = false;
+	let lastSwipeAt = 0;
 
 	function setViewportZoom(allowed: boolean) {
 		const viewport = document.querySelector(`meta[name="viewport"]`);
@@ -64,12 +64,13 @@
 		resetNativeZoom();
 	}
 
+	function wasRecentSwipe() {
+		return Date.now() - lastSwipeAt < 350;
+	}
+
 	function handleImageClick(event: MouseEvent) {
 		event.stopPropagation();
-		if (suppressClick) {
-			suppressClick = false;
-			return;
-		}
+		if (wasRecentSwipe()) return;
 
 		const target = event.currentTarget;
 		if (!(target instanceof HTMLElement)) return;
@@ -84,10 +85,7 @@
 	}
 
 	function handleBackdropClick() {
-		if (suppressClick) {
-			suppressClick = false;
-			return;
-		}
+		if (wasRecentSwipe()) return;
 		onOpenChange(false);
 	}
 
@@ -115,7 +113,7 @@
 			const minSwipeDistance = 50; // minimum distance for a swipe
 
 			if (Math.abs(diffX) > minSwipeDistance) {
-				suppressClick = true;
+				lastSwipeAt = Date.now();
 				if (diffX > 0) {
 					// Swipe left - go to next image
 					goToNext();
