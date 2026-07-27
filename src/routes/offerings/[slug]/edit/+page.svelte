@@ -13,12 +13,15 @@
 	} from "$lib/routes";
 	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
 	import { toast } from "svelte-sonner";
+	import { allowOfferingSlugQueryReopen } from "../../OfferingDetailsDialog.svelte";
 	import type { PageProps } from "./$types";
 
 	let { data }: PageProps = $props();
 	let offering = $derived(data.offering);
 	let editFormValues = $derived(data.editFormValues);
 	let initializedFormOfferingId = $state<number | null>(null);
+
+	allowOfferingSlugQueryReopen();
 
 	let format = $state<OfferingFormat>(`offline`);
 	let imageBusy = $state(false);

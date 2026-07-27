@@ -28,6 +28,11 @@
 		pushState(routes.offeringDetails(slug), { selectedOfferingSlug: slug });
 	}
 
+	/** Call when navigating to edit so return via `?offeringSlug=` can reopen the dialog. */
+	export function allowOfferingSlugQueryReopen() {
+		consumedQuerySlug = null;
+	}
+
 	function dialogHostPath(url: URL) {
 		if (!parseOfferingDetailsSlugFromUrl(url)) return routes.currentPath(url);
 		if (!editReturnTo) return routes.offeringsList();
@@ -81,6 +86,7 @@
 
 	let fetchedOffering = $state<OfferingDetailsDialogOffering | null>(null);
 	let fetchingSlug = $state<string | null>(null);
+	let openingOfferingSlug: string | undefined;
 
 	const offeringFromList = $derived(offerings.find((item) => item.slug === activeSlug));
 	const offering = $derived(
@@ -109,27 +115,43 @@
 
 		const hostPath = routes.currentPath(url);
 		// After dismiss, history.back() can restore a stale `?offeringSlug=` in page.url;
-		// strip it without reopening. Still allow reopen when returning from edit (dialog still open).
+		// strip it without reopening.
 		if (consumedQuerySlug === offeringSlug && !dialog.open) {
 			replaceState(hostPath, {});
 			return;
 		}
 
-		if (activeSlug === offeringSlug && dialog.open) return;
-
-		consumedQuerySlug = offeringSlug;
-		editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
-		// Replace `?offeringSlug=` with the host page, then push the dialog URL so
-		// history.back() closes to the list instead of returning to /edit.
-		replaceState(hostPath, {});
-		await ensureOfferingLoaded(offeringSlug);
-		if (fetchedOffering?.slug !== offeringSlug && !offerings.some((item) => item.slug === offeringSlug)) {
+		if (openingOfferingSlug === offeringSlug) return;
+		if (
+			activeSlug === offeringSlug &&
+			dialog.open &&
+			page.state.selectedOfferingSlug === offeringSlug
+		) {
+			replaceState(hostPath, { selectedOfferingSlug: offeringSlug });
 			return;
 		}
 
-		pushState(routes.offeringDetails(offeringSlug), { selectedOfferingSlug: offeringSlug });
-		activeSlug = offeringSlug;
-		dialog.show({ noEnterAnimation: true });
+		openingOfferingSlug = offeringSlug;
+		try {
+			consumedQuerySlug = offeringSlug;
+			editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
+			await ensureOfferingLoaded(offeringSlug);
+			if (
+				fetchedOffering?.slug !== offeringSlug &&
+				!offerings.some((item) => item.slug === offeringSlug)
+			) {
+				return;
+			}
+
+			// Replace `?offeringSlug=` with the host page, then push the dialog URL so
+			// history.back() closes to the list instead of returning to /edit.
+			replaceState(hostPath, {});
+			pushState(routes.offeringDetails(offeringSlug), { selectedOfferingSlug: offeringSlug });
+			activeSlug = offeringSlug;
+			dialog.show({ noEnterAnimation: true });
+		} finally {
+			if (openingOfferingSlug === offeringSlug) openingOfferingSlug = undefined;
+		}
 	}
 
 	async function syncFromUrl(url: URL) {
