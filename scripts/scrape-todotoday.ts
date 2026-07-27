@@ -15,12 +15,10 @@ import { ScrapedEvent } from '../src/lib/types.ts';
 import {
 	WebsiteScraperInterface,
 	cleanProseHtml,
-	customFetch,
 	dateToIsoStr,
-	REQUEST_DELAY_MS,
-	sleep,
 	TimeZoneString,
 } from './common.ts';
+import { BrowserSession } from './browserSession.ts';
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 import * as cheerio from 'cheerio';
 
@@ -50,15 +48,30 @@ const LOCATION_TIMEZONES: Record<string, TimeZoneString> = {
 	'south-goa': `Asia/Kolkata`,
 };
 
-const DETAIL_CONCURRENCY = 5;
+/**
+ * Requests are already spaced out by the session, so this only controls how much
+ * parsing and geocoding overlaps the wait for the next slot.
+ */
+const DETAIL_CONCURRENCY = 3;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
 		let locationsWithEvents = 0;
+		const session = new BrowserSession({
+			acceptLanguage: `en-US,en;q=0.9,id;q=0.8`,
+			minGapMs: 700,
+			maxGapMs: 2000,
+		});
+
+		// Land on a real page first: the APIs are then called with the cookies and
+		// referer a browser would already have.
+		await session
+			.visit({ url: `${BASE_URL}/${LOCATIONS[0]}/` })
+			.catch((error: unknown) => console.error(`Landing page visit failed (continuing):`, error));
 
 		console.error(`Fetching Todo.Today venue map...`);
-		const venuesById = await fetchVenuesById();
+		const venuesById = await fetchVenuesById(session);
 		console.error(`Loaded ${Object.keys(venuesById).length} venues`);
 
 		for (const location of LOCATIONS) {
@@ -66,7 +79,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 			for (const day of [`today`, `tomorrow`] as const) {
 				try {
-					const listingEvents = await fetchListingEvents({ location, day });
+					const listingEvents = await fetchListingEvents({ session, location, day });
 					if (!listingEvents.length) {
 						console.warn(`No ${day} events for ${location}`);
 						continue;
@@ -81,6 +94,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 						mapper: async (listingEvent) => {
 							try {
 								return await this.extractEventFromListing({
+									session,
 									listingEvent,
 									location,
 									venuesById,
@@ -119,21 +133,23 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	private async extractEventFromListing(args: {
+		session: BrowserSession;
 		listingEvent: TtListingEvent;
 		location: string;
 		venuesById: Record<string, TtVenue>;
 	}): Promise<ScrapedEvent | undefined> {
-		const { listingEvent, location, venuesById } = args;
+		const { session, listingEvent, location, venuesById } = args;
 		if (!listingEvent.name || !listingEvent.link) return undefined;
 
 		const parsed = parseEventUrl(listingEvent.link);
 		if (!parsed) return undefined;
 
 		const [detailData, appEvent] = await Promise.all([
-			fetchSingleEvent({ params: parsed }),
-			listingEvent.id != null ? fetchAppEvent({ eventId: listingEvent.id }) : Promise.resolve(null),
+			fetchSingleEvent({ session, params: parsed }),
+			listingEvent.id != null
+				? fetchAppEvent({ session, eventId: listingEvent.id })
+				: Promise.resolve(null),
 		]);
-		await sleep(REQUEST_DELAY_MS);
 
 		const timeZone = (detailData?.location?.timezone as TimeZoneString | undefined)
 			?? LOCATION_TIMEZONES[location]
@@ -270,6 +286,7 @@ if (import.meta.main) {
 }
 
 async function fetchListingEvents(args: {
+	session: BrowserSession;
 	location: string;
 	day: `today` | `tomorrow`;
 }): Promise<TtListingEvent[]> {
@@ -277,12 +294,10 @@ async function fetchListingEvents(args: {
 		channel: args.location,
 		event_date: args.day,
 	});
-	const payload = await customFetch(`${LISTING_API}?${params.toString()}`, {
-		returnType: `json`,
-		headers: {
-			Accept: `application/json`,
-		},
-	}) as TtListingResponse;
+	const payload = await args.session.json<TtListingResponse>({
+		url: `${LISTING_API}?${params.toString()}`,
+		referer: `${BASE_URL}/${args.location}/`,
+	});
 
 	const sections = payload?.sections;
 	if (!sections?.length) return [];
@@ -302,6 +317,7 @@ async function fetchListingEvents(args: {
 }
 
 async function fetchSingleEvent(args: {
+	session: BrowserSession;
 	params: ParsedEventUrl;
 }): Promise<TtSingleEventData | null> {
 	const { params } = args;
@@ -314,15 +330,14 @@ async function fetchSingleEvent(args: {
 			day: params.day,
 			slug: params.slug,
 		});
-		const json = await customFetch(ADMIN_AJAX, {
+		const json = await args.session.json<{ success?: boolean; data?: TtSingleEventData }>({
+			url: ADMIN_AJAX,
 			method: `POST`,
-			returnType: `json`,
-			headers: {
-				'Content-Type': `application/x-www-form-urlencoded`,
-				Accept: `application/json`,
-			},
+			contentType: `application/x-www-form-urlencoded; charset=UTF-8`,
+			referer: `${BASE_URL}/${params.location}/${params.year}/${params.month}/${params.day}/${params.slug}/`,
+			headers: { [`X-Requested-With`]: `XMLHttpRequest` },
 			body: body.toString(),
-		}) as { success?: boolean; data?: TtSingleEventData };
+		});
 
 		if (!json?.success || !json.data) return null;
 		return json.data;
@@ -332,17 +347,18 @@ async function fetchSingleEvent(args: {
 	}
 }
 
-async function fetchAppEvent(args: { eventId: number }): Promise<TtAppEvent | null> {
+async function fetchAppEvent(args: {
+	session: BrowserSession;
+	eventId: number;
+}): Promise<TtAppEvent | null> {
 	try {
-		const json = await customFetch(APP_EVENT_API, {
+		const json = await args.session.json<{ success?: boolean; data?: TtAppEvent }>({
+			url: APP_EVENT_API,
 			method: `POST`,
-			returnType: `json`,
-			headers: {
-				'Content-Type': `application/json`,
-				Accept: `application/json`,
-			},
+			contentType: `application/json`,
+			referer: `${BASE_URL}/`,
 			body: JSON.stringify({ event_id: args.eventId }),
-		}) as { success?: boolean; data?: TtAppEvent };
+		});
 
 		if (!json?.data) return null;
 		return json.data;
@@ -352,12 +368,12 @@ async function fetchAppEvent(args: { eventId: number }): Promise<TtAppEvent | nu
 	}
 }
 
-async function fetchVenuesById(): Promise<Record<string, TtVenue>> {
+async function fetchVenuesById(session: BrowserSession): Promise<Record<string, TtVenue>> {
 	try {
-		const json = await customFetch(APP_VENUES_API, {
-			returnType: `json`,
-			headers: { Accept: `application/json` },
-		}) as { data?: TtVenue[] };
+		const json = await session.json<{ data?: TtVenue[] }>({
+			url: APP_VENUES_API,
+			referer: `${BASE_URL}/`,
+		});
 
 		const byId: Record<string, TtVenue> = {};
 		for (const venue of json?.data ?? []) {

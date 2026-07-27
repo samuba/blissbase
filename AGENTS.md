@@ -32,7 +32,7 @@ Each scrape script should get the entire html and pass it down to the individual
 Always use early returns, early continues and early breaks. 
 Always use backticks for strings except for: imports, nested strings, console.log, console.error.
 Always use string interpolation when possible instead of concatenating strings. Do this: `${foo} ${bar}` Instead of this: foo + " " + bar
-When a function has 3 parameters or more use an object named 'args' instead of individual parameters with type inlined.
+When a function has 3 params or more use named arguments: foo({a,b}: {a:bool, b:bool}).
 Always place type definitions at the bottom of the file unless the type is only used inside a function/context then leave it there.  
 Never type a variable if typescript can infer the type correctly on its own.
 Always inline types when feasible.

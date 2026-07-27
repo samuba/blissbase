@@ -28,6 +28,14 @@ export const FETCH_TIMEOUT_MS = 10000;
  */
 export const REQUEST_DELAY_MS = 500;
 
+export function sleep(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function randomInt({ min, max }: { min: number; max: number }): number {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 export function customFetch(
     url: string,
     options: RequestInit & { returnType?: 'json' }
@@ -377,8 +385,4 @@ export interface WebsiteScraperInterface {
     extractHost(html: string): string | undefined;
     extractHostLink(html: string): string | undefined;
     extractTags(html: string): string[] | undefined;
-}
-
-export function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }

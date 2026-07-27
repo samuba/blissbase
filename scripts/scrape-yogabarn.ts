@@ -21,8 +21,8 @@ import {
 	WebsiteScraperInterface,
 	cleanProseHtml,
 	dateToIsoStr,
-	sleep,
 } from "./common.ts";
+import { BrowserSession } from "./browserSession.ts";
 import * as cheerio from "cheerio";
 
 const SITE_BASE = `https://theyogabarn.com`;
@@ -56,7 +56,21 @@ const FOOTER_IMAGE_MARKERS = [
 const MIN_IMAGE_BYTES = 10 * 1024;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
+	/** One identity, one cookie jar and one request queue for the whole run. */
+	private readonly session = new BrowserSession({
+		acceptLanguage: `en-US,en;q=0.9,id;q=0.8`,
+		minGapMs: 800,
+		maxGapMs: 2200,
+	});
+
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
+		// The calendar AJAX endpoint is only ever called from this page, so load it
+		// first to pick up the cookies a normal visitor would carry.
+		console.error(`Loading calendar page…`);
+		await this.session
+			.visit({ url: CALENDAR_PAGE })
+			.catch((error: unknown) => console.error(`Calendar page load failed (continuing):`, error));
+
 		console.error(`Fetching calendar months via event_onmonth…`);
 		const cards = await this.fetchCalendarCardsAhead(MONTHS_AHEAD);
 		console.error(`  calendar cards: ${cards.length}`);
@@ -93,6 +107,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				if (seen.has(dedupeKey)) continue;
 
 				event.imageUrls = await filterImagesByMinBytes({
+					session: this.session,
 					urls: event.imageUrls,
 					minBytes: MIN_IMAGE_BYTES,
 					sizeCache: imageSizeCache,
@@ -258,34 +273,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			} catch (error) {
 				console.error(`Failed to fetch calendar month ${date}:`, error);
 			}
-			await sleep(120);
 		}
 
 		return [...byKey.values()];
 	}
 
 	private async fetchMonthHtml(eventDate: string): Promise<string> {
-		const url =
-			`${CALENDAR_AJAX}?action=event_onmonth&eventDate=${encodeURIComponent(eventDate)}`;
-		let lastError: unknown;
-		for (let attempt = 1; attempt <= 3; attempt++) {
-			try {
-				const res = await fetch(url, {
-					headers: {
-						[`User-Agent`]: `Mozilla/5.0`,
-						Accept: `text/html,*/*`,
-						Referer: CALENDAR_PAGE,
-					},
-				});
-				if (!res.ok) throw new Error(`event_onmonth failed: ${res.status}`);
-				return await res.text();
-			} catch (error) {
-				lastError = error;
-				console.error(`event_onmonth ${eventDate} attempt ${attempt} failed:`, error);
-				await sleep(400 * attempt);
-			}
-		}
-		throw lastError instanceof Error ? lastError : new Error(String(lastError));
+		return await this.session.text({
+			url: `${CALENDAR_AJAX}?action=event_onmonth&eventDate=${encodeURIComponent(eventDate)}`,
+			accept: `text/html,*/*;q=0.8`,
+			referer: CALENDAR_PAGE,
+			headers: { [`X-Requested-With`]: `XMLHttpRequest` },
+		});
 	}
 
 	private parseCalendarCardsHtml(html: string): CalendarCard[] {
@@ -331,8 +330,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		let page = 1;
 
 		while (true) {
-			const url = `${WP_EVENTS_API}?per_page=100&page=${page}&_embed=1`;
-			const batch = await this.fetchWpEventsPage(url, page);
+			const batch = await this.fetchWpEventsPage(page);
 			if (!batch?.items.length) break;
 
 			for (const item of batch.items) {
@@ -346,56 +344,31 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 			if (page >= batch.totalPages) break;
 			page++;
-			await sleep(100);
 		}
 
 		return bySlug;
 	}
 
 	private async fetchWpEventsPage(
-		url: string,
 		page: number,
 	): Promise<{ items: WpEventJson[]; totalPages: number } | undefined> {
-		for (let attempt = 1; attempt <= 3; attempt++) {
-			let res: Response;
-			try {
-				res = await fetch(url, {
-					headers: {
-						[`User-Agent`]: `Mozilla/5.0`,
-						Accept: `application/json`,
-					},
-				});
-			} catch (error) {
-				console.error(`Failed to fetch WP events page ${page} (attempt ${attempt}):`, error);
-				await sleep(400 * attempt);
-				continue;
-			}
-			if (!res.ok) {
-				console.error(`WP events page ${page} failed: ${res.status}`);
-				return undefined;
-			}
-
+		try {
+			const res = await this.session.fetch({
+				url: `${WP_EVENTS_API}?per_page=100&page=${page}&_embed=1`,
+				accept: `application/json`,
+				referer: CALENDAR_PAGE,
+			});
 			const items = await readJsonBody<WpEventJson[]>(res);
-			if (!items) {
-				console.error(
-					`WP events page ${page} returned non-JSON on attempt ${attempt} (${res.headers.get(`content-type`) || `unknown type`})`,
-				);
-				await sleep(400 * attempt);
-				continue;
-			}
 			if (!Array.isArray(items)) {
-				console.error(`WP events page ${page} JSON was not an array`);
+				console.error(`WP events page ${page} did not return an array`);
 				return undefined;
 			}
 
-			return {
-				items,
-				totalPages: Number(res.headers.get(`x-wp-totalpages`) || 1),
-			};
+			return { items, totalPages: Number(res.headers.get(`x-wp-totalpages`) || 1) };
+		} catch (error) {
+			console.error(`Failed to fetch WP events page ${page}:`, error);
+			return undefined;
 		}
-
-		console.error(`WP events page ${page} exhausted retries`);
-		return undefined;
 	}
 
 	private parseWpEvent(item: WpEventJson): WpEventPoster {
@@ -456,25 +429,31 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			} catch (error) {
 				console.error(`Failed to fetch Megatix event ${slug}:`, error);
 			}
-			await sleep(80);
 		}
 
 		return bySlug;
 	}
 
 	private async fetchMegatixEventBySlug(slug: string): Promise<MegatixEvent | undefined> {
-		const direct = await fetchJson<{ data?: MegatixEvent }>(
-			`${MEGATIX_BASE}/api/v2/events/${encodeURIComponent(slug)}`,
-		);
-		if (direct?.data?.slug) return direct.data;
+		const direct = await this.fetchMegatixEvent(slug);
+		if (direct) return direct;
 
 		const base = stripSeasonalSlugSuffix(slug);
 		if (base === slug) return undefined;
+		return await this.fetchMegatixEvent(base);
+	}
 
-		const fallback = await fetchJson<{ data?: MegatixEvent }>(
-			`${MEGATIX_BASE}/api/v2/events/${encodeURIComponent(base)}`,
-		);
-		return fallback?.data?.slug ? fallback.data : undefined;
+	private async fetchMegatixEvent(slug: string): Promise<MegatixEvent | undefined> {
+		const payload = await this.session
+			.json<{ data?: MegatixEvent }>({
+				url: `${MEGATIX_BASE}/api/v2/events/${encodeURIComponent(slug)}`,
+				referer: `${MEGATIX_BASE}/`,
+			})
+			.catch((error: unknown) => {
+				console.error(`Megatix lookup failed for ${slug}:`, error);
+				return undefined;
+			});
+		return payload?.data?.slug ? payload.data : undefined;
 	}
 }
 
@@ -567,6 +546,7 @@ function uniqueUrls(urls: string[]): string[] {
 }
 
 async function filterImagesByMinBytes(args: {
+	session: BrowserSession;
 	urls: string[];
 	minBytes: number;
 	sizeCache?: Map<string, number | undefined>;
@@ -579,9 +559,8 @@ async function filterImagesByMinBytes(args: {
 			if (cache.has(url)) {
 				size = cache.get(url);
 			} else {
-				size = await getImageByteSize(url);
+				size = await getImageByteSize({ session: args.session, url });
 				cache.set(url, size);
-				await sleep(40);
 			}
 			if (size === undefined) continue;
 			if (size < args.minBytes) {
@@ -596,53 +575,40 @@ async function filterImagesByMinBytes(args: {
 	return kept;
 }
 
-async function getImageByteSize(url: string): Promise<number | undefined> {
-	const fromHead = await fetchImageSizeViaHead(url);
+/**
+ * HEAD is cheapest, but WP/CDN setups often strip content-length from it, so fall
+ * back to the GET a browser would have made anyway.
+ */
+async function getImageByteSize(args: {
+	session: BrowserSession;
+	url: string;
+}): Promise<number | undefined> {
+	const fromHead = await fetchImageSize({ ...args, method: `HEAD` });
 	if (fromHead !== undefined) return fromHead;
-	return await fetchImageSizeViaGet(url);
+	return await fetchImageSize({ ...args, method: `GET` });
 }
 
-async function fetchImageSizeViaHead(url: string): Promise<number | undefined> {
-	const ctrl = new AbortController();
-	const timer = setTimeout(() => ctrl.abort(), 8000);
+async function fetchImageSize(args: {
+	session: BrowserSession;
+	url: string;
+	method: `HEAD` | `GET`;
+}): Promise<number | undefined> {
 	try {
-		const head = await fetch(url, {
-			method: `HEAD`,
-			signal: ctrl.signal,
-			headers: { [`User-Agent`]: `Mozilla/5.0` },
+		const res = await args.session.fetch({
+			url: args.url,
+			method: args.method,
+			kind: `image`,
+			referer: CALENDAR_PAGE,
 		});
-		if (!head.ok) return undefined;
-		const size = Number(head.headers.get(`content-length`));
-		if (!Number.isFinite(size) || size <= 0) return undefined;
-		return size;
-	} catch {
-		return undefined;
-	} finally {
-		clearTimeout(timer);
-	}
-}
-
-async function fetchImageSizeViaGet(url: string): Promise<number | undefined> {
-	const ctrl = new AbortController();
-	const timer = setTimeout(() => ctrl.abort(), 12000);
-	try {
-		const res = await fetch(url, {
-			method: `GET`,
-			signal: ctrl.signal,
-			headers: { [`User-Agent`]: `Mozilla/5.0` },
-		});
-		if (!res.ok) return undefined;
 		const fromHeader = Number(res.headers.get(`content-length`));
 		if (Number.isFinite(fromHeader) && fromHeader > 0) {
 			await res.body?.cancel();
 			return fromHeader;
 		}
-		const bytes = await res.arrayBuffer();
-		return bytes.byteLength;
+		if (args.method === `HEAD`) return undefined;
+		return (await res.arrayBuffer()).byteLength;
 	} catch {
 		return undefined;
-	} finally {
-		clearTimeout(timer);
 	}
 }
 
@@ -947,24 +913,6 @@ function extractPriceFromText(text: string): string | undefined {
 
 	if (!amounts.length) return undefined;
 	return formatIdr(Math.min(...amounts));
-}
-
-async function fetchJson<T>(url: string): Promise<T | undefined> {
-	const ctrl = new AbortController();
-	const timer = setTimeout(() => ctrl.abort(), 12000);
-	try {
-		const res = await fetch(url, {
-			signal: ctrl.signal,
-			headers: {
-				Accept: `application/json`,
-				[`User-Agent`]: `Mozilla/5.0`,
-			},
-		});
-		if (!res.ok) return undefined;
-		return await readJsonBody<T>(res);
-	} finally {
-		clearTimeout(timer);
-	}
 }
 
 async function readJsonBody<T>(res: Response): Promise<T | undefined> {
