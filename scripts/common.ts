@@ -336,9 +336,11 @@ export function linkify(html: string): string {
     return getHtmlBody($);
 }
 
-export type TimeZoneString = 'Asia/Ho_Chi_Minh' 
-| 'Asia/Makassar' 
+export type TimeZoneString = 'Asia/Ho_Chi_Minh'
+| 'Asia/Makassar'
+| 'Asia/Jakarta'
 | 'Asia/Bangkok'
+| 'Asia/Kolkata'
 | 'Europe/Berlin';
 
 export function dateToIsoStr(year: number, month: number, day: number, hour: number, minute: number, timeZone: TimeZoneString, countMonthFromZero: boolean) {

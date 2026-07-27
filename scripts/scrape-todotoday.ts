@@ -33,11 +33,13 @@ const LOCATIONS = process.env.TODOTODAY_LOCATIONS
 	? process.env.TODOTODAY_LOCATIONS.split(`,`).map((location) => location.trim()).filter(Boolean)
 	: [...DEFAULT_LOCATIONS];
 
+/** Channel → IANA zone for local wall-clock times. Prefer this over the API when both exist
+ * (Todo.Today's CMS has wrong zones for some channels, e.g. Lombok as Asia/Jakarta). */
 const LOCATION_TIMEZONES: Record<string, TimeZoneString> = {
 	ubud: `Asia/Makassar`,
 	canggu: `Asia/Makassar`,
 	uluwatu: `Asia/Makassar`,
-	'kuta-lombok': `Asia/Jakarta`,
+	'kuta-lombok': `Asia/Makassar`, // WITA, not WIB — API incorrectly returns Asia/Jakarta
 	'koh-phangan': `Asia/Bangkok`,
 	pai: `Asia/Bangkok`,
 	bangkok: `Asia/Bangkok`,
@@ -47,6 +49,15 @@ const LOCATION_TIMEZONES: Record<string, TimeZoneString> = {
 	phuket: `Asia/Bangkok`,
 	'south-goa': `Asia/Kolkata`,
 };
+
+const KNOWN_TIME_ZONES = new Set<string>([
+	`Asia/Ho_Chi_Minh`,
+	`Asia/Makassar`,
+	`Asia/Jakarta`,
+	`Asia/Bangkok`,
+	`Asia/Kolkata`,
+	`Europe/Berlin`,
+]);
 
 /**
  * Requests are already spaced out by the session, so this only controls how much
@@ -155,9 +166,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				: Promise.resolve(null),
 		]);
 
-		const timeZone = (detailData?.location?.timezone as TimeZoneString | undefined)
-			?? LOCATION_TIMEZONES[location]
-			?? `Asia/Makassar`;
+		const timeZone = resolveTimeZone({
+			location,
+			apiTimezone: detailData?.location?.timezone,
+		});
 
 		const dateStr = detailData?.start_date || `${parsed.year}-${parsed.month}-${parsed.day}`;
 		const startTime = detailData?.start_time ?? listingEvent.start_time ?? undefined;
@@ -171,9 +183,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		if (!startAt) return undefined;
 
 		const endAt = endTime || detailData?.end_date
-			? buildIsoFromApiDate({
-				dateStr: detailData?.end_date || dateStr,
-				timeStr: endTime || `23:59:00`,
+			? buildEndIso({
+				startDateStr: dateStr,
+				endDateStr: detailData?.end_date || undefined,
+				startTimeStr: startTime || `00:00:00`,
+				endTimeStr: endTime || `23:59:00`,
 				timeZone,
 			})
 			: undefined;
@@ -189,7 +203,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			|| listingEvent.google_map?.trim();
 
 		const address = [venueName, formatLocationName(location)].filter(Boolean) as string[];
-		const timezoneLookup = (googleMap || venueName || venueArea)
+		const geocodeResult = (googleMap || venueName || venueArea)
 			? await geocodeAddressCached({
 				addressLines: [venueName, venueArea, formatLocationName(location)].filter(Boolean) as string[],
 				apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
@@ -202,7 +216,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		if (venueLat !== undefined && venueLng !== undefined && !Number.isNaN(venueLat) && !Number.isNaN(venueLng)) {
 			coordinates = { lat: venueLat, lng: venueLng };
 		} else if (googleMap || venueName || venueArea) {
-			coordinates = timezoneLookup;
+			coordinates = geocodeResult;
 		}
 
 		const creatorName = detailData?.creator?.name || listingEvent.creator_name || appEvent?.facilitator;
@@ -236,7 +250,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			contact,
 			latitude: coordinates?.lat,
 			longitude: coordinates?.lng,
-			timezone: timezoneLookup?.timezone ?? timeZone,
+			// Keep the same zone used to build startAt/endAt — geocode TZ can disagree and skew edits.
+			timezone: timeZone,
 			tags,
 			sourceUrl: listingEvent.link,
 			source: `todotoday`,
@@ -450,6 +465,20 @@ function parseEventUrl(url: string): ParsedEventUrl | null {
 	};
 }
 
+function resolveTimeZone(args: {
+	location: string;
+	apiTimezone?: string;
+}): TimeZoneString {
+	const fromMap = LOCATION_TIMEZONES[args.location];
+	if (fromMap) return fromMap;
+
+	if (args.apiTimezone && KNOWN_TIME_ZONES.has(args.apiTimezone)) {
+		return args.apiTimezone as TimeZoneString;
+	}
+
+	return `Asia/Makassar`;
+}
+
 function buildIsoFromApiDate(args: {
 	dateStr?: string;
 	timeStr?: string;
@@ -464,6 +493,46 @@ function buildIsoFromApiDate(args: {
 	if (!parsedTime) return undefined;
 
 	return dateToIsoStr(year, month, day, parsedTime.hour, parsedTime.minute, args.timeZone, false);
+}
+
+/** Builds end ISO; rolls overnight ends (end clock before start, no explicit end_date) to the next day. */
+function buildEndIso(args: {
+	startDateStr: string;
+	endDateStr?: string;
+	startTimeStr: string;
+	endTimeStr: string;
+	timeZone: TimeZoneString;
+}): string | undefined {
+	let endDateStr = args.endDateStr || args.startDateStr;
+
+	if (!args.endDateStr) {
+		const startTime = parseTimeTo24h(args.startTimeStr);
+		const endTime = parseTimeTo24h(args.endTimeStr);
+		if (startTime && endTime) {
+			const startMinutes = startTime.hour * 60 + startTime.minute;
+			const endMinutes = endTime.hour * 60 + endTime.minute;
+			if (endMinutes <= startMinutes) {
+				endDateStr = addDaysToDateStr(args.startDateStr, 1) ?? endDateStr;
+			}
+		}
+	}
+
+	return buildIsoFromApiDate({
+		dateStr: endDateStr,
+		timeStr: args.endTimeStr,
+		timeZone: args.timeZone,
+	});
+}
+
+function addDaysToDateStr(dateStr: string, days: number): string | undefined {
+	const [year, month, day] = dateStr.split(`-`).map(Number);
+	if (isNaN(year) || isNaN(month) || isNaN(day)) return undefined;
+	const date = new Date(Date.UTC(year, month - 1, day));
+	date.setUTCDate(date.getUTCDate() + days);
+	const y = date.getUTCFullYear().toString().padStart(4, `0`);
+	const m = (date.getUTCMonth() + 1).toString().padStart(2, `0`);
+	const d = date.getUTCDate().toString().padStart(2, `0`);
+	return `${y}-${m}-${d}`;
 }
 
 function parseTimeTo24h(timeStr?: string): { hour: number; minute: number } | undefined {
