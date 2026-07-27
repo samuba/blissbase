@@ -1908,3 +1908,12 @@ msgstr "Event source filter"
 #: src/routes/sources/+page.svelte
 msgid "tribehaus.app"
 msgstr "tribehaus.app"
+
+#. 0: currentIndex + 1; 1: imageUrls.length
+#: src/lib/components/ImageDialog.svelte
+msgid "Image {0} of {1}"
+msgstr "Image {0} of {1}"
+
+#: src/lib/components/ImageDialog.svelte
+msgid "Close image"
+msgstr "Close image"

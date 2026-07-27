@@ -23,6 +23,7 @@
 	let open = $state(false);
 	let touchStartX: number | null = null;
 	let touchStartY: number | null = null;
+	let suppressClick = false;
 
 	function setViewportZoom(allowed: boolean) {
 		const viewport = document.querySelector(`meta[name="viewport"]`);
@@ -35,14 +36,59 @@
 		viewport.replaceWith(next);
 	}
 
+	function resetNativeZoom() {
+		if (!open) return;
+		setViewportZoom(false);
+		// Briefly lock scale so iOS drops the pinch-zoom, then re-allow zoom
+		setTimeout(() => {
+			if (!open) return;
+			setViewportZoom(true);
+		}, 50);
+	}
+
 	function goToPrevious() {
-		if (imageUrls.length <= 1) return;
-		currentIndex = currentIndex > 0 ? currentIndex - 1 : imageUrls.length - 1;
+		if (currentIndex <= 0) {
+			onOpenChange(false);
+			return;
+		}
+		currentIndex = currentIndex - 1;
+		resetNativeZoom();
 	}
 
 	function goToNext() {
-		if (imageUrls.length <= 1) return;
-		currentIndex = currentIndex < imageUrls.length - 1 ? currentIndex + 1 : 0;
+		if (currentIndex >= imageUrls.length - 1) {
+			onOpenChange(false);
+			return;
+		}
+		currentIndex = currentIndex + 1;
+		resetNativeZoom();
+	}
+
+	function handleImageClick(event: MouseEvent) {
+		event.stopPropagation();
+		if (suppressClick) {
+			suppressClick = false;
+			return;
+		}
+
+		const target = event.currentTarget;
+		if (!(target instanceof HTMLElement)) return;
+
+		const rect = target.getBoundingClientRect();
+		const clickedLeft = event.clientX - rect.left < rect.width * 0.38;
+		if (clickedLeft) {
+			goToPrevious();
+			return;
+		}
+		goToNext();
+	}
+
+	function handleBackdropClick() {
+		if (suppressClick) {
+			suppressClick = false;
+			return;
+		}
+		onOpenChange(false);
 	}
 
 	function onOpenChange(shouldOpen: boolean) {
@@ -69,6 +115,7 @@
 			const minSwipeDistance = 50; // minimum distance for a swipe
 
 			if (Math.abs(diffX) > minSwipeDistance) {
+				suppressClick = true;
 				if (diffX > 0) {
 					// Swipe left - go to next image
 					goToNext();
@@ -120,7 +167,7 @@
 		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
-			onclick={() => onOpenChange(false)}
+			onclick={handleBackdropClick}
 			onkeydown={handleKeydown}
 			ontouchstart={handleTouchStart}
 			ontouchend={handleTouchEnd}
@@ -133,15 +180,26 @@
 				onkeydown={(e) => e.stopPropagation()}
 			>
 				{#if imageUrls.length > 0}
-					<img
-						src={imageUrls[currentIndex]}
-						{alt}
-						class="max-h-[100vh] max-w-full object-contain select-none"
-						draggable="false"
-					/>
+					<button
+						type="button"
+						class="block max-h-full max-w-full cursor-pointer border-none bg-transparent p-0"
+						onclick={handleImageClick}
+						aria-label={
+							imageUrls.length > 1
+								? `Image ${currentIndex + 1} of ${imageUrls.length}`
+								: `Close image`
+						}
+					>
+						<img
+							src={imageUrls[currentIndex]}
+							{alt}
+							class="max-h-[100vh] max-w-full object-contain select-none"
+							draggable="false"
+						/>
+					</button>
 				{/if}
 
-				{#if imageUrls.length > 1}
+				{#if currentIndex > 0}
 					<button
 						onclick={goToPrevious}
 						class="absolute top-1/2 flex w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-r-full border-none bg-black/30 py-3 pr-3 shadow-lg transition-colors duration-150 hover:bg-black/70 focus:outline-none"
@@ -150,7 +208,9 @@
 					>
 						<i class="icon-[ph--caret-left] size-6 text-white"></i>
 					</button>
+				{/if}
 
+				{#if currentIndex < imageUrls.length - 1}
 					<button
 						onclick={goToNext}
 						class="absolute top-1/2 right-0 flex w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-l-full border-none bg-black/30 py-3 pl-3 shadow-lg transition-colors duration-150 hover:bg-black/70 focus:outline-none"
