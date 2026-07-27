@@ -378,7 +378,7 @@
 								</div>
 							{:else if event.contact?.length}
 								<div class=" flex flex-col gap-3">
-									{#each event.contact as contact}
+									{#each event.contact as contact (contact)}
 										{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
 									{/each}
 								</div>
