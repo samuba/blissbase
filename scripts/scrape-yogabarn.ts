@@ -53,7 +53,7 @@ const FOOTER_IMAGE_MARKERS = [
 	`logo_theyogabarn`,
 	`cropped-cropped-Image_Editor`,
 ];
-const MIN_IMAGE_BYTES = 40 * 1024;
+const MIN_IMAGE_BYTES = 10 * 1024;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
