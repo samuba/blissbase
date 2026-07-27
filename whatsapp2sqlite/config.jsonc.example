@@ -4,6 +4,9 @@
   "database_sync_interval": "30s",
   "push_name": "Blissbase Sync",
 
+  // Postgres URL used to mirror named chats into `whatsapp_chats`.
+  "postgres_database_url": "postgresql://postgres:password@db.example.supabase.co:5432/postgres",
+
   // Set either r2_endpoint directly or r2_account_id to derive it automatically.
   "r2_account_id": "your-cloudflare-account-id",
   // "r2_endpoint": "https://your-account-id.r2.cloudflarestorage.com",

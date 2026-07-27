@@ -137,6 +137,16 @@ export const whatsappScrapingTargets = pgTable("whatsapp_scraping_targets", {
 
 export type WhatsappScrapingTarget = typeof whatsappScrapingTargets.$inferSelect;
 
+/** Mirrored from whatsapp2sqlite `sync_chats` (only chats with a non-empty name). */
+export const whatsappChats = pgTable("whatsapp_chats", {
+	chatJid: text().primaryKey(),
+	name: text().notNull(),
+	lastMessageTime: timestamp(),
+	updatedAt: timestamp().notNull().defaultNow(),
+});
+
+export type WhatsappChat = typeof whatsappChats.$inferSelect;
+
 // All images are cached in R2. For website-scraped-images we remember the original url so that we dont need to process the image again.
 export const imageCacheMap = pgTable(
 	"image_cache_map",

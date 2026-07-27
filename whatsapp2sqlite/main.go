@@ -125,10 +125,16 @@ func run(ctx context.Context, config daemonConfig) error {
 		return err
 	}
 
+	postgres, err := newPostgresChatsSync(ctx, config.PostgresDatabaseURL)
+	if err != nil {
+		return err
+	}
+
 	daemon := &daemon{
 		client:      client,
 		db:          db,
 		r2:          r2Manager,
+		postgres:    postgres,
 		fatalEvents: make(chan error, 1),
 	}
 	defer func() {
@@ -138,6 +144,10 @@ func run(ctx context.Context, config daemonConfig) error {
 			log.Printf("shutdown R2 workers failed: %v", err)
 		}
 	}()
+
+	if err := daemon.syncAllNamedChats(ctx); err != nil {
+		return err
+	}
 
 	if err := daemon.deleteExpiredMessages(ctx, time.Now()); err != nil {
 		return err
@@ -209,6 +219,7 @@ func loadConfig(path string) (daemonConfig, error) {
 
 	config.configDirectory = filepath.Dir(absolutePath)
 	config.DatabasePath = strings.TrimSpace(config.DatabasePath)
+	config.PostgresDatabaseURL = strings.TrimSpace(config.PostgresDatabaseURL)
 	config.PushName = strings.TrimSpace(config.PushName)
 	config.DatabaseSyncInterval = strings.TrimSpace(config.DatabaseSyncInterval)
 	config.R2Endpoint = strings.TrimSpace(config.R2Endpoint)
@@ -523,6 +534,7 @@ func (d *daemon) storeConversation(ctx context.Context, conversation *waHistoryS
 	}
 
 	d.notifyDatabaseChanged()
+	d.syncChatToPostgres(ctx, chatJID.String())
 
 	return nil
 }
@@ -643,6 +655,7 @@ func (d *daemon) upsertSyncChatMetadata(ctx context.Context, metadata syncChatMe
 	}
 
 	d.notifyDatabaseChanged()
+	d.syncChatToPostgres(ctx, metadata.chatJID)
 
 	return nil
 }
@@ -759,7 +772,13 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 		return fmt.Errorf("upsert message %s/%s: %w", evt.Info.Chat, messageID, err)
 	}
 
+	chatJID := evt.Info.Chat.String()
+	if err := d.touchSyncChatLastMessage(ctx, chatJID, evt.Info.Timestamp.Unix()); err != nil {
+		return err
+	}
+
 	d.notifyDatabaseChanged()
+	d.syncChatToPostgres(ctx, chatJID)
 	if mediaUploadJob != nil {
 		d.r2.enqueueMediaUpload(*mediaUploadJob)
 	}
@@ -1421,7 +1440,15 @@ func stripJSONCComments(data []byte) []byte {
 // shutdown flushes background R2 work before the daemon exits.
 // Example: `if err := d.shutdown(ctx); err != nil { return err }`
 func (d *daemon) shutdown(ctx context.Context) error {
-	if d == nil || d.r2 == nil {
+	if d == nil {
+		return nil
+	}
+
+	if d.postgres != nil {
+		d.postgres.Close()
+	}
+
+	if d.r2 == nil {
 		return nil
 	}
 
@@ -1444,6 +1471,8 @@ func (c daemonConfig) validate() error {
 	switch {
 	case strings.TrimSpace(c.DatabasePath) == "":
 		return errors.New("missing `database_path` in config")
+	case strings.TrimSpace(c.PostgresDatabaseURL) == "":
+		return errors.New("missing `postgres_database_url` in config")
 	case strings.TrimSpace(c.R2Bucket) == "":
 		return errors.New("missing `r2_bucket` in config")
 	case strings.TrimSpace(c.R2AccessKeyID) == "":
@@ -1920,6 +1949,7 @@ type daemon struct {
 	client      *whatsmeow.Client
 	db          *sql.DB
 	r2          *r2Manager
+	postgres    *postgresChatsSync
 	fatalEvents chan error
 
 	groupMetadataSyncRunning atomic.Bool
@@ -1929,6 +1959,7 @@ type daemonConfig struct {
 	DatabasePath         string `json:"database_path"`
 	DatabaseSyncInterval string `json:"database_sync_interval"`
 	PushName             string `json:"push_name"`
+	PostgresDatabaseURL  string `json:"postgres_database_url"`
 	R2AccessKeyID        string `json:"r2_access_key_id"`
 	R2AccountID          string `json:"r2_account_id"`
 	R2Bucket             string `json:"r2_bucket"`
