@@ -404,8 +404,10 @@ func (d *daemon) handleEvent(evt any) {
 	case *events.Connected:
 		log.Printf("connected as %s", d.client.Store.ID)
 		d.backfillGroupDisplayNamesAsync()
+		d.backfillContactDisplayNamesAsync()
 	case *events.OfflineSyncCompleted:
 		d.backfillGroupDisplayNamesAsync()
+		d.backfillContactDisplayNamesAsync()
 	case *events.JoinedGroup:
 		if err := d.storeJoinedGroup(context.Background(), event); err != nil {
 			log.Printf("store joined group metadata failed: %v", err)
@@ -413,6 +415,18 @@ func (d *daemon) handleEvent(evt any) {
 	case *events.GroupInfo:
 		if err := d.storeGroupInfoChange(context.Background(), event); err != nil {
 			log.Printf("store group info change failed: %v", err)
+		}
+	case *events.Contact:
+		if err := d.storeContactChange(context.Background(), event); err != nil {
+			log.Printf("store contact display name failed: %v", err)
+		}
+	case *events.PushName:
+		if err := d.storePushNameChange(context.Background(), event); err != nil {
+			log.Printf("store push name display name failed: %v", err)
+		}
+	case *events.BusinessName:
+		if err := d.storeBusinessNameChange(context.Background(), event); err != nil {
+			log.Printf("store business name display name failed: %v", err)
 		}
 	case *events.Disconnected:
 		log.Printf("disconnected from WhatsApp, waiting for automatic reconnect")
@@ -494,6 +508,9 @@ func (d *daemon) storeConversation(ctx context.Context, conversation *waHistoryS
 		conversation.GetName(),
 		conversation.GetUsername(),
 	)
+	if displayName == "" && isDirectChatJID(chatJID) {
+		displayName = d.resolveDirectChatDisplayName(ctx, chatJID)
+	}
 
 	lastTimestamp := int64(conversation.GetConversationTimestamp())
 	if lastTimestamp == 0 {
@@ -624,6 +641,250 @@ func (d *daemon) storeGroupMetadata(ctx context.Context, group *types.GroupInfo)
 		displayName: group.Name,
 		updatedAt:   unixOrNow(group.NameSetAt),
 	})
+}
+
+// backfillContactDisplayNamesAsync refreshes missing DM names without blocking the event loop.
+// Example: `d.backfillContactDisplayNamesAsync()`
+func (d *daemon) backfillContactDisplayNamesAsync() {
+	if d == nil || d.client == nil {
+		return
+	}
+
+	if !d.contactDisplayNameSyncRunning.CompareAndSwap(false, true) {
+		return
+	}
+
+	go func() {
+		defer d.contactDisplayNameSyncRunning.Store(false)
+
+		ctx, cancel := context.WithTimeout(context.Background(), groupMetadataSyncTimeout)
+		defer cancel()
+
+		if err := d.backfillContactDisplayNames(ctx); err != nil {
+			log.Printf("backfill contact display names failed: %v", err)
+		}
+	}()
+}
+
+// backfillContactDisplayNames fills empty DM display_name values from the WhatsApp contact store.
+// Example: `if err := d.backfillContactDisplayNames(ctx); err != nil { return err }`
+func (d *daemon) backfillContactDisplayNames(ctx context.Context) error {
+	if d == nil || d.db == nil || d.client == nil {
+		return nil
+	}
+
+	rows, err := d.db.QueryContext(ctx, `
+		SELECT chat_jid
+		FROM sync_chats
+		WHERE TRIM(COALESCE(display_name, '')) = ''
+	`)
+	if err != nil {
+		return fmt.Errorf("query chats missing display names: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var chatJIDValue string
+		if err := rows.Scan(&chatJIDValue); err != nil {
+			return fmt.Errorf("scan chat missing display name: %w", err)
+		}
+
+		chatJID, err := types.ParseJID(chatJIDValue)
+		if err != nil {
+			log.Printf("skip contact display name backfill for %q: %v", chatJIDValue, err)
+			continue
+		}
+
+		if !isDirectChatJID(chatJID) {
+			continue
+		}
+
+		displayName := d.resolveDirectChatDisplayName(ctx, chatJID)
+		if displayName == "" {
+			continue
+		}
+
+		if err := d.upsertSyncChatMetadata(ctx, syncChatMetadata{
+			chatJID:     chatJID.ToNonAD().String(),
+			displayName: displayName,
+			updatedAt:   time.Now().Unix(),
+		}); err != nil {
+			log.Printf("store contact display name for %s failed: %v", chatJID, err)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate chats missing display names: %w", err)
+	}
+
+	return nil
+}
+
+// storeContactChange persists address-book name updates for direct chats.
+// Example: `if err := d.storeContactChange(ctx, evt); err != nil { return err }`
+func (d *daemon) storeContactChange(ctx context.Context, evt *events.Contact) error {
+	if evt == nil || evt.Action == nil || evt.JID.IsEmpty() {
+		return nil
+	}
+
+	displayName := firstNonEmpty(
+		evt.Action.GetFullName(),
+		evt.Action.GetFirstName(),
+		evt.Action.GetUsername(),
+	)
+	if displayName == "" {
+		return nil
+	}
+
+	return d.upsertDirectChatDisplayNames(ctx, evt.JID, displayName, unixOrNow(evt.Timestamp), false)
+}
+
+// storePushNameChange fills empty DM display names when a contact's push name is learned.
+// Example: `if err := d.storePushNameChange(ctx, evt); err != nil { return err }`
+func (d *daemon) storePushNameChange(ctx context.Context, evt *events.PushName) error {
+	if evt == nil || evt.JID.IsEmpty() {
+		return nil
+	}
+
+	return d.upsertDirectChatDisplayNames(ctx, evt.JID, evt.NewPushName, time.Now().Unix(), true)
+}
+
+// storeBusinessNameChange fills empty DM display names when a business name is learned.
+// Example: `if err := d.storeBusinessNameChange(ctx, evt); err != nil { return err }`
+func (d *daemon) storeBusinessNameChange(ctx context.Context, evt *events.BusinessName) error {
+	if evt == nil || evt.JID.IsEmpty() {
+		return nil
+	}
+
+	return d.upsertDirectChatDisplayNames(ctx, evt.JID, evt.NewBusinessName, time.Now().Unix(), true)
+}
+
+// upsertDirectChatDisplayNames writes a DM display name onto existing sync_chats rows for the JID and its LID/PN twin.
+// Example: `err := d.upsertDirectChatDisplayNames(ctx, jid, name, now, true)`
+func (d *daemon) upsertDirectChatDisplayNames(ctx context.Context, jid types.JID, displayName string, updatedAt int64, onlyIfEmpty bool) error {
+	if d == nil || d.db == nil {
+		return nil
+	}
+
+	displayName = strings.TrimSpace(displayName)
+	if displayName == "" || jid.IsEmpty() || !isDirectChatJID(jid) {
+		return nil
+	}
+
+	if updatedAt == 0 {
+		updatedAt = time.Now().Unix()
+	}
+
+	for _, candidate := range d.directChatJIDVariants(ctx, jid) {
+		chatJID := candidate.ToNonAD().String()
+		query := `
+			UPDATE sync_chats
+			SET
+				display_name = ?,
+				updated_at = ?
+			WHERE chat_jid = ?`
+		if onlyIfEmpty {
+			query = `
+				UPDATE sync_chats
+				SET
+					display_name = ?,
+					updated_at = ?
+				WHERE chat_jid = ?
+					AND (display_name IS NULL OR TRIM(display_name) = '')`
+		}
+
+		result, err := d.db.ExecContext(ctx, query, displayName, updatedAt, chatJID)
+		if err != nil {
+			return fmt.Errorf("update direct chat display name for %s: %w", chatJID, err)
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("update direct chat display name rows for %s: %w", chatJID, err)
+		}
+		if rowsAffected == 0 {
+			continue
+		}
+
+		d.notifyDatabaseChanged()
+		d.syncChatToPostgres(ctx, chatJID)
+	}
+
+	return nil
+}
+
+// resolveDirectChatDisplayName looks up a DM name from the local WhatsApp contact cache.
+// Example: `name := d.resolveDirectChatDisplayName(ctx, chatJID)`
+func (d *daemon) resolveDirectChatDisplayName(ctx context.Context, jid types.JID) string {
+	if d == nil || d.client == nil || d.client.Store == nil || d.client.Store.Contacts == nil {
+		return ""
+	}
+
+	for _, candidate := range d.directChatJIDVariants(ctx, jid) {
+		contact, err := d.client.Store.Contacts.GetContact(ctx, candidate.ToNonAD())
+		if err != nil {
+			log.Printf("lookup contact display name for %s failed: %v", candidate, err)
+			continue
+		}
+
+		if name := contactInfoDisplayName(contact); name != "" {
+			return name
+		}
+	}
+
+	return ""
+}
+
+// directChatJIDVariants returns the chat JID plus its mapped LID/PN twin when available.
+// Example: `for _, candidate := range d.directChatJIDVariants(ctx, jid) { ... }`
+func (d *daemon) directChatJIDVariants(ctx context.Context, jid types.JID) []types.JID {
+	jid = jid.ToNonAD()
+	candidates := []types.JID{jid}
+	if d == nil || d.client == nil || d.client.Store == nil || d.client.Store.LIDs == nil {
+		return candidates
+	}
+
+	var alt types.JID
+	var err error
+	switch jid.Server {
+	case types.HiddenUserServer, types.HostedLIDServer:
+		alt, err = d.client.Store.LIDs.GetPNForLID(ctx, jid)
+	case types.DefaultUserServer, types.HostedServer:
+		alt, err = d.client.Store.LIDs.GetLIDForPN(ctx, jid)
+	default:
+		return candidates
+	}
+	if err != nil {
+		log.Printf("lookup LID/PN twin for %s failed: %v", jid, err)
+		return candidates
+	}
+	if alt.IsEmpty() {
+		return candidates
+	}
+
+	return append(candidates, alt.ToNonAD())
+}
+
+// contactInfoDisplayName picks the best human-readable name from a cached contact.
+// Example: `name := contactInfoDisplayName(contact)`
+func contactInfoDisplayName(contact types.ContactInfo) string {
+	return firstNonEmpty(
+		contact.FullName,
+		contact.BusinessName,
+		contact.FirstName,
+		contact.PushName,
+	)
+}
+
+// isDirectChatJID reports whether the JID is a 1:1 chat (phone number or LID), not a group/list.
+// Example: `if isDirectChatJID(chatJID) { ... }`
+func isDirectChatJID(jid types.JID) bool {
+	switch jid.Server {
+	case types.DefaultUserServer, types.LegacyUserServer, types.HiddenUserServer, types.HostedServer, types.HostedLIDServer:
+		return jid.User != ""
+	default:
+		return false
+	}
 }
 
 // upsertSyncChatMetadata updates the known chat metadata without clearing existing values on sparse payloads.
@@ -780,6 +1041,12 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 	chatJID := evt.Info.Chat.String()
 	if err := d.touchSyncChatLastMessage(ctx, chatJID, evt.Info.Timestamp.Unix()); err != nil {
 		return err
+	}
+
+	if !evt.Info.IsGroup && !evt.Info.IsFromMe {
+		if err := d.upsertDirectChatDisplayNames(ctx, evt.Info.Chat, evt.Info.PushName, evt.Info.Timestamp.Unix(), true); err != nil {
+			log.Printf("fill direct chat display name from push name for %s failed: %v", chatJID, err)
+		}
 	}
 
 	d.notifyDatabaseChanged()
@@ -1957,7 +2224,8 @@ type daemon struct {
 	postgres    *postgresChatsSync
 	fatalEvents chan error
 
-	groupMetadataSyncRunning atomic.Bool
+	groupMetadataSyncRunning      atomic.Bool
+	contactDisplayNameSyncRunning atomic.Bool
 }
 
 type daemonConfig struct {
