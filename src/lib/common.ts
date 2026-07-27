@@ -345,6 +345,41 @@ export function getContactMethod(contact: string | undefined) {
     return 'Website';
 }
 
+/**
+ * Core domain label for display, excluding subdomain and TLD.
+ * Handles compound public suffixes like `.co.id` / `.co.uk` via a short heuristic:
+ * if the penultimate label is a common second-level (`co`, `com`, …) and the last
+ * label is a 2-letter country code, use the label before that.
+ *
+ * @example
+ * getWebsiteDomainLabel(`https://megatix.co.id`) // `megatix`
+ * getWebsiteDomainLabel(`https://www.shop.example.com/path`) // `example`
+ */
+export function getWebsiteDomainLabel(url: string) {
+	try {
+		const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, ``);
+		const parts = hostname.split(`.`).filter(Boolean);
+		if (!parts.length) return undefined;
+
+		const compoundSecondLevels = new Set([`co`, `com`, `net`, `org`, `ac`, `edu`, `gov`, `or`, `ne`, `go`]);
+		const last = parts.at(-1);
+		const penultimate = parts.at(-2);
+		if (
+			parts.length >= 3 &&
+			last?.length === 2 &&
+			penultimate &&
+			compoundSecondLevels.has(penultimate)
+		) {
+			return parts.at(-3);
+		}
+
+		if (parts.length >= 2) return penultimate;
+		return parts[0];
+	} catch {
+		return undefined;
+	}
+}
+
 export function isTouchDevice() {
     return matchMedia('(hover: none)').matches;
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAddress, getLongLocale, getContactMethod, type SupportedLocale, resolveSupportedLocale, formatDatesStr, formatTimesStr } from '$lib/common';
+	import { formatAddress, getLongLocale, getContactMethod, getWebsiteDomainLabel, type SupportedLocale, resolveSupportedLocale, formatDatesStr, formatTimesStr } from '$lib/common';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
@@ -32,6 +32,15 @@
 				}
 			: undefined
 	);
+
+	const websiteContactCount = $derived(
+		event.contact?.filter((c) => getContactMethod(c) === `Website`).length ?? 0
+	);
+
+	function websiteButtonLabel(url: string) {
+		if (websiteContactCount <= 1) return `Website`;
+		return getWebsiteDomainLabel(url) ?? `Website`;
+	}
 
 	const tags = $derived.by(() => {
 		const tags = new Set<string>();
@@ -368,10 +377,7 @@
 									{@render contactButton(singleContact.method, singleContact.url!)}
 								</div>
 							{:else if event.contact?.length}
-								<span class="word-wrap">
-									Anmeldung über diese Kanäle:
-								</span>
-								<div class="mt-3 flex flex-col gap-3">
+								<div class=" flex flex-col gap-3">
 									{#each event.contact as contact}
 										{@render contactButton(getContactMethod(contact), getContactUrl(contact)!)}
 									{/each}
@@ -509,8 +515,8 @@
 		</button>
 	{:else if method === 'Website'}
 		<a href={url} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-			<i class="icon-[ph--arrow-square-out] size-5"></i>
-			Website
+			<i class="icon-[ph--globe] size-5"></i>
+			{websiteButtonLabel(url)}
 		</a>
 	{/if}
 {/snippet}

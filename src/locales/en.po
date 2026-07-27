@@ -54,6 +54,9 @@ msgstr "Email"
 
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
+#: src/routes/EventDetails.svelte
 msgid "Website"
 msgstr "Website"
 
@@ -153,9 +156,8 @@ msgstr "<0/> Call"
 msgid "<0/> Email"
 msgstr "<0/> Email"
 
-#: src/routes/EventDetails.svelte
-msgid "<0/> Website"
-msgstr "<0/> Website"
+#~ msgid "<0/> Website"
+#~ msgstr "<0/> Website"
 
 #: src/lib/components/EventAutofill.svelte
 #: src/lib/components/HeaderControls.svelte
@@ -577,9 +579,8 @@ msgstr "Installation instructions"
 msgid "Anmeldung per <0/>."
 msgstr "Registration via <0/>."
 
-#: src/routes/EventDetails.svelte
-msgid "Anmeldung über diese Kanäle:"
-msgstr "Registration via these channels:"
+#~ msgid "Anmeldung über diese Kanäle:"
+#~ msgstr "Registration via these channels:"
 
 #. 0: event.name; 1: eventDate
 #: src/routes/EventDetails.svelte
@@ -1917,3 +1918,6 @@ msgstr "Image {0} of {1}"
 #: src/lib/components/ImageDialog.svelte
 msgid "Close image"
 msgstr "Close image"
+
+#~ msgid "Anmeldung über:"
+#~ msgstr "Booking via:"

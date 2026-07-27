@@ -1,8 +1,17 @@
-import { deduplicateItems, formatDatesStr, formatTimesStr, generateSlug } from '../lib/common';
+import { deduplicateItems, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel } from '../lib/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /** Fixed "now": Wed 4 Jun 2025, 12:00 local — used by relative-date logic. */
 const REFERENCE_NOW = new Date(2025, 5, 4, 12, 0, 0);
+
+describe(`getWebsiteDomainLabel`, () => {
+	it(`strips subdomain and compound public suffixes`, () => {
+		expect(getWebsiteDomainLabel(`https://megatix.co.id`)).toBe(`megatix`);
+		expect(getWebsiteDomainLabel(`https://www.shop.megatix.co.id/path`)).toBe(`megatix`);
+		expect(getWebsiteDomainLabel(`https://blog.yogabarn.de`)).toBe(`yogabarn`);
+		expect(getWebsiteDomainLabel(`https://www.example.com`)).toBe(`example`);
+	});
+});
 
 describe(`deduplicateItems`, () => {
     it(`keeps only the first occurrence of each item`, () => {
