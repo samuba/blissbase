@@ -515,7 +515,12 @@ func (d *daemon) storeConversation(ctx context.Context, conversation *waHistoryS
 		ON CONFLICT(chat_jid) DO UPDATE SET
 			display_name = COALESCE(excluded.display_name, sync_chats.display_name),
 			username = COALESCE(excluded.username, sync_chats.username),
-			last_message_timestamp = COALESCE(excluded.last_message_timestamp, sync_chats.last_message_timestamp),
+			last_message_timestamp = CASE
+				WHEN excluded.last_message_timestamp IS NULL THEN sync_chats.last_message_timestamp
+				WHEN sync_chats.last_message_timestamp IS NULL THEN excluded.last_message_timestamp
+				WHEN excluded.last_message_timestamp > sync_chats.last_message_timestamp THEN excluded.last_message_timestamp
+				ELSE sync_chats.last_message_timestamp
+			END,
 			unread_count = excluded.unread_count,
 			archived = excluded.archived,
 			raw_conversation_json = COALESCE(excluded.raw_conversation_json, sync_chats.raw_conversation_json),

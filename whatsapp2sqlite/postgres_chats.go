@@ -78,7 +78,8 @@ func (d *daemon) syncAllNamedChats(ctx context.Context) error {
 		SELECT
 			chat_jid,
 			TRIM(COALESCE(NULLIF(TRIM(display_name), ''), NULLIF(TRIM(username), ''))) AS name,
-			last_message_timestamp
+			last_message_timestamp,
+			updated_at
 		FROM sync_chats
 		WHERE TRIM(COALESCE(NULLIF(TRIM(display_name), ''), NULLIF(TRIM(username), ''))) != ''
 	`)
@@ -135,7 +136,8 @@ func (d *daemon) syncChatToPostgres(ctx context.Context, chatJID string) {
 		SELECT
 			chat_jid,
 			TRIM(COALESCE(NULLIF(TRIM(display_name), ''), NULLIF(TRIM(username), ''))) AS name,
-			last_message_timestamp
+			last_message_timestamp,
+			updated_at
 		FROM sync_chats
 		WHERE chat_jid = ?
 	`, chatJID)
@@ -368,12 +370,17 @@ func queueWhatsappChatUpsert(batch *pgx.Batch, chat namedSyncChat) {
 			name,
 			last_message_time,
 			updated_at
-		) VALUES ($1, $2, $3, NOW())
+		) VALUES ($1, $2, $3, $4)
 		ON CONFLICT (chat_jid) DO UPDATE SET
 			name = EXCLUDED.name,
-			last_message_time = COALESCE(EXCLUDED.last_message_time, whatsapp_chats.last_message_time),
-			updated_at = NOW()
-	`, chat.chatJID, chat.name, chat.lastMessageTime)
+			last_message_time = CASE
+				WHEN EXCLUDED.last_message_time IS NULL THEN whatsapp_chats.last_message_time
+				WHEN whatsapp_chats.last_message_time IS NULL THEN EXCLUDED.last_message_time
+				WHEN EXCLUDED.last_message_time > whatsapp_chats.last_message_time THEN EXCLUDED.last_message_time
+				ELSE whatsapp_chats.last_message_time
+			END,
+			updated_at = EXCLUDED.updated_at
+	`, chat.chatJID, chat.name, chat.lastMessageTime, chat.updatedAt)
 }
 
 func scanNamedSyncChat(row interface {
@@ -382,8 +389,9 @@ func scanNamedSyncChat(row interface {
 	var chat namedSyncChat
 	var name sql.NullString
 	var lastMessageTimestamp sql.NullInt64
+	var updatedAt int64
 
-	if err := row.Scan(&chat.chatJID, &name, &lastMessageTimestamp); err != nil {
+	if err := row.Scan(&chat.chatJID, &name, &lastMessageTimestamp, &updatedAt); err != nil {
 		return namedSyncChat{}, err
 	}
 
@@ -394,6 +402,12 @@ func scanNamedSyncChat(row interface {
 	if lastMessageTimestamp.Valid && lastMessageTimestamp.Int64 > 0 {
 		timestamp := time.Unix(lastMessageTimestamp.Int64, 0).UTC()
 		chat.lastMessageTime = &timestamp
+	}
+
+	if updatedAt > 0 {
+		chat.updatedAt = time.Unix(updatedAt, 0).UTC()
+	} else {
+		chat.updatedAt = time.Now().UTC()
 	}
 
 	return chat, nil
@@ -409,4 +423,5 @@ type namedSyncChat struct {
 	chatJID         string
 	name            string
 	lastMessageTime *time.Time
+	updatedAt       time.Time
 }
