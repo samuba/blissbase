@@ -53,6 +53,7 @@ const FOOTER_IMAGE_MARKERS = [
 	`logo_theyogabarn`,
 	`cropped-cropped-Image_Editor`,
 ];
+const MIN_IMAGE_BYTES = 40 * 1024;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
@@ -81,6 +82,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const events: ScrapedEvent[] = [];
 		const seen = new Set<string>();
 		const nowMs = Date.now() - 6 * 60 * 60 * 1000;
+		const imageSizeCache = new Map<string, number | undefined>();
 
 		for (const card of cards) {
 			try {
@@ -89,6 +91,17 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				if (Date.parse(event.startAt) < nowMs) continue;
 				const dedupeKey = `${normalizeKey(event.name)}|${event.startAt}`;
 				if (seen.has(dedupeKey)) continue;
+
+				event.imageUrls = await filterImagesByMinBytes({
+					urls: event.imageUrls,
+					minBytes: MIN_IMAGE_BYTES,
+					sizeCache: imageSizeCache,
+				});
+				if (!event.imageUrls.length) {
+					console.error(`Skipping ${event.name}: no images >= ${MIN_IMAGE_BYTES / 1024}kb`);
+					continue;
+				}
+
 				seen.add(dedupeKey);
 				events.push(event);
 			} catch (error) {
@@ -179,10 +192,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			null;
 
 		const name = (megatix?.name || wp?.title || card.title).replace(/\s+/g, ` `).trim();
-		const description =
-			(megatix?.description ? cleanProseHtml(megatix.description) : undefined) ||
-			wp?.description ||
-			null;
+		const fromMegatix = megatix?.description
+			? extractImagesAndCleanDescription(megatix.description)
+			: undefined;
+		const description = fromMegatix?.description || wp?.description || null;
+		const descriptionImages = fromMegatix?.imageUrls?.length
+			? fromMegatix.imageUrls
+			: (wp?.descriptionImageUrls ?? []);
+		const imageUrls = uniqueUrls([imageUrl, ...descriptionImages]);
 		const price =
 			priceFromMegatixTickets(megatix?.tickets) ||
 			extractPriceFromText(wp?.rawText || card.bodyText || ``) ||
@@ -202,7 +219,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			price,
 			priceIsHtml: false,
 			description,
-			imageUrls: [imageUrl],
+			imageUrls,
 			host: `The Yoga Barn`,
 			hostLink: SITE_BASE,
 			contact: [...CONTACT],
@@ -346,17 +363,15 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			megatixUrls.push(match[0].replace(/&amp;/g, `&`));
 		}
 
+		const { description, imageUrls: descriptionImageUrls } =
+			extractImagesAndCleanDescription(content);
 		const featured = item._embedded?.[`wp:featuredmedia`]?.[0]?.source_url;
-		const contentImages = $(`img`)
-			.map((_, el) => $(el).attr(`src`)?.trim())
-			.get()
-			.filter((src): src is string => !!src && isPosterCandidate(src));
-		const portrait = [...contentImages, featured]
+		const portrait = [...descriptionImageUrls, featured]
 			.map((src) => (src ? absoluteUrl(src) : undefined))
 			.find((src) => src && /portrait|potrait/i.test(src));
 		const imageUrl =
 			portrait ||
-			[...contentImages, featured]
+			[...descriptionImageUrls, featured]
 				.map((src) => (src ? absoluteUrl(src) : undefined))
 				.find((src) => src && isPosterCandidate(src));
 
@@ -366,7 +381,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			link: item.link,
 			megatixUrls: [...new Set(megatixUrls)],
 			imageUrl,
-			description: cleanProseHtml(content) ?? null,
+			description,
+			descriptionImageUrls,
 			rawText: $.root().text().replace(/\s+/g, ` `).trim(),
 		};
 	}
@@ -458,6 +474,125 @@ function isPosterCandidate(url: string): boolean {
 	if (FOOTER_IMAGE_MARKERS.some((marker) => lower.includes(marker))) return false;
 	if (lower.endsWith(`.svg`)) return false;
 	return true;
+}
+
+/** Pulls img srcs into imageUrls and returns prose HTML without img tags. */
+function extractImagesAndCleanDescription(html: string): {
+	description: string | null;
+	imageUrls: string[];
+} {
+	const $ = cheerio.load(html);
+	const imageUrls: string[] = [];
+
+	$(`img`).each((_, el) => {
+		try {
+			const src = $(el).attr(`src`)?.trim();
+			$(el).remove();
+			if (!src || !isPosterCandidate(src)) return;
+			const absolute = absoluteUrl(src);
+			if (imageUrls.includes(absolute)) return;
+			imageUrls.push(absolute);
+		} catch (error) {
+			console.error(`Failed to extract description image:`, error);
+		}
+	});
+
+	const withoutImgs = $(`body`).html() ?? ``;
+	return {
+		description: cleanProseHtml(withoutImgs) || null,
+		imageUrls,
+	};
+}
+
+function uniqueUrls(urls: string[]): string[] {
+	const seen = new Set<string>();
+	const out: string[] = [];
+	for (const url of urls) {
+		if (!url || seen.has(url)) continue;
+		seen.add(url);
+		out.push(url);
+	}
+	return out;
+}
+
+async function filterImagesByMinBytes(args: {
+	urls: string[];
+	minBytes: number;
+	sizeCache?: Map<string, number | undefined>;
+}): Promise<string[]> {
+	const cache = args.sizeCache ?? new Map<string, number | undefined>();
+	const kept: string[] = [];
+	for (const url of args.urls) {
+		try {
+			let size: number | undefined;
+			if (cache.has(url)) {
+				size = cache.get(url);
+			} else {
+				size = await getImageByteSize(url);
+				cache.set(url, size);
+				await sleep(40);
+			}
+			if (size === undefined) continue;
+			if (size < args.minBytes) {
+				console.error(`  skipping image < ${args.minBytes / 1024}kb (${size}b): ${url}`);
+				continue;
+			}
+			kept.push(url);
+		} catch (error) {
+			console.error(`Failed to check image size for ${url}:`, error);
+		}
+	}
+	return kept;
+}
+
+async function getImageByteSize(url: string): Promise<number | undefined> {
+	const fromHead = await fetchImageSizeViaHead(url);
+	if (fromHead !== undefined) return fromHead;
+	return await fetchImageSizeViaGet(url);
+}
+
+async function fetchImageSizeViaHead(url: string): Promise<number | undefined> {
+	const ctrl = new AbortController();
+	const timer = setTimeout(() => ctrl.abort(), 8000);
+	try {
+		const head = await fetch(url, {
+			method: `HEAD`,
+			signal: ctrl.signal,
+			headers: { [`User-Agent`]: `Mozilla/5.0` },
+		});
+		if (!head.ok) return undefined;
+		const size = Number(head.headers.get(`content-length`));
+		if (!Number.isFinite(size) || size <= 0) return undefined;
+		return size;
+	} catch {
+		return undefined;
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+async function fetchImageSizeViaGet(url: string): Promise<number | undefined> {
+	const ctrl = new AbortController();
+	const timer = setTimeout(() => ctrl.abort(), 12000);
+	try {
+		const res = await fetch(url, {
+			method: `GET`,
+			signal: ctrl.signal,
+			headers: { [`User-Agent`]: `Mozilla/5.0` },
+		});
+		if (!res.ok) return undefined;
+		const fromHeader = Number(res.headers.get(`content-length`));
+		if (Number.isFinite(fromHeader) && fromHeader > 0) {
+			await res.body?.cancel();
+			return fromHeader;
+		}
+		const bytes = await res.arrayBuffer();
+		return bytes.byteLength;
+	} catch {
+		return undefined;
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 function eventSlugFromUrl(url: string): string | undefined {
@@ -783,6 +918,7 @@ type WpEventPoster = {
 	megatixUrls: string[];
 	imageUrl?: string;
 	description?: string | null;
+	descriptionImageUrls: string[];
 	rawText?: string;
 };
 
