@@ -245,6 +245,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				const html = await this.fetchMonthHtml(date);
 				const cards = this.parseCalendarCardsHtml(html);
 				console.error(`  ${date}: ${cards.length} cards`);
+				if (!cards.length) {
+					console.error(
+						`  ${date}: empty calendar body preview: ${previewBody(html)}`,
+					);
+				}
 				for (const card of cards) {
 					const key = card.slug || `${normalizeKey(card.title)}|${card.scheduleHint}`;
 					const existing = byKey.get(key);
@@ -262,15 +267,25 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	private async fetchMonthHtml(eventDate: string): Promise<string> {
 		const url =
 			`${CALENDAR_AJAX}?action=event_onmonth&eventDate=${encodeURIComponent(eventDate)}`;
-		const res = await fetch(url, {
-			headers: {
-				[`User-Agent`]: `Mozilla/5.0`,
-				Accept: `text/html,*/*`,
-				Referer: CALENDAR_PAGE,
-			},
-		});
-		if (!res.ok) throw new Error(`event_onmonth failed: ${res.status}`);
-		return await res.text();
+		let lastError: unknown;
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			try {
+				const res = await fetch(url, {
+					headers: {
+						[`User-Agent`]: `Mozilla/5.0`,
+						Accept: `text/html,*/*`,
+						Referer: CALENDAR_PAGE,
+					},
+				});
+				if (!res.ok) throw new Error(`event_onmonth failed: ${res.status}`);
+				return await res.text();
+			} catch (error) {
+				lastError = error;
+				console.error(`event_onmonth ${eventDate} attempt ${attempt} failed:`, error);
+				await sleep(400 * attempt);
+			}
+		}
+		throw lastError instanceof Error ? lastError : new Error(String(lastError));
 	}
 
 	private parseCalendarCardsHtml(html: string): CalendarCard[] {
@@ -317,24 +332,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 		while (true) {
 			const url = `${WP_EVENTS_API}?per_page=100&page=${page}&_embed=1`;
-			let res: Response;
-			try {
-				res = await fetch(url, {
-					headers: { [`User-Agent`]: `Mozilla/5.0` },
-				});
-			} catch (error) {
-				console.error(`Failed to fetch WP events page ${page}:`, error);
-				break;
-			}
-			if (!res.ok) {
-				console.error(`WP events page ${page} failed: ${res.status}`);
-				break;
-			}
+			const batch = await this.fetchWpEventsPage(url, page);
+			if (!batch?.items.length) break;
 
-			const batch = (await res.json()) as WpEventJson[];
-			if (!batch?.length) break;
-
-			for (const item of batch) {
+			for (const item of batch.items) {
 				try {
 					const parsed = this.parseWpEvent(item);
 					bySlug.set(parsed.slug, parsed);
@@ -343,13 +344,58 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				}
 			}
 
-			const totalPages = Number(res.headers.get(`x-wp-totalpages`) || 1);
-			if (page >= totalPages) break;
+			if (page >= batch.totalPages) break;
 			page++;
 			await sleep(100);
 		}
 
 		return bySlug;
+	}
+
+	private async fetchWpEventsPage(
+		url: string,
+		page: number,
+	): Promise<{ items: WpEventJson[]; totalPages: number } | undefined> {
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			let res: Response;
+			try {
+				res = await fetch(url, {
+					headers: {
+						[`User-Agent`]: `Mozilla/5.0`,
+						Accept: `application/json`,
+					},
+				});
+			} catch (error) {
+				console.error(`Failed to fetch WP events page ${page} (attempt ${attempt}):`, error);
+				await sleep(400 * attempt);
+				continue;
+			}
+			if (!res.ok) {
+				console.error(`WP events page ${page} failed: ${res.status}`);
+				return undefined;
+			}
+
+			const items = await readJsonBody<WpEventJson[]>(res);
+			if (!items) {
+				console.error(
+					`WP events page ${page} returned non-JSON on attempt ${attempt} (${res.headers.get(`content-type`) || `unknown type`})`,
+				);
+				await sleep(400 * attempt);
+				continue;
+			}
+			if (!Array.isArray(items)) {
+				console.error(`WP events page ${page} JSON was not an array`);
+				return undefined;
+			}
+
+			return {
+				items,
+				totalPages: Number(res.headers.get(`x-wp-totalpages`) || 1),
+			};
+		}
+
+		console.error(`WP events page ${page} exhausted retries`);
+		return undefined;
 	}
 
 	private parseWpEvent(item: WpEventJson): WpEventPoster {
@@ -915,10 +961,25 @@ async function fetchJson<T>(url: string): Promise<T | undefined> {
 			},
 		});
 		if (!res.ok) return undefined;
-		return (await res.json()) as T;
+		return await readJsonBody<T>(res);
 	} finally {
 		clearTimeout(timer);
 	}
+}
+
+async function readJsonBody<T>(res: Response): Promise<T | undefined> {
+	const text = await res.text();
+	if (!text.trim()) return undefined;
+	try {
+		return JSON.parse(text) as T;
+	} catch {
+		console.error(`JSON parse failed: ${previewBody(text)}`);
+		return undefined;
+	}
+}
+
+function previewBody(text: string): string {
+	return text.replace(/\s+/g, ` `).trim().slice(0, 240);
 }
 
 if (import.meta.main) {
