@@ -3,15 +3,15 @@
  *
  * A scraper gets flagged when it behaves unlike a browser tab, so a session:
  * - keeps one identity for the whole run (browsers never swap User-Agent mid-session)
- * - carries cookies, including across redirects, so `__cf_bm` and friends survive
+ * - carries cookies via wreq-js (so `__cf_bm` and friends survive)
  * - sends fetch-metadata headers consistent with what the request claims to be
  * - paces every request through a single queue, so concurrency never causes a burst
  * - stops on a challenge instead of retrying, since hammering a soft block escalates it
  *
- * Header hygiene does not hide the TLS/HTTP2 fingerprint. If a site runs full
- * Cloudflare Bot Management a `BlockedError` is the signal that a real browser
- * (or a TLS-impersonating client) is required.
+ * TLS/HTTP2 fingerprinting uses wreq-js (Rust `wreq` Chrome profiles), which works
+ * under Bun — no Node sidecar required.
  */
+import { createSession, type Session } from 'wreq-js';
 import { NotFoundError, randomInt, sleep } from './common.ts';
 
 export class BlockedError extends Error {
@@ -21,26 +21,9 @@ export class BlockedError extends Error {
 	}
 }
 
-const BROWSER_PROFILES = [
-	{
-		userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`,
-		secChUa: `"Chromium";v="145", "Google Chrome";v="145", "Not?A_Brand";v="24"`,
-		platform: `"macOS"`,
-	},
-	{
-		userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36`,
-		secChUa: `"Chromium";v="145", "Google Chrome";v="145", "Not?A_Brand";v="24"`,
-		platform: `"Windows"`,
-	},
-	{
-		userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36`,
-		secChUa: `"Chromium";v="144", "Google Chrome";v="144", "Not?A_Brand";v="24"`,
-		platform: `"macOS"`,
-	},
-] as const;
-
-/** Picked once per process: client hints must stay consistent with the User-Agent. */
-const PROFILE = BROWSER_PROFILES[randomInt({ min: 0, max: BROWSER_PROFILES.length - 1 })];
+/** Keep UA / client hints in sync with this profile — wreq sets them from the preset. */
+const BROWSER = `chrome_146` as const;
+const OS = `macos` as const;
 
 const DEFAULT_ACCEPT: Record<RequestKind, string> = {
 	document: `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8`,
@@ -66,7 +49,6 @@ const CHALLENGE_MARKERS = [
 const MAX_REDIRECTS = 5;
 
 export class BrowserSession {
-	readonly #cookies = new Map<string, Map<string, string>>();
 	readonly #acceptLanguage: string;
 	readonly #minGapMs: number;
 	readonly #maxGapMs: number;
@@ -75,6 +57,8 @@ export class BrowserSession {
 	readonly #maxRetries: number;
 	#nextSlotAt = 0;
 	#requestCount = 0;
+	#wreq: Session | undefined;
+	#wreqReady: Promise<Session> | undefined;
 
 	constructor(options: BrowserSessionOptions = {}) {
 		this.#acceptLanguage = options.acceptLanguage ?? `en-US,en;q=0.9`;
@@ -112,6 +96,13 @@ export class BrowserSession {
 		return await res.text();
 	}
 
+	async close(): Promise<void> {
+		const session = this.#wreq;
+		this.#wreq = undefined;
+		this.#wreqReady = undefined;
+		await session?.close();
+	}
+
 	async fetch(args: RequestArgs): Promise<Response> {
 		for (let attempt = 0; ; attempt++) {
 			await this.#awaitSlot(args.kind ?? `xhr`);
@@ -142,22 +133,23 @@ export class BrowserSession {
 		}
 	}
 
-	/** Follows redirects by hand so cookies set on intermediate hops are kept. */
+	/** Follows redirects by hand so challenge redirects are visible and cookies hop correctly. */
 	async #send(args: RequestArgs): Promise<Response> {
 		const kind = args.kind ?? `xhr`;
 		let url = args.url;
 		let method = args.method ?? `GET`;
 		let body = args.body;
+		const wreq = await this.#ensureWreq();
 
 		for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-			const res = await fetch(url, {
+			const res = await wreq.fetch(url, {
 				method,
 				body,
 				redirect: `manual`,
-				signal: this.#signal(args.signal),
+				timeout: this.#timeoutMs,
+				signal: args.signal,
 				headers: this.#headers({ ...args, url, method, kind }),
 			});
-			this.#storeCookies({ url, res });
 
 			const location = res.headers.get(`location`);
 			if (!REDIRECT_STATUS.has(res.status) || !location) {
@@ -177,6 +169,22 @@ export class BrowserSession {
 		}
 
 		throw new Error(`Too many redirects for ${args.url}`);
+	}
+
+	async #ensureWreq(): Promise<Session> {
+		if (this.#wreq) return this.#wreq;
+		this.#wreqReady ??= createSession({
+			browser: BROWSER,
+			os: OS,
+			timeout: this.#timeoutMs,
+			defaultHeaders: {
+				[`Accept-Language`]: this.#acceptLanguage,
+			},
+		}).then((session) => {
+			this.#wreq = session;
+			return session;
+		});
+		return await this.#wreqReady;
 	}
 
 	/**
@@ -200,20 +208,19 @@ export class BrowserSession {
 		if (slotAt > now) await sleep(slotAt - now);
 	}
 
+	/**
+	 * Overrides only what the request kind needs. UA / sec-ch-ua come from the
+	 * wreq Chrome profile so they cannot drift from the TLS fingerprint.
+	 */
 	#headers(args: RequestArgs & { url: string; method: string; kind: RequestKind }): Record<string, string> {
 		const { url, method, kind, referer } = args;
 		const site = fetchSite({ url, referer });
 
 		const headers: Record<string, string> = {
-			[`sec-ch-ua`]: PROFILE.secChUa,
-			[`sec-ch-ua-mobile`]: `?0`,
-			[`sec-ch-ua-platform`]: PROFILE.platform,
-			[`User-Agent`]: PROFILE.userAgent,
 			Accept: args.accept ?? DEFAULT_ACCEPT[kind],
 			[`Sec-Fetch-Site`]: site,
 			[`Sec-Fetch-Mode`]: FETCH_MODE[kind],
 			[`Sec-Fetch-Dest`]: kind === `xhr` ? `empty` : kind,
-			[`Accept-Language`]: this.#acceptLanguage,
 		};
 
 		if (kind === `document`) {
@@ -221,50 +228,12 @@ export class BrowserSession {
 			headers[`Sec-Fetch-User`] = `?1`;
 		}
 		if (referer) headers.Referer = referer;
-		// Browsers attach Origin only to CORS-relevant requests, and it is the page's origin.
 		if (kind === `xhr` && (!SAFE_METHODS.has(method) || site !== `same-origin`)) {
 			headers.Origin = new URL(referer ?? url).origin;
 		}
 		if (args.contentType) headers[`Content-Type`] = args.contentType;
 
-		const cookie = this.#cookieHeader(url);
-		if (cookie) headers.Cookie = cookie;
-
 		return { ...headers, ...args.headers };
-	}
-
-	#cookieHeader(url: string): string | undefined {
-		const host = new URL(url).hostname.toLowerCase();
-		const pairs: string[] = [];
-		for (const [domain, jar] of this.#cookies) {
-			if (host !== domain && !host.endsWith(`.${domain}`)) continue;
-			for (const [name, value] of jar) pairs.push(`${name}=${value}`);
-		}
-		return pairs.length ? pairs.join(`; `) : undefined;
-	}
-
-	#storeCookies(args: { url: string; res: Response }): void {
-		const lines = args.res.headers.getSetCookie?.() ?? [];
-		if (!lines.length) return;
-
-		const host = new URL(args.url).hostname.toLowerCase();
-		for (const line of lines) {
-			const [pair, ...attributes] = line.split(`;`);
-			const separator = pair.indexOf(`=`);
-			if (separator < 1) continue;
-
-			const domain = cookieAttribute({ attributes, name: `domain` })?.replace(/^\./, ``) ?? host;
-			const jar = this.#cookies.get(domain) ?? new Map<string, string>();
-			this.#cookies.set(domain, jar);
-
-			const name = pair.slice(0, separator).trim();
-			const maxAge = cookieAttribute({ attributes, name: `max-age` });
-			if (maxAge !== undefined && Number(maxAge) <= 0) {
-				jar.delete(name);
-				continue;
-			}
-			jar.set(name, pair.slice(separator + 1).trim());
-		}
 	}
 
 	async #assertNotBlocked(args: { url: string; res: Response }): Promise<void> {
@@ -276,11 +245,6 @@ export class BrowserSession {
 		const body = (await res.clone().text()).slice(0, 4000).toLowerCase();
 		const marker = CHALLENGE_MARKERS.find((candidate) => body.includes(candidate));
 		if (marker) throw new BlockedError(url, marker);
-	}
-
-	#signal(signal?: AbortSignal): AbortSignal {
-		const timeout = AbortSignal.timeout(this.#timeoutMs);
-		return signal ? AbortSignal.any([signal, timeout]) : timeout;
 	}
 }
 
@@ -298,14 +262,6 @@ function isSameSite(args: { a: string; b: string }): boolean {
 	const a = args.a.toLowerCase();
 	const b = args.b.toLowerCase();
 	return a === b || a.endsWith(`.${b}`) || b.endsWith(`.${a}`);
-}
-
-function cookieAttribute(args: { attributes: string[]; name: string }): string | undefined {
-	const prefix = `${args.name}=`;
-	const match = args.attributes
-		.map((attribute) => attribute.trim())
-		.find((attribute) => attribute.toLowerCase().startsWith(prefix));
-	return match?.slice(prefix.length).trim().toLowerCase();
 }
 
 function retryAfterMs(res?: Response): number | undefined {

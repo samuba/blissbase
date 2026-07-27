@@ -64,64 +64,68 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			maxGapMs: 2000,
 		});
 
-		// Land on a real page first: the APIs are then called with the cookies and
-		// referer a browser would already have.
-		await session
-			.visit({ url: `${BASE_URL}/${LOCATIONS[0]}/` })
-			.catch((error: unknown) => console.error(`Landing page visit failed (continuing):`, error));
+		try {
+			// Land on a real page first: the APIs are then called with the cookies and
+			// referer a browser would already have.
+			await session
+				.visit({ url: `${BASE_URL}/${LOCATIONS[0]}/` })
+				.catch((error: unknown) => console.error(`Landing page visit failed (continuing):`, error));
 
-		console.error(`Fetching Todo.Today venue map...`);
-		const venuesById = await fetchVenuesById(session);
-		console.error(`Loaded ${Object.keys(venuesById).length} venues`);
+			console.error(`Fetching Todo.Today venue map...`);
+			const venuesById = await fetchVenuesById(session);
+			console.error(`Loaded ${Object.keys(venuesById).length} venues`);
 
-		for (const location of LOCATIONS) {
-			console.error(`Scraping events for ${location}...`);
+			for (const location of LOCATIONS) {
+				console.error(`Scraping events for ${location}...`);
 
-			for (const day of [`today`, `tomorrow`] as const) {
-				try {
-					const listingEvents = await fetchListingEvents({ session, location, day });
-					if (!listingEvents.length) {
-						console.warn(`No ${day} events for ${location}`);
+				for (const day of [`today`, `tomorrow`] as const) {
+					try {
+						const listingEvents = await fetchListingEvents({ session, location, day });
+						if (!listingEvents.length) {
+							console.warn(`No ${day} events for ${location}`);
+							continue;
+						}
+
+						locationsWithEvents += 1;
+						console.error(`[${location}/${day}] ${listingEvents.length} listing events — enriching...`);
+
+						const events = await mapWithConcurrency({
+							items: listingEvents,
+							concurrency: DETAIL_CONCURRENCY,
+							mapper: async (listingEvent) => {
+								try {
+									return await this.extractEventFromListing({
+										session,
+										listingEvent,
+										location,
+										venuesById,
+									});
+								} catch (error) {
+									console.error(`[${location}/${day}] Failed ${listingEvent.slug ?? listingEvent.id}`, error);
+									return undefined;
+								}
+							},
+						});
+
+						const extracted = events.filter((event): event is ScrapedEvent => Boolean(event));
+						allEvents.push(...extracted);
+						console.error(`[${location}/${day}] Extracted ${extracted.length}/${listingEvents.length}`);
+					} catch (error) {
+						console.error(`Failed to scrape ${day} events for ${location}`, error);
 						continue;
 					}
-
-					locationsWithEvents += 1;
-					console.error(`[${location}/${day}] ${listingEvents.length} listing events — enriching...`);
-
-					const events = await mapWithConcurrency({
-						items: listingEvents,
-						concurrency: DETAIL_CONCURRENCY,
-						mapper: async (listingEvent) => {
-							try {
-								return await this.extractEventFromListing({
-									session,
-									listingEvent,
-									location,
-									venuesById,
-								});
-							} catch (error) {
-								console.error(`[${location}/${day}] Failed ${listingEvent.slug ?? listingEvent.id}`, error);
-								return undefined;
-							}
-						},
-					});
-
-					const extracted = events.filter((event): event is ScrapedEvent => Boolean(event));
-					allEvents.push(...extracted);
-					console.error(`[${location}/${day}] Extracted ${extracted.length}/${listingEvents.length}`);
-				} catch (error) {
-					console.error(`Failed to scrape ${day} events for ${location}`, error);
-					continue;
 				}
 			}
-		}
 
-		if (locationsWithEvents === 0) {
-			throw new Error(`No events found! Failed to fetch API data for all locations.`);
-		}
+			if (locationsWithEvents === 0) {
+				throw new Error(`No events found! Failed to fetch API data for all locations.`);
+			}
 
-		console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
-		return allEvents;
+			console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
+			return allEvents;
+		} finally {
+			await session.close();
+		}
 	}
 
 	scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]> {

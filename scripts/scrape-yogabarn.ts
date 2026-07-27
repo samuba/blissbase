@@ -64,69 +64,73 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	});
 
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
-		// The calendar AJAX endpoint is only ever called from this page, so load it
-		// first to pick up the cookies a normal visitor would carry.
-		console.error(`Loading calendar page…`);
-		await this.session
-			.visit({ url: CALENDAR_PAGE })
-			.catch((error: unknown) => console.error(`Calendar page load failed (continuing):`, error));
+		try {
+			// The calendar AJAX endpoint is only ever called from this page, so load it
+			// first to pick up the cookies a normal visitor would carry.
+			console.error(`Loading calendar page…`);
+			await this.session
+				.visit({ url: CALENDAR_PAGE })
+				.catch((error: unknown) => console.error(`Calendar page load failed (continuing):`, error));
 
-		console.error(`Fetching calendar months via event_onmonth…`);
-		const cards = await this.fetchCalendarCardsAhead(MONTHS_AHEAD);
-		console.error(`  calendar cards: ${cards.length}`);
+			console.error(`Fetching calendar months via event_onmonth…`);
+			const cards = await this.fetchCalendarCardsAhead(MONTHS_AHEAD);
+			console.error(`  calendar cards: ${cards.length}`);
 
-		console.error(`Fetching WP event descriptions…`);
-		const wpBySlug = await this.fetchWpEventsBySlug();
-		console.error(`  WP events indexed: ${wpBySlug.size}`);
+			console.error(`Fetching WP event descriptions…`);
+			const wpBySlug = await this.fetchWpEventsBySlug();
+			console.error(`  WP events indexed: ${wpBySlug.size}`);
 
-		const megatixUrls = [
-			...new Set(
-				cards
-					.flatMap((c) => {
-						const wp = c.slug ? wpBySlug.get(c.slug) : undefined;
-						return [c.megatixUrl, wp?.megatixUrls[0]];
-					})
-					.filter((u): u is string => !!u),
-			),
-		];
-		console.error(`Fetching Megatix event pages (${megatixUrls.length})…`);
-		const megatixBySlug = await this.fetchMegatixEventsByUrls(megatixUrls);
-		console.error(`  megatix events resolved: ${megatixBySlug.size}/${megatixUrls.length}`);
+			const megatixUrls = [
+				...new Set(
+					cards
+						.flatMap((c) => {
+							const wp = c.slug ? wpBySlug.get(c.slug) : undefined;
+							return [c.megatixUrl, wp?.megatixUrls[0]];
+						})
+						.filter((u): u is string => !!u),
+				),
+			];
+			console.error(`Fetching Megatix event pages (${megatixUrls.length})…`);
+			const megatixBySlug = await this.fetchMegatixEventsByUrls(megatixUrls);
+			console.error(`  megatix events resolved: ${megatixBySlug.size}/${megatixUrls.length}`);
 
-		const events: ScrapedEvent[] = [];
-		const seen = new Set<string>();
-		const nowMs = Date.now() - 6 * 60 * 60 * 1000;
-		const imageSizeCache = new Map<string, number | undefined>();
+			const events: ScrapedEvent[] = [];
+			const seen = new Set<string>();
+			const nowMs = Date.now() - 6 * 60 * 60 * 1000;
+			const imageSizeCache = new Map<string, number | undefined>();
 
-		for (const card of cards) {
-			try {
-				const event = this.cardToEvent({ card, wpBySlug, megatixBySlug });
-				if (!event) continue;
-				if (Date.parse(event.startAt) < nowMs) continue;
-				const dedupeKey = `${normalizeKey(event.name)}|${event.startAt}`;
-				if (seen.has(dedupeKey)) continue;
+			for (const card of cards) {
+				try {
+					const event = this.cardToEvent({ card, wpBySlug, megatixBySlug });
+					if (!event) continue;
+					if (Date.parse(event.startAt) < nowMs) continue;
+					const dedupeKey = `${normalizeKey(event.name)}|${event.startAt}`;
+					if (seen.has(dedupeKey)) continue;
 
-				event.imageUrls = await filterImagesByMinBytes({
-					session: this.session,
-					urls: event.imageUrls,
-					minBytes: MIN_IMAGE_BYTES,
-					sizeCache: imageSizeCache,
-				});
-				if (!event.imageUrls.length) {
-					console.error(`Skipping ${event.name}: no images >= ${MIN_IMAGE_BYTES / 1024}kb`);
-					continue;
+					event.imageUrls = await filterImagesByMinBytes({
+						session: this.session,
+						urls: event.imageUrls,
+						minBytes: MIN_IMAGE_BYTES,
+						sizeCache: imageSizeCache,
+					});
+					if (!event.imageUrls.length) {
+						console.error(`Skipping ${event.name}: no images >= ${MIN_IMAGE_BYTES / 1024}kb`);
+						continue;
+					}
+
+					seen.add(dedupeKey);
+					events.push(event);
+				} catch (error) {
+					console.error(`Failed to map calendar card ${card.title}:`, error);
 				}
-
-				seen.add(dedupeKey);
-				events.push(event);
-			} catch (error) {
-				console.error(`Failed to map calendar card ${card.title}:`, error);
 			}
-		}
 
-		events.sort((a, b) => a.startAt.localeCompare(b.startAt));
-		console.error(`--- Scraping finished. Total events: ${events.length} ---`);
-		return events;
+			events.sort((a, b) => a.startAt.localeCompare(b.startAt));
+			console.error(`--- Scraping finished. Total events: ${events.length} ---`);
+			return events;
+		} finally {
+			await this.session.close();
+		}
 	}
 
 	async scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]> {
