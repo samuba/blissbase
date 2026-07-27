@@ -266,10 +266,19 @@
 
 <svelte:window onresize={updateTableScrollWidth} />
 
-<div class="flex w-full flex-col gap-6 px-4 py-4 md:py-0 md:pb-10">
-	<div class="mx-auto flex w-full max-w-5xl flex-wrap items-start justify-between gap-3">
+<div
+	class={[
+		`fixed inset-x-0 z-0 flex flex-col gap-4 overflow-hidden px-4 pt-4 pb-4`,
+		`top-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))]`,
+		`md:top-20 md:bottom-0 md:gap-4 md:pt-0`,
+	]}
+>
+	<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-wrap items-start justify-between gap-3">
 		<div class="space-y-1">
-			<h1 class="text-lg font-semibold">WhatsApp Scraping Targets</h1>
+			<h1 class="flex items-center gap-2 text-lg font-semibold">
+				<i class="icon-[ph--whatsapp-logo] size-6 text-[#25D366]" aria-hidden="true"></i>
+				WhatsApp Scraping Targets
+			</h1>
 			<p class="text-base-content/80 text-sm leading-relaxed">
 				Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten.
 			</p>
@@ -286,120 +295,122 @@
 		</div>
 	</div>
 
-	<div class="card bg-base-100 w-full shadow">
-		<div class="card-body gap-4">
+	<div class="card bg-base-100 flex min-h-0 w-full flex-1 flex-col overflow-hidden shadow">
+		<div class="flex shrink-0 items-center gap-2 px-6 pt-6">
 			<h2 class="card-title text-base">
 				Vorhandene Targets
 				{#if targets.length}
 					<span class="badge badge-ghost">{targets.length}</span>
 				{/if}
 			</h2>
-
-			{#if !targets.length}
-				<p class="text-base-content/70 text-sm">Noch keine WhatsApp Scraping Targets.</p>
-			{:else}
-				<div class="flex max-h-[calc(100dvh-12rem)] w-full flex-col md:max-h-[calc(100dvh-10rem)]">
-					<div
-						{@attach tableScrollAttach}
-						class="targets-table-scroll min-h-0 w-full flex-1 overflow-auto"
-						onscroll={syncStickyFromTable}
-					>
-						<table class="table table-pin-rows table-sm w-full">
-							<thead>
-								<tr>
-									{#each sortColumns as column (column.key)}
-										<th
-											class="bg-base-100"
-											aria-sort={sortKey === column.key
-												? sortDir === `asc`
-													? `ascending`
-													: `descending`
-												: `none`}
-										>
-											<button
-												type="button"
-												class="hover:text-primary inline-flex items-center gap-1 font-semibold whitespace-nowrap"
-												onclick={() => toggleSort(column.key)}
-											>
-												{column.label}
-												<i class={[sortIcon(column.key), `size-3.5 opacity-70`]}></i>
-											</button>
-										</th>
-									{/each}
-								</tr>
-							</thead>
-							<tbody>
-								{#each sortedTargets as target (target.chatJid)}
-									{@const openUrl = whatsappDirectChatUrl(target.chatJid)}
-									<tr
-										class={[
-											`hover:bg-base-200 cursor-pointer`,
-											selectedChatJid === target.chatJid && `bg-primary/10`,
-										]}
-										onclick={() => selectTarget(target)}
-									>
-										<td class="font-medium">
-											<div class="flex items-center gap-1">
-												{#if openUrl}
-													<a
-														href={openUrl}
-														target="_blank"
-														rel="noopener noreferrer"
-														class="btn btn-ghost btn-square btn-xs"
-														title="In WhatsApp öffnen"
-														aria-label="In WhatsApp öffnen"
-														onclick={(e) => e.stopPropagation()}
-													>
-														<i class="icon-[ph--arrow-square-out] size-4"></i>
-													</a>
-												{:else}
-													<button
-														type="button"
-														class="btn btn-ghost btn-square btn-xs"
-														title="chatJid kopieren (Gruppen haben keinen Open-Link)"
-														aria-label="chatJid kopieren"
-														onclick={(e) => copyChatJid({ chatJid: target.chatJid, event: e })}
-													>
-														<i class="icon-[ph--copy] size-4"></i>
-													</button>
-												{/if}
-												<span>{target.name ?? `—`}</span>
-											</div>
-										</td>
-										<td class="font-mono text-xs whitespace-nowrap">{target.chatJid}</td>
-										<td class="max-w-48 truncate" title={formatAddress(target.defaultAddress)}>
-											{formatAddress(target.defaultAddress)}
-										</td>
-										<td>{target.defaultTimezone}</td>
-										<td>
-											{#if target.hasOnlyConsciousEvents}
-												<span class="badge badge-success badge-sm">ja</span>
-											{:else}
-												<span class="badge badge-ghost badge-sm">nein</span>
-											{/if}
-										</td>
-										<td>{target.scrapedEvents}</td>
-										<td class="whitespace-nowrap text-xs">{formatDate(target.lastRunFinishedAt)}</td>
-										<td class="text-error max-w-48 truncate text-xs" title={target.lastError ?? ``}>
-											{target.lastError ?? `—`}
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-
-					<div
-						{@attach stickyScrollAttach}
-						class="bg-base-100 sticky bottom-0 z-10 shrink-0 overflow-x-auto border-t border-base-300"
-						onscroll={syncTableFromSticky}
-						aria-hidden="true"
-					>
-						<div style:width={`${Math.max(tableScrollWidth, 1)}px`} class="h-3"></div>
-					</div>
-				</div>
-			{/if}
 		</div>
+
+		{#if !targets.length}
+			<p class="text-base-content/70 px-6 py-4 text-sm">Noch keine WhatsApp Scraping Targets.</p>
+		{:else}
+			<div class="flex min-h-0 w-full flex-1 flex-col px-6 pt-4">
+				<div
+					{@attach tableScrollAttach}
+					class="targets-table-scroll min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto"
+					onscroll={syncStickyFromTable}
+				>
+					<table class="table table-pin-rows table-sm w-full">
+						<thead>
+							<tr>
+								{#each sortColumns as column (column.key)}
+									<th
+										class="bg-base-100"
+										aria-sort={sortKey === column.key
+											? sortDir === `asc`
+												? `ascending`
+												: `descending`
+											: `none`}
+									>
+										<button
+											type="button"
+											class="hover:text-primary inline-flex items-center gap-1 font-semibold whitespace-nowrap"
+											onclick={() => toggleSort(column.key)}
+										>
+											{column.label}
+											<i class={[sortIcon(column.key), `size-3.5 opacity-70`]}></i>
+										</button>
+									</th>
+								{/each}
+							</tr>
+						</thead>
+						<tbody>
+							{#each sortedTargets as target (target.chatJid)}
+								{@const openUrl = whatsappDirectChatUrl(target.chatJid)}
+								<tr
+									class={[
+										`hover:bg-base-200 cursor-pointer`,
+										selectedChatJid === target.chatJid && `bg-primary/10`,
+									]}
+									onclick={() => selectTarget(target)}
+								>
+									<td class="min-w-64 font-medium">
+										<div class="flex items-center gap-1">
+											{#if openUrl}
+												<a
+													href={openUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													class="btn btn-ghost btn-square btn-xs"
+													title="In WhatsApp öffnen"
+													aria-label="In WhatsApp öffnen"
+													onclick={(e) => e.stopPropagation()}
+												>
+													<i class="icon-[ph--arrow-square-out] size-4"></i>
+												</a>
+											{:else}
+												<button
+													type="button"
+													class="btn btn-ghost btn-square btn-xs"
+													title="chatJid kopieren (Gruppen haben keinen Open-Link)"
+													aria-label="chatJid kopieren"
+													onclick={(e) => copyChatJid({ chatJid: target.chatJid, event: e })}
+												>
+													<i class="icon-[ph--copy] size-4"></i>
+												</button>
+											{/if}
+											<span>{target.name ?? `—`}</span>
+										</div>
+									</td>
+									<td class="max-w-44 truncate font-mono text-xs whitespace-nowrap" title={target.chatJid}>
+										{target.chatJid}
+									</td>
+									<td class="max-w-48 truncate" title={formatAddress(target.defaultAddress)}>
+										{formatAddress(target.defaultAddress)}
+									</td>
+									<td>{target.defaultTimezone}</td>
+									<td>
+										{#if target.hasOnlyConsciousEvents}
+											<span class="badge badge-success badge-sm">ja</span>
+										{:else}
+											<span class="badge badge-ghost badge-sm">nein</span>
+										{/if}
+									</td>
+									<td>{target.scrapedEvents}</td>
+									<td class="whitespace-nowrap text-xs">{formatDate(target.lastRunFinishedAt)}</td>
+									<td class="text-error max-w-48 truncate text-xs" title={target.lastError ?? ``}>
+										{target.lastError ?? `—`}
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+
+				<div
+					{@attach stickyScrollAttach}
+					class="bg-base-100 sticky bottom-0 z-10 shrink-0 overflow-x-auto border-t border-base-300"
+					onscroll={syncTableFromSticky}
+					aria-hidden="true"
+				>
+					<div style:width={`${Math.max(tableScrollWidth, 1)}px`} class="h-3"></div>
+				</div>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -650,12 +661,12 @@
 </Dialog.Root>
 
 <style>
+	/* Vertical scrollbar only; horizontal scrolling uses the sticky bar below. */
 	.targets-table-scroll {
 		scrollbar-width: thin;
 	}
 
 	.targets-table-scroll::-webkit-scrollbar {
 		width: 8px;
-		height: 0;
 	}
 </style>

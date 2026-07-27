@@ -164,6 +164,8 @@ msgstr "<0/> Email"
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/routes/EventDetailsDialog.svelte
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
@@ -427,6 +429,7 @@ msgstr "Delete event"
 msgid "Abbrechen"
 msgstr "Cancel"
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
@@ -1929,9 +1932,8 @@ msgstr "Close image"
 #~ msgid "<0/> Telegram Targets"
 #~ msgstr "<0/> Telegram Targets"
 
-#: src/routes/admin/telegram/+page.svelte
-msgid "Telegram Scraping Targets"
-msgstr "Telegram Scraping Targets"
+#~ msgid "Telegram Scraping Targets"
+#~ msgstr "Telegram Scraping Targets"
 
 #~ msgid "Übersicht aller Telegram-Ziele und Formular zum Hinzufügen neuer Targets."
 #~ msgstr "Overview of all Telegram targets and form to add new targets."
@@ -1941,10 +1943,10 @@ msgstr "Telegram Scraping Targets"
 msgid "<0/> Zurück zu Admin"
 msgstr "<0/> Back to Admin"
 
-#: src/routes/admin/telegram/+page.svelte
-msgid "Neues Target hinzufügen"
-msgstr "Add new target"
+#~ msgid "Neues Target hinzufügen"
+#~ msgstr "Add new target"
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte
 msgid "roomId *"
 msgstr "roomId *"
@@ -1962,11 +1964,13 @@ msgstr "roomId *"
 #~ msgstr "JSON array. [] = no topics, [-1] = all topics."
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "defaultTimezone *"
 msgstr "defaultTimezone *"
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
@@ -2026,11 +2030,13 @@ msgid "nein"
 msgstr "no"
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "defaultAddress"
 msgstr "Default address"
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
@@ -2038,32 +2044,34 @@ msgid "Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 msgstr "Optional. One or more lines, e.g. Studio name, street, city"
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse."
 msgstr "Comma- or line-separated. Empty = no fallback address."
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
 msgid "topicIds"
 msgstr "topicIds"
 
 #: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
 msgid "Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics."
 msgstr "Comma-separated numbers. Empty = no topics, -1 = all topics."
 
-#: src/routes/admin/telegram/+page.svelte
-msgid "Targets hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
-msgstr "Add targets or select a row to edit it."
+#~ msgid "Targets hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
+#~ msgstr "Add targets or select a row to edit it."
 
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "Target bearbeiten"
 msgstr "Edit target"
 
-#: src/routes/admin/telegram/+page.svelte
-msgid "Neu"
-msgstr "New"
+#~ msgid "Neu"
+#~ msgstr "New"
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
@@ -2084,9 +2092,8 @@ msgstr "Open in Telegram"
 #~ msgid "<0/> WhatsApp Targets"
 #~ msgstr "<0/> WhatsApp Targets"
 
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "WhatsApp Scraping Targets"
-msgstr "WhatsApp Scraping Targets"
+#~ msgid "WhatsApp Scraping Targets"
+#~ msgstr "WhatsApp Scraping Targets"
 
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "chatJid *"
@@ -2128,10 +2135,12 @@ msgstr "<0/> WhatsApp Scraping"
 #~ msgid "Für Gruppen: Invite-Link aus der Gruppen-Info — öffnet WhatsApp mit diesem Chat. Bei 1:1 reicht die chatJid (`wa.me`)."
 #~ msgstr "For groups: invite link from the group info — opens WhatsApp with this chat. For 1:1, the chatJid (`wa.me`) is sufficient."
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
 msgstr "Add a target or select a line to edit."
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "<0/> Hinzufügen"
 msgstr "<0/> Add"
@@ -2163,3 +2172,17 @@ msgstr "Edit"
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "Letzte Nachricht: {0}"
 msgstr "Last message: {0}"
+
+#~ msgid "<0/> Telegram Scraping Targets <1/>"
+#~ msgstr "<0/> Telegram Scraping Targets <1/>"
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "<0/> Telegram Scraping Targets"
+msgstr "<0/> Telegram Scraping Targets"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "<0/> WhatsApp Scraping Targets"
+msgstr "<0/> WhatsApp Scraping Targets"
+
+#~ msgid "<0/> WhatsApp Scraping Targets<0/> WhatsApp Scraping Targets"
+#~ msgstr "<0/> WhatsApp Scraping Targets"

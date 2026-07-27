@@ -99,13 +99,13 @@
 				{/if}
 			</fieldset>
 
-			<div class="card-actions flex-col items-stretch pt-1">
-				<a href={routes.adminTelegram()} class="btn justify-start">
-					<i class="icon-[ph--telegram-logo] size-4"></i>
+			<div class="flex gap-4 items-stretch pt-1">
+				<a href={routes.adminTelegram()} class="btn justify-start grow">
+					<i class="icon-[ph--telegram-logo] size-5 text-[#26A5E4]"></i>
 					Telegram Scraping
 				</a>
-				<a href={routes.adminWhatsapp()} class="btn justify-start">
-					<i class="icon-[ph--whatsapp-logo] size-4"></i>
+				<a href={routes.adminWhatsapp()} class="btn justify-start grow">
+					<i class="icon-[ph--whatsapp-logo] size-5 text-[#25D366]"></i>
 					WhatsApp Scraping
 				</a>
 			</div>
