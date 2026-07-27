@@ -48,6 +48,9 @@ export const routes = {
     },
     favorites: () => resolve(`/profile/favorites`) ,
     admin: () => resolve(`/admin`) ,
+    adminTelegram: () => resolve(`/admin/telegram`) ,
+    adminTelegramResolve: () => resolve(`/admin/telegram/resolve`) ,
+    adminWhatsapp: () => resolve(`/admin/whatsapp`) ,
 }
 
 export const BASE_URL = "https://blissbase.app" as const

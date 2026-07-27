@@ -68,14 +68,22 @@
 
 			<fieldset class="fieldset">
 				<legend class="fieldset-legend">Event Quelle Filter</legend>
-				<Select
-					value={selectedSource}
-					placeholder="All"
-					options={sourceOptions}
-					onValueChange={handleSourceChange}
-					disabled={isSaving}
-					triggerProps={{ class: `w-full` }}
-				/>
+				<div class="flex flex-col gap-2 sm:flex-row sm:items-start">
+					<div class="min-w-0 flex-1">
+						<Select
+							value={selectedSource}
+							placeholder="All"
+							options={sourceOptions}
+							onValueChange={handleSourceChange}
+							disabled={isSaving}
+							triggerProps={{ class: `w-full` }}
+						/>
+					</div>
+					<a href={routes.root()} class="btn shrink-0">
+						<i class="icon-[ph--arrow-left] size-4"></i>
+						Zur Event-Liste
+					</a>
+				</div>
 				{#if isSaving}
 					<p class="label text-base-content/60">Wird gespeichert...</p>
 				{:else if saveError}
@@ -91,10 +99,14 @@
 				{/if}
 			</fieldset>
 
-			<div class="card-actions pt-1">
-				<a href={routes.root()} class="btn">
-					<i class="icon-[ph--arrow-left] size-4"></i>
-					Zur Event-Liste
+			<div class="card-actions flex-col items-stretch pt-1">
+				<a href={routes.adminTelegram()} class="btn justify-start">
+					<i class="icon-[ph--telegram-logo] size-4"></i>
+					Telegram Scraping
+				</a>
+				<a href={routes.adminWhatsapp()} class="btn justify-start">
+					<i class="icon-[ph--whatsapp-logo] size-4"></i>
+					WhatsApp Scraping
 				</a>
 			</div>
 		</div>

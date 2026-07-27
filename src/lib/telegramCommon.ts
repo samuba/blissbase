@@ -312,3 +312,48 @@ export function resolveTelegramFormattingToHtml(text: string, entities: Api.Type
             .replace(/<br>(\s*<br>){2,}/g, '<br><br>');
     }
 }
+
+/**
+ * Normalizes roomId input: extracts username or chat id from t.me / telegram.me links.
+ * Invite links (+… / joinchat) cannot be converted to a room id.
+ *
+ * @example
+ * extractTelegramRoomIdFromInput(`https://t.me/c/1234567890/1`) // `-1001234567890`
+ * extractTelegramRoomIdFromInput(`https://t.me/my_channel`) // `my_channel`
+ */
+export function extractTelegramRoomIdFromInput(input: string) {
+	const trimmed = input.trim();
+	if (!trimmed) return trimmed;
+
+	const withoutProtocol = trimmed
+		.replace(/^https?:\/\//i, ``)
+		.replace(/^telegram\.me\//i, `t.me/`);
+
+	if (!withoutProtocol.toLowerCase().startsWith(`t.me/`)) {
+		return trimmed;
+	}
+
+	const path = withoutProtocol.slice(`t.me/`.length).split(`?`)[0]?.split(`#`)[0] ?? ``;
+	const segments = path.split(`/`).filter(Boolean);
+	if (!segments.length) {
+		throw new Error(`Ungültiger t.me Link`);
+	}
+
+	const [first, second] = segments;
+	if (first === `c`) {
+		if (!second || !/^\d+$/.test(second)) {
+			throw new Error(`Ungültiger t.me/c/… Link`);
+		}
+		return `-100${second}`;
+	}
+
+	if (first === `joinchat` || first.startsWith(`+`)) {
+		throw new Error(`Invite-Links können nicht in eine roomId umgewandelt werden. Nutze @username oder die Chat-ID.`);
+	}
+
+	if (!/^[A-Za-z]\w{3,31}$/.test(first)) {
+		throw new Error(`Ungültiger t.me Username: ${first}`);
+	}
+
+	return first;
+}

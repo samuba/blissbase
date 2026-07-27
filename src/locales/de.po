@@ -425,6 +425,8 @@ msgstr "Event löschen"
 msgid "Abbrechen"
 msgstr "Abbrechen"
 
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
@@ -1920,3 +1922,202 @@ msgstr "Close image"
 
 #~ msgid "Anmeldung über:"
 #~ msgstr "Anmeldung über:"
+
+#~ msgid "<0/> Telegram Targets"
+#~ msgstr "<0/> Telegram Targets"
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "Telegram Scraping Targets"
+msgstr "Telegram Scraping Targets"
+
+#~ msgid "Übersicht aller Telegram-Ziele und Formular zum Hinzufügen neuer Targets."
+#~ msgstr "Übersicht aller Telegram-Ziele und Formular zum Hinzufügen neuer Targets."
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "<0/> Zurück zu Admin"
+msgstr "<0/> Zurück zu Admin"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Neues Target hinzufügen"
+msgstr "Neues Target hinzufügen"
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "roomId *"
+msgstr "roomId *"
+
+#~ msgid "defaultAddress *"
+#~ msgstr "defaultAddress *"
+
+#~ msgid "Komma- oder zeilengetrennt. Wird als Fallback-Adresse genutzt."
+#~ msgstr "Komma- oder zeilengetrennt. Wird als Fallback-Adresse genutzt."
+
+#~ msgid "topicIds *"
+#~ msgstr "topicIds *"
+
+#~ msgid "JSON-Array. [] = keine Topics, [-1] = alle Topics."
+#~ msgstr "JSON-Array. [] = keine Topics, [-1] = alle Topics."
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "defaultTimezone *"
+msgstr "defaultTimezone *"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "hasOnlyConsciousEvents <0>Wenn aktiv, wird der Consciousness-Check übersprungen.</0>"
+msgstr "hasOnlyConsciousEvents <0>Wenn aktiv, wird der Consciousness-Check übersprungen.</0>"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Target hinzufügen"
+msgstr "Target hinzufügen"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Vorhandene Targets <0/>"
+msgstr "Vorhandene Targets <0/>"
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "Noch keine Telegram Scraping Targets."
+msgstr "Noch keine Telegram Scraping Targets."
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Name"
+msgstr "Name"
+
+#~ msgid "roomId"
+#~ msgstr "roomId"
+
+#~ msgid "Adresse"
+#~ msgstr "Adresse"
+
+#~ msgid "Topics"
+#~ msgstr "Topics"
+
+#~ msgid "Timezone"
+#~ msgstr "Timezone"
+
+#~ msgid "Conscious only"
+#~ msgstr "Conscious only"
+
+#~ msgid "Events"
+#~ msgstr "Events"
+
+#~ msgid "Letzter Lauf"
+#~ msgstr "Letzter Lauf"
+
+#~ msgid "Fehler"
+#~ msgstr "Fehler"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "ja"
+msgstr "ja"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "nein"
+msgstr "nein"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "defaultAddress"
+msgstr "defaultAddress"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+msgstr "Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse."
+msgstr "Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse."
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "topicIds"
+msgstr "topicIds"
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics."
+msgstr "Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics."
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Targets hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
+msgstr "Targets hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Target bearbeiten"
+msgstr "Target bearbeiten"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Neu"
+msgstr "Neu"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "<0/> Wird gespeichert..."
+msgstr "<0/> Wird gespeichert..."
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
+msgid "In Telegram öffnen"
+msgstr "In Telegram öffnen"
+
+#~ msgid "defaultTimezone"
+#~ msgstr "defaultTimezone"
+
+#~ msgid "Leer = germany"
+#~ msgstr "Leer = germany"
+
+#~ msgid "<0/> WhatsApp Targets"
+#~ msgstr "<0/> WhatsApp Targets"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "WhatsApp Scraping Targets"
+msgstr "WhatsApp Scraping Targets"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "chatJid *"
+msgstr "chatJid *"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Anzeigename der Gruppe / des Chats"
+msgstr "Anzeigename der Gruppe / des Chats"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Noch keine WhatsApp Scraping Targets."
+msgstr "Noch keine WhatsApp Scraping Targets."
+
+#: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "In WhatsApp öffnen"
+msgstr "In WhatsApp öffnen"
+
+#: src/routes/admin/+page.svelte
+msgid "<0/> Telegram Scraping"
+msgstr "<0/> Telegram Scraping"
+
+#: src/routes/admin/+page.svelte
+msgid "<0/> WhatsApp Scraping"
+msgstr "<0/> WhatsApp Scraping"
+
+#~ msgid "(für Gruppen nötig zum Öffnen)"
+#~ msgstr "(für Gruppen nötig zum Öffnen)"
+
+#~ msgid "Invite-Link <0/>"
+#~ msgstr "Invite-Link <0/>"
+
+#~ msgid "Gruppen haben keinen Open-Link aus der chatJid. Invite-Link aus Gruppen-Info kopieren — öffnet WhatsApp auch wenn du schon Mitglied bist. Bei 1:1-Chats reicht die chatJid (`wa.me`)."
+#~ msgstr "Gruppen haben keinen Open-Link aus der chatJid. Invite-Link aus Gruppen-Info kopieren — öffnet WhatsApp auch wenn du schon Mitglied bist. Bei 1:1-Chats reicht die chatJid (`wa.me`)."
+
+#~ msgid "Invite-Link"
+#~ msgstr "Invite-Link"
+
+#~ msgid "Für Gruppen: Invite-Link aus der Gruppen-Info — öffnet WhatsApp mit diesem Chat. Bei 1:1 reicht die chatJid (`wa.me`)."
+#~ msgstr "Für Gruppen: Invite-Link aus der Gruppen-Info — öffnet WhatsApp mit diesem Chat. Bei 1:1 reicht die chatJid (`wa.me`)."
