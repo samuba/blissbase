@@ -72,4 +72,6 @@ export const whiteListSources = [
     'vortexapp',
     'soulwise',
     'yogabarn',
+    'tantrakalender',
+    'tantrazentrumleipzig',
 ] satisfies WebsiteScrapeSourceName[];
