@@ -45,7 +45,7 @@ const (
 	defaultConfigPath           = "./config.jsonc"
 	defaultDatabaseSyncInterval = 30 * time.Second
 	databaseSyncTimeout         = 2 * time.Minute
-	groupMetadataSyncTimeout    = 5 * time.Minute
+	groupMetadataSyncTimeout    = 15 * time.Minute
 	mediaUploadTimeout          = 2 * time.Minute
 	objectDeleteTimeout         = 30 * time.Second
 	mediaUploadWorkerCount      = 4
@@ -622,20 +622,31 @@ func (d *daemon) backfillGroupDisplayNamesAsync() {
 		return
 	}
 
+	d.groupMetadataSyncPending.Store(true)
+	go d.runGroupMetadataSync()
+}
+
+// runGroupMetadataSync drains pending group metadata backfill requests.
+// Example: `go d.runGroupMetadataSync()`
+func (d *daemon) runGroupMetadataSync() {
 	if !d.groupMetadataSyncRunning.CompareAndSwap(false, true) {
 		return
 	}
+	defer d.groupMetadataSyncRunning.Store(false)
 
-	go func() {
-		defer d.groupMetadataSyncRunning.Store(false)
-
+	for d.groupMetadataSyncPending.CompareAndSwap(true, false) {
 		ctx, cancel := context.WithTimeout(context.Background(), groupMetadataSyncTimeout)
-		defer cancel()
-
-		if err := d.backfillGroupDisplayNames(ctx); err != nil {
+		err := d.backfillGroupDisplayNames(ctx)
+		cancel()
+		if err != nil {
 			log.Printf("backfill group display names failed: %v", err)
 		}
-	}()
+	}
+
+	// A request may have arrived after the last CAS failed but before running was cleared.
+	if d.groupMetadataSyncPending.Load() {
+		go d.runGroupMetadataSync()
+	}
 }
 
 // backfillGroupDisplayNames fetches all joined groups and syncs names, metadata, and memberships.
@@ -650,10 +661,150 @@ func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 		return fmt.Errorf("get joined groups: %w", err)
 	}
 
+	seen := map[string]bool{}
+	log.Printf("backfill groups: GetJoinedGroups returned %d groups", len(groups))
+
 	for _, group := range groups {
-		if err := d.storeGroupMetadata(ctx, group); err != nil {
-			log.Printf("store group metadata failed: %v", err)
+		if group == nil || group.JID.IsEmpty() {
+			continue
 		}
+		seen[group.JID.ToNonAD().String()] = true
+
+		if err := d.syncGroupWithFullInfo(ctx, group); err != nil {
+			log.Printf("store group metadata for %s failed: %v", group.JID, err)
+		}
+
+		if !group.IsParent {
+			continue
+		}
+		if err := d.syncCommunitySubgroups(ctx, group.JID, seen); err != nil {
+			log.Printf("sync community subgroups for %s failed: %v", group.JID, err)
+		}
+	}
+
+	if err := d.syncMissingGroupsFromChats(ctx, seen); err != nil {
+		log.Printf("sync missing groups from chats failed: %v", err)
+	}
+
+	return nil
+}
+
+// syncGroupWithFullInfo refreshes a group via GetGroupInfo when the roster looks incomplete.
+// Example: `if err := d.syncGroupWithFullInfo(ctx, group); err != nil { return err }`
+func (d *daemon) syncGroupWithFullInfo(ctx context.Context, group *types.GroupInfo) error {
+	if group == nil || group.JID.IsEmpty() {
+		return nil
+	}
+
+	needsRefresh := len(group.Participants) == 0 ||
+		(group.ParticipantCount > 0 && len(group.Participants) < group.ParticipantCount)
+	if !needsRefresh {
+		return d.storeGroupMetadata(ctx, group)
+	}
+
+	info, err := d.client.GetGroupInfo(ctx, group.JID)
+	if err != nil {
+		log.Printf("GetGroupInfo for %s failed, storing partial metadata: %v", group.JID, err)
+		return d.storeGroupMetadata(ctx, group)
+	}
+
+	log.Printf(
+		"backfill group %s (%s): refreshed participants %d -> %d",
+		info.JID,
+		info.Name,
+		len(group.Participants),
+		len(info.Participants),
+	)
+	return d.storeGroupMetadata(ctx, info)
+}
+
+// syncCommunitySubgroups fetches and stores linked subgroups under a community parent.
+// Example: `if err := d.syncCommunitySubgroups(ctx, parentJID, seen); err != nil { return err }`
+func (d *daemon) syncCommunitySubgroups(ctx context.Context, parentJID types.JID, seen map[string]bool) error {
+	if d == nil || d.client == nil || parentJID.IsEmpty() {
+		return nil
+	}
+
+	subgroups, err := d.client.GetSubGroups(ctx, parentJID)
+	if err != nil {
+		return fmt.Errorf("get subgroups for %s: %w", parentJID, err)
+	}
+
+	log.Printf("backfill community %s: %d subgroups", parentJID, len(subgroups))
+	for _, subgroup := range subgroups {
+		if subgroup == nil || subgroup.JID.IsEmpty() {
+			continue
+		}
+		groupJID := subgroup.JID.ToNonAD().String()
+		if seen[groupJID] {
+			continue
+		}
+		seen[groupJID] = true
+
+		info, err := d.client.GetGroupInfo(ctx, subgroup.JID)
+		if err != nil {
+			log.Printf("GetGroupInfo for subgroup %s failed: %v", subgroup.JID, err)
+			continue
+		}
+		if err := d.storeGroupMetadata(ctx, info); err != nil {
+			log.Printf("store subgroup metadata for %s failed: %v", subgroup.JID, err)
+		}
+	}
+
+	return nil
+}
+
+// syncMissingGroupsFromChats fetches metadata for group chats seen in sync_chats but missing from backfill.
+// Example: `if err := d.syncMissingGroupsFromChats(ctx, seen); err != nil { return err }`
+func (d *daemon) syncMissingGroupsFromChats(ctx context.Context, seen map[string]bool) error {
+	if d == nil || d.db == nil || d.client == nil {
+		return nil
+	}
+
+	rows, err := d.db.QueryContext(
+		ctx,
+		`SELECT chat_jid
+		FROM sync_chats
+		WHERE chat_jid LIKE '%@g.us'`,
+	)
+	if err != nil {
+		return fmt.Errorf("query group chats: %w", err)
+	}
+	defer rows.Close()
+
+	missing := 0
+	for rows.Next() {
+		var chatJID string
+		if err := rows.Scan(&chatJID); err != nil {
+			return fmt.Errorf("scan group chat jid: %w", err)
+		}
+		if chatJID == "" || seen[chatJID] {
+			continue
+		}
+
+		jid, err := types.ParseJID(chatJID)
+		if err != nil || jid.Server != types.GroupServer {
+			continue
+		}
+
+		seen[chatJID] = true
+		missing++
+
+		info, err := d.client.GetGroupInfo(ctx, jid)
+		if err != nil {
+			log.Printf("GetGroupInfo for chat group %s failed: %v", chatJID, err)
+			continue
+		}
+		if err := d.storeGroupMetadata(ctx, info); err != nil {
+			log.Printf("store chat group metadata for %s failed: %v", chatJID, err)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate group chats: %w", err)
+	}
+
+	if missing > 0 {
+		log.Printf("backfill groups: fetched %d additional groups from sync_chats", missing)
 	}
 
 	return nil
@@ -666,7 +817,14 @@ func (d *daemon) storeJoinedGroup(ctx context.Context, evt *events.JoinedGroup) 
 		return nil
 	}
 
-	return d.storeGroupMetadata(ctx, &evt.GroupInfo)
+	if err := d.syncGroupWithFullInfo(ctx, &evt.GroupInfo); err != nil {
+		return err
+	}
+	if !evt.IsParent {
+		return nil
+	}
+	seen := map[string]bool{evt.JID.ToNonAD().String(): true}
+	return d.syncCommunitySubgroups(ctx, evt.JID, seen)
 }
 
 // storeGroupInfoChange persists live group metadata and membership changes.
@@ -3159,6 +3317,7 @@ type daemon struct {
 	fatalEvents chan error
 
 	groupMetadataSyncRunning      atomic.Bool
+	groupMetadataSyncPending      atomic.Bool
 	contactDisplayNameSyncRunning atomic.Bool
 }
 
