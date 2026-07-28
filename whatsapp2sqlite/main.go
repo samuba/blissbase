@@ -45,17 +45,18 @@ const (
 	defaultConfigPath           = "./config.jsonc"
 	defaultDatabaseSyncInterval = 30 * time.Second
 	databaseSyncTimeout         = 2 * time.Minute
-	groupMetadataSyncTimeout    = 60 * time.Minute
+	groupMetadataSyncTimeout = 60 * time.Minute
 	// Space group IQ calls conservatively to avoid WhatsApp 429 rate-overlimit bans.
-	groupIQMinInterval     = 5 * time.Second
-	groupIQRateLimitCooldown = 30 * time.Minute
-	mediaUploadTimeout          = 2 * time.Minute
-	objectDeleteTimeout         = 30 * time.Second
-	mediaUploadWorkerCount      = 4
-	mediaUploadQueueSize        = 256
-	objectDeleteQueueSize       = 256
-	defaultR2DatabaseObjectKey  = "whatsapp.sqlite"
-	defaultR2MediaPrefix        = "media"
+	groupIQMinInterval       = 10 * time.Second
+	groupIQRateLimitCooldown   = 30 * time.Minute
+	groupRosterFreshFor      = 24 * time.Hour
+	mediaUploadTimeout       = 2 * time.Minute
+	objectDeleteTimeout      = 30 * time.Second
+	mediaUploadWorkerCount   = 4
+	mediaUploadQueueSize     = 256
+	objectDeleteQueueSize    = 256
+	defaultR2DatabaseObjectKey = "whatsapp.sqlite"
+	defaultR2MediaPrefix       = "media"
 )
 
 var errGroupIQCoolingDown = errors.New("group IQ cooling down after rate-overlimit")
@@ -462,7 +463,8 @@ func (d *daemon) handleEvent(evt any) {
 		}
 	case *events.Connected:
 		log.Printf("connected as %s", d.client.Store.ID)
-		d.backfillGroupDisplayNamesAsync()
+		// Defer heavy group IQ work to OfflineSyncCompleted when possible.
+		// Only kick contacts here; group backfill runs after offline sync finishes.
 		d.backfillContactDisplayNamesAsync()
 	case *events.OfflineSyncCompleted:
 		d.backfillGroupDisplayNamesAsync()
@@ -661,19 +663,20 @@ func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 		return nil
 	}
 
+	// One list IQ only. Prefer that payload over per-group GetGroupInfo to avoid bans.
 	groups, err := d.client.GetJoinedGroups(ctx)
 	if err != nil {
 		return fmt.Errorf("get joined groups: %w", err)
 	}
 
-	seen := map[string]bool{}
-	log.Printf("backfill groups: GetJoinedGroups returned %d groups", len(groups))
+	log.Printf("backfill groups: GetJoinedGroups returned %d groups (no bulk GetGroupInfo)", len(groups))
 
+	stored := 0
+	skippedRoster := 0
 	for i, group := range groups {
 		if group == nil || group.JID.IsEmpty() {
 			continue
 		}
-		seen[group.JID.ToNonAD().String()] = true
 
 		log.Printf(
 			"backfill groups: [%d/%d] %s (%s, participants=%d)",
@@ -683,35 +686,127 @@ func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 			group.Name,
 			len(group.Participants),
 		)
-		if err := d.syncGroupWithFullInfo(ctx, group); err != nil {
+		result, err := d.syncGroupFromJoinedList(ctx, group)
+		if err != nil {
 			if errors.Is(err, errGroupIQCoolingDown) {
 				log.Printf("backfill groups: stopping early to respect rate limits: %v", err)
 				return nil
 			}
 			log.Printf("store group metadata for %s failed: %v", group.JID, err)
-		}
-
-		if !group.IsParent {
 			continue
 		}
-		if err := d.syncCommunitySubgroups(ctx, group.JID, seen); err != nil {
-			if errors.Is(err, errGroupIQCoolingDown) {
-				log.Printf("backfill groups: stopping early to respect rate limits: %v", err)
-				return nil
-			}
-			log.Printf("sync community subgroups for %s failed: %v", group.JID, err)
+		stored++
+		if result.skippedRoster {
+			skippedRoster++
 		}
 	}
 
-	if err := d.syncMissingGroupsFromChats(ctx, seen); err != nil {
-		if errors.Is(err, errGroupIQCoolingDown) {
-			log.Printf("backfill groups: stopping early to respect rate limits: %v", err)
-			return nil
-		}
-		log.Printf("sync missing groups from chats failed: %v", err)
-	}
-
+	log.Printf(
+		"backfill groups: done (stored=%d skipped_roster_rewrite=%d extra_group_info_calls_avoided=community+chats)",
+		stored,
+		skippedRoster,
+	)
 	return nil
+}
+
+// syncGroupFromJoinedList stores a group using GetJoinedGroups data and only fetches
+// GetGroupInfo when the list payload has no participants and local roster is empty.
+// Example: `result, err := d.syncGroupFromJoinedList(ctx, group)`
+func (d *daemon) syncGroupFromJoinedList(ctx context.Context, group *types.GroupInfo) (groupSyncResult, error) {
+	if group == nil || group.JID.IsEmpty() {
+		return groupSyncResult{}, nil
+	}
+
+	groupJID := group.JID.ToNonAD().String()
+	localCount, localUpdatedAt, hasLocal := d.localGroupRosterState(ctx, groupJID)
+
+	// Prefer WhatsApp's joined-list participants — no extra IQ.
+	if len(group.Participants) > 0 {
+		if hasLocal && d.rosterLooksFresh(localCount, localUpdatedAt, len(group.Participants)) {
+			log.Printf(
+				"backfill groups: skip roster rewrite for %s (local=%d list=%d updated_at=%d)",
+				groupJID,
+				localCount,
+				len(group.Participants),
+				localUpdatedAt,
+			)
+			return groupSyncResult{skippedRoster: true}, d.persistGroupMetadata(ctx, group, false)
+		}
+		return groupSyncResult{}, d.persistGroupMetadata(ctx, group, true)
+	}
+
+	// Empty participant list from GetJoinedGroups (e.g. some community parents).
+	if hasLocal && localCount > 0 {
+		log.Printf(
+			"backfill groups: skip GetGroupInfo for %s (local roster already has %d members)",
+			groupJID,
+			localCount,
+		)
+		return groupSyncResult{skippedRoster: true}, d.persistGroupMetadata(ctx, group, false)
+	}
+
+	log.Printf("backfill groups: local roster missing for %s — throttled GetGroupInfo", groupJID)
+	info, err := d.getGroupInfoThrottled(ctx, group.JID)
+	if err != nil {
+		if errors.Is(err, errGroupIQCoolingDown) {
+			_ = d.persistGroupMetadata(ctx, group, false)
+			return groupSyncResult{}, err
+		}
+		log.Printf("GetGroupInfo for %s failed, storing partial metadata: %v", group.JID, err)
+		return groupSyncResult{}, d.persistGroupMetadata(ctx, group, false)
+	}
+	return groupSyncResult{}, d.persistGroupMetadata(ctx, info, true)
+}
+
+// localGroupRosterState returns local membership count and last update time.
+// Example: `count, updatedAt, ok := d.localGroupRosterState(ctx, groupJID)`
+func (d *daemon) localGroupRosterState(ctx context.Context, groupJID string) (int, int64, bool) {
+	if d == nil || d.db == nil || groupJID == "" {
+		return 0, 0, false
+	}
+
+	var updatedAt sql.NullInt64
+	err := d.db.QueryRowContext(
+		ctx,
+		`SELECT updated_at FROM groups WHERE group_jid = ?`,
+		groupJID,
+	).Scan(&updatedAt)
+	if err != nil {
+		return 0, 0, false
+	}
+
+	var count int
+	if err := d.db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(*) FROM group_contacts WHERE group_jid = ?`,
+		groupJID,
+	).Scan(&count); err != nil {
+		return 0, updatedAt.Int64, false
+	}
+
+	return count, updatedAt.Int64, true
+}
+
+// rosterLooksFresh reports whether the local roster can be left alone.
+// Example: `if d.rosterLooksFresh(localCount, updatedAt, listCount) { skip }`
+func (d *daemon) rosterLooksFresh(localCount int, updatedAt int64, listCount int) bool {
+	if localCount <= 0 || updatedAt <= 0 {
+		return false
+	}
+	if time.Since(time.Unix(updatedAt, 0)) > groupRosterFreshFor {
+		return false
+	}
+	// Allow small drift; live join/leave events keep the table accurate between full rewrites.
+	if listCount > 0 {
+		delta := localCount - listCount
+		if delta < 0 {
+			delta = -delta
+		}
+		if delta > 5 && delta*100 > listCount*5 {
+			return false
+		}
+	}
+	return true
 }
 
 // awaitGroupIQ spaces out WhatsApp group info queries and honors cooldown after 429s.
@@ -806,161 +901,12 @@ func (d *daemon) getGroupInfoThrottled(ctx context.Context, jid types.JID) (*typ
 	return info, nil
 }
 
-// getSubGroupsThrottled fetches community subgroups with spacing and 429 cooldown handling.
-// Example: `subgroups, err := d.getSubGroupsThrottled(ctx, parentJID)`
-func (d *daemon) getSubGroupsThrottled(ctx context.Context, parentJID types.JID) ([]*types.GroupLinkTarget, error) {
-	if err := d.awaitGroupIQ(ctx); err != nil {
-		return nil, err
-	}
-
-	log.Printf("group IQ: GetSubGroups %s", parentJID)
-	started := time.Now()
-	subgroups, err := d.client.GetSubGroups(ctx, parentJID)
-	if isGroupIQRateOverLimit(err) {
-		d.markGroupIQRateLimited()
-		return nil, fmt.Errorf("%w: %v", errGroupIQCoolingDown, err)
-	}
-	if err != nil {
-		log.Printf("group IQ: GetSubGroups %s failed after %s: %v", parentJID, time.Since(started).Round(time.Millisecond), err)
-		return nil, err
-	}
-	log.Printf("group IQ: GetSubGroups %s ok in %s (%d subgroups)", parentJID, time.Since(started).Round(time.Millisecond), len(subgroups))
-	return subgroups, nil
-}
-
-// syncGroupWithFullInfo refreshes a group via GetGroupInfo when the roster looks incomplete.
+// syncGroupWithFullInfo refreshes a group via GetGroupInfo only when roster data is missing locally
+// and the provided payload has no participants.
 // Example: `if err := d.syncGroupWithFullInfo(ctx, group); err != nil { return err }`
 func (d *daemon) syncGroupWithFullInfo(ctx context.Context, group *types.GroupInfo) error {
-	if group == nil || group.JID.IsEmpty() {
-		return nil
-	}
-
-	needsRefresh := len(group.Participants) == 0 ||
-		(group.ParticipantCount > 0 && len(group.Participants) < group.ParticipantCount)
-	if !needsRefresh {
-		return d.storeGroupMetadata(ctx, group)
-	}
-
-	info, err := d.getGroupInfoThrottled(ctx, group.JID)
-	if err != nil {
-		if errors.Is(err, errGroupIQCoolingDown) {
-			_ = d.storeGroupMetadata(ctx, group)
-			return err
-		}
-		log.Printf("GetGroupInfo for %s failed, storing partial metadata: %v", group.JID, err)
-		return d.storeGroupMetadata(ctx, group)
-	}
-
-	log.Printf(
-		"backfill group %s (%s): refreshed participants %d -> %d",
-		info.JID,
-		info.Name,
-		len(group.Participants),
-		len(info.Participants),
-	)
-	return d.storeGroupMetadata(ctx, info)
-}
-
-// syncCommunitySubgroups fetches and stores linked subgroups under a community parent.
-// Example: `if err := d.syncCommunitySubgroups(ctx, parentJID, seen); err != nil { return err }`
-func (d *daemon) syncCommunitySubgroups(ctx context.Context, parentJID types.JID, seen map[string]bool) error {
-	if d == nil || d.client == nil || parentJID.IsEmpty() {
-		return nil
-	}
-
-	subgroups, err := d.getSubGroupsThrottled(ctx, parentJID)
-	if err != nil {
-		if errors.Is(err, errGroupIQCoolingDown) {
-			return err
-		}
-		return fmt.Errorf("get subgroups for %s: %w", parentJID, err)
-	}
-
-	log.Printf("backfill community %s: %d subgroups", parentJID, len(subgroups))
-	for _, subgroup := range subgroups {
-		if subgroup == nil || subgroup.JID.IsEmpty() {
-			continue
-		}
-		groupJID := subgroup.JID.ToNonAD().String()
-		if seen[groupJID] {
-			continue
-		}
-		seen[groupJID] = true
-
-		info, err := d.getGroupInfoThrottled(ctx, subgroup.JID)
-		if err != nil {
-			if errors.Is(err, errGroupIQCoolingDown) {
-				return err
-			}
-			log.Printf("GetGroupInfo for subgroup %s failed: %v", subgroup.JID, err)
-			continue
-		}
-		if err := d.storeGroupMetadata(ctx, info); err != nil {
-			log.Printf("store subgroup metadata for %s failed: %v", subgroup.JID, err)
-		}
-	}
-
-	return nil
-}
-
-// syncMissingGroupsFromChats fetches metadata for group chats seen in sync_chats but missing from backfill.
-// Example: `if err := d.syncMissingGroupsFromChats(ctx, seen); err != nil { return err }`
-func (d *daemon) syncMissingGroupsFromChats(ctx context.Context, seen map[string]bool) error {
-	if d == nil || d.db == nil || d.client == nil {
-		return nil
-	}
-
-	rows, err := d.db.QueryContext(
-		ctx,
-		`SELECT chat_jid
-		FROM sync_chats
-		WHERE chat_jid LIKE '%@g.us'`,
-	)
-	if err != nil {
-		return fmt.Errorf("query group chats: %w", err)
-	}
-	defer rows.Close()
-
-	missing := 0
-	for rows.Next() {
-		var chatJID string
-		if err := rows.Scan(&chatJID); err != nil {
-			return fmt.Errorf("scan group chat jid: %w", err)
-		}
-		if chatJID == "" || seen[chatJID] {
-			continue
-		}
-
-		jid, err := types.ParseJID(chatJID)
-		if err != nil || jid.Server != types.GroupServer {
-			continue
-		}
-
-		seen[chatJID] = true
-		missing++
-
-		info, err := d.getGroupInfoThrottled(ctx, jid)
-		if err != nil {
-			if errors.Is(err, errGroupIQCoolingDown) {
-				log.Printf("backfill groups: fetched %d additional groups from sync_chats before rate limit", missing-1)
-				return err
-			}
-			log.Printf("GetGroupInfo for chat group %s failed: %v", chatJID, err)
-			continue
-		}
-		if err := d.storeGroupMetadata(ctx, info); err != nil {
-			log.Printf("store chat group metadata for %s failed: %v", chatJID, err)
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("iterate group chats: %w", err)
-	}
-
-	if missing > 0 {
-		log.Printf("backfill groups: fetched %d additional groups from sync_chats", missing)
-	}
-
-	return nil
+	_, err := d.syncGroupFromJoinedList(ctx, group)
+	return err
 }
 
 // storeJoinedGroup upserts group metadata and membership for newly joined groups.
@@ -970,14 +916,9 @@ func (d *daemon) storeJoinedGroup(ctx context.Context, evt *events.JoinedGroup) 
 		return nil
 	}
 
-	if err := d.syncGroupWithFullInfo(ctx, &evt.GroupInfo); err != nil {
-		return err
-	}
-	if !evt.IsParent {
-		return nil
-	}
-	seen := map[string]bool{evt.JID.ToNonAD().String(): true}
-	return d.syncCommunitySubgroups(ctx, evt.JID, seen)
+	// No community subgroup fan-out — only store the group we actually joined.
+	_, err := d.syncGroupFromJoinedList(ctx, &evt.GroupInfo)
+	return err
 }
 
 // storeGroupInfoChange persists live group metadata and membership changes.
@@ -1045,16 +986,23 @@ func (d *daemon) deleteGroup(ctx context.Context, groupJID string) error {
 // storeGroupMetadata writes group metadata into sync_chats and the groups/contacts tables.
 // Example: `if err := d.storeGroupMetadata(ctx, group); err != nil { return err }`
 func (d *daemon) storeGroupMetadata(ctx context.Context, group *types.GroupInfo) error {
+	return d.persistGroupMetadata(ctx, group, true)
+}
+
+// persistGroupMetadata upserts group metadata and optionally rewrites membership.
+// Example: `if err := d.persistGroupMetadata(ctx, group, false); err != nil { return err }`
+func (d *daemon) persistGroupMetadata(ctx context.Context, group *types.GroupInfo, replaceRoster bool) error {
 	if group == nil || group.JID.IsEmpty() {
 		return nil
 	}
 
 	started := time.Now()
 	log.Printf(
-		"store group metadata: %s (%s, participants=%d)",
+		"store group metadata: %s (%s, participants=%d, replace_roster=%t)",
 		group.JID,
 		group.Name,
 		len(group.Participants),
+		replaceRoster,
 	)
 
 	if err := d.upsertSyncChatMetadata(ctx, syncChatMetadata{
@@ -1069,8 +1017,10 @@ func (d *daemon) storeGroupMetadata(ctx context.Context, group *types.GroupInfo)
 		return err
 	}
 
-	if err := d.replaceGroupContacts(ctx, group); err != nil {
-		return err
+	if replaceRoster {
+		if err := d.replaceGroupContacts(ctx, group); err != nil {
+			return err
+		}
 	}
 
 	log.Printf(
@@ -3585,6 +3535,10 @@ type syncChatMetadata struct {
 	chatJID     string
 	displayName string
 	updatedAt   int64
+}
+
+type groupSyncResult struct {
+	skippedRoster bool
 }
 
 type contactIdentity struct {
