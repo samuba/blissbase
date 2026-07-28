@@ -52,6 +52,8 @@ const (
 	groupRosterFreshFor        = 24 * time.Hour
 	eventPersistTimeout        = 45 * time.Second
 	eventPersistQueueSize      = 2048
+	postgresChatSyncTimeout    = 45 * time.Second
+	postgresChatWakeQueueSize  = 64
 	mediaUploadTimeout         = 2 * time.Minute
 	objectDeleteTimeout        = 30 * time.Second
 	mediaUploadWorkerCount     = 4
@@ -139,14 +141,17 @@ func run(ctx context.Context, config daemonConfig) error {
 	}
 
 	daemon := &daemon{
-		client:           client,
-		db:               db,
-		r2:               r2Manager,
-		postgres:         postgres,
-		fatalEvents:      make(chan error, 1),
-		eventPersistJobs: make(chan eventPersistJob, eventPersistQueueSize),
+		client:            client,
+		db:                db,
+		r2:                r2Manager,
+		postgres:          postgres,
+		fatalEvents:       make(chan error, 1),
+		eventPersistJobs:  make(chan eventPersistJob, eventPersistQueueSize),
+		postgresChatWake:  make(chan struct{}, postgresChatWakeQueueSize),
+		pendingPostgresChats: make(map[string]struct{}),
 	}
 	daemon.startEventPersistWorker()
+	daemon.startPostgresChatWorker()
 	defer func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), databaseSyncTimeout)
 		defer cancel()
@@ -154,10 +159,6 @@ func run(ctx context.Context, config daemonConfig) error {
 			log.Printf("shutdown R2 workers failed: %v", err)
 		}
 	}()
-
-	if err := daemon.syncAllNamedChats(ctx); err != nil {
-		return err
-	}
 
 	if err := daemon.deleteExpiredMessages(ctx, time.Now()); err != nil {
 		return err
@@ -180,6 +181,9 @@ func run(ctx context.Context, config daemonConfig) error {
 	if err := client.Connect(); err != nil {
 		return fmt.Errorf("connect WhatsApp client: %w", err)
 	}
+
+	// Never block WhatsApp connect/processing on Postgres — run initial chat mirror in background.
+	daemon.enqueuePostgresFullSync()
 
 	log.Printf("daemon is running, syncing into %s", dbPath)
 
@@ -3023,6 +3027,7 @@ func (d *daemon) shutdown(ctx context.Context) error {
 	}
 
 	d.stopEventPersistWorker()
+	d.stopPostgresChatWorker()
 
 	if d.postgres != nil {
 		d.postgres.Close()
@@ -3543,6 +3548,13 @@ type daemon struct {
 	eventPersistJobs chan eventPersistJob
 	eventPersistWG   sync.WaitGroup
 	eventPersistStop sync.Once
+
+	postgresChatWake     chan struct{}
+	postgresChatWG       sync.WaitGroup
+	postgresChatStop     sync.Once
+	pendingPostgresMu    sync.Mutex
+	pendingPostgresChats map[string]struct{}
+	postgresFullSync     atomic.Bool
 }
 
 type eventPersistJob struct {

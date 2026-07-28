@@ -64,6 +64,126 @@ func (s *postgresChatsSync) Close() {
 	log.Printf("postgres chat sync: connection closed")
 }
 
+// startPostgresChatWorker starts the background worker that mirrors chats to Postgres.
+// Example: `d.startPostgresChatWorker()`
+func (d *daemon) startPostgresChatWorker() {
+	if d == nil || d.postgres == nil || d.postgresChatWake == nil {
+		return
+	}
+
+	d.postgresChatWG.Add(1)
+	go d.runPostgresChatWorker()
+}
+
+// stopPostgresChatWorker stops the Postgres chat worker after draining pending work.
+// Example: `d.stopPostgresChatWorker()`
+func (d *daemon) stopPostgresChatWorker() {
+	if d == nil || d.postgresChatWake == nil {
+		return
+	}
+
+	d.postgresChatStop.Do(func() {
+		close(d.postgresChatWake)
+		d.postgresChatWG.Wait()
+	})
+}
+
+// enqueuePostgresFullSync schedules a full named-chat mirror without blocking the caller.
+// Example: `d.enqueuePostgresFullSync()`
+func (d *daemon) enqueuePostgresFullSync() {
+	if d == nil || d.postgres == nil {
+		return
+	}
+
+	d.postgresFullSync.Store(true)
+	d.wakePostgresChatWorker()
+}
+
+// syncChatToPostgres queues one chat for Postgres upsert and returns immediately.
+// Example: `d.syncChatToPostgres(chatJID)`
+func (d *daemon) syncChatToPostgres(chatJID string) {
+	if d == nil || d.db == nil || d.postgres == nil {
+		return
+	}
+
+	chatJID = strings.TrimSpace(chatJID)
+	if chatJID == "" {
+		return
+	}
+
+	d.pendingPostgresMu.Lock()
+	if d.pendingPostgresChats == nil {
+		d.pendingPostgresChats = make(map[string]struct{})
+	}
+	d.pendingPostgresChats[chatJID] = struct{}{}
+	d.pendingPostgresMu.Unlock()
+
+	d.wakePostgresChatWorker()
+}
+
+// wakePostgresChatWorker nudges the Postgres worker without blocking.
+// Example: `d.wakePostgresChatWorker()`
+func (d *daemon) wakePostgresChatWorker() {
+	if d == nil || d.postgresChatWake == nil {
+		return
+	}
+
+	select {
+	case d.postgresChatWake <- struct{}{}:
+	default:
+	}
+}
+
+// runPostgresChatWorker serially drains pending chat upserts and optional full syncs.
+// Example: `go d.runPostgresChatWorker()`
+func (d *daemon) runPostgresChatWorker() {
+	defer d.postgresChatWG.Done()
+
+	for range d.postgresChatWake {
+		d.drainPostgresChatWork()
+	}
+
+	// Final drain after wake channel close.
+	d.drainPostgresChatWork()
+}
+
+// drainPostgresChatWork runs one full sync (if requested) then all pending per-chat upserts.
+// Example: `d.drainPostgresChatWork()`
+func (d *daemon) drainPostgresChatWork() {
+	if d.postgresFullSync.Swap(false) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		err := d.syncAllNamedChats(ctx)
+		cancel()
+		if err != nil {
+			log.Printf("postgres chat sync: background full sync failed: %v", err)
+		}
+	}
+
+	for {
+		chatJID, ok := d.takePendingPostgresChat()
+		if !ok {
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), postgresChatSyncTimeout)
+		d.syncChatToPostgresSync(ctx, chatJID)
+		cancel()
+	}
+}
+
+// takePendingPostgresChat pops one queued chat JID.
+// Example: `chatJID, ok := d.takePendingPostgresChat()`
+func (d *daemon) takePendingPostgresChat() (string, bool) {
+	d.pendingPostgresMu.Lock()
+	defer d.pendingPostgresMu.Unlock()
+
+	for chatJID := range d.pendingPostgresChats {
+		delete(d.pendingPostgresChats, chatJID)
+		return chatJID, true
+	}
+	return "", false
+}
+
 // syncAllNamedChats upserts every SQLite chat that has a non-empty name into Postgres.
 // Example: `if err := d.syncAllNamedChats(ctx); err != nil { return err }`
 func (d *daemon) syncAllNamedChats(ctx context.Context) error {
@@ -120,21 +240,7 @@ func (d *daemon) syncAllNamedChats(ctx context.Context) error {
 	return nil
 }
 
-// syncChatToPostgres mirrors one SQLite chat into Postgres when it has a non-empty name.
-// Example: `d.syncChatToPostgres(chatJID)`
-func (d *daemon) syncChatToPostgres(chatJID string) {
-	if d == nil || d.db == nil || d.postgres == nil || chatJID == "" {
-		return
-	}
-
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), eventPersistTimeout)
-		defer cancel()
-		d.syncChatToPostgresSync(ctx, chatJID)
-	}()
-}
-
-// syncChatToPostgresSync performs the Postgres upsert and must not run on the WA event loop.
+// syncChatToPostgresSync performs the Postgres upsert on the dedicated worker.
 // Example: `d.syncChatToPostgresSync(ctx, chatJID)`
 func (d *daemon) syncChatToPostgresSync(ctx context.Context, chatJID string) {
 	if d == nil || d.db == nil || d.postgres == nil {
