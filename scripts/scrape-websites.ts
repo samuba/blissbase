@@ -256,6 +256,7 @@ async function main() {
 
 
     async function cacheImages(events: typeof eventsToInsert) {
+        const IMAGE_CACHE_CONCURRENCY = 5;
         console.log('Starting image caching...');
         const startTime = Date.now();
         const alreadyCachedImages = await db
@@ -266,46 +267,87 @@ async function main() {
             })
             .from(s.imageCacheMap);
         console.log("images in imageCacheMap table", alreadyCachedImages.length);
+
+        const cacheByKey = new Map(
+            alreadyCachedImages.map((entry) => [`${entry.eventSlug}\0${entry.originalUrl}`, entry.url] as const),
+        );
+        const assetCreds = assets.loadCreds();
         const totalImageCount = events.reduce((sum, event) => sum + (event.imageUrls?.length ?? 0), 0);
         let processedImageCount = 0;
-        console.log(` -> Total images to process: ${totalImageCount}`);
+        console.log(` -> Total images to process: ${totalImageCount} (concurrency ${IMAGE_CACHE_CONCURRENCY})`);
 
+        type CacheJob = {
+            event: (typeof events)[number];
+            originalUrl: string;
+            index: number;
+        };
+
+        const jobs: CacheJob[] = [];
         for (const event of events) {
-            const cachedEventImageUrls: string[] = []
-            const newlyCachedImages: { originalUrl: string, eventSlug: string, url: string }[] = []
-            for (const url of event.imageUrls ?? []) {
+            for (const [index, originalUrl] of (event.imageUrls ?? []).entries()) {
+                if (!originalUrl) continue;
+                jobs.push({ event, originalUrl, index });
+            }
+        }
+
+        // slot results back into each event while preserving original order
+        const resultsByEvent = new Map<(typeof events)[number], (string | undefined)[]>();
+        for (const event of events) {
+            resultsByEvent.set(event, Array.from({ length: event.imageUrls?.length ?? 0 }));
+        }
+
+        const newlyCachedImages: { originalUrl: string; eventSlug: string; url: string }[] = [];
+
+        async function processJob(job: CacheJob) {
+            const eventResults = resultsByEvent.get(job.event);
+            if (!eventResults) return;
+
+            const cacheKey = `${job.event.slug}\0${job.originalUrl}`;
+            const cachedUrl = cacheByKey.get(cacheKey);
+            if (cachedUrl) {
+                eventResults[job.index] = cachedUrl;
+                processedImageCount++;
                 if (processedImageCount % 50 === 0) {
                     const elapsedTime = Date.now() - startTime;
                     console.log(` -> Progress: ${processedImageCount}/${totalImageCount} images processed (${(elapsedTime / 1000).toFixed(1)}s elapsed)`);
                 }
-                const cachedImage = alreadyCachedImages.find(x => x.originalUrl === url && x.eventSlug === event.slug)
-                if (cachedImage) {
-                    cachedEventImageUrls.push(cachedImage.url);
-                    processedImageCount++;
-                    continue;
-                }
-                console.log(` -> Image ${url} not found in image cache map`);
-                try {
-                    const bytes = await customFetch(url, { returnType: 'bytes' })
-                    const { buffer, phash } = await resizeCoverImage(bytes)
-                    const imageUrl = await assets.uploadEventImage(buffer, event.slug, phash, assets.loadCreds());
-                    cachedEventImageUrls.push(imageUrl);
-                    const newCacheEntry = { originalUrl: url, eventSlug: event.slug, url: imageUrl };
-                    newlyCachedImages.push(newCacheEntry);
-                    alreadyCachedImages.push(newCacheEntry);
-                    // warm up the image url
-                    await customFetch(imageUrl, { returnType: 'bytes' });
-                } catch (error) {
-                    console.error(`Error fetching/processing image. Skipping ${url}:`, error);
-                }
-                processedImageCount++;
+                return;
             }
-            event.imageUrls = cachedEventImageUrls;
-            if (newlyCachedImages.length > 0) {
-                await db.insert(s.imageCacheMap)
-                    .values(newlyCachedImages)
-                    .onConflictDoNothing();
+
+            console.log(` -> Image ${job.originalUrl} not found in image cache map`);
+            try {
+                const bytes = await customFetch(job.originalUrl, { returnType: 'bytes' });
+                const { buffer, phash } = await resizeCoverImage(bytes);
+                const imageUrl = await assets.uploadEventImage(buffer, job.event.slug, phash, assetCreds);
+                eventResults[job.index] = imageUrl;
+                const newCacheEntry = { originalUrl: job.originalUrl, eventSlug: job.event.slug, url: imageUrl };
+                newlyCachedImages.push(newCacheEntry);
+                cacheByKey.set(cacheKey, imageUrl);
+                await customFetch(imageUrl, { returnType: 'bytes' });
+            } catch (error) {
+                console.error(`Error fetching/processing image. Skipping ${job.originalUrl}:`, error);
             }
+
+            processedImageCount++;
+            if (processedImageCount % 50 === 0) {
+                const elapsedTime = Date.now() - startTime;
+                console.log(` -> Progress: ${processedImageCount}/${totalImageCount} images processed (${(elapsedTime / 1000).toFixed(1)}s elapsed)`);
+            }
+        }
+
+        for (let i = 0; i < jobs.length; i += IMAGE_CACHE_CONCURRENCY) {
+            const batch = jobs.slice(i, i + IMAGE_CACHE_CONCURRENCY);
+            await Promise.all(batch.map((job) => processJob(job)));
+        }
+
+        for (const event of events) {
+            event.imageUrls = (resultsByEvent.get(event) ?? []).filter((url): url is string => Boolean(url));
+        }
+
+        if (newlyCachedImages.length > 0) {
+            await db.insert(s.imageCacheMap)
+                .values(newlyCachedImages)
+                .onConflictDoNothing();
         }
 
         const totalTime = Date.now() - startTime;
