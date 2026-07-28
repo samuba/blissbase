@@ -100,6 +100,27 @@ cleanup_repo() {
     log_info "Repository cleaned up"
 }
 
+# Run tests; abort deploy on failure
+run_tests() {
+    log_info "Running tests..."
+
+    cd "$TARGET_DIR"
+
+    if [ ! -f "go.mod" ]; then
+        log_error "go.mod not found in $TARGET_DIR"
+        exit 1
+    fi
+
+    go mod tidy
+    if ! go test ./... -count=1; then
+        log_error "Tests failed — aborting deployment"
+        exit 1
+    fi
+
+    log_info "Tests passed"
+    cd - > /dev/null
+}
+
 # Build the Go project
 build_project() {
     log_info "Building Go project..."
@@ -116,7 +137,7 @@ build_project() {
     go mod tidy 2>/dev/null || true
     
     # Build the project
-    go build -o whatsapp2sqlite .
+    go build -o whatsapp2sqlite ./cmd/whatsapp2sqlite
     
     if [ ! -f "whatsapp2sqlite" ]; then
         log_error "Build failed - binary not found"
@@ -207,7 +228,8 @@ main() {
     extract_project
     cleanup_repo
     
-    # Build
+    # Test then build — do not deploy a binary that fails tests
+    run_tests
     build_project
     
     # Setup service

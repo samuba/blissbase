@@ -53,3 +53,14 @@ systemctl --user restart whatsapp2sqlite
 Useful log prefixes: `backfill groups:`, `postgres chat sync:`, `drop event persist job`, `event persist`, `sqlite snapshot:`.
 
 `event persist …: start/done` and `sqlite snapshot: VACUUM INTO start/done` show when the shared SQLite conn is held vs released (correlate with `[WA WARN] Node handling is taking long`).
+
+## Tests
+
+```bash
+cd whatsapp2sqlite
+go test ./...
+go build -o whatsapp2sqlite ./cmd/whatsapp2sqlite
+```
+
+Tests live under `test/`. No live WhatsApp or Docker Postgres.
+Go requires an importable package for subdirectory tests, so app code is `package whatsapp2sqlite` and the binary entrypoint is the thin `cmd/whatsapp2sqlite`.

@@ -1,4 +1,4 @@
-package main
+package whatsapp2sqlite
 
 import (
 	"bytes"
@@ -45,40 +45,44 @@ const (
 	defaultConfigPath           = "./config.jsonc"
 	defaultDatabaseSyncInterval = 30 * time.Second
 	databaseSyncTimeout         = 2 * time.Minute
-	groupMetadataSyncTimeout = 60 * time.Minute
-	// Space group IQ calls conservatively to avoid WhatsApp 429 rate-overlimit bans.
-	groupIQMinInterval         = 10 * time.Second
-	groupIQRateLimitCooldown     = 30 * time.Minute
-	groupRosterFreshFor        = 24 * time.Hour
-	eventPersistTimeout        = 45 * time.Second
-	eventPersistQueueSize      = 2048
-	postgresChatSyncTimeout    = 45 * time.Second
-	postgresChatWakeQueueSize  = 64
-	mediaUploadTimeout         = 2 * time.Minute
-	objectDeleteTimeout        = 30 * time.Second
-	mediaUploadWorkerCount     = 4
-	mediaUploadQueueSize       = 256
-	objectDeleteQueueSize      = 256
-	defaultR2DatabaseObjectKey = "whatsapp.sqlite"
-	defaultR2MediaPrefix       = "media"
+	groupMetadataSyncTimeout    = 60 * time.Minute
+	eventPersistTimeout         = 45 * time.Second
+	eventPersistQueueSize       = 2048
+	postgresChatSyncTimeout     = 45 * time.Second
+	postgresChatWakeQueueSize   = 64
+	mediaUploadTimeout          = 2 * time.Minute
+	objectDeleteTimeout         = 30 * time.Second
+	mediaUploadWorkerCount      = 4
+	mediaUploadQueueSize        = 256
+	objectDeleteQueueSize       = 256
+	defaultR2DatabaseObjectKey  = "whatsapp.sqlite"
+	defaultR2MediaPrefix        = "media"
+)
+
+// Ban-safety timings are vars so tests can shrink wall-clock waits without dialing WhatsApp.
+var (
+	groupIQMinInterval       = 10 * time.Second
+	groupIQRateLimitCooldown = 30 * time.Minute
+	groupRosterFreshFor      = 24 * time.Hour
 )
 
 var errGroupIQCoolingDown = errors.New("group IQ cooling down after rate-overlimit")
 
-// main starts the long-running WhatsApp sync daemon.
-// Example: `go run . -config ./config.jsonc`
-func main() {
+// Main parses config and runs the long-running WhatsApp sync daemon.
+func Main() error {
 	config, err := parseConfig()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	if err := run(ctx, config); err != nil && !errors.Is(err, context.Canceled) {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 // run opens SQLite, initializes WhatsApp, and blocks until shutdown.
@@ -141,13 +145,13 @@ func run(ctx context.Context, config daemonConfig) error {
 	}
 
 	daemon := &daemon{
-		client:            client,
-		db:                db,
-		r2:                r2Manager,
-		postgres:          postgres,
-		fatalEvents:       make(chan error, 1),
-		eventPersistJobs:  make(chan eventPersistJob, eventPersistQueueSize),
-		postgresChatWake:  make(chan struct{}, postgresChatWakeQueueSize),
+		client:               client,
+		db:                   db,
+		r2:                   r2Manager,
+		postgres:             postgres,
+		fatalEvents:          make(chan error, 1),
+		eventPersistJobs:     make(chan eventPersistJob, eventPersistQueueSize),
+		postgresChatWake:     make(chan struct{}, postgresChatWakeQueueSize),
 		pendingPostgresChats: make(map[string]struct{}),
 	}
 	daemon.startEventPersistWorker()

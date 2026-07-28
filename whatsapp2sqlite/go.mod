@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.13
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.13
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3
+	github.com/bradfitz/gopglite v0.0.0-20260128220817-b649918a2f89
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/mdp/qrterminal/v3 v3.2.1
 	go.mau.fi/whatsmeow v0.0.0-20260722203353-e9a033b24933
@@ -45,6 +46,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20260713124913-97594f28f5ca // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rs/zerolog v1.35.1 // indirect
+	github.com/tetratelabs/wazero v1.8.2 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.27 // indirect
 	go.mau.fi/libsignal v0.2.2 // indirect
 	go.mau.fi/util v0.9.12-0.20260717235539-f9ffa7eca58d // indirect

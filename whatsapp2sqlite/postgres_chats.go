@@ -1,4 +1,4 @@
-package main
+package whatsapp2sqlite
 
 import (
 	"context"
@@ -483,8 +483,7 @@ func isTransientPostgresError(err error) bool {
 	return false
 }
 
-func queueWhatsappChatUpsert(batch *pgx.Batch, chat namedSyncChat) {
-	batch.Queue(`
+const whatsappChatUpsertSQL = `
 		INSERT INTO whatsapp_chats (
 			chat_jid,
 			name,
@@ -500,7 +499,40 @@ func queueWhatsappChatUpsert(batch *pgx.Batch, chat namedSyncChat) {
 				ELSE whatsapp_chats.last_message_time
 			END,
 			updated_at = EXCLUDED.updated_at
-	`, chat.chatJID, chat.name, chat.lastMessageTime, chat.updatedAt)
+	`
+
+func queueWhatsappChatUpsert(batch *pgx.Batch, chat namedSyncChat) {
+	batch.Queue(whatsappChatUpsertSQL, chat.chatJID, chat.name, chat.lastMessageTime, chat.updatedAt)
+}
+
+// execWhatsappChatUpsert runs the same upsert SQL used by the pgx batch path (for PGlite tests).
+func execWhatsappChatUpsert(ctx context.Context, db *sql.DB, chat namedSyncChat) error {
+	if db == nil {
+		return fmt.Errorf("nil database")
+	}
+
+	// database/sql drivers (PGlite) need RFC3339 strings; pgx accepts time.Time directly in Queue.
+	_, err := db.ExecContext(
+		ctx,
+		whatsappChatUpsertSQL,
+		chat.chatJID,
+		chat.name,
+		formatTimestamptzArg(chat.lastMessageTime),
+		formatTimestamptzArg(&chat.updatedAt),
+	)
+	if err != nil {
+		return fmt.Errorf("upsert whatsapp chat %s: %w", chat.chatJID, err)
+	}
+
+	return nil
+}
+
+func formatTimestamptzArg(value *time.Time) any {
+	if value == nil {
+		return nil
+	}
+
+	return value.UTC().Format(time.RFC3339Nano)
 }
 
 func scanNamedSyncChat(row interface {
