@@ -10,6 +10,7 @@ const config = {
 		},
 		adapter: adapter({
 			runtime: 'nodejs24.x',
+			regions: ['fra1'],
 		}),
 		version: {
 			pollInterval: 60_000 * 1
