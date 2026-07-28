@@ -5,6 +5,8 @@ Mirrors named chats from SQLite `sync_chats` into Postgres `whatsapp_chats` (sta
 Loads settings from `config.jsonc` on startup. Use `config.jsonc.example` as the template.
 Make sure to never risk a ban from whatsapp for any reason! (e.g. running into rate limits etc)
 
+Logs can be observed via ssh and journalctl on "whatsapp2sqlite".
+
 # deploy like this
 `ssh walter@waltersbox`
 `cd whatsapp2sqlite`
