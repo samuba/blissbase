@@ -50,4 +50,6 @@ journalctl --user -u whatsapp2sqlite -f
 systemctl --user restart whatsapp2sqlite
 ```
 
-Useful log prefixes: `backfill groups:`, `postgres chat sync:`, `drop event persist job`.
+Useful log prefixes: `backfill groups:`, `postgres chat sync:`, `drop event persist job`, `event persist`, `sqlite snapshot:`.
+
+`event persist …: start/done` and `sqlite snapshot: VACUUM INTO start/done` show when the shared SQLite conn is held vs released (correlate with `[WA WARN] Node handling is taking long`).

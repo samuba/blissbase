@@ -390,6 +390,7 @@ func ensureSchema(ctx context.Context, db *sql.DB) error {
 			lid_jid TEXT,
 			is_admin INTEGER NOT NULL DEFAULT 0,
 			is_super_admin INTEGER NOT NULL DEFAULT 0,
+			left_group INTEGER NOT NULL DEFAULT 0,
 			updated_at INTEGER NOT NULL,
 			PRIMARY KEY (group_jid, contact_jid),
 			FOREIGN KEY (group_jid) REFERENCES groups(group_jid) ON DELETE CASCADE,
@@ -412,6 +413,7 @@ func ensureSchema(ctx context.Context, db *sql.DB) error {
 		`ALTER TABLE sync_messages ADD COLUMN media_mime_type TEXT`,
 		`ALTER TABLE sync_messages ADD COLUMN media_path TEXT`,
 		`ALTER TABLE sync_messages ADD COLUMN media_sha256 TEXT`,
+		`ALTER TABLE group_contacts ADD COLUMN left_group INTEGER NOT NULL DEFAULT 0`,
 	}
 
 	for _, statement := range optionalColumns {
@@ -551,6 +553,8 @@ func (d *daemon) runEventPersistWorker() {
 	defer d.eventPersistWG.Done()
 
 	for job := range d.eventPersistJobs {
+		// Start/done lines make single-conn SQLite hold+release visible next to WA node stalls.
+		log.Printf("event persist %s: start (queue=%d)", job.name, len(d.eventPersistJobs))
 		ctx, cancel := context.WithTimeout(context.Background(), eventPersistTimeout)
 		started := time.Now()
 		err := job.run(ctx)
@@ -558,12 +562,10 @@ func (d *daemon) runEventPersistWorker() {
 		cancel()
 
 		if err != nil {
-			log.Printf("event persist %s failed after %s: %v", job.name, elapsed, err)
+			log.Printf("event persist %s: failed after %s: %v", job.name, elapsed, err)
 			continue
 		}
-		if elapsed > 5*time.Second {
-			log.Printf("event persist %s slow: %s", job.name, elapsed)
-		}
+		log.Printf("event persist %s: done in %s", job.name, elapsed)
 	}
 }
 
@@ -855,7 +857,7 @@ func (d *daemon) localGroupRosterState(ctx context.Context, groupJID string) (in
 	var count int
 	if err := d.db.QueryRowContext(
 		ctx,
-		`SELECT COUNT(*) FROM group_contacts WHERE group_jid = ?`,
+		`SELECT COUNT(*) FROM group_contacts WHERE group_jid = ? AND left_group = 0`,
 		groupJID,
 	).Scan(&count); err != nil {
 		return 0, updatedAt.Int64, false
@@ -1008,7 +1010,8 @@ func (d *daemon) storeGroupInfoChange(ctx context.Context, evt *events.GroupInfo
 	updatedAt := unixOrNow(evt.Timestamp)
 
 	if evt.Delete != nil && evt.Delete.Deleted {
-		return d.deleteGroup(ctx, evt.JID.String())
+		// Left or removed from the group — keep groups + group_contacts for historical roster.
+		return d.handleGroupLeftOrRemoved(ctx, evt.JID.String())
 	}
 
 	if evt.Name != nil {
@@ -1032,28 +1035,23 @@ func (d *daemon) storeGroupInfoChange(ctx context.Context, evt *events.GroupInfo
 	return nil
 }
 
-// deleteGroup removes group metadata and the mirrored sync_chats row.
-// Example: `if err := d.deleteGroup(ctx, groupJID); err != nil { return err }`
-func (d *daemon) deleteGroup(ctx context.Context, groupJID string) error {
+// handleGroupLeftOrRemoved records that we left or were removed without clearing the roster.
+// Example: `if err := d.handleGroupLeftOrRemoved(ctx, groupJID); err != nil { return err }`
+func (d *daemon) handleGroupLeftOrRemoved(ctx context.Context, groupJID string) error {
 	if d == nil || d.db == nil || groupJID == "" {
 		return nil
 	}
 
-	tx, err := d.db.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("begin delete group %s: %w", groupJID, err)
-	}
-	defer tx.Rollback()
+	// groups has ON DELETE CASCADE into group_contacts — never DELETE the groups row on leave.
+	log.Printf("group leave/remove: preserving groups and group_contacts for %s", groupJID)
 
-	if _, err := tx.ExecContext(ctx, `DELETE FROM groups WHERE group_jid = ?`, groupJID); err != nil {
-		return fmt.Errorf("delete group %s: %w", groupJID, err)
-	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM sync_chats WHERE chat_jid = ?`, groupJID); err != nil {
-		return fmt.Errorf("delete sync chat for group %s: %w", groupJID, err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit delete group %s: %w", groupJID, err)
+	if _, err := d.db.ExecContext(
+		ctx,
+		`UPDATE groups SET updated_at = ? WHERE group_jid = ?`,
+		time.Now().Unix(),
+		groupJID,
+	); err != nil {
+		return fmt.Errorf("touch group after leave/remove %s: %w", groupJID, err)
 	}
 
 	d.notifyDatabaseChanged()
@@ -1335,7 +1333,8 @@ func (d *daemon) patchGroupFromInfoChange(ctx context.Context, evt *events.Group
 	return nil
 }
 
-// replaceGroupContacts replaces the full membership roster for a group.
+// replaceGroupContacts rewrites the active membership roster for a group.
+// Members missing from the payload are marked left_group=1 instead of deleted.
 // Example: `if err := d.replaceGroupContacts(ctx, group); err != nil { return err }`
 func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInfo) error {
 	if d == nil || d.db == nil || group == nil || group.JID.IsEmpty() {
@@ -1382,8 +1381,13 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.ExecContext(ctx, `DELETE FROM group_contacts WHERE group_jid = ?`, groupJID); err != nil {
-		return fmt.Errorf("clear group contacts for %s: %w", groupJID, err)
+	if _, err := tx.ExecContext(
+		ctx,
+		`UPDATE group_contacts SET left_group = 1, updated_at = ? WHERE group_jid = ? AND left_group = 0`,
+		updatedAt,
+		groupJID,
+	); err != nil {
+		return fmt.Errorf("mark prior group contacts left for %s: %w", groupJID, err)
 	}
 
 	for _, member := range members {
@@ -1409,13 +1413,15 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 				lid_jid,
 				is_admin,
 				is_super_admin,
+				left_group,
 				updated_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, ?, ?, ?, 0, ?)
 			ON CONFLICT(group_jid, contact_jid) DO UPDATE SET
 				phone_number = COALESCE(excluded.phone_number, group_contacts.phone_number),
 				lid_jid = COALESCE(excluded.lid_jid, group_contacts.lid_jid),
 				is_admin = excluded.is_admin,
 				is_super_admin = excluded.is_super_admin,
+				left_group = 0,
 				updated_at = excluded.updated_at`,
 			groupJID,
 			member.identity.contactJID,
@@ -1433,7 +1439,7 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 		ctx,
 		`UPDATE groups
 		SET participant_count = (
-			SELECT COUNT(*) FROM group_contacts WHERE group_jid = ?
+			SELECT COUNT(*) FROM group_contacts WHERE group_jid = ? AND left_group = 0
 		),
 		updated_at = ?
 		WHERE group_jid = ?`,
@@ -1513,13 +1519,15 @@ func (d *daemon) applyGroupMembershipChanges(ctx context.Context, evt *events.Gr
 				lid_jid,
 				is_admin,
 				is_super_admin,
+				left_group,
 				updated_at
-			) VALUES (?, ?, ?, ?, 0, 0, ?)
+			) VALUES (?, ?, ?, ?, 0, 0, 0, ?)
 			ON CONFLICT(group_jid, contact_jid) DO UPDATE SET
 				phone_number = COALESCE(excluded.phone_number, group_contacts.phone_number),
 				lid_jid = COALESCE(excluded.lid_jid, group_contacts.lid_jid),
 				is_admin = excluded.is_admin,
 				is_super_admin = excluded.is_super_admin,
+				left_group = 0,
 				updated_at = excluded.updated_at`,
 			groupJID,
 			identity.contactJID,
@@ -1537,8 +1545,8 @@ func (d *daemon) applyGroupMembershipChanges(ctx context.Context, evt *events.Gr
 			continue
 		}
 
-		if err := d.deleteGroupContactMatches(ctx, d.db, groupJID, identity); err != nil {
-			log.Printf("remove group contact %s from %s failed: %v", identity.contactJID, groupJID, err)
+		if err := d.markGroupContactLeft(ctx, groupJID, identity, updatedAt); err != nil {
+			log.Printf("mark group contact %s left %s failed: %v", identity.contactJID, groupJID, err)
 		}
 	}
 
@@ -1558,7 +1566,7 @@ func (d *daemon) applyGroupMembershipChanges(ctx context.Context, evt *events.Gr
 		ctx,
 		`UPDATE groups
 		SET participant_count = (
-			SELECT COUNT(*) FROM group_contacts WHERE group_jid = ?
+			SELECT COUNT(*) FROM group_contacts WHERE group_jid = ? AND left_group = 0
 		),
 		updated_at = ?
 		WHERE group_jid = ?`,
@@ -1586,6 +1594,7 @@ func (d *daemon) setGroupContactAdmin(ctx context.Context, groupJID string, memb
 		`UPDATE group_contacts
 		SET is_admin = ?, is_super_admin = CASE WHEN ? = 0 THEN 0 ELSE is_super_admin END, updated_at = ?
 		WHERE group_jid = ?
+			AND left_group = 0
 			AND (
 				contact_jid = ?
 				OR (? != '' AND phone_number = ?)
@@ -1602,6 +1611,90 @@ func (d *daemon) setGroupContactAdmin(ctx context.Context, groupJID string, memb
 		identity.lidJID,
 	)
 	return err
+}
+
+// markGroupContactLeft flags matching membership rows as left instead of deleting them.
+// Example: `if err := d.markGroupContactLeft(ctx, groupJID, identity, updatedAt); err != nil { return err }`
+func (d *daemon) markGroupContactLeft(ctx context.Context, groupJID string, identity contactIdentity, updatedAt int64) error {
+	if d == nil || d.db == nil || groupJID == "" || identity.contactJID == "" {
+		return nil
+	}
+
+	result, err := d.db.ExecContext(
+		ctx,
+		`UPDATE group_contacts
+		SET left_group = 1, is_admin = 0, is_super_admin = 0, updated_at = ?
+		WHERE group_jid = ?
+			AND left_group = 0
+			AND (
+				contact_jid = ?
+				OR (? != '' AND phone_number = ?)
+				OR (? != '' AND lid_jid = ?)
+			)`,
+		updatedAt,
+		groupJID,
+		identity.contactJID,
+		identity.phoneNumber,
+		identity.phoneNumber,
+		identity.lidJID,
+		identity.lidJID,
+	)
+	if err != nil {
+		return fmt.Errorf("mark group contact left for %s in %s: %w", identity.contactJID, groupJID, err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected marking group contact left for %s in %s: %w", identity.contactJID, groupJID, err)
+	}
+	if affected > 0 {
+		return nil
+	}
+
+	// Never saw this member join — still keep a left row for the event.
+	names := d.lookupContactNames(ctx, identity)
+	if err := d.upsertContact(ctx, contactRecord{
+		contactJID:   identity.contactJID,
+		phoneNumber:  identity.phoneNumber,
+		lidJID:       identity.lidJID,
+		firstName:    names.firstName,
+		fullName:     names.fullName,
+		pushName:     names.pushName,
+		businessName: names.businessName,
+		updatedAt:    updatedAt,
+	}); err != nil {
+		return fmt.Errorf("upsert left contact %s for %s: %w", identity.contactJID, groupJID, err)
+	}
+
+	if _, err := d.db.ExecContext(
+		ctx,
+		`INSERT INTO group_contacts (
+			group_jid,
+			contact_jid,
+			phone_number,
+			lid_jid,
+			is_admin,
+			is_super_admin,
+			left_group,
+			updated_at
+		) VALUES (?, ?, ?, ?, 0, 0, 1, ?)
+		ON CONFLICT(group_jid, contact_jid) DO UPDATE SET
+			phone_number = COALESCE(excluded.phone_number, group_contacts.phone_number),
+			lid_jid = COALESCE(excluded.lid_jid, group_contacts.lid_jid),
+			is_admin = 0,
+			is_super_admin = 0,
+			left_group = 1,
+			updated_at = excluded.updated_at`,
+		groupJID,
+		identity.contactJID,
+		nilIfEmpty(identity.phoneNumber),
+		nilIfEmpty(identity.lidJID),
+		updatedAt,
+	); err != nil {
+		return fmt.Errorf("insert left group contact %s in %s: %w", identity.contactJID, groupJID, err)
+	}
+
+	return nil
 }
 
 // deleteGroupContactMatches removes membership rows that match any known identity key.
@@ -3401,9 +3494,13 @@ func (m *r2Manager) syncDatabaseSnapshot(ctx context.Context) error {
 
 	snapshotPath := filepath.Join(snapshotDir, "whatsapp.sqlite")
 	statement := fmt.Sprintf("VACUUM INTO %s", sqliteStringLiteral(snapshotPath))
+	log.Printf("sqlite snapshot: VACUUM INTO start")
+	vacuumStarted := time.Now()
 	if _, err := m.snapshotDB.ExecContext(syncCtx, statement); err != nil {
+		log.Printf("sqlite snapshot: VACUUM INTO failed after %s: %v", time.Since(vacuumStarted).Round(time.Millisecond), err)
 		return fmt.Errorf("vacuum sqlite snapshot: %w", err)
 	}
+	log.Printf("sqlite snapshot: VACUUM INTO done in %s", time.Since(vacuumStarted).Round(time.Millisecond))
 
 	file, err := os.Open(snapshotPath)
 	if err != nil {
@@ -3416,7 +3513,14 @@ func (m *r2Manager) syncDatabaseSnapshot(ctx context.Context) error {
 		return fmt.Errorf("stat sqlite snapshot: %w", err)
 	}
 
-	return m.uploadObject(syncCtx, m.databaseObjectKey, file, info.Size(), "application/vnd.sqlite3")
+	log.Printf("sqlite snapshot: R2 upload start (%s, %d bytes)", m.databaseObjectKey, info.Size())
+	uploadStarted := time.Now()
+	if err := m.uploadObject(syncCtx, m.databaseObjectKey, file, info.Size(), "application/vnd.sqlite3"); err != nil {
+		log.Printf("sqlite snapshot: R2 upload failed after %s: %v", time.Since(uploadStarted).Round(time.Millisecond), err)
+		return err
+	}
+	log.Printf("sqlite snapshot: R2 upload done in %s", time.Since(uploadStarted).Round(time.Millisecond))
+	return nil
 }
 
 // uploadObject writes a stream into R2.
