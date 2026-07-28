@@ -67,37 +67,29 @@ export const saveTelegramScrapingTarget = form(saveTelegramScrapingTargetSchema,
 			return invalid(issue.roomId(`Target wurde nicht gefunden`));
 		}
 
-		const roomIdChanged = data.roomId !== originalRoomId;
-		let resolvedRoomId = data.roomId;
-		let name = existing.name;
+		// Always re-resolve so bare channel ids (1999…) become marked peer ids (-100…).
+		let resolved: { roomId: string; name: string };
+		try {
+			resolved = await resolveTelegramRoom({ roomId: data.roomId });
+		} catch (err) {
+			const message = err instanceof Error ? err.message : `Telegram-Raum konnte nicht verifiziert werden`;
+			return invalid(issue.roomId(message));
+		}
 
-		if (roomIdChanged) {
-			let resolved: { roomId: string; name: string };
-			try {
-				resolved = await resolveTelegramRoom({ roomId: data.roomId });
-			} catch (err) {
-				const message = err instanceof Error ? err.message : `Telegram-Raum konnte nicht verifiziert werden`;
-				return invalid(issue.roomId(message));
+		if (resolved.roomId !== originalRoomId) {
+			const conflict = await db.query.telegramScrapingTargets.findFirst({
+				where: eq(s.telegramScrapingTargets.roomId, resolved.roomId),
+				columns: { roomId: true },
+			});
+			if (conflict) {
+				return invalid(issue.roomId(`Ein Target mit roomId ${resolved.roomId} existiert bereits`));
 			}
-
-			if (resolved.roomId !== originalRoomId) {
-				const conflict = await db.query.telegramScrapingTargets.findFirst({
-					where: eq(s.telegramScrapingTargets.roomId, resolved.roomId),
-					columns: { roomId: true },
-				});
-				if (conflict) {
-					return invalid(issue.roomId(`Ein Target mit roomId ${resolved.roomId} existiert bereits`));
-				}
-			}
-
-			resolvedRoomId = resolved.roomId;
-			name = resolved.name;
 		}
 
 		await db.update(s.telegramScrapingTargets)
 			.set({
-				roomId: resolvedRoomId,
-				name,
+				roomId: resolved.roomId,
+				name: resolved.name,
 				defaultAddress: data.defaultAddress,
 				topicIds: data.topicIds,
 				defaultTimezone: data.defaultTimezone,
@@ -109,8 +101,8 @@ export const saveTelegramScrapingTarget = form(saveTelegramScrapingTargetSchema,
 
 		return {
 			action: `updated` as const,
-			roomId: resolvedRoomId,
-			name: name ?? resolvedRoomId,
+			roomId: resolved.roomId,
+			name: resolved.name,
 		};
 	}
 
