@@ -121,8 +121,22 @@ func (d *daemon) syncAllNamedChats(ctx context.Context) error {
 }
 
 // syncChatToPostgres mirrors one SQLite chat into Postgres when it has a non-empty name.
-// Example: `d.syncChatToPostgres(ctx, chatJID)`
-func (d *daemon) syncChatToPostgres(ctx context.Context, chatJID string) {
+// Example: `d.syncChatToPostgres(chatJID)`
+func (d *daemon) syncChatToPostgres(chatJID string) {
+	if d == nil || d.db == nil || d.postgres == nil || chatJID == "" {
+		return
+	}
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), eventPersistTimeout)
+		defer cancel()
+		d.syncChatToPostgresSync(ctx, chatJID)
+	}()
+}
+
+// syncChatToPostgresSync performs the Postgres upsert and must not run on the WA event loop.
+// Example: `d.syncChatToPostgresSync(ctx, chatJID)`
+func (d *daemon) syncChatToPostgresSync(ctx context.Context, chatJID string) {
 	if d == nil || d.db == nil || d.postgres == nil {
 		return
 	}

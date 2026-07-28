@@ -47,14 +47,16 @@ const (
 	databaseSyncTimeout         = 2 * time.Minute
 	groupMetadataSyncTimeout = 60 * time.Minute
 	// Space group IQ calls conservatively to avoid WhatsApp 429 rate-overlimit bans.
-	groupIQMinInterval       = 10 * time.Second
-	groupIQRateLimitCooldown   = 30 * time.Minute
-	groupRosterFreshFor      = 24 * time.Hour
-	mediaUploadTimeout       = 2 * time.Minute
-	objectDeleteTimeout      = 30 * time.Second
-	mediaUploadWorkerCount   = 4
-	mediaUploadQueueSize     = 256
-	objectDeleteQueueSize    = 256
+	groupIQMinInterval         = 10 * time.Second
+	groupIQRateLimitCooldown     = 30 * time.Minute
+	groupRosterFreshFor        = 24 * time.Hour
+	eventPersistTimeout        = 45 * time.Second
+	eventPersistQueueSize      = 2048
+	mediaUploadTimeout         = 2 * time.Minute
+	objectDeleteTimeout        = 30 * time.Second
+	mediaUploadWorkerCount     = 4
+	mediaUploadQueueSize       = 256
+	objectDeleteQueueSize      = 256
 	defaultR2DatabaseObjectKey = "whatsapp.sqlite"
 	defaultR2MediaPrefix       = "media"
 )
@@ -137,12 +139,14 @@ func run(ctx context.Context, config daemonConfig) error {
 	}
 
 	daemon := &daemon{
-		client:      client,
-		db:          db,
-		r2:          r2Manager,
-		postgres:    postgres,
-		fatalEvents: make(chan error, 1),
+		client:           client,
+		db:               db,
+		r2:               r2Manager,
+		postgres:         postgres,
+		fatalEvents:      make(chan error, 1),
+		eventPersistJobs: make(chan eventPersistJob, eventPersistQueueSize),
 	}
+	daemon.startEventPersistWorker()
 	defer func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), databaseSyncTimeout)
 		defer cancel()
@@ -287,7 +291,7 @@ func sqliteDSN(path string) string {
 	query := url.Values{}
 	query.Add("_pragma", "foreign_keys(1)")
 	query.Add("_pragma", "journal_mode(WAL)")
-	query.Add("_pragma", "busy_timeout(5000)")
+	query.Add("_pragma", "busy_timeout(30000)")
 	fileURL.RawQuery = query.Encode()
 
 	return fileURL.String()
@@ -454,13 +458,16 @@ func (d *daemon) consumeQRCodes(qrChan <-chan whatsmeow.QRChannelItem) {
 func (d *daemon) handleEvent(evt any) {
 	switch event := evt.(type) {
 	case *events.Message:
-		if err := d.storeMessage(context.Background(), event, "realtime"); err != nil {
-			log.Printf("store realtime message failed: %v", err)
-		}
+		// Keep the pointer alive in the queued closure; never block the WA event loop.
+		messageEvent := event
+		d.enqueueEventPersist(`message`, func(ctx context.Context) error {
+			return d.storeMessage(ctx, messageEvent, "realtime")
+		})
 	case *events.HistorySync:
-		if err := d.storeHistorySync(context.Background(), event); err != nil {
-			log.Printf("store history sync failed: %v", err)
-		}
+		historyEvent := event
+		d.enqueueEventPersist(`history_sync`, func(ctx context.Context) error {
+			return d.storeHistorySync(ctx, historyEvent)
+		})
 	case *events.Connected:
 		log.Printf("connected as %s", d.client.Store.ID)
 		// Defer heavy group IQ work to OfflineSyncCompleted when possible.
@@ -470,25 +477,30 @@ func (d *daemon) handleEvent(evt any) {
 		d.backfillGroupDisplayNamesAsync()
 		d.backfillContactDisplayNamesAsync()
 	case *events.JoinedGroup:
-		if err := d.storeJoinedGroup(context.Background(), event); err != nil {
-			log.Printf("store joined group metadata failed: %v", err)
-		}
+		joinedEvent := *event
+		d.enqueueEventPersist(`joined_group`, func(ctx context.Context) error {
+			return d.storeJoinedGroup(ctx, &joinedEvent)
+		})
 	case *events.GroupInfo:
-		if err := d.storeGroupInfoChange(context.Background(), event); err != nil {
-			log.Printf("store group info change failed: %v", err)
-		}
+		groupEvent := *event
+		d.enqueueEventPersist(`group_info`, func(ctx context.Context) error {
+			return d.storeGroupInfoChange(ctx, &groupEvent)
+		})
 	case *events.Contact:
-		if err := d.storeContactChange(context.Background(), event); err != nil {
-			log.Printf("store contact display name failed: %v", err)
-		}
+		contactEvent := *event
+		d.enqueueEventPersist(`contact`, func(ctx context.Context) error {
+			return d.storeContactChange(ctx, &contactEvent)
+		})
 	case *events.PushName:
-		if err := d.storePushNameChange(context.Background(), event); err != nil {
-			log.Printf("store push name display name failed: %v", err)
-		}
+		pushEvent := *event
+		d.enqueueEventPersist(`push_name`, func(ctx context.Context) error {
+			return d.storePushNameChange(ctx, &pushEvent)
+		})
 	case *events.BusinessName:
-		if err := d.storeBusinessNameChange(context.Background(), event); err != nil {
-			log.Printf("store business name display name failed: %v", err)
-		}
+		businessEvent := *event
+		d.enqueueEventPersist(`business_name`, func(ctx context.Context) error {
+			return d.storeBusinessNameChange(ctx, &businessEvent)
+		})
 	case *events.Disconnected:
 		log.Printf("disconnected from WhatsApp, waiting for automatic reconnect")
 	case *events.KeepAliveTimeout:
@@ -501,6 +513,67 @@ func (d *daemon) handleEvent(evt any) {
 	case *events.StreamReplaced:
 		d.notifyFatal(errors.New("WhatsApp stream was replaced by another client"))
 	}
+}
+
+// startEventPersistWorker starts the serial background worker for event DB writes.
+// Example: `d.startEventPersistWorker()`
+func (d *daemon) startEventPersistWorker() {
+	if d == nil || d.eventPersistJobs == nil {
+		return
+	}
+
+	d.eventPersistWG.Add(1)
+	go d.runEventPersistWorker()
+}
+
+// enqueueEventPersist queues DB work so the WhatsApp event loop never blocks on SQLite/Postgres.
+// Example: `d.enqueueEventPersist("group_info", func(ctx context.Context) error { return d.storeGroupInfoChange(ctx, evt) })`
+func (d *daemon) enqueueEventPersist(name string, run func(ctx context.Context) error) {
+	if d == nil || run == nil || d.eventPersistJobs == nil {
+		return
+	}
+
+	job := eventPersistJob{name: name, run: run}
+	select {
+	case d.eventPersistJobs <- job:
+	default:
+		log.Printf("drop event persist job %s: queue is saturated (%d)", name, eventPersistQueueSize)
+	}
+}
+
+// runEventPersistWorker applies queued event writes one-at-a-time with a hard timeout.
+// Example: `go d.runEventPersistWorker()`
+func (d *daemon) runEventPersistWorker() {
+	defer d.eventPersistWG.Done()
+
+	for job := range d.eventPersistJobs {
+		ctx, cancel := context.WithTimeout(context.Background(), eventPersistTimeout)
+		started := time.Now()
+		err := job.run(ctx)
+		elapsed := time.Since(started).Round(time.Millisecond)
+		cancel()
+
+		if err != nil {
+			log.Printf("event persist %s failed after %s: %v", job.name, elapsed, err)
+			continue
+		}
+		if elapsed > 5*time.Second {
+			log.Printf("event persist %s slow: %s", job.name, elapsed)
+		}
+	}
+}
+
+// stopEventPersistWorker closes the persist queue and waits for in-flight jobs.
+// Example: `d.stopEventPersistWorker()`
+func (d *daemon) stopEventPersistWorker() {
+	if d == nil || d.eventPersistJobs == nil {
+		return
+	}
+
+	d.eventPersistStop.Do(func() {
+		close(d.eventPersistJobs)
+		d.eventPersistWG.Wait()
+	})
 }
 
 // notifyFatal reports a non-recoverable daemon error without blocking the event loop.
@@ -617,7 +690,7 @@ func (d *daemon) storeConversation(ctx context.Context, conversation *waHistoryS
 	}
 
 	d.notifyDatabaseChanged()
-	d.syncChatToPostgres(ctx, chatJID.String())
+	d.syncChatToPostgres(chatJID.String())
 
 	return nil
 }
@@ -2030,7 +2103,7 @@ func (d *daemon) upsertDirectChatDisplayNames(ctx context.Context, jid types.JID
 		}
 
 		d.notifyDatabaseChanged()
-		d.syncChatToPostgres(ctx, chatJID)
+		d.syncChatToPostgres(chatJID)
 	}
 
 	return nil
@@ -2144,7 +2217,7 @@ func (d *daemon) upsertSyncChatMetadata(ctx context.Context, metadata syncChatMe
 	}
 
 	d.notifyDatabaseChanged()
-	d.syncChatToPostgres(ctx, metadata.chatJID)
+	d.syncChatToPostgres(metadata.chatJID)
 
 	return nil
 }
@@ -2273,7 +2346,7 @@ func (d *daemon) storeMessage(ctx context.Context, evt *events.Message, source s
 	}
 
 	d.notifyDatabaseChanged()
-	d.syncChatToPostgres(ctx, chatJID)
+	d.syncChatToPostgres(chatJID)
 	if mediaUploadJob != nil {
 		d.r2.enqueueMediaUpload(*mediaUploadJob)
 	}
@@ -2949,6 +3022,8 @@ func (d *daemon) shutdown(ctx context.Context) error {
 		return nil
 	}
 
+	d.stopEventPersistWorker()
+
 	if d.postgres != nil {
 		d.postgres.Close()
 	}
@@ -3464,6 +3539,15 @@ type daemon struct {
 	groupIQMu            sync.Mutex
 	groupIQLastRequest   time.Time
 	groupIQCooldownUntil time.Time
+
+	eventPersistJobs chan eventPersistJob
+	eventPersistWG   sync.WaitGroup
+	eventPersistStop sync.Once
+}
+
+type eventPersistJob struct {
+	name string
+	run  func(ctx context.Context) error
 }
 
 type daemonConfig struct {
