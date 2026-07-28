@@ -1,4 +1,4 @@
 *.sqlite*
 /media
-whatsapp2sqlite
+/whatsapp2sqlite
 config.jsonc
