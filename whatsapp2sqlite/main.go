@@ -738,6 +738,7 @@ func (d *daemon) awaitGroupIQ(ctx context.Context) error {
 		}
 		d.groupIQMu.Unlock()
 
+		log.Printf("group IQ throttle: waiting %s before next WhatsApp group request", wait.Round(time.Millisecond))
 		timer := time.NewTimer(wait)
 		select {
 		case <-ctx.Done():
@@ -784,12 +785,25 @@ func (d *daemon) getGroupInfoThrottled(ctx context.Context, jid types.JID) (*typ
 		return nil, err
 	}
 
+	log.Printf("group IQ: GetGroupInfo %s", jid)
+	started := time.Now()
 	info, err := d.client.GetGroupInfo(ctx, jid)
 	if isGroupIQRateOverLimit(err) {
 		d.markGroupIQRateLimited()
 		return nil, fmt.Errorf("%w: %v", errGroupIQCoolingDown, err)
 	}
-	return info, err
+	if err != nil {
+		log.Printf("group IQ: GetGroupInfo %s failed after %s: %v", jid, time.Since(started).Round(time.Millisecond), err)
+		return nil, err
+	}
+	log.Printf(
+		"group IQ: GetGroupInfo %s ok in %s (name=%q participants=%d)",
+		jid,
+		time.Since(started).Round(time.Millisecond),
+		info.Name,
+		len(info.Participants),
+	)
+	return info, nil
 }
 
 // getSubGroupsThrottled fetches community subgroups with spacing and 429 cooldown handling.
@@ -799,12 +813,19 @@ func (d *daemon) getSubGroupsThrottled(ctx context.Context, parentJID types.JID)
 		return nil, err
 	}
 
+	log.Printf("group IQ: GetSubGroups %s", parentJID)
+	started := time.Now()
 	subgroups, err := d.client.GetSubGroups(ctx, parentJID)
 	if isGroupIQRateOverLimit(err) {
 		d.markGroupIQRateLimited()
 		return nil, fmt.Errorf("%w: %v", errGroupIQCoolingDown, err)
 	}
-	return subgroups, err
+	if err != nil {
+		log.Printf("group IQ: GetSubGroups %s failed after %s: %v", parentJID, time.Since(started).Round(time.Millisecond), err)
+		return nil, err
+	}
+	log.Printf("group IQ: GetSubGroups %s ok in %s (%d subgroups)", parentJID, time.Since(started).Round(time.Millisecond), len(subgroups))
+	return subgroups, nil
 }
 
 // syncGroupWithFullInfo refreshes a group via GetGroupInfo when the roster looks incomplete.
@@ -1028,6 +1049,14 @@ func (d *daemon) storeGroupMetadata(ctx context.Context, group *types.GroupInfo)
 		return nil
 	}
 
+	started := time.Now()
+	log.Printf(
+		"store group metadata: %s (%s, participants=%d)",
+		group.JID,
+		group.Name,
+		len(group.Participants),
+	)
+
 	if err := d.upsertSyncChatMetadata(ctx, syncChatMetadata{
 		chatJID:     group.JID.String(),
 		displayName: group.Name,
@@ -1044,6 +1073,11 @@ func (d *daemon) storeGroupMetadata(ctx context.Context, group *types.GroupInfo)
 		return err
 	}
 
+	log.Printf(
+		"store group metadata: %s done in %s",
+		group.JID,
+		time.Since(started).Round(time.Millisecond),
+	)
 	return nil
 }
 
@@ -1292,6 +1326,8 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 		isAdmin  bool
 		isSuper  bool
 	}
+	log.Printf("replace group contacts: resolving %d members for %s", len(group.Participants), groupJID)
+	resolveStarted := time.Now()
 	members := make([]memberRow, 0, len(group.Participants))
 	for _, participant := range group.Participants {
 		identity := d.resolveParticipantIdentity(ctx, participant)
@@ -1305,6 +1341,13 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 			isSuper:  participant.IsSuperAdmin,
 		})
 	}
+	log.Printf(
+		"replace group contacts: resolved %d/%d members for %s in %s",
+		len(members),
+		len(group.Participants),
+		groupJID,
+		time.Since(resolveStarted).Round(time.Millisecond),
+	)
 
 	tx, err := d.db.BeginTx(ctx, nil)
 	if err != nil {
