@@ -45,7 +45,10 @@ const (
 	defaultConfigPath           = "./config.jsonc"
 	defaultDatabaseSyncInterval = 30 * time.Second
 	databaseSyncTimeout         = 2 * time.Minute
-	groupMetadataSyncTimeout    = 15 * time.Minute
+	groupMetadataSyncTimeout    = 60 * time.Minute
+	// Space group IQ calls conservatively to avoid WhatsApp 429 rate-overlimit bans.
+	groupIQMinInterval     = 5 * time.Second
+	groupIQRateLimitCooldown = 30 * time.Minute
 	mediaUploadTimeout          = 2 * time.Minute
 	objectDeleteTimeout         = 30 * time.Second
 	mediaUploadWorkerCount      = 4
@@ -54,6 +57,8 @@ const (
 	defaultR2DatabaseObjectKey  = "whatsapp.sqlite"
 	defaultR2MediaPrefix        = "media"
 )
+
+var errGroupIQCoolingDown = errors.New("group IQ cooling down after rate-overlimit")
 
 // main starts the long-running WhatsApp sync daemon.
 // Example: `go run . -config ./config.jsonc`
@@ -679,6 +684,10 @@ func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 			len(group.Participants),
 		)
 		if err := d.syncGroupWithFullInfo(ctx, group); err != nil {
+			if errors.Is(err, errGroupIQCoolingDown) {
+				log.Printf("backfill groups: stopping early to respect rate limits: %v", err)
+				return nil
+			}
 			log.Printf("store group metadata for %s failed: %v", group.JID, err)
 		}
 
@@ -686,15 +695,116 @@ func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 			continue
 		}
 		if err := d.syncCommunitySubgroups(ctx, group.JID, seen); err != nil {
+			if errors.Is(err, errGroupIQCoolingDown) {
+				log.Printf("backfill groups: stopping early to respect rate limits: %v", err)
+				return nil
+			}
 			log.Printf("sync community subgroups for %s failed: %v", group.JID, err)
 		}
 	}
 
 	if err := d.syncMissingGroupsFromChats(ctx, seen); err != nil {
+		if errors.Is(err, errGroupIQCoolingDown) {
+			log.Printf("backfill groups: stopping early to respect rate limits: %v", err)
+			return nil
+		}
 		log.Printf("sync missing groups from chats failed: %v", err)
 	}
 
 	return nil
+}
+
+// awaitGroupIQ spaces out WhatsApp group info queries and honors cooldown after 429s.
+// Example: `if err := d.awaitGroupIQ(ctx); err != nil { return err }`
+func (d *daemon) awaitGroupIQ(ctx context.Context) error {
+	if d == nil {
+		return nil
+	}
+
+	for {
+		d.groupIQMu.Lock()
+		now := time.Now()
+		if !d.groupIQCooldownUntil.IsZero() && now.Before(d.groupIQCooldownUntil) {
+			until := d.groupIQCooldownUntil
+			d.groupIQMu.Unlock()
+			return fmt.Errorf("%w (until %s)", errGroupIQCoolingDown, until.UTC().Format(time.RFC3339))
+		}
+
+		wait := groupIQMinInterval - now.Sub(d.groupIQLastRequest)
+		if d.groupIQLastRequest.IsZero() || wait <= 0 {
+			d.groupIQLastRequest = now
+			d.groupIQMu.Unlock()
+			return nil
+		}
+		d.groupIQMu.Unlock()
+
+		timer := time.NewTimer(wait)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
+
+// markGroupIQRateLimited starts a cooldown after WhatsApp returns rate-overlimit.
+// Example: `d.markGroupIQRateLimited()`
+func (d *daemon) markGroupIQRateLimited() {
+	if d == nil {
+		return
+	}
+
+	d.groupIQMu.Lock()
+	defer d.groupIQMu.Unlock()
+
+	d.groupIQCooldownUntil = time.Now().Add(groupIQRateLimitCooldown)
+	log.Printf(
+		"group IQ rate-overlimit: pausing further group fetches until %s",
+		d.groupIQCooldownUntil.UTC().Format(time.RFC3339),
+	)
+}
+
+// isGroupIQRateOverLimit reports whether err is a WhatsApp 429 rate-overlimit response.
+// Example: `if isGroupIQRateOverLimit(err) { d.markGroupIQRateLimited() }`
+func isGroupIQRateOverLimit(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, whatsmeow.ErrIQRateOverLimit) {
+		return true
+	}
+	return strings.Contains(err.Error(), "rate-overlimit")
+}
+
+// getGroupInfoThrottled fetches group info with spacing and 429 cooldown handling.
+// Example: `info, err := d.getGroupInfoThrottled(ctx, jid)`
+func (d *daemon) getGroupInfoThrottled(ctx context.Context, jid types.JID) (*types.GroupInfo, error) {
+	if err := d.awaitGroupIQ(ctx); err != nil {
+		return nil, err
+	}
+
+	info, err := d.client.GetGroupInfo(ctx, jid)
+	if isGroupIQRateOverLimit(err) {
+		d.markGroupIQRateLimited()
+		return nil, fmt.Errorf("%w: %v", errGroupIQCoolingDown, err)
+	}
+	return info, err
+}
+
+// getSubGroupsThrottled fetches community subgroups with spacing and 429 cooldown handling.
+// Example: `subgroups, err := d.getSubGroupsThrottled(ctx, parentJID)`
+func (d *daemon) getSubGroupsThrottled(ctx context.Context, parentJID types.JID) ([]*types.GroupLinkTarget, error) {
+	if err := d.awaitGroupIQ(ctx); err != nil {
+		return nil, err
+	}
+
+	subgroups, err := d.client.GetSubGroups(ctx, parentJID)
+	if isGroupIQRateOverLimit(err) {
+		d.markGroupIQRateLimited()
+		return nil, fmt.Errorf("%w: %v", errGroupIQCoolingDown, err)
+	}
+	return subgroups, err
 }
 
 // syncGroupWithFullInfo refreshes a group via GetGroupInfo when the roster looks incomplete.
@@ -710,8 +820,12 @@ func (d *daemon) syncGroupWithFullInfo(ctx context.Context, group *types.GroupIn
 		return d.storeGroupMetadata(ctx, group)
 	}
 
-	info, err := d.client.GetGroupInfo(ctx, group.JID)
+	info, err := d.getGroupInfoThrottled(ctx, group.JID)
 	if err != nil {
+		if errors.Is(err, errGroupIQCoolingDown) {
+			_ = d.storeGroupMetadata(ctx, group)
+			return err
+		}
 		log.Printf("GetGroupInfo for %s failed, storing partial metadata: %v", group.JID, err)
 		return d.storeGroupMetadata(ctx, group)
 	}
@@ -733,8 +847,11 @@ func (d *daemon) syncCommunitySubgroups(ctx context.Context, parentJID types.JID
 		return nil
 	}
 
-	subgroups, err := d.client.GetSubGroups(ctx, parentJID)
+	subgroups, err := d.getSubGroupsThrottled(ctx, parentJID)
 	if err != nil {
+		if errors.Is(err, errGroupIQCoolingDown) {
+			return err
+		}
 		return fmt.Errorf("get subgroups for %s: %w", parentJID, err)
 	}
 
@@ -749,8 +866,11 @@ func (d *daemon) syncCommunitySubgroups(ctx context.Context, parentJID types.JID
 		}
 		seen[groupJID] = true
 
-		info, err := d.client.GetGroupInfo(ctx, subgroup.JID)
+		info, err := d.getGroupInfoThrottled(ctx, subgroup.JID)
 		if err != nil {
+			if errors.Is(err, errGroupIQCoolingDown) {
+				return err
+			}
 			log.Printf("GetGroupInfo for subgroup %s failed: %v", subgroup.JID, err)
 			continue
 		}
@@ -798,8 +918,12 @@ func (d *daemon) syncMissingGroupsFromChats(ctx context.Context, seen map[string
 		seen[chatJID] = true
 		missing++
 
-		info, err := d.client.GetGroupInfo(ctx, jid)
+		info, err := d.getGroupInfoThrottled(ctx, jid)
 		if err != nil {
+			if errors.Is(err, errGroupIQCoolingDown) {
+				log.Printf("backfill groups: fetched %d additional groups from sync_chats before rate limit", missing-1)
+				return err
+			}
 			log.Printf("GetGroupInfo for chat group %s failed: %v", chatJID, err)
 			continue
 		}
@@ -3343,6 +3467,10 @@ type daemon struct {
 	groupMetadataSyncRunning      atomic.Bool
 	groupMetadataSyncPending      atomic.Bool
 	contactDisplayNameSyncRunning atomic.Bool
+
+	groupIQMu            sync.Mutex
+	groupIQLastRequest   time.Time
+	groupIQCooldownUntil time.Time
 }
 
 type daemonConfig struct {
