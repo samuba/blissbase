@@ -45,7 +45,7 @@ const (
 	defaultConfigPath           = "./config.jsonc"
 	defaultDatabaseSyncInterval = 30 * time.Second
 	databaseSyncTimeout         = 2 * time.Minute
-	groupMetadataSyncTimeout    = 2 * time.Minute
+	groupMetadataSyncTimeout    = 5 * time.Minute
 	mediaUploadTimeout          = 2 * time.Minute
 	objectDeleteTimeout         = 30 * time.Second
 	mediaUploadWorkerCount      = 4
@@ -331,6 +331,60 @@ func ensureSchema(ctx context.Context, db *sql.DB) error {
 			ON sync_messages(timestamp)`,
 		`CREATE INDEX IF NOT EXISTS sync_messages_sender_idx
 			ON sync_messages(sender_jid)`,
+		`CREATE TABLE IF NOT EXISTS groups (
+			group_jid TEXT PRIMARY KEY,
+			name TEXT,
+			topic TEXT,
+			owner_jid TEXT,
+			owner_phone TEXT,
+			created_at INTEGER,
+			creator_country_code TEXT,
+			is_locked INTEGER NOT NULL DEFAULT 0,
+			is_announce INTEGER NOT NULL DEFAULT 0,
+			is_ephemeral INTEGER NOT NULL DEFAULT 0,
+			disappearing_timer INTEGER,
+			is_incognito INTEGER NOT NULL DEFAULT 0,
+			is_parent INTEGER NOT NULL DEFAULT 0,
+			linked_parent_jid TEXT,
+			is_default_sub INTEGER NOT NULL DEFAULT 0,
+			membership_approval_required INTEGER NOT NULL DEFAULT 0,
+			member_add_mode TEXT,
+			addressing_mode TEXT,
+			participant_count INTEGER,
+			participant_version_id TEXT,
+			suspended INTEGER NOT NULL DEFAULT 0,
+			updated_at INTEGER NOT NULL
+		)`,
+		`CREATE TABLE IF NOT EXISTS contacts (
+			contact_jid TEXT PRIMARY KEY,
+			phone_number TEXT,
+			lid_jid TEXT,
+			first_name TEXT,
+			full_name TEXT,
+			push_name TEXT,
+			business_name TEXT,
+			updated_at INTEGER NOT NULL
+		)`,
+		`CREATE INDEX IF NOT EXISTS contacts_phone_number_idx
+			ON contacts(phone_number)`,
+		`CREATE INDEX IF NOT EXISTS contacts_lid_jid_idx
+			ON contacts(lid_jid)`,
+		`CREATE TABLE IF NOT EXISTS group_contacts (
+			group_jid TEXT NOT NULL,
+			contact_jid TEXT NOT NULL,
+			phone_number TEXT,
+			lid_jid TEXT,
+			is_admin INTEGER NOT NULL DEFAULT 0,
+			is_super_admin INTEGER NOT NULL DEFAULT 0,
+			updated_at INTEGER NOT NULL,
+			PRIMARY KEY (group_jid, contact_jid),
+			FOREIGN KEY (group_jid) REFERENCES groups(group_jid) ON DELETE CASCADE,
+			FOREIGN KEY (contact_jid) REFERENCES contacts(contact_jid) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS group_contacts_contact_jid_idx
+			ON group_contacts(contact_jid)`,
+		`CREATE INDEX IF NOT EXISTS group_contacts_phone_number_idx
+			ON group_contacts(phone_number)`,
 	}
 
 	for _, statement := range statements {
@@ -584,7 +638,7 @@ func (d *daemon) backfillGroupDisplayNamesAsync() {
 	}()
 }
 
-// backfillGroupDisplayNames fetches the current names for all joined groups and upserts them into SQLite.
+// backfillGroupDisplayNames fetches all joined groups and syncs names, metadata, and memberships.
 // Example: `if err := d.backfillGroupDisplayNames(ctx); err != nil { return err }`
 func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 	if d == nil || d.client == nil {
@@ -605,7 +659,7 @@ func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 	return nil
 }
 
-// storeJoinedGroup upserts the group name for newly joined groups.
+// storeJoinedGroup upserts group metadata and membership for newly joined groups.
 // Example: `if err := d.storeJoinedGroup(ctx, evt); err != nil { return err }`
 func (d *daemon) storeJoinedGroup(ctx context.Context, evt *events.JoinedGroup) error {
 	if evt == nil {
@@ -615,32 +669,852 @@ func (d *daemon) storeJoinedGroup(ctx context.Context, evt *events.JoinedGroup) 
 	return d.storeGroupMetadata(ctx, &evt.GroupInfo)
 }
 
-// storeGroupInfoChange persists live group name changes so display_name stays current.
+// storeGroupInfoChange persists live group metadata and membership changes.
 // Example: `if err := d.storeGroupInfoChange(ctx, evt); err != nil { return err }`
 func (d *daemon) storeGroupInfoChange(ctx context.Context, evt *events.GroupInfo) error {
-	if evt == nil || evt.Name == nil {
+	if evt == nil || evt.JID.IsEmpty() {
 		return nil
 	}
 
-	return d.upsertSyncChatMetadata(ctx, syncChatMetadata{
-		chatJID:     evt.JID.String(),
-		displayName: evt.Name.Name,
-		updatedAt:   unixOrNow(evt.Timestamp),
-	})
+	updatedAt := unixOrNow(evt.Timestamp)
+
+	if evt.Delete != nil && evt.Delete.Deleted {
+		return d.deleteGroup(ctx, evt.JID.String())
+	}
+
+	if evt.Name != nil {
+		if err := d.upsertSyncChatMetadata(ctx, syncChatMetadata{
+			chatJID:     evt.JID.String(),
+			displayName: evt.Name.Name,
+			updatedAt:   updatedAt,
+		}); err != nil {
+			return err
+		}
+	}
+
+	if err := d.patchGroupFromInfoChange(ctx, evt, updatedAt); err != nil {
+		return err
+	}
+
+	if err := d.applyGroupMembershipChanges(ctx, evt, updatedAt); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// storeGroupMetadata writes the latest known group name into sync_chats.
+// deleteGroup removes group metadata and the mirrored sync_chats row.
+// Example: `if err := d.deleteGroup(ctx, groupJID); err != nil { return err }`
+func (d *daemon) deleteGroup(ctx context.Context, groupJID string) error {
+	if d == nil || d.db == nil || groupJID == "" {
+		return nil
+	}
+
+	tx, err := d.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin delete group %s: %w", groupJID, err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM groups WHERE group_jid = ?`, groupJID); err != nil {
+		return fmt.Errorf("delete group %s: %w", groupJID, err)
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM sync_chats WHERE chat_jid = ?`, groupJID); err != nil {
+		return fmt.Errorf("delete sync chat for group %s: %w", groupJID, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit delete group %s: %w", groupJID, err)
+	}
+
+	d.notifyDatabaseChanged()
+	return nil
+}
+
+// storeGroupMetadata writes group metadata into sync_chats and the groups/contacts tables.
 // Example: `if err := d.storeGroupMetadata(ctx, group); err != nil { return err }`
 func (d *daemon) storeGroupMetadata(ctx context.Context, group *types.GroupInfo) error {
 	if group == nil || group.JID.IsEmpty() {
 		return nil
 	}
 
-	return d.upsertSyncChatMetadata(ctx, syncChatMetadata{
+	if err := d.upsertSyncChatMetadata(ctx, syncChatMetadata{
 		chatJID:     group.JID.String(),
 		displayName: group.Name,
 		updatedAt:   unixOrNow(group.NameSetAt),
-	})
+	}); err != nil {
+		return err
+	}
+
+	if err := d.upsertGroup(ctx, group); err != nil {
+		return err
+	}
+
+	if err := d.replaceGroupContacts(ctx, group); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// upsertGroup writes the latest known metadata for a joined group/community.
+// Example: `if err := d.upsertGroup(ctx, group); err != nil { return err }`
+func (d *daemon) upsertGroup(ctx context.Context, group *types.GroupInfo) error {
+	if d == nil || d.db == nil || group == nil || group.JID.IsEmpty() {
+		return nil
+	}
+
+	updatedAt := time.Now().Unix()
+	participantCount := group.ParticipantCount
+	if participantCount == 0 {
+		participantCount = len(group.Participants)
+	}
+
+	_, err := d.db.ExecContext(
+		ctx,
+		`INSERT INTO groups (
+			group_jid,
+			name,
+			topic,
+			owner_jid,
+			owner_phone,
+			created_at,
+			creator_country_code,
+			is_locked,
+			is_announce,
+			is_ephemeral,
+			disappearing_timer,
+			is_incognito,
+			is_parent,
+			linked_parent_jid,
+			is_default_sub,
+			membership_approval_required,
+			member_add_mode,
+			addressing_mode,
+			participant_count,
+			participant_version_id,
+			suspended,
+			updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(group_jid) DO UPDATE SET
+			name = COALESCE(excluded.name, groups.name),
+			topic = COALESCE(excluded.topic, groups.topic),
+			owner_jid = COALESCE(excluded.owner_jid, groups.owner_jid),
+			owner_phone = COALESCE(excluded.owner_phone, groups.owner_phone),
+			created_at = COALESCE(excluded.created_at, groups.created_at),
+			creator_country_code = COALESCE(excluded.creator_country_code, groups.creator_country_code),
+			is_locked = excluded.is_locked,
+			is_announce = excluded.is_announce,
+			is_ephemeral = excluded.is_ephemeral,
+			disappearing_timer = COALESCE(excluded.disappearing_timer, groups.disappearing_timer),
+			is_incognito = excluded.is_incognito,
+			is_parent = excluded.is_parent,
+			linked_parent_jid = COALESCE(excluded.linked_parent_jid, groups.linked_parent_jid),
+			is_default_sub = excluded.is_default_sub,
+			membership_approval_required = excluded.membership_approval_required,
+			member_add_mode = COALESCE(excluded.member_add_mode, groups.member_add_mode),
+			addressing_mode = COALESCE(excluded.addressing_mode, groups.addressing_mode),
+			participant_count = COALESCE(excluded.participant_count, groups.participant_count),
+			participant_version_id = COALESCE(excluded.participant_version_id, groups.participant_version_id),
+			suspended = excluded.suspended,
+			updated_at = excluded.updated_at`,
+		group.JID.String(),
+		nilIfEmpty(group.Name),
+		nilIfEmpty(group.Topic),
+		nilIfEmpty(jidString(group.OwnerJID)),
+		nilIfEmpty(normalizePhoneNumberJID(firstNonEmptyJID(group.OwnerPN, group.OwnerJID))),
+		nilIfZero(unixOrZero(group.GroupCreated)),
+		nilIfEmpty(group.CreatorCountryCode),
+		boolToInt(group.IsLocked),
+		boolToInt(group.IsAnnounce),
+		boolToInt(group.IsEphemeral),
+		nilIfZero(int64(group.DisappearingTimer)),
+		boolToInt(group.IsIncognito),
+		boolToInt(group.IsParent),
+		nilIfEmpty(jidString(group.LinkedParentJID)),
+		boolToInt(group.IsDefaultSubGroup),
+		boolToInt(group.IsJoinApprovalRequired),
+		nilIfEmpty(string(group.MemberAddMode)),
+		nilIfEmpty(string(group.AddressingMode)),
+		nilIfZero(int64(participantCount)),
+		nilIfEmpty(group.ParticipantVersionID),
+		boolToInt(group.Suspended),
+		updatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("upsert group %s: %w", group.JID, err)
+	}
+
+	d.notifyDatabaseChanged()
+	return nil
+}
+
+// patchGroupFromInfoChange applies sparse live group metadata updates.
+// Example: `if err := d.patchGroupFromInfoChange(ctx, evt, updatedAt); err != nil { return err }`
+func (d *daemon) patchGroupFromInfoChange(ctx context.Context, evt *events.GroupInfo, updatedAt int64) error {
+	if d == nil || d.db == nil || evt == nil || evt.JID.IsEmpty() {
+		return nil
+	}
+
+	if evt.Name == nil && evt.Topic == nil && evt.Locked == nil && evt.Announce == nil &&
+		evt.Ephemeral == nil && evt.MembershipApprovalMode == nil &&
+		!evt.Suspended && !evt.Unsuspended && evt.ParticipantVersionID == "" {
+		return nil
+	}
+
+	_, err := d.db.ExecContext(
+		ctx,
+		`INSERT INTO groups (group_jid, updated_at) VALUES (?, ?)
+		ON CONFLICT(group_jid) DO UPDATE SET updated_at = excluded.updated_at`,
+		evt.JID.String(),
+		updatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("ensure group row %s: %w", evt.JID, err)
+	}
+
+	if evt.Name != nil {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET name = ?, updated_at = ? WHERE group_jid = ?`,
+			nilIfEmpty(evt.Name.Name),
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group name %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.Topic != nil {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET topic = ?, updated_at = ? WHERE group_jid = ?`,
+			nilIfEmpty(evt.Topic.Topic),
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group topic %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.Locked != nil {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET is_locked = ?, updated_at = ? WHERE group_jid = ?`,
+			boolToInt(evt.Locked.IsLocked),
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group locked %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.Announce != nil {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET is_announce = ?, updated_at = ? WHERE group_jid = ?`,
+			boolToInt(evt.Announce.IsAnnounce),
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group announce %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.Ephemeral != nil {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET is_ephemeral = ?, disappearing_timer = ?, updated_at = ? WHERE group_jid = ?`,
+			boolToInt(evt.Ephemeral.IsEphemeral),
+			nilIfZero(int64(evt.Ephemeral.DisappearingTimer)),
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group ephemeral %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.MembershipApprovalMode != nil {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET membership_approval_required = ?, updated_at = ? WHERE group_jid = ?`,
+			boolToInt(evt.MembershipApprovalMode.IsJoinApprovalRequired),
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group membership approval %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.ParticipantVersionID != "" {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET participant_version_id = ?, updated_at = ? WHERE group_jid = ?`,
+			evt.ParticipantVersionID,
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group participant version %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.Suspended {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET suspended = 1, updated_at = ? WHERE group_jid = ?`,
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group suspended %s: %w", evt.JID, err)
+		}
+	}
+
+	if evt.Unsuspended {
+		if _, err := d.db.ExecContext(
+			ctx,
+			`UPDATE groups SET suspended = 0, updated_at = ? WHERE group_jid = ?`,
+			updatedAt,
+			evt.JID.String(),
+		); err != nil {
+			return fmt.Errorf("update group unsuspended %s: %w", evt.JID, err)
+		}
+	}
+
+	d.notifyDatabaseChanged()
+	return nil
+}
+
+// replaceGroupContacts replaces the full membership roster for a group.
+// Example: `if err := d.replaceGroupContacts(ctx, group); err != nil { return err }`
+func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInfo) error {
+	if d == nil || d.db == nil || group == nil || group.JID.IsEmpty() {
+		return nil
+	}
+
+	updatedAt := time.Now().Unix()
+	groupJID := group.JID.String()
+
+	tx, err := d.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin group contacts transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM group_contacts WHERE group_jid = ?`, groupJID); err != nil {
+		return fmt.Errorf("clear group contacts for %s: %w", groupJID, err)
+	}
+
+	for _, participant := range group.Participants {
+		identity := d.resolveParticipantIdentity(ctx, participant)
+		if identity.contactJID == "" {
+			continue
+		}
+
+		names := d.lookupContactNames(ctx, identity)
+		if err := upsertContactTx(ctx, tx, contactRecord{
+			contactJID:   identity.contactJID,
+			phoneNumber:  identity.phoneNumber,
+			lidJID:       identity.lidJID,
+			firstName:    names.firstName,
+			fullName:     names.fullName,
+			pushName:     names.pushName,
+			businessName: names.businessName,
+			updatedAt:    updatedAt,
+		}); err != nil {
+			return fmt.Errorf("upsert contact %s for group %s: %w", identity.contactJID, groupJID, err)
+		}
+
+		if _, err := tx.ExecContext(
+			ctx,
+			`INSERT INTO group_contacts (
+				group_jid,
+				contact_jid,
+				phone_number,
+				lid_jid,
+				is_admin,
+				is_super_admin,
+				updated_at
+			) VALUES (?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(group_jid, contact_jid) DO UPDATE SET
+				phone_number = COALESCE(excluded.phone_number, group_contacts.phone_number),
+				lid_jid = COALESCE(excluded.lid_jid, group_contacts.lid_jid),
+				is_admin = excluded.is_admin,
+				is_super_admin = excluded.is_super_admin,
+				updated_at = excluded.updated_at`,
+			groupJID,
+			identity.contactJID,
+			nilIfEmpty(identity.phoneNumber),
+			nilIfEmpty(identity.lidJID),
+			boolToInt(participant.IsAdmin),
+			boolToInt(participant.IsSuperAdmin),
+			updatedAt,
+		); err != nil {
+			return fmt.Errorf("upsert group contact %s in %s: %w", identity.contactJID, groupJID, err)
+		}
+	}
+
+	if _, err := tx.ExecContext(
+		ctx,
+		`UPDATE groups
+		SET participant_count = (
+			SELECT COUNT(*) FROM group_contacts WHERE group_jid = ?
+		),
+		updated_at = ?
+		WHERE group_jid = ?`,
+		groupJID,
+		updatedAt,
+		groupJID,
+	); err != nil {
+		return fmt.Errorf("update participant count for %s: %w", groupJID, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit group contacts for %s: %w", groupJID, err)
+	}
+
+	d.notifyDatabaseChanged()
+	return nil
+}
+
+// applyGroupMembershipChanges applies Join/Leave/Promote/Demote updates from live events.
+// Example: `if err := d.applyGroupMembershipChanges(ctx, evt, updatedAt); err != nil { return err }`
+func (d *daemon) applyGroupMembershipChanges(ctx context.Context, evt *events.GroupInfo, updatedAt int64) error {
+	if d == nil || d.db == nil || evt == nil || evt.JID.IsEmpty() {
+		return nil
+	}
+
+	if len(evt.Join) == 0 && len(evt.Leave) == 0 && len(evt.Promote) == 0 && len(evt.Demote) == 0 {
+		return nil
+	}
+
+	groupJID := evt.JID.String()
+
+	_, err := d.db.ExecContext(
+		ctx,
+		`INSERT INTO groups (group_jid, updated_at) VALUES (?, ?)
+		ON CONFLICT(group_jid) DO UPDATE SET updated_at = excluded.updated_at`,
+		groupJID,
+		updatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("ensure group row for membership change %s: %w", groupJID, err)
+	}
+
+	for _, member := range evt.Join {
+		identity := d.resolveJIDIdentity(ctx, member)
+		if identity.contactJID == "" {
+			continue
+		}
+
+		names := d.lookupContactNames(ctx, identity)
+		if err := d.upsertContact(ctx, contactRecord{
+			contactJID:   identity.contactJID,
+			phoneNumber:  identity.phoneNumber,
+			lidJID:       identity.lidJID,
+			firstName:    names.firstName,
+			fullName:     names.fullName,
+			pushName:     names.pushName,
+			businessName: names.businessName,
+			updatedAt:    updatedAt,
+		}); err != nil {
+			log.Printf("upsert joined contact %s failed: %v", identity.contactJID, err)
+			continue
+		}
+
+		// Drop any prior rows for this person (phone/LID/contact key variants) before insert
+		// so rejoins reset admin flags and do not leave duplicate memberships.
+		if err := d.deleteGroupContactMatches(ctx, d.db, groupJID, identity); err != nil {
+			log.Printf("clear prior group contact %s in %s failed: %v", identity.contactJID, groupJID, err)
+			continue
+		}
+
+		if _, err := d.db.ExecContext(
+			ctx,
+			`INSERT INTO group_contacts (
+				group_jid,
+				contact_jid,
+				phone_number,
+				lid_jid,
+				is_admin,
+				is_super_admin,
+				updated_at
+			) VALUES (?, ?, ?, ?, 0, 0, ?)
+			ON CONFLICT(group_jid, contact_jid) DO UPDATE SET
+				phone_number = COALESCE(excluded.phone_number, group_contacts.phone_number),
+				lid_jid = COALESCE(excluded.lid_jid, group_contacts.lid_jid),
+				is_admin = excluded.is_admin,
+				is_super_admin = excluded.is_super_admin,
+				updated_at = excluded.updated_at`,
+			groupJID,
+			identity.contactJID,
+			nilIfEmpty(identity.phoneNumber),
+			nilIfEmpty(identity.lidJID),
+			updatedAt,
+		); err != nil {
+			log.Printf("add group contact %s to %s failed: %v", identity.contactJID, groupJID, err)
+		}
+	}
+
+	for _, member := range evt.Leave {
+		identity := d.resolveJIDIdentity(ctx, member)
+		if identity.contactJID == "" {
+			continue
+		}
+
+		if err := d.deleteGroupContactMatches(ctx, d.db, groupJID, identity); err != nil {
+			log.Printf("remove group contact %s from %s failed: %v", identity.contactJID, groupJID, err)
+		}
+	}
+
+	for _, member := range evt.Promote {
+		if err := d.setGroupContactAdmin(ctx, groupJID, member, true, updatedAt); err != nil {
+			log.Printf("promote group contact in %s failed: %v", groupJID, err)
+		}
+	}
+
+	for _, member := range evt.Demote {
+		if err := d.setGroupContactAdmin(ctx, groupJID, member, false, updatedAt); err != nil {
+			log.Printf("demote group contact in %s failed: %v", groupJID, err)
+		}
+	}
+
+	if _, err := d.db.ExecContext(
+		ctx,
+		`UPDATE groups
+		SET participant_count = (
+			SELECT COUNT(*) FROM group_contacts WHERE group_jid = ?
+		),
+		updated_at = ?
+		WHERE group_jid = ?`,
+		groupJID,
+		updatedAt,
+		groupJID,
+	); err != nil {
+		return fmt.Errorf("refresh participant count for %s: %w", groupJID, err)
+	}
+
+	d.notifyDatabaseChanged()
+	return nil
+}
+
+// setGroupContactAdmin updates admin flags for a group member.
+// Example: `if err := d.setGroupContactAdmin(ctx, groupJID, member, true, now); err != nil { return err }`
+func (d *daemon) setGroupContactAdmin(ctx context.Context, groupJID string, member types.JID, isAdmin bool, updatedAt int64) error {
+	identity := d.resolveJIDIdentity(ctx, member)
+	if identity.contactJID == "" {
+		return nil
+	}
+
+	_, err := d.db.ExecContext(
+		ctx,
+		`UPDATE group_contacts
+		SET is_admin = ?, is_super_admin = CASE WHEN ? = 0 THEN 0 ELSE is_super_admin END, updated_at = ?
+		WHERE group_jid = ?
+			AND (
+				contact_jid = ?
+				OR (? != '' AND phone_number = ?)
+				OR (? != '' AND lid_jid = ?)
+			)`,
+		boolToInt(isAdmin),
+		boolToInt(isAdmin),
+		updatedAt,
+		groupJID,
+		identity.contactJID,
+		identity.phoneNumber,
+		identity.phoneNumber,
+		identity.lidJID,
+		identity.lidJID,
+	)
+	return err
+}
+
+// deleteGroupContactMatches removes membership rows that match any known identity key.
+// Example: `if err := d.deleteGroupContactMatches(ctx, db, groupJID, identity); err != nil { return err }`
+func (d *daemon) deleteGroupContactMatches(ctx context.Context, execer contactExecer, groupJID string, identity contactIdentity) error {
+	if execer == nil || groupJID == "" || identity.contactJID == "" {
+		return nil
+	}
+
+	_, err := execer.ExecContext(
+		ctx,
+		`DELETE FROM group_contacts
+		WHERE group_jid = ?
+			AND (
+				contact_jid = ?
+				OR (? != '' AND phone_number = ?)
+				OR (? != '' AND lid_jid = ?)
+			)`,
+		groupJID,
+		identity.contactJID,
+		identity.phoneNumber,
+		identity.phoneNumber,
+		identity.lidJID,
+		identity.lidJID,
+	)
+	if err != nil {
+		return fmt.Errorf("delete group contact matches for %s in %s: %w", identity.contactJID, groupJID, err)
+	}
+
+	return nil
+}
+
+// resolveParticipantIdentity maps a group participant to contact_jid + real phone when available.
+// Example: `identity := d.resolveParticipantIdentity(ctx, participant)`
+func (d *daemon) resolveParticipantIdentity(ctx context.Context, participant types.GroupParticipant) contactIdentity {
+	phoneJID := participant.PhoneNumber
+	lidJID := participant.LID
+	primary := participant.JID.ToNonAD()
+
+	if phoneJID.IsEmpty() {
+		switch primary.Server {
+		case types.DefaultUserServer, types.HostedServer:
+			phoneJID = primary
+		}
+	}
+	if lidJID.IsEmpty() {
+		switch primary.Server {
+		case types.HiddenUserServer, types.HostedLIDServer:
+			lidJID = primary
+		}
+	}
+
+	if phoneJID.IsEmpty() && !lidJID.IsEmpty() {
+		if pn := d.lookupPNForLID(ctx, lidJID); !pn.IsEmpty() {
+			phoneJID = pn
+		}
+	}
+	if lidJID.IsEmpty() && !phoneJID.IsEmpty() {
+		if lid := d.lookupLIDForPN(ctx, phoneJID); !lid.IsEmpty() {
+			lidJID = lid
+		}
+	}
+
+	phoneNumber := normalizePhoneNumberJID(phoneJID)
+	contactJID := ""
+	if !phoneJID.IsEmpty() {
+		contactJID = phoneJID.ToNonAD().String()
+	} else if !lidJID.IsEmpty() {
+		contactJID = lidJID.ToNonAD().String()
+	} else if !primary.IsEmpty() {
+		contactJID = primary.String()
+	}
+
+	return contactIdentity{
+		contactJID:  contactJID,
+		phoneNumber: phoneNumber,
+		lidJID:      jidString(lidJID),
+		phoneJID:    phoneJID.ToNonAD(),
+		lid:         lidJID.ToNonAD(),
+	}
+}
+
+// resolveJIDIdentity maps an arbitrary member JID to contact_jid + real phone when available.
+// Example: `identity := d.resolveJIDIdentity(ctx, member)`
+func (d *daemon) resolveJIDIdentity(ctx context.Context, jid types.JID) contactIdentity {
+	if jid.IsEmpty() {
+		return contactIdentity{}
+	}
+
+	return d.resolveParticipantIdentity(ctx, types.GroupParticipant{JID: jid.ToNonAD()})
+}
+
+// lookupPNForLID returns the phone-number JID for a LID when present in the local map.
+// Example: `pn := d.lookupPNForLID(ctx, lid)`
+func (d *daemon) lookupPNForLID(ctx context.Context, lid types.JID) types.JID {
+	if d == nil || d.client == nil || d.client.Store == nil || d.client.Store.LIDs == nil || lid.IsEmpty() {
+		return types.EmptyJID
+	}
+
+	pn, err := d.client.Store.LIDs.GetPNForLID(ctx, lid.ToNonAD())
+	if err != nil {
+		log.Printf("lookup PN for LID %s failed: %v", lid, err)
+		return types.EmptyJID
+	}
+
+	return pn.ToNonAD()
+}
+
+// lookupLIDForPN returns the LID for a phone-number JID when present in the local map.
+// Example: `lid := d.lookupLIDForPN(ctx, pn)`
+func (d *daemon) lookupLIDForPN(ctx context.Context, pn types.JID) types.JID {
+	if d == nil || d.client == nil || d.client.Store == nil || d.client.Store.LIDs == nil || pn.IsEmpty() {
+		return types.EmptyJID
+	}
+
+	lid, err := d.client.Store.LIDs.GetLIDForPN(ctx, pn.ToNonAD())
+	if err != nil {
+		log.Printf("lookup LID for PN %s failed: %v", pn, err)
+		return types.EmptyJID
+	}
+
+	return lid.ToNonAD()
+}
+
+// lookupContactNames loads address-book / push / business names for a contact identity.
+// Example: `names := d.lookupContactNames(ctx, identity)`
+func (d *daemon) lookupContactNames(ctx context.Context, identity contactIdentity) contactNames {
+	if d == nil || d.client == nil || d.client.Store == nil || d.client.Store.Contacts == nil {
+		return contactNames{}
+	}
+
+	candidates := make([]types.JID, 0, 3)
+	if !identity.phoneJID.IsEmpty() {
+		candidates = append(candidates, identity.phoneJID)
+	}
+	if !identity.lid.IsEmpty() {
+		candidates = append(candidates, identity.lid)
+	}
+	if identity.contactJID != "" {
+		if parsed, err := types.ParseJID(identity.contactJID); err == nil {
+			candidates = append(candidates, parsed)
+		}
+	}
+
+	var merged contactNames
+	seen := map[string]bool{}
+	for _, candidate := range candidates {
+		candidate = candidate.ToNonAD()
+		if candidate.IsEmpty() || seen[candidate.String()] {
+			continue
+		}
+		seen[candidate.String()] = true
+
+		contact, err := d.client.Store.Contacts.GetContact(ctx, candidate)
+		if err != nil {
+			log.Printf("lookup contact names for %s failed: %v", candidate, err)
+			continue
+		}
+		if !contact.Found {
+			continue
+		}
+
+		if merged.firstName == "" {
+			merged.firstName = contact.FirstName
+		}
+		if merged.fullName == "" {
+			merged.fullName = contact.FullName
+		}
+		if merged.pushName == "" {
+			merged.pushName = contact.PushName
+		}
+		if merged.businessName == "" {
+			merged.businessName = contact.BusinessName
+		}
+	}
+
+	return merged
+}
+
+// upsertContact inserts or updates a row in the contacts table.
+// Example: `if err := d.upsertContact(ctx, record); err != nil { return err }`
+func (d *daemon) upsertContact(ctx context.Context, record contactRecord) error {
+	if d == nil || d.db == nil {
+		return nil
+	}
+
+	return upsertContactTx(ctx, d.db, record)
+}
+
+// upsertContactTx upserts a contact using a DB or transaction handle.
+// Example: `if err := upsertContactTx(ctx, tx, record); err != nil { return err }`
+func upsertContactTx(ctx context.Context, execer contactExecer, record contactRecord) error {
+	if execer == nil || record.contactJID == "" {
+		return nil
+	}
+
+	_, err := execer.ExecContext(
+		ctx,
+		`INSERT INTO contacts (
+			contact_jid,
+			phone_number,
+			lid_jid,
+			first_name,
+			full_name,
+			push_name,
+			business_name,
+			updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(contact_jid) DO UPDATE SET
+			phone_number = COALESCE(excluded.phone_number, contacts.phone_number),
+			lid_jid = COALESCE(excluded.lid_jid, contacts.lid_jid),
+			first_name = COALESCE(excluded.first_name, contacts.first_name),
+			full_name = COALESCE(excluded.full_name, contacts.full_name),
+			push_name = COALESCE(excluded.push_name, contacts.push_name),
+			business_name = COALESCE(excluded.business_name, contacts.business_name),
+			updated_at = excluded.updated_at`,
+		record.contactJID,
+		nilIfEmpty(record.phoneNumber),
+		nilIfEmpty(record.lidJID),
+		nilIfEmpty(record.firstName),
+		nilIfEmpty(record.fullName),
+		nilIfEmpty(record.pushName),
+		nilIfEmpty(record.businessName),
+		record.updatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("upsert contact %s: %w", record.contactJID, err)
+	}
+
+	return nil
+}
+
+// syncContactsFromStore mirrors whatsmeow_contacts into contacts with resolved phone numbers.
+// Example: `if err := d.syncContactsFromStore(ctx); err != nil { return err }`
+func (d *daemon) syncContactsFromStore(ctx context.Context) error {
+	if d == nil || d.client == nil || d.client.Store == nil || d.client.Store.Contacts == nil {
+		return nil
+	}
+
+	allContacts, err := d.client.Store.Contacts.GetAllContacts(ctx)
+	if err != nil {
+		return fmt.Errorf("get all contacts: %w", err)
+	}
+
+	updatedAt := time.Now().Unix()
+	for jid, info := range allContacts {
+		identity := d.resolveJIDIdentity(ctx, jid)
+		if identity.contactJID == "" {
+			continue
+		}
+
+		if err := d.upsertContact(ctx, contactRecord{
+			contactJID:   identity.contactJID,
+			phoneNumber:  identity.phoneNumber,
+			lidJID:       identity.lidJID,
+			firstName:    info.FirstName,
+			fullName:     info.FullName,
+			pushName:     info.PushName,
+			businessName: info.BusinessName,
+			updatedAt:    updatedAt,
+		}); err != nil {
+			log.Printf("sync contact %s failed: %v", identity.contactJID, err)
+		}
+	}
+
+	d.notifyDatabaseChanged()
+	return nil
+}
+
+// jidString returns the non-AD string form of a JID, or empty when unset.
+// Example: `value := jidString(group.OwnerJID)`
+func jidString(jid types.JID) string {
+	if jid.IsEmpty() {
+		return ""
+	}
+
+	return jid.ToNonAD().String()
+}
+
+// firstNonEmptyJID returns the first non-empty JID.
+// Example: `owner := firstNonEmptyJID(group.OwnerPN, group.OwnerJID)`
+func firstNonEmptyJID(values ...types.JID) types.JID {
+	for _, value := range values {
+		if !value.IsEmpty() {
+			return value
+		}
+	}
+
+	return types.EmptyJID
 }
 
 // backfillContactDisplayNamesAsync refreshes missing DM names without blocking the event loop.
@@ -659,6 +1533,10 @@ func (d *daemon) backfillContactDisplayNamesAsync() {
 
 		ctx, cancel := context.WithTimeout(context.Background(), groupMetadataSyncTimeout)
 		defer cancel()
+
+		if err := d.syncContactsFromStore(ctx); err != nil {
+			log.Printf("sync contacts from store failed: %v", err)
+		}
 
 		if err := d.backfillContactDisplayNames(ctx); err != nil {
 			log.Printf("backfill contact display names failed: %v", err)
@@ -720,11 +1598,27 @@ func (d *daemon) backfillContactDisplayNames(ctx context.Context) error {
 	return nil
 }
 
-// storeContactChange persists address-book name updates for direct chats.
+// storeContactChange persists address-book name updates for direct chats and contacts.
 // Example: `if err := d.storeContactChange(ctx, evt); err != nil { return err }`
 func (d *daemon) storeContactChange(ctx context.Context, evt *events.Contact) error {
 	if evt == nil || evt.Action == nil || evt.JID.IsEmpty() {
 		return nil
+	}
+
+	identity := d.resolveJIDIdentity(ctx, evt.JID)
+	if identity.contactJID != "" {
+		if err := d.upsertContact(ctx, contactRecord{
+			contactJID:  identity.contactJID,
+			phoneNumber: identity.phoneNumber,
+			lidJID:      identity.lidJID,
+			firstName:   evt.Action.GetFirstName(),
+			fullName:    evt.Action.GetFullName(),
+			updatedAt:   unixOrNow(evt.Timestamp),
+		}); err != nil {
+			log.Printf("upsert contact from contact change failed: %v", err)
+		} else {
+			d.notifyDatabaseChanged()
+		}
 	}
 
 	displayName := firstNonEmpty(
@@ -746,6 +1640,21 @@ func (d *daemon) storePushNameChange(ctx context.Context, evt *events.PushName) 
 		return nil
 	}
 
+	identity := d.resolveJIDIdentity(ctx, evt.JID)
+	if identity.contactJID != "" {
+		if err := d.upsertContact(ctx, contactRecord{
+			contactJID:  identity.contactJID,
+			phoneNumber: identity.phoneNumber,
+			lidJID:      identity.lidJID,
+			pushName:    evt.NewPushName,
+			updatedAt:   time.Now().Unix(),
+		}); err != nil {
+			log.Printf("upsert contact from push name failed: %v", err)
+		} else {
+			d.notifyDatabaseChanged()
+		}
+	}
+
 	return d.upsertDirectChatDisplayNames(ctx, evt.JID, evt.NewPushName, time.Now().Unix(), true)
 }
 
@@ -754,6 +1663,21 @@ func (d *daemon) storePushNameChange(ctx context.Context, evt *events.PushName) 
 func (d *daemon) storeBusinessNameChange(ctx context.Context, evt *events.BusinessName) error {
 	if evt == nil || evt.JID.IsEmpty() {
 		return nil
+	}
+
+	identity := d.resolveJIDIdentity(ctx, evt.JID)
+	if identity.contactJID != "" {
+		if err := d.upsertContact(ctx, contactRecord{
+			contactJID:   identity.contactJID,
+			phoneNumber:  identity.phoneNumber,
+			lidJID:       identity.lidJID,
+			businessName: evt.NewBusinessName,
+			updatedAt:    time.Now().Unix(),
+		}); err != nil {
+			log.Printf("upsert contact from business name failed: %v", err)
+		} else {
+			d.notifyDatabaseChanged()
+		}
 	}
 
 	return d.upsertDirectChatDisplayNames(ctx, evt.JID, evt.NewBusinessName, time.Now().Unix(), true)
@@ -1433,6 +2357,16 @@ func boolToInt(value bool) int {
 func unixOrNow(value time.Time) int64 {
 	if value.IsZero() {
 		return time.Now().Unix()
+	}
+
+	return value.Unix()
+}
+
+// unixOrZero returns a Unix timestamp, or 0 when the time is unset.
+// Example: `createdAt := unixOrZero(group.GroupCreated)`
+func unixOrZero(value time.Time) int64 {
+	if value.IsZero() {
+		return 0
 	}
 
 	return value.Unix()
@@ -2297,4 +3231,34 @@ type syncChatMetadata struct {
 	chatJID     string
 	displayName string
 	updatedAt   int64
+}
+
+type contactIdentity struct {
+	contactJID  string
+	phoneNumber string
+	lidJID      string
+	phoneJID    types.JID
+	lid         types.JID
+}
+
+type contactNames struct {
+	firstName    string
+	fullName     string
+	pushName     string
+	businessName string
+}
+
+type contactRecord struct {
+	contactJID   string
+	phoneNumber  string
+	lidJID       string
+	firstName    string
+	fullName     string
+	pushName     string
+	businessName string
+	updatedAt    int64
+}
+
+type contactExecer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
