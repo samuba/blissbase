@@ -3,14 +3,17 @@
  *
  * No browser needed — the React frontend reads `seminare`, `tagesseminare`
  * and `urlaubsseminare` that we query here with the anon key from their bundle.
+ * Event images are pulled from each seminar's `anbieterUrl` (og:image + page imgs).
  *
  * Usage:
  *   bun run scripts/scrape-tantrakalender.ts
  */
+import * as cheerio from "cheerio";
 import { ScrapedEvent } from "../src/lib/types.ts";
 import {
 	WebsiteScraperInterface,
 	cleanProseHtml,
+	customFetch,
 	dateToIsoStr,
 	sleep,
 } from "./common.ts";
@@ -21,6 +24,21 @@ const SUPABASE_URL = `https://rzybwlgnmuysywtblhpe.supabase.co`;
 const SUPABASE_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6eWJ3bGdubXV5c3l3dGJsaHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMTcwNjIsImV4cCI6MjA4NDU5MzA2Mn0.4k5umpsiFSVmDn9evLPgE_xscjJZrT0JVXqlKVMh9Wk`;
 const PAGE_SIZE = 100;
 const DEFAULT_TIMEZONE = `Europe/Berlin`;
+const IMAGE_FETCH_CONCURRENCY = 8;
+const MAX_IMAGES_PER_EVENT = 2;
+
+const CONTENT_IMAGE_SELECTORS = [
+	`article .entry-content img`,
+	`article .post-content img`,
+	`.tribe-events-single .tribe-events-single-event-description img`,
+	`.tribe-events-single img`,
+	`article img`,
+	`.entry-content img`,
+	`.post-content img`,
+	`main article img`,
+	`main .content img`,
+	`.wp-block-image img`,
+] as const;
 
 const SOURCE_TABLES = [
 	{ table: `seminare`, tag: `Mehrtägiges Seminar` },
@@ -29,30 +47,47 @@ const SOURCE_TABLES = [
 ] as const;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
+	private readonly imageCache = new Map<string, string[]>();
+
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
 		console.error(`Fetching seminars from Tantrakalender Supabase...`);
 
+		const rowsBySource: { row: TantrakalenderSeminar; sourceTag: string }[] = [];
 		for (const source of SOURCE_TABLES) {
 			try {
 				const rows = await this.fetchUpcomingFromTable(source.table);
 				console.error(`  ${source.table}: ${rows.length} upcoming`);
-
 				for (const row of rows) {
-					try {
-						const event = await this.eventToScrapedEvent({ row, sourceTag: source.tag });
-						if (!event) continue;
-						allEvents.push(event);
-					} catch (error) {
-						console.error(`Failed to process ${source.table} ${row.id} (${row.name}):`, error);
-					}
+					rowsBySource.push({ row, sourceTag: source.tag });
 				}
 			} catch (error) {
 				console.error(`Failed to fetch ${source.table}:`, error);
 			}
 		}
 
-		console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
+		const anbieterUrls = [
+			...new Set(
+				rowsBySource
+					.map(({ row }) => row.anbieterUrl?.trim())
+					.filter((url): url is string => Boolean(url)),
+			),
+		];
+		console.error(`Fetching images from ${anbieterUrls.length} unique anbieter URLs...`);
+		await this.prefetchAnbieterImages(anbieterUrls);
+
+		for (const { row, sourceTag } of rowsBySource) {
+			try {
+				const event = await this.eventToScrapedEvent({ row, sourceTag });
+				if (!event) continue;
+				allEvents.push(event);
+			} catch (error) {
+				console.error(`Failed to process ${row.id} (${row.name}):`, error);
+			}
+		}
+
+		const withImages = allEvents.filter((event) => event.imageUrls?.length).length;
+		console.error(`--- Scraping finished. Total events: ${allEvents.length} (${withImages} with images) ---`);
 		return allEvents;
 	}
 
@@ -83,7 +118,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		throw new Error(`Method not implemented.` + html);
 	}
 	extractImageUrls(html: string): string[] | undefined {
-		throw new Error(`Method not implemented.` + html);
+		return this.extractImageUrlsFromHtml({ html, pageUrl: SITE_BASE });
 	}
 	extractHost(html: string): string | undefined {
 		throw new Error(`Method not implemented.` + html);
@@ -133,6 +168,73 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		return events;
 	}
 
+	private async prefetchAnbieterImages(urls: string[]) {
+		for (let i = 0; i < urls.length; i += IMAGE_FETCH_CONCURRENCY) {
+			const batch = urls.slice(i, i + IMAGE_FETCH_CONCURRENCY);
+			await Promise.all(
+				batch.map(async (url) => {
+					try {
+						const images = await this.fetchImagesFromAnbieterUrl(url);
+						this.imageCache.set(url, images);
+					} catch (error) {
+						console.error(`Image fetch failed for ${url}:`, error);
+						this.imageCache.set(url, []);
+					}
+				}),
+			);
+			if (i + IMAGE_FETCH_CONCURRENCY < urls.length) await sleep(100);
+			if ((i + IMAGE_FETCH_CONCURRENCY) % 40 === 0 || i + IMAGE_FETCH_CONCURRENCY >= urls.length) {
+				const done = Math.min(i + IMAGE_FETCH_CONCURRENCY, urls.length);
+				const withImages = [...this.imageCache.values()].filter((imgs) => imgs?.length).length;
+				console.error(`  images ${done}/${urls.length} pages (${withImages} with images)`);
+			}
+		}
+	}
+
+	private async fetchImagesFromAnbieterUrl(url: string): Promise<string[]> {
+		const html = await customFetch(url, { returnType: `text` });
+		return this.extractImageUrlsFromHtml({ html, pageUrl: url });
+	}
+
+	private extractImageUrlsFromHtml(args: { html: string; pageUrl: string }): string[] {
+		const { html, pageUrl } = args;
+		const $ = cheerio.load(html);
+		const urls: string[] = [];
+
+		const add = (raw: string | undefined) => {
+			if (!raw?.trim()) return;
+			if (urls.length >= MAX_IMAGES_PER_EVENT) return;
+			const absolute = normalizeImageUrl(toAbsoluteUrl({ href: raw.trim(), pageUrl }));
+			if (!absolute) return;
+			if (!isUsableImageUrl(absolute)) return;
+			if (urls.includes(absolute)) return;
+			urls.push(absolute);
+		};
+
+		// Prefer social meta images — these are almost always the event hero.
+		add($(`meta[property="og:image"]`).attr(`content`));
+		add($(`meta[property="og:image:url"]`).attr(`content`));
+		add($(`meta[name="twitter:image"]`).attr(`content`));
+		add($(`meta[name="twitter:image:src"]`).attr(`content`));
+		add($(`link[rel="image_src"]`).attr(`href`));
+
+		// Only if meta images are missing/rejected: one image from main content.
+		if (!urls?.length) {
+			for (const selector of CONTENT_IMAGE_SELECTORS) {
+				const $img = $(selector).first();
+				if (!$img.length) continue;
+				add($img.attr(`src`));
+				add($img.attr(`data-src`));
+				add($img.attr(`data-lazy-src`));
+				const srcset = $img.attr(`srcset`) || $img.attr(`data-srcset`);
+				if (srcset) add(largestFromSrcset(srcset));
+				if (urls?.length) break;
+			}
+		}
+
+		return urls;
+	}
+
 	private async eventToScrapedEvent(args: {
 		row: TantrakalenderSeminar;
 		sourceTag: string;
@@ -171,6 +273,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		}
 		timezone = timezone ?? DEFAULT_TIMEZONE;
 
+		const anbieterUrl = row.anbieterUrl?.trim();
+		const imageUrls = anbieterUrl ? (this.imageCache.get(anbieterUrl) ?? []) : [];
+
 		return {
 			name,
 			startAt,
@@ -179,7 +284,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			price: this.extractPriceFromEvent(row),
 			priceIsHtml: false,
 			description: this.extractDescriptionFromEvent(row),
-			imageUrls: [],
+			imageUrls,
 			host: this.extractHostFromEvent(row),
 			hostLink: this.extractHostLinkFromEvent(row),
 			contact: this.extractContactFromEvent(row),
@@ -315,6 +420,71 @@ function isLikelyGermany(address: string[]) {
 	if (/frankreich|france|korfu|corfu|österreich|austria|schweiz|switzerland|italien|italy|spanien|spain|portugal|griechenland|greece|bali|thailand|indien|india/.test(text)) {
 		return false;
 	}
+	return true;
+}
+
+function toAbsoluteUrl(args: { href: string; pageUrl: string }): string | undefined {
+	try {
+		return new URL(args.href, args.pageUrl).toString();
+	} catch {
+		return undefined;
+	}
+}
+
+function normalizeImageUrl(url: string | undefined): string | undefined {
+	if (!url) return undefined;
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol === `http:`) parsed.protocol = `https:`;
+		parsed.hash = ``;
+		return parsed.toString();
+	} catch {
+		return undefined;
+	}
+}
+
+function largestFromSrcset(srcset: string): string | undefined {
+	let bestUrl: string | undefined;
+	let bestWidth = -1;
+	for (const part of srcset.split(`,`)) {
+		const [url, descriptor] = part.trim().split(/\s+/);
+		if (!url) continue;
+		const widthMatch = descriptor?.match(/^(\d+)w$/);
+		const width = widthMatch ? Number(widthMatch[1]) : 0;
+		if (width >= bestWidth) {
+			bestWidth = width;
+			bestUrl = url;
+		}
+	}
+	return bestUrl;
+}
+
+function isUsableImageUrl(url: string): boolean {
+	if (url.startsWith(`data:`)) return false;
+	if (url.length > 1500) return false;
+
+	let pathname: string;
+	try {
+		pathname = new URL(url).pathname.toLowerCase();
+	} catch {
+		return false;
+	}
+
+	if (/\.(svg|gif|ico)(\?|$)/i.test(pathname)) return false;
+	if (/logo|icon|favicon|sprite|avatar|emoji|pixel|tracking|gravatar|wp-includes|wp-content\/plugins|\/flags\/|spinner|loading/i.test(url)) {
+		return false;
+	}
+	if (/amazon-adsystem|doubleclick|googlesyndication|facebook\.com\/tr|google-analytics/i.test(url)) {
+		return false;
+	}
+
+	// Reject tiny WordPress-style sizes like 50x50 / 100x100 embedded in the path.
+	for (const match of url.matchAll(/(?:^|[^\d])(\d{1,3})x(\d{1,3})(?:[^\d]|$)/g)) {
+		const width = Number(match[1]);
+		const height = Number(match[2]);
+		if (width > 0 && height > 0 && width < 200 && height < 200) return false;
+	}
+
 	return true;
 }
 
