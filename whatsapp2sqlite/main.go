@@ -664,12 +664,20 @@ func (d *daemon) backfillGroupDisplayNames(ctx context.Context) error {
 	seen := map[string]bool{}
 	log.Printf("backfill groups: GetJoinedGroups returned %d groups", len(groups))
 
-	for _, group := range groups {
+	for i, group := range groups {
 		if group == nil || group.JID.IsEmpty() {
 			continue
 		}
 		seen[group.JID.ToNonAD().String()] = true
 
+		log.Printf(
+			"backfill groups: [%d/%d] %s (%s, participants=%d)",
+			i+1,
+			len(groups),
+			group.JID,
+			group.Name,
+			len(group.Participants),
+		)
 		if err := d.syncGroupWithFullInfo(ctx, group); err != nil {
 			log.Printf("store group metadata for %s failed: %v", group.JID, err)
 		}
@@ -1152,6 +1160,28 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 	updatedAt := time.Now().Unix()
 	groupJID := group.JID.String()
 
+	// Resolve identities/names before opening a write transaction. LID/contact store
+	// lookups use the same SQLite DB; holding a TX across them deadlocks the daemon.
+	type memberRow struct {
+		identity contactIdentity
+		names    contactNames
+		isAdmin  bool
+		isSuper  bool
+	}
+	members := make([]memberRow, 0, len(group.Participants))
+	for _, participant := range group.Participants {
+		identity := d.resolveParticipantIdentity(ctx, participant)
+		if identity.contactJID == "" {
+			continue
+		}
+		members = append(members, memberRow{
+			identity: identity,
+			names:    d.lookupContactNames(ctx, identity),
+			isAdmin:  participant.IsAdmin,
+			isSuper:  participant.IsSuperAdmin,
+		})
+	}
+
 	tx, err := d.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin group contacts transaction: %w", err)
@@ -1162,24 +1192,18 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 		return fmt.Errorf("clear group contacts for %s: %w", groupJID, err)
 	}
 
-	for _, participant := range group.Participants {
-		identity := d.resolveParticipantIdentity(ctx, participant)
-		if identity.contactJID == "" {
-			continue
-		}
-
-		names := d.lookupContactNames(ctx, identity)
+	for _, member := range members {
 		if err := upsertContactTx(ctx, tx, contactRecord{
-			contactJID:   identity.contactJID,
-			phoneNumber:  identity.phoneNumber,
-			lidJID:       identity.lidJID,
-			firstName:    names.firstName,
-			fullName:     names.fullName,
-			pushName:     names.pushName,
-			businessName: names.businessName,
+			contactJID:   member.identity.contactJID,
+			phoneNumber:  member.identity.phoneNumber,
+			lidJID:       member.identity.lidJID,
+			firstName:    member.names.firstName,
+			fullName:     member.names.fullName,
+			pushName:     member.names.pushName,
+			businessName: member.names.businessName,
 			updatedAt:    updatedAt,
 		}); err != nil {
-			return fmt.Errorf("upsert contact %s for group %s: %w", identity.contactJID, groupJID, err)
+			return fmt.Errorf("upsert contact %s for group %s: %w", member.identity.contactJID, groupJID, err)
 		}
 
 		if _, err := tx.ExecContext(
@@ -1200,14 +1224,14 @@ func (d *daemon) replaceGroupContacts(ctx context.Context, group *types.GroupInf
 				is_super_admin = excluded.is_super_admin,
 				updated_at = excluded.updated_at`,
 			groupJID,
-			identity.contactJID,
-			nilIfEmpty(identity.phoneNumber),
-			nilIfEmpty(identity.lidJID),
-			boolToInt(participant.IsAdmin),
-			boolToInt(participant.IsSuperAdmin),
+			member.identity.contactJID,
+			nilIfEmpty(member.identity.phoneNumber),
+			nilIfEmpty(member.identity.lidJID),
+			boolToInt(member.isAdmin),
+			boolToInt(member.isSuper),
 			updatedAt,
 		); err != nil {
-			return fmt.Errorf("upsert group contact %s in %s: %w", identity.contactJID, groupJID, err)
+			return fmt.Errorf("upsert group contact %s in %s: %w", member.identity.contactJID, groupJID, err)
 		}
 	}
 
