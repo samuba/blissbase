@@ -1,4 +1,4 @@
-import { Api, TelegramClient } from "teleproto";
+import { Api, TelegramClient, utils } from "teleproto";
 import { StringSession } from "teleproto/sessions";
 import readline from "readline";
 import 'dotenv/config'
@@ -12,7 +12,7 @@ import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
 import type { Entity } from "teleproto/define";
 import * as assets from "../src/lib/assets";
-import { resolveTelegramFormattingToHtml } from "../src/lib/telegramCommon";
+import { resolveTelegramFormattingToHtml, telegramEntityLookupCandidates } from "../src/lib/telegramCommon";
 import { extractVideoFrame } from "./extractVideoFrame";
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
@@ -856,7 +856,12 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
             console.log(`resolved "${chatName}" to ${chatId}`)
         }
 
-        const entity = await client.getEntity(resolvedRoomId);
+        const entity = await resolveScrapingEntity(client, resolvedRoomId);
+        // Persist Bot-API marked peer id (-100…) — bare Channel.id breaks later getEntity as PeerUser.
+        resolvedRoomId = utils.getPeerId(entity);
+        if (resolvedRoomId !== target.roomId) {
+            console.log(`Normalized roomId ${target.roomId} → ${resolvedRoomId}`);
+        }
         const entityName = getEntityName(entity);
         console.log(`Target name: ${entityName}`);
 
@@ -929,6 +934,7 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
             console.log(`No new messages for target ${target.roomId}`);
             await db.update(s.telegramScrapingTargets)
                 .set({
+                    roomId: resolvedRoomId,
                     name: entityName,
                     lastRunFinishedAt: new Date(),
                     lastError: null,
@@ -1042,6 +1048,43 @@ async function getChatIdByName(client: TelegramClient, name: string) {
             return dialog.id?.toString();
         }
     }
+}
+
+/**
+ * Resolves a scraping target entity. Retries with -100… candidates and warms dialogs
+ * when a bare channel id was stored as a positive PeerUser-looking id.
+ */
+async function resolveScrapingEntity(client: TelegramClient, roomId: string) {
+    for (const candidate of telegramEntityLookupCandidates(roomId)) {
+        try {
+            return await client.getEntity(candidate);
+        } catch {
+            continue;
+        }
+    }
+
+    // Warm access hashes — needed when session cache never saw this peer as a channel.
+    const dialogs = await client.getDialogs({});
+    const wanted = new Set(
+        telegramEntityLookupCandidates(roomId).map((candidate) => candidate.toString()),
+    );
+    for (const dialog of dialogs) {
+        const dialogId = dialog.id?.toString();
+        if (!dialogId || !wanted.has(dialogId)) continue;
+        if (dialog.entity) return dialog.entity;
+    }
+
+    for (const candidate of telegramEntityLookupCandidates(roomId)) {
+        try {
+            return await client.getEntity(candidate);
+        } catch {
+            continue;
+        }
+    }
+
+    throw new Error(
+        `Could not find Telegram entity for "${roomId}". Use @username, resolveName:Chat Title, or the full chat id (e.g. -100…). The scraper account must be a member of the chat.`,
+    );
 }
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

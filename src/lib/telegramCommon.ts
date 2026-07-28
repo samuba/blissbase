@@ -314,6 +314,38 @@ export function resolveTelegramFormattingToHtml(text: string, entities: Api.Type
 }
 
 /**
+ * Candidates for teleproto `getEntity` / dialog matching.
+ * Positive bare channel ids are also tried as `-100…` (Bot API marked peer id).
+ */
+export function telegramEntityLookupCandidates(roomId: string) {
+	const trimmed = roomId.trim();
+	const candidates: Array<string | number> = [trimmed];
+
+	if (trimmed.startsWith(`@`)) {
+		candidates.push(trimmed.slice(1));
+		return candidates;
+	}
+
+	if (!/^-?\d+$/.test(trimmed)) {
+		candidates.push(`@${trimmed}`);
+		return candidates;
+	}
+
+	const asNumber = Number(trimmed);
+	candidates.push(asNumber);
+
+	// Positive IDs are often channel IDs without the -100 prefix.
+	if (asNumber > 0) {
+		candidates.push(`-100${trimmed}`);
+		candidates.push(Number(`-100${trimmed}`));
+		candidates.push(`-${trimmed}`);
+		candidates.push(-asNumber);
+	}
+
+	return candidates;
+}
+
+/**
  * Normalizes roomId input: extracts username or chat id from t.me / telegram.me links.
  * Invite links (+… / joinchat) cannot be converted to a room id.
  *

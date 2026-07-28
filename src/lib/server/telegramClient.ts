@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/private';
-import { extractTelegramRoomIdFromInput } from '$lib/telegramCommon';
-import { TelegramClient } from 'teleproto';
+import { extractTelegramRoomIdFromInput, telegramEntityLookupCandidates } from '$lib/telegramCommon';
+import { TelegramClient, utils } from 'teleproto';
 import { StringSession } from 'teleproto/sessions';
 
 /**
@@ -48,8 +48,9 @@ export async function resolveTelegramScrapingTarget({ roomId }: { roomId: string
 		}
 
 		const entity = await resolveEntity({ client, dialogs, roomId: resolvedRoomId });
+		// Channel.entity.id is the bare id; store Bot-API marked peer id (-100…) so the scraper can resolve it.
 		return {
-			roomId: entity.id?.toString() ?? resolvedRoomId,
+			roomId: utils.getPeerId(entity),
 			name: getEntityName(entity),
 		};
 	} finally {
@@ -67,7 +68,7 @@ async function resolveEntity(args: {
 	const fromDialogs = findDialogEntity({ dialogs, roomId });
 	if (fromDialogs) return fromDialogs;
 
-	for (const candidate of entityLookupCandidates(roomId)) {
+	for (const candidate of telegramEntityLookupCandidates(roomId)) {
 		try {
 			return await client.getEntity(candidate);
 		} catch {
@@ -80,40 +81,12 @@ async function resolveEntity(args: {
 	);
 }
 
-function entityLookupCandidates(roomId: string) {
-	const trimmed = roomId.trim();
-	const candidates: Array<string | number> = [trimmed];
-
-	if (trimmed.startsWith(`@`)) {
-		candidates.push(trimmed.slice(1));
-		return candidates;
-	}
-
-	if (!/^-?\d+$/.test(trimmed)) {
-		candidates.push(`@${trimmed}`);
-		return candidates;
-	}
-
-	const asNumber = Number(trimmed);
-	candidates.push(asNumber);
-
-	// Positive IDs are often channel IDs without the -100 prefix.
-	if (asNumber > 0) {
-		candidates.push(`-100${trimmed}`);
-		candidates.push(Number(`-100${trimmed}`));
-		candidates.push(`-${trimmed}`);
-		candidates.push(-asNumber);
-	}
-
-	return candidates;
-}
-
 function findDialogEntity(args: {
 	dialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>;
 	roomId: string;
 }) {
 	const wanted = new Set(
-		entityLookupCandidates(args.roomId).map((candidate) => candidate.toString()),
+		telegramEntityLookupCandidates(args.roomId).map((candidate) => candidate.toString()),
 	);
 
 	for (const dialog of args.dialogs) {
