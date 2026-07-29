@@ -1868,48 +1868,45 @@ msgstr "<0/> Erneut laden"
 msgid "Admin"
 msgstr "Admin"
 
-#: src/routes/profile/+page.svelte
-msgid "Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen."
-msgstr "Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen."
+#~ msgid "Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen."
+#~ msgstr "Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen."
 
 #: src/routes/profile/+page.svelte
 msgid "Admin öffnen"
 msgstr "Admin öffnen"
 
-#: src/routes/admin/+page.svelte
-#: src/routes/admin/+page.svelte
+#: src/lib/components/AdminEventSourceFilter.svelte
+#: src/lib/components/AdminEventSourceFilter.svelte
 msgid "All"
 msgstr "All"
 
-#: src/routes/admin/+page.svelte
+#: src/lib/components/AdminEventSourceFilter.svelte
 msgid "Failed to save source filter"
 msgstr "Failed to save source filter"
 
-#: src/routes/admin/+page.svelte
-msgid "Wähle, welche Event-Quellen auf der Startseite angezeigt werden."
-msgstr "Wähle, welche Event-Quellen auf der Startseite angezeigt werden."
+#~ msgid "Wähle, welche Event-Quellen auf der Startseite angezeigt werden."
+#~ msgstr "Wähle, welche Event-Quellen auf der Startseite angezeigt werden."
 
 #~ msgid "Event Quelle"
 #~ msgstr "Event Quelle"
 
-#: src/routes/admin/+page.svelte
+#: src/lib/components/AdminEventSourceFilter.svelte
 msgid "Wird gespeichert..."
 msgstr "Wird gespeichert..."
 
-#: src/routes/admin/+page.svelte
+#: src/lib/components/AdminEventSourceFilter.svelte
 msgid "Es werden Events aus allen Quellen angezeigt."
 msgstr "Es werden Events aus allen Quellen angezeigt."
 
 #. 0: getSourceLabel(selectedSource)
-#: src/routes/admin/+page.svelte
+#: src/lib/components/AdminEventSourceFilter.svelte
 msgid "Es werden nur Events aus „{0}“ angezeigt."
 msgstr "Es werden nur Events aus „{0}“ angezeigt."
 
-#: src/routes/admin/+page.svelte
-msgid "<0/> Zur Event-Liste"
-msgstr "<0/> Zur Event-Liste"
+#~ msgid "<0/> Zur Event-Liste"
+#~ msgstr "<0/> Zur Event-Liste"
 
-#: src/routes/admin/+page.svelte
+#: src/lib/components/AdminEventSourceFilter.svelte
 msgid "Event Quelle Filter"
 msgstr "Event Quelle Filter"
 
@@ -2186,3 +2183,21 @@ msgstr "<0/> WhatsApp Scraping Targets"
 
 #~ msgid "<0/> WhatsApp Scraping Targets<0/> WhatsApp Scraping Targets"
 #~ msgstr "<0/> WhatsApp Scraping Targets<0/> WhatsApp Scraping Targets"
+
+#~ msgid "<0/> Admin"
+#~ msgstr "<0/> Admin"
+
+#~ msgid "Wähle, welche Event-Quellen angezeigt werden."
+#~ msgstr "Wähle, welche Event-Quellen angezeigt werden."
+
+#: src/routes/admin/+page.svelte
+msgid "Event-Quellenfilter findest du im Filter-Dialog auf der Startseite."
+msgstr "Event-Quellenfilter findest du im Filter-Dialog auf der Startseite."
+
+#: src/routes/profile/+page.svelte
+msgid "Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools."
+msgstr "Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools."
+
+#: src/lib/components/AdminEventSourceFilter.svelte
+msgid "<0/> Admin Zeug"
+msgstr "<0/> Admin Zeug"
