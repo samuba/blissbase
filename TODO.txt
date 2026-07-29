@@ -8,14 +8,7 @@ whitelisting, geolock, otp
 
 form invalid messages übersetzen
 allevents scrapen?
-franky antworten
-offerings: make sure texts are correct
-create offering: nach erstellung öffnet sich das offering und lässt sich nicht mehr schließen
 enbable fork=true when it does not produce bugs anymore see repro
-offerings show online does not work after hovering over page menu!!
-navigating to offerings page from discover freezes tab with fork=true
-
-switch to lexical editor?
 use single flight mutations for profile and event creation
 make everything go fast - indexes? 
 run offering schema migration manually: offerings.name -> title, description -> description_html, add offering_format enum + format column
