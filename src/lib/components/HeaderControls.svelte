@@ -10,6 +10,7 @@
 	import TabsNavDesktop from './TabsNavDesktop.svelte';
 	import { routes } from '$lib/routes';
 	import { OfferingsFeatureFlag } from '$lib/OfferingsFeatureFlag.svelte';
+	import { user } from '$lib/user.svelte';
 
 	let {
 		onLocationDistanceChange = eventsStore.handleLocationDistanceChange
@@ -235,6 +236,18 @@
 						Alle Filter zurücksetzen
 					</button>
 				</div>
+
+				{#if user.isAdmin}
+					<svelte:boundary>
+						{@const AdminEventSourceFilter = (await import('./AdminEventSourceFilter.svelte')).default}
+						<AdminEventSourceFilter />
+						{#snippet pending()}
+							<div class="bg-warning text-warning-content flex w-full flex-col items-start gap-3 rounded-box p-4">
+								<span class="loading loading-spinner loading-sm"></span>
+							</div>
+						{/snippet}
+					</svelte:boundary>
+				{/if}
 			</div>
 
 			<!-- <div class="grow"></div> -->

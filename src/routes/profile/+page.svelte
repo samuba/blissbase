@@ -124,7 +124,7 @@
 					<div class="min-w-0 flex-1 space-y-2">
 						<h3 class="text-lg font-semibold">Admin</h3>
 						<p class="text-base-content/80 text-sm leading-relaxed">
-							Verwalte Admin-Einstellungen wie die sichtbaren Event-Quellen.
+							Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools.
 						</p>
 						<div class="card-actions pt-1">
 							<a href={routes.admin()} class="btn">
