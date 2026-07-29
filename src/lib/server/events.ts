@@ -7,7 +7,6 @@ import {
 	and,
 	lt,
 	isNotNull,
-	isNull,
 	lte,
 	gt,
 	sql,
@@ -67,11 +66,10 @@ export const eventWith = {
  * Returns events that match ALL of the following conditions:
  *
  * 1. **Date Range**: Events that fall within the specified date range
- *    - Events that start within the range
- *    - Events that end within the range (must have started within last 6 hours for current/future ranges)
- *    - Events that span the entire range (must have started within last 6 hours for current/future ranges)
- *    - Never returns events that started more than 6 hours ago (except for historical date ranges)
- *    - Historical ranges (both startDate and endDate in the past) return all events without time restrictions
+ *    - Events that start within, end within, or span the range
+ *    - Current and future ranges include ongoing events until 30% of their duration has elapsed
+ *    - Events without an end time use a default duration of four hours
+ *    - Historical ranges return all matching events without elapsed-time restrictions
  *
  * 2. **Location Filter** (if distance parameter provided):
  *    - Events within the specified distance (in km) from the given coordinates or geocoded address
@@ -85,7 +83,8 @@ export const eventWith = {
  *
  * 5. **Sorting**: By time (startAt) or distance from specified location
  *
- * Events are excluded if they started more than 6 hours ago and don't meet the ongoing event criteria.
+ * The relevance timestamp is kept stable across paginated requests so offset pagination cannot skip events
+ * as ongoing events age past the 30% threshold.
  *
  * @example
  * // Get events in Berlin within 10km, starting next week
@@ -112,8 +111,8 @@ export async function fetchEvents(params: LoadEventsParams) {
 	const offset = (page - 1) * limit;
 	const source = params.source?.trim() || null;
 
-	const now = new Date();
-	const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+	const relevanceAt = parseRelevanceAt(params.relevanceAt);
+	const relevanceAtIso = relevanceAt.toISOString();
 	const startDate = startCalDate.toDate(timeZone);
 	const endDate = new Date(endCalDate.toDate(timeZone).getTime() + 24 * 60 * 60 * 1000 - 1); // End of day
 
@@ -121,45 +120,33 @@ export async function fetchEvents(params: LoadEventsParams) {
 	if (onlyOnlineEvents) attendanceMode = 'online'; // remove after some time
 
 	// Check if the entire date range is in the past
-	const isHistoricalRange = endDate <= now;
+	const isHistoricalRange = endDate <= relevanceAt;
+
+	const effectiveEndAt = sql`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
+	const stillRelevantCondition = or(
+		gte(s.events.startAt, relevanceAt), // Future events (haven't started yet)
+		and(
+			sql`${effectiveEndAt} >= ${relevanceAtIso}`, // Events that haven't ended yet (default end = start + 4h)
+			sql`${relevanceAtIso} <= ${s.events.startAt} + 0.3 * (${effectiveEndAt} - ${s.events.startAt})`, // At most 30% of duration elapsed
+		),
+	);
 
 	const startsInRange = and(
 		gte(s.events.startAt, startDate),
 		lte(s.events.startAt, endDate),
-		isHistoricalRange
-			? undefined
-			: or(
-					gte(s.events.startAt, sql`NOW()`), // Future events (haven't started yet)
-					and(
-						gte(s.events.startAt, twoHoursAgo), // Recent events (started within last 6 hours)
-						or(
-							isNull(s.events.endAt), // Events without end time
-							gte(s.events.endAt, sql`NOW()`) // Events that haven't ended yet
-						)
-					)
-				)
+		isHistoricalRange ? undefined : stillRelevantCondition,
 	);
 	const endsInRange = and(
 		isNotNull(s.events.endAt),
 		gte(s.events.endAt, startDate),
 		lte(s.events.endAt, endDate),
-		isHistoricalRange
-			? undefined
-			: and(
-					gte(s.events.startAt, twoHoursAgo),
-					gte(s.events.endAt, sql`NOW()`) // Event hasn't ended yet
-				)
+		isHistoricalRange ? undefined : stillRelevantCondition,
 	);
 	const spansRange = and(
 		isNotNull(s.events.endAt),
 		lt(s.events.startAt, startDate),
 		gt(s.events.endAt, endDate),
-		isHistoricalRange
-			? undefined
-			: and(
-					gte(s.events.startAt, twoHoursAgo),
-					gte(s.events.endAt, sql`NOW()`) // Event hasn't ended yet
-				)
+		isHistoricalRange ? undefined : stillRelevantCondition,
 	);
 	const dateCondition = or(startsInRange, endsInRange, spansRange);
 	const allConditions = [and(s.events.listed), dateCondition];
@@ -327,9 +314,16 @@ export async function fetchEvents(params: LoadEventsParams) {
 			sortOrder,
 			tagIds,
 			attendanceMode,
-			source
+			source,
+			relevanceAt: relevanceAtIso
 		} satisfies LoadEventsParams & { totalEvents: number; totalPages: number }
 	};
+}
+
+function parseRelevanceAt(value?: string | null) {
+	const parsed = value ? new Date(value) : new Date();
+	if (!Number.isNaN(parsed.getTime())) return parsed;
+	return new Date();
 }
 
 type TempFetchEventsResult = Awaited<ReturnType<typeof fetchEvents>>;
@@ -405,6 +399,7 @@ export const loadEventsParamsSchema = v.partial(
 		onlyOnlineEvents: v.nullable(v.boolean()), // TODO: remove after some time
 		attendanceMode: v.nullable(v.picklist(attendanceModeEnum)),
 		source: v.nullable(v.string()),
+		relevanceAt: v.nullable(v.pipe(v.string(), v.isoTimestamp())),
 		// these are not used as params but are returned in the pagination object
 		totalEvents: v.nullable(v.number()),
 		totalPages: v.nullable(v.number())

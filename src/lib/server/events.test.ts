@@ -879,6 +879,51 @@ describe('Events Module - Happy Flow Tests', () => {
                 expect(page1.pagination.page).toBe(1);
                 expect(page2.pagination.page).toBe(2);
             });
+
+            it('should keep the relevance timestamp stable across pages', async () => {
+                const relevanceAt = new Date(`2026-07-29T12:00:00Z`);
+                const events = [
+                    createTestEvent({
+                        name: `A`,
+                        startAt: new Date(`2026-07-29T11:50:00Z`),
+                        endAt: new Date(`2026-07-29T12:50:00Z`),
+                        slug: `pagination-a`
+                    }),
+                    createTestEvent({
+                        name: `B`,
+                        startAt: new Date(`2026-07-29T13:00:00Z`),
+                        endAt: new Date(`2026-07-29T14:00:00Z`),
+                        slug: `pagination-b`
+                    }),
+                    createTestEvent({
+                        name: `C`,
+                        startAt: new Date(`2026-07-29T14:00:00Z`),
+                        endAt: new Date(`2026-07-29T15:00:00Z`),
+                        slug: `pagination-c`
+                    })
+                ];
+
+                await upsertEvents(events);
+
+                const page1 = prepareEventsResultForUi(await fetchEvents({
+                    startDate: `2026-07-29`,
+                    endDate: `2026-07-29`,
+                    limit: 2,
+                    page: 1,
+                    relevanceAt: relevanceAt.toISOString()
+                }));
+                const page2 = prepareEventsResultForUi(await fetchEvents({
+                    startDate: `2026-07-29`,
+                    endDate: `2026-07-29`,
+                    limit: 2,
+                    page: 2,
+                    relevanceAt: page1.pagination.relevanceAt
+                }));
+
+                expect(page1.events.map((event) => event.name)).toEqual([`A`, `B`]);
+                expect(page2.events.map((event) => event.name)).toEqual([`C`]);
+                expect(page2.pagination.relevanceAt).toBe(relevanceAt.toISOString());
+            });
         });
 
         describe('Date filtering', () => {
@@ -978,6 +1023,54 @@ describe('Events Module - Happy Flow Tests', () => {
 
                 expect(result.events).toHaveLength(1);
                 expect(result.events[0].name).toBe('Old Event');
+            });
+
+            it('should hide ongoing events once more than 30% of their duration has elapsed', async () => {
+                const relevanceAt = new Date(`2026-07-29T12:00:00Z`);
+                const now = relevanceAt.getTime();
+                const events = [
+                    createTestEvent({
+                        name: 'Just Started',
+                        startAt: new Date(now - 30 * 60 * 1000), // 30min into 4h = 12.5%
+                        endAt: new Date(now + 3.5 * 60 * 60 * 1000),
+                        slug: 'just-started'
+                    }),
+                    createTestEvent({
+                        name: 'Mostly Elapsed',
+                        startAt: new Date(now - 2 * 60 * 60 * 1000), // 2h into 4h = 50%
+                        endAt: new Date(now + 2 * 60 * 60 * 1000),
+                        slug: 'mostly-elapsed'
+                    }),
+                    createTestEvent({
+                        name: 'No End Still Early',
+                        startAt: new Date(now - 60 * 60 * 1000), // 1h into default 4h = 25%
+                        endAt: null,
+                        slug: 'no-end-early'
+                    }),
+                    createTestEvent({
+                        name: 'No End Mostly Elapsed',
+                        startAt: new Date(now - 2 * 60 * 60 * 1000), // 2h into default 4h = 50%
+                        endAt: null,
+                        slug: 'no-end-elapsed'
+                    }),
+                    createTestEvent({
+                        name: 'Future Event',
+                        startAt: new Date(now + 60 * 60 * 1000),
+                        endAt: new Date(now + 3 * 60 * 60 * 1000),
+                        slug: 'future-still-relevant'
+                    })
+                ];
+
+                await upsertEvents(events);
+
+                const result = prepareEventsResultForUi(await fetchEvents({
+                    startDate: `2026-07-29`,
+                    endDate: `2026-07-29`,
+                    relevanceAt: relevanceAt.toISOString()
+                }));
+                const names = result.events.map((event) => event.name).sort();
+
+                expect(names).toEqual([`Future Event`, `Just Started`, `No End Still Early`]);
             });
 
             it('should handle same-day events when start and end dates are the same', async () => {

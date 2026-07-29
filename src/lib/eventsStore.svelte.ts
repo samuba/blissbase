@@ -27,6 +27,7 @@ type PaginationState = {
     source?: string | null;
     totalEvents?: number | null;
     totalPages?: number | null;
+    relevanceAt?: string | null;
 };
 
 function initialPagination() {
@@ -37,6 +38,7 @@ function initialPagination() {
         limit: 8,
         sortBy: 'time',
         sortOrder: 'asc',
+        relevanceAt: null,
     } satisfies PaginationState;
 }
 
@@ -92,8 +94,14 @@ export class EventsStore {
     // Core loading function
     async loadEvents(params: Parameters<typeof fetchEventsWithCookiePersistence>[0], append?: boolean) {
         const requestId = ++this.loadRequestId;
+        const requestParams = {
+            ...params,
+            relevanceAt: append ? this.pagination.relevanceAt ?? null : null,
+        };
         const applyPagination = (params: Parameters<typeof fetchEventsWithCookiePersistence>[0]) => {
-                // Normalize undefined to null for consistency with PaginationState type
+                // Normalize undefined to null for consistency with PaginationState type.
+                // Preserve totals/relevance across optimistic request updates that omit them
+                // so canLoadMore stays correct if a load-more request fails or is superseded.
                 this.pagination = {
                     ...this.pagination,
                     page: params.page ?? this.pagination.page,
@@ -109,16 +117,17 @@ export class EventsStore {
                     tagIds: params.tagIds ?? null,
                     attendanceMode: params.attendanceMode ?? null,
                     source: params.source ?? null,
-                    totalEvents: params.totalEvents ?? null,
-                    totalPages: params.totalPages ?? null,
+                    totalEvents: `totalEvents` in params ? params.totalEvents ?? null : this.pagination.totalEvents,
+                    totalPages: `totalPages` in params ? params.totalPages ?? null : this.pagination.totalPages,
+                    relevanceAt: `relevanceAt` in params ? params.relevanceAt ?? null : this.pagination.relevanceAt,
                 };
         }
 
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
-            applyPagination(params); // optimistically set pagination state
-            OfferingsFeatureFlag.updateFromPosition({ lat: params.lat, lng: params.lng });
-            const data = await fetchEventsWithCookiePersistence(params);
+            applyPagination(requestParams); // optimistically set pagination state
+            OfferingsFeatureFlag.updateFromPosition({ lat: requestParams.lat, lng: requestParams.lng });
+            const data = await fetchEventsWithCookiePersistence(requestParams);
 
             if (requestId !== this.loadRequestId) return;
 
@@ -142,6 +151,7 @@ export class EventsStore {
     // Load more events for infinite scroll
     async loadMoreEvents() {
         if (this.loadingState !== 'not-loading') return;
+        if (this.pagination.totalPages != null && this.pagination.page >= this.pagination.totalPages) return;
 
         return this.loadEvents(
             {
@@ -158,7 +168,7 @@ export class EventsStore {
                 sortOrder: this.pagination.sortOrder,
                 tagIds: this.pagination.tagIds,
                 attendanceMode: this.pagination.attendanceMode,
-                source: this.pagination.source
+                source: this.pagination.source,
             },
             true
         );
