@@ -134,6 +134,10 @@ Looks nice for anyone interested.`,
 
 	itWithAiKey(
 		`extracts rich event fields and obeys URL/contact guardrails`,
+		{
+			timeout: 90_000,
+			retry: 2
+		},
 		async () => {
 			if (!model) throw new Error(`AI API key is required for this test`);
 
@@ -191,7 +195,6 @@ Message me only if both registration links fail.`,
 			expect(result.city).toBe(`Berlin`);
 			expect(result.tags?.length).toBeGreaterThan(0);
 			expect(result.isConscious).toBe(true);
-		},
-		90_000
+		}
 	);
 });

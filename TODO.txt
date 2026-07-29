@@ -1,3 +1,11 @@
+introduce bookingUrl. cuz sourceUrl is good to have to know where its coming from but its not always where we wanna guide people to. Can use it for the source link
+-> already have contact.
+
+"We dont have events in this location, you can help us adding more  by telling us about how events get announced here. Websites? Whatsapp Groups? Facebook? Telegram?"
+
+diesen anderen tantra kalender scrapen
+whitelisting, geolock, otp
+
 form invalid messages übersetzen
 allevents scrapen?
 franky antworten
