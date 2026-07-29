@@ -11,6 +11,7 @@
 	import { routes } from '$lib/routes';
 	import { OfferingsFeatureFlag } from '$lib/OfferingsFeatureFlag.svelte';
 	import { user } from '$lib/user.svelte';
+	import AdminEventSourceFilter from './AdminEventSourceFilter.svelte';
 
 	let {
 		onLocationDistanceChange = eventsStore.handleLocationDistanceChange
@@ -238,15 +239,9 @@
 				</div>
 
 				{#if user.isAdmin}
-					<svelte:boundary>
-						{@const AdminEventSourceFilter = (await import('./AdminEventSourceFilter.svelte')).default}
-						<AdminEventSourceFilter />
-						{#snippet pending()}
-							<div class="bg-warning text-warning-content flex w-full flex-col items-start gap-3 rounded-box p-4">
-								<span class="loading loading-spinner loading-sm"></span>
-							</div>
-						{/snippet}
-					</svelte:boundary>
+					<AdminEventSourceFilter />
+			
+		
 				{/if}
 			</div>
 
