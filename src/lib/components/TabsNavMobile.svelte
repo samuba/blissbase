@@ -5,10 +5,26 @@
 	import { onMount } from 'svelte';
 	import { showLoginDialog } from './LoginDialog.svelte';
 
+	const NON_TEXT_INPUT_TYPES = new Set([
+		`button`,
+		`checkbox`,
+		`color`,
+		`file`,
+		`hidden`,
+		`image`,
+		`radio`,
+		`range`,
+		`reset`,
+		`submit`
+	]);
+
 	const userId = $derived(page.data.userId);
 	const pathname = $derived(page.url.pathname);
 	let isMoreMenuOpen = $state(false);
-	let keyboardOpen = $state(false);
+	let keyboardInset = $state(0);
+	let isTextEntryFocused = $state(false);
+	// Browser toolbars can shrink the visual viewport by ~100px, virtual keyboards by far more.
+	const keyboardOpen = $derived(isTextEntryFocused && keyboardInset > 150);
 
 	/**
 	 * Toggle the mobile `Mehr` menu.
@@ -54,6 +70,33 @@
 		isMoreMenuOpen = false;
 	}
 
+	/**
+	 * Detect a text-entry element, since only those open a virtual keyboard.
+	 * Focus alone is not enough: pinch-zoom shrinks the visual viewport too.
+	 */
+	function isTextEntry(target: EventTarget | null) {
+		if (!(target instanceof HTMLElement)) {
+			return false;
+		}
+
+		if (target.isContentEditable || target instanceof HTMLTextAreaElement) {
+			return true;
+		}
+
+		if (!(target instanceof HTMLInputElement)) {
+			return false;
+		}
+
+		return !NON_TEXT_INPUT_TYPES.has(target.type);
+	}
+
+	function handleFocusIn(event: FocusEvent) {
+		isTextEntryFocused = isTextEntry(event.target);
+		if (isTextEntryFocused) {
+			isMoreMenuOpen = false;
+		}
+	}
+
 	// Hide the tab bar while the virtual keyboard is open (avoids the fixed-bottom gap).
 	onMount(() => {
 		const visualViewport = window.visualViewport;
@@ -61,37 +104,36 @@
 			return;
 		}
 
-		const syncKeyboard = () => {
-			const bottomInset = Math.max(
+		const syncKeyboardInset = () => {
+			// `scale` normalizes pinch-zoom, where the visual viewport shrinks without a keyboard.
+			const visibleHeight = visualViewport.height * visualViewport.scale;
+			keyboardInset = Math.max(
 				0,
-				window.innerHeight - visualViewport.height - visualViewport.offsetTop
+				window.innerHeight - visibleHeight - visualViewport.offsetTop
 			);
-			const nextKeyboardOpen = bottomInset > 50;
-			if (nextKeyboardOpen === keyboardOpen) {
-				return;
-			}
-			keyboardOpen = nextKeyboardOpen;
-			if (nextKeyboardOpen) {
-				isMoreMenuOpen = false;
-			}
 		};
 
-		visualViewport.addEventListener(`resize`, syncKeyboard);
-		visualViewport.addEventListener(`scroll`, syncKeyboard, { passive: true });
-		syncKeyboard();
+		visualViewport.addEventListener(`resize`, syncKeyboardInset);
+		visualViewport.addEventListener(`scroll`, syncKeyboardInset, { passive: true });
+		syncKeyboardInset();
 
 		return () => {
-			visualViewport.removeEventListener(`resize`, syncKeyboard);
-			visualViewport.removeEventListener(`scroll`, syncKeyboard);
+			visualViewport.removeEventListener(`resize`, syncKeyboardInset);
+			visualViewport.removeEventListener(`scroll`, syncKeyboardInset);
 		};
 	});
+
 </script>
 
-<svelte:document onclick={handleDocumentClick} onkeydown={handleDocumentKeydown} />
+<svelte:document
+	onclick={handleDocumentClick}
+	onkeydown={handleDocumentKeydown}
+	onfocusin={handleFocusIn}
+	onfocusout={() => (isTextEntryFocused = false)}
+/>
 
 <nav
 	aria-label="Hauptnavigation mobil"
-	aria-hidden={keyboardOpen}
 	class={[
 		`fixed inset-x-0 bottom-0 z-50 border-t border-base-300/80 bg-base-100 shadow-[0_-12px_30px_rgba(0,0,0,0.08)] md:hidden`,
 		keyboardOpen && `invisible pointer-events-none`
