@@ -8,7 +8,7 @@
 	const userId = $derived(page.data.userId);
 	const pathname = $derived(page.url.pathname);
 	let isMoreMenuOpen = $state(false);
-	let navEl: HTMLElement | undefined = $state();
+	let keyboardOpen = $state(false);
 
 	/**
 	 * Toggle the mobile `Mehr` menu.
@@ -54,85 +54,35 @@
 		isMoreMenuOpen = false;
 	}
 
-	/**
-	 * Pin the fixed nav to the visual viewport bottom.
-	 * Mobile keyboards (esp. Firefox) leave a gap under `bottom: 0` fixed bars otherwise.
-	 */
+	// Hide the tab bar while the virtual keyboard is open (avoids the fixed-bottom gap).
 	onMount(() => {
 		const visualViewport = window.visualViewport;
 		if (!visualViewport) {
 			return;
 		}
 
-		let frame: number | undefined;
-		let appliedOffset = 0;
-		let keyboardOpen = false;
-
-		const syncToVisualViewport = () => {
-			frame = undefined;
-			const el = navEl;
-			if (!el) {
-				return;
-			}
-
+		const syncKeyboard = () => {
 			const bottomInset = Math.max(
 				0,
 				window.innerHeight - visualViewport.height - visualViewport.offsetTop
 			);
 			const nextKeyboardOpen = bottomInset > 50;
-
-			if (nextKeyboardOpen !== keyboardOpen) {
-				keyboardOpen = nextKeyboardOpen;
-				if (nextKeyboardOpen) {
-					isMoreMenuOpen = false;
-					// Home indicator is covered by the keyboard — drop the safe-area pad.
-					el.style.setProperty(`--tabs-nav-safe-bottom`, `0px`);
-				} else {
-					el.style.removeProperty(`--tabs-nav-safe-bottom`);
-				}
-			}
-
-			if (!nextKeyboardOpen) {
-				if (appliedOffset === 0) {
-					return;
-				}
-				appliedOffset = 0;
-				el.style.removeProperty(`transform`);
+			if (nextKeyboardOpen === keyboardOpen) {
 				return;
 			}
-
-			// Align nav bottom to visual viewport bottom (closes Firefox gap or lifts from under keyboard).
-			const correction =
-				visualViewport.offsetTop + visualViewport.height - el.getBoundingClientRect().bottom;
-			if (Math.abs(correction) <= 0.5) {
-				return;
+			keyboardOpen = nextKeyboardOpen;
+			if (nextKeyboardOpen) {
+				isMoreMenuOpen = false;
 			}
-
-			appliedOffset += correction;
-			el.style.transform = `translate3d(0, ${appliedOffset}px, 0)`;
 		};
 
-		const scheduleSync = () => {
-			if (frame !== undefined) {
-				return;
-			}
-			frame = window.requestAnimationFrame(syncToVisualViewport);
-		};
-
-		visualViewport.addEventListener(`resize`, scheduleSync);
-		visualViewport.addEventListener(`scroll`, scheduleSync, { passive: true });
-		window.addEventListener(`resize`, scheduleSync);
-		syncToVisualViewport();
+		visualViewport.addEventListener(`resize`, syncKeyboard);
+		visualViewport.addEventListener(`scroll`, syncKeyboard, { passive: true });
+		syncKeyboard();
 
 		return () => {
-			visualViewport.removeEventListener(`resize`, scheduleSync);
-			visualViewport.removeEventListener(`scroll`, scheduleSync);
-			window.removeEventListener(`resize`, scheduleSync);
-			if (frame !== undefined) {
-				window.cancelAnimationFrame(frame);
-			}
-			navEl?.style.removeProperty(`transform`);
-			navEl?.style.removeProperty(`--tabs-nav-safe-bottom`);
+			visualViewport.removeEventListener(`resize`, syncKeyboard);
+			visualViewport.removeEventListener(`scroll`, syncKeyboard);
 		};
 	});
 </script>
@@ -140,11 +90,14 @@
 <svelte:document onclick={handleDocumentClick} onkeydown={handleDocumentKeydown} />
 
 <nav
-	bind:this={navEl}
 	aria-label="Hauptnavigation mobil"
-	class="fixed inset-x-0 bottom-0 z-50 border-t border-base-300/80 bg-base-100 shadow-[0_-12px_30px_rgba(0,0,0,0.08)] md:hidden"
+	aria-hidden={keyboardOpen}
+	class={[
+		`fixed inset-x-0 bottom-0 z-50 border-t border-base-300/80 bg-base-100 shadow-[0_-12px_30px_rgba(0,0,0,0.08)] md:hidden`,
+		keyboardOpen && `invisible pointer-events-none`
+	]}
 >
-	<ul class="grid grid-cols-5 px-2 pt-3 pb-[calc(0.75rem+var(--tabs-nav-safe-bottom,env(safe-area-inset-bottom)))]">
+	<ul class="grid grid-cols-5 px-2 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
 		{#each getAppNavItems().filter(x => !x.isInMoreMenu) as tab (tab.href)}
 			{@const isActive = isActiveAppTab(pathname, tab.href)}
 			{@const icon = isActive ? tab.iconActive : tab.icon}
