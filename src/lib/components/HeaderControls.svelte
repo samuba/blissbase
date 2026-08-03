@@ -24,10 +24,9 @@
 	let contentBeforeMenuHeight = $state(0);
 	const showShadow = $derived(scrollY > ((headerElement?.offsetHeight ?? 50) + contentBeforeMenuHeight - 100));
 	let isFilterDialogOpen = $state(false);
-	let dismissedOfferingsLink = $state(false);
 	const sortByTime = $derived(eventsStore.selectedSortValue === 'time_asc');
 	const sortByDistance = $derived(eventsStore.selectedSortValue === 'distance_asc');
-	const showOfferingsLink = $derived(!dismissedOfferingsLink && OfferingsFeatureFlag.isEnabled);
+	let showOfferingsLink = $state(true);
 
 	const startDate = $derived(eventsStore.pagination.startDate ? parseDate(eventsStore.pagination.startDate) : undefined);
 	const endDate = $derived(eventsStore.pagination.endDate ? parseDate(eventsStore.pagination.endDate) : undefined);
@@ -123,7 +122,7 @@
 					<button
 						class="btn btn-ghost btn-circle btn-xs mr-2 ml-1"
 						aria-label="Offerings-Hinweis ausblenden"
-						onclick={() => dismissedOfferingsLink = true}
+						onclick={() => showOfferingsLink = true}
 					>
 						<i class="icon-[ph--x] size-4"></i>
 					</button>

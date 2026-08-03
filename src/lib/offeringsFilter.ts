@@ -43,7 +43,9 @@ export function parseOfferingsFilterFromUrl(url: URL): OfferingsFilter {
 		lat: sanitized.lat ?? null,
 		lng: sanitized.lng ?? null,
 		searchTerm,
-		includeOnline: includeOnlineParam === `1` || includeOnlineParam === `true`,
+		includeOnline: includeOnlineParam == null
+			? true
+			: includeOnlineParam === `1` || includeOnlineParam === `true`,
 	};
 }
 
@@ -56,7 +58,8 @@ export function hasOfferingsLocationParams(filter: OfferingsFilter) {
 }
 
 export function hasOfferingsFilterParams(filter: OfferingsFilter) {
-	return hasOfferingsLocationParams(filter) || Boolean(filter.searchTerm?.trim()) || filter.includeOnline;
+	// includeOnline defaults to true — only the off state counts as an explicit filter.
+	return hasOfferingsLocationParams(filter) || Boolean(filter.searchTerm?.trim()) || !filter.includeOnline;
 }
 
 /** True when the URL explicitly carries any offerings filter query key. */
@@ -71,7 +74,7 @@ export function offeringsFilterFromCookie(cookie: FilterCookieData | null | unde
 		lat: cookie?.lat ?? null,
 		lng: cookie?.lng ?? null,
 		searchTerm: cookie?.offeringsSearchTerm ?? null,
-		includeOnline: cookie?.includeOnline === true,
+		includeOnline: cookie?.includeOnline ?? true,
 	};
 }
 
@@ -83,7 +86,7 @@ export function buildOfferingsFilterSearchParams(filter: OfferingsFilter) {
 	if (filter.lat != null) params.set(`lat`, String(filter.lat));
 	if (filter.lng != null) params.set(`lng`, String(filter.lng));
 	if (filter.searchTerm?.trim()) params.set(`searchTerm`, filter.searchTerm.trim());
-	if (filter.includeOnline) params.set(`includeOnline`, `1`);
+	if (!filter.includeOnline) params.set(`includeOnline`, `0`);
 
 	return params;
 }

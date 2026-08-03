@@ -17,7 +17,7 @@
 	});
 
 	function handleCancel() {
-		void goto(routes.createHub(), { replaceState: true });
+		void goto(routes.root(), { replaceState: true });
 	}
 
 	function handleSaveSuccess() {
@@ -35,7 +35,7 @@
 					<h1 class="text-xl sm:text-2xl font-bold">Event erstellen</h1>
 				</div>
 				<a
-					href={routes.createHub()}
+					href={routes.root()}
 					class="btn btn-ghost btn-sm"
 					onclick={(e) => {
 						e.preventDefault();

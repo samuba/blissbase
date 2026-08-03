@@ -57,7 +57,7 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 		lat: sanitized.lat ?? null,
 		lng: sanitized.lng ?? null,
 		searchTerm: args.searchTerm?.trim() || null,
-		includeOnline: args.includeOnline ?? false,
+		includeOnline: args.includeOnline ?? true,
 	};
 	const currentUserId = getRequestEvent().locals.userId;
 	const filterCoords = await resolveOfferingsFilterCoordinates(filter);

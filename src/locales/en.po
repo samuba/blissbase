@@ -311,7 +311,6 @@ msgstr "<0/> Sending..."
 #: src/routes/EventDetailsDialog.svelte
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/OfferingDetailsDialog.svelte
-#: src/routes/sources/+page.svelte
 msgid "<0/> Zurück"
 msgstr "<0/> Back"
 
@@ -348,9 +347,8 @@ msgstr "Link copied"
 msgid "Keine Tags gefunden"
 msgstr "No tags found"
 
-#: src/routes/sources/+page.svelte
-msgid "Event Quellen"
-msgstr "Event sources"
+#~ msgid "Event Quellen"
+#~ msgstr "Event sources"
 
 #: src/routes/sources/+page.svelte
 msgid "Websites"
@@ -383,9 +381,8 @@ msgstr "kuschelraum.de"
 msgid "ciglobalcalendar.net"
 msgstr "ciglobalcalendar.net"
 
-#: src/routes/sources/+page.svelte
-msgid "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> und noch weitere Gruppen und Kanäle."
-msgstr "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> and more groups and channels."
+#~ msgid "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> und noch weitere Gruppen und Kanäle."
+#~ msgstr "<0>Bewegungsnetz Bielefeld und Umgebung</0> <1>YouMeUnity</1> <2>Kendralah-Experience</2> and more groups and channels."
 
 #. 0: event.name
 #: src/routes/edit/[id]/+page.svelte
@@ -767,11 +764,8 @@ msgstr "You are logged in as <0/>"
 msgid "Hauptnavigation mobil"
 msgstr "Mobile main navigation"
 
-#: src/lib/components/TabsNavMobile.svelte
-#: src/lib/components/TabsNavMobile.svelte
-#: src/lib/components/tabsNav.ts
-msgid "Erstellen"
-msgstr "Create"
+#~ msgid "Erstellen"
+#~ msgstr "Create"
 
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
@@ -782,17 +776,14 @@ msgstr "Main navigation"
 msgid "Event erstellen <0/>"
 msgstr "Create event <0/>"
 
-#: src/routes/new/+page.svelte
-msgid "<0/> Telegram-Bot"
-msgstr "<0/> Telegram bot"
+#~ msgid "<0/> Telegram-Bot"
+#~ msgstr "<0/> Telegram bot"
 
-#: src/routes/new/+page.svelte
-msgid "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!"
-msgstr "Send your event to my Telegram bot. <0/><1>Warning:</1> Description, location, date and image must all be in a single message!"
+#~ msgid "Sende deinen Event an meinen Telegram-Bot. <0/><1>Achtung:</1> Beschreibung, Ort, Datum und Bild muss alles in einer Nachricht sein!"
+#~ msgstr "Send your event to my Telegram bot. <0/><1>Warning:</1> Description, location, date and image must all be in a single message!"
 
-#: src/routes/new/+page.svelte
-msgid "Event an Telegram-Bot senden <0/>"
-msgstr "Send event to Telegram bot <0/>"
+#~ msgid "Event an Telegram-Bot senden <0/>"
+#~ msgstr "Send event to Telegram bot <0/>"
 
 #: src/routes/profile/+page.svelte
 msgid "Aktuelle Events"
@@ -822,13 +813,11 @@ msgstr "You're being shown events around <0/>. If that's not your location, chan
 msgid "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
 msgstr "PS. The project is still in its infancy and I don't yet know where it will go. I'm therefore very grateful for any feedback, ideas and collaborations: <0>hi@blissbase.app</0>"
 
-#: src/routes/new/+page.svelte
-msgid "<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
-msgstr "<0><0/> Event sources</0> Add your event to one of my event sources. I regularly import events from these sources. You should see your event here after about half a day. <1>Show event sources <0/></1>"
+#~ msgid "<0><0/> Event Quellen</0> Trage deinen Event in eine meiner Event Quellen ein. Ich importiere regelmäßig Events aus diesen Quellen. Nach etwa einem halben Tag solltest du dein Event hier sehen. <1>Event Quellen anzeigen <0/></1>"
+#~ msgstr "<0><0/> Event sources</0> Add your event to one of my event sources. I regularly import events from these sources. You should see your event here after about half a day. <1>Show event sources <0/></1>"
 
-#: src/routes/sources/+page.svelte
-msgid "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
-msgstr "From these sources I fetch events for you several times a day. <0/>Submit your event to one of them so it will appear on Blissbase a few hours later."
+#~ msgid "Aus diesen Quellen beziehe ich mehrmals täglich Events für euch. <0/>Trage deinen Event in einer davon ein damit er ein paar Stunden später auf Blissbase erscheint."
+#~ msgstr "From these sources I fetch events for you several times a day. <0/>Submit your event to one of them so it will appear on Blissbase a few hours later."
 
 #: src/routes/profile/favorites/+page.svelte
 msgid "Keine aktuellen Events in deinen Favoriten."
@@ -923,9 +912,8 @@ msgstr "Don't see your question? <0>Write to me.</0>"
 msgid "Escape"
 msgstr "Escape"
 
-#: src/lib/components/tabsNav.ts
-msgid "Entdecken"
-msgstr "Discover"
+#~ msgid "Entdecken"
+#~ msgstr "Discover"
 
 #: src/lib/components/tabsNav.ts
 msgid "Favoriten"
@@ -959,9 +947,8 @@ msgstr "I want to bring together Germany's mindful communities. To this end, I c
 msgid "Welche Regionen werden unterstützt?"
 msgstr "Which regions are supported?"
 
-#: src/routes/faq/+page.svelte
-msgid "Du kannst Blissbase weltweit nutzen aber unsere zur Zeit am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-msgstr "You can use Blissbase worldwide, but here you can see our currently best-supported regions, along with the number of <0>new events in the last two months</0>."
+#~ msgid "Du kannst Blissbase weltweit nutzen aber unsere zur Zeit am besten unterstützten Regionen siehst du hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgstr "You can use Blissbase worldwide, but here you can see our currently best-supported regions, along with the number of <0>new events in the last two months</0>."
 
 #: src/routes/faq/+page.svelte
 msgid "<0/> <1/> <2/>Neue Events"
@@ -1204,6 +1191,7 @@ msgstr "Confirm email"
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Checking…"
 
+#: src/lib/components/tabsNav.ts
 #: src/routes/offerings/+page.svelte
 msgid "Angebote"
 msgstr "Offerings"
@@ -1243,7 +1231,6 @@ msgid "Ein einzelner Termin, Workshop oder Circle mit Datum und Uhrzeit."
 msgstr "A single appointment, workshop, or circle with date and time."
 
 #: src/routes/new/+page.svelte
-#: src/routes/offerings/+page.svelte
 #: src/routes/profile/offerings/+page.svelte
 msgid "<0/> Angebot erstellen"
 msgstr "<0/> Create offering"
@@ -1256,9 +1243,8 @@ msgstr "A permanently visible offer that people can contact directly."
 msgid "Angebot erstellen <0/>"
 msgstr "Create offering <0/>"
 
-#: src/routes/new/+page.svelte
-msgid "Weitere Wege"
-msgstr "Other ways"
+#~ msgid "Weitere Wege"
+#~ msgstr "Other ways"
 
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -1269,7 +1255,6 @@ msgstr "Please enter your email address."
 msgid "Angebot erstellen | Blissbase"
 msgstr "Create offering | Blissbase"
 
-#: src/routes/offerings/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/offerings/+page.svelte
@@ -1342,13 +1327,11 @@ msgstr "<0/> Events"
 msgid "Offerings-Hinweis ausblenden"
 msgstr "Hide offer notice"
 
-#: src/routes/offerings/+page.svelte
-msgid "Was willst du der Community geben?"
-msgstr "What do you want to give the community?"
+#~ msgid "Was willst du der Community geben?"
+#~ msgstr "What do you want to give the community?"
 
-#: src/routes/offerings/+page.svelte
-msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
-msgstr "Whether it’s a private breathwork session, coaching, massage, Reiki, or tarot readings—here you can offer it to the community."
+#~ msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
+#~ msgstr "Whether it’s a private breathwork session, coaching, massage, Reiki, or tarot readings—here you can offer it to the community."
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
@@ -1568,9 +1551,8 @@ msgstr "We sent a 6-digit code to <0/>. Enter it here to confirm your email. You
 msgid "E-Mail bestätigen und Angebot veröffentlichen"
 msgstr "Confirm email and publish offer"
 
-#: src/routes/offerings/+page.svelte
-msgid "✨ Aus der Community für die Community ✨"
-msgstr "✨ From the community, for the community ✨"
+#~ msgid "✨ Aus der Community für die Community ✨"
+#~ msgstr "✨ From the community, for the community ✨"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte füge mindestens einen Social-Link hinzu."
@@ -2007,8 +1989,9 @@ msgstr "Name"
 #~ msgid "Conscious only"
 #~ msgstr "Conscious only"
 
-#~ msgid "Events"
-#~ msgstr "Events"
+#: src/lib/components/tabsNav.ts
+msgid "Events"
+msgstr "Events"
 
 #~ msgid "Letzter Lauf"
 #~ msgstr "Last run"
@@ -2234,3 +2217,192 @@ msgstr "Show again"
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "Ausblenden"
 msgstr "Hide"
+
+#~ msgid "<0/> Kopieren"
+#~ msgstr "<0/> Copy"
+
+#~ msgid "<0/> Kopieren für mich"
+#~ msgstr "<0/> Copy for me"
+
+#~ msgid "<0/> Kopieren für dich"
+#~ msgstr "<0/> Copy for yourself"
+
+#~ msgid "<0/> Erstellen"
+#~ msgstr "<0/> Create"
+
+#~ msgid "Du hast ein Event?"
+#~ msgstr "Do you have an event?"
+
+#~ msgid "Teile deine Circles, Workshops und Festivals mit der Community."
+#~ msgstr "Share your circles, workshops, and festivals with the community."
+
+#~ msgid "Teile deine Workshops und Festivals mit der Community."
+#~ msgstr "Share your workshops and festivals with the community."
+
+#~ msgid "Teile deine Workshops, Treffen und Festivals mit der Community."
+#~ msgstr "Share your workshops, meetups, and festivals with the community."
+
+#~ msgid "Was planst du als Nächstes?"
+#~ msgstr "What are you planning next?"
+
+#~ msgid "Egal ob Ecstatic Dance, Meditation, Workshop oder Festival – trag es ein und finde deine Menschen."
+#~ msgstr "Whether it’s ecstatic dance, meditation, a workshop, or a festival—list it and find your people."
+
+#~ msgid "Finde Menschen für dein Event"
+#~ msgstr "Find people for your event"
+
+#~ msgid "Kostenlos eintragen – und sichtbar werden für alle, die Ecstatic Dance, Meditation, Workshops & mehr in deiner Nähe suchen."
+#~ msgstr "List for free – and get discovered by everyone searching for Ecstatic Dance, meditation, workshops, and more near you."
+
+#~ msgid "Kostenlos eintragen – und sichtbar werden für alle, die Ecstatic Dance, Meditation, Workshops und mehr in deiner Nähe suchen."
+#~ msgstr "List for free – and be visible to everyone looking for Ecstatic Dance, meditation, workshops, and more near you."
+
+#~ msgid "Dein Event fehlt noch?"
+#~ msgstr "Is your event not listed yet?"
+
+#~ msgid "Trag es kostenlos ein – Ecstatic Dance, Meditation, Workshop oder Festival – und mach es für die Community sichtbar."
+#~ msgstr "Add it for free – Ecstatic Dance, meditation, workshop, or festival – and make it visible to the community."
+
+#: src/lib/components/CreateEventCta.svelte
+#: src/routes/+page.svelte
+msgid "Dein Event gehört hierher ✨"
+msgstr "Your event belongs here ✨"
+
+#~ msgid "Ob Ecstatic Dance, Meditation, Workshop oder Festival – trag es kostenlos ein und erreich genau die Menschen, die danach suchen."
+#~ msgstr "Whether it’s Ecstatic Dance, meditation, a workshop, or a festival—list it for free and reach exactly the people who are looking for it."
+
+#~ msgid "<0/> Event eintragen"
+#~ msgstr "<0/> List event"
+
+#~ msgid "Ob Workshop oder Festival – trag es kostenlos ein und erreich genau die Menschen, die danach suchen."
+#~ msgstr "Whether it's a workshop or a festival—list it for free and reach exactly the people looking for it."
+
+#~ msgid "Ob Workshop, Treffen oder Festival – trag es kostenlos ein und erreich genau die Menschen, die danach suchen."
+#~ msgstr "Whether it’s a workshop, meetup, or festival—list it for free and reach exactly the people looking for it."
+
+#~ msgid "Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreich genau die Menschen, die danach suchen."
+#~ msgstr "Whether it’s a workshop, meetup, or ecstatic dance—list it for free and reach exactly the people looking for it."
+
+#~ msgid "Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreich die Menschen, die danach suchen."
+#~ msgstr "Whether it's a workshop, meetup, or ecstatic dance—list it for free and reach the people looking for it."
+
+#~ msgid "Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche die Menschen, die danach suchen."
+#~ msgstr "Whether it’s a workshop, meetup, or Ecstatic Dance—list it for free and reach the people looking for it."
+
+#~ msgid "Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen, die danach suchen."
+#~ msgstr "Whether it’s a workshop, meetup, or Ecstatic Dance—list it for free and reach people looking for it."
+
+#: src/lib/components/CreateEventCta.svelte
+#: src/routes/+page.svelte
+msgid "Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen die danach suchen."
+msgstr "Whether it’s a workshop, meetup, or ecstatic dance—list it for free and reach people looking for it."
+
+#: src/lib/components/CreateEventCta.svelte
+#: src/lib/components/CreateEventCta.svelte
+#: src/lib/components/CreateEventCta.svelte
+#: src/lib/components/CreateEventCta.svelte
+msgid "<0/> Event hinzufügen"
+msgstr "<0/> Add event"
+
+#: src/routes/+page.svelte
+msgid "Event hinzufügen"
+msgstr "Add event"
+
+#: src/routes/offerings/+page.svelte
+msgid "Angebot hinzufügen"
+msgstr "Add offer"
+
+#~ msgid "Deine Gabe gehört hierher ✨"
+#~ msgstr "Your offering belongs here ✨"
+
+#~ msgid "Ob Breathwork-Session, Coaching, Massage oder Reiki – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen."
+#~ msgstr "Whether it’s a breathwork session, coaching, massage, or Reiki – list your offering for free and reach the people who are looking for exactly that."
+
+#~ msgid "Was hast du zu ✨"
+#~ msgstr "What do you have to ✨"
+
+#: src/routes/sources/+page.svelte
+msgid "Event-Quellen"
+msgstr "Event Sources"
+
+#: src/routes/sources/+page.svelte
+msgid "Neben Events, die direkt auf Blissbase eingetragen werden, hole ich mehrmals täglich Termine aus öffentlichen Kalendern, Websites und Community-Kanälen ab."
+msgstr "In addition to events entered directly on Blissbase, I retrieve events from public calendars, websites, and community channels several times a day."
+
+#: src/routes/sources/+page.svelte
+msgid "Du kannst deinen Event auch in einer dieser Quellen eintragen – nach ein paar Stunden sollte er hier auftauchen. Noch direkter geht's über <0>Event hinzufügen</0> auf der Startseite oder per <1>Telegram-Bot</1>. Mehr dazu steht in der <2>FAQ</2>."
+msgstr "You can also add your event to one of these sources – it should appear here after a few hours. For an even more direct option, use <0>Add event</0> on the homepage or the <1>Telegram bot</1>. More information is available in the <2>FAQ</2>."
+
+#: src/routes/sources/+page.svelte
+msgid "Bewegungsnetz Bielefeld und Umgebung"
+msgstr "Bewegungsnetz Bielefeld and Surrounding Area"
+
+#: src/routes/sources/+page.svelte
+msgid "YouMeUnity"
+msgstr "YouMeUnity"
+
+#: src/routes/sources/+page.svelte
+msgid "Kendralah-Experience"
+msgstr "Kendralah-Experience"
+
+#: src/routes/sources/+page.svelte
+msgid "und noch weitere Gruppen und Kanäle."
+msgstr "and many other groups and channels."
+
+#: src/routes/sources/+page.svelte
+msgid "<0/> Zurück zur FAQ"
+msgstr "<0/> Back to FAQ"
+
+#~ msgid "Was hast du zu geben? ✨"
+#~ msgstr "What do you have to give? ✨"
+
+#: src/routes/offerings/+page.svelte
+msgid "Was hast du zu geben?  ✨"
+msgstr "What do you have to give?  ✨"
+
+#: src/routes/offerings/+page.svelte
+msgid "Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen."
+msgstr "Whether it's coaching, massage, reiki, or tarot readings—list your offering for free and reach the people who are looking for exactly that."
+
+#: src/routes/faq/+page.svelte
+msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+msgstr "You can use Blissbase worldwide – the regions shown here are currently the best supported, with the number of <0>new events from the last two months</0>."
+
+#: src/routes/faq/+page.svelte
+msgid "Woher kommen die Events?"
+msgstr "Where do the events come from?"
+
+#: src/routes/faq/+page.svelte
+msgid "Von Veranstalter:innen, die ihre Termine direkt auf Blissbase teilen – und aus öffentlichen Kalendern, Websites und Community-Kanälen. So bleibt die achtsame Szene sichtbar, ohne dass du zehn Apps und Gruppen durchforsten musst."
+msgstr "From organizers who share their dates directly on Blissbase – as well as from public calendars, websites, and community channels. This keeps the mindful scene visible without you having to scour ten apps and groups."
+
+#: src/routes/faq/+page.svelte
+msgid "Die vollständige Liste findest du unter <0>Event-Quellen</0>."
+msgstr "You can find the complete list under <0>Event sources</0>."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie kann ich selbst ein Event eintragen?"
+msgstr "How can I add an event myself?"
+
+#~ msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite – dafür meldest du dich kurz an."
+#~ msgstr "The easiest way is via <0>Add event</0> on the homepage – you just need to sign in briefly for this."
+
+#: src/routes/faq/+page.svelte
+msgid "Weitere Wege:"
+msgstr "Other ways:"
+
+#: src/routes/faq/+page.svelte
+msgid "<0>Telegram-Bot:</0> Schick deinen Event an <1>@blissbase_bot</1>. Wichtig: Beschreibung, Ort, Datum und Bild müssen in <2>einer einzigen Nachricht</2> stehen."
+msgstr "<0>Telegram bot:</0> Send your event to <1>@blissbase_bot</1>. Important: The description, location, date, and image must all be included in <2>a single message</2>."
+
+#: src/routes/faq/+page.svelte
+msgid "<0>Über eine Event-Quelle:</0> Trag deinen Termin auf einer der gelisteten Websites oder in einem Community-Kanal ein. Ich hole diese Quellen mehrmals täglich ab – nach ein paar Stunden solltest du dein Event hier sehen. Alle Quellen findest du unter <1>Event-Quellen</1>."
+msgstr "<0>Via an event source:</0> Add your event to one of the listed websites or in a community channel. I check these sources several times a day – you should see your event here after a few hours. You can find all sources under <1>Event sources</1>."
+
+#: src/routes/faq/+page.svelte
+msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
+msgstr "The easiest way is via <0>Add event</0> on the homepage."
+
+#: src/routes/offerings/+page.svelte
+msgid "✨ Persönliche Sessions & Services aus der Community ✨"
+msgstr "✨ Personal Sessions & Services from the Community ✨"

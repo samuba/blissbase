@@ -25,7 +25,7 @@ describe('parseOfferingsFilterFromUrl', () => {
 			distance: `50`,
 			location: `Berlin`,
 			searchTerm: `yoga`,
-			includeOnline: false,
+			includeOnline: true,
 		});
 	});
 
@@ -42,9 +42,11 @@ describe('parseOfferingsFilterFromUrl', () => {
 		expect(parseOfferingsFilterFromUrl(new URL(`https://blissbase.app/offerings?includeOnline=1`)).includeOnline).toBe(true);
 		expect(parseOfferingsFilterFromUrl(new URL(`https://blissbase.app/offerings?includeOnline=true`)).includeOnline).toBe(true);
 		expect(parseOfferingsFilterFromUrl(new URL(`https://blissbase.app/offerings?onlineOnly=1`)).includeOnline).toBe(true);
+		expect(parseOfferingsFilterFromUrl(new URL(`https://blissbase.app/offerings?includeOnline=0`)).includeOnline).toBe(false);
+		expect(parseOfferingsFilterFromUrl(new URL(`https://blissbase.app/offerings?includeOnline=false`)).includeOnline).toBe(false);
 	});
 
-	it('returns nulls for missing params', () => {
+	it('returns nulls for missing params and defaults includeOnline to true', () => {
 		const filter = parseOfferingsFilterFromUrl(new URL(`https://blissbase.app/offerings`));
 
 		expect(filter).toEqual({
@@ -53,7 +55,7 @@ describe('parseOfferingsFilterFromUrl', () => {
 			distance: null,
 			location: null,
 			searchTerm: null,
-			includeOnline: false,
+			includeOnline: true,
 		});
 	});
 });
@@ -68,10 +70,10 @@ describe('hasOfferingsLocationParams', () => {
 });
 
 describe('hasOfferingsFilterParams', () => {
-	it('detects search and includeOnline without location', () => {
-		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: `yoga`, includeOnline: false })).toBe(true);
-		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: true })).toBe(true);
-		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(false);
+	it('detects search and includeOnline=false without location', () => {
+		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: `yoga`, includeOnline: true })).toBe(true);
+		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: false })).toBe(true);
+		expect(hasOfferingsFilterParams({ location: null, distance: null, lat: null, lng: null, searchTerm: null, includeOnline: true })).toBe(false);
 	});
 });
 
@@ -113,36 +115,36 @@ describe('offeringsFilterFromCookie', () => {
 			lat: null,
 			lng: null,
 			searchTerm: null,
-			includeOnline: false,
+			includeOnline: true,
 		});
 	});
 });
 
 describe('buildOfferingsFilterSearchParams', () => {
-	it('omits empty values', () => {
+	it('omits empty values and default includeOnline', () => {
 		const params = buildOfferingsFilterSearchParams({
 			location: `Berlin`,
 			distance: `50`,
 			lat: 52.5,
 			lng: 13.4,
 			searchTerm: null,
-			includeOnline: false,
+			includeOnline: true,
 		});
 
 		expect(params.toString()).toBe(`location=Berlin&distance=50&lat=52.5&lng=13.4`);
 	});
 
-	it('includes includeOnline when enabled', () => {
+	it('includes includeOnline=0 when disabled', () => {
 		const params = buildOfferingsFilterSearchParams({
 			location: null,
 			distance: null,
 			lat: null,
 			lng: null,
 			searchTerm: null,
-			includeOnline: true,
+			includeOnline: false,
 		});
 
-		expect(params.toString()).toBe(`includeOnline=1`);
+		expect(params.toString()).toBe(`includeOnline=0`);
 	});
 });
 

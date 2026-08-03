@@ -4,20 +4,20 @@ import { routes } from '$lib/routes';
 export function getAppNavItems(): AppNavItem[] {
 	return [
 		{
-			label: /* @wc-include */ `Entdecken`,
+			label: /* @wc-include */ `Events`,
 			href: resolve(`/#header-controls`),
-			icon: `icon-[ph--compass]`,
-			iconActive: `icon-[ph--compass-fill]`,
+			icon: `icon-[ph--calendar-dots]`,
+			iconActive: `icon-[ph--calendar-dots-fill]`,
 			requireLogin: false,
 			isInMoreMenu: false
 		},
 		{
-			label: /* @wc-include */ `Erstellen`,
-			href: routes.createHub(),
-			icon: `icon-[ph--plus-circle]`,
-			iconActive: `icon-[ph--plus-circle-fill]`,
-			requireLogin: true,
-			isInMoreMenu: false,
+			label: /* @wc-include */ `Angebote`,
+			href: routes.offeringsList(),
+			icon: `icon-[ph--hand-heart]`,
+			iconActive: `icon-[ph--hand-heart-fill]`,
+			requireLogin: false,
+			isInMoreMenu: false
 		},
 		{
 			label: /* @wc-include */ `Favoriten`, 
@@ -67,8 +67,8 @@ export function isActiveAppTab(pathname: string, href: string) {
 	if (href === routes.profile()) {
 		return pathname === href || (pathname.startsWith(`${href}/`) && pathname !== routes.favorites());
 	}
-	if (href === routes.createHub()) {
-		return pathname === href || pathname.startsWith(`/events/`);
+	if (href === routes.offeringsList()) {
+		return pathname === href || pathname.startsWith(`${href}/`);
 	}
 	return pathname === href;
 }

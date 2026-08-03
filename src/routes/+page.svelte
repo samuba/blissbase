@@ -1,5 +1,7 @@
 <script lang="ts">
 	import EventCard from '$lib/components/EventCard.svelte';
+	import CreateCta from '$lib/components/CreateCta.svelte';
+	import { routes } from '$lib/routes';
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import HeaderControls from '$lib/components/HeaderControls.svelte';
@@ -121,6 +123,9 @@
 			{#if eventsStore.isLoading}
 				{@render loading(true)}
 			{:else if (eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat)}
+				<div class="grid gap-4 min-[920px]:grid-cols-2">
+					{@render createEventCta()}
+				</div>
 				<div class={noResultsContainerClasses}>
 					<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
 						<i class="icon-[ph--map-pin] size-10  block"></i>
@@ -132,6 +137,7 @@
 			{:else if eventsStore.hasEvents}
 				<div class="fade-in flex w-full flex-col gap-4">
 					<div class="grid gap-4 min-[920px]:grid-cols-2">
+						{@render createEventCta()}
 						{#each visibleEvents as event (event.id)}
 							<div class="h-full min-w-0">
 								<EventCard {event} />
@@ -151,6 +157,9 @@
 					{/if}
 				</div>
 			{:else}
+				<div class="grid gap-4 min-[920px]:grid-cols-2">
+					{@render createEventCta()}
+				</div>
 				{@render noResults(false)}
 			{/if}
 		</div>
@@ -166,6 +175,16 @@
 		{/snippet}
 	</svelte:boundary>
 </div>
+
+{#snippet createEventCta()}
+	<CreateCta
+		title="Dein Event gehört hierher ✨"
+		description="Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen die danach suchen."
+		buttonText="Event hinzufügen"
+		href={routes.newEvent()}
+		requireLogin
+	/>
+{/snippet}
 
 {#snippet loading(reserveVerticalSpace: boolean)}
 	<div class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? 'h-dvh' : 'h-15']}

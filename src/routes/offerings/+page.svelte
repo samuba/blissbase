@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import CreateCta from "$lib/components/CreateCta.svelte";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
 	import LocationDistanceInput from "$lib/components/LocationDistanceInput.svelte";
 	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
@@ -65,7 +66,7 @@
 			lat: `lat` in nextFilter ? nextFilter.lat ?? null : filter.lat,
 			lng: `lng` in nextFilter ? nextFilter.lng ?? null : filter.lng,
 			searchTerm: `searchTerm` in nextFilter ? nextFilter.searchTerm ?? null : filter.searchTerm,
-			includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? false : filter.includeOnline,
+			includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? true : filter.includeOnline,
 		};
 
 		persistOfferingsFilters(nextOfferingsFilter);
@@ -161,7 +162,7 @@
 		</div>
 
 		<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
-			✨ Aus der Community für die Community ✨
+			✨ Persönliche Sessions & Services aus der Community ✨
 		</h2>
 	</div>
 </div>
@@ -231,16 +232,7 @@
 				</div>
 			{:else if filteredOfferings.length}
 				<div class="grid gap-4 min-[920px]:grid-cols-2">
-					<div class="border-primary rounded-box bg-primary/20 flex flex-col justify-center gap-2 border-2 border-dashed p-4">
-						<span class="md:card-title text-primary-content">Was willst du der Community geben?</span>
-						<p class="text-primary-content/80 hidden md:block">
-							Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten.
-						</p>
-						<a href={newOfferingHref()} class="btn btn-primary w-fit">
-							<i class="icon-[ph--plus] size-5"></i>
-							Angebot erstellen
-						</a>
-					</div>
+					{@render createOfferingCta()}
 					{#each filteredOfferings as offering (offering.id)}
 						<div class="h-full min-w-0" animate:flip={{ duration: 200 }} out:fade={{ duration: 200 }} in:fade={{ duration: 200 }}>
 							<OfferingCard
@@ -270,14 +262,16 @@
 					</div>
 				</section>
 			{:else}
-				<section class="card bg-base-100 shadow-sm">
+				<div class="grid gap-4 min-[920px]:grid-cols-2">
+					{@render createOfferingCta()}
+				</div>
+				<section class="card bg-base-100 shadow-sm mt-4">
 					<div class="card-body items-center py-12 text-center">
 						<div class="bg-primary/15 text-primary flex size-16 items-center justify-center rounded-full">
 							<i class="icon-[ph--hand-heart] size-8"></i>
 						</div>
 						<h2 class="card-title mt-2">Noch keine Angebote hier</h2>
 						<p class="text-base-content/70 max-w-md">Erstelle das erste Angebot für diesen Bereich oder schau später wieder vorbei.</p>
-						<a href={newOfferingHref()} class="btn btn-primary mt-2"> Angebot erstellen </a>
 					</div>
 				</section>
 			{/if}
@@ -300,5 +294,14 @@
 		</div>
 	</div>
 </div>
+
+{#snippet createOfferingCta()}
+	<CreateCta
+		title="Was hast du zu geben?  ✨"
+		description="Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen."
+		buttonText="Angebot hinzufügen"
+		href={newOfferingHref()}
+	/>
+{/snippet}
 
 <OfferingDetailsDialog {offerings} />

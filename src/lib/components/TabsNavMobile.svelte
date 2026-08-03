@@ -153,7 +153,7 @@
 							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`
 						]}
 					>
-						<i class={[icon, tab.label === `Erstellen` ? `size-6` : `size-6`]}></i>
+						<i class={[icon, `size-6`]}></i>
 						<span class="text-[0.7rem] font-medium">{tab.label}</span>
 					</button>
 				{:else}
@@ -165,7 +165,7 @@
 							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`
 						]}
 					>
-						<i class={[icon, tab.label === `Erstellen` ? `size-6` : `size-6`]}></i>
+						<i class={[icon, `size-6`]}></i>
 						<span class="text-[0.7rem] font-medium">{tab.label}</span>
 					</a>
 				{/if}

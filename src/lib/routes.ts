@@ -14,7 +14,6 @@ export const routes = {
     about: () => resolve(`/about`) ,
     faq: () => resolve(`/faq`) ,
     newEvent: () => resolve(`/events/new`) ,
-    createHub: () => resolve(`/new`) ,
     offeringsList: (args: Partial<OfferingsFilter> = {}) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
         const params = buildOfferingsFilterSearchParams({
@@ -23,7 +22,7 @@ export const routes = {
             lat: args.lat ?? null,
             lng: args.lng ?? null,
             searchTerm: args.searchTerm ?? null,
-            includeOnline: args.includeOnline ?? false,
+            includeOnline: args.includeOnline ?? true,
         });
         for (const [key, value] of params.entries()) {
             url.searchParams.set(key, value);
