@@ -40,7 +40,7 @@
 	const missingBio = !profile?.bio?.trim();
 	const missingSocialLinks = !profile?.socialLinks?.some((link) => link.value?.trim());
 	const signedInProfileIncomplete =
-		missingDisplayName || missingProfileImageUrl || missingBannerImageUrl || missingBio || missingSocialLinks;
+		missingDisplayName || missingProfileImageUrl || missingBio || missingSocialLinks;
 
 	let requestedStep = $state<WizardStep>(`offering`);
 	let clientReady = $state(false);
