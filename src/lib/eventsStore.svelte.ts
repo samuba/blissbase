@@ -6,7 +6,6 @@ import { browser } from '$app/environment';
 import { SvelteSet } from 'svelte/reactivity';
 import type { AttendanceMode } from './server/schema';
 import { setLocationInteractedCookie } from './cookie-utils';
-import { OfferingsFeatureFlag } from '$lib/OfferingsFeatureFlag.svelte';
 
 type LoadingState = 'not-loading' | 'loading' | 'loading-more';
 
@@ -78,7 +77,6 @@ export class EventsStore {
         if (initialData) {
             this.events = initialData.events;
             this.pagination = initialData.pagination;
-            OfferingsFeatureFlag.updateFromPosition({ lat: initialData.pagination.lat, lng: initialData.pagination.lng });
         }
         // Bind the loadMoreEvents method to maintain this context when it is used as a callback
         this.loadMoreEvents = this.loadMoreEvents.bind(this);
@@ -88,7 +86,6 @@ export class EventsStore {
     initialize(args: { events: UiEvent[]; pagination: PaginationState }) {
         this.events = args.events;
         this.pagination = args.pagination;
-        OfferingsFeatureFlag.updateFromPosition({ lat: args.pagination.lat, lng: args.pagination.lng });
     }
 
     // Core loading function
@@ -126,7 +123,6 @@ export class EventsStore {
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
             applyPagination(requestParams); // optimistically set pagination state
-            OfferingsFeatureFlag.updateFromPosition({ lat: requestParams.lat, lng: requestParams.lng });
             const data = await fetchEventsWithCookiePersistence(requestParams);
 
             if (requestId !== this.loadRequestId) return;
@@ -141,7 +137,6 @@ export class EventsStore {
             }
 
             applyPagination(data.pagination);
-            OfferingsFeatureFlag.updateFromPosition({ lat: data.pagination.lat, lng: data.pagination.lng });
         } finally {
             this.loadingState = 'not-loading';
             this.finishedLoadingCallbacks.forEach((callback) => callback(append));

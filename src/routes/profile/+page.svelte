@@ -2,8 +2,6 @@
 	import { getUserSession } from '$lib/rpc/auth.remote';
 	import { getSupabaseBrowserClient } from '$lib/supabase';
 	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
-	import { OfferingsFeatureFlag } from '$lib/OfferingsFeatureFlag.svelte';
-	import { userHasOfferings } from '$lib/rpc/offerings.remote';
 	import { getMyPublicProfile } from '$lib/rpc/profile.remote';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import { routes } from '$lib/routes';
@@ -12,8 +10,6 @@
 
 	let isLoggingOut = $state(false);
 	const myPublic = await getMyPublicProfile();
-	const hasOfferings = $derived(await userHasOfferings());
-	const showOfferingsCard = $derived(OfferingsFeatureFlag.isEnabled || hasOfferings);
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
 	let pastEvents = $state<Awaited<ReturnType<typeof getMyAuthoredUpcomingEvents>>>([]);
 	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
@@ -91,28 +87,26 @@
 		</div>
 	</div>
 
-	{#if showOfferingsCard}
-		<div class="card bg-base-100 mt-4 shadow">
-			<div class="card-body gap-4">
-				<div class="flex items-start gap-3">
-					<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
-						<i class="icon-[ph--hand-heart] size-7"></i>
-					</div>
-					<div class="min-w-0 flex-1 space-y-2">
-						<h3 class="text-lg font-semibold">Meine Angebote</h3>
-						<p class="text-base-content/80 text-sm leading-relaxed">
-							Verwalte deine Angebote und aktiviere oder deaktiviere sie.
-						</p>
-						<div class="card-actions pt-1">
-							<a href={routes.myOfferings()} class="btn">
-								Angebote verwalten
-							</a>
-						</div>
+	<div class="card bg-base-100 mt-4 shadow">
+		<div class="card-body gap-4">
+			<div class="flex items-start gap-3">
+				<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
+					<i class="icon-[ph--hand-heart] size-7"></i>
+				</div>
+				<div class="min-w-0 flex-1 space-y-2">
+					<h3 class="text-lg font-semibold">Meine Angebote</h3>
+					<p class="text-base-content/80 text-sm leading-relaxed">
+						Verwalte deine Angebote und aktiviere oder deaktiviere sie.
+					</p>
+					<div class="card-actions pt-1">
+						<a href={routes.myOfferings()} class="btn">
+							Angebote verwalten
+						</a>
 					</div>
 				</div>
 			</div>
 		</div>
-	{/if}
+	</div>
 
 	{#if user.isAdmin}
 		<div class="card bg-base-100 mt-4 shadow">

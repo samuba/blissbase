@@ -1333,9 +1333,8 @@ msgstr "Offerings-Hinweis ausblenden"
 #~ msgid "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
 #~ msgstr "Egal ob private Breathwork Session, Coaching, Massage, Reiki oder Tarot Readings - Hier kannst du es der Community anbieten."
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
-msgstr "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
+#~ msgid "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
+#~ msgstr "Für private Sessions und Services go to: <0><0/> Offerings</0> <1/> <2/>"
 
 #. 0: normalizedSearchTerm
 #: src/routes/offerings/+page.svelte
@@ -2406,3 +2405,17 @@ msgstr "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 #: src/routes/offerings/+page.svelte
 msgid "✨ Persönliche Sessions & Services aus der Community ✨"
 msgstr "✨ Persönliche Sessions & Services aus der Community ✨"
+
+#~ msgid "<0/> Für private Sessions und Services go to: <1><0/> Offerings</1> <2/> <3/>"
+#~ msgstr "<0/> Für private Sessions und Services go to: <1><0/> Offerings</1> <2/> <3/>"
+
+#~ msgid "Für private Sessions und Services go to: <0><0/> Offerings</0>"
+#~ msgstr "Für private Sessions und Services go to: <0><0/> Offerings</0>"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Für private Sessions und Services go to:"
+msgstr "Für private Sessions und Services go to:"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "<0/> Offerings"
+msgstr "<0/> Offerings"

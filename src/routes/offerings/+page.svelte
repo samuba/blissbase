@@ -10,7 +10,6 @@
 	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
-	import { OfferingsFeatureFlag } from "$lib/OfferingsFeatureFlag.svelte";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
@@ -51,13 +50,6 @@
 		contentBeforeMenuHeight = document.getElementById(`content-before-menu`)?.clientHeight ?? 0;
 	});
 
-	$effect(() => {
-		OfferingsFeatureFlag.updateFromPosition({
-			lat: filter.lat,
-			lng: filter.lng,
-		});
-	});
-
 	async function navigateWithFilter(nextFilter: Partial<OfferingsFilter>) {
 		loading = true;
 		const nextOfferingsFilter = {
@@ -70,11 +62,6 @@
 		};
 
 		persistOfferingsFilters(nextOfferingsFilter);
-
-		OfferingsFeatureFlag.updateFromPosition({
-			lat: nextOfferingsFilter.lat,
-			lng: nextOfferingsFilter.lng,
-		});
 
 		await goto(
 			routes.offeringsList(nextOfferingsFilter),
