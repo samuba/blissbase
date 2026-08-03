@@ -64,7 +64,6 @@ export const prefillEventFromDescription = command(prefillSchema, async ({ text,
 		messageDate: new Date(),
 		timezone: timeZone,
 		imageInputs,
-		model: `gpt-5.4-nano`,
 		eventIsDefinitelyConscious: true
 	});
 	const fields = await mapAiAnswerToCreateEventPrefill(analysis);

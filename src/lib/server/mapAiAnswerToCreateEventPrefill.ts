@@ -69,20 +69,27 @@ async function resolveTagIdsFromAiNames(names: string[]): Promise<string[]> {
 	if (!names?.length) return [];
 
 	const rows = await db.query.tags.findMany({
-		columns: { id: true },
+		columns: { id: true, slug: true },
 		with: { translations: true }
 	});
 
-	const enToId = new Map<string, number>();
+	const labelToId = new Map<string, number>();
 	for (const row of rows) {
-		const en = row.translations.find((t) => t.locale === `en`)?.name;
-		if (en) enToId.set(en.trim().toLowerCase(), row.id);
+		labelToId.set(row.slug.trim().toLowerCase(), row.id);
+		for (const translation of row.translations) {
+			if (!translation.name) continue;
+			labelToId.set(translation.name.trim().toLowerCase(), row.id);
+		}
 	}
 
 	const ids: string[] = [];
+	const seen = new Set<number>();
 	for (const name of names) {
-		const id = enToId.get(name.trim().toLowerCase());
-		if (id !== undefined) ids.push(String(id));
+		const id = labelToId.get(name.trim().toLowerCase());
+		if (id === undefined) continue;
+		if (seen.has(id)) continue;
+		seen.add(id);
+		ids.push(String(id));
 	}
 
 	return ids;

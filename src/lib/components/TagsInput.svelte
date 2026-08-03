@@ -15,9 +15,7 @@
 	let searchValue = $state('');
 	let open = $state(false);
 	let inputRef = $state<HTMLInputElement | null>(null);
-	let selectedTagIds = $state(
-		allTags.filter((x) => field.value()?.includes(x.id.toString())).map((t) => t.id.toString())
-	);
+	let selectedTagIds = $derived((field.value() ?? []).filter((id): id is string => !!id));
 
 	function clearInput() {
 		if (!inputRef) return;
@@ -25,13 +23,18 @@
 		inputRef.dispatchEvent(new InputEvent(`input`, { bubbles: true, data: `` }));
 	}
 
-	function onSearchValueChange() {
+	function onSelectedTagIdsChange(next: string[]) {
+		field.set(next ?? []);
 		open = false;
 		// Bits-UI synchronously sets inputValue to the selected label inside toggleItem. Wait one tick so that runs first, then clear.
 		tick().then(() => {
 			searchValue = '';
 			clearInput();
 		});
+	}
+
+	function removeTag(tagId: string) {
+		field.set(selectedTagIds.filter((id) => id !== tagId));
 	}
 
 	const selectedTagIdSet = $derived(new Set(selectedTagIds));
@@ -52,8 +55,8 @@
 <Combobox.Root
 	type="multiple"
 	inputValue={searchValue}
-	onValueChange={onSearchValueChange}
-	bind:value={selectedTagIds}
+	value={selectedTagIds}
+	onValueChange={onSelectedTagIdsChange}
 	bind:open
 >
 	<div class="relative">
@@ -75,7 +78,7 @@
 			sideOffset={10}
 		>
 			<Combobox.ScrollUpButton class="flex w-full items-center justify-center pt-1 pb-2">
-				<i class="icon-[ph--caret-double-up] size-4" />
+				<i class="icon-[ph--caret-double-up] size-4"></i>
 			</Combobox.ScrollUpButton>
 			<Combobox.Viewport class="p-1">
 				{#each filteredTags as tag (tag.id)}
@@ -92,7 +95,7 @@
 				{/each}
 			</Combobox.Viewport>
 			<Combobox.ScrollDownButton class="flex w-full items-center justify-center pb-1 pt-2">
-				<i class="icon-[ph--caret-double-down] size-4" />
+				<i class="icon-[ph--caret-double-down] size-4"></i>
 			</Combobox.ScrollDownButton>
 		</Combobox.Content>
 	</Combobox.Portal>
@@ -108,7 +111,7 @@
 					type="button"
 					class="cursor-pointer mx-0 pr-1.5 flex items-center justify-center"
 					aria-label="Entfernen"
-					onclick={() => selectedTagIds = selectedTagIds.filter((t) => t !== tagId)}
+					onclick={() => removeTag(tagId)}
 				>
 					<i class="icon-[ph--x] size-4"></i>
 				</button>
