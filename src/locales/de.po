@@ -2154,9 +2154,8 @@ msgstr "Chat suchen…"
 msgid "Keine verfügbaren Chats. Alle bekannten Chats sind bereits Targets."
 msgstr "Keine verfügbaren Chats. Alle bekannten Chats sind bereits Targets."
 
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Keine Chats für diese Suche."
-msgstr "Keine Chats für diese Suche."
+#~ msgid "Keine Chats für diese Suche."
+#~ msgstr "Keine Chats für diese Suche."
 
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "Ändern"
@@ -2201,3 +2200,37 @@ msgstr "Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools."
 #: src/lib/components/AdminEventSourceFilter.svelte
 msgid "<0/> Admin Zeug"
 msgstr "<0/> Admin Zeug"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Chat-Quelle filtern"
+msgstr "Chat-Quelle filtern"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Keine Chats für diese Filterung."
+msgstr "Keine Chats für diese Filterung."
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Chat konnte nicht ausgeblendet werden"
+msgstr "Chat konnte nicht ausgeblendet werden"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Chat konnte nicht eingeblendet werden"
+msgstr "Chat konnte nicht eingeblendet werden"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Ausgeblendete anzeigen <0/>"
+msgstr "Ausgeblendete anzeigen <0/>"
+
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "ausgeblendet"
+msgstr "ausgeblendet"
+
+#: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Wieder einblenden"
+msgstr "Wieder einblenden"
+
+#: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Ausblenden"
+msgstr "Ausblenden"

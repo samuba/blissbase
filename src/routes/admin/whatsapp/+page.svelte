@@ -6,6 +6,7 @@
 		getAvailableWhatsappChats,
 		getWhatsappScrapingTargets,
 		saveWhatsappScrapingTarget,
+		setWhatsappChatHidden,
 	} from '$lib/rpc/adminWhatsapp.remote';
 	import { toast } from 'svelte-sonner';
 
@@ -25,11 +26,31 @@
 	let selectedChatJid = $state<string | null>(null);
 	let selectedChatForAdd = $state<{ chatJid: string; name: string } | null>(null);
 	let chatFilter = $state(``);
+	let chatSourceFilter = $state<ChatSourceFilter>(`groups`);
+	let showHiddenChats = $state(false);
+	let hidingChatJid = $state<string | null>(null);
+
+	const chatSourceOptions = [
+		{ value: `all`, label: `Alle` },
+		{ value: `groups`, label: `Gruppen` },
+		{ value: `contacts`, label: `Kontakte` },
+		{ value: `channels`, label: `Kanäle` },
+		{ value: `broadcasts`, label: `Broadcasts` },
+		{ value: `other`, label: `Sonstige` },
+	] as const;
+
+	const hiddenAvailableChatsCount = $derived(
+		availableChats.filter((chat) => chat.hidden).length,
+	);
 
 	const filteredAvailableChats = $derived.by(() => {
 		const query = chatFilter.trim().toLowerCase();
-		if (!query) return availableChats;
 		return availableChats.filter((chat) => {
+			if (!showHiddenChats && chat.hidden) return false;
+			if (chatSourceFilter !== `all` && getChatSource(chat.chatJid) !== chatSourceFilter) {
+				return false;
+			}
+			if (!query) return true;
 			return (
 				chat.name.toLowerCase().includes(query) ||
 				chat.chatJid.toLowerCase().includes(query)
@@ -81,6 +102,9 @@
 	function openAddDialog() {
 		selectedChatForAdd = null;
 		chatFilter = ``;
+		chatSourceFilter = `groups`;
+		showHiddenChats = false;
+		hidingChatJid = null;
 		saveWhatsappScrapingTarget.fields.set(defaultFormValues);
 		isAddDialogOpen = true;
 	}
@@ -89,7 +113,51 @@
 		isAddDialogOpen = false;
 		selectedChatForAdd = null;
 		chatFilter = ``;
+		chatSourceFilter = `groups`;
+		showHiddenChats = false;
+		hidingChatJid = null;
 		saveWhatsappScrapingTarget.fields.set(defaultFormValues);
+	}
+
+	async function toggleChatHidden(args: { chat: AvailableChat; event: MouseEvent }) {
+		args.event.stopPropagation();
+		if (hidingChatJid) return;
+
+		const nextHidden = !args.chat.hidden;
+		hidingChatJid = args.chat.chatJid;
+		try {
+			await setWhatsappChatHidden({ chatJid: args.chat.chatJid, hidden: nextHidden });
+			await getAvailableWhatsappChats().refresh();
+			toast.success(
+				nextHidden
+					? `„${args.chat.name}“ ausgeblendet`
+					: `„${args.chat.name}“ wieder eingeblendet`,
+			);
+		} catch (error) {
+			console.error(`Failed to toggle chat hidden:`, error);
+			toast.error(
+				nextHidden
+					? `Chat konnte nicht ausgeblendet werden`
+					: `Chat konnte nicht eingeblendet werden`,
+			);
+		} finally {
+			hidingChatJid = null;
+		}
+	}
+
+	function getChatSource(chatJid: string): Exclude<ChatSourceFilter, `all`> {
+		const jid = chatJid.toLowerCase();
+		if (jid.endsWith(`@g.us`)) return `groups`;
+		if (jid.endsWith(`@newsletter`)) return `channels`;
+		if (jid.endsWith(`@broadcast`)) return `broadcasts`;
+		if (
+			jid.endsWith(`@s.whatsapp.net`) ||
+			jid.endsWith(`@c.us`) ||
+			jid.endsWith(`@lid`)
+		) {
+			return `contacts`;
+		}
+		return `other`;
 	}
 
 	function onAddDialogOpenChange(open: boolean) {
@@ -253,6 +321,13 @@
 
 	type Target = (typeof targets)[number];
 	type AvailableChat = (typeof availableChats)[number];
+	type ChatSourceFilter =
+		| `all`
+		| `groups`
+		| `contacts`
+		| `channels`
+		| `broadcasts`
+		| `other`;
 	type SortKey =
 		| `name`
 		| `chatJid`
@@ -430,34 +505,88 @@
 						<p class="text-base-content/70 text-sm">
 							Wähle einen Chat aus, der noch kein Scraping-Target ist.
 						</p>
-						<input
-							class="input w-full"
-							type="search"
-							placeholder="Chat suchen…"
-							bind:value={chatFilter}
-						/>
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<select
+								class="select w-full sm:w-44"
+								bind:value={chatSourceFilter}
+								aria-label="Chat-Quelle filtern"
+							>
+								{#each chatSourceOptions as option (option.value)}
+									<option value={option.value}>{option.label}</option>
+								{/each}
+							</select>
+							<input
+								class="input w-full min-w-0 flex-1"
+								type="search"
+								placeholder="Chat suchen…"
+								bind:value={chatFilter}
+							/>
+						</div>
+						{#if hiddenAvailableChatsCount}
+							<label class="label cursor-pointer justify-start gap-2">
+								<input
+									type="checkbox"
+									class="checkbox checkbox-sm"
+									bind:checked={showHiddenChats}
+								/>
+								<span class="text-sm">
+									Ausgeblendete anzeigen
+									<span class="text-base-content/60">({hiddenAvailableChatsCount})</span>
+								</span>
+							</label>
+						{/if}
 						{#if !availableChats.length}
 							<p class="text-base-content/70 text-sm">
 								Keine verfügbaren Chats. Alle bekannten Chats sind bereits Targets.
 							</p>
 						{:else if !filteredAvailableChats.length}
-							<p class="text-base-content/70 text-sm">Keine Chats für diese Suche.</p>
+							<p class="text-base-content/70 text-sm">
+								Keine Chats für diese Filterung.
+							</p>
 						{:else}
-							<div class="bg-base-200 max-h-[70vh] overflow-y-auto overscroll-contain rounded-box p-1">
-								<ul class="flex w-full flex-col">
+							<div class="max-h-[70vh] overflow-y-auto overscroll-contain">
+								<ul class="flex w-full flex-col gap-1.5">
 									{#each filteredAvailableChats as chat (chat.chatJid)}
 										<li class="w-full min-w-0">
-											<button
-												type="button"
-												class="hover:bg-base-content/10 flex w-full min-w-0 flex-col items-start gap-0.5 rounded-field px-3 py-1.5 text-start"
-												onclick={() => selectChatForAdd(chat)}
+											<div
+												class={[
+													`card card-border bg-base-200 flex w-full min-w-0 flex-row items-start gap-1 rounded-box`,
+													chat.hidden && `opacity-60`,
+												]}
 											>
-												<span class="w-full truncate text-sm font-medium">{chat.name}</span>
-												<span class="w-full break-all font-mono text-xs opacity-70">{chat.chatJid}</span>
-												<span class="text-xs opacity-60">
-													Letzte Nachricht: {formatDate(chat.lastMessageTime)}
-												</span>
-											</button>
+												<button
+													type="button"
+													class="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-1.5 text-start"
+													onclick={() => selectChatForAdd(chat)}
+												>
+													<span class="w-full truncate text-sm font-medium">
+														{chat.name}
+														{#if chat.hidden}
+															<span class="badge badge-ghost badge-xs ml-1">ausgeblendet</span>
+														{/if}
+													</span>
+													<span class="w-full break-all font-mono text-xs opacity-70">{chat.chatJid}</span>
+													<span class="text-xs opacity-60">
+														Letzte Nachricht: {formatDate(chat.lastMessageTime)}
+													</span>
+												</button>
+												<button
+													type="button"
+													class="btn btn-ghost btn-square btn-xs mt-1 mr-1 shrink-0"
+													title={chat.hidden ? `Wieder einblenden` : `Ausblenden`}
+													aria-label={chat.hidden ? `Wieder einblenden` : `Ausblenden`}
+													disabled={hidingChatJid === chat.chatJid}
+													onclick={(e) => toggleChatHidden({ chat, event: e })}
+												>
+													{#if hidingChatJid === chat.chatJid}
+														<span class="loading loading-spinner loading-xs"></span>
+													{:else if chat.hidden}
+														<i class="icon-[ph--eye] size-4"></i>
+													{:else}
+														<i class="icon-[ph--eye-slash] size-4"></i>
+													{/if}
+												</button>
+											</div>
 										</li>
 									{/each}
 								</ul>

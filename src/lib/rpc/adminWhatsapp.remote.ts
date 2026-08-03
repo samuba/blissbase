@@ -1,4 +1,4 @@
-import { form, query, requested } from '$app/server';
+import { command, form, query, requested } from '$app/server';
 import { error, invalid } from '@sveltejs/kit';
 import { asc, desc, notInArray } from 'drizzle-orm';
 import * as v from 'valibot';
@@ -23,6 +23,11 @@ const saveWhatsappScrapingTargetSchema = v.object({
 		`germany`,
 	),
 	hasOnlyConsciousEvents: v.optional(v.boolean(), false),
+});
+
+const setWhatsappChatHiddenSchema = v.object({
+	chatJid: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+	hidden: v.boolean(),
 });
 
 export const getWhatsappScrapingTargets = query(async () => {
@@ -55,6 +60,25 @@ export const getAvailableWhatsappChats = query(async () => {
 		where: notInArray(s.whatsappChats.chatJid, targetJids),
 		orderBy,
 	});
+});
+
+export const setWhatsappChatHidden = command(setWhatsappChatHiddenSchema, async ({ chatJid, hidden }) => {
+	assertAdmin();
+
+	const [updated] = await db
+		.update(s.whatsappChats)
+		.set({ hidden })
+		.where(eq(s.whatsappChats.chatJid, chatJid))
+		.returning({ chatJid: s.whatsappChats.chatJid, hidden: s.whatsappChats.hidden });
+
+	if (!updated) {
+		error(404, `Chat nicht gefunden`);
+	}
+
+	getAvailableWhatsappChats().refresh();
+	void requested(getAvailableWhatsappChats, 1).refreshAll();
+
+	return updated;
 });
 
 export const saveWhatsappScrapingTarget = form(saveWhatsappScrapingTargetSchema, async (data, issue) => {

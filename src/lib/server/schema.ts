@@ -142,6 +142,7 @@ export const whatsappChats = pgTable("whatsapp_chats", {
 	chatJid: text().primaryKey(),
 	name: text().notNull(),
 	lastMessageTime: timestamp(),
+	hidden: boolean().notNull().default(false),
 	createdAt: timestamp().notNull().defaultNow(),
 	updatedAt: timestamp(),
 });

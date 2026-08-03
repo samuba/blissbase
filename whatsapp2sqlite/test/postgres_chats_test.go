@@ -25,6 +25,7 @@ func openPGlite(t *testing.T) *sql.DB {
 			chat_jid text PRIMARY KEY,
 			name text NOT NULL,
 			last_message_time timestamptz,
+			hidden boolean NOT NULL DEFAULT false,
 			created_at timestamptz NOT NULL DEFAULT now(),
 			updated_at timestamptz
 		)
