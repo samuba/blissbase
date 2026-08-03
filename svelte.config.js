@@ -17,7 +17,7 @@ const config = {
 		},
 		experimental: {
 			remoteFunctions: true,
-			forkPreloads: false
+			forkPreloads: true
 		}
 	},
 	vitePlugin: {
