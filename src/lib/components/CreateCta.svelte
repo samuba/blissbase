@@ -21,37 +21,73 @@
 	const userId = $derived(page.data.userId);
 	const useLink = $derived(!requireLogin || Boolean(userId));
 	let showFab = $state(false);
+	let desiredShowFab = false;
+	let fabTransitioning = false;
+	let ctaElement: HTMLElement | undefined;
+
+	function isRoughlyInViewport(element: HTMLElement) {
+		const rect = element.getBoundingClientRect();
+		return rect.bottom > 0 && rect.top < window.innerHeight;
+	}
 
 	function setShowFab(next: boolean) {
-		if (next === showFab) return;
+		desiredShowFab = next;
+		applyShowFab();
+	}
 
+	function applyShowFab() {
+		if (fabTransitioning) return;
+		if (desiredShowFab === showFab) return;
+
+		const next = desiredShowFab;
 		const canTransition =
 			typeof document.startViewTransition === `function` &&
-			!window.matchMedia(`(prefers-reduced-motion: reduce)`).matches;
+			!window.matchMedia(`(prefers-reduced-motion: reduce)`).matches &&
+			// Skip morph when the in-flow button isn't on screen (e.g. back-nav scroll restore).
+			(!ctaElement || isRoughlyInViewport(ctaElement));
 
 		if (!canTransition) {
 			showFab = next;
 			return;
 		}
 
+		fabTransitioning = true;
 		document.documentElement.dataset.vt = `create-cta-fab`;
 		const transition = document.startViewTransition(async () => {
 			showFab = next;
 			await tick();
 		});
 		transition.finished.finally(() => {
+			fabTransitioning = false;
 			delete document.documentElement.dataset.vt;
+			applyShowFab();
 		});
+	}
+
+	function syncFabFromGeometry(element = ctaElement) {
+		if (!element) return;
+
+		const headerHeight =
+			document.getElementById(`header-controls`)?.getBoundingClientRect().height ?? 0;
+		setShowFab(element.getBoundingClientRect().top < headerHeight);
 	}
 
 	const observeCtaForFab: Attachment = (element) => {
 		if (!(element instanceof HTMLElement)) return;
 
+		ctaElement = element;
 		let intersectionObserver: IntersectionObserver | undefined;
+		let syncScheduled = false;
 
-		const syncFabVisibility = (entry: IntersectionObserverEntry) => {
-			const rootTop = entry.rootBounds?.top ?? 0;
-			setShowFab(entry.boundingClientRect.top < rootTop);
+		// Coalesce IO/scroll/resize onto one live geometry read after layout.
+		// Avoids stale boundingClientRect from scroll restoration races.
+		const scheduleSync = () => {
+			if (syncScheduled) return;
+			syncScheduled = true;
+			requestAnimationFrame(() => {
+				syncScheduled = false;
+				syncFabFromGeometry(element);
+			});
 		};
 
 		const connectObserver = () => {
@@ -59,18 +95,16 @@
 				document.getElementById(`header-controls`)?.getBoundingClientRect().height ?? 0;
 
 			intersectionObserver?.disconnect();
-			intersectionObserver = new IntersectionObserver(
-				(entries) => {
-					const entry = entries[0];
-					if (!entry) return;
-					syncFabVisibility(entry);
-				},
-				{ rootMargin: `-${headerHeight}px 0px 0px 0px`, threshold: 1 },
-			);
+			intersectionObserver = new IntersectionObserver(scheduleSync, {
+				rootMargin: `-${headerHeight}px 0px 0px 0px`,
+				threshold: 1,
+			});
 			intersectionObserver.observe(element);
+			scheduleSync();
 		};
 
 		connectObserver();
+		window.addEventListener(`scroll`, scheduleSync, { passive: true });
 
 		const headerElement = document.getElementById(`header-controls`);
 		const resizeObserver = new ResizeObserver(connectObserver);
@@ -79,13 +113,15 @@
 		}
 
 		return () => {
+			if (ctaElement === element) ctaElement = undefined;
 			intersectionObserver?.disconnect();
 			resizeObserver.disconnect();
+			window.removeEventListener(`scroll`, scheduleSync);
 		};
 	};
 
 	const fabClasses = [
-		`btn btn-primary fixed right-4 z-40 shadow-lg`,
+		`btn max-sm:btn-lg btn-primary max-sm:btn-circle fixed right-4 z-40 shadow-lg`,
 		`bottom-[calc(4.75rem+env(safe-area-inset-bottom))]`,
 		`md:bottom-4`,
 	];
@@ -137,14 +173,20 @@
 			href={href}
 			data-sveltekit-preload-data="hover"
 			class={[fabClasses, `create-cta-vt`]}
+			aria-label={buttonText}
 		>
-			<i class="icon-[ph--plus] size-5"></i>
-			{buttonText}
+			<i class="icon-[ph--plus] size-6 sm:size-5"></i>
+			<span class="hidden sm:block">{buttonText}</span>
 		</a>
 	{:else}
-		<button type="button" onclick={showLoginDialog} class={[fabClasses, `create-cta-vt`]}>
-			<i class="icon-[ph--plus] size-5"></i>
-			{buttonText}
+		<button
+			type="button"
+			onclick={showLoginDialog}
+			class={[fabClasses, `create-cta-vt`]}
+			aria-label={buttonText}
+		>
+			<i class="icon-[ph--plus] size-6 sm:size-5"></i>
+			<span class="hidden sm:block">{buttonText}</span>
 		</button>
 	{/if}
 {/if}
