@@ -59,14 +59,13 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 		searchTerm: args.searchTerm?.trim() || null,
 		includeOnline: args.includeOnline ?? true,
 	};
-	const currentUserId = getRequestEvent().locals.userId;
+	const { userId, isAdminSession } = getRequestEvent().locals;
 	const filterCoords = await resolveOfferingsFilterCoordinates(filter);
 	const distanceKm = filter.distance ? parseFloat(filter.distance) : null;
-	const isAdminSession = getRequestEvent().locals.isAdminSession;
 
 	const offerings = await db.query.offerings.findMany({
-		where: currentUserId
-			? or(eq(s.offerings.listed, true), eq(s.offerings.profileId, currentUserId))
+		where: userId
+			? or(eq(s.offerings.listed, true), eq(s.offerings.profileId, userId))
 			: eq(s.offerings.listed, true),
 		columns: {
 			id: true,
@@ -125,7 +124,7 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 						bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
 						locationLabel: offering.profile.locationLabel ?? ``,
 					},
-					canManage: currentUserId === offering.profile.id || isAdminSession,
+					canManage: userId === offering.profile.id || isAdminSession,
 				})),
 			includeOnline: filter.includeOnline,
 		}),
