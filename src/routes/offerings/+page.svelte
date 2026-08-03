@@ -7,16 +7,19 @@
 	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
 	import TabsNavDesktop from "$lib/components/TabsNavDesktop.svelte";
 	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
-	import { filterOfferingsBySearchTerm } from "$lib/offeringsFilter";
+	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
+	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 
 	let { data } = $props();
-	const offeringsResult = $derived(data.offeringsResult);
+	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
+	const offeringsQuery = $derived(getOfferings(filterFromUrl));
+	const offeringsResult = $derived(offeringsQuery.current ?? data.offeringsResult);
 	let loading = $state(false);
 	const filter = $derived(offeringsResult.filter);
 	const offerings = $derived(offeringsResult.offerings);

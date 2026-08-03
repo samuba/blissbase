@@ -2,14 +2,15 @@
 	import { page } from "$app/state";
 	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
-	import { updateProfileLocation } from "$lib/rpc/offerings.remote";
+	import { getMyOfferings, updateProfileLocation } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
 	let profile = $state(data.profile);
-	const offerings = $derived(data.offerings);
+	const offeringsQuery = getMyOfferings();
+	const offerings = $derived(offeringsQuery.current ?? data.offerings);
 	const activeOfferings = $derived(offerings.filter((offering) => offering.listed));
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
 
