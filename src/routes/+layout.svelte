@@ -18,7 +18,6 @@
 	import { Toaster } from 'svelte-sonner';
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
-	import { isActiveAppTab } from '$lib/components/tabsNav';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import { routes } from '$lib/routes';
 
@@ -62,8 +61,9 @@
 	registerAuthCallbackFeedbackToast();
 	registerFlashToast();
 
+	// Home and offerings list embed their own TabsNavDesktop; every other page uses the layout nav.
 	const showDesktopNav = $derived(
-		!isActiveAppTab(page.url.pathname, routes.root()) && !isActiveAppTab(page.url.pathname, routes.offeringsList())
+		page.url.pathname !== routes.root() && page.url.pathname !== new URL(routes.offeringsList(), page.url.origin).pathname
 	);
 </script>
 

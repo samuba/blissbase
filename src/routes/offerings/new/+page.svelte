@@ -485,7 +485,7 @@
 </script>
 
 <svelte:head>
-	<title>Angebot erstellen | Blissbase</title>
+	<title>Angebot hinzufügen | Blissbase</title>
 </svelte:head>
 
 <svelte:window onbeforeunload={unsaved.handleBeforeUnload} />
@@ -507,7 +507,7 @@
 						erst live, wenn die Bestätigung abgeschlossen ist.
 					</p>
 				{:else}
-					<h1 class="text-xl sm:text-2xl font-bold">Angebot erstellen</h1>
+					<h1 class="text-xl sm:text-2xl font-bold">Angebot hinzufügen</h1>
 					<p class="text-base-content/70 text-sm">
 						Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst.
 						Jeder kann es in deinem Profil und auf der Angebote-Seite sehen.

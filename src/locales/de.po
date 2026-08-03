@@ -1251,11 +1251,9 @@ msgstr "Angebot erstellen <0/>"
 msgid "Bitte gib deine E-Mail-Adresse ein."
 msgstr "Bitte gib deine E-Mail-Adresse ein."
 
-#: src/routes/offerings/new/+page.svelte
-msgid "Angebot erstellen | Blissbase"
-msgstr "Angebot erstellen | Blissbase"
+#~ msgid "Angebot erstellen | Blissbase"
+#~ msgstr "Angebot erstellen | Blissbase"
 
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/profile/offerings/+page.svelte
 msgid "Angebot erstellen"
@@ -2309,6 +2307,7 @@ msgid "Event hinzufügen"
 msgstr "Event hinzufügen"
 
 #: src/routes/offerings/+page.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Angebot hinzufügen"
 msgstr "Angebot hinzufügen"
 
@@ -2425,3 +2424,7 @@ msgstr "✨ Persönliche Sessions & Services aus der Community ✨"
 #: src/lib/components/HeaderControls.svelte
 msgid "Für private Sessions und Services:"
 msgstr "Für private Sessions und Services:"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Angebot hinzufügen | Blissbase"
+msgstr "Angebot hinzufügen | Blissbase"

@@ -62,7 +62,8 @@ export function isActiveAppTab(pathname: string, href: string) {
 		href = href.slice(1);
 	}
 	if (href.includes('#')) {
-		return pathname === href.split('#')[0];
+		const path = href.split('#')[0];
+		return pathname === path || pathname === routes.newEvent();
 	}
 	if (href === routes.profile()) {
 		return pathname === href || (pathname.startsWith(`${href}/`) && pathname !== routes.favorites());
