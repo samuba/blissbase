@@ -115,6 +115,8 @@ const supabaseAuth: Handle = async ({ event, resolve }) => {
 };
 
 const guardRoutesWithLogin: Handle = async ({ event, resolve }) => {
+    if (event.url.pathname.startsWith("/_app/remote/")) return resolve(event); // never guard remote functions
+    
     const { userId } = event.locals;
     ["/events", "/profile"].forEach(route => {
         if (event.url.pathname.startsWith(route) && !userId) {
