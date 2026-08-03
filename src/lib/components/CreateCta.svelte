@@ -185,7 +185,6 @@
 				showFab && `invisible`,
 			]}
 			inert={showFab}
-			data-sveltekit-preload-data="hover"
 		>
 			<i class="icon-[ph--plus] size-5"></i>
 			{buttonText}
@@ -212,7 +211,6 @@
 	{#if useLink}
 		<a
 			href={href}
-			data-sveltekit-preload-data="hover"
 			class={[fabClasses, `create-cta-vt`]}
 			aria-label={buttonText}
 		>
