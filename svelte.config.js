@@ -17,7 +17,7 @@ const config = {
 		},
 		experimental: {
 			remoteFunctions: true,
-			forkPreloads: true
+			forkPreloads: false // in prod this kills the tab
 		}
 	},
 	vitePlugin: {
