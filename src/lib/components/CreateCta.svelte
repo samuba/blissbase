@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { showLoginDialog } from '$lib/components/LoginDialog.svelte';
 	import type { Attachment } from 'svelte/attachments';
@@ -23,7 +24,21 @@
 	let showFab = $state(false);
 	let desiredShowFab = false;
 	let fabTransitioning = false;
+	let fabArmed = false;
 	let ctaElement: HTMLElement | undefined;
+
+	// Drop the fixed FAB instantly on leave so it can't morph/jump during
+	// scroll-to-top of the outgoing page or briefly linger on the next route.
+	beforeNavigate(({ from, to }) => {
+		if (!from || !to) return;
+		if (from.url.pathname === to.url.pathname) return;
+
+		fabArmed = false;
+		desiredShowFab = false;
+		showFab = false;
+		fabTransitioning = false;
+		delete document.documentElement.dataset.vt;
+	});
 
 	function isRoughlyInViewport(element: HTMLElement) {
 		const rect = element.getBoundingClientRect();
@@ -36,6 +51,7 @@
 	}
 
 	function applyShowFab() {
+		if (!fabArmed) return;
 		if (fabTransitioning) return;
 		if (desiredShowFab === showFab) return;
 
@@ -76,8 +92,10 @@
 		if (!(element instanceof HTMLElement)) return;
 
 		ctaElement = element;
+		fabArmed = false;
 		let intersectionObserver: IntersectionObserver | undefined;
 		let syncScheduled = false;
+		let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
 		// Coalesce IO/scroll/resize onto one live geometry read after layout.
 		// Avoids stale boundingClientRect from scroll restoration races.
@@ -90,6 +108,20 @@
 			});
 		};
 
+		// Wait out SvelteKit scroll-to-top / back-forward restore before showing the FAB.
+		// Otherwise a mid-nav scroll offset briefly treats the CTA as off-screen and the
+		// previous page's FAB appears to "carry over", then morphs away when scroll settles.
+		const armFab = () => {
+			if (fabArmed) return;
+			fabArmed = true;
+			scheduleSync();
+		};
+
+		const scheduleArm = () => {
+			clearTimeout(settleTimer);
+			settleTimer = setTimeout(armFab, 50);
+		};
+
 		const connectObserver = () => {
 			const headerHeight =
 				document.getElementById(`header-controls`)?.getBoundingClientRect().height ?? 0;
@@ -100,11 +132,12 @@
 				threshold: 1,
 			});
 			intersectionObserver.observe(element);
-			scheduleSync();
+			if (fabArmed) scheduleSync();
 		};
 
 		connectObserver();
 		window.addEventListener(`scroll`, scheduleSync, { passive: true });
+		window.addEventListener(`scroll`, scheduleArm, { passive: true });
 
 		const headerElement = document.getElementById(`header-controls`);
 		const resizeObserver = new ResizeObserver(connectObserver);
@@ -112,11 +145,19 @@
 			resizeObserver.observe(headerElement);
 		}
 
+		// Arm after layout even when navigation does not emit scroll events.
+		requestAnimationFrame(() => {
+			requestAnimationFrame(scheduleArm);
+		});
+
 		return () => {
 			if (ctaElement === element) ctaElement = undefined;
+			fabArmed = false;
+			clearTimeout(settleTimer);
 			intersectionObserver?.disconnect();
 			resizeObserver.disconnect();
 			window.removeEventListener(`scroll`, scheduleSync);
+			window.removeEventListener(`scroll`, scheduleArm);
 		};
 	};
 
