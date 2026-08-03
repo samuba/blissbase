@@ -11,9 +11,7 @@ const openai = createOpenAI({
 });
 
 export default defineConfig({
-    // sourceLocale is en by default
-    sourceLocale: 'de',
-    otherLocales: ['en'],
+    // first locale is the source locale
     locales: ['de', 'en'],
     adapters: {
         main: svelte({ loader: 'sveltekit', heuristic: svelteDefaultHeuristicDerivedReq }),
@@ -27,21 +25,23 @@ export default defineConfig({
         })
     },
     ai: {
-        name: "gpt-5.4-nano",
+        name: "gpt-5.6-luna",
         group: {},
         batchSize: 50,
         parallel: 3,
         translate: async (messages, instruction) => {
+            console.time('translation took');
             const { text } = await generateText({
-                model: openai('gpt-5.4-nano'),
+                model: openai('gpt-5.6-luna'),
                 system: instruction,
                 prompt: messages,
                 providerOptions: {
                     openai: {
-                        reasoningEffort: 'medium',
+                        reasoningEffort: 'low',
                     },
                 },
             })
+            console.timeEnd('translation took');
             return text
         }
       },

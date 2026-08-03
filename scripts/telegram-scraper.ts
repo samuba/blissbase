@@ -491,7 +491,6 @@ async function extractEventDataFromImageMessage(
         timezone: defaultTimezone,
         authorName: author?.username,
         imageInputs: [imageInput],
-        model: `gpt-5.4-nano`,
         eventIsDefinitelyConscious,
     });
 
@@ -541,7 +540,6 @@ async function extractEventDataFromMessage(
         timezone: defaultTimezone,
         authorName: author?.username,
         imageInputs: adjacentImageInputs,
-        model: `gpt-5.4-nano`,
         eventIsDefinitelyConscious,
     });
 

@@ -35,8 +35,8 @@
 		"wuchale:clean": "wuchale --clean"
 	},
 	"devDependencies": {
-		"@ai-sdk/google": "^3.0.63",
-		"@ai-sdk/openai": "^3.0.53",
+		"@ai-sdk/google": "^4.0.24",
+		"@ai-sdk/openai": "^4.0.25",
 		"@electric-sql/pglite": "^0.4.4",
 		"@eslint/compat": "^2.0.5",
 		"@eslint/js": "^10.0.1",
@@ -59,7 +59,7 @@
 		"@vercel/functions": "^3.4.3",
 		"@vite-pwa/sveltekit": "^1.1.0",
 		"@wuchale/svelte": "^0.19.3",
-		"ai": "^6.0.161",
+		"ai": "^7.0.44",
 		"bits-ui": "^2.17.3",
 		"calendar-link": "^2.11.0",
 		"cheerio": "^1.2.0",

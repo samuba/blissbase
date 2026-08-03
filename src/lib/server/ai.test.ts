@@ -2,8 +2,8 @@ import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
 import { aiExtractEventData, getExistingSource, normalizeDescription } from './ai';
 
-const model = process.env.OPENAI_API_KEY ? `gpt-5.4-nano` : undefined;
-const itWithAiKey = model ? it : it.skip;
+const hasAiKey = !!process.env.OPENAI_API_KEY;
+const itWithAiKey = hasAiKey ? it : it.skip;
 
 describe(`normalizeDescription`, () => {
 	it(`removes a normalized leading event name`, () => {
@@ -119,7 +119,6 @@ https://sei.jetzt/event/ecstatic-dance-berlin
 Looks nice for anyone interested.`,
 				messageDate: new Date(`2026-04-29T06:00:00.000Z`),
 				timezone: `Europe/Berlin`,
-				model: `gpt-5.4-nano`,
 				eventIsDefinitelyConscious: false
 			});
 
@@ -139,7 +138,7 @@ Looks nice for anyone interested.`,
 			retry: 2
 		},
 		async () => {
-			if (!model) throw new Error(`AI API key is required for this test`);
+			if (!hasAiKey) throw new Error(`AI API key is required for this test`);
 
 			const result = await aiExtractEventData({
 				message: `*Einladung zum 𝐄𝐦𝐛𝐨𝐝𝐢𝐞𝐝 Consent Lab in Berlin*
@@ -163,7 +162,6 @@ WhatsApp questions: +49123456789
 Message me only if both registration links fail.`,
 				messageDate: new Date(`2026-04-29T06:00:00.000Z`),
 				timezone: `Europe/Berlin`,
-				model,
 				eventIsDefinitelyConscious: true
 			});
 

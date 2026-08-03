@@ -607,7 +607,6 @@ async function extractEventDataFromImageMessage(args: {
         timezone: args.defaultTimezone,
         authorName: getWhatsappAuthor(args.message).name,
         imageInputs: [imageInput],
-        model: `gpt-5.4-nano`,
         eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
     })
 
@@ -672,7 +671,6 @@ async function extractEventDataFromMessage(args: {
         timezone: args.defaultTimezone,
         authorName: getWhatsappAuthor(args.message).name,
         imageInputs: adjacentImageInputs,
-        model: `gpt-5.4-nano`,
         eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
     })
 

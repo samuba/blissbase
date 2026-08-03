@@ -13,7 +13,6 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 		timezone,
 		authorName,
 		imageInputs = [],
-		model,
 		eventIsDefinitelyConscious,
 	} = args;
 	const existingSource = getExistingSource(message);
@@ -27,17 +26,13 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	try {
 		const { output, usage } = await generateText({
-			model: openai(model),
-			providerOptions: {
-				openai: {
-					reasoningEffort: 'high',
-				},
-			},
+			model: openai(`gpt-5.6-luna`),
+			reasoning: `medium`,
 			output: Output.object({
 				name: `eventExtraction`,
 				schema: buildMsgAnalysisSchema(timezone)
 			}),
-			system: msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName),
+			instructions: msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName),
 			messages: [
 				{
 					role: `user`,
@@ -72,33 +67,30 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 }
 
 /**
- * Normalizes app image inputs into AI SDK image parts.
+ * Normalizes app image inputs into AI SDK file parts.
  * @example
  * buildAiImagePart({ image: Buffer.from(`abc`), mediaType: `image/webp` })
  */
 function buildAiImagePart(imageInput: AiImageInput) {
 	if (typeof imageInput === `string`) {
 		return {
-			type: `image` as const,
-			image: normalizeAiImageValue(imageInput)
+			type: `file` as const,
+			mediaType: `image` as const,
+			data: normalizeAiImageValue(imageInput)
 		};
 	}
 	if (imageInput instanceof URL) {
 		return {
-			type: `image` as const,
-			image: imageInput
+			type: `file` as const,
+			mediaType: `image` as const,
+			data: imageInput
 		};
 	}
 
-	const part = {
-		type: `image` as const,
-		image: normalizeAiImageValue(imageInput.image)
-	};
-	if (!imageInput.mediaType) return part;
-
 	return {
-		...part,
-		mediaType: imageInput.mediaType
+		type: `file` as const,
+		mediaType: imageInput.mediaType ?? `image`,
+		data: normalizeAiImageValue(imageInput.image)
 	};
 }
 
@@ -356,7 +348,7 @@ function buildMsgAnalysisSchema(timezone: string) {
 			},
 			description: {
 				type: [`string`, `null`],
-				description: `An exact copy from the message, including html tags; do not convert <br> tags to line breaks. Preserve line breaks using \\n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start of this field. From extracted images only include information that is not already in the message.`
+				description: `An exact copy from the message, including html tags; do not convert <br> tags to line breaks. Preserve line breaks using \\n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start. From extracted images only include information that is not already in the message. Do not include text from (company) logos. Do not include addresses or simple start/end dates/times`
 			},
 			startDate: {
 				type: [`string`, `null`],
@@ -470,7 +462,6 @@ export type AiExtractEventDataArgs = {
 	timezone: string;
 	authorName?: string;
 	imageInputs?: (AiImageInput | undefined)[];
-	model: `gpt-5.4-nano` | `gpt-5.4-nano`;
 	eventIsDefinitelyConscious: boolean;
 };
 
