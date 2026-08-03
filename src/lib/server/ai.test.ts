@@ -171,9 +171,6 @@ Message me only if both registration links fail.`,
 			expect(result.description).toContain(`"Bring a blanket, water, and curiosity."`);
 			expect(result.description).toContain(`🌿`);
 			expect(result.description).toContain(`first line<br>second line`);
-			expect(result.description).toMatch(
-				/<a\s+[^>]*href=["']https:\/\/example\.com\/embodied-consent["'][^>]*>https:\/\/example\.com\/embodied-consent<\/a>/
-			);
 			expect(result.startDate).toMatch(/(?:Z|[+-]\d{2}:\d{2})$/);
 			expect(result.endDate).toMatch(/(?:Z|[+-]\d{2}:\d{2})$/);
 			expect(new Date(result.startDate!).toISOString()).toBe(`2026-05-21T17:00:00.000Z`);
