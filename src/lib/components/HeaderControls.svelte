@@ -104,22 +104,15 @@
 				>
 					<div class="">
 						<div class="inline-block mr-1.5">
-							Für private Sessions und Services go to:
+							Für private Sessions und Services:
 						</div> 
 						<div class="inline-block align-middle">
 							<a
-								data-sveltekit-preload-data="off"
-								// on preloading this results in 2 requests one freezes the tab
-								href={routes.offeringsList({
-									lat: eventsStore.pagination.lat,
-									lng: eventsStore.pagination.lng,
-									distance: eventsStore.pagination.distance,
-									location: eventsStore.pagination.plzCity,
-								})}
+								href={routes.offeringsList()}
 								class="link text-base-content flex items-center gap-1 font-semibold"
 							>
 								<i class="icon-[ph--hand-heart] size-4"></i>
-								Offerings
+								Angebote
 							</a>
 						</div>
 					</div>

@@ -1315,6 +1315,7 @@ msgstr "Change your search or delete the search term to see all offerings again.
 msgid "Aktuell keine Angebote."
 msgstr "No offerings available."
 
+#: src/lib/components/HeaderControls.svelte
 #: src/routes/@/[slug]/+page.svelte
 msgid "<0/> Angebote"
 msgstr "<0/> Offerings"
@@ -2412,10 +2413,15 @@ msgstr "✨ Personal Sessions & Services from the Community ✨"
 #~ msgid "Für private Sessions und Services go to: <0><0/> Offerings</0>"
 #~ msgstr "For private sessions and services, go to: <0><0/> Offerings</0>"
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Für private Sessions und Services go to:"
-msgstr "For private sessions and services go to:"
+#~ msgid "Für private Sessions und Services go to:"
+#~ msgstr "For private sessions and services go to:"
+
+#~ msgid "<0/> Offerings"
+#~ msgstr "<0/> Offerings"
+
+#~ msgid "Für private Sessions und Services checkout:"
+#~ msgstr "For private sessions and services:"
 
 #: src/lib/components/HeaderControls.svelte
-msgid "<0/> Offerings"
-msgstr "<0/> Offerings"
+msgid "Für private Sessions und Services:"
+msgstr "For private sessions and services:"
