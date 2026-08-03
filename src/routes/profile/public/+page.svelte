@@ -5,11 +5,13 @@
 	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
 	import PublicProfileSocialLinksEditor from "$lib/components/PublicProfileSocialLinksEditor.svelte";
 	import { publicProfileFormSchema } from "$lib/rpc/profile.common";
-	import { checkSlugAvailability, getMyPublicProfile, upsertPublicProfile } from "$lib/rpc/profile.remote";
+	import { checkSlugAvailability, upsertPublicProfile } from "$lib/rpc/profile.remote";
 	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
 	import { resolve } from "$app/paths";
 
-	const profile = $state(await getMyPublicProfile());
+	let { data } = $props();
+	// svelte-ignore state_referenced_locally
+	const profile = $state(data.profile);
 
 	let profileImageBusy = $state(false);
 	let bannerImageBusy = $state(false);

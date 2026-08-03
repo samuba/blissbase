@@ -59,6 +59,7 @@
 
 			<EventForm
 				remoteForm={updateEvent}
+				allTags={data.tags.allTags}
 				initialExistingImageUrls={editFormValues.existingImageUrls}
 			/>
 

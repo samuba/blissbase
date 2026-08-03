@@ -12,7 +12,7 @@
 	import { offeringNeedsLocation, type OfferingFormat } from "$lib/rpc/offerings.common";
 	import { createOffering } from "$lib/rpc/offerings.remote";
 	import { profileLocationCheckMessage, type PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-	import { checkEmailProfileComplete, getMyPublicProfile } from "$lib/rpc/profile.remote";
+	import { checkEmailProfileComplete } from "$lib/rpc/profile.remote";
 	import { hasValidCoordinates } from "$lib/locationFilter";
 	import { routes, safeReturnToPath } from "$lib/routes";
 	import { getSupabaseBrowserClient } from "$lib/supabase";
@@ -31,8 +31,10 @@
 		allIssues?: () => unknown[] | undefined;
 	};
 
+	let { data } = $props();
 	const isSignedIn = Boolean(page.data.userId);
-	let profile = $state(isSignedIn ? await getMyPublicProfile() : null);
+	// svelte-ignore state_referenced_locally
+	let profile = $state(data.profile);
 	const EMAIL_CHECK_DEBOUNCE_MS = 500;
 	const missingDisplayName = !profile?.displayName?.trim();
 	const missingProfileImageUrl = !profile?.profileImageUrl?.trim();

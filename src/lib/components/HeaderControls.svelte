@@ -11,11 +11,18 @@
 	import { routes } from "$lib/routes";
 	import { user } from "$lib/user.svelte";
 	import AdminEventSourceFilter from "./AdminEventSourceFilter.svelte";
+	import type { UiTag } from "$lib/rpc/TagSelection.remote";
 
 	let {
 		onLocationDistanceChange = eventsStore.handleLocationDistanceChange,
+		allTags,
+		eventSources = null,
+		eventSourceFilter = null,
 	}: {
 		onLocationDistanceChange?: (event: LocationChangeEvent) => void;
+		allTags: UiTag[];
+		eventSources?: string[] | null;
+		eventSourceFilter?: string | null;
 	} = $props();
 
 	let headerElement = $state<HTMLElement | null>(null);
@@ -94,7 +101,7 @@
 		</div>
 
 		<div class="mx-auto flex w-full max-w-2xl items-center gap-4 px-4 sm:px-0">
-			<TagSelection />
+			<TagSelection {allTags} />
 		</div>
 
 		{#if showOfferingsLink}
@@ -229,8 +236,8 @@
 					</button>
 				</div>
 
-				{#if user.isAdmin}
-					<AdminEventSourceFilter />
+				{#if user.isAdmin && eventSources && eventSourceFilter}
+					<AdminEventSourceFilter sources={eventSources} initialSource={eventSourceFilter} />
 				{/if}
 			</div>
 

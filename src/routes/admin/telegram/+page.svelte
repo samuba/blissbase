@@ -8,7 +8,9 @@
 	} from '$lib/rpc/adminTelegram.remote';
 	import { toast } from 'svelte-sonner';
 
-	const targets = $derived(await getTelegramScrapingTargets());
+	let { data } = $props();
+	const targetsQuery = getTelegramScrapingTargets();
+	const targets = $derived(targetsQuery.current ?? data.targets);
 	const defaultFormValues = {
 		originalRoomId: ``,
 		roomId: ``,

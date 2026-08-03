@@ -17,6 +17,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import type { RemoteFormFields } from '@sveltejs/kit';
+	import type { UiTag } from '$lib/rpc/TagSelection.remote';
 
 	type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
 	type UpdateEventForm = typeof import('$lib/rpc/eventMutations.remote').updateEvent;
@@ -27,12 +28,14 @@
 
 	let {
 		remoteForm,
+		allTags,
 		initialExistingImageUrls = [],
 		showAutofillControl = false,
 		onDirty,
 		onSuccess,
 	}: {
 		remoteForm: EventFormRemoteForm;
+		allTags: UiTag[];
 		initialExistingImageUrls?: string[];
 		showAutofillControl?: boolean;
 		onDirty?: () => void;
@@ -159,7 +162,7 @@
 
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Tags</legend>
-			<TagsInput field={remoteForm.fields.tagIds} />
+			<TagsInput {allTags} field={remoteForm.fields.tagIds} />
 			<FormFieldIssues field={remoteForm.fields.tagIds} />
 		</fieldset>
 	</div>

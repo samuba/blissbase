@@ -6,12 +6,13 @@
 		removeFavorite
 	} from '$lib/rpc/favorites.remote';
 
+	let { data } = $props();
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
 
 	const upcomingEventsQuery = getFavoriteUpcomingEvents();
-	const upcomingEvents = await upcomingEventsQuery;
+	const upcomingEvents = $derived(upcomingEventsQuery.current ?? data.upcomingEvents);
 
-	let pastEvents = $state<typeof upcomingEvents>([]);
+	let pastEvents = $state<typeof data.upcomingEvents>([]);
 	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
 
 	async function fetchPastEvents() {
@@ -32,7 +33,9 @@
 
 	function onRemoveFavorite(eventId: number) {
 		removeFavorite(eventId).updates(
-			upcomingEventsQuery.withOverride((current) => current.filter((x) => x.id !== eventId))
+			upcomingEventsQuery.withOverride((current) =>
+				(current ?? data.upcomingEvents).filter((x) => x.id !== eventId)
+			)
 		);
 		pastEvents = pastEvents.filter((x) => x.id !== eventId);
 	}

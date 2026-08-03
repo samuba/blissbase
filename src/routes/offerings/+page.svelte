@@ -7,18 +7,17 @@
 	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
 	import TabsNavDesktop from "$lib/components/TabsNavDesktop.svelte";
 	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
-	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
+	import { filterOfferingsBySearchTerm } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
-	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 
-	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
-	const offeringsResult = $derived(await getOfferings(filterFromUrl));
-	let loading = $state(false); // can not use getOfferings().loading as its broken: https://github.com/sveltejs/kit/issues/14915
+	let { data } = $props();
+	const offeringsResult = $derived(data.offeringsResult);
+	let loading = $state(false);
 	const filter = $derived(offeringsResult.filter);
 	const offerings = $derived(offeringsResult.offerings);
 	const filteredOfferings = $derived(
@@ -63,13 +62,11 @@
 
 		persistOfferingsFilters(nextOfferingsFilter);
 
-		await goto(
-			routes.offeringsList(nextOfferingsFilter),
-			{ keepFocus: true, noScroll: true },
-		)
-
 		try {
-			await getOfferings(nextOfferingsFilter).refresh()
+			await goto(
+				routes.offeringsList(nextOfferingsFilter),
+				{ keepFocus: true, noScroll: true },
+			);
 		} finally {
 			loading = false;
 		}

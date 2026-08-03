@@ -1,18 +1,17 @@
 <script lang="ts">
-	import { getTags } from '$lib/rpc/TagSelection.remote';
+	import type { UiTag } from '$lib/rpc/TagSelection.remote';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { localeStore } from '../../locales/localeStore.svelte';
 	import TextSearchInput from '$lib/components/TextSearchInput.svelte';
 
-	const { allTags } = await getTags();
-	type Tag = (typeof allTags)[number];
+	let { allTags }: { allTags: UiTag[] } = $props();
 
 	let textSearchInput = $state<TextSearchInput | null>(null);
 
 	/** Parses search term and returns matched tags */
-	function parseSearchTermToTags(searchTerm: string): Tag[] {
+	function parseSearchTermToTags(searchTerm: string): UiTag[] {
 		const searchWords =
 			searchTerm
 				.trim()
@@ -49,7 +48,7 @@
 
 	const initialState = getInitialState();
 	let filterQuery = $state(initialState.filterQuery);
-	let selectedTags = $state<Tag[]>(initialState.selectedTags);
+	let selectedTags = $state<UiTag[]>(initialState.selectedTags);
 	let keywordSearched = $state(initialState.keywordSearched);
 	let locale = $derived(localeStore.locale as 'en' | 'de');
 	let showLeftShadow = $state(false);
@@ -73,13 +72,13 @@
 		eventsStore.handleSearchTermChange('');
 	}
 
-	function selectTag(tag: Tag) {
+	function selectTag(tag: UiTag) {
 		selectedTags = [...selectedTags, tag];
 		textSearchInput?.close();
 		eventsStore.handleSearchTermChange(buildSelectedTagSearchTerm());
 	}
 
-	function removeTag(tag: Tag) {
+	function removeTag(tag: UiTag) {
 		selectedTags = selectedTags.filter((selectedTag) => selectedTag.id !== tag.id);
 		eventsStore.handleSearchTermChange(buildSelectedTagSearchTerm());
 	}

@@ -5,6 +5,7 @@ import { isAdminSession } from '$lib/server/admin';
 import { getEditEventInitialValues } from '$lib/events.remote.common';
 import type { Config } from '@sveltejs/adapter-vercel';
 import { getRequestEvent } from '$app/server';
+import { getTags } from '$lib/rpc/TagSelection.remote';
 
 export const config: Config = {
 	split: true
@@ -33,7 +34,8 @@ export async function load({ url, params: { id } }) {
     if (hostSecretCorrect || userIsAuthor || await isAdminSession()) {
         return {
             event,
-            editFormValues: getEditEventInitialValues(event, event.eventTags.map((x) => x.tagId))
+            editFormValues: getEditEventInitialValues(event, event.eventTags.map((x) => x.tagId)),
+            tags: await getTags(),
         };
     }
 

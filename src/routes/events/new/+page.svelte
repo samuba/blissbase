@@ -6,6 +6,7 @@
 	import { routes } from '$lib/routes';
 	import { UnsavedChangesGuard } from '$lib/unsavedChangesGuard.svelte';
 
+	let { data } = $props();
 	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	let hasInitializedCreateFields = $state(false);
 	const unsaved = new UnsavedChangesGuard();
@@ -50,6 +51,7 @@
 			{#if hasInitializedCreateFields}
 				<EventForm
 					remoteForm={createEvent}
+					allTags={data.tags.allTags}
 					showAutofillControl
 					onDirty={unsaved.markDirty}
 					onSuccess={handleSaveSuccess}

@@ -17,7 +17,7 @@ const config = {
 		},
 		experimental: {
 			remoteFunctions: true,
-			forkPreloads: false // diagnosing hang on offerings hover-preload
+			forkPreloads: true
 		}
 	},
 	vitePlugin: {

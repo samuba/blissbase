@@ -116,7 +116,12 @@
 		</div>
 	{/if}
 
-	<HeaderControls onLocationDistanceChange={handleLocationDistanceChange} />
+	<HeaderControls
+		onLocationDistanceChange={handleLocationDistanceChange}
+		allTags={data.tags.allTags}
+		eventSources={data.eventSources}
+		eventSourceFilter={data.eventSourceFilter}
+	/>
 
 	<svelte:boundary>
 		<div class="mx-auto mb-2 w-full max-w-5xl px-4 pt-4 sm:mb-4">

@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { resolve } from '$app/paths';
-import { estimateEventCount } from '$lib/rpc/eventCount.remote';
+	import { resolve } from '$app/paths';
 
-    const eventCount = await estimateEventCount().then((count) => Math.floor(count / 1000) * 1000);
+	let { data } = $props();
+	const eventCount = $derived(data.eventCount);
 </script>
 
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:pb-6 md:py-0">

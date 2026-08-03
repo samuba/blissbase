@@ -3,14 +3,17 @@
 	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import { ALL_EVENT_SOURCES_VALUE } from '$lib/cookie-utils';
-	import {
-		getEventSourceFilter,
-		getEventSources,
-		setEventSourceFilter,
-	} from '$lib/rpc/admin.remote';
+	import { setEventSourceFilter } from '$lib/rpc/admin.remote';
 
-	const sources = await getEventSources();
-	let selectedSource = $state(await getEventSourceFilter());
+	let {
+		sources,
+		initialSource,
+	}: {
+		sources: string[];
+		initialSource: string;
+	} = $props();
+	// svelte-ignore state_referenced_locally
+	let selectedSource = $state(initialSource);
 	let isSaving = $state(false);
 	let saveError = $state<string | null>(null);
 

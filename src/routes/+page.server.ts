@@ -3,6 +3,7 @@ import type { PageServerLoad } from "./$types";
 import { loadFiltersFromCookie, LOCATION_INTERACTED_COOKIE_NAME, saveFiltersToCookie } from "$lib/cookie-utils";
 import { coarseLatLngForAnalytics } from "$lib/locationFilter";
 import { posthogCapture } from "$lib/server/common";
+import { getEventSourceFilter, getEventSources } from "$lib/rpc/admin.remote";
 import { getTags } from "$lib/rpc/TagSelection.remote";
 
 export const load = (async ({ cookies, locals }) => {
@@ -52,7 +53,10 @@ export const load = (async ({ cookies, locals }) => {
         source: locals.isAdminSession ? (pagination.source ?? null) : (savedFilters?.source ?? null),
     });
 
-    const tags = await getTags(); // cant do this in TagSelection.svelte cuz it get rerendered via 'if' in template and refetches from server then. Also having it in one component up the tree caused the popover to not be able to close on SSR'd page
+    const tags = await getTags();
+    const [eventSources, eventSourceFilter] = locals.isAdminSession
+        ? await Promise.all([getEventSources(), getEventSourceFilter()])
+        : [null, null];
     const coarseCoords = coarseLatLngForAnalytics({ lat: pagination.lat, lng: pagination.lng });
     posthogCapture('events_fetched', {
         events: events.length,
@@ -73,6 +77,8 @@ export const load = (async ({ cookies, locals }) => {
         pagination,
         savedFilters,
         autoDetectedCity,
-        tags
+        tags,
+        eventSources,
+        eventSourceFilter,
     };
 }) satisfies PageServerLoad;

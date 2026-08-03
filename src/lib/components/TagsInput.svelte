@@ -1,16 +1,23 @@
 <script lang="ts">
 	import { Combobox } from 'bits-ui';
 	import { tick } from 'svelte';
-	import { getTags } from '$lib/rpc/TagSelection.remote';
+	import type { UiTag } from '$lib/rpc/TagSelection.remote';
 	import { localeStore } from '../../locales/localeStore.svelte';
 	import type { RemoteFormField } from '@sveltejs/kit';
 
-	let { 
-		field = $bindable()
-	}: {  field: RemoteFormField<string[]> } = $props();
-	
-	const { allTags } = await getTags();
-	allTags.sort((a, b) => a?.[localeStore.locale]?.localeCompare(b?.[localeStore.locale] ?? '') ?? 0);
+	let {
+		field = $bindable(),
+		allTags,
+	}: {
+		field: RemoteFormField<string[]>;
+		allTags: UiTag[];
+	} = $props();
+
+	const sortedTags = $derived(
+		[...allTags].sort(
+			(a, b) => a?.[localeStore.locale]?.localeCompare(b?.[localeStore.locale] ?? '') ?? 0
+		)
+	);
 
 	let searchValue = $state('');
 	let open = $state(false);
@@ -40,7 +47,7 @@
 	const selectedTagIdSet = $derived(new Set(selectedTagIds));
 
 	const filteredTags = $derived.by(() => {
-		const unselected = allTags.filter((x) => !selectedTagIdSet.has(x.id.toString()));
+		const unselected = sortedTags.filter((x) => !selectedTagIdSet.has(x.id.toString()));
 		if (searchValue === '') return unselected;
 		const search = searchValue.trim().toLowerCase();
 		return unselected.filter((x) =>
@@ -106,7 +113,7 @@
 		{#each selectedTagIds as tagId (tagId)}
 			<input {...field.as('checkbox', tagId)} checked class="hidden" />
 			<div class="badge badge-ghost break-keep pr-0 gap-1">
-				{allTags.find((t) => t.id.toString() === tagId)?.[localeStore.locale] ?? tagId}
+				{sortedTags.find((t) => t.id.toString() === tagId)?.[localeStore.locale] ?? tagId}
 				<button
 					type="button"
 					class="cursor-pointer mx-0 pr-1.5 flex items-center justify-center"

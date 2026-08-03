@@ -1,9 +1,9 @@
 <script lang="ts">
 	/* @wc-include */
-	import { getFaqRecentEventCounts } from '$lib/rpc/eventCount.remote';
 	import { routes } from '$lib/routes';
 
-	const faqRecentEventCounts = await getFaqRecentEventCounts();
+	let { data } = $props();
+	const faqRecentEventCounts = $derived(data.faqRecentEventCounts);
 
 	const faqs = [
 		{

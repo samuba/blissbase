@@ -2,13 +2,14 @@
 	import { page } from "$app/state";
 	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
-	import { getMyOfferings, updateProfileLocation } from "$lib/rpc/offerings.remote";
-	import { getMyPublicProfile } from "$lib/rpc/profile.remote";
+	import { updateProfileLocation } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
 
-	const profile = $state(await getMyPublicProfile());
-	const offerings = $derived(await getMyOfferings());
+	let { data } = $props();
+	// svelte-ignore state_referenced_locally
+	let profile = $state(data.profile);
+	const offerings = $derived(data.offerings);
 	const activeOfferings = $derived(offerings.filter((offering) => offering.listed));
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
 
@@ -27,7 +28,7 @@
 			longitude: event.longitude == null ? `` : String(event.longitude),
 		});
 
-		profile.locationLabel = event.locationLabel?.trim() || null;
+		profile.locationLabel = event.locationLabel?.trim() || ``;
 		profile.latitude = event.latitude;
 		profile.longitude = event.longitude;
 	}

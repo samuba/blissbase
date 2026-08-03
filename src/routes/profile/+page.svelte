@@ -1,17 +1,16 @@
 <script lang="ts">
-	import { getUserSession } from '$lib/rpc/auth.remote';
 	import { getSupabaseBrowserClient } from '$lib/supabase';
-	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
-	import { getMyPublicProfile } from '$lib/rpc/profile.remote';
+	import { getMyAuthoredPastEvents } from '$lib/rpc/events.remote';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import { routes } from '$lib/routes';
 	import { user } from '$lib/user.svelte';
 	import { resetPosthogIdentity } from '$lib/posthog';
 
+	let { data } = $props();
+	const myPublic = $derived(data.myPublic);
 	let isLoggingOut = $state(false);
-	const myPublic = await getMyPublicProfile();
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
-	let pastEvents = $state<Awaited<ReturnType<typeof getMyAuthoredUpcomingEvents>>>([]);
+	let pastEvents = $state<Awaited<ReturnType<typeof getMyAuthoredPastEvents>>>([]);
 	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
 
 	async function fetchPastEvents() {
@@ -134,7 +133,7 @@
 	<div class="card shadow bg-base-100 mt-4">
 		<!-- <i class="icon-[ph--check-circle] size-5"></i> -->
 		<div class="flex flex-col gap-3 card-body">
-			<span>Du bist eingeloggt als <strong>{(await getUserSession()).email}</strong></span>
+			<span>Du bist eingeloggt als <strong>{data.session.email}</strong></span>
 			<button class="btn btn-warning w-fit" onclick={handleLogout} disabled={isLoggingOut}>
 				{#if isLoggingOut}
 					<span class="loading loading-spinner loading-sm"></span>
@@ -174,23 +173,15 @@
 		</div>
 
 		<div class:hidden={selectedTab !== `upcoming`}>
-			<svelte:boundary>
-				<div class="mt-4 flex w-full flex-col gap-6">
-					{#each await getMyAuthoredUpcomingEvents() as event (event.id)}
-						<EventCard {event} />
-					{:else}
-						<div class="mt-2 text-center text-base-content/60">
-							Du hast aktuell keine Events.
-						</div>
-					{/each}
-				</div>
-
-				{#snippet pending()}
-					<div class="mt-12 flex justify-center">
-						<span class="loading loading-spinner"></span>
+			<div class="mt-4 flex w-full flex-col gap-6">
+				{#each data.upcomingEvents as event (event.id)}
+					<EventCard {event} />
+				{:else}
+					<div class="mt-2 text-center text-base-content/60">
+						Du hast aktuell keine Events.
 					</div>
-				{/snippet}
-			</svelte:boundary>
+				{/each}
+			</div>
 		</div>
 
 		<div class:hidden={selectedTab !== `past`}>

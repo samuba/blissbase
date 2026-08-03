@@ -10,8 +10,11 @@
 	} from '$lib/rpc/adminWhatsapp.remote';
 	import { toast } from 'svelte-sonner';
 
-	const targets = $derived(await getWhatsappScrapingTargets());
-	const availableChats = $derived(await getAvailableWhatsappChats());
+	let { data } = $props();
+	const targetsQuery = getWhatsappScrapingTargets();
+	const availableChatsQuery = getAvailableWhatsappChats();
+	const targets = $derived(targetsQuery.current ?? data.targets);
+	const availableChats = $derived(availableChatsQuery.current ?? data.availableChats);
 	const defaultFormValues = {
 		originalChatJid: ``,
 		chatJid: ``,
