@@ -50,7 +50,8 @@
 		let intersectionObserver: IntersectionObserver | undefined;
 
 		const syncFabVisibility = (entry: IntersectionObserverEntry) => {
-			setShowFab(!entry.isIntersecting && entry.boundingClientRect.top < window.innerHeight);
+			const rootTop = entry.rootBounds?.top ?? 0;
+			setShowFab(entry.boundingClientRect.top < rootTop);
 		};
 
 		const connectObserver = () => {
@@ -64,7 +65,7 @@
 					if (!entry) return;
 					syncFabVisibility(entry);
 				},
-				{ rootMargin: `-${headerHeight}px 0px 0px 0px`, threshold: 0 },
+				{ rootMargin: `-${headerHeight}px 0px 0px 0px`, threshold: 1 },
 			);
 			intersectionObserver.observe(element);
 		};
@@ -91,17 +92,22 @@
 </script>
 
 <div
-	{@attach observeCtaForFab}
-	class="border-primary rounded-box bg-primary/20 flex sm:flex-col items-center sm:items-start sm:justify-center justify-between gap-2 border-2 border-dashed p-4"
+	class="border-primary rounded-box bg-primary/20 flex flex-wrap sm:flex-col items-center sm:items-start sm:justify-center justify-between gap-2 border-2 border-dashed p-4"
 >
-	<span class="sm:card-title text-primary-content">{title}</span>
+	<span class="sm:card-title font-semibold text-primary-content whitespace-nowrap">{title}</span>
 	<p class="text-primary-content/80 hidden sm:block">
 		{description}
 	</p>
 	{#if useLink}
 		<a
+			{@attach observeCtaForFab}
 			href={href}
-			class={[`btn btn-primary w-fit`, !showFab && `create-cta-vt`]}
+			class={[
+				`btn btn-primary w-fit`,
+				!showFab && `create-cta-vt`,
+				showFab && `invisible`,
+			]}
+			inert={showFab}
 			data-sveltekit-preload-data="hover"
 		>
 			<i class="icon-[ph--plus] size-5"></i>
@@ -109,9 +115,15 @@
 		</a>
 	{:else}
 		<button
+			{@attach observeCtaForFab}
 			type="button"
 			onclick={showLoginDialog}
-			class={[`btn btn-primary w-fit`, !showFab && `create-cta-vt`]}
+			class={[
+				`btn btn-primary w-fit`,
+				!showFab && `create-cta-vt`,
+				showFab && `invisible`,
+			]}
+			inert={showFab}
 		>
 			<i class="icon-[ph--plus] size-5"></i>
 			{buttonText}

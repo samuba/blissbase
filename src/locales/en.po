@@ -2309,7 +2309,7 @@ msgstr "Add event"
 
 #: src/routes/offerings/+page.svelte
 msgid "Angebot hinzufügen"
-msgstr "Add offer"
+msgstr "Add offering"
 
 #~ msgid "Deine Gabe gehört hierher ✨"
 #~ msgstr "Your offering belongs here ✨"
