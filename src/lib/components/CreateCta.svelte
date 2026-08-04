@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { showLoginDialog } from '$lib/components/LoginDialog.svelte';
 	import type { Attachment } from 'svelte/attachments';
-	import { tick } from 'svelte';
+	import { tick, type Snippet } from 'svelte';
 
 	let {
 		title,
@@ -12,8 +12,8 @@
 		href,
 		requireLogin = false,
 	}: {
-		title: string;
-		description: string;
+		title: Snippet;
+		description: Snippet;
 		buttonText: string;
 		href: string;
 		requireLogin?: boolean;
@@ -171,9 +171,11 @@
 <div
 	class="border-primary rounded-box bg-primary/20 flex flex-wrap sm:flex-col items-center sm:items-start sm:justify-center justify-between gap-2 border-2 border-dashed p-4"
 >
-	<span class="sm:card-title font-semibold text-primary-content whitespace-nowrap">{title}</span>
+	<span class="sm:card-title flex items-center gap-1.5 font-semibold text-primary-content whitespace-nowrap">
+		{@render title()}
+	</span>
 	<p class="text-primary-content/80 hidden sm:block">
-		{description}
+		{@render description()}
 	</p>
 	{#if useLink}
 		<a

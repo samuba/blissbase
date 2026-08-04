@@ -195,12 +195,18 @@
 
 {#snippet createEventCta()}
 	<CreateCta
-		title="Dein Event gehört hierher ✨"
-		description="Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen die danach suchen."
 		buttonText="Event hinzufügen"
 		href={routes.newEvent()}
 		requireLogin
-	/>
+	>
+		{#snippet title()}
+			<i class="icon-[ph--megaphone] size-6 shrink-0"></i>
+			Dein Event gehört hierher
+		{/snippet}
+		{#snippet description()}
+			Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen die danach suchen.
+		{/snippet}
+	</CreateCta>
 {/snippet}
 
 {#snippet loading(reserveVerticalSpace: boolean)}

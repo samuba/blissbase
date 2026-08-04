@@ -284,11 +284,17 @@
 
 {#snippet createOfferingCta()}
 	<CreateCta
-		title="Was hast du zu geben?  ✨"
-		description="Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen."
 		buttonText="Angebot hinzufügen"
 		href={newOfferingHref()}
-	/>
+	>
+		{#snippet title()}
+			<i class="icon-[ph--hand-heart] size-6 shrink-0"></i>
+			Was hast du zu geben?
+		{/snippet}
+		{#snippet description()}
+			Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen.
+		{/snippet}
+	</CreateCta>
 {/snippet}
 
 <OfferingDetailsDialog {offerings} />
