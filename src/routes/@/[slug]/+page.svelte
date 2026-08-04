@@ -162,10 +162,17 @@
 	</div>
 
 	<div class="flex w-full justify-center gap-6 my-6">
-		<a href={routes.eventList()} class="btn btn-sm">
-			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
-			Alle Events
-		</a>
+		{#if selectedTab === `events`}
+			<a href={routes.eventList()} class="btn btn-sm">
+				<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
+				Alle Events
+			</a>
+		{:else}
+			<a href={routes.offeringsList()} class="btn btn-sm">
+				<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
+				Alle Angebote
+			</a>
+		{/if}
 	</div>
 </div>
 

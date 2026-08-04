@@ -1494,6 +1494,7 @@ msgstr "My offerings | Blissbase"
 msgid "Du hast keine aktiven Angebote."
 msgstr "You have no active offerings."
 
+#: src/routes/@/[slug]/+page.svelte
 #: src/routes/offerings/[slug]/+page.svelte
 msgid "<0/> Alle Angebote"
 msgstr "<0/> All offerings"
