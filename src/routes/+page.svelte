@@ -11,7 +11,7 @@
 	import { setLocationInteractedCookie } from '$lib/cookie-utils';
 	import { addHours } from '$lib/common';
 	import { now } from '$lib/now.svelte';
-	import { heroMobile, heroTablet, heroDesktop } from '$lib/assets/hero-images';
+	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';
 
 	const { data } = $props();
 	const { autoDetectedCity } = $derived(data);
@@ -71,11 +71,9 @@
 			{#each Object.entries(heroMobile.sources) as [format, srcset] (format)}
 				<source media="(max-width: 499px)" {srcset} type={`image/${format}`} />
 			{/each}
-			{#each Object.entries(heroDesktop.sources) as [format, srcset] (format)}
-				<source media="(min-width: 1100px)" {srcset} type={`image/${format}`} />
-			{/each}
+			<source media="(min-width: 1100px)" srcset={heroDesktopUrl} type="image/{heroDesktopUrl.split('.').pop()}" />
 			{#each Object.entries(heroTablet.sources) as [format, srcset] (format)}
-				<source {srcset} type={`image/${format}`} />
+			    <source {srcset} type={`image/${format}`} />
 			{/each}
 			<img
 				src={heroTablet.img.src}
