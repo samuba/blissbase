@@ -2442,3 +2442,16 @@ msgstr "<0/> What do you have to give?"
 #: src/lib/components/PeekFooter.svelte
 msgid "Seitenlinks"
 msgstr "Page links"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Tags nach links scrollen"
+msgstr "Scroll tags left"
+
+#: src/lib/components/TagSelection.svelte
+msgid "Tags nach rechts scrollen"
+msgstr "Scroll tags right"
+
+#: src/lib/components/TextSearchInput.svelte
+#: src/lib/components/TextSearchInput.svelte
+msgid "Suche öffnen"
+msgstr "Open search"

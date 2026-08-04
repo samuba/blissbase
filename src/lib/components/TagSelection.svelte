@@ -53,6 +53,7 @@
 	let locale = $derived(localeStore.locale as 'en' | 'de');
 	let showLeftShadow = $state(false);
 	let showRightShadow = $state(false);
+	let tagRailEl = $state<HTMLDivElement | null>(null);
 
 	eventsStore.showTextSearch = initialState.keywordSearched;
 
@@ -108,7 +109,17 @@
 		showRightShadow = !isAtEnd;
 	}
 
+	function scrollTagRail(direction: `left` | `right`) {
+		if (!tagRailEl) return;
+		const amount = Math.max(tagRailEl.clientWidth * 0.75, 200);
+		tagRailEl.scrollBy({
+			left: direction === `left` ? -amount : amount,
+			behavior: `smooth`,
+		});
+	}
+
 	function trackTagRail(node: HTMLDivElement) {
+		tagRailEl = node;
 		const update = () => updateTagRailShadows(node);
 		const resizeObserver = new ResizeObserver(update);
 		resizeObserver.observe(node);
@@ -116,6 +127,7 @@
 
 		return () => {
 			resizeObserver.disconnect();
+			if (tagRailEl === node) tagRailEl = null;
 		};
 	}
 </script>
@@ -162,21 +174,49 @@
 						</button>
 					{/each}
 				</div>
-				<!-- shadow right -->
-				<div
+			</div>
+
+			<!-- fade + chevron left -->
+			<div
+				class={[
+					`tag-rail-fade h-full from-base-200 via-base-200/85 pointer-events-none absolute top-0 left-0 z-10 flex w-14 items-center justify-start bg-linear-to-r to-transparent transition-opacity duration-300 ease-out`,
+					showLeftShadow ? `opacity-100` : `opacity-0`
+				]}
+			>
+				<button
+					type="button"
 					class={[
-						'from-base-200 via-base-200/70 pointer-events-none absolute top-0 right-0 bottom-0 flex items-center justify-center bg-linear-to-l to-transparent transition-all duration-300 ease-out',
-						showRightShadow ? 'opacity-100' : 'opacity-0',
-						showLeftShadow ? 'w-10' : 'w-25'
+						`tag-rail-chevron btn btn-circle btn-ghost btn-sm pointer-fine:mb-3`,
+						showLeftShadow ? `pointer-events-auto` : `pointer-events-none`
 					]}
-				></div>
-				<!-- shadow left -->
-				<div
+					aria-label="Tags nach links scrollen"
+					tabindex={showLeftShadow ? 0 : -1}
+					onclick={() => scrollTagRail(`left`)}
+				>
+					<i class="icon-[ph--caret-left] size-5"></i>
+				</button>
+			</div>
+
+			<!-- fade + chevron right -->
+			<div
+				class={[
+					`tag-rail-fade h-full from-base-200 via-base-200/85 pointer-events-none absolute top-0 right-0 z-10 flex items-center justify-end bg-linear-to-l to-transparent transition-all duration-300 ease-out`,
+					showRightShadow ? `opacity-100` : `opacity-0`,
+					showLeftShadow ? `w-14` : `w-18`
+				]}
+			>
+				<button
+					type="button"
 					class={[
-						'from-base-200 via-base-200/70 pointer-events-none absolute top-0 bottom-0 left-0 w-10 bg-linear-to-r to-transparent transition-opacity duration-300 ease-out',
-						showLeftShadow ? 'opacity-100' : 'opacity-0'
+						`tag-rail-chevron btn btn-circle btn-ghost btn-sm pointer-fine:mb-3`,
+						showRightShadow ? `pointer-events-auto` : `pointer-events-none`
 					]}
-				></div>
+					aria-label="Tags nach rechts scrollen"
+					tabindex={showRightShadow ? 0 : -1}
+					onclick={() => scrollTagRail(`right`)}
+				>
+					<i class="icon-[ph--caret-right] size-5"></i>
+				</button>
 			</div>
 		</div>
 	</div>
@@ -187,6 +227,11 @@
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		scrollbar-gutter: stable;
+	}
+
+	/* Align fades/chevrons with tag buttons, excluding the horizontal scrollbar gutter */
+	.tag-rail-fade {
+		bottom: 8px;
 	}
 
 	.tag-trigger {

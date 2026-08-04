@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { isTouchDevice } from '$lib/common';
+	import { tick } from 'svelte';
+	import { MediaQuery } from 'svelte/reactivity';
 
 	let {
 		id,
@@ -22,21 +24,29 @@
 	let searchExpanded = $state(false);
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let searchButton = $state<HTMLButtonElement | null>(null);
+	let wrapperEl = $state<HTMLDivElement | null>(null);
 
-	$effect(() => {
-		if (searched) searchExpanded = true;
-	});
+	const isMdUp = new MediaQuery(`min-width: 768px`, true);
+	const showField = $derived(variant === `full` || searchExpanded || searched || isMdUp.current);
 
 	export function close() {
 		closeSearch();
 	}
 
-	export function focus() {
-		searchInput?.focus();
+	export async function focus() {
+		await expandAndFocus();
 	}
 
-	export function clearAndFocus() {
-		closeSearch();
+	export async function clearAndFocus() {
+		searched = false;
+		query = ``;
+		onClose?.();
+		await expandAndFocus();
+	}
+
+	async function expandAndFocus() {
+		searchExpanded = true;
+		await tick();
 		searchInput?.focus();
 	}
 
@@ -53,10 +63,7 @@
 		if (query.trim()) return;
 
 		const nextFocusedEl = e.relatedTarget;
-		if (nextFocusedEl instanceof HTMLElement) {
-			const container = e.currentTarget.closest(`label`);
-			if (container && nextFocusedEl.closest(`label`) === container) return;
-		}
+		if (nextFocusedEl instanceof HTMLElement && wrapperEl?.contains(nextFocusedEl)) return;
 
 		closeSearch();
 	}
@@ -82,71 +89,83 @@
 	function clearSearchQuery() {
 		closeSearch();
 	}
+
+	async function handleSearchButtonClick() {
+		if (!showField) {
+			await expandAndFocus();
+			return;
+		}
+		if (!query.trim()) {
+			searchInput?.focus();
+			return;
+		}
+		runTextSearch(query);
+	}
 </script>
 
 <div
+	bind:this={wrapperEl}
 	class={[
 		`shrink-0`,
-		variant === `full` ? [`join`, `w-full`] : [`tag-trigger`, `flex`, `overflow-hidden`],
+		variant === `full` ? [`join`, `w-full`] : [`tag-trigger`, `flex`, `items-center`],
 		wrapperClass,
 	]}
 >
-	<label
-		class={[
-			`input input-bordered min-w-0 pr-1`,
-			variant === `full` ? [`join-item`, `w-full`] : `rounded-r-none`,
-			searched && `active font-semibold`,
-		]}
-		onblur={handleSearchBlur}
-	>
-		<input
-			{id}
-			bind:this={searchInput}
+	{#if showField}
+		<label
 			class={[
-				`min-w-0`,
-				variant === `compact` && [`transition-transform duration-50 ease-out`, searchExpanded ? `w-28` : `w-14`],
-				variant === `full` && `w-full`,
+				`input input-bordered min-w-0 pr-1`,
+				variant === `full` ? [`join-item`, `w-full`] : `rounded-r-none`,
+				searched && `active font-semibold`,
 			]}
-			bind:value={query}
-			onfocus={openSearch}
-			oninput={(e) => handleSearchInput(e.currentTarget.value)}
 			onblur={handleSearchBlur}
-			onkeydown={(e) => {
-				if (e.key === `Enter` && query.trim()) {
-					runTextSearch(query);
-				}
-			}}
-			type="text"
-			placeholder={searchExpanded ? `Suchbegriff` : `Suchen`}
-		/>
-		{#if searchExpanded}
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm btn-circle hover:cursor-pointer"
-				aria-label="Suchbegriff löschen"
-				tabindex={query.trim() ? 0 : -1}
-				onclick={clearSearchQuery}
-			>
-				<i class="icon-[ph--x] size-5"></i>
-			</button>
-		{/if}
-	</label>
+		>
+			<input
+				{id}
+				bind:this={searchInput}
+				class={[
+					`min-w-0`,
+					searchExpanded && `w-25`,
+					variant === `compact` && `w-15`,
+					variant === `full` && `w-full`,
+				]}
+				bind:value={query}
+				onfocus={openSearch}
+				oninput={(e) => handleSearchInput(e.currentTarget.value)}
+				onblur={handleSearchBlur}
+				onkeydown={(e) => {
+					if (e.key === `Enter` && query.trim()) {
+						runTextSearch(query);
+					}
+				}}
+				type="text"
+				placeholder={searchExpanded || searched ? `Suchbegriff` : `Suchen`}
+			/>
+			{#if searchExpanded || searched}
+				<button
+					type="button"
+					class="btn btn-ghost btn-sm btn-circle hover:cursor-pointer"
+					aria-label="Suchbegriff löschen"
+					tabindex={query.trim() ? 0 : -1}
+					onclick={clearSearchQuery}
+				>
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
+			{/if}
+		</label>
+	{/if}
 	<button
 		bind:this={searchButton}
 		class={[
-			`btn pl-3 hover:cursor-pointer`,
-			variant === `full` ? `join-item` : [`rounded-l-none`, `border-l-0`],
+			`btn hover:cursor-pointer`,
+			variant === `full` && [`join-item`, `pl-3`],
+			variant === `compact` && !showField && `btn-circle`,
+			variant === `compact` && showField && [`rounded-l-none`, `border-l-0`, `pl-3`],
 			searchExpanded && !searched && `btn-primary`,
 		]}
-		title="Suche starten"
-		aria-label="Suche starten"
-		onclick={() => {
-			if (!query.trim()) {
-				searchInput?.focus();
-				return;
-			}
-			runTextSearch(query);
-		}}
+		title={showField ? `Suche starten` : `Suche öffnen`}
+		aria-label={showField ? `Suche starten` : `Suche öffnen`}
+		onclick={handleSearchButtonClick}
 	>
 		<i class="icon-[ph--magnifying-glass] size-5 min-w-5"></i>
 	</button>
