@@ -288,7 +288,7 @@
 		href={newOfferingHref()}
 	>
 		{#snippet title()}
-			<i class="icon-[ph--hand-heart] size-6 shrink-0"></i>
+			<i class="icon-[ph--hand-heart] size-6 shrink-0 mr-1"></i>
 			Was hast du zu geben?
 		{/snippet}
 		{#snippet description()}
