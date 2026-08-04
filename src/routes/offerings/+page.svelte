@@ -158,7 +158,7 @@
 	<header
 		bind:this={headerElement}
 		class={[
-			`z-10 w-full bg-base-200 sticky top-0 pt-4`,
+			`z-10 w-full bg-base-200 sticky top-0 pt-4 flex justify-center`,
 			`pb-3`
 		]}
 		id="header-controls"
@@ -170,10 +170,10 @@
 			></div>
 		{/if}
 
-		<div class="mx-auto flex w-full max-w-3xl flex-col justify-center gap-3">
+		<div class=" flex w-full max-w-2xl flex-col justify-center gap-3 mx-4">
 			<TabsNavDesktop />
 
-			<div class="flex w-full flex-col gap-3 px-4 sm:flex-row sm:items-end">
+			<div class="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
 				<div class="flex w-full flex-col gap-1.5">
 					<LocationDistanceInput
 						inputId="plzCityInput-offerings"

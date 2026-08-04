@@ -75,7 +75,7 @@
 		></div>
 	{/if}
 
-	<div class="mx-auto flex w-full max-w-3xl flex-col justify-center gap-3">
+	<div class="mx-auto flex w-full max-w-2xl flex-col justify-center gap-3">
 		<TabsNavDesktop />
 
 		<div class="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-4 sm:px-0">
