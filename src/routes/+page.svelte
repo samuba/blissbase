@@ -11,6 +11,9 @@
 	import { setLocationInteractedCookie } from '$lib/cookie-utils';
 	import { addHours } from '$lib/common';
 	import { now } from '$lib/now.svelte';
+	import heroMobile from '$lib/../../static/testcover6.jpeg?enhanced';
+	import heroTablet from '$lib/../../static/testcover2.jpeg?enhanced';
+	import heroDesktop from '$lib/../../static/testcover3.jpeg?enhanced';
 
 	const { data } = $props();
 	const { autoDetectedCity } = $derived(data);
