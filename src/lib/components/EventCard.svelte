@@ -40,6 +40,32 @@
 		});
 		return Array.from(tags);
 	});
+
+	function trackTagsOverflow(tags: string[]) {
+		return (node: HTMLDivElement) => {
+			const fits = () => node.scrollHeight <= node.clientHeight + 1;
+			const update = () => {
+				const tagEls = [...node.children].slice(0, -1) as HTMLElement[];
+				const ellipsisEl = node.lastElementChild as HTMLElement | null;
+				if (!ellipsisEl || !tags.length) return;
+
+				for (const el of tagEls) el.hidden = false;
+				ellipsisEl.hidden = true;
+				if (fits()) return;
+
+				ellipsisEl.hidden = false;
+				for (let i = tagEls.length - 1; i >= 0 && !fits(); i--) {
+					tagEls[i].hidden = true;
+				}
+			};
+
+			const resizeObserver = new ResizeObserver(update);
+			resizeObserver.observe(node);
+			requestAnimationFrame(update);
+
+			return () => resizeObserver.disconnect();
+		};
+	}
 </script>
 
 <a href={resolve("/[slug]", { slug: event.slug })} class=" w-full" data-sveltekit-preload-data="false" onclick={handleClick}>
@@ -159,12 +185,15 @@
 				{/if}
 
 				{#if tags.length}
-					<div class="mt-1 flex flex-wrap gap-1 text-xs">
-						{#each tags as tag}
-							<button class="badge badge-sm badge-ghost">
-								{tag}
-							</button>
+					<div
+						class="mt-1 flex max-h-11 flex-wrap gap-1 overflow-hidden text-xs"
+						title={tags.join(`, `)}
+						{@attach trackTagsOverflow(tags)}
+					>
+						{#each tags as tag (tag)}
+							<span class="badge badge-sm badge-ghost">{tag}</span>
 						{/each}
+						<span class="badge badge-sm badge-ghost" hidden aria-hidden="true">...</span>
 					</div>
 				{/if}
 			</div>
