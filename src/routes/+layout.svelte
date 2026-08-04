@@ -18,6 +18,7 @@
 	import { Toaster } from 'svelte-sonner';
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
+	import PeekFooter from '$lib/components/PeekFooter.svelte';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import { routes } from '$lib/routes';
 
@@ -88,6 +89,7 @@
 			{@render children()}
 		</div>
 	</div>
+	<PeekFooter />
 	<TabsNavMobile />
 </div>
 

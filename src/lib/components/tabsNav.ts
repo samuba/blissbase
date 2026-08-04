@@ -8,48 +8,28 @@ export function getAppNavItems(): AppNavItem[] {
 			href: resolve(`/#header-controls`),
 			icon: `icon-[ph--calendar-dots]`,
 			iconActive: `icon-[ph--calendar-dots-fill]`,
-			requireLogin: false,
-			isInMoreMenu: false
+			requireLogin: false
 		},
 		{
 			label: /* @wc-include */ `Angebote`,
 			href: routes.offeringsList(),
 			icon: `icon-[ph--hand-heart]`,
 			iconActive: `icon-[ph--hand-heart-fill]`,
-			requireLogin: false,
-			isInMoreMenu: false
+			requireLogin: false
 		},
 		{
-			label: /* @wc-include */ `Favoriten`, 
+			label: /* @wc-include */ `Favoriten`,
 			href: resolve(`/profile/favorites`),
 			icon: `icon-[ph--heart]`,
 			iconActive: `icon-[ph--heart-fill]`,
-			requireLogin: true,
-			isInMoreMenu: false
+			requireLogin: true
 		},
 		{
 			label: /* @wc-include */ `Meins`,
 			href: resolve(`/profile`),
 			icon: `icon-[ph--user-circle]`,
 			iconActive: `icon-[ph--user-circle-fill]`,
-			requireLogin: true,
-			isInMoreMenu: false
-		},
-		{
-			label: /* @wc-include */ `Über`,
-			href: resolve(`/about`),
-			icon: `icon-[ph--info]`,
-			iconActive: `icon-[ph--info-fill]`,
-			requireLogin: false,
-			isInMoreMenu: true
-		},
-		{
-			label: /* @wc-include */ `FAQ`,
-			href: resolve(`/faq`),
-			icon: `icon-[ph--question]`,
-			iconActive: `icon-[ph--question-fill]`,
-			requireLogin: false,
-			isInMoreMenu: true
+			requireLogin: true
 		}
 	];
 }
@@ -80,5 +60,4 @@ type AppNavItem = {
 	icon: string;
 	iconActive: string;
 	requireLogin: boolean;
-	isInMoreMenu: boolean;
 };
