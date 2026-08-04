@@ -11,9 +11,7 @@
 	import { setLocationInteractedCookie } from '$lib/cookie-utils';
 	import { addHours } from '$lib/common';
 	import { now } from '$lib/now.svelte';
-	import heroMobile from '$lib/../../static/testcover6.jpeg?enhanced';
-	import heroTablet from '$lib/../../static/testcover2.jpeg?enhanced';
-	import heroDesktop from '$lib/../../static/testcover3.jpeg?enhanced';
+	import { heroMobile, heroTablet, heroDesktop } from '$lib/assets/hero-images';
 
 	const { data } = $props();
 	const { autoDetectedCity } = $derived(data);
@@ -111,7 +109,7 @@
 	
 <div class="flex w-full flex-col items-center justify-center pb-4">
 	{#if showAutoLocationHint}
-		<div class="mx-auto mt-4 w-full max-w-3xl px-4">
+		<div class="mx-auto mt-4 w-full max-w-5xl px-4">
 			<div class="alert bg-base-100 mb-2 relative alert-horizontal">
 				<i class="icon-[ph--info] size-6 shrink-0"></i>
 				<span class="w-full">
