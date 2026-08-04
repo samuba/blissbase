@@ -3,7 +3,7 @@ import type { Picture } from 'vite-imagetools';
 
 import mobile from './testcover6.jpeg?enhanced';
 import tablet from './testcover2.jpeg?enhanced';
-import desktop from './testcover3.jpeg?enhanced&format=webp;jpeg&quality=100';
+import desktop from './testcover3.jpeg?enhanced&effort=max&lossless=true'; // processing fucks up quality or size for this one
 
 export const heroMobile = mobile as Picture;
 export const heroTablet = tablet as Picture;
