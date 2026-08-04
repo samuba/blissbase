@@ -2,6 +2,7 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { showLoginDialog } from '$lib/components/LoginDialog.svelte';
+	import { peekFooter } from '$lib/peekFooter.svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import { tick, type Snippet } from 'svelte';
 
@@ -161,11 +162,13 @@
 		};
 	};
 
-	const fabClasses = [
+	// Parked above tab + peek footer; on mobile slides down with the footer via the same transform.
+	const fabClasses = $derived([
 		`btn max-sm:btn-lg btn-primary max-sm:btn-circle fixed right-4 z-40 shadow-lg`,
-		`bottom-[calc(4.75rem+env(safe-area-inset-bottom))]`,
-		`md:bottom-4`,
-	];
+		`bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-11`,
+		`transition-transform duration-200 ease-out motion-reduce:transition-none`,
+		!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`
+	]);
 </script>
 
 <div
