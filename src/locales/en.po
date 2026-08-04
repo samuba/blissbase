@@ -2431,9 +2431,8 @@ msgstr "Hero"
 #~ msgid "<0/> Was hast du zu geben? ✨"
 #~ msgstr "<0/> What do you have to give? ✨"
 
-#: src/routes/+page.svelte
-msgid "<0/> Dein Event gehört hierher"
-msgstr "<0/> Your event belongs here"
+#~ msgid "<0/> Dein Event gehört hierher"
+#~ msgstr "<0/> Your event belongs here"
 
 #: src/routes/offerings/+page.svelte
 msgid "<0/> Was hast du zu geben?"
@@ -2455,3 +2454,19 @@ msgstr "Scroll tags right"
 #: src/lib/components/TextSearchInput.svelte
 msgid "Suche öffnen"
 msgstr "Open search"
+
+#~ msgid "Dein Event gehört hierher"
+#~ msgstr "Your event belongs here"
+
+#~ msgid "Dein Event gehört hierher <0/>"
+#~ msgstr "Your event belongs here <0/>"
+
+#~ msgid "Dein Event gehört hierher. <0/>"
+#~ msgstr "Your event belongs here. <0/>"
+
+#~ msgid "Dein Event gehört hierher! <0/>"
+#~ msgstr "Your event belongs here! <0/>"
+
+#: src/routes/+page.svelte
+msgid "<0/> Dein Event gehört hierher."
+msgstr "<0/> Your event belongs here."

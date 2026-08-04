@@ -200,8 +200,8 @@
 		requireLogin
 	>
 		{#snippet title()}
-			<i class="icon-[ph--megaphone] size-6 shrink-0"></i>
-			Dein Event gehört hierher
+		<i class="icon-[ph--signpost] size-6 shrink-0 mr-1"></i>
+		Dein Event gehört hierher.
 		{/snippet}
 		{#snippet description()}
 			Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen die danach suchen.
