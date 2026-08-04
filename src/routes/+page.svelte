@@ -66,11 +66,24 @@
 <div bind:this={contentBeforeMenu} class="grid w-full overflow-hidden" id="content-before-menu">
 	<!-- hero image layer -->
 	<div class="col-start-1 row-start-1">
-		<enhanced:img 
-			src="/static/hero.jpg?blur=2&brightness=0.87"
-			alt="Hero image"
-			class="w-full md:h-auto md:max-h-[550px] h-72 object-cover md:blur-[2px]"
-		/>
+		<picture>
+			{#each Object.entries(heroMobile.sources) as [format, srcset] (format)}
+				<source media="(max-width: 499px)" {srcset} type={`image/${format}`} />
+			{/each}
+			{#each Object.entries(heroDesktop.sources) as [format, srcset] (format)}
+				<source media="(min-width: 1100px)" {srcset} type={`image/${format}`} />
+			{/each}
+			{#each Object.entries(heroTablet.sources) as [format, srcset] (format)}
+				<source {srcset} type={`image/${format}`} />
+			{/each}
+			<img
+				src={heroTablet.img.src}
+				width={heroTablet.img.w}
+				height={heroTablet.img.h}
+				alt="Hero"
+				class="h-72 w-full object-cover md:h-auto md:max-h-[550px]"
+			/>
+		</picture>
 	</div>
 
 	<!-- Content layer -->
@@ -83,7 +96,7 @@
 				</h1>
 			</div>
 
-			<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
+			<h2 class="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
 				✨ Achtsame Events in deiner Nähe ✨
 			</h2>
 		</div>
