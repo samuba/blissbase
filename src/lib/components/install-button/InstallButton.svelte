@@ -141,7 +141,7 @@
 <svelte:window bind:innerHeight />
 
 {#if showInstallButton}
-	<button onclick={onInstallClick} class={['btn btn-primary w-fit', className]}>
+	<button onclick={onInstallClick} class={['btn sm:btn-md btn-sm w-fit', className]}>
 		App installieren <i class="icon--ph-app-store"></i>
 	</button>
 {/if}
