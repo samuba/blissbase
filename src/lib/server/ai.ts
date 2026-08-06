@@ -283,12 +283,13 @@ const PRESERVED_HTML_ENTITY_REGEX = /&(?:amp|lt|gt|quot|apos|#\d+|#x[\da-fA-F]+)
  * linkifyBareUrls(`More: https://example.com`)
  */
 function linkifyBareUrls(text: string) {
-	return text.replace(/https?:\/\/[^\s<]+/g, (match, offset) => {
+	return text.replace(/(?:https?:\/\/|\bwww\.)[^\s<]+/g, (match, offset) => {
 		if (isInsideAnchorTag({ text, offset })) return match;
 
 		const trailingPunctuation = match.match(TRAILING_URL_PUNCTUATION_REGEX)?.[0] ?? ``;
 		const url = trailingPunctuation ? match.slice(0, -trailingPunctuation.length) : match;
-		return `<a href="${escapeHtmlAttribute(url)}">${escapeHtmlText(url)}</a>${trailingPunctuation}`;
+		const href = url.startsWith(`http`) ? url : `https://${url}`;
+		return `<a href="${escapeHtmlAttribute(href)}">${escapeHtmlText(url)}</a>${trailingPunctuation}`;
 	});
 }
 
