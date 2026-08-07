@@ -10,16 +10,22 @@
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
 	import { setLocationInteractedCookie } from '$lib/cookie-utils';
 	import { addHours } from '$lib/common';
-	import { now } from '$lib/now.svelte';
 	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';
 
 	const { data } = $props();
 	const { autoDetectedCity } = $derived(data);
 
+	// Snapshot the reference time once instead of reading the 1-second `now` ticker.
+	// If this filter ticked every second, a card crossing the 30%-elapsed threshold
+	// would drop out mid-scroll and shift every card below it upward — which cancels
+	// in-flight clicks (no click event ever fires). Filtering upcoming events is a
+	// nicety, so a fixed load-time reference is plenty fresh and keeps the list stable.
+	const filterReferenceTime = new Date();
+
 	function isEventMostlyElapsed(args: { startAt: Date; endAt?: Date | null }) {
 		const endTime = args.endAt ?? addHours(args.startAt, 4);
 		const totalDuration = endTime.getTime() - args.startAt.getTime();
-		const elapsed = now.value.getTime() - args.startAt.getTime();
+		const elapsed = filterReferenceTime.getTime() - args.startAt.getTime();
 		return elapsed / totalDuration > 0.3;
 	}
 

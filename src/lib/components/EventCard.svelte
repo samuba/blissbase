@@ -4,7 +4,6 @@
 	import { resolve } from "$app/paths";
 	import RandomPlaceholderImg from "./RandomPlaceholderImg.svelte";
 	import FavoriteButton from "./FavoriteButton.svelte";
-	import { now } from "$lib/now.svelte";
 	import { localeStore } from "../../locales/localeStore.svelte";
 	import { showEventDetailsDialog } from "../../routes/EventDetailsDialog.svelte";
 
@@ -23,12 +22,23 @@
 	let imageLoadError = $state(false);
 	const imageUrl = $derived(event.imageUrls?.[0]);
 
-	const isPast = $derived((event.endAt ?? addHours(event.startAt, 4)) < now.value);
-	const isOngoing = $derived(event.startAt < now.value && (event.endAt ?? addHours(event.startAt, 4) > now.value));
+	// Snapshot the time once at mount rather than reading the 1-second `now` ticker.
+	// These badges only need to reflect state at load; letting them re-derive every
+	// second means the "Vorbei"/"Läuft" badge can appear or disappear under the
+	// pointer, changing the card's height and shifting the cards below it mid-click.
+	const referenceTime = new Date();
+	const isPast = $derived((event.endAt ?? addHours(event.startAt, 4)) < referenceTime);
+	const isOngoing = $derived(event.startAt < referenceTime && (event.endAt ?? addHours(event.startAt, 4) > referenceTime));
 
 	function handleClick(e: MouseEvent) {
-		e.preventDefault();
+		// Leave modifier / non-primary clicks to the browser (open in new tab, etc.).
+		if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
 		showEventDetailsDialog(event);
+		// Only suppress the native navigation once the dialog has actually opened.
+		// If the call above throws, we fall through to the plain <a href> instead of
+		// swallowing the click and doing nothing.
+		e.preventDefault();
 	}
 
 	const tags = $derived.by(() => {
