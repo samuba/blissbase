@@ -128,6 +128,15 @@
 						handleClose();
 					}}
 				/>
+			{:else if dialog.open}
+				<div class="flex flex-col gap-6 p-4 sm:p-6" aria-busy="true">
+					<div class="skeleton h-64 w-full"></div>
+					<div class="flex flex-col gap-4">
+						<div class="skeleton h-8 w-2/3"></div>
+						<div class="skeleton h-4 w-1/3"></div>
+						<div class="skeleton h-24 w-full"></div>
+					</div>
+				</div>
 			{/if}
 
 			<div class="md:hidden flex w-full justify-center gap-6 pb-6">
