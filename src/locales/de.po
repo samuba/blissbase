@@ -579,6 +579,18 @@ msgstr "So installierst du die App auf deinem iPhone"
 msgid "Installationsanleitung"
 msgstr "Installationsanleitung"
 
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Öffne diese Seite in Safari, um die App zu installieren."
+msgstr "Öffne diese Seite in Safari, um die App zu installieren."
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Andere Browser auf dem iPhone können keine Apps installieren."
+msgstr "Andere Browser auf dem iPhone können keine Apps installieren."
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
+msgstr "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
+
 #: src/routes/EventDetails.svelte
 msgid "Anmeldung per <0/>."
 msgstr "Anmeldung per <0/>."

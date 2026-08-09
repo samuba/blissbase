@@ -13,10 +13,12 @@
 
 	let showInstallButton = $state(false);
 	let showIosInstallHowto = $state(false);
+	let videoFailed = $state(false);
 	let innerHeight = $state(700);
 	let explanationDiv: HTMLDivElement | null = $state(null);
 
 	const mode = $derived(browser ? detectIosDevice() : 'not-ios');
+	const iosBrowser = $derived(browser ? detectIosBrowser() : 'safari');
 	const iosVideoPrefix = $derived(browser ? getIosVideoPrefix() : 'ios18');
 
 	function detectIosDevice() {
@@ -38,6 +40,18 @@
 		}
 
 		return 'not-ios';
+	}
+
+	/** Detects the iOS browser engine. Every iOS browser uses WebKit, but only
+	 * Safari runs the "Add to Home Screen" flow the how-to video shows. Chrome
+	 * (`CriOS`), Firefox (`FxiOS`), Edge (`EdgiOS`) and Opera (`OPiOS`/`OPT`) on
+	 * iOS cannot install the PWA, so they get text instructions instead. */
+	function detectIosBrowser(): 'safari' | 'other' {
+		if (!browser) return 'safari';
+
+		const ua = navigator.userAgent;
+		const isNonSafari = /crios|fxios|edgios|opios|opt\//i.test(ua);
+		return isNonSafari ? 'other' : 'safari';
 	}
 
 	/** Detects iOS version from the UA `Version/` field (Apple's user-facing version)
@@ -105,6 +119,7 @@
 
 	async function onInstallClick() {
 		if (mode === 'smallIosDevice' || mode === 'ipad') {
+			videoFailed = false;
 			showIosInstallHowto = true;
 			return;
 		}
@@ -160,17 +175,39 @@
 				<span class="leading-tight text-sm w-full">So installierst du die App auf deinem iPhone</span>
 			</div>
 
-			<video
-				src="/{iosVideoPrefix}-install-howto-{localeStore.locale}.mp4"
-				autoplay
-				loop
-				muted
-				playsinline
-				disablepictureinpicture
-				disableremoteplayback
-				class="mx-auto flex-1 rounded-[3rem] object-contain"
-				style="height: {innerHeight - ((explanationDiv?.offsetHeight ?? 0) + 30)}px"
-			/>
+			{#if iosBrowser === 'other'}
+				<div class="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+					<i class="icon-[ph--arrow-square-out] size-12 text-primary"></i>
+					<p class="text-lg leading-snug">
+						Öffne diese Seite in Safari, um die App zu installieren.
+					</p>
+					<p class="text-sm opacity-70">
+						Andere Browser auf dem iPhone können keine Apps installieren.
+					</p>
+				</div>
+			{:else if videoFailed}
+				<div class="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+					<i class="icon-[ph--share-network] size-12 text-primary"></i>
+					<p class="text-lg leading-snug">
+						Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“.
+					</p>
+				</div>
+			{:else}
+				<video
+					src="/{iosVideoPrefix}-install-howto-{localeStore.locale}.mp4"
+					poster="/blissbase-poster.png"
+					preload="auto"
+					autoplay
+					loop
+					muted
+					playsinline
+					disablepictureinpicture
+					disableremoteplayback
+					onerror={() => (videoFailed = true)}
+					class="mx-auto flex-1 rounded-[3rem] object-contain"
+					style="height: {innerHeight - ((explanationDiv?.offsetHeight ?? 0) + 30)}px"
+				></video>
+			{/if}
 		</Dialog.ContentAnimated>
 	</Dialog.Portal>
 </Dialog.Root>
