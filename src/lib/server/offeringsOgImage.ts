@@ -1,11 +1,14 @@
+import opentype from 'opentype.js';
 import sharp from 'sharp';
 import logoDataUrl from './blissbase-logo-transparent.png?inline';
+import brandFontDataUrl from '$lib/fonts/Baloo2-SemiBold.ttf?inline';
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 const PRIMARY = `#43ebd3`;
 const TEXT = `#0f3d36`;
 const MAX_COVERS = 15;
+const brandFont = opentype.parse(dataUrlToArrayBuffer(brandFontDataUrl));
 
 /**
  * Builds a WhatsApp-friendly 1200×630 OG image: offering covers as collage
@@ -234,6 +237,7 @@ async function buildBrandingOverlay({ locationLabel }: { locationLabel?: string 
 
 	const title = `Conscious Offerings`;
 	const subtitle = locationLabel?.trim() ? `in ${locationLabel.trim()}` : `near you`;
+	const brandText = `Blissbase.app`;
 
 	const cardWidth = 500;
 	const cardHeight = 250;
@@ -241,7 +245,8 @@ async function buildBrandingOverlay({ locationLabel }: { locationLabel?: string 
 	const cardY = (OG_HEIGHT - cardHeight) / 2;
 
 	const brandGap = 12;
-	const brandTextWidth = 210;
+	const brandFontSize = 34;
+	const brandTextWidth = brandFont.getAdvanceWidth(brandText, brandFontSize);
 	const brandGroupWidth = logoSize + brandGap + brandTextWidth;
 	const brandGroupX = Math.round((OG_WIDTH - brandGroupWidth) / 2);
 	const brandRowTop = Math.round(cardY + 168);
@@ -255,9 +260,9 @@ async function buildBrandingOverlay({ locationLabel }: { locationLabel?: string 
 				</filter>
 			</defs>
 			<rect x="${cardX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="26" fill="#faf7f5" fill-opacity="0.75" filter="url(#shadow)"/>
-			<text x="${OG_WIDTH / 2}" y="${cardY + 70}" text-anchor="middle" font-family="Arial Rounded MT Bold, Arial Black, Helvetica, sans-serif" font-size="48" font-weight="700" fill="${TEXT}">${escapeXml(title)}</text>
-			<text x="${OG_WIDTH / 2}" y="${cardY + 132}" text-anchor="middle" font-family="Arial Rounded MT Bold, Arial, Helvetica, sans-serif" font-size="46" font-weight="700" fill="${TEXT}" fill-opacity="0.88">${escapeXml(subtitle)}</text>
-			<text x="${brandGroupX + logoSize + brandGap}" y="${brandTextBaseline}" text-anchor="start" font-family="Arial Rounded MT Bold, Arial Black, Helvetica, sans-serif" font-size="34" font-weight="700" fill="${TEXT}">Blissbase.app</text>
+			${svgTextPath({ text: title, x: OG_WIDTH / 2, y: cardY + 70, fontSize: 48, anchor: `middle`, fill: TEXT })}
+			${svgTextPath({ text: subtitle, x: OG_WIDTH / 2, y: cardY + 132, fontSize: 46, anchor: `middle`, fill: TEXT, fillOpacity: 0.88 })}
+			${svgTextPath({ text: brandText, x: brandGroupX + logoSize + brandGap, y: brandTextBaseline, fontSize: brandFontSize, fill: TEXT })}
 		</svg>
 	`);
 
@@ -290,11 +295,32 @@ function dataUrlToBuffer(dataUrl: string) {
 	return Buffer.from(dataUrl.slice(comma + 1), `base64`);
 }
 
-function escapeXml(value: string) {
-	return value
-		.replaceAll(`&`, `&amp;`)
-		.replaceAll(`<`, `&lt;`)
-		.replaceAll(`>`, `&gt;`)
-		.replaceAll(`"`, `&quot;`)
-		.replaceAll(`'`, `&apos;`);
+function dataUrlToArrayBuffer(dataUrl: string) {
+	const { buffer, byteOffset, byteLength } = dataUrlToBuffer(dataUrl);
+	return buffer.slice(byteOffset, byteOffset + byteLength);
+}
+
+function svgTextPath({
+	text,
+	x,
+	y,
+	fontSize,
+	anchor = `start`,
+	fill,
+	fillOpacity = 1,
+}: {
+	text: string;
+	x: number;
+	y: number;
+	fontSize: number;
+	anchor?: `start` | `middle`;
+	fill: string;
+	fillOpacity?: number;
+}) {
+	const width = brandFont.getAdvanceWidth(text, fontSize);
+	const startX = anchor === `middle` ? x - width / 2 : x;
+	return brandFont
+		.getPath(text, startX, y, fontSize)
+		.toSVG(2)
+		.replace(`<path`, `<path fill="${fill}" fill-opacity="${fillOpacity}"`);
 }

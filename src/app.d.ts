@@ -77,3 +77,13 @@ declare global {
 		is_anonymous: boolean
 	  }
 }
+
+declare module '*.png?inline' {
+	const src: string;
+	export default src;
+}
+
+declare module '*.ttf?inline' {
+	const src: string;
+	export default src;
+}
