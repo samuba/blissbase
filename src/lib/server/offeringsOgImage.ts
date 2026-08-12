@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import sharp from 'sharp';
+import logoDataUrl from './blissbase-logo-transparent.png?inline';
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
@@ -227,9 +226,8 @@ async function softTealWash() {
 }
 
 async function buildBrandingOverlay({ locationLabel }: { locationLabel?: string | null }) {
-	const logoPath = path.join(process.cwd(), `static/blissbase-logo-transparent.png`);
 	const logoSize = 52;
-	const logo = await sharp(await readFile(logoPath))
+	const logo = await sharp(dataUrlToBuffer(logoDataUrl))
 		.resize(logoSize, logoSize, { fit: `contain`, background: { r: 0, g: 0, b: 0, alpha: 0 } })
 		.png()
 		.toBuffer();
@@ -285,6 +283,11 @@ function shuffleItems<T>(items: T[]) {
 		[result[i], result[j]] = [result[j]!, result[i]!];
 	}
 	return result;
+}
+
+function dataUrlToBuffer(dataUrl: string) {
+	const comma = dataUrl.indexOf(`,`);
+	return Buffer.from(dataUrl.slice(comma + 1), `base64`);
 }
 
 function escapeXml(value: string) {
