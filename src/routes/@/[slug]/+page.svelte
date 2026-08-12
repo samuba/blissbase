@@ -2,6 +2,7 @@
 	import EventCard from '$lib/components/EventCard.svelte';
 	import OfferingCard from '$lib/components/OfferingCard.svelte';
 	import ProfileContactButtons from '$lib/components/ProfileContactButtons.svelte';
+	import { hasValidCoordinates } from '$lib/locationFilter';
 	import { routes } from '$lib/routes';
 	import { resolve } from '$app/paths';
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from '../../offerings/OfferingDetailsDialog.svelte';
@@ -10,6 +11,14 @@
 	let { data } = $props();
 	const { profile, upcomingEvents, publicOfferings, userId } = $derived(data);
 	const isOwnProfile = $derived(Boolean(profile.id === userId));
+	const locationMapsUrl = $derived.by(() => {
+		const label = profile.locationLabel?.trim();
+		if (!label) return null;
+		if (hasValidCoordinates({ lat: profile.latitude, lng: profile.longitude })) {
+			return `https://www.google.com/maps/search/?api=1&query=${profile.latitude},${profile.longitude}`;
+		}
+		return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`;
+	});
 	let selectedTab = $state<ProfileTab>(getInitialSelectedTab());
 
 	function getInitialSelectedTab(): ProfileTab {
@@ -73,11 +82,16 @@
 									{profile.displayName}
 								</h1>
 
-								{#if profile.locationLabel?.trim()}
-									<p class="text-base-content/60 flex min-w-0 items-start justify-start gap-1 text-sm">
+								{#if locationMapsUrl}
+									<a
+										href={locationMapsUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="text-base-content/60 hover:text-base-content flex min-w-0 items-start justify-start gap-1 text-sm"
+									>
 										<i class="icon-[ph--map-pin] mt-0.5 size-4 min-w-4 shrink-0 leading-none"></i>
 										<span class="min-w-0 wrap-break-word">{profile.locationLabel}</span>
-									</p>
+									</a>
 								{/if}
 							</div>
 							{#if isOwnProfile}
