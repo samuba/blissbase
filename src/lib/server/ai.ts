@@ -428,6 +428,64 @@ function buildMsgAnalysisSchema(timezone: string) {
 	});
 }
 
+/**
+ * Picks one fitting emoji per offering title (same order as input).
+ * Pass `reservedEmojis` for emojis already used elsewhere (e.g. extracted from titles).
+ */
+export async function aiPickEmojisForTitles({
+	titles,
+	reservedEmojis = [],
+}: {
+	titles: string[];
+	reservedEmojis?: string[];
+}): Promise<string[]> {
+	if (!titles.length) return [];
+
+	const reservedNote = reservedEmojis.length
+		? `\nThese emojis are already taken and must not be used (including their male/female variants): ${reservedEmojis.join(` `)}`
+		: ``;
+
+	const { output } = await generateText({
+		model: openai(`gpt-5.6-luna`),
+		output: Output.object({
+			name: `titleEmojis`,
+			schema: jsonSchema<{ emojis: string[] }>({
+				type: `object`,
+				properties: {
+					emojis: {
+						type: `array`,
+						items: { type: `string` },
+						description: `Exactly one unique emoji (or at most two) per title, same order as the input titles. No duplicates. Do not use both male and female versions of the same concept.`,
+					},
+				},
+				required: [`emojis`],
+				additionalProperties: false,
+			}),
+		}),
+		instructions: `You pick a fitting emoji for each offering/service based only on the offering title text. Ignore personal names, author names, and provider names even if they appear in the title. Base the emoji on what the offering/service is about.
+
+Rules:
+- Return exactly one emoji string per title in the same order.
+- Prefer a single emoji; at most two.
+- Every emoji must be unique across the full list — never reuse the same emoji for different titles.
+- Never use both a male and a female version of the same concept (for example not both 👨 and 👩, or 👨‍⚕️ and 👩‍⚕️). Prefer gender-neutral emojis (🧑 / 🧑‍⚕️ / 🧘) when possible. If one title already uses a gendered emoji, other titles must use a different unrelated emoji — not the opposite gender of the same concept.
+- No text or explanation.${reservedNote}
+- make sure the emoji look appealing for conscious people`,
+		messages: [
+			{
+				role: `user`,
+				content: titles.map((title, i) => `${i + 1}. ${title}`).join(`\n`),
+			},
+		],
+	});
+
+	return titles.map((_, i) => {
+		const emoji = output.emojis[i]?.trim();
+		if (!emoji) return `✨`;
+		return emoji;
+	});
+}
+
 export type MsgAnalysisAnswer = {
 	hasEventData: boolean;
 	contact?: string[];

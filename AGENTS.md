@@ -53,6 +53,7 @@ Do not pass params to functions on the server when instead we could get the data
 
 # Sveltekit
 Instead of resolve() use routes object. Ignore warnings/errors/autofixer reports about having to use resolve().
+Use .pending of remote functions when showing pending states.
 
 # Svelte
 Only use $effect as a last resort when its not feasible to use $derived.

@@ -10,11 +10,15 @@
 	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
+	import { generateOfferingAnnouncement } from "$lib/rpc/admin.remote";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
+	import { user } from "$lib/user.svelte";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
+	import { DropdownMenu } from "bits-ui";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
+	import { toast } from "svelte-sonner";
 
 	let { data } = $props();
 	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
@@ -47,6 +51,7 @@
 	const ctaHref = $derived(
 		filter.location ? routes.eventList({ searchTerm: filter.location }) : routes.eventList(),
 	);
+	const normalizedSearchTerm = $derived(filter.searchTerm?.trim() ?? ``);
 
 	$effect(() => {
 		contentBeforeMenuHeight = document.getElementById(`content-before-menu`)?.clientHeight ?? 0;
@@ -125,7 +130,19 @@
 		showOfferingDetailsDialog(offering.slug);
 	}
 
-	const normalizedSearchTerm = $derived(filter.searchTerm?.trim() ?? ``);
+	async function generateAnnouncement() {
+		if (generateOfferingAnnouncement.pending > 0) return;
+
+		const toastId = toast.loading(`Generating announcement…`);
+		try {
+			const { announcement } = await generateOfferingAnnouncement({ url: page.url.href });
+			await navigator.clipboard.writeText(announcement);
+			toast.success(`Announcement is now in the clipboard`, { id: toastId });
+		} catch (error) {
+			console.error(`Failed to generate offering announcement:`, error);
+			toast.error(`Could not generate announcement`, { id: toastId });
+		}
+	}
 </script>
 
 <svelte:window bind:scrollY />
@@ -193,6 +210,48 @@
 						onClose={() => navigateWithFilter({ searchTerm: null })}
 					/>
 				</div>
+
+				{#if user.isAdmin}
+					<div class="shrink-0 self-end">
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger
+								class="btn btn-circle"
+								aria-label="Admin actions"
+								title="Admin actions"
+								disabled={generateOfferingAnnouncement.pending > 0}
+							>
+								{#if generateOfferingAnnouncement.pending > 0}
+									<span class="loading loading-spinner loading-sm"></span>
+								{:else}
+									<i class="icon-[ph--shield-star] size-5"></i>
+								{/if}
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Portal>
+								<DropdownMenu.Content
+									class={[
+										`card card-border bg-base-100 z-50 min-w-52 rounded-xl p-1 shadow-xl outline-hidden`,
+										`data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95`,
+									]}
+									sideOffset={8}
+									align="end"
+								>
+									<DropdownMenu.Group>
+										<DropdownMenu.GroupHeading class="text-base-content/60 px-3 py-1.5 text-xs font-medium">
+											Admin Menu
+										</DropdownMenu.GroupHeading>
+										<DropdownMenu.Item
+											class="data-highlighted:bg-base-200 flex h-10 w-full cursor-pointer items-center rounded-lg px-3 text-sm outline-hidden select-none data-disabled:opacity-55"
+											disabled={generateOfferingAnnouncement.pending > 0}
+											onSelect={generateAnnouncement}
+										>
+											Generate announcement
+										</DropdownMenu.Item>
+									</DropdownMenu.Group>
+								</DropdownMenu.Content>
+							</DropdownMenu.Portal>
+						</DropdownMenu.Root>
+					</div>
+				{/if}
 			</div>
 
 			<label class="label cursor-pointer justify-start gap-2 px-4 sm:-mt-2">

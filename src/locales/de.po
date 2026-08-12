@@ -1277,9 +1277,8 @@ msgstr "Video-Call oder anderes Online-Format."
 msgid "Dein Name *"
 msgstr "Dein Name *"
 
-#: src/routes/offerings/+page.svelte
-msgid "Angebote | Blissbase"
-msgstr "Angebote | Blissbase"
+#~ msgid "Angebote | Blissbase"
+#~ msgstr "Angebote | Blissbase"
 
 #: src/routes/offerings/+page.svelte
 msgid "Noch keine Angebote hier"
@@ -2490,3 +2489,31 @@ msgstr "Target konnte nicht gelöscht werden"
 #: src/routes/admin/telegram/+page.svelte
 msgid "<0/> Wird gelöscht..."
 msgstr "<0/> Wird gelöscht..."
+
+#~ msgid "No visible offerings to announce"
+#~ msgstr "No visible offerings to announce"
+
+#: src/routes/offerings/+page.svelte
+msgid "Generating announcement…"
+msgstr "Generating announcement…"
+
+#: src/routes/offerings/+page.svelte
+msgid "Announcement is now in the clipboard"
+msgstr "Announcement is now in the clipboard"
+
+#: src/routes/offerings/+page.svelte
+msgid "Could not generate announcement"
+msgstr "Could not generate announcement"
+
+#: src/routes/offerings/+page.svelte
+#: src/routes/offerings/+page.svelte
+msgid "Admin actions"
+msgstr "Admin actions"
+
+#: src/routes/offerings/+page.svelte
+msgid "Generate announcement"
+msgstr "Generate announcement"
+
+#: src/routes/offerings/+page.svelte
+msgid "Admin Menu"
+msgstr "Admin Menu"
