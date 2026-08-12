@@ -1,21 +1,17 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { error } from '@sveltejs/kit';
-import { asc, eq } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
 import * as v from 'valibot';
 import { ALL_EVENT_SOURCES_VALUE, loadFiltersFromCookie, saveFiltersToCookie } from '$lib/cookie-utils';
-import {
-	filterOfferingsByIncludeOnline,
-	filterOfferingsBySearchTerm,
-	parseOfferingsFilterFromUrl,
-	shouldIncludeOfferingInLocationFilter,
-	type OfferingsFilter,
-} from '$lib/offeringsFilter';
-import { sanitizeLocationParams } from '$lib/locationFilter';
+import { parseOfferingsFilterFromUrl } from '$lib/offeringsFilter';
 import { isAdminSession } from '$lib/server/admin';
 import { aiPickEmojisForTitles } from '$lib/server/ai';
 import { db, s } from '$lib/server/db';
-import { resolveOfferingsFilterCoordinates } from '$lib/server/offeringsFilter';
-import { hasSocialLink, isPublicProfile } from '$lib/server/profile';
+import {
+	bustOfferingsOgImageCache,
+	loadVisibleListedOfferings,
+	scheduleOfferingsOgWarmForFilter,
+} from '$lib/server/offeringsOg';
 
 export const getEventSources = query(async () => {
 	assertAdmin();
@@ -66,71 +62,13 @@ export const generateOfferingAnnouncement = command(
 		assertAdmin();
 
 		const pageUrl = new URL(url);
-		const filterFromUrl = parseOfferingsFilterFromUrl(pageUrl);
-		const sanitized = sanitizeLocationParams({
-			location: filterFromUrl.location,
-			distance: filterFromUrl.distance,
-			lat: filterFromUrl.lat,
-			lng: filterFromUrl.lng,
-		});
-		const filter: OfferingsFilter = {
-			location: sanitized.location ?? null,
-			distance: sanitized.distance ?? null,
-			lat: sanitized.lat ?? null,
-			lng: sanitized.lng ?? null,
-			searchTerm: filterFromUrl.searchTerm?.trim() || null,
-			includeOnline: filterFromUrl.includeOnline ?? true,
-		};
+		const { filter, offerings } = await loadVisibleListedOfferings(parseOfferingsFilterFromUrl(pageUrl));
 
-		const filterCoords = await resolveOfferingsFilterCoordinates(filter);
-		const distanceKm = filter.distance ? parseFloat(filter.distance) : null;
-
-		const offerings = await db.query.offerings.findMany({
-			where: eq(s.offerings.listed, true),
-			columns: {
-				title: true,
-				descriptionHtml: true,
-				format: true,
-			},
-			with: {
-				profile: {
-					columns: {
-						displayName: true,
-						slug: true,
-						socialLinks: true,
-						latitude: true,
-						longitude: true,
-					},
-				},
-			},
-		});
-
-		const visibleOfferings = filterOfferingsBySearchTerm({
-			offerings: filterOfferingsByIncludeOnline({
-				offerings: offerings.filter((offering) => {
-					if (!offering.profile || !isPublicProfile(offering.profile)) return false;
-					if (!hasSocialLink(offering.profile)) return false;
-					if (!filterCoords || distanceKm == null || Number.isNaN(distanceKm)) return true;
-
-					return shouldIncludeOfferingInLocationFilter({
-						format: offering.format,
-						includeOnline: filter.includeOnline,
-						profileLatitude: offering.profile.latitude,
-						profileLongitude: offering.profile.longitude,
-						filterCoords,
-						distanceKm,
-					});
-				}),
-				includeOnline: filter.includeOnline,
-			}),
-			searchTerm: filter.searchTerm,
-		});
-
-		if (!visibleOfferings.length) {
+		if (!offerings.length) {
 			error(400, `No visible offerings to announce`);
 		}
 
-		const shuffled = shuffleItems(visibleOfferings);
+		const shuffled = shuffleItems(offerings);
 		const prepared = shuffled.map((offering) => {
 			const existingEmoji = extractFirstEmoji(offering.title);
 			const title = stripEmojis(offering.title) || offering.title;
@@ -170,6 +108,20 @@ export const generateOfferingAnnouncement = command(
 		});
 
 		return { announcement };
+	},
+);
+
+export const bustOfferingsOgCache = command(
+	v.object({
+		url: v.optional(v.pipe(v.string(), v.url())),
+	}),
+	async ({ url }) => {
+		assertAdmin();
+		const result = await bustOfferingsOgImageCache();
+		if (url) {
+			scheduleOfferingsOgWarmForFilter(parseOfferingsFilterFromUrl(new URL(url)));
+		}
+		return result;
 	},
 );
 

@@ -10,7 +10,7 @@
 	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 	import type { OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
-	import { generateOfferingAnnouncement } from "$lib/rpc/admin.remote";
+	import { bustOfferingsOgCache, generateOfferingAnnouncement } from "$lib/rpc/admin.remote";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
 	import { routes } from "$lib/routes";
 	import { user } from "$lib/user.svelte";
@@ -131,7 +131,7 @@
 	}
 
 	async function generateAnnouncement() {
-		if (generateOfferingAnnouncement.pending > 0) return;
+		if (generateOfferingAnnouncement.pending > 0 || bustOfferingsOgCache.pending > 0) return;
 
 		const toastId = toast.loading(`Generating announcement…`);
 		try {
@@ -141,6 +141,24 @@
 		} catch (error) {
 			console.error(`Failed to generate offering announcement:`, error);
 			toast.error(`Could not generate announcement`, { id: toastId });
+		}
+	}
+
+	async function bustOgImageCache() {
+		if (bustOfferingsOgCache.pending > 0 || generateOfferingAnnouncement.pending > 0) return;
+
+		const toastId = toast.loading(`Busting OG image cache…`);
+		try {
+			const { deletedCount } = await bustOfferingsOgCache({ url: page.url.href });
+			toast.success(
+				deletedCount
+					? `OG cache busted (${deletedCount} deleted); warming new image…`
+					: `OG cache was empty; warming new image…`,
+				{ id: toastId },
+			);
+		} catch (error) {
+			console.error(`Failed to bust offerings OG cache:`, error);
+			toast.error(`Could not bust OG image cache`, { id: toastId });
 		}
 	}
 </script>
@@ -218,9 +236,9 @@
 								class="btn btn-circle"
 								aria-label="Admin actions"
 								title="Admin actions"
-								disabled={generateOfferingAnnouncement.pending > 0}
+								disabled={generateOfferingAnnouncement.pending > 0 || bustOfferingsOgCache.pending > 0}
 							>
-								{#if generateOfferingAnnouncement.pending > 0}
+								{#if generateOfferingAnnouncement.pending > 0 || bustOfferingsOgCache.pending > 0}
 									<span class="loading loading-spinner loading-sm"></span>
 								{:else}
 									<i class="icon-[ph--shield-star] size-5"></i>
@@ -241,10 +259,17 @@
 										</DropdownMenu.GroupHeading>
 										<DropdownMenu.Item
 											class="data-highlighted:bg-base-200 flex h-10 w-full cursor-pointer items-center rounded-lg px-3 text-sm outline-hidden select-none data-disabled:opacity-55"
-											disabled={generateOfferingAnnouncement.pending > 0}
+											disabled={generateOfferingAnnouncement.pending > 0 || bustOfferingsOgCache.pending > 0}
 											onSelect={generateAnnouncement}
 										>
 											Generate announcement
+										</DropdownMenu.Item>
+										<DropdownMenu.Item
+											class="data-highlighted:bg-base-200 flex h-10 w-full cursor-pointer items-center rounded-lg px-3 text-sm outline-hidden select-none data-disabled:opacity-55"
+											disabled={generateOfferingAnnouncement.pending > 0 || bustOfferingsOgCache.pending > 0}
+											onSelect={bustOgImageCache}
+										>
+											Bust og image cache
 										</DropdownMenu.Item>
 									</DropdownMenu.Group>
 								</DropdownMenu.Content>

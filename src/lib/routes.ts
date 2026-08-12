@@ -29,6 +29,21 @@ export const routes = {
         }
         return relativeUrl(url) ;
     } ,
+    offeringsOg: (args: Partial<OfferingsFilter> = {}) => {
+        const url = new URL(resolve(`/offerings/og`), BASE_URL);
+        const params = buildOfferingsFilterSearchParams({
+            location: args.location ?? null,
+            distance: args.distance ?? null,
+            lat: args.lat ?? null,
+            lng: args.lng ?? null,
+            searchTerm: args.searchTerm ?? null,
+            includeOnline: args.includeOnline ?? true,
+        });
+        for (const [key, value] of params.entries()) {
+            url.searchParams.set(key, value);
+        }
+        return relativeUrl(url);
+    },
     currentPath: (url: URL) => `${url.pathname}${url.search}${url.hash}` ,
     newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/new`) , args.returnTo),
     offeringDetails: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]`, { slug }) , args.returnTo),
