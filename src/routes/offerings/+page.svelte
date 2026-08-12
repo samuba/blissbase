@@ -128,10 +128,6 @@
 	const normalizedSearchTerm = $derived(filter.searchTerm?.trim() ?? ``);
 </script>
 
-<svelte:head>
-	<title>Angebote | Blissbase</title>
-</svelte:head>
-
 <svelte:window bind:scrollY />
 
 <div class="grid w-full overflow-hidden" id="content-before-menu">
