@@ -14,6 +14,7 @@ import type { Entity } from "teleproto/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml, telegramEntityLookupCandidates } from "../src/lib/telegramCommon";
 import { extractVideoFrame } from "./extractVideoFrame";
+import { resolveEventImageUrls } from "./ogImageFallback";
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
@@ -509,7 +510,12 @@ async function extractEventDataFromImageMessage(
     const { imageUrls: additionalImageUrls, messageIds: adjacentImageMessageIds } = await extractAdjacentImagesWithIds(message, allMessages, client, slug);
     const allImageUrls = Array.from(new Set([...(mainImageUrl ? [mainImageUrl] : []), ...additionalImageUrls]));
 
-    baseEvent.imageUrls = allImageUrls;
+    baseEvent.imageUrls = await resolveEventImageUrls({
+        imageUrls: allImageUrls,
+        slug,
+        sourceUrl: aiAnswer.url,
+        description: [combinedText, aiAnswer.description].filter(Boolean).join(`\n\n`),
+    });
     const mergedEvent = await mergeWithExistingEventBySlug(baseEvent);
 
     const allAdjacentMessageIds = [...adjacentTextMessageIds, ...adjacentImageMessageIds];
@@ -555,7 +561,12 @@ async function extractEventDataFromMessage(
     const { baseEvent, slug } = base;
 
     const { imageUrls, messageIds: adjacentImageMessageIds } = await extractAdjacentImagesWithIds(message, allMessages, client, slug);
-    baseEvent.imageUrls = imageUrls;
+    baseEvent.imageUrls = await resolveEventImageUrls({
+        imageUrls,
+        slug,
+        sourceUrl: aiAnswer.url,
+        description: [combinedText, aiAnswer.description].filter(Boolean).join(`\n\n`),
+    });
     const mergedEvent = await mergeWithExistingEventBySlug(baseEvent);
 
     const allAdjacentMessageIds = [...adjacentTextMessageIds, ...adjacentImageMessageIds];

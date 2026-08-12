@@ -14,6 +14,7 @@ import { resizeCoverImage } from "../src/lib/imageProcessing"
 import type { WhatsappScrapingTarget } from "../src/lib/server/schema" 
 import * as assets from "../src/lib/assets"
 import { extractVideoFrame } from "./extractVideoFrame"
+import { resolveEventImageUrls } from "./ogImageFallback"
 
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!
 const sqliteObjectKey = `whatsapp.sqlite`
@@ -628,7 +629,12 @@ async function extractEventDataFromImageMessage(args: {
     })
     const allImageUrls = Array.from(new Set([...(mainImageUrl ? [mainImageUrl] : []), ...additionalImageUrls]))
 
-    baseEvent.imageUrls = allImageUrls
+    baseEvent.imageUrls = await resolveEventImageUrls({
+        imageUrls: allImageUrls,
+        slug,
+        sourceUrl: aiAnswer.url,
+        description: [combinedText, aiAnswer.description].filter(Boolean).join(`\n\n`),
+    })
     const mergedEvent = await mergeWithExistingEventBySlug(baseEvent)
 
     return {
@@ -689,7 +695,12 @@ async function extractEventDataFromMessage(args: {
         s3: args.s3,
         slug
     })
-    baseEvent.imageUrls = imageUrls
+    baseEvent.imageUrls = await resolveEventImageUrls({
+        imageUrls,
+        slug,
+        sourceUrl: aiAnswer.url,
+        description: [combinedText, aiAnswer.description].filter(Boolean).join(`\n\n`),
+    })
     const mergedEvent = await mergeWithExistingEventBySlug(baseEvent)
 
     return {
