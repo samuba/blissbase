@@ -4,7 +4,8 @@
 	import { showLoginDialog } from '$lib/components/LoginDialog.svelte';
 	import { peekFooter } from '$lib/peekFooter.svelte';
 	import type { Attachment } from 'svelte/attachments';
-	import { tick, type Snippet } from 'svelte';
+	import { fly } from 'svelte/transition';
+	import type { Snippet } from 'svelte';
 
 	let {
 		title,
@@ -24,12 +25,10 @@
 	const useLink = $derived(!requireLogin || Boolean(userId));
 	let showFab = $state(false);
 	let desiredShowFab = false;
-	let fabTransitioning = false;
 	let fabArmed = false;
 	let ctaElement: HTMLElement | undefined;
 
-	// Drop the fixed FAB instantly on leave so it can't morph/jump during
-	// scroll-to-top of the outgoing page or briefly linger on the next route.
+	// Drop the fixed FAB instantly on leave so it can't linger on the next route.
 	beforeNavigate(({ from, to }) => {
 		if (!from || !to) return;
 		if (from.url.pathname === to.url.pathname) return;
@@ -37,48 +36,13 @@
 		fabArmed = false;
 		desiredShowFab = false;
 		showFab = false;
-		fabTransitioning = false;
-		delete document.documentElement.dataset.vt;
 	});
-
-	function isRoughlyInViewport(element: HTMLElement) {
-		const rect = element.getBoundingClientRect();
-		return rect.bottom > 0 && rect.top < window.innerHeight;
-	}
 
 	function setShowFab(next: boolean) {
 		desiredShowFab = next;
-		applyShowFab();
-	}
-
-	function applyShowFab() {
 		if (!fabArmed) return;
-		if (fabTransitioning) return;
 		if (desiredShowFab === showFab) return;
-
-		const next = desiredShowFab;
-		const canTransition =
-			typeof document.startViewTransition === `function` &&
-			!window.matchMedia(`(prefers-reduced-motion: reduce)`).matches &&
-			// Skip morph when the in-flow button isn't on screen (e.g. back-nav scroll restore).
-			(!ctaElement || isRoughlyInViewport(ctaElement));
-
-		if (!canTransition) {
-			showFab = next;
-			return;
-		}
-
-		fabTransitioning = true;
-		document.documentElement.dataset.vt = `create-cta-fab`;
-		const transition = document.startViewTransition(async () => {
-			showFab = next;
-			await tick();
-		});
-		transition.finished.finally(() => {
-			fabTransitioning = false;
-			delete document.documentElement.dataset.vt;
-			applyShowFab();
-		});
+		showFab = desiredShowFab;
 	}
 
 	function syncFabFromGeometry(element = ctaElement) {
@@ -111,7 +75,7 @@
 
 		// Wait out SvelteKit scroll-to-top / back-forward restore before showing the FAB.
 		// Otherwise a mid-nav scroll offset briefly treats the CTA as off-screen and the
-		// previous page's FAB appears to "carry over", then morphs away when scroll settles.
+		// previous page's FAB appears to "carry over".
 		const armFab = () => {
 			if (fabArmed) return;
 			fabArmed = true;
@@ -184,11 +148,7 @@
 		<a
 			{@attach observeCtaForFab}
 			href={href}
-			class={[
-				`btn btn-primary w-fit`,
-				!showFab && `create-cta-vt`,
-				showFab && `invisible`,
-			]}
+			class={[`btn btn-primary w-fit`, showFab && `invisible`]}
 			inert={showFab}
 		>
 			<i class="icon-[ph--plus] size-5"></i>
@@ -199,11 +159,7 @@
 			{@attach observeCtaForFab}
 			type="button"
 			onclick={showLoginDialog}
-			class={[
-				`btn btn-primary w-fit`,
-				!showFab && `create-cta-vt`,
-				showFab && `invisible`,
-			]}
+			class={[`btn btn-primary w-fit`, showFab && `invisible`]}
 			inert={showFab}
 		>
 			<i class="icon-[ph--plus] size-5"></i>
@@ -212,42 +168,25 @@
 	{/if}
 </div>
 
-{#if showFab}
-	{#if useLink}
-		<a
-			href={href}
-			class={[fabClasses, `create-cta-vt`]}
-			aria-label={buttonText}
-		>
-			<i class="icon-[ph--plus] size-6 sm:size-5"></i>
-			<span class="hidden sm:block">{buttonText}</span>
-		</a>
-	{:else}
-		<button
-			type="button"
-			onclick={showLoginDialog}
-			class={[fabClasses, `create-cta-vt`]}
-			aria-label={buttonText}
-		>
-			<i class="icon-[ph--plus] size-6 sm:size-5"></i>
-			<span class="hidden sm:block">{buttonText}</span>
-		</button>
-	{/if}
+{#if showFab && useLink}
+	<a
+		href={href}
+		class={fabClasses}
+		aria-label={buttonText}
+		transition:fly={{ y: 24, duration: 300 }}
+	>
+		<i class="icon-[ph--plus] size-6 sm:size-5"></i>
+		<span class="hidden sm:block">{buttonText}</span>
+	</a>
+{:else if showFab}
+	<button
+		type="button"
+		onclick={showLoginDialog}
+		class={fabClasses}
+		aria-label={buttonText}
+		transition:fly={{ y: 24, duration: 300 }}
+	>
+		<i class="icon-[ph--plus] size-6 sm:size-5"></i>
+		<span class="hidden sm:block">{buttonText}</span>
+	</button>
 {/if}
-
-<style>
-	.create-cta-vt {
-		view-transition-name: create-cta;
-	}
-
-	:global(::view-transition-group(create-cta)) {
-		animation-duration: 0.4s;
-		animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	/* Keep the rest of the page still — only morph the create button. */
-	:global(html[data-vt='create-cta-fab']::view-transition-old(root)),
-	:global(html[data-vt='create-cta-fab']::view-transition-new(root)) {
-		animation: none;
-	}
-</style>
