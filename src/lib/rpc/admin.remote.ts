@@ -210,9 +210,9 @@ function buildOfferingAnnouncement({
 	location: string;
 	url: string;
 }) {
-	const header = `Community Offerings that you can book in ${location}`;
+	const header = `Community Offerings that you can book in ${location}.\nCheck them out here or add your own: ${url}`;
 	const parts = offerings.map((offering) => {
 		return `${offering.emoji} *${offering.title}*\nby ${offering.author}`;
 	});
-	return `${header}\n\n${parts.join(`\n\n`)}\n\nCheck them out here or add your own: ${url}`;
+	return `${header}\n\n${parts.join(`\n\n`)}`;
 }
