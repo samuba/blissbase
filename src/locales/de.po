@@ -1410,6 +1410,7 @@ msgstr "Angebot konnte nicht gelöscht werden."
 msgid "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 msgstr "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 
+#: src/routes/admin/telegram/+page.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "<0/> Löschen"
@@ -2471,3 +2472,21 @@ msgstr "Suche öffnen"
 #: src/routes/+page.svelte
 msgid "<0/> Dein Event gehört hierher."
 msgstr "<0/> Dein Event gehört hierher."
+
+#. 0: label
+#: src/routes/admin/telegram/+page.svelte
+msgid "Target „{0}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+msgstr "Target „{0}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+
+#. 0: label
+#: src/routes/admin/telegram/+page.svelte
+msgid "Target „{0}“ gelöscht"
+msgstr "Target „{0}“ gelöscht"
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "Target konnte nicht gelöscht werden"
+msgstr "Target konnte nicht gelöscht werden"
+
+#: src/routes/admin/telegram/+page.svelte
+msgid "<0/> Wird gelöscht..."
+msgstr "<0/> Wird gelöscht..."

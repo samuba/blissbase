@@ -1,4 +1,4 @@
-import { form, getRequestEvent, query, requested } from '$app/server';
+import { command, form, getRequestEvent, query, requested } from '$app/server';
 import { error, invalid } from '@sveltejs/kit';
 import { asc } from 'drizzle-orm';
 import * as v from 'valibot';
@@ -148,6 +148,30 @@ export const saveTelegramScrapingTarget = form(saveTelegramScrapingTargetSchema,
 		roomId: resolved.roomId,
 		name: resolved.name,
 	};
+});
+
+const deleteTelegramScrapingTargetSchema = v.object({
+	roomId: v.pipe(v.string(), v.trim(), v.nonEmpty(`roomId ist erforderlich`)),
+});
+
+export const deleteTelegramScrapingTarget = command(deleteTelegramScrapingTargetSchema, async ({ roomId }) => {
+	assertAdmin();
+
+	const [deleted] = await db
+		.delete(s.telegramScrapingTargets)
+		.where(eq(s.telegramScrapingTargets.roomId, roomId))
+		.returning({
+			roomId: s.telegramScrapingTargets.roomId,
+			name: s.telegramScrapingTargets.name,
+		});
+
+	if (!deleted) {
+		error(404, `Target wurde nicht gefunden`);
+	}
+
+	refreshTelegramScrapingTargets();
+
+	return deleted;
 });
 
 function refreshTelegramScrapingTargets() {

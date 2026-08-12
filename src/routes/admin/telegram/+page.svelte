@@ -3,6 +3,7 @@
 	import { Dialog } from '$lib/components/dialog';
 	import { routes } from '$lib/routes';
 	import {
+		deleteTelegramScrapingTarget,
 		getTelegramScrapingTargets,
 		saveTelegramScrapingTarget,
 	} from '$lib/rpc/adminTelegram.remote';
@@ -23,6 +24,8 @@
 	let isAddDialogOpen = $state(false);
 	let isEditDialogOpen = $state(false);
 	let selectedRoomId = $state<string | null>(null);
+	let isDeleting = $state(false);
+	const selectedTarget = $derived(targets.find((target) => target.roomId === selectedRoomId) ?? null);
 
 	saveTelegramScrapingTarget.fields.set(defaultFormValues);
 
@@ -101,7 +104,30 @@
 		isEditDialogOpen = open;
 		if (open) return;
 		selectedRoomId = null;
+		isDeleting = false;
 		saveTelegramScrapingTarget.fields.set(defaultFormValues);
+	}
+
+	async function deleteSelectedTarget() {
+		if (!selectedTarget || isDeleting) return;
+
+		const label = selectedTarget.name?.trim() || selectedTarget.roomId;
+		if (!confirm(`Target „${label}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
+			return;
+		}
+
+		isDeleting = true;
+		try {
+			await deleteTelegramScrapingTarget({ roomId: selectedTarget.roomId });
+			await getTelegramScrapingTargets().refresh();
+			toast.success(`Target „${label}“ gelöscht`);
+			onEditDialogOpenChange(false);
+		} catch (err) {
+			console.error(`Failed to delete telegram scraping target:`, err);
+			toast.error(`Target konnte nicht gelöscht werden`);
+		} finally {
+			isDeleting = false;
+		}
 	}
 
 	function formatTopicIds(topicIds: string[] | null | undefined) {
@@ -574,11 +600,25 @@
 						</div>
 					{/if}
 
-					<div class="flex flex-wrap gap-2 pt-2">
+					<div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+						<button
+							type="button"
+							class="btn btn-error btn-outline"
+							disabled={isDeleting || saveTelegramScrapingTarget.pending > 0}
+							onclick={deleteSelectedTarget}
+						>
+							{#if isDeleting}
+								<span class="loading loading-spinner loading-sm"></span>
+								Wird gelöscht...
+							{:else}
+								<i class="icon-[ph--trash] size-4"></i>
+								Löschen
+							{/if}
+						</button>
 						<button
 							type="submit"
 							class="btn btn-primary"
-							disabled={saveTelegramScrapingTarget.pending > 0}
+							disabled={isDeleting || saveTelegramScrapingTarget.pending > 0}
 						>
 							{#if saveTelegramScrapingTarget.pending > 0}
 								<span class="loading loading-spinner loading-sm"></span>
