@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RemoteFormField } from '@sveltejs/kit';
 	import { isTouchDevice } from '$lib/common';
+	import { portalToBody } from '$lib/attachments/portal';
 	import { resetGoogleMapsPlacesLoader } from '$lib/googleMapsLoader';
 	import { reverseGeocodeCity } from '$lib/rpc/places.remote';
 	import { fade } from 'svelte/transition';
@@ -547,6 +548,7 @@
 
 		{#if showAutocompletePanel}
 			<ul
+				{@attach portalToBody}
 				id="{inputId}-listbox"
 				role="listbox"
 				data-testid="location-suggestions"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isTouchDevice } from '$lib/common';
+	import { portalToBody } from '$lib/attachments/portal';
 	import { resetGoogleMapsPlacesLoader } from '$lib/googleMapsLoader';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
@@ -464,6 +465,7 @@
 
 			{#if autocomplete?.isOpen && useGoogleAutocomplete}
 				<ul
+					{@attach portalToBody}
 					id="{inputId}-listbox"
 					role="listbox"
 					data-testid="location-suggestions"
