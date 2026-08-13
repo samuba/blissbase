@@ -1,5 +1,7 @@
 create event flow auch account frei machen wie offerings
 
+adjust PWA icons
+
 have tags also in the filter dialog
 
 
