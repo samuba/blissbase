@@ -59,4 +59,4 @@ Use .pending of remote functions when showing pending states.
 Only use $effect as a last resort when its not feasible to use $derived.
 
 # Playwright
-Prefer getByTestId() to identify elements.
+Identify elements via data-testid and getByTestId().
