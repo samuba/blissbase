@@ -74,4 +74,5 @@ export const whiteListSources = [
     'yogabarn',
     'tantrakalender',
     'tantrazentrumleipzig',
+    'dieliebelle',
 ] satisfies WebsiteScrapeSourceName[];

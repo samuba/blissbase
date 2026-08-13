@@ -15,6 +15,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     yogabarn: { module: './scrape-yogabarn.ts', label: 'The Yoga Barn', url: 'https://theyogabarn.com' },
     tantrakalender: { module: './scrape-tantrakalender.ts', label: 'Tantrakalender', url: 'https://tantrakalender.de' },
     tantrazentrumleipzig: { module: './scrape-tantrazentrumleipzig.ts', label: 'Tantrazentrum Leipzig', url: 'https://www.tantrazentrum-leipzig.de' },
+    dieliebelle: { module: './scrape-dieliebelle.ts', label: 'DIE LIEBE.LLE', url: 'https://www.die-liebelle.de' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string, label: string, url: string }>;
 
