@@ -4,15 +4,17 @@
  *
  * Requires Bun, for network requests and file system operations.
  * Usage: 
- * bun run scripts/scrape-websites.ts [source] [--clean]
+ * bun run scripts/scrape-websites.ts [source] [--clean] [--exclude source,...]
  * 
  * Examples:
  * bun run scripts/scrape-websites.ts                    # Scrape all sources
  * bun run scripts/scrape-websites.ts tribehaus              # Scrape only tribehaus
  * bun run scripts/scrape-websites.ts --clean            # Clear all sources and scrape all
  * bun run scripts/scrape-websites.ts tribehaus --clean      # Clear tribehaus and scrape tribehaus
+ * bun run scripts/scrape-websites.ts --exclude yogabarn # Scrape all except yogabarn
  * 
- * The '--clean' flag deletes all existing events from the target source(s) before insertion.
+ * The '--clean' flag deletes existing events from sources that scraped successfully this run.
+ * The '--exclude' flag skips one or more sources (comma-separated, repeatable).
  */
 
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
@@ -70,11 +72,30 @@ async function main() {
                 type: 'boolean',
                 default: false,
             },
+            exclude: {
+                type: 'string',
+                multiple: true,
+            },
         },
         allowPositionals: true,
     });
 
     const shouldClean = values.clean;
+    const excludedSources = new Set(
+        (values.exclude ?? [])
+            .flatMap((value) => value.split(`,`))
+            .map((value) => value.trim().toLowerCase())
+            .filter((excluded) => {
+                if (!excluded) return false;
+                if (WEBSITE_SCRAPE_SOURCES.includes(excluded as WebsiteScrapeSourceName)) return true;
+                console.warn(`Ignoring unknown --exclude source: ${excluded}`);
+                return false;
+            }),
+    );
+    if (excludedSources.size > 0) {
+        console.log(`Excluding sources: ${[...excludedSources].join(`, `)}`);
+    }
+
     let targetSourceArg: string | null = null;
 
     // Check if a source is specified as positional argument
@@ -97,7 +118,13 @@ async function main() {
     }
 
     // --- Determine sources to scrape ---
-    const sourcesToScrape = targetSourceArg ? [targetSourceArg] : WEBSITE_SCRAPE_SOURCES;
+    const sourcesToScrape = (targetSourceArg ? [targetSourceArg] : WEBSITE_SCRAPE_SOURCES)
+        .filter((source) => !excludedSources.has(source));
+
+    if (!sourcesToScrape.length) {
+        console.error(`No sources left to scrape after applying --exclude.`);
+        process.exit(1);
+    }
 
     // --- Run Scrapers in Parallel ---
     const scrapePromises = sourcesToScrape.map(source => scrapeSource(source));
@@ -107,11 +134,13 @@ async function main() {
     
     // Separate successful results from failures
     const failedSources: { source: string; error: unknown }[] = [];
+    const successfulSources: string[] = [];
     const allEvents: ScrapedEvent[] = [];
     
     results.forEach((result, index) => {
         const source = sourcesToScrape[index];
         if (result.status === 'fulfilled') {
+            successfulSources.push(source);
             allEvents.push(...result.value);
         } else {
             failedSources.push({ source, error: result.reason });
@@ -147,27 +176,20 @@ async function main() {
 
     // --- Clear existing events if requested ---
     if (shouldClean) {
-        console.log('Clearing existing events from target sources...');
-
-        let sourcesToClear: string[] = [];
-
-        if (targetSourceArg) {
-            // Clear only the target source
-            sourcesToClear = [targetSourceArg];
+        if (!successfulSources.length) {
+            console.log(`Skipping --clean because no sources scraped successfully.`);
         } else {
-            // Clear all scrape sources
-            sourcesToClear = WEBSITE_SCRAPE_SOURCES;
-        }
+            console.log(`Clearing existing events from successfully scraped sources...`);
+            console.log(` -> Deleting events from sources: ${successfulSources.join(`, `)}`);
 
-        console.log(` -> Deleting events from sources: ${sourcesToClear.join(', ')}`);
+            try {
+                await db.delete(s.events).where(inArray(s.events.source, successfulSources));
 
-        try {
-            await db.delete(s.events).where(inArray(s.events.source, sourcesToClear));
-
-            console.log(` -> Successfully cleared existing events from ${sourcesToClear.length} source(s)`);
-        } catch (error) {
-            console.error('Error clearing existing events:', error);
-            throw error;
+                console.log(` -> Successfully cleared existing events from ${successfulSources.length} source(s)`);
+            } catch (error) {
+                console.error('Error clearing existing events:', error);
+                throw error;
+            }
         }
     }
 
@@ -204,13 +226,18 @@ async function main() {
     eventsToInsert = deduplicateEvents(eventsToInsert);
 
     // delete all events that are not in sources and are in the future. So that would be events that were deleted by the organizer
-    const deletedEvents = await db.delete(s.events)
-        .where(and(
-            inArray(s.events.source, sourcesToScrape),
-            notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
-            // gte(s.events.startAt, new Date())
-        )).returning();
-    console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
+    // Only touch sources that scraped successfully — a failed source must not wipe its existing events.
+    if (successfulSources.length > 0) {
+        const deletedEvents = await db.delete(s.events)
+            .where(and(
+                inArray(s.events.source, successfulSources),
+                notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
+                // gte(s.events.startAt, new Date())
+            )).returning();
+        console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
+    } else {
+        console.log(`Skipping stale-event delete because no sources scraped successfully.`);
+    }
 
     // image processing
     await cacheImages(eventsToInsert);

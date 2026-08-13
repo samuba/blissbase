@@ -13,7 +13,9 @@ on:
         default: ''
 
 jobs:
+  # Yoga Barn is scraped in separate jobs below so each retry gets a new runner IP.
   scrape-websites:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.params == '' || !startsWith(github.event.inputs.params, 'yogabarn') }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -42,11 +44,44 @@ jobs:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           TODOTODAY_EMAIL: ${{ secrets.TODOTODAY_EMAIL }}
           TODOTODAY_PASSWORD: ${{ secrets.TODOTODAY_PASSWORD }}
-        run: bun run scripts/scrape-websites.ts ${{ github.event.inputs.params }}
+        run: bun run scripts/scrape-websites.ts ${{ github.event.inputs.params }} --exclude yogabarn
+
+  # Each attempt is a new job → new GitHub-hosted runner → new public IP.
+  # Bot protection flags some Azure IPs; retrying on the same IP makes it worse.
+  # Run on schedule, empty/flag-only dispatch (--clean), or an explicit yogabarn source.
+  # Skip when dispatch targets a different source (e.g. tribehaus).
+  scrape-yogabarn-1:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.params == '' || startsWith(github.event.inputs.params, 'yogabarn') || startsWith(github.event.inputs.params, '--') }}
+    uses: ./.github/workflows/scrape-source.yml
+    with:
+      source: yogabarn
+      continue_on_error: true
+      clean: ${{ contains(github.event.inputs.params, '--clean') }}
+    secrets: inherit
+
+  scrape-yogabarn-2:
+    needs: [scrape-yogabarn-1]
+    if: ${{ always() && needs.scrape-yogabarn-1.result != 'skipped' && needs.scrape-yogabarn-1.outputs.ok != 'true' }}
+    uses: ./.github/workflows/scrape-source.yml
+    with:
+      source: yogabarn
+      continue_on_error: true
+      clean: ${{ contains(github.event.inputs.params, '--clean') }}
+    secrets: inherit
+
+  scrape-yogabarn-3:
+    needs: [scrape-yogabarn-2]
+    if: ${{ always() && needs.scrape-yogabarn-2.result != 'skipped' && needs.scrape-yogabarn-2.outputs.ok != 'true' }}
+    uses: ./.github/workflows/scrape-source.yml
+    with:
+      source: yogabarn
+      continue_on_error: false
+      clean: ${{ contains(github.event.inputs.params, '--clean') }}
+    secrets: inherit
 
   deduplicate:
     if: ${{ always() }}
-    needs: [scrape-websites]
+    needs: [scrape-websites, scrape-yogabarn-1, scrape-yogabarn-2, scrape-yogabarn-3]
     runs-on: ubuntu-latest
     environment: production
     steps:
