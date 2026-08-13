@@ -5,6 +5,7 @@
 	import {
 		deleteTelegramScrapingTarget,
 		getTelegramScrapingTargets,
+		lookupTimezoneFromAddress,
 		saveTelegramScrapingTarget,
 	} from '$lib/rpc/adminTelegram.remote';
 	import { toast } from 'svelte-sonner';
@@ -17,7 +18,7 @@
 		roomId: ``,
 		defaultAddress: ``,
 		topicIds: ``,
-		defaultTimezone: `germany`,
+		defaultTimezone: `Europe/Berlin`,
 		hasOnlyConsciousEvents: false,
 	};
 
@@ -25,6 +26,7 @@
 	let isEditDialogOpen = $state(false);
 	let selectedRoomId = $state<string | null>(null);
 	let isDeleting = $state(false);
+	let timezoneLookupAddress = ``;
 	const selectedTarget = $derived(targets.find((target) => target.roomId === selectedRoomId) ?? null);
 
 	saveTelegramScrapingTarget.fields.set(defaultFormValues);
@@ -85,6 +87,26 @@
 			return;
 		}
 		closeAddDialog();
+	}
+
+	async function fillTimezoneFromAddress(address: string) {
+		const trimmed = address.trim();
+		if (!trimmed) return;
+
+		timezoneLookupAddress = trimmed;
+		try {
+			const timezone = await lookupTimezoneFromAddress({ address: trimmed });
+			if (timezoneLookupAddress !== trimmed) return;
+			if (!timezone) {
+				toast.error(`Zeitzone zur Adresse nicht gefunden`);
+				return;
+			}
+			saveTelegramScrapingTarget.fields.defaultTimezone.set(timezone);
+		} catch (error) {
+			if (timezoneLookupAddress !== trimmed) return;
+			console.error(`Failed to look up timezone:`, error);
+			toast.error(`Zeitzone konnte nicht ermittelt werden`);
+		}
 	}
 
 	function selectTarget(target: Target) {
@@ -458,6 +480,7 @@
 							class="textarea min-h-20 w-full peer"
 							{...saveTelegramScrapingTarget.fields.defaultAddress.as(`text`)}
 							placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+							onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
 						></textarea>
 						<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
 						<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultAddress} />
@@ -475,7 +498,12 @@
 					</fieldset>
 
 					<fieldset class="fieldset">
-						<legend class="fieldset-legend">defaultTimezone *</legend>
+						<legend class="fieldset-legend">
+							defaultTimezone *
+							{#if lookupTimezoneFromAddress.pending > 0}
+								<span class="loading loading-spinner loading-xs"></span>
+							{/if}
+						</legend>
 						<input
 							class="input w-full peer"
 							{...saveTelegramScrapingTarget.fields.defaultTimezone.as(`text`)}
@@ -496,7 +524,7 @@
 						<button
 							type="submit"
 							class="btn btn-primary"
-							disabled={saveTelegramScrapingTarget.pending > 0}
+							disabled={saveTelegramScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
 						>
 							{#if saveTelegramScrapingTarget.pending > 0}
 								<span class="loading loading-spinner loading-sm"></span>
@@ -566,6 +594,7 @@
 							class="textarea min-h-20 w-full peer"
 							{...saveTelegramScrapingTarget.fields.defaultAddress.as(`text`)}
 							placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+							onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
 						></textarea>
 						<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
 						<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultAddress} />
@@ -583,7 +612,12 @@
 					</fieldset>
 
 					<fieldset class="fieldset">
-						<legend class="fieldset-legend">defaultTimezone *</legend>
+						<legend class="fieldset-legend">
+							defaultTimezone *
+							{#if lookupTimezoneFromAddress.pending > 0}
+								<span class="loading loading-spinner loading-xs"></span>
+							{/if}
+						</legend>
 						<input
 							class="input w-full peer"
 							{...saveTelegramScrapingTarget.fields.defaultTimezone.as(`text`)}
@@ -618,7 +652,7 @@
 						<button
 							type="submit"
 							class="btn btn-primary"
-							disabled={isDeleting || saveTelegramScrapingTarget.pending > 0}
+							disabled={isDeleting || saveTelegramScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
 						>
 							{#if saveTelegramScrapingTarget.pending > 0}
 								<span class="loading loading-spinner loading-sm"></span>

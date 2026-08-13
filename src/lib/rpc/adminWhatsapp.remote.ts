@@ -1,9 +1,11 @@
 import { command, form, query, requested } from '$app/server';
+import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { error, invalid } from '@sveltejs/kit';
 import { asc, desc, notInArray } from 'drizzle-orm';
 import * as v from 'valibot';
 import { isAdminSession } from '$lib/server/admin';
 import { db, eq, s } from '$lib/server/db';
+import { geocodeAddressCached } from '$lib/server/google';
 
 function toAddressLines(address: string) {
 	if (!address.trim()) return [];
@@ -61,6 +63,21 @@ export const getAvailableWhatsappChats = query(async () => {
 		orderBy,
 	});
 });
+
+export const lookupTimezoneFromAddress = command(
+	v.object({
+		address: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+	}),
+	async ({ address }) => {
+		assertAdmin();
+
+		const coords = await geocodeAddressCached({
+			addressLines: toAddressLines(address),
+			apiKey: GOOGLE_MAPS_API_KEY,
+		});
+		return coords?.timezone ?? null;
+	},
+);
 
 export const setWhatsappChatHidden = command(setWhatsappChatHiddenSchema, async ({ chatJid, hidden }) => {
 	assertAdmin();

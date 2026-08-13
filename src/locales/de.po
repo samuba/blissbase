@@ -2202,3 +2202,20 @@ msgstr "OG cache busted ({0} deleted); warming new image…"
 #: src/routes/offerings/+page.svelte
 msgid "OG cache was empty; warming new image…"
 msgstr "OG cache was empty; warming new image…"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Zeitzone zur Adresse nicht gefunden"
+msgstr "Zeitzone zur Adresse nicht gefunden"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "Zeitzone konnte nicht ermittelt werden"
+msgstr "Zeitzone konnte nicht ermittelt werden"
+
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/telegram/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+#: src/routes/admin/whatsapp/+page.svelte
+msgid "defaultTimezone * <0/>"
+msgstr "defaultTimezone * <0/>"

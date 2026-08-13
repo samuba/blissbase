@@ -1,9 +1,11 @@
 import { command, form, getRequestEvent, query, requested } from '$app/server';
+import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import { error, invalid } from '@sveltejs/kit';
 import { asc } from 'drizzle-orm';
 import * as v from 'valibot';
 import { isAdminSession } from '$lib/server/admin';
 import { db, eq, s } from '$lib/server/db';
+import { geocodeAddressCached } from '$lib/server/google';
 import { routes } from '$lib/routes';
 
 function toAddressLines(address: string) {
@@ -38,6 +40,21 @@ const saveTelegramScrapingTargetSchema = v.object({
 	),
 	hasOnlyConsciousEvents: v.optional(v.boolean(), false),
 });
+
+export const lookupTimezoneFromAddress = command(
+	v.object({
+		address: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+	}),
+	async ({ address }) => {
+		assertAdmin();
+
+		const coords = await geocodeAddressCached({
+			addressLines: toAddressLines(address),
+			apiKey: GOOGLE_MAPS_API_KEY,
+		});
+		return coords?.timezone ?? null;
+	},
+);
 
 export const getTelegramScrapingTargets = query(async () => {
 	assertAdmin();

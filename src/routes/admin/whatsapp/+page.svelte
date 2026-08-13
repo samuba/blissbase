@@ -5,6 +5,7 @@
 	import {
 		getAvailableWhatsappChats,
 		getWhatsappScrapingTargets,
+		lookupTimezoneFromAddress,
 		saveWhatsappScrapingTarget,
 		setWhatsappChatHidden,
 	} from '$lib/rpc/adminWhatsapp.remote';
@@ -20,7 +21,7 @@
 		chatJid: ``,
 		name: ``,
 		defaultAddress: ``,
-		defaultTimezone: `germany`,
+		defaultTimezone: `Europe/Berlin`,
 		hasOnlyConsciousEvents: false,
 	};
 
@@ -32,6 +33,7 @@
 	let chatSourceFilter = $state<ChatSourceFilter>(`groups`);
 	let showHiddenChats = $state(false);
 	let hidingChatJid = $state<string | null>(null);
+	let timezoneLookupAddress = ``;
 
 	const chatSourceOptions = [
 		{ value: `all`, label: `Alle` },
@@ -183,6 +185,26 @@
 	function clearSelectedChatForAdd() {
 		selectedChatForAdd = null;
 		saveWhatsappScrapingTarget.fields.set(defaultFormValues);
+	}
+
+	async function fillTimezoneFromAddress(address: string) {
+		const trimmed = address.trim();
+		if (!trimmed) return;
+
+		timezoneLookupAddress = trimmed;
+		try {
+			const timezone = await lookupTimezoneFromAddress({ address: trimmed });
+			if (timezoneLookupAddress !== trimmed) return;
+			if (!timezone) {
+				toast.error(`Zeitzone zur Adresse nicht gefunden`);
+				return;
+			}
+			saveWhatsappScrapingTarget.fields.defaultTimezone.set(timezone);
+		} catch (error) {
+			if (timezoneLookupAddress !== trimmed) return;
+			console.error(`Failed to look up timezone:`, error);
+			toast.error(`Zeitzone konnte nicht ermittelt werden`);
+		}
 	}
 
 	function selectTarget(target: Target) {
@@ -634,13 +656,19 @@
 								class="textarea min-h-20 w-full peer"
 								{...saveWhatsappScrapingTarget.fields.defaultAddress.as(`text`)}
 								placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+								onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
 							></textarea>
 							<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
 							<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultAddress} />
 						</fieldset>
 
 						<fieldset class="fieldset">
-							<legend class="fieldset-legend">defaultTimezone *</legend>
+							<legend class="fieldset-legend">
+								defaultTimezone *
+								{#if lookupTimezoneFromAddress.pending > 0}
+									<span class="loading loading-spinner loading-xs"></span>
+								{/if}
+							</legend>
 							<input
 								class="input w-full peer"
 								{...saveWhatsappScrapingTarget.fields.defaultTimezone.as(`text`)}
@@ -661,7 +689,7 @@
 							<button
 								type="submit"
 								class="btn btn-primary"
-								disabled={saveWhatsappScrapingTarget.pending > 0}
+								disabled={saveWhatsappScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
 							>
 								{#if saveWhatsappScrapingTarget.pending > 0}
 									<span class="loading loading-spinner loading-sm"></span>
@@ -742,13 +770,19 @@
 							class="textarea min-h-20 w-full peer"
 							{...saveWhatsappScrapingTarget.fields.defaultAddress.as(`text`)}
 							placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+							onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
 						></textarea>
 						<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
 						<FormFieldIssues field={saveWhatsappScrapingTarget.fields.defaultAddress} />
 					</fieldset>
 
 					<fieldset class="fieldset">
-						<legend class="fieldset-legend">defaultTimezone *</legend>
+						<legend class="fieldset-legend">
+							defaultTimezone *
+							{#if lookupTimezoneFromAddress.pending > 0}
+								<span class="loading loading-spinner loading-xs"></span>
+							{/if}
+						</legend>
 						<input
 							class="input w-full peer"
 							{...saveWhatsappScrapingTarget.fields.defaultTimezone.as(`text`)}
@@ -769,7 +803,7 @@
 						<button
 							type="submit"
 							class="btn btn-primary"
-							disabled={saveWhatsappScrapingTarget.pending > 0}
+							disabled={saveWhatsappScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
 						>
 							{#if saveWhatsappScrapingTarget.pending > 0}
 								<span class="loading loading-spinner loading-sm"></span>
