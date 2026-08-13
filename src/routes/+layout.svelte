@@ -19,6 +19,7 @@
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
 	import PeekFooter from '$lib/components/PeekFooter.svelte';
+	import LogoLoader from '$lib/components/LogoLoader.svelte';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import { routes } from '$lib/routes';
 
@@ -100,11 +101,10 @@
 {#if $navigationIsDelayed}
 	<div class="fixed inset-0 z-100 h-full w-full" in:fade={{ duration: 300 }}>
 		<div class="absolute z-100 h-full w-full bg-white/30 backdrop-blur-sm"></div>
-		<div class="absolute z-110 flex h-full w-full items-center justify-center text-4xl">
-			<div class="rounded-full bg-base-200 p-3  size-20 animate-ping">
-			</div>
+		<div class="absolute z-110 flex h-full w-full items-center justify-center">
+			<div class="size-22 rounded-full bg-primary p-3 animate-ping"></div>
 			<div class="fixed rounded-full bg-base-200 p-3 shadow-md">
-				<img src="/logo.svg" alt="Loading Blissbase" class=" size-16 min-w-16  animate-spin" />
+				<LogoLoader class="size-22 min-w-22" aria-label="Loading Blissbase" />
 			</div>
 		</div>
 	</div>

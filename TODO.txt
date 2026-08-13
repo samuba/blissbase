@@ -1,5 +1,8 @@
 create event flow auch account frei machen wie offerings
 
+have tags also in the filter dialog
+
+
 introduce bookingUrl. cuz sourceUrl is good to have to know where its coming from but its not always where we wanna guide people to. Can use it for the source link
 -> already have contact.
 

@@ -34,7 +34,6 @@
 @plugin "daisyui" {
 	themes:
 		cupcake --default,
-		cupcake --prefersdark,
 		cupcake;
 	/* Unused daisyUI parts — keep: alert, badge, button, card, checkbox, fieldset,
 	   input, label, link, loading, range, select, tab, table, textarea, tooltip,
@@ -45,6 +44,15 @@
 		megamenu, menu, mockup, modal, navbar, otp, progress, radialprogress, radio,
 		rating, rootscrollgutter, skeleton, stack, stat, status, steps, swap,
 		textrotate, timeline, toast;
+}
+
+@plugin "daisyui/theme" {
+	name: "cupcake";
+	default: true;
+	prefersdark: false;
+	color-scheme: "light";
+	--color-primary: oklch(79% 0.184 86.047);
+	--color-primary-content: oklch(28% 0.066 53.813);
 }
 
 @theme {
@@ -76,7 +84,7 @@ select {
 }
 
 /* get rid of ring around inputs */
-.input, .textarea {
+.input, .textarea, .select, select {
 	@apply focus:outline-0! focus-within:outline-0!;
 }
 

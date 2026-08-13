@@ -10,11 +10,9 @@ msgstr ""
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
-#: src/lib/components/TabsNavDesktop.svelte
 #: src/routes/+error.svelte
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
-#: src/routes/+page.svelte
 #: src/routes/+page.svelte
 msgid "Blissbase"
 msgstr "Blissbase"

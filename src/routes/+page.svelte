@@ -89,14 +89,14 @@
 	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-4 sm:gap-8 items-center sm:justify-center">
 		<div class="flex flex-col gap-3 w-full items-center justify-center px-4 mt-6 sm:mt-0">
 			<div class="flex justify-center items-center gap-3">
-				<img src="/logo.svg" alt="Blissbase" class="md:size-16 size-12" />
+				<img src="/logo.svg" alt="" class="size-12 md:size-16" data-testid="hero-logo" />
 				<h1 class="md:text-5xl text-4xl font-semibold text-base-100 font-brand" >
 					Blissbase
 				</h1>
 			</div>
 
 			<h2 class="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
-				✨ Achtsame Events in deiner Nähe ✨
+				<span class="text-yellow-400">✨</span> Achtsame Events in deiner Nähe <span class="text-yellow-400">✨</span>
 			</h2>
 		</div>
 
@@ -213,7 +213,8 @@
 	<div class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? 'h-dvh' : 'h-15']}
 		id="events-loading-spinner" 
 	>
-		<img src="/logo.svg" alt="Blissbase" class="size-10 min-w-10 animate-spin" />
+	<span class="loading loading-spinner loading-xl"></span>
+		<!-- <img src="/logo.svg" alt="Blissbase" class="size-10 min-w-10 animate-spin" /> -->
 		<p class="">Lade...</p>
 	</div>
 {/snippet}
