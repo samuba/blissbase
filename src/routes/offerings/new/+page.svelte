@@ -497,19 +497,19 @@
 		<div class="card-body gap-6 p-4 sm:p-6">
 			<div class="flex flex-col gap-2">
 				{#if currentStep === `profile`}
-					<h1 class="text-xl sm:text-2xl font-bold">Fülle dein Profil aus</h1>
+					<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-wizard-heading" data-step="profile">Fülle dein Profil aus</h1>
 					<p class="text-base-content/70 text-sm">
 						Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen.
 						Dein Profil wird unter jedem deiner Angebote angezeigt.
 					</p>
 				{:else if currentStep === `otp`}
-					<h1 class="text-xl sm:text-2xl font-bold">E-Mail bestätigen</h1>
+					<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-wizard-heading" data-step="otp">E-Mail bestätigen</h1>
 					<p class="text-base-content/70 text-sm">
 						Wir haben einen 6-stelligen Code an <b>{pendingEmail}</b> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht
 						erst live, wenn die Bestätigung abgeschlossen ist.
 					</p>
 				{:else}
-					<h1 class="text-xl sm:text-2xl font-bold">Angebot hinzufügen</h1>
+					<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-wizard-heading" data-step="offering">Angebot hinzufügen</h1>
 					<p class="text-base-content/70 text-sm">
 						Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst.
 						Jeder kann es in deinem Profil und auf der Angebote-Seite sehen.
@@ -537,6 +537,7 @@
 						<fieldset class="fieldset" data-wizard-step="offering">
 							<input
 								class="input peer w-full"
+								data-testid="offering-email-input"
 								{...createOffering.fields.email.as(`email`)}
 								bind:value={email}
 								autocomplete="email"
@@ -560,6 +561,7 @@
 								<fieldset class={[`fieldset`, !missingDisplayName && `hidden`]}>
 									<input
 										class="input peer w-full"
+										data-testid="profile-name-input"
 										{...createOffering.fields.profile.displayName.as(`text`)}
 										value={profile?.displayName ?? ``}
 										autocomplete="name"
@@ -594,7 +596,7 @@
 								/>
 							</div>
 
-							<fieldset class={[`fieldset`, !missingBio && `hidden`]}>
+							<fieldset class={[`fieldset`, !missingBio && `hidden`]} data-testid="profile-bio-editor">
 								<LexicalEditor
 									field={createOffering.fields.profile.bio}
 									value={profile?.bio ?? ``}
@@ -658,7 +660,7 @@
 				{:else}
 					<button type="button" class="btn btn-ghost" disabled={primaryBusy} onclick={goBack}>Zurück</button>
 				{/if}
-				<button type="button" class="btn btn-primary" disabled={!clientReady || primaryBusy} onclick={goNext}>
+				<button type="button" class="btn btn-primary" data-testid="wizard-primary" disabled={!clientReady || primaryBusy} onclick={goNext}>
 					{#if anyImageUploadInFlight}
 						<span class="loading loading-spinner loading-sm"></span>
 						Bilder werden hochgeladen…

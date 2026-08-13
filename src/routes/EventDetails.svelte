@@ -194,7 +194,7 @@
 		<!-- head -->
 		<div class="flex flex-col gap-6">
 			<div class="relative">
-				<h1 class="card-title block w-full text-center text-2xl font-semibold mb-0">
+				<h1 class="card-title block w-full text-center text-2xl font-semibold mb-0" data-testid="event-title">
 					{event.name}
 				</h1>
 			</div>
@@ -305,12 +305,12 @@
 				<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 	
 				{#if showQuelleInsteadOfAnmelden}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn">
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn" data-testid="event-source-link">
 						Quelle
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if sourceUrl && !sourceUrl.includes("todo.today")}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn" title="Jetzt Buchen">
+					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn" title="Jetzt Buchen" data-testid="event-register-link">
 						Jetzt Buchen
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
@@ -321,6 +321,7 @@
 						rel="noopener noreferrer"
 						class="btn-primary btn"
 						title="Jetzt Buchen"
+						data-testid="event-register-link"
 					>
 						Jetzt Buchen
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
@@ -328,7 +329,7 @@
 				{:else if event.contact?.length}
 					<PopOver contentClass="bg-base-100 p-5 w-xs z-60">
 						{#snippet trigger({ props })}
-							<button {...props} class={[`btn btn-primary`, props.class]} title="Jetzt Buchen"> 
+							<button {...props} class={[`btn btn-primary`, props.class]} title="Jetzt Buchen" data-testid="event-register-link"> 
 								Jetzt Buchen
 							</button>
 						{/snippet}
@@ -417,6 +418,7 @@
 		{#if !hideSource && event.sourceUrl}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
+				data-testid="event-source-label"
 			>
 				Quelle:
 				<a

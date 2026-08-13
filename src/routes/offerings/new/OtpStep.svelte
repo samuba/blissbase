@@ -18,23 +18,24 @@
 	} = $props();
 </script>
 
-<section class="flex flex-col gap-5">
-	<PinInput.Root
-		bind:value={otpCode}
-		maxlength={6}
-		disabled={authBusy}
-		pattern={REGEXP_ONLY_DIGITS}
-		textalign="center"
-		autocomplete="one-time-code"
-		inputmode="numeric"
-		aria-label="Einmalcode"
-		pasteTransformer={(value) => value.replace(/\D/g, ``).slice(0, 6)}
-		onComplete={() =>
-			queueMicrotask(() => {
-				void onVerify();
-			})}
-		class="mx-auto max-w-[240px] py-2"
-	>
+<section class="flex flex-col gap-5" data-testid="otp-step">
+	<div data-testid="otp-input">
+		<PinInput.Root
+			bind:value={otpCode}
+			maxlength={6}
+			disabled={authBusy}
+			pattern={REGEXP_ONLY_DIGITS}
+			textalign="center"
+			autocomplete="one-time-code"
+			inputmode="numeric"
+			aria-label="Einmalcode"
+			pasteTransformer={(value) => value.replace(/\D/g, ``).slice(0, 6)}
+			onComplete={() =>
+				queueMicrotask(() => {
+					void onVerify();
+				})}
+			class="mx-auto max-w-[240px] py-2"
+		>
 		{#snippet children({ cells })}
 			<div class="flex justify-center">
 				{#each cells as cell, i (i)}
@@ -52,6 +53,7 @@
 			</div>
 		{/snippet}
 	</PinInput.Root>
+	</div>
 
 	{#if authError}
 		<div class="alert alert-error bg-error/60">

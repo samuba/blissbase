@@ -125,7 +125,7 @@
 <div class="mx-auto w-full max-w-3xl px-0 pb-6 sm:px-4">
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body gap-6 p-4 sm:p-6">
-			<h1 class="text-xl sm:text-2xl font-bold">Angebot bearbeiten</h1>
+			<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-edit-heading">Angebot bearbeiten</h1>
 
 			{#if initializedFormOfferingId === offering.id}
 				<OfferingForm
@@ -141,7 +141,7 @@
 
 			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
 				<div class="flex flex-row items-center join w-full sm:w-auto ">
-					<button type="button" onclick={handleDeleteOffering} disabled={actionsDisabled} class="btn join-item grow">
+					<button type="button" data-testid="offering-delete" onclick={handleDeleteOffering} disabled={actionsDisabled} class="btn join-item grow">
 						{#if isDeletingOffering}
 							<span class="loading loading-spinner loading-sm"></span>
 							Lösche…
@@ -150,7 +150,7 @@
 							Löschen
 						{/if}
 					</button>
-					<button type="button" onclick={handleToggleListing} disabled={actionsDisabled} class="btn join-item grow">
+					<button type="button" data-testid="offering-toggle-listing" data-listed={String(offering.listed)} onclick={handleToggleListing} disabled={actionsDisabled} class="btn join-item grow">
 						{#if isChangingListing}
 							<span class="loading loading-spinner loading-sm"></span>
 							{offering.listed ? `Deaktiviere…` : `Aktiviere…`}
@@ -168,7 +168,7 @@
 
 				<button type="button" onclick={handleCancel} class="btn " disabled={actionsDisabled}>Abbrechen</button>
 
-				<button type="submit" form="offering-form" class="btn btn-primary " disabled={actionsDisabled}>
+				<button type="submit" form="offering-form" class="btn btn-primary " data-testid="offering-save" disabled={actionsDisabled}>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>
 						Speichere…

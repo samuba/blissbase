@@ -11,11 +11,9 @@ msgstr ""
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
-#: src/lib/components/TabsNavDesktop.svelte
 #: src/routes/+error.svelte
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
-#: src/routes/+page.svelte
 #: src/routes/+page.svelte
 #: src/routes/+page.svelte
 msgid "Blissbase"
@@ -525,9 +523,8 @@ msgstr "Failed to delete event. Please try again."
 msgid "Ergebnisse anzeigen"
 msgstr "Ergebnisse anzeigen"
 
-#: src/routes/+page.svelte
-msgid "✨ Achtsame Events in deiner Nähe ✨"
-msgstr "✨ Achtsame Events in deiner Nähe ✨"
+#~ msgid "✨ Achtsame Events in deiner Nähe ✨"
+#~ msgstr "✨ Achtsame Events in deiner Nähe ✨"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Setze zuerst einen Standort"
@@ -2213,3 +2210,7 @@ msgstr "Zeitzone konnte nicht ermittelt werden"
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "defaultTimezone * <0/>"
 msgstr "defaultTimezone * <0/>"
+
+#: src/routes/+page.svelte
+msgid "<0/> Achtsame Events in deiner Nähe <1/>"
+msgstr "<0/> Achtsame Events in deiner Nähe <1/>"

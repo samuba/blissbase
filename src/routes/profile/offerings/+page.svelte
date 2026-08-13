@@ -105,7 +105,7 @@
 	{/if}
 
 	{#if inactiveOfferings.length}
-		<h2 class="mt-10 text-lg font-semibold">Deaktivierte Angebote</h2>
+		<h2 class="mt-10 text-lg font-semibold" data-testid="inactive-offerings-heading">Deaktivierte Angebote</h2>
 		<div class="mt-3 flex w-full flex-col gap-4">
 			{#each inactiveOfferings as offering (offering.id)}
 				<OfferingCard

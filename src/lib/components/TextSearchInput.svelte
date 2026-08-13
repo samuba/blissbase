@@ -123,6 +123,7 @@
 			<input
 				{id}
 				bind:this={searchInput}
+				data-testid="event-search-input"
 				class={[
 					`min-w-0`,
 					searchExpanded && `w-25`,

@@ -132,7 +132,7 @@
 		/>
 
 		<fieldset class="fieldset">
-			<input class="input peer w-full" {...remoteForm.fields.title.as(`text`)} required placeholder="z.B. Private Couching Session" />
+			<input class="input peer w-full" data-testid="offering-title-input" {...remoteForm.fields.title.as(`text`)} required placeholder="z.B. Private Couching Session" />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Titel *</legend>
 			<FormFieldIssues field={remoteForm.fields.title} />
 		</fieldset>
@@ -152,6 +152,7 @@
 			<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 				{#each OFFERING_FORMATS as option (option)}
 					<label
+						data-testid={`offering-format-${option}`}
 						class={[
 							`card card-border bg-base-100 relative cursor-pointer border-2 transition-colors`,
 							`border-base-500 hover:border-dashed hover:border-primary has-checked:border-solid has-checked:border-primary outline-0`,

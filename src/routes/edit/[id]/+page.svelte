@@ -55,7 +55,7 @@
 <div class="container mx-auto max-w-4xl md:pb-6">
 	<div class="sm:rounded-box bg-base-100 shadow">
 		<div class="card-body gap-6">
-			<h1 class="card-title text-2xl">Event bearbeiten</h1>
+			<h1 class="card-title text-2xl" data-testid="event-edit-heading">Event bearbeiten</h1>
 
 			<EventForm
 				remoteForm={updateEvent}
@@ -97,6 +97,7 @@
 					type="submit"
 					class="btn btn-primary disabled:bg-primary disabled:text-primary-content"
 					form="event-form"
+					data-testid="event-save"
 					disabled={isSubmitting || isDeletingEvent}
 				>
 					{#if !isSubmitting}

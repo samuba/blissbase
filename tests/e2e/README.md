@@ -119,7 +119,7 @@ See `.github/workflows/e2e-tests.yml` for details.
 
 1. Use `test.describe()` to group related tests
 2. Use `test.beforeEach()` for common setup with seed data
-3. Use page locators with semantic selectors
+3. Locate interactive elements via `data-testid` and `getByTestId()`. Do not find buttons, links, dialogs, inputs, or cards by visible text.
 4. Handle CI slowness with appropriate timeouts
 
 Example:
@@ -133,7 +133,7 @@ test.describe("Feature Name", () => {
 		await clearTestEvents(page);
 		await createEvent(page, createMeditationEvent());
 		await page.goto("/");
-		await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
+		await page.getByTestId("event-card").first().waitFor({ timeout: 15000 });
 	});
 
 	test.afterEach(async ({ page }) => {

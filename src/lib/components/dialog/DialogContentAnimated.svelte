@@ -20,10 +20,10 @@
 <Dialog.Content
 	forceMount
 	bind:ref
-	{onOpenAutoFocus}
-	{onCloseAutoFocus}
-	{onEscapeKeydown}
-	{onInteractOutside}
+	{...onOpenAutoFocus ? { onOpenAutoFocus } : {}}
+	{...onCloseAutoFocus ? { onCloseAutoFocus } : {}}
+	{...onEscapeKeydown ? { onEscapeKeydown } : {}}
+	{...onInteractOutside ? { onInteractOutside } : {}}
 >
 	{#snippet child({ props, open })}
 		{#if open}

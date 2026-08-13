@@ -9,7 +9,7 @@ import {
 	createProfile,
 	E2E_DEFAULT_USER_ID,
 } from "./helpers/seed";
-import { setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
+import { offeringCardById, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 const profileIds = [E2E_DEFAULT_USER_ID];
@@ -32,11 +32,11 @@ test.describe(`Offering details dialog`, () => {
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
 
-		await page.locator(`[data-offering-id="${offering.id}"]`).click();
+		await offeringCardById(page, offering.id).click();
 
-		const dialog = page.getByRole(`dialog`);
+		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByRole(`heading`, { name: `Dialog Click Offering` })).toBeVisible();
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`Dialog Click Offering`);
 		await expect(page).toHaveURL(new RegExp(`/offerings/${offering.slug}$`));
 	});
 
@@ -45,9 +45,9 @@ test.describe(`Offering details dialog`, () => {
 
 		await page.goto(`/offerings/${offering.slug}`);
 
-		await expect(page.getByRole(`dialog`)).toHaveCount(0);
-		await expect(page.getByRole(`heading`, { name: `Cold Page Offering` })).toBeVisible();
-		await expect(page.getByRole(`link`, { name: `Alle Angebote` })).toBeVisible();
+		await expect(page.getByTestId(`details-dialog`)).toHaveCount(0);
+		await expect(page.getByTestId(`offering-title`)).toHaveText(`Cold Page Offering`);
+		await expect(page.getByTestId(`all-offerings-link`)).toBeVisible();
 	});
 
 	test(`dialog stays synchronized across repeated close methods`, async ({ page }) => {
@@ -55,8 +55,8 @@ test.describe(`Offering details dialog`, () => {
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
 
-		const offeringCard = page.locator(`[data-offering-id="${offering.id}"]`);
-		const dialog = page.getByRole(`dialog`);
+		const offeringCard = offeringCardById(page, offering.id);
+		const dialog = page.getByTestId(`details-dialog`);
 
 		await offeringCard.click();
 		await expect(dialog).toBeVisible({ timeout: 15000 });
@@ -68,7 +68,7 @@ test.describe(`Offering details dialog`, () => {
 		await offeringCard.click();
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(page).toHaveURL(new RegExp(`/offerings/${offering.slug}$`));
-		await dialog.getByRole(`button`, { name: `Schließen` }).click({ force: true });
+		await dialog.getByTestId(`dialog-close`).click({ force: true });
 		await expect(dialog).toHaveCount(0);
 		await expect(page).toHaveURL(listUrl);
 
@@ -124,22 +124,21 @@ test.describe(`Offering details dialog`, () => {
 		]);
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
-		await page.getByRole(`link`, { name: /Angebot (?:erstellen|hinzufügen)/i }).first().click();
-		await expect(page.getByRole(`heading`, { name: /Angebot (?:erstellen|hinzufügen)/i })).toBeVisible();
-		await page.getByPlaceholder(`z.B. Private Couching Session`).fill(`Post Create Dialog Offering`);
-		await page.getByRole(`button`, { name: /Angebot (?:erstellen|hinzufügen)/i }).click();
+		await page.getByTestId(`create-offering`).click();
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `offering`);
+		await page.getByTestId(`offering-title-input`).fill(`Post Create Dialog Offering`);
+		await page.getByTestId(`wizard-primary`).click();
 
-		const dialog = page.getByRole(`dialog`);
+		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByRole(`heading`, { name: `Post Create Dialog Offering` })).toBeVisible();
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`Post Create Dialog Offering`);
 		await expect(page).toHaveURL(new RegExp(`/offerings/[^/?]+$`));
 
-		await page.getByRole(`button`, { name: `Schließen` }).click();
+		await page.getByTestId(`dialog-close`).click();
 		await expect(dialog).toHaveCount(0);
 		await expect(page).toHaveURL(listUrl);
-		// Stay closed after history/query sync settles (reopen regression).
 		await page.waitForTimeout(1000);
-		await expect(page.getByRole(`dialog`)).toHaveCount(0);
+		await expect(page.getByTestId(`details-dialog`)).toHaveCount(0);
 		await expect(page).toHaveURL(listUrl);
 	});
 
@@ -150,20 +149,20 @@ test.describe(`Offering details dialog`, () => {
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
 
-		await page.locator(`[data-offering-id="${first.id}"]`).click();
-		const dialog = page.getByRole(`dialog`);
+		await offeringCardById(page, first.id).click();
+		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await page.keyboard.press(`Escape`);
 		await expect(dialog).toHaveCount(0);
 		await expect(page).toHaveURL(listUrl);
 
-		const favorites = page.getByRole(`navigation`, { name: `Hauptnavigation`, exact: true }).getByRole(`link`, { name: `Favoriten` });
+		const favorites = page.getByTestId(`nav-favorites`);
 		await expect(favorites).toBeVisible();
 		await favorites.hover();
 		await page.waitForTimeout(800);
-		await page.locator(`[data-offering-id="${second.id}"]`).click();
+		await offeringCardById(page, second.id).click();
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByRole(`heading`, { name: `Second Hover Offering` })).toBeVisible();
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`Second Hover Offering`);
 		await expect(page).toHaveURL(new RegExp(`/offerings/${second.slug}$`));
 	});
 });

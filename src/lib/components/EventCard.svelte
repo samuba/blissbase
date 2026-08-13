@@ -127,7 +127,7 @@
 			</div>
 
 			<div class="card-body flex flex-col gap-2 pt-4.5 md:pt-6">
-				<h3 class="card-title leading-snug tracking-tight">
+				<h3 class="card-title leading-snug tracking-tight" data-testid="event-card-title">
 					{event.name}
 
 					{#if event.soldOut}

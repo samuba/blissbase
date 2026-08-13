@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export async function setGermanLocale(page: Page) {
 	await page.context().addCookies([
@@ -37,6 +37,7 @@ export async function mockSupabaseOtpRequest(page: Page) {
 }
 
 export async function mockGooglePlacesAutocomplete(page: Page) {
+	await page.route(/maps\.(googleapis|gstatic)\.com/, (route) => route.abort());
 	await page.addInitScript(() => {
 		const places = [
 			{ name: `Berlin`, address: `Berlin, Germany`, lat: 52.52, lng: 13.405 },
@@ -69,16 +70,33 @@ export async function mockGooglePlacesAutocomplete(page: Page) {
 				}),
 			},
 		};
-		Object.defineProperty(window, `google`, { configurable: true, value: googleMock });
+		Object.defineProperty(window, `google`, { configurable: true, writable: true, value: googleMock });
 	});
 }
 
-export async function chooseLocation(page: Page, args: { inputId: string; query?: string; option?: string }) {
-	const input = page.locator(`#${args.inputId}`);
+export async function openFilterDialog(page: Page) {
+	await waitForClientHydration(page);
+	await page.getByTestId(`open-filter-dialog`).click({ force: true });
+	const dialog = page.getByTestId(`filter-dialog`);
+	await expect(dialog).toBeVisible();
+	return dialog;
+}
+
+export function offeringCardById(page: Page, offeringId: number) {
+	return page.getByTestId(`offering-card`).and(page.locator(`[data-offering-id="${offeringId}"]`));
+}
+
+export function detailsDialog(page: Page) {
+	return page.getByTestId(`details-dialog`);
+}
+
+export async function chooseLocation(page: Page, args: { inputId: string; query?: string; optionIndex?: number }) {
+	const input = page.getByTestId(args.inputId);
 	await input.fill(args.query ?? `Ber`);
-	const suggestions = page.locator(`#${args.inputId}-listbox`);
+	const suggestions = page.getByTestId(`location-suggestions`);
 	await suggestions.waitFor({ state: `visible`, timeout: 10000 });
-	await expectSelectedOption(suggestions.getByRole(`option`, { name: args.option ?? `Berlin, Germany` }));
+	const option = suggestions.getByTestId(`location-option`).nth(args.optionIndex ?? 0);
+	await expectSelectedOption(option);
 	await input.press(`Enter`);
 }
 

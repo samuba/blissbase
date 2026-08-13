@@ -148,6 +148,7 @@
 		<a
 			{@attach observeCtaForFab}
 			href={href}
+			data-testid="create-offering"
 			class={[`btn btn-primary w-fit`, showFab && `invisible`]}
 			inert={showFab}
 		>
@@ -159,6 +160,7 @@
 			{@attach observeCtaForFab}
 			type="button"
 			onclick={showLoginDialog}
+			data-testid="create-offering"
 			class={[`btn btn-primary w-fit`, showFab && `invisible`]}
 			inert={showFab}
 		>

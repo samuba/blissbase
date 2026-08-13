@@ -418,10 +418,15 @@
 		console.error(`Google Maps Autocomplete Fehler:`, error);
 	}}
 >
-	{#if autocomplete?.loadFailed}
-		{@render googleAutocompleteError(retryGoogleAutocomplete)}
-	{:else}
-		<div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-distance-input">
+	<div
+		class="relative flex min-w-0 flex-col gap-1"
+		data-testid="location-distance-input"
+		data-autocomplete-status={autocomplete?.loadFailed ? `failed` : autocomplete?.isAvailable ? `ready` : `idle`}
+	>
+		{#if autocomplete?.loadFailed}
+			{@render googleAutocompleteError(retryGoogleAutocomplete)}
+		{/if}
+		<div class="relative flex min-w-0 items-center gap-2.5">
 			<div
 				bind:this={joinContainer}
 				class="form-control join flex min-w-0 grow items-center p-0"
@@ -443,6 +448,7 @@
 							bind:this={plzCityInput}
 							type="text"
 							id={inputId}
+							data-testid={inputId}
 							role="combobox"
 							aria-expanded={autocomplete?.isOpen ?? false}
 							aria-controls="{inputId}-listbox"
@@ -472,13 +478,14 @@
 					class="bg-base-100 border-base-300 fixed z-200 max-h-64 overflow-y-auto rounded-box border shadow-lg"
 					style:top="{dropdownPosition.top}px"
 					style:left="{dropdownPosition.left}px"
-					style:width="{dropdownPosition.width}px"
+					style:width="{dropdownPosition.width || joinContainer?.clientWidth || 280}px"
 					onmousedown={cancelBlurClose}
 				>
 					{#each autocomplete.suggestions as suggestion, index (suggestion.text)}
 						<li
 							id="{inputId}-option-{index}"
 							role="option"
+							data-testid="location-option"
 							aria-selected={autocomplete.highlightedIndex === index}
 							class={[
 								`cursor-pointer px-3 py-2 text-sm border-base-300`,
@@ -549,6 +556,7 @@
 		{#if showDistanceInput}
 			<select
 				id="{inputId}-distance"
+				data-testid="{inputId}-distance"
 				class={[`select join-item w-auto appearance-none`, usingCurrentLocation && `active`]}
 				bind:value={selectedDistance}
 				onchange={handleFilterInputChange}
@@ -562,7 +570,7 @@
 		{/if}
 			</div>
 		</div>
-	{/if}
+	</div>
 
 	{#snippet failed(_error, reset)}
 		{@render googleAutocompleteError(() => {

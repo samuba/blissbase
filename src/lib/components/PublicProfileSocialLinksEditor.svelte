@@ -157,6 +157,7 @@
 							<button
 								type="button"
 								class="btn btn-ghost btn-square btn-sm shrink-0"
+								data-testid="remove-social-link"
 								aria-label={`${socialLabel(link.type)} entfernen`}
 								onclick={() => removeSocialLink(i)}
 							>
@@ -202,6 +203,7 @@
 	<button
 		type="button"
 		class="btn mx-auto w-fit sm:mx-0"
+		data-testid="add-social-link"
 		onclick={openAddLinkDialog}
 		disabled={!canAddSocialLink || socialSlotFilled.length >= PROFILE_SOCIAL_TYPES.length}
 	>
@@ -218,6 +220,7 @@
 	<Dialog.Portal>
 		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
+			data-testid="add-social-link-dialog"
 			class={[
 				`bg-base-100 fixed top-1/2 left-1/2 z-60 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg p-6 shadow-xl`,
 			]}
@@ -258,6 +261,7 @@
 						<input
 							id="public-add-social-value"
 							class="input input-bordered w-full"
+							data-testid="add-social-link-value"
 							spellcheck="false"
 							bind:value={pendingLinkValue}
 							placeholder={pendingLinkType ? socialValuePlaceholder(pendingLinkType) : `Zuerst Typ wählen`}
@@ -273,7 +277,7 @@
 
 			<div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<Dialog.Close class="btn btn-ghost" type="button">Abbrechen</Dialog.Close>
-				<button type="button" onclick={confirmAddLink} form="add-social-link-form" class="btn btn-primary"> Hinzufügen </button>
+				<button type="button" onclick={confirmAddLink} form="add-social-link-form" class="btn btn-primary" data-testid="add-social-link-submit"> Hinzufügen </button>
 			</div>
 
 			<Dialog.Close

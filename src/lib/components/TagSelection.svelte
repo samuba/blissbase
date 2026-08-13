@@ -168,6 +168,7 @@
 					{#each railTags as tag (tag.id)}
 						<button
 							class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap"
+							data-testid={`tag-chip-${tag.slug}`}
 							onclick={() => selectTag(tag)}
 						>
 							{tag[locale] ?? tag.slug}

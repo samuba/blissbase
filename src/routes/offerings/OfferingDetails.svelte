@@ -144,7 +144,7 @@
 	<div class="flex flex-col gap-6 p-4 sm:p-6">
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-col gap-3">
-				<h1 class="text-2xl leading-none font-bold sm:text-3xl">
+				<h1 class="text-2xl leading-none font-bold sm:text-3xl" data-testid="offering-title">
 					{offering.title}
 				</h1>
 
@@ -177,7 +177,7 @@
 				</div>
 
 				{#if !offering.listed}
-					<span class="badge badge-soft badge-warning w-fit gap-1">
+					<span class="badge badge-soft badge-warning w-fit gap-1" data-testid="offering-unlisted-badge">
 						<i class="icon-[ph--eye-slash] size-3.5"></i>
 						Deaktiviert — nicht für andere sichtbar
 					</span>
@@ -190,6 +190,7 @@
 							<button
 								type="button"
 								class="btn btn-sm join-item"
+								data-testid="offering-delete"
 								onclick={() => void manageOffering(`delete`)}
 								disabled={Boolean(pendingManagementAction)}
 							>
@@ -200,7 +201,7 @@
 								{/if}
 								Löschen
 							</button>
-							<button type="button" class="btn btn-sm join-item" onclick={manageListingState} disabled={Boolean(pendingManagementAction)}>
+							<button type="button" class="btn btn-sm join-item" data-testid="offering-toggle-listing" data-listed={String(offering.listed)} onclick={manageListingState} disabled={Boolean(pendingManagementAction)}>
 								{#if pendingManagementAction === `unlist` || pendingManagementAction === `list`}
 									<span class="loading loading-spinner loading-xs"></span>
 								{:else if offering.listed}
@@ -213,6 +214,7 @@
 							<a
 								href={pendingManagementAction ? "#" : routes.editOffering(offering.slug, { returnTo: editReturnTo })}
 								class={["btn btn-sm join-item", pendingManagementAction && `btn-disabled`]}
+								data-testid="offering-edit-link"
 							>
 								<i class="icon-[ph--pencil-simple] size-4"></i>
 								Bearbeiten

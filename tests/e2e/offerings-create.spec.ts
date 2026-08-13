@@ -61,11 +61,11 @@ test.describe("Offering creation", () => {
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(1);
 		await expect(page.getByTestId(`offering-image-preview-remove`)).toBeEnabled({ timeout: 30000 });
 
-		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await clickWizardPrimary(page);
 		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
-		const dialog = page.getByRole(`dialog`);
+		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByRole(`heading`, { name: `E2E Online Mentoring` })).toBeVisible();
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`E2E Online Mentoring`);
 
 		const slug = getCreatedSlugFromUrl(page);
 		await expect(page).toHaveURL(new RegExp(`/offerings/${slug}$`));
@@ -80,7 +80,7 @@ test.describe("Offering creation", () => {
 		expect(offering.imageUrls[0]).toContain(`/e2e/offerings/`);
 
 		const offeringsHostUrl = new URL(`/offerings`, page.url()).href;
-		await page.goBack();
+		await page.getByTestId(`dialog-close`).click();
 		await expect(dialog).toBeHidden();
 		await expect(page).toHaveURL(offeringsHostUrl);
 	});
@@ -91,11 +91,11 @@ test.describe("Offering creation", () => {
 		await page.goto(`/offerings/new`);
 
 		await fillOfferingBasics(page, { title: `E2E Hybrid Mentoring`, format: `offline+online` });
-		await expect(page.locator(`#offering-form-location`)).toHaveValue(`Berlin`);
-		await clickWizardPrimary(page, /Angebot erstellen/i);
-		const dialog = page.getByRole(`dialog`);
+		await expect(page.getByTestId(`offering-form-location`)).toHaveValue(`Berlin`);
+		await clickWizardPrimary(page);
+		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByRole(`heading`, { name: `E2E Hybrid Mentoring`, level: 1 })).toBeVisible();
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`E2E Hybrid Mentoring`);
 
 		const offering = await getOfferingBySlug(page, getCreatedSlugFromUrl(page));
 		expect(offering).toMatchObject({
@@ -113,14 +113,14 @@ test.describe("Offering creation", () => {
 		await page.goto(`/offerings/new`);
 
 		await fillOfferingBasics(page, { title: `E2E Berlin Bodywork`, format: `offline` });
-		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await clickWizardPrimary(page);
 		await expect(page.getByText(/Please select a location from the suggestions/i)).toBeVisible();
 
 		await chooseLocation(page, { inputId: `offering-form-location` });
-		await clickWizardPrimary(page, /Angebot erstellen/i);
-		const dialog = page.getByRole(`dialog`);
+		await clickWizardPrimary(page);
+		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByRole(`heading`, { name: `E2E Berlin Bodywork`, level: 1 })).toBeVisible();
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`E2E Berlin Bodywork`);
 		expect(await getProfileById(page, E2E_DEFAULT_USER_ID)).toMatchObject({
 			locationLabel: `Berlin`,
 			latitude: 52.52,
@@ -142,13 +142,13 @@ test.describe("Offering creation", () => {
 		await page.goto(`/offerings/new`);
 
 		await fillOfferingBasics(page, { title: `E2E Profile Completion`, format: `online` });
-		await clickWizardPrimary(page, /Weiter/i);
-		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible();
-		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Completed User`);
+		await clickWizardPrimary(page);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`);
+		await page.getByTestId(`profile-name-input`).fill(`Completed User`);
 		await fillProfileBio(page, `Completed bio`);
 		await addSocialLink(page);
 
-		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await clickWizardPrimary(page);
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const slug = getCreatedSlugFromUrl(page);
 		expect((await getOfferingBySlug(page, slug)).title).toBe(`E2E Profile Completion`);
@@ -175,25 +175,25 @@ test.describe("Offering creation", () => {
 		await page.goto(`/offerings/new`);
 
 		await fillOfferingBasics(page, { title: `E2E Social Link Fix`, format: `online` });
-		await clickWizardPrimary(page, /Weiter/i);
-		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible();
-		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Social Fix User`);
+		await clickWizardPrimary(page);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`);
+		await page.getByTestId(`profile-name-input`).fill(`Social Fix User`);
 		await fillProfileBio(page, `Social fix bio`);
 		await addSocialLink(page, `not-a-domain`);
 
-		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await clickWizardPrimary(page);
 		const websiteError = page.getByText(`Website is not a valid URL`);
 		await expect(websiteError.first()).toBeVisible();
 
-		await page.getByRole(`button`, { name: `Website entfernen` }).click();
+		await page.getByTestId(`remove-social-link`).click();
 		await expect(websiteError).toHaveCount(0);
 
-		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await clickWizardPrimary(page);
 		await expect(page.getByText(`Bitte füge mindestens einen Social-Link hinzu.`)).toBeVisible();
 		await expect(websiteError).toHaveCount(0);
 
 		await addSocialLink(page, `https://example.com/social-fix`);
-		await clickWizardPrimary(page, /Angebot erstellen/i);
+		await clickWizardPrimary(page);
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 
 		const profile = await getProfileById(page, E2E_DEFAULT_USER_ID);
@@ -207,19 +207,19 @@ test.describe("Offering creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
 		await fillOfferingBasics(page, { title: `E2E Anonymous Offering`, format: `online` });
-		await page.getByPlaceholder(`deine@email.de`).fill(anonymousNewEmail);
-		await clickWizardPrimary(page, /Weiter/i);
+		await page.getByTestId(`offering-email-input`).fill(anonymousNewEmail);
+		await clickWizardPrimary(page);
 
-		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible({
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
 		});
-		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Anonymous User`);
+		await page.getByTestId(`profile-name-input`).fill(`Anonymous User`);
 		await uploadRequiredProfileImages(page);
 		await fillProfileBio(page, `Anonymous bio`);
 		await addSocialLink(page);
-		await clickWizardPrimary(page, /Weiter/i);
+		await clickWizardPrimary(page);
 
-		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toBeVisible();
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`);
 		await enterOtp(page, `000000`);
 		await expect(page.getByText(`Der Code ist falsch oder abgelaufen.`)).toBeVisible();
 
@@ -233,28 +233,28 @@ test.describe("Offering creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
 		await fillOfferingBasics(page, { title: `E2E Social Preflight`, format: `online` });
-		await page.getByPlaceholder(`deine@email.de`).fill(anonymousNewEmail);
-		await clickWizardPrimary(page, /Weiter/i);
+		await page.getByTestId(`offering-email-input`).fill(anonymousNewEmail);
+		await clickWizardPrimary(page);
 
-		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toBeVisible({
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
 		});
-		await page.locator(`[data-wizard-step="profile"] input[autocomplete="name"]`).fill(`Anonymous Preflight`);
+		await page.getByTestId(`profile-name-input`).fill(`Anonymous Preflight`);
 		await uploadRequiredProfileImages(page);
 		await fillProfileBio(page, `Anonymous preflight bio`);
 		await addSocialLink(page, `not-a-domain`);
 
-		await clickWizardPrimary(page, /Weiter/i);
+		await clickWizardPrimary(page);
 		const websiteError = page.getByText(`Website is not a valid URL`);
 		await expect(websiteError.first()).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toHaveCount(0);
+		await expect(page.getByTestId(`offering-wizard-heading`)).not.toHaveAttribute(`data-step`, `otp`);
 
-		await page.getByRole(`button`, { name: `Website entfernen` }).click();
+		await page.getByTestId(`remove-social-link`).click();
 		await expect(websiteError).toHaveCount(0);
 		await addSocialLink(page, `https://example.com/preflight`);
-		await clickWizardPrimary(page, /Weiter/i);
+		await clickWizardPrimary(page);
 
-		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toBeVisible();
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`);
 		await expect(websiteError).toHaveCount(0);
 	});
 
@@ -270,13 +270,13 @@ test.describe("Offering creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
 		await fillOfferingBasics(page, { title: `E2E Existing Email Offering`, format: `online` });
-		await page.getByPlaceholder(`deine@email.de`).fill(anonymousCompleteEmail);
-		await clickWizardPrimary(page, /Weiter/i);
+		await page.getByTestId(`offering-email-input`).fill(anonymousCompleteEmail);
+		await clickWizardPrimary(page);
 
-		await expect(page.getByRole(`heading`, { name: `E-Mail bestätigen` })).toBeVisible({
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`, {
 			timeout: 10000,
 		});
-		await expect(page.getByText(/Ein vollständiges Profil hilft/i)).toHaveCount(0);
+		await expect(page.getByTestId(`offering-wizard-heading`)).not.toHaveAttribute(`data-step`, `profile`);
 		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const slug = getCreatedSlugFromUrl(page);
@@ -285,45 +285,44 @@ test.describe("Offering creation", () => {
 });
 
 async function fillOfferingBasics(page: Page, args: { title: string; format: `offline` | `online` | `offline+online` }) {
-	await expect(page.getByRole(`heading`, { name: `Angebot erstellen` })).toBeVisible();
-	await page.getByPlaceholder(`z.B. Private Couching Session`).fill(args.title);
-	const radio = page.locator(`input[type="radio"][value="${args.format}"]`);
-	await radio.locator(`xpath=ancestor::label`).click();
-	await expect(radio).toBeChecked();
+	await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `offering`);
+	await page.getByTestId(`offering-title-input`).fill(args.title);
+	await page.getByTestId(`offering-format-${args.format}`).click();
+	await expect(page.getByTestId(`offering-format-${args.format}`).locator(`input`)).toBeChecked();
 }
 
 async function fillProfileBio(page: Page, text: string) {
-	const bioEditor = page.locator(`[data-wizard-step="profile"] [contenteditable="true"]`);
+	const bioEditor = page.getByTestId(`profile-bio-editor`).locator(`[contenteditable="true"]`);
 	await bioEditor.click();
 	await page.keyboard.press(`ControlOrMeta+A`);
 	await page.keyboard.type(text);
-	// Lexical syncs into the hidden field on a short debounce.
-	await expect(page.locator(`[data-wizard-step="profile"] textarea`)).toHaveValue(new RegExp(text));
+	await expect(page.getByTestId(`profile-bio-editor`).locator(`textarea`)).toHaveValue(new RegExp(text));
 }
 
-async function clickWizardPrimary(page: Page, name: RegExp) {
-	await page.getByRole(`button`, { name }).click();
+async function clickWizardPrimary(page: Page) {
+	await page.getByTestId(`wizard-primary`).click();
 }
 
 async function addSocialLink(page: Page, value = `https://example.com/e2e-user`) {
-	await page.getByRole(`button`, { name: /Social-Link hinzufügen/i }).click();
-	const dialog = page.getByRole(`dialog`, { name: /Link hinzufügen/i });
-	await dialog.locator(`input:not([type="hidden"])`).last().fill(value);
-	await dialog.getByRole(`button`, { name: `Hinzufügen` }).click();
+	await page.getByTestId(`add-social-link`).click();
+	const dialog = page.getByTestId(`add-social-link-dialog`);
+	await dialog.getByTestId(`add-social-link-value`).fill(value);
+	await dialog.getByTestId(`add-social-link-submit`).click();
 	await expect(dialog).toBeHidden();
 }
 
 async function uploadRequiredProfileImages(page: Page) {
-	const inputs = page.locator(`[data-wizard-step="profile"] input[type="file"]`);
-	const count = await inputs.count();
-	for (let index = 0; index < count; index++) {
-		await inputs.nth(index).setInputFiles(`static/pwa-192-maskable.png`);
-		await page.getByRole(`button`, { name: `Fertig` }).click();
+	for (const kind of [`profile`, `banner`]) {
+		const crop = page.getByTestId(`${kind}-image-crop`);
+		if (await crop.evaluate((el) => el.classList.contains(`hidden`))) continue;
+		await page.getByTestId(`${kind}-image-file`).setInputFiles(`static/pwa-192-maskable.png`);
+		await page.getByTestId(`${kind}-crop-done`).click();
+		await expect(page.getByTestId(`${kind}-image-file`)).toBeEnabled({ timeout: 30000 });
 	}
 }
 
 async function enterOtp(page: Page, code: string) {
-	const otp = page.getByLabel(`Einmalcode`);
+	const otp = page.getByTestId(`otp-input`);
 	await otp.click();
 	await page.keyboard.press(`ControlOrMeta+A`);
 	await page.keyboard.type(code);

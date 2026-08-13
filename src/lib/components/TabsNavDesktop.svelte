@@ -29,6 +29,7 @@
 							<button
 								type="button"
 								onclick={showLoginDialog}
+								data-testid={`nav-${tab.id}`}
 								class={[
 									`flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors justify-start`,
 									isActive
@@ -42,6 +43,7 @@
 						{:else}
 							<a
 								href={tab.href}
+								data-testid={`nav-${tab.id}`}
 								aria-current={isActive ? `page` : undefined}
 								class={[
 									`flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors justify-start`,

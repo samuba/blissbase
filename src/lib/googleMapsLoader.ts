@@ -19,8 +19,8 @@ export function resetGoogleMapsPlacesLoader() {
 
 async function loadPlacesLibrary(): Promise<google.maps.PlacesLibrary | null> {
 	try {
-		if (typeof google !== `undefined` && google.maps?.importLibrary) {
-			return (await google.maps.importLibrary(`places`)) as google.maps.PlacesLibrary;
+		if (globalThis.google?.maps?.importLibrary) {
+			return (await globalThis.google.maps.importLibrary(`places`)) as google.maps.PlacesLibrary;
 		}
 
 		const apiKey = PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY;

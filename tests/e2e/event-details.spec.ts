@@ -8,7 +8,7 @@ test.describe('Event Details Modal', () => {
 		await clearTestEvents(page);
 		await createEvent(page, createMeditationEvent());
 		await page.goto('/');
-		await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
+		await page.getByTestId('event-card').first().waitFor({ timeout: 15000 });
 		await waitForClientHydration(page);
 	});
 
@@ -17,35 +17,35 @@ test.describe('Event Details Modal', () => {
 	});
 
 	test('event details modal displays all required elements', async ({ page }) => {
-		const firstCard = page.locator('[data-testid="event-card"]').first();
+		const firstCard = page.getByTestId('event-card').first();
 		await expect(firstCard).toBeVisible();
 
 		await firstCard.click();
-		const dialog = page.getByRole('dialog');
+		const dialog = page.getByTestId('details-dialog');
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.locator('h1').first()).toBeVisible();
+		await expect(dialog.getByTestId('event-title')).toBeVisible();
 	});
 
 	test('event details show price information', async ({ page }) => {
-		const firstCard = page.locator('[data-testid="event-card"]').first();
+		const firstCard = page.getByTestId('event-card').first();
 		await firstCard.click();
-		const dialog = page.getByRole('dialog');
+		const dialog = page.getByTestId('details-dialog');
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByText('Free', { exact: true })).toBeVisible();
 	});
 
 	// formatAddress joins address parts with ' · ' (middle dot), not ', '
 	test('event details show location', async ({ page }) => {
-		const firstCard = page.locator('[data-testid="event-card"]').first();
+		const firstCard = page.getByTestId('event-card').first();
 		await firstCard.click();
-		const dialog = page.getByRole('dialog');
+		const dialog = page.getByTestId('details-dialog');
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByText(/Zen Center.*Berlin/)).toBeVisible();
 	});
 
 	test('dialog stays synchronized across repeated close methods', async ({ page }) => {
 		const firstCard = page.getByTestId('event-card').first();
-		const dialog = page.getByRole('dialog');
+		const dialog = page.getByTestId('details-dialog');
 
 		await firstCard.click();
 		await expect(dialog).toBeVisible({ timeout: 15000 });
@@ -57,7 +57,7 @@ test.describe('Event Details Modal', () => {
 		await firstCard.click();
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(page).toHaveURL(detailUrl);
-		await dialog.getByRole('button', { name: /Close|Schließen/ }).click({ force: true });
+		await dialog.getByTestId('dialog-close').click({ force: true });
 		await expect(dialog).toHaveCount(0);
 		await expect(page).toHaveURL('/');
 
@@ -106,12 +106,10 @@ test.describe('Source-Dependent Rendering', () => {
 		const { event } = await createEvent(page, createMeditationEvent());
 
 		await page.goto(`/${event.slug}`);
-		await page.waitForSelector('h1', { timeout: 15000 });
+		await expect(page.getByTestId('event-title')).toBeVisible({ timeout: 15000 });
 
-		// Source label (Quelle:/Source:) section should be visible with source link
-		await expect(page.getByRole('link', { name: 'Tribehaus' })).toBeVisible();
-		// Registration link should be visible (translated: Jetzt Buchen → Book now)
-		await expect(page.getByRole('link', { name: /Jetzt Buchen|Book now/i })).toBeVisible();
+		await expect(page.getByTestId('event-source-label')).toContainText('Tribehaus');
+		await expect(page.getByTestId('event-register-link')).toBeVisible();
 	});
 
 	test('heilnetz source shows source link instead of registration button', async ({ page }) => {
@@ -119,13 +117,11 @@ test.describe('Source-Dependent Rendering', () => {
 		const { event } = await createEvent(page, createYogaEvent());
 
 		await page.goto(`/${event.slug}`);
-		await page.waitForSelector('h1', { timeout: 15000 });
+		await expect(page.getByTestId('event-title')).toBeVisible({ timeout: 15000 });
 
-		// The action button should be "Quelle/Source" (not "Jetzt Buchen/Book now") for heilnetz
-		await expect(page.getByRole('link', { name: /Quelle|Source/i }).first()).toBeVisible();
-		await expect(page.getByRole('link', { name: /Jetzt Buchen|Book now/i })).not.toBeVisible();
-		// Source label should show "Heilnetz"
-		await expect(page.getByRole('link', { name: 'Heilnetz' })).toBeVisible();
+		await expect(page.getByTestId('event-source-link')).toBeVisible();
+		await expect(page.getByTestId('event-register-link')).toHaveCount(0);
+		await expect(page.getByTestId('event-source-label')).toContainText('Heilnetz');
 	});
 
 	test('telegram source hides source label section', async ({ page }) => {
@@ -133,12 +129,8 @@ test.describe('Source-Dependent Rendering', () => {
 		const { event } = await createEvent(page, createTelegramEvent());
 
 		await page.goto(`/${event.slug}`);
-		await page.waitForSelector('h1', { timeout: 15000 });
-
-		await expect(page.locator('h1').first()).toBeVisible();
-		// Source label block (Quelle: / Source: pill) is hidden for telegram events
-		// The {#if event.source !== 'telegram'} guard prevents rendering it
-		await expect(page.getByText(/Quelle:|Source:/)).not.toBeVisible();
+		await expect(page.getByTestId('event-title')).toBeVisible({ timeout: 15000 });
+		await expect(page.getByTestId('event-source-label')).toHaveCount(0);
 	});
 });
 
@@ -148,7 +140,7 @@ test.describe('Navigation Menu', () => {
 		await clearTestEvents(page);
 		await createEvent(page, createMeditationEvent());
 		await page.goto('/');
-		await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
+		await page.getByTestId('event-card').first().waitFor({ timeout: 15000 });
 	});
 
 	test.afterEach(async ({ page }) => {
@@ -166,7 +158,7 @@ test.describe('Navigation Menu', () => {
 			}
 		}
 		await expect(page.locator('body')).toBeVisible();
-		await expect(page.getByRole('heading', { name: 'Create event' }).first()).toBeVisible();
+		await expect(page.getByTestId('create-event-heading')).toBeVisible();
 	});
 
 	test('event sources page is accessible', async ({ page }) => {
@@ -192,7 +184,7 @@ test.describe('Event Deep Linking', () => {
 
 		await page.goto(`/${event.slug}`);
 		await expect(page.locator('body')).toBeVisible();
-		await expect(page.locator('h1').first()).toBeVisible();
+		await expect(page.getByTestId('event-title')).toBeVisible();
 	});
 
 	test('eventSlug query opens a dialog and dismissing does not reopen it', async ({ page }) => {
@@ -200,9 +192,9 @@ test.describe('Event Deep Linking', () => {
 		const { event } = await createEvent(page, createMeditationEvent({ slug: 'query-dismiss-event' }));
 
 		await page.goto(`/?eventSlug=${encodeURIComponent(event.slug)}`);
-		const dialog = page.getByRole('dialog');
+		const dialog = page.getByTestId('details-dialog');
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.locator('h1').first()).toBeVisible();
+		await expect(dialog.getByTestId('event-title')).toBeVisible();
 		await expect(page).toHaveURL(new RegExp(`/${event.slug}$`));
 
 		await page.keyboard.press('Escape');
@@ -210,7 +202,7 @@ test.describe('Event Deep Linking', () => {
 		await expect(page).toHaveURL('/');
 		// Stay closed after history/query sync settles (reopen regression).
 		await page.waitForTimeout(500);
-		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect(page.getByTestId('details-dialog')).toHaveCount(0);
 		await expect(page).toHaveURL('/');
 	});
 });

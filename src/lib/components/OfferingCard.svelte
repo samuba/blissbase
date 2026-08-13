@@ -65,6 +65,7 @@
 	]}
 	data-sveltekit-preload-data="false"
 	onclick={handleClick}
+	data-testid="offering-card"
 	data-offering-id={offering.id}
 >
 	<article class="flex h-full min-w-0 flex-col">
@@ -91,7 +92,7 @@
 			{/if}
 
 			<div class="card-body flex min-w-0 flex-1 flex-col gap-2 overflow-hidden p-5">
-				<h3 class="card-title line-clamp-2 overflow-hidden leading-snug tracking-tight wrap-break-word">
+				<h3 class="card-title line-clamp-2 overflow-hidden leading-snug tracking-tight wrap-break-word" data-testid="offering-card-title">
 					{offering.title}
 				</h3>
 				<div class="text-base-content/75 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-1.5 py-1 leading-none">
@@ -108,7 +109,7 @@
 				</div>
 
 				{#if isDisabled}
-					<span class="badge badge-soft badge-warning my-2 w-fit gap-1">
+					<span class="badge badge-soft badge-warning my-2 w-fit gap-1" data-testid="offering-unlisted-badge">
 						<i class="icon-[ph--eye-slash] size-3.5"></i>
 						Deaktiviert — nicht für andere sichtbar
 					</span>

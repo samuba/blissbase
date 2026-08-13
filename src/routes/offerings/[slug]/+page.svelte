@@ -27,7 +27,7 @@
 	</div>
 
 	<div class="flex w-full justify-center py-6 bg-base-100 sm:bg-transparent">
-		<a href={offeringsListHref} class="btn btn-sm">
+		<a href={offeringsListHref} class="btn btn-sm" data-testid="all-offerings-link">
 			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 			Alle Angebote
 		</a>

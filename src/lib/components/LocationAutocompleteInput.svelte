@@ -526,6 +526,7 @@
 						bind:this={locationInput}
 						type="text"
 						id={inputId}
+						data-testid={inputId}
 						role="combobox"
 						aria-expanded={showAutocompletePanel}
 						aria-controls="{inputId}-listbox"
@@ -579,6 +580,7 @@
 							<li
 								id="{inputId}-option-{index}"
 								role="option"
+								data-testid="location-option"
 								aria-selected={controller.highlightedIndex === index}
 								class={[
 									`cursor-pointer px-3 py-2 text-sm border-base-300`,

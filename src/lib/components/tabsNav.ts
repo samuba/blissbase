@@ -4,6 +4,7 @@ import { routes } from '$lib/routes';
 export function getAppNavItems(): AppNavItem[] {
 	return [
 		{
+			id: `events`,
 			label: /* @wc-include */ `Events`,
 			href: resolve(`/#header-controls`),
 			icon: `icon-[ph--calendar-dots]`,
@@ -11,6 +12,7 @@ export function getAppNavItems(): AppNavItem[] {
 			requireLogin: false
 		},
 		{
+			id: `offerings`,
 			label: /* @wc-include */ `Angebote`,
 			href: routes.offeringsList(),
 			icon: `icon-[ph--hand-heart]`,
@@ -18,6 +20,7 @@ export function getAppNavItems(): AppNavItem[] {
 			requireLogin: false
 		},
 		{
+			id: `favorites`,
 			label: /* @wc-include */ `Favoriten`,
 			href: resolve(`/profile/favorites`),
 			icon: `icon-[ph--heart]`,
@@ -25,6 +28,7 @@ export function getAppNavItems(): AppNavItem[] {
 			requireLogin: true
 		},
 		{
+			id: `profile`,
 			label: /* @wc-include */ `Meins`,
 			href: resolve(`/profile`),
 			icon: `icon-[ph--user-circle]`,
@@ -55,6 +59,7 @@ export function isActiveAppTab(pathname: string, href: string) {
 }
 
 type AppNavItem = {
+	id: `events` | `offerings` | `favorites` | `profile`;
 	label: string;
 	href: string;
 	icon: string;

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { createEvent, createEvents, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent } from './helpers/seed';
+import { createEvents, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent } from './helpers/seed';
+import { openFilterDialog, waitForClientHydration } from './helpers/offering-test-utils';
 
 test.describe('Filter Modal', () => {
 	test.beforeEach(async ({ page }) => {
@@ -10,7 +11,8 @@ test.describe('Filter Modal', () => {
 			createOnlineEvent()
 		]);
 		await page.goto('/');
-		await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
+		await page.getByTestId('event-card').first().waitFor({ timeout: 15000 });
+		await waitForClientHydration(page);
 	});
 
 	test.afterEach(async ({ page }) => {
@@ -18,38 +20,17 @@ test.describe('Filter Modal', () => {
 	});
 
 	test('filter modal opens and closes', async ({ page }) => {
-		// Find and click filter button (avoid matching unrelated buttons on the page)
-		const filterButton = page.getByRole('button', { name: 'Filter', exact: true });
-		await expect(filterButton).toBeVisible();
-		await filterButton.click();
-
-		// Wait for modal to appear
-		await page.waitForTimeout(1000);
-		
-		// Press Escape to close
+		const filterDialog = await openFilterDialog(page);
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(500);
-		
-		// Page should still work
-		await expect(page.locator('body')).toBeVisible();
+		await expect(filterDialog).toHaveCount(0);
 	});
 
 	test('show results button applies filters', async ({ page }) => {
-		const filterButton = page.getByRole('button', { name: 'Filter', exact: true });
-		await filterButton.click();
-		await page.waitForTimeout(1000);
-
-		const filterDialog = page.getByRole('dialog', { name: 'Filter' });
-		const applyButton = filterDialog.getByRole('button', {
-			name: /^(Show results|Ergebnisse anzeigen|Anwenden|Apply)$/i
-		});
-		if (await applyButton.isVisible().catch(() => false)) {
-			await applyButton.click();
-			await page.waitForTimeout(500);
-		}
+		const filterDialog = await openFilterDialog(page);
+		await filterDialog.getByTestId('filter-apply').click();
+		await expect(filterDialog).toHaveCount(0);
 		
-		// Page should still show events
-		await expect(page.locator('body')).toBeVisible();
+		await expect(page.getByTestId('event-card').first()).toBeVisible();
 	});
 });
 
@@ -62,7 +43,8 @@ test.describe('Filter Combinations', () => {
 			createOnlineEvent()
 		]);
 		await page.goto('/');
-		await page.waitForSelector('[data-testid="event-card"]', { timeout: 15000 });
+		await page.getByTestId('event-card').first().waitFor({ timeout: 15000 });
+		await waitForClientHydration(page);
 	});
 
 	test.afterEach(async ({ page }) => {
@@ -70,13 +52,12 @@ test.describe('Filter Combinations', () => {
 	});
 
 	test('search filters events', async ({ page }) => {
-		const searchInput = page.locator('input[type="text"]').first();
+		const searchInput = page.getByTestId('plzCityInput-header');
 		await searchInput.fill('Berlin');
 		await searchInput.press('Enter');
 		await page.waitForTimeout(1000);
 
-		// Should show filtered results
-		const eventCount = await page.locator('[data-testid="event-card"]').count();
+		const eventCount = await page.getByTestId('event-card').count();
 		expect(eventCount).toBeGreaterThanOrEqual(0);
 	});
 });

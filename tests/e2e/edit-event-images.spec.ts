@@ -25,7 +25,7 @@ test.describe('Edit event images', () => {
 		});
 
 		await page.goto(`/edit/${event.id}?hostSecret=${event.hostSecret}`);
-		await expect(page.getByRole(`heading`, { name: /Event bearbeiten|Edit event/i })).toBeVisible();
+		await expect(page.getByTestId(`event-edit-heading`)).toBeVisible();
 		await expect(page.getByTestId(`image-preview-item`)).toHaveCount(3);
 
 		await page.getByTestId(`image-preview-remove`).nth(1).click();
@@ -43,7 +43,7 @@ test.describe('Edit event images', () => {
 			timeout: 30000
 		});
 
-		await page.getByRole(`button`, { name: /Speichern|Save/i }).click();
+		await page.getByTestId(`event-save`).click();
 		await page.waitForURL(`**/${event.slug}`);
 
 		await expect

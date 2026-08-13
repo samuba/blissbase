@@ -10,7 +10,7 @@ import {
 	createProfile,
 	E2E_DEFAULT_USER_ID,
 } from "./helpers/seed";
-import { setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
+import { offeringCardById, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const farUserId = `00000000-0000-4000-8000-000000000003`;
 const incompleteUserId = `00000000-0000-4000-8000-000000000004`;
@@ -39,9 +39,9 @@ test.describe("Offering discovery and details", () => {
 				socialLinks: [],
 			}),
 		);
-		await createOffering(page, createOfflineOffering({ title: `Visible Offering`, slug: `visible` }));
-		await createOffering(page, createOfflineOffering({ title: `Hidden Unlisted`, slug: `unlisted`, listed: false }));
-		await createOffering(
+		const visible = await createOffering(page, createOfflineOffering({ title: `Visible Offering`, slug: `visible` }));
+		const unlisted = await createOffering(page, createOfflineOffering({ title: `Hidden Unlisted`, slug: `unlisted`, listed: false }));
+		const incomplete = await createOffering(
 			page,
 			createOfflineOffering({
 				profileId: incompleteUserId,
@@ -51,9 +51,9 @@ test.describe("Offering discovery and details", () => {
 		);
 
 		await page.goto(`/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`);
-		await expect(page.getByRole(`heading`, { name: `Visible Offering` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Hidden Unlisted` })).toHaveCount(0);
-		await expect(page.getByRole(`heading`, { name: `Hidden Incomplete Profile` })).toHaveCount(0);
+		await expect(offeringCardById(page, visible.id)).toBeVisible();
+		await expect(offeringCardById(page, unlisted.id)).toHaveCount(0);
+		await expect(offeringCardById(page, incomplete.id)).toHaveCount(0);
 	});
 
 	test("search filters exact results across title, description, and profile name", async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe("Offering discovery and details", () => {
 				displayName: `Sound Practitioner`,
 			}),
 		);
-		await createOffering(
+		const somatic = await createOffering(
 			page,
 			createOfflineOffering({
 				title: `Somatic Coaching`,
@@ -74,7 +74,7 @@ test.describe("Offering discovery and details", () => {
 				slug: `somatic`,
 			}),
 		);
-		await createOffering(
+		const sound = await createOffering(
 			page,
 			createOfflineOffering({
 				profileId: farUserId,
@@ -87,8 +87,8 @@ test.describe("Offering discovery and details", () => {
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 		for (const searchTerm of [`somatic`, `grounding`, `E2E User`]) {
 			await page.goto(`${listUrl}&searchTerm=${encodeURIComponent(searchTerm)}`);
-			await expect(page.getByRole(`heading`, { name: `Somatic Coaching` })).toBeVisible();
-			await expect(page.getByRole(`heading`, { name: `Sound Bath` })).toHaveCount(0);
+			await expect(offeringCardById(page, somatic.id)).toBeVisible();
+			await expect(offeringCardById(page, sound.id)).toHaveCount(0);
 		}
 	});
 
@@ -105,8 +105,8 @@ test.describe("Offering discovery and details", () => {
 				longitude: 11.575,
 			}),
 		);
-		await createOffering(page, createOfflineOffering({ title: `Nearby Offline`, slug: `nearby` }));
-		await createOffering(
+		const nearbyOffline = await createOffering(page, createOfflineOffering({ title: `Nearby Offline`, slug: `nearby` }));
+		const farOffline = await createOffering(
 			page,
 			createOfflineOffering({
 				profileId: farUserId,
@@ -114,8 +114,8 @@ test.describe("Offering discovery and details", () => {
 				slug: `far`,
 			}),
 		);
-		await createOffering(page, createOnlineOffering({ title: `Always Online`, slug: `online` }));
-		await createOffering(
+		const alwaysOnline = await createOffering(page, createOnlineOffering({ title: `Always Online`, slug: `online` }));
+		const nearbyHybrid = await createOffering(
 			page,
 			createOfflineOffering({
 				title: `Nearby Hybrid`,
@@ -123,7 +123,7 @@ test.describe("Offering discovery and details", () => {
 				format: `offline+online`,
 			}),
 		);
-		await createOffering(
+		const farHybrid = await createOffering(
 			page,
 			createOfflineOffering({
 				profileId: farUserId,
@@ -133,19 +133,19 @@ test.describe("Offering discovery and details", () => {
 			}),
 		);
 
-		await page.goto(`/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`);
-		await expect(page.getByRole(`heading`, { name: `Nearby Offline` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Nearby Hybrid` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Far Offline` })).toHaveCount(0);
-		await expect(page.getByRole(`heading`, { name: `Far Hybrid` })).toHaveCount(0);
-		await expect(page.getByRole(`heading`, { name: `Always Online` })).toHaveCount(0);
+		await page.goto(`/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405&includeOnline=0`);
+		await expect(offeringCardById(page, nearbyOffline.id)).toBeVisible();
+		await expect(offeringCardById(page, nearbyHybrid.id)).toBeVisible();
+		await expect(offeringCardById(page, farOffline.id)).toHaveCount(0);
+		await expect(offeringCardById(page, farHybrid.id)).toHaveCount(0);
+		await expect(offeringCardById(page, alwaysOnline.id)).toHaveCount(0);
 
 		await page.goto(`/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405&includeOnline=1`);
-		await expect(page.getByRole(`heading`, { name: `Nearby Offline` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Nearby Hybrid` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Always Online` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Far Hybrid` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Far Offline` })).toHaveCount(0);
+		await expect(offeringCardById(page, nearbyOffline.id)).toBeVisible();
+		await expect(offeringCardById(page, nearbyHybrid.id)).toBeVisible();
+		await expect(offeringCardById(page, alwaysOnline.id)).toBeVisible();
+		await expect(offeringCardById(page, farHybrid.id)).toBeVisible();
+		await expect(offeringCardById(page, farOffline.id)).toHaveCount(0);
 	});
 
 	test("post-edit opens the offering in a dialog on the filtered list", async ({ page }) => {
@@ -159,18 +159,18 @@ test.describe("Offering discovery and details", () => {
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
 
-		await page.locator(`[data-offering-id="${offering.id}"]`).click();
-		const dialog = page.getByRole(`dialog`);
+		await offeringCardById(page, offering.id).click();
+		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible();
-		await dialog.getByRole(`link`, { name: `Bearbeiten` }).click();
-		await expect(page.getByRole(`heading`, { name: `Angebot bearbeiten` })).toBeVisible();
-		await page.getByPlaceholder(`z.B. Private Couching Session`).fill(`Edited Return Offering`);
-		await page.getByRole(`button`, { name: `Speichern`, exact: true }).click();
+		await dialog.getByTestId(`offering-edit-link`).click();
+		await expect(page.getByTestId(`offering-edit-heading`)).toBeVisible();
+		await page.getByTestId(`offering-title-input`).fill(`Edited Return Offering`);
+		await page.getByTestId(`offering-save`).click();
 
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByRole(`heading`, { name: `Edited Return Offering` })).toBeVisible();
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`Edited Return Offering`);
 		await expect(page).toHaveURL(new RegExp(`/offerings/${offering.slug}$`));
-		await page.getByRole(`button`, { name: `Schließen` }).click();
+		await page.getByTestId(`dialog-close`).click();
 		await expect(dialog).toHaveCount(0);
 		await expect(page).toHaveURL(listUrl);
 	});

@@ -14,7 +14,7 @@ import {
 	getOfferingById,
 	getProfileById,
 } from "./helpers/seed";
-import { chooseLocation, mockGooglePlacesAutocomplete, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
+import { chooseLocation, mockGooglePlacesAutocomplete, offeringCardById, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const profileIds = [E2E_DEFAULT_USER_ID, E2E_OTHER_USER_ID];
 
@@ -48,7 +48,7 @@ test.describe("Offering lifecycle and access control", () => {
 		);
 		await signInAsE2EUser(page);
 		await page.goto(`/offerings/${offering.slug}/edit`);
-		await expect(page.getByRole(`heading`, { name: `Angebot bearbeiten` })).toBeVisible();
+		await expect(page.getByTestId(`offering-edit-heading`)).toBeVisible();
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(3);
 
 		await page.getByTestId(`offering-image-input`).setInputFiles(`static/pwa-192-maskable.png`);
@@ -57,11 +57,11 @@ test.describe("Offering lifecycle and access control", () => {
 			timeout: 30000,
 		});
 		await page.getByTestId(`offering-image-preview-remove`).nth(1).click();
-		await page.getByRole(`button`, { name: `Bild #1 nach rechts verschieben` }).press(`Enter`);
+		await page.getByTestId(`offering-image-preview-item`).first().getByTestId(`offering-image-preview-move-right`).press(`Enter`);
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(3);
 		await expect(page.getByTestId(`offering-image-preview-item`).first()).toContainText(`Bild #3`);
-		await page.getByPlaceholder(`z.B. Private Couching Session`).fill(`Edited Offering`);
-		await page.getByRole(`button`, { name: `Speichern`, exact: true }).click();
+		await page.getByTestId(`offering-title-input`).fill(`Edited Offering`);
+		await page.getByTestId(`offering-save`).click();
 
 		await expect(page.getByText(`Angebot wurde aktualisiert.`)).toBeVisible({ timeout: 15000 });
 		const persisted = await getOfferingById(page, offering.id);
@@ -80,9 +80,8 @@ test.describe("Offering lifecycle and access control", () => {
 		await chooseLocation(page, {
 			inputId: `offering-form-location`,
 			query: `Mun`,
-			option: `Munich, Germany`,
 		});
-		await page.getByRole(`button`, { name: `Speichern`, exact: true }).click();
+		await page.getByTestId(`offering-save`).click();
 		await expect(page.getByText(`Angebot wurde aktualisiert.`)).toBeVisible({ timeout: 15000 });
 		expect(await getProfileById(page, E2E_DEFAULT_USER_ID)).toMatchObject({
 			locationLabel: `Munich`,
@@ -104,10 +103,9 @@ test.describe("Offering lifecycle and access control", () => {
 		await signInAsE2EUser(page);
 		await page.goto(`/offerings/${offering.slug}/edit`);
 
-		const offlineRadio = page.locator(`input[type="radio"][value="offline"]`);
-		await offlineRadio.locator(`xpath=ancestor::label`).click();
-		await expect(offlineRadio).toBeChecked();
-		await page.getByRole(`button`, { name: `Speichern`, exact: true }).click();
+		await page.getByTestId(`offering-format-offline`).click();
+		await expect(page.getByTestId(`offering-format-offline`).locator(`input`)).toBeChecked();
+		await page.getByTestId(`offering-save`).click();
 
 		await expect(page.getByText(`Bitte wähle einen Ort für dein Angebot aus.`).first()).toBeVisible();
 		await expect(page).toHaveURL(`/offerings/${offering.slug}/edit`);
@@ -129,30 +127,30 @@ test.describe("Offering lifecycle and access control", () => {
 		await signInAsE2EUser(page);
 		await page.goto(`/offerings/${offering.slug}/edit`);
 		await expect(page.getByTestId(`offering-image-input`)).toBeAttached();
-		await page.getByRole(`button`, { name: `Deaktivieren`, exact: true }).click();
-		await expect(page.getByRole(`button`, { name: `Aktivieren`, exact: true })).toBeVisible();
+		await page.getByTestId(`offering-toggle-listing`).click();
+		await expect(page.getByTestId(`offering-toggle-listing`)).toHaveAttribute(`data-listed`, `false`);
 		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(false);
 
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 		await page.goto(listUrl);
-		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toBeVisible();
-		await expect(page.getByText(`Deaktiviert — nicht für andere sichtbar`)).toBeVisible();
+		await expect(offeringCardById(page, offering.id)).toBeVisible();
+		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toBeVisible();
 
 		await page.context().clearCookies();
 		await setGermanLocale(page);
 		await page.goto(listUrl);
-		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toHaveCount(0);
+		await expect(offeringCardById(page, offering.id)).toHaveCount(0);
 
 		await signInAsE2EUser(page);
 		await setGermanLocale(page);
 		await page.goto(`/offerings/${offering.slug}`);
-		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toBeVisible();
-		await page.getByRole(`button`, { name: `Aktivieren`, exact: true }).click();
+		await expect(page.getByTestId(`offering-title`)).toHaveText(`Lifecycle Offering`);
+		await page.getByTestId(`offering-toggle-listing`).click();
 		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(true);
 
 		await page.goto(listUrl);
-		await expect(page.getByRole(`heading`, { name: `Lifecycle Offering` })).toBeVisible();
-		await expect(page.getByText(`Deaktiviert — nicht für andere sichtbar`)).toHaveCount(0);
+		await expect(offeringCardById(page, offering.id)).toBeVisible();
+		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toHaveCount(0);
 	});
 
 	test("profile offerings lists inactive offerings below active ones", async ({ page }) => {
@@ -161,23 +159,23 @@ test.describe("Offering lifecycle and access control", () => {
 		await page.goto(`/profile/offerings`);
 		await waitForClientHydration(page);
 
-		await expect(page.getByRole(`heading`, { name: `Active Profile Offering` })).toBeVisible();
-		await page.locator(`[data-offering-id="${offering.id}"]`).click();
-		await expect(page.getByRole(`dialog`)).toBeVisible();
+		await expect(offeringCardById(page, offering.id)).toBeVisible();
+		await offeringCardById(page, offering.id).click();
+		await expect(page.getByTestId(`details-dialog`)).toBeVisible();
 		await expect(page).toHaveURL(`/offerings/${offering.slug}`);
-		await page.getByRole(`dialog`).getByRole(`link`, { name: `Bearbeiten` }).click();
-		await expect(page.getByRole(`dialog`)).toHaveCount(0);
+		await page.getByTestId(`details-dialog`).getByTestId(`offering-edit-link`).click();
+		await expect(page.getByTestId(`details-dialog`)).toHaveCount(0);
 		await expect(page.getByTestId(`offering-image-input`)).toBeAttached();
-		const deactivateButton = page.getByRole(`button`, { name: `Deaktivieren`, exact: true });
-		await expect(deactivateButton).toBeEnabled();
-		await deactivateButton.click();
-		await expect(page.getByRole(`button`, { name: `Aktivieren`, exact: true })).toBeVisible();
+		const listingToggle = page.getByTestId(`offering-toggle-listing`);
+		await expect(listingToggle).toBeEnabled();
+		await listingToggle.click();
+		await expect(listingToggle).toHaveAttribute(`data-listed`, `false`);
 		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(false);
 
 		await page.goto(`/profile/offerings`);
 		await waitForClientHydration(page);
-		await expect(page.getByRole(`heading`, { name: `Deaktivierte Angebote` })).toBeVisible();
-		await expect(page.getByRole(`heading`, { name: `Active Profile Offering` })).toBeVisible();
+		await expect(page.getByTestId(`inactive-offerings-heading`)).toBeVisible();
+		await expect(offeringCardById(page, offering.id)).toBeVisible();
 	});
 
 	test("anonymous users cannot view an unlisted offering but its owner can", async ({ page }) => {
@@ -195,7 +193,7 @@ test.describe("Offering lifecycle and access control", () => {
 		await signInAsE2EUser(page);
 		const ownerResponse = await page.goto(`/offerings/${offering.slug}`);
 		expect(ownerResponse?.status()).toBe(200);
-		await expect(page.getByRole(`heading`, { name: `Private Owner Offering` })).toBeVisible();
+		await expect(page.getByTestId(`offering-title`)).toHaveText(`Private Owner Offering`);
 	});
 
 	test("owner confirms deletion and the offering disappears from persistence and discovery", async ({ page }) => {
@@ -206,10 +204,10 @@ test.describe("Offering lifecycle and access control", () => {
 		page.once(`dialog`, (dialog) => void dialog.accept());
 		await Promise.all([
 			page.waitForURL((url) => url.pathname === `/offerings`),
-			page.getByRole(`button`, { name: `Löschen`, exact: true }).click(),
+			page.getByTestId(`offering-delete`).click(),
 		]);
 
 		await expect.poll(async () => await getOfferingById(page, offering.id)).toBeUndefined();
-		await expect(page.getByRole(`heading`, { name: `Delete Offering` })).toHaveCount(0);
+		await expect(offeringCardById(page, offering.id)).toHaveCount(0);
 	});
 });

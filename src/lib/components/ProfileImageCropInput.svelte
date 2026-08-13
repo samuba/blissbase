@@ -209,7 +209,7 @@
 
 <svelte:window bind:innerHeight={windowInnerHeight} />
 
-<fieldset class={[`fieldset`, className]}>
+<fieldset class={[`fieldset`, className]} data-testid={`${kind}-image-crop`}>
 	<legend class="fieldset-legend">{kind === `profile` ? `Profilbild` : `Banner`}</legend>
 
 	{#if displayedUrl}
@@ -286,6 +286,7 @@
 		type="file"
 		accept="image/*"
 		class="sr-only"
+		data-testid={`${kind}-image-file`}
 		onchange={onFileChange}
 		disabled={busy}
 	/>
@@ -365,6 +366,7 @@
 				<button
 					type="button"
 					class="btn btn-primary"
+					data-testid={`${kind}-crop-done`}
 					onclick={confirmCrop}
 					disabled={busy || !croppedPixels}
 				>
