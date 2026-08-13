@@ -63,8 +63,12 @@
 	registerFlashToast();
 
 	// Home and offerings list embed their own TabsNavDesktop; every other page uses the layout nav.
+	// Shallow dialogs push a detail URL — don't mount a second nav over the list while they're open.
 	const showDesktopNav = $derived(
-		page.url.pathname !== routes.root() && page.url.pathname !== new URL(routes.offeringsList(), page.url.origin).pathname
+		page.state.selectedOfferingSlug == null &&
+			page.state.selectedEventId == null &&
+			page.url.pathname !== routes.root() &&
+			page.url.pathname !== new URL(routes.offeringsList(), page.url.origin).pathname
 	);
 </script>
 

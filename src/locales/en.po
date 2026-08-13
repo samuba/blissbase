@@ -160,12 +160,11 @@ msgstr "<0/> Email"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
-#: src/routes/EventDetailsDialog.svelte
+#: src/lib/components/dialog/DetailsDialog.svelte
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "Schließen"
 msgstr "Close"
 
@@ -305,9 +304,8 @@ msgid "<0/> Wird gesendet..."
 msgstr "<0/> Sending..."
 
 #: src/lib/components/PageHeader.svelte
-#: src/routes/EventDetailsDialog.svelte
+#: src/lib/components/dialog/DetailsDialog.svelte
 #: src/routes/events/new/+page.svelte
-#: src/routes/offerings/OfferingDetailsDialog.svelte
 msgid "<0/> Zurück"
 msgstr "<0/> Back"
 
@@ -1809,12 +1807,8 @@ msgstr "<0/> Back to Admin"
 msgid "roomId *"
 msgstr "roomId *"
 
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "defaultTimezone *"
-msgstr "defaultTimezone *"
+#~ msgid "defaultTimezone *"
+#~ msgstr "defaultTimezone *"
 
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte

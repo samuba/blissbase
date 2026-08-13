@@ -1,27 +1,31 @@
 <script lang="ts" module>
 	import type { UiEvent } from '$lib/server/events';
-	import { pushState, replaceState } from '$app/navigation';
-	import { resolve } from '$app/paths';
+	import { replaceState } from '$app/navigation';
+	import { page } from '$app/state';
+	import { afterClientHydration, ShallowDialog } from '$lib/shallowDialog.svelte';
 	import { routes, takeEventSlugQuery } from '$lib/routes';
-	import { ShallowDialogState } from '$lib/shallowDialog.svelte';
 
-	const dialog = new ShallowDialogState();
 	let event = $state<UiEvent | undefined>(undefined);
-	let openingEventSlug = $state<string | undefined>(undefined);
-	/** Set when a slug was opened from `?eventSlug=`; blocks reopen after dismiss. */
-	let consumedQuerySlug: string | null = null;
+	const dialog = new ShallowDialog(routes.root());
 
-	export function showEventDetailsDialog(eventToShow: UiEvent, args?: { noEnterAnimation?: boolean }) {
+	export function showEventDetailsDialog(eventToShow: UiEvent) {
+		snapshotReturnTo();
 		event = eventToShow;
-		consumedQuerySlug = eventToShow.slug;
-		dialog.show({ noEnterAnimation: args?.noEnterAnimation });
-		pushState(resolve('/[slug]', { slug: eventToShow.slug }), {
-			selectedEventId: eventToShow.id,
+		dialog.open({
+			href: routes.eventDetails(eventToShow.slug),
+			state: { selectedEventId: eventToShow.id },
 		});
 	}
 
-	function clearEvent() {
-		event = undefined;
+	function snapshotReturnTo() {
+		const url = new URL(window.location.href);
+		takeEventSlugQuery(url);
+		if (page.state.selectedEventId != null) return;
+		dialog.returnToPath = routes.currentPath(url);
+	}
+
+	function closeEventDetailsDialog() {
+		dialog.close();
 	}
 </script>
 
@@ -29,113 +33,50 @@
 	import { Dialog } from '$lib/components/dialog';
 	import EventDetails from './EventDetails.svelte';
 	import { eventsStore } from '$lib/eventsStore.svelte';
-	import {
-		dialogContentAnimationClasses,
-		dialogContentExitAnimationClasses,
-		dialogOverlayAnimationClasses,
-		dialogOverlayExitAnimationClasses,
-	} from '$lib/common';
-	import { browser } from '$app/environment';
-	import { page } from '$app/state';
 	import { getEventBySlug } from '$lib/rpc/events.remote';
 	import { untrack } from 'svelte';
 
-	$effect(() => {
-		// close dialog if user clicked browser back button
-		if (page.state.selectedEventId) return;
-		dialog.closeGracefully(clearEvent);
-	});
+	const isOpen = $derived(page.state.selectedEventId != null);
+	let openingEventSlug: string | undefined;
 
 	$effect(() => {
 		const href = page.url.href;
 		untrack(() => {
-			void maybeOpenFromEventSlugQuery(new URL(href));
+			void openFromEventSlugQuery(new URL(href));
 		});
 	});
 
-	async function maybeOpenFromEventSlugQuery(url: URL) {
+	async function openFromEventSlugQuery(url: URL) {
+		const queryHref = url.href;
 		const eventSlug = takeEventSlugQuery(url);
 		if (!eventSlug) return;
+		if (event?.slug === eventSlug && page.state.selectedEventId === event.id) return;
+		if (openingEventSlug === eventSlug) return;
 
 		const hostPath = routes.currentPath(url);
-		// After dismiss, history.back() can restore a stale `?eventSlug=` in page.url;
-		// strip it without reopening.
-		if (consumedQuerySlug === eventSlug && !dialog.open) {
-			replaceState(hostPath, {});
-			return;
-		}
-
-		if (openingEventSlug === eventSlug || event?.slug === eventSlug) return;
-
 		openingEventSlug = eventSlug;
 		try {
-			consumedQuerySlug = eventSlug;
+			await afterClientHydration();
+			if (page.url.href !== queryHref) return;
 			replaceState(hostPath, {});
 			const eventToShow = await getEventBySlug({ slug: eventSlug });
-			if (openingEventSlug !== eventSlug) return;
 			if (!eventToShow) return;
-			showEventDetailsDialog(eventToShow, { noEnterAnimation: true });
+			if (page.state.selectedEventId) return;
+			showEventDetailsDialog(eventToShow);
 		} finally {
 			if (openingEventSlug === eventSlug) openingEventSlug = undefined;
 		}
 	}
-
-	function handleClose() {
-		if (!browser) return;
-		dialog.closeGracefully(clearEvent);
-		history.back();
-	}
-
-	function onOpenChange(shouldOpen: boolean) {
-		if (shouldOpen) return;
-		handleClose();
-	}
 </script>
 
-<Dialog.Root open={dialog.open} {onOpenChange}>
-	<Dialog.Portal>
-		<Dialog.Overlay
-			class={[
-				'fixed inset-0 z-50 bg-stone-800/90 transition-opacity',
-				dialog.noEnterAnimation ? dialogOverlayExitAnimationClasses : dialogOverlayAnimationClasses,
-			]}
-		/>
-
-		<Dialog.Content
-			role="dialog"
-			class={[
-				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
-				dialog.noEnterAnimation ? dialogContentExitAnimationClasses : dialogContentAnimationClasses,
-			]}
-			style="scrollbar-width: thin"
-			onOpenAutoFocus={(e) => {
-				e.preventDefault(); // ugly blue focus on close button in safari otherwise
+<Dialog.Details open={isOpen} onClose={closeEventDetailsDialog}>
+	{#if event}
+		<EventDetails
+			{event}
+			onShowEventForTag={(tag) => {
+				eventsStore.handleSearchTermChange(tag);
+				closeEventDetailsDialog();
 			}}
-		>
-			<div class="sticky top-0 right-0 z-20 ml-auto h-0 w-max">
-				<Dialog.Close class="block rounded-full p-4" aria-label="Schließen">
-					<div class="btn btn-circle btn-primary shadow-lg drop-shadow-2xl">
-						<i class="icon-[ph--x] size-5"></i>
-					</div>
-				</Dialog.Close>
-			</div>
-
-			{#if event}
-				<EventDetails
-					{event}
-					onShowEventForTag={(tag) => {
-						eventsStore.handleSearchTermChange(tag);
-						handleClose();
-					}}
-				/>
-			{/if}
-
-			<div class="md:hidden flex w-full justify-center gap-6 pb-6">
-				<button type="button" class="btn btn-sm" onclick={handleClose}>
-					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
-					Zurück
-				</button>
-			</div>
-		</Dialog.Content>
-	</Dialog.Portal>
-</Dialog.Root>
+		/>
+	{/if}
+</Dialog.Details>

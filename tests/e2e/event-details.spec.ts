@@ -43,14 +43,53 @@ test.describe('Event Details Modal', () => {
 		await expect(dialog.getByText(/Zen Center.*Berlin/)).toBeVisible();
 	});
 
-	test('modal closes with Escape key', async ({ page }) => {
-		const firstCard = page.locator('[data-testid="event-card"]').first();
-		await firstCard.click();
+	test('dialog stays synchronized across repeated close methods', async ({ page }) => {
+		const firstCard = page.getByTestId('event-card').first();
 		const dialog = page.getByRole('dialog');
-		await expect(dialog).toBeVisible({ timeout: 15000 });
 
+		await firstCard.click();
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		const detailUrl = page.url();
 		await page.keyboard.press('Escape');
-		await expect(dialog).toBeHidden({ timeout: 15000 });
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL('/');
+
+		await firstCard.click();
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(page).toHaveURL(detailUrl);
+		await dialog.getByRole('button', { name: /Close|Schließen/ }).click({ force: true });
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL('/');
+
+		await firstCard.click();
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(page).toHaveURL(detailUrl);
+		await page.goBack();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL('/');
+
+		// Rapid reopen after dismiss must still be closable.
+		await firstCard.click();
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await page.keyboard.press('Escape');
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL('/');
+		await firstCard.click();
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await page.keyboard.press('Escape');
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL('/');
+
+		// Stress: many open/close cycles must not leave a stuck overlay after the URL resets.
+		for (let i = 0; i < 8; i++) {
+			await firstCard.click();
+			await expect(dialog).toBeVisible({ timeout: 15000 });
+			await expect(page.locator('[data-dialog-overlay]')).toHaveCount(1);
+			await page.keyboard.press('Escape');
+			await expect(dialog).toHaveCount(0);
+			await expect(page).toHaveURL('/');
+			await expect(page.locator('[data-dialog-overlay]')).toHaveCount(0);
+		}
 	});
 });
 

@@ -24,9 +24,13 @@
 		{#if open}
 			<div
 				{...props}
+				data-dialog-overlay
 				class={['fixed inset-0 z-50 backdrop-blur-sm bg-stone-800/65', className]}
 				in:fade={{ duration: inDuration }}
 				out:fade={{ duration: outDuration }}
+				onoutrostart={(event) => {
+					event.currentTarget.style.pointerEvents = `none`;
+				}}
 			>
 				{@render children?.()}
 			</div>

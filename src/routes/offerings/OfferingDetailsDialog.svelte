@@ -1,49 +1,40 @@
 <script lang="ts" module>
-	import { pushState, replaceState } from '$app/navigation';
+	import { replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import type { OfferingFormat } from '$lib/rpc/offerings.common';
 	import type { PublicProfileSocialLinks } from '$lib/rpc/profile.common';
+	import { afterClientHydration, ShallowDialog } from '$lib/shallowDialog.svelte';
 	import {
-		BASE_URL,
 		parseOfferingDetailsSlugFromUrl,
 		routes,
 		takeOfferingSlugQuery,
 		withOfferingSlug,
 	} from '$lib/routes';
-	import { ShallowDialogState } from '$lib/shallowDialog.svelte';
 
-	const dialog = new ShallowDialogState();
 	let editReturnTo = $state<string | undefined>(undefined);
-	let activeSlug = $state<string | null>(null);
-	/** Set when a slug was opened from `?offeringSlug=`; blocks reopen after dismiss. */
-	let consumedQuerySlug: string | null = null;
+	const dialog = new ShallowDialog(routes.offeringsList());
 
 	export function showOfferingDetailsDialog(slug: string) {
+		snapshotReturnTo();
 		editReturnTo = withOfferingSlug({
-			path: dialogHostPath(new URL(window.location.href)),
+			path: dialog.returnToPath,
 			offeringSlug: slug,
 		});
-		activeSlug = slug;
-		consumedQuerySlug = slug;
-		dialog.show();
-		pushState(routes.offeringDetails(slug), { selectedOfferingSlug: slug });
+		dialog.open({
+			href: routes.offeringDetails(slug),
+			state: { selectedOfferingSlug: slug },
+		});
 	}
 
-	/** Call when navigating to edit so return via `?offeringSlug=` can reopen the dialog. */
-	export function allowOfferingSlugQueryReopen() {
-		consumedQuerySlug = null;
+	function snapshotReturnTo() {
+		const url = new URL(window.location.href);
+		takeOfferingSlugQuery(url);
+		if (parseOfferingDetailsSlugFromUrl(url)) return;
+		dialog.returnToPath = routes.currentPath(url);
 	}
 
-	function dialogHostPath(url: URL) {
-		if (!parseOfferingDetailsSlugFromUrl(url)) return routes.currentPath(url);
-		if (!editReturnTo) return routes.offeringsList();
-
-		const returnUrl = new URL(editReturnTo, BASE_URL);
-		takeOfferingSlugQuery(returnUrl);
-		return routes.currentPath(returnUrl);
-	}
-
-	function clearActiveSlug() {
-		activeSlug = null;
+	function closeOfferingDetailsDialog() {
+		dialog.close();
 	}
 
 	type OfferingDetailsDialogOffering = {
@@ -67,16 +58,11 @@
 			longitude?: number | null;
 		};
 	};
+
+	type OfferingWithSlug = OfferingDetailsDialogOffering & { slug: string };
 </script>
 
 <script lang="ts">
-	import { page } from '$app/state';
-	import {
-		dialogContentAnimationClasses,
-		dialogContentExitAnimationClasses,
-		dialogOverlayAnimationClasses,
-		dialogOverlayExitAnimationClasses,
-	} from '$lib/common';
 	import { Dialog } from '$lib/components/dialog';
 	import { getOfferingBySlug } from '$lib/rpc/offerings.remote';
 	import OfferingDetails from './OfferingDetails.svelte';
@@ -88,15 +74,15 @@
 	let fetchingSlug = $state<string | null>(null);
 	let openingOfferingSlug: string | undefined;
 
+	const activeSlug = $derived(page.state.selectedOfferingSlug ?? null);
+	const isOpen = $derived(activeSlug !== null);
 	const offeringFromList = $derived(offerings.find((item) => item.slug === activeSlug));
-	const offering = $derived(
-		offeringFromList ?? (fetchedOffering?.slug === activeSlug ? fetchedOffering : undefined),
-	);
-
-	$effect(() => {
-		// close dialog if user clicked browser back button
-		if (page.state.selectedOfferingSlug) return;
-		dialog.closeGracefully(clearActiveSlug);
+	let lastOffering: OfferingWithSlug | undefined;
+	const offering = $derived.by(() => {
+		const value = offeringFromList ?? (fetchedOffering?.slug === activeSlug ? fetchedOffering : undefined);
+		if (!value?.slug) return lastOffering;
+		lastOffering = { ...value, slug: value.slug };
+		return lastOffering;
 	});
 
 	$effect(() => {
@@ -107,35 +93,19 @@
 	});
 
 	async function openFromOfferingSlugQuery(url: URL) {
+		const queryHref = url.href;
 		const offeringSlug = takeOfferingSlugQuery(url);
-		if (!offeringSlug) {
-			await syncFromUrl(url);
-			return;
-		}
+		if (!offeringSlug) return;
+		if (openingOfferingSlug === offeringSlug) return;
 
 		const hostPath = routes.currentPath(url);
-		// After dismiss, history.back() can restore a stale `?offeringSlug=` in page.url;
-		// strip it without reopening.
-		if (consumedQuerySlug === offeringSlug && !dialog.open) {
-			replaceState(hostPath, {});
-			return;
-		}
-
-		if (openingOfferingSlug === offeringSlug) return;
-		if (
-			activeSlug === offeringSlug &&
-			dialog.open &&
-			page.state.selectedOfferingSlug === offeringSlug
-		) {
-			replaceState(hostPath, { selectedOfferingSlug: offeringSlug });
-			return;
-		}
-
 		openingOfferingSlug = offeringSlug;
 		try {
-			consumedQuerySlug = offeringSlug;
-			editReturnTo = withOfferingSlug({ path: hostPath, offeringSlug });
+			await afterClientHydration();
+			if (page.url.href !== queryHref) return;
+			replaceState(hostPath, {});
 			await ensureOfferingLoaded(offeringSlug);
+			if (page.state.selectedOfferingSlug) return;
 			if (
 				fetchedOffering?.slug !== offeringSlug &&
 				!offerings.some((item) => item.slug === offeringSlug)
@@ -143,29 +113,10 @@
 				return;
 			}
 
-			// Replace `?offeringSlug=` with the host page, then push the dialog URL so
-			// history.back() closes to the list instead of returning to /edit.
-			replaceState(hostPath, {});
-			pushState(routes.offeringDetails(offeringSlug), { selectedOfferingSlug: offeringSlug });
-			activeSlug = offeringSlug;
-			dialog.show({ noEnterAnimation: true });
+			showOfferingDetailsDialog(offeringSlug);
 		} finally {
 			if (openingOfferingSlug === offeringSlug) openingOfferingSlug = undefined;
 		}
-	}
-
-	async function syncFromUrl(url: URL) {
-		const slug = parseOfferingDetailsSlugFromUrl(url);
-		if (!slug) return;
-
-		activeSlug = slug;
-		await ensureOfferingLoaded(slug);
-		// Card click already called show() before pushState; don't override its enter animation.
-		if (dialog.open) return;
-		if (!page.state.selectedOfferingSlug) {
-			replaceState(routes.currentPath(url), { selectedOfferingSlug: slug });
-		}
-		dialog.show({ noEnterAnimation: true });
 	}
 
 	async function ensureOfferingLoaded(slug: string) {
@@ -184,60 +135,12 @@
 			if (fetchingSlug === slug) fetchingSlug = null;
 		}
 	}
-
-	function handleClose() {
-		fetchedOffering = null;
-		dialog.closeGracefully(clearActiveSlug);
-		if (parseOfferingDetailsSlugFromUrl(new URL(window.location.href))) {
-			history.back();
-		}
-	}
-
-	function onOpenChange(shouldOpen: boolean) {
-		if (!shouldOpen) handleClose();
-	}
 </script>
 
-<Dialog.Root open={dialog.open} {onOpenChange}>
-	<Dialog.Portal>
-		<Dialog.Overlay
-			class={[
-				'fixed inset-0 z-50 bg-stone-800/90 transition-opacity',
-				dialog.noEnterAnimation ? dialogOverlayExitAnimationClasses : dialogOverlayAnimationClasses,
-			]}
-		/>
-
-		<Dialog.Content
-			role="dialog"
-			class={[
-				'bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-50 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl',
-				dialog.noEnterAnimation ? dialogContentExitAnimationClasses : dialogContentAnimationClasses,
-			]}
-			style="scrollbar-width: thin"
-			onOpenAutoFocus={(e) => {
-				e.preventDefault();
-			}}
-		>
-			<div class="sticky top-0 right-0 z-20 ml-auto h-0 w-max">
-				<Dialog.Close class="block rounded-full p-4" aria-label="Schließen">
-					<div class="btn btn-circle btn-primary shadow-lg drop-shadow-2xl">
-						<i class="icon-[ph--x] size-5"></i>
-					</div>
-				</Dialog.Close>
-			</div>
-
-			{#if offering}
-				{#key offering.id}
-					<OfferingDetails {offering} {editReturnTo} onManaged={handleClose} />
-				{/key}
-			{/if}
-
-			<div class="mt-2 flex w-full justify-center gap-6 pb-6 md:hidden">
-				<button type="button" class="btn btn-sm" onclick={handleClose}>
-					<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
-					Zurück
-				</button>
-			</div>
-		</Dialog.Content>
-	</Dialog.Portal>
-</Dialog.Root>
+<Dialog.Details open={isOpen} onClose={closeOfferingDetailsDialog}>
+	{#if offering}
+		{#key offering.id}
+			<OfferingDetails {offering} {editReturnTo} onManaged={closeOfferingDetailsDialog} />
+		{/key}
+	{/if}
+</Dialog.Details>

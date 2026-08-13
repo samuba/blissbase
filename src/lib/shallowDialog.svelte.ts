@@ -1,40 +1,43 @@
-const CLOSE_ANIMATION_MS = 200;
+import { pushState, replaceState } from '$app/navigation';
+import { page } from '$app/state';
 
-/** Shared open/close timing for shallow-routed details dialogs. */
-export class ShallowDialogState {
-	open = $state(false);
-	noEnterAnimation = $state(false);
-	#isClosing = false;
-	#closeTimeout: ReturnType<typeof setTimeout> | undefined;
+export class ShallowDialog {
+	returnToPath: string;
 
-	show(args?: { noEnterAnimation?: boolean }) {
-		this.cancelPendingClose();
-		this.noEnterAnimation = args?.noEnterAnimation ?? false;
-		this.open = true;
+	constructor(fallbackReturnTo: string) {
+		this.returnToPath = fallbackReturnTo;
 	}
 
-	cancelPendingClose() {
-		if (this.#closeTimeout) {
-			clearTimeout(this.#closeTimeout);
-			this.#closeTimeout = undefined;
+	open({ href, state }: { href: string; state: App.PageState }) {
+		if (sameDialogState(page.state, state)) return;
+		if (hasDialogState(page.state)) {
+			replaceState(href, state);
+			return;
 		}
-		this.#isClosing = false;
+		pushState(href, state);
 	}
 
-	/**
-	 * Hides the dialog, then runs `clear` after the close animation so content
-	 * does not unmount mid-transition.
-	 */
-	closeGracefully(clear?: () => void) {
-		if (this.#isClosing) return;
-		if (!this.open) return;
-
-		this.#isClosing = true;
-		this.open = false;
-		this.#closeTimeout = setTimeout(() => {
-			clear?.();
-			this.#isClosing = false;
-			this.#closeTimeout = undefined;
-		}, CLOSE_ANIMATION_MS);
+	close() {
+		if (!hasDialogState(page.state)) return;
+		replaceState(this.returnToPath, {});
 	}
+}
+
+/**
+ * SvelteKit attaches history listeners after the first client macrotask.
+ * replaceState before that can be overwritten by hydration.
+ */
+export function afterClientHydration() {
+	return new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+function hasDialogState(state: App.PageState) {
+	return state.selectedEventId != null || state.selectedOfferingSlug != null;
+}
+
+function sameDialogState(current: App.PageState, next: App.PageState) {
+	return (
+		current.selectedEventId === next.selectedEventId &&
+		current.selectedOfferingSlug === next.selectedOfferingSlug
+	);
 }

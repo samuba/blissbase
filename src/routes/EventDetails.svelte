@@ -7,7 +7,6 @@
 	import ShareButton from '$lib/components/ShareButton.svelte';
 	import ImageDialog from '$lib/components/ImageDialog.svelte';
 	import EventAdminSection from '$lib/components/EventAdminSection.svelte';
-	import { getFavoriteEventIds, addFavorite, removeFavorite } from '$lib/rpc/favorites.remote';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
 	import { localeStore } from '../locales/localeStore.svelte';
 	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
@@ -133,40 +132,6 @@
 
 	function openLink(url: string) {
 		window.open(url, '_blank', 'noopener,noreferrer');
-	}
-
-	// Get all favorites and check if this event is favorited
-	const favoritesQuery = getFavoriteEventIds();
-	let favorites = $state<number[]>([]);
-	let isFavorite = $derived(favorites.includes(event.id));
-	let showLoginDialog = $state(false);
-
-	// Load favorites asynchronously without blocking derived state
-	$effect(() => {
-		favoritesQuery.then((x) => (favorites = x));
-	});
-
-	async function toggleFavorite(e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
-		try {
-			if (isFavorite) {
-				await removeFavorite(event.id).updates(
-					favoritesQuery.withOverride((current) => current.filter((id) => id !== event.id))
-				);
-			} else {
-				await addFavorite(event.id).updates(
-					favoritesQuery.withOverride((current) => [...current, event.id])
-				);
-			}
-		} catch (error: unknown) {
-			// Handle 401 - show login dialog
-			if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
-				showLoginDialog = true;
-			} else {
-				console.error(`Failed to toggle favorite:`, error);
-			}
-		}
 	}
 </script>
 

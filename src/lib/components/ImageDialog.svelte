@@ -162,9 +162,9 @@
 		{@render children()}
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.OverlayAnimated />
+		<Dialog.OverlayAnimated class="z-70!" />
 		<Dialog.ContentAnimated
-			class="fixed inset-0 z-50 flex items-center justify-center outline-none"
+			class="fixed inset-0 z-70 flex items-center justify-center outline-none"
 			onclick={handleBackdropClick}
 			onkeydown={handleKeydown}
 			ontouchstart={handleTouchStart}
