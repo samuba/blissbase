@@ -48,37 +48,30 @@
 		<a href={routes.offeringsList()} class="link">Angebote-Seite</a> sichtbar.
 	</p>
 
-	<div class="card bg-base-100 mt-4 shadow">
-		<div class="card-body gap-3">
-			<fieldset class="fieldset">
-				<legend class="fieldset-legend peer-aria-invalid:text-red-600">
-					Standort für deine Angebote
-				</legend>
-				<p class="text-base-content/70 mb-1 text-sm leading-relaxed">
-					Deine Angebote werden in der Nähe dieses Orts angezeigt.
-					Ohne Standort sind nur Online-Angebote auffindbar.
-				</p>
-				<div class="flex items-center gap-2">
-					<div class="min-w-0 flex-1">
-						<LocationAutocompleteInput
-							inputId="offeringsProfileLocationInput"
-							initialLabel={profile.locationLabel}
-							initialLat={profile.latitude}
-							initialLng={profile.longitude}
-							onSelect={handleLocationSelect}
-							disabled={updateProfileLocation.pending > 0}
-						/>
-					</div>
-					{#if updateProfileLocation.pending > 0}
-						<span class="text-base-content/60 flex shrink-0 items-center gap-1.5 text-sm">
-							<span class="loading loading-spinner loading-xs"></span>
-							Speichern…
-						</span>
-					{/if}
-				</div>
-			</fieldset>
+	<fieldset class="fieldset mt-4 w-full min-w-0">
+		<legend class="fieldset-legend">Standort für deine Angebote</legend>
+		<div class="flex w-full min-w-0 items-center gap-2">
+			<div class="min-w-0 flex-1">
+				<LocationAutocompleteInput
+					inputId="offeringsProfileLocationInput"
+					initialLabel={profile.locationLabel}
+					initialLat={profile.latitude}
+					initialLng={profile.longitude}
+					onSelect={handleLocationSelect}
+					disabled={updateProfileLocation.pending > 0}
+				/>
+			</div>
+			{#if updateProfileLocation.pending > 0}
+				<span class="text-base-content/60 flex shrink-0 items-center gap-1.5 text-sm">
+					<span class="loading loading-spinner loading-xs"></span>
+					Speichern…
+				</span>
+			{/if}
 		</div>
-	</div>
+		<p class="text-sm label whitespace-normal">
+			Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.
+		</p>
+	</fieldset>
 
 	<div class="my-4">
 		<a href={newOfferingHref()} class="btn btn-primary w-full sm:w-auto">

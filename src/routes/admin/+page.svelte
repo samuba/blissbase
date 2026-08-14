@@ -6,8 +6,8 @@
 	<div class="card bg-base-100 mt-4 shadow">
 		<div class="card-body gap-4">
 			<div class="flex items-start gap-3">
-				<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
-					<i class="icon-[ph--shield-star] size-7"></i>
+				<div class="bg-primary/15 text-primary-content flex size-12 shrink-0 items-center justify-center rounded-xl">
+					<i class="icon-[ph--shield-star] block size-7"></i>
 				</div>
 				<div class="min-w-0 flex-1 space-y-2">
 					<h1 class="text-lg font-semibold">Admin</h1>
@@ -16,17 +16,33 @@
 					</p>
 				</div>
 			</div>
-
-			<div class="flex gap-4 items-stretch pt-1">
-				<a href={routes.adminTelegram()} class="btn justify-start grow">
-					<i class="icon-[ph--telegram-logo] size-5 text-[#26A5E4]"></i>
-					Telegram Scraping
-				</a>
-				<a href={routes.adminWhatsapp()} class="btn justify-start grow">
-					<i class="icon-[ph--whatsapp-logo] size-5 text-[#25D366]"></i>
-					WhatsApp Scraping
-				</a>
-			</div>
 		</div>
+	</div>
+
+	<div class="card bg-base-100 mt-4 overflow-hidden shadow">
+		<ul class="list">
+			<li>
+				<a href={routes.adminTelegram()} class="list-row hover:bg-base-200 items-start no-underline">
+					<div class="bg-base-200 flex size-12 shrink-0 items-center justify-center rounded-xl">
+						<i class="icon-[ph--telegram-logo] block size-7 text-[#26A5E4]"></i>
+					</div>
+					<div class="list-col-grow">
+						<h3 class="text-lg font-semibold">Telegram Scraping</h3>
+					</div>
+					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
+				</a>
+			</li>
+			<li>
+				<a href={routes.adminWhatsapp()} class="list-row hover:bg-base-200 items-start no-underline">
+					<div class="bg-base-200 flex size-12 shrink-0 items-center justify-center rounded-xl">
+						<i class="icon-[ph--whatsapp-logo] block size-7 text-[#25D366]"></i>
+					</div>
+					<div class="list-col-grow">
+						<h3 class="text-lg font-semibold">WhatsApp Scraping</h3>
+					</div>
+					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
+				</a>
+			</li>
+		</ul>
 	</div>
 </div>
