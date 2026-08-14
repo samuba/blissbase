@@ -18,6 +18,10 @@ export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export function shouldSkipRecipient(email: string) {
+    return email.toLowerCase().endsWith(`@example.com`);
+}
+
 export function deduplicateItems<T>(items: readonly T[] | null | undefined) {
     if (!Array.isArray(items) || !items.length) return [];
     return Array.from(new Set(items));

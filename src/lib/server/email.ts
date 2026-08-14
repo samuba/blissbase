@@ -34,6 +34,9 @@ ${eventUrl}`.trim();
 }
 
 async function sendEmail(payload: SendEmailPayload) {
+	const to = payload.to.filter((address) => !address.toLowerCase().endsWith(`@example.com`));
+	if (!to.length) return true;
+
 	try {
 		const res = await fetch(`https://api.resend.com/emails`, {
 			method: `POST`,
@@ -41,7 +44,7 @@ async function sendEmail(payload: SendEmailPayload) {
 				Authorization: `Bearer ${RESEND_API_KEY}`,
 				'Content-Type': `application/json`
 			},
-			body: JSON.stringify(payload)
+			body: JSON.stringify({ ...payload, to })
 		});
 		if (!res.ok) throw new Error(`Resend returned unexpected status: ${res.status} ${res.statusText} ${await res.text()}`);
 		return true;
