@@ -1,6 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { browser } from '$app/environment';
+import { shouldSkipRecipient } from '$lib/common';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export function getSupabaseBrowserClient() {
@@ -15,7 +16,7 @@ export function getSupabaseBrowserClient() {
 	const client = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 	const signInWithOtp = client.auth.signInWithOtp.bind(client.auth);
 	client.auth.signInWithOtp = async (credentials) => {
-		if (`email` in credentials && credentials.email.toLowerCase().endsWith(`@example.com`)) {
+		if (`email` in credentials && shouldSkipRecipient(credentials.email)) {
 			return { data: { user: null, session: null }, error: null };
 		}
 		return signInWithOtp(credentials);

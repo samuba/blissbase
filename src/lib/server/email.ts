@@ -1,3 +1,4 @@
+import { shouldSkipRecipient } from '$lib/common';
 import { absoluteUrl, routes } from '$lib/routes';
 import { posthogCaptureException } from './common';
 import {RESEND_API_KEY} from '$env/static/private';
@@ -34,7 +35,7 @@ ${eventUrl}`.trim();
 }
 
 async function sendEmail(payload: SendEmailPayload) {
-	const to = payload.to.filter((address) => !address.toLowerCase().endsWith(`@example.com`));
+	const to = payload.to.filter((address) => !shouldSkipRecipient(address));
 	if (!to.length) return true;
 
 	try {
