@@ -50,6 +50,7 @@ export const routes = {
     editOffering: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]/edit`, { slug }) , args.returnTo),
     profile: () => resolve(`/profile`) ,
     myOfferings: () => resolve(`/profile/offerings`) ,
+    myEvents: () => resolve(`/profile/events`) ,
     publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }) ,
     editPublicProfile: () => resolve(`/profile/public`) ,
     editEvent: (id: number, hostSecret?: string) => {

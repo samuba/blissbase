@@ -36,11 +36,11 @@
 		cupcake --default,
 		cupcake;
 	/* Unused daisyUI parts — keep: alert, badge, button, card, checkbox, fieldset,
-	   input, label, link, loading, range, select, tab, table, textarea, tooltip,
+	   input, label, link, list, loading, range, select, tab, table, textarea, tooltip,
 	   join, validator (+ base/colors). */
 	exclude: aura, avatar, breadcrumbs, calendar, carousel, chat, collapse,
 		countdown, diff, divider, dock, drawer, dropdown, fab, fileinput, filter,
-		footer, glass, hero, hover3d, hovergallery, indicator, kbd, list, mask,
+		footer, glass, hero, hover3d, hovergallery, indicator, kbd, mask,
 		megamenu, menu, mockup, modal, navbar, otp, progress, radialprogress, radio,
 		rating, rootscrollgutter, skeleton, stack, stat, status, steps, swap,
 		textrotate, timeline, toast;

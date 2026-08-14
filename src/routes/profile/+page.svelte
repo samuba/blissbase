@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { getSupabaseBrowserClient } from '$lib/supabase';
-	import { getMyAuthoredPastEvents } from '$lib/rpc/events.remote';
-	import EventCard from '$lib/components/EventCard.svelte';
 	import { routes } from '$lib/routes';
 	import { user } from '$lib/user.svelte';
 	import { resetPosthogIdentity } from '$lib/posthog';
@@ -9,25 +7,6 @@
 	let { data } = $props();
 	const myPublic = $derived(data.myPublic);
 	let isLoggingOut = $state(false);
-	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
-	let pastEvents = $state<Awaited<ReturnType<typeof getMyAuthoredPastEvents>>>([]);
-	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
-
-	async function fetchPastEvents() {
-		if (pastEventsStatus !== `idle`) return;
-
-		pastEventsStatus = `loading`;
-		pastEvents = await getMyAuthoredPastEvents();
-		pastEventsStatus = `loaded`;
-	}
-
-	async function selectTab(tab: `upcoming` | `past`) {
-		if (selectedTab === tab) return;
-		selectedTab = tab;
-
-		if (tab !== `past`) return;
-		await fetchPastEvents();
-	}
 
 	async function handleLogout() {
 		if (isLoggingOut) return;
@@ -48,11 +27,44 @@
 
 
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:py-0 md:pb-10">
+	<div class="card bg-base-100 mt-4 overflow-hidden shadow">
+		<ul class="list">
+			<li>
+				<a href={routes.myEvents()} class="list-row hover:bg-base-200 items-start no-underline">
+					<div class="bg-primary/15 text-primary-content flex size-12 shrink-0 items-center justify-center rounded-xl">
+						<i class="icon-[ph--calendar-dots] block size-7"></i>
+					</div>
+					<div class="list-col-grow">
+						<h3 class="text-lg font-semibold">Meine Events</h3>
+						<p class="text-base-content/80 text-sm leading-relaxed">
+							Verwalte deine erstellten Events.
+						</p>
+					</div>
+					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
+				</a>
+			</li>
+			<li>
+				<a href={routes.myOfferings()} class="list-row hover:bg-base-200 items-start no-underline">
+					<div class="bg-primary/15 text-primary-content flex size-12 shrink-0 items-center justify-center rounded-xl">
+						<i class="icon-[ph--hand-heart] block size-7"></i>
+					</div>
+					<div class="list-col-grow">
+						<h3 class="text-lg font-semibold">Meine Angebote</h3>
+						<p class="text-base-content/80 text-sm leading-relaxed">
+							Verwalte deine Angebote und aktiviere oder deaktiviere sie.
+						</p>
+					</div>
+					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
+				</a>
+			</li>
+		</ul>
+	</div>
+
 	<div class="card bg-base-100 mt-4 shadow">
 		<div class="card-body gap-4">
 			<div class="flex items-start gap-3">
-				<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
-					<i class="icon-[ph--identification-card] size-7"></i>
+				<div class="bg-primary/15 text-primary-content flex size-12 shrink-0 items-center justify-center rounded-xl">
+					<i class="icon-[ph--identification-card] block size-7"></i>
 				</div>
 				<div class="min-w-0 flex-1 space-y-2">
 					<h3 class="text-lg font-semibold">Öffentliches Profil</h3>
@@ -86,33 +98,12 @@
 		</div>
 	</div>
 
-	<div class="card bg-base-100 mt-4 shadow">
-		<div class="card-body gap-4">
-			<div class="flex items-start gap-3">
-				<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
-					<i class="icon-[ph--hand-heart] size-7"></i>
-				</div>
-				<div class="min-w-0 flex-1 space-y-2">
-					<h3 class="text-lg font-semibold">Meine Angebote</h3>
-					<p class="text-base-content/80 text-sm leading-relaxed">
-						Verwalte deine Angebote und aktiviere oder deaktiviere sie.
-					</p>
-					<div class="card-actions pt-1">
-						<a href={routes.myOfferings()} class="btn">
-							Angebote verwalten
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	{#if user.isAdmin}
 		<div class="card bg-base-100 mt-4 shadow">
 			<div class="card-body gap-4">
 				<div class="flex items-start gap-3">
-					<div class="bg-primary/15 text-primary-content rounded-xl p-2.5">
-						<i class="icon-[ph--shield-star] size-7"></i>
+					<div class="bg-primary/15 text-primary-content flex size-12 shrink-0 items-center justify-center rounded-xl">
+						<i class="icon-[ph--shield-star] block size-7"></i>
 					</div>
 					<div class="min-w-0 flex-1 space-y-2">
 						<h3 class="text-lg font-semibold">Admin</h3>
@@ -143,63 +134,6 @@
 					Abmelden
 				{/if}
 			</button>
-		</div>
-	</div>
-
-	<div class="mt-8">
-		<h3 class="text-lg font-semibold">Meine erstellten Events</h3>
-
-		<div role="tablist" class="tabs tabs-box mt-3 bg-base-300 flex justify-center flex-row">
-			<button
-				role="tab"
-				class="tab grow"
-				class:tab-active={selectedTab === `upcoming`}
-				onclick={() => selectTab(`upcoming`)}
-			>
-				Aktuelle Events
-			</button>
-
-			<button
-				role="tab"
-				class="tab grow"
-				class:tab-active={selectedTab === `past`}
-				onclick={() => selectTab(`past`)}
-				onpointerdown={fetchPastEvents}
-				onmouseenter={fetchPastEvents}
-				onfocus={fetchPastEvents}
-			>
-				Vergangene Events
-			</button>
-		</div>
-
-		<div class:hidden={selectedTab !== `upcoming`}>
-			<div class="mt-4 flex w-full flex-col gap-6">
-				{#each data.upcomingEvents as event (event.id)}
-					<EventCard {event} />
-				{:else}
-					<div class="mt-2 text-center text-base-content/60">
-						Du hast aktuell keine Events.
-					</div>
-				{/each}
-			</div>
-		</div>
-
-		<div class:hidden={selectedTab !== `past`}>
-			{#if pastEventsStatus === `loading`}
-				<div class="mt-12 flex justify-center">
-					<span class="loading loading-spinner"></span>
-				</div>
-			{:else if pastEvents.length}
-				<div class="mt-4 flex w-full flex-col gap-6">
-					{#each pastEvents as event (event.id)}
-						<EventCard {event} />
-					{/each}
-				</div>
-			{:else}
-				<div class="mt-12 text-center text-base-content/60">
-					Du hast noch keine vergangenen Events.
-				</div>
-			{/if}
 		</div>
 	</div>
 </div>
