@@ -17,6 +17,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import type { RemoteFormFields } from '@sveltejs/kit';
+	import type { Snippet } from 'svelte';
 	import type { UiTag } from '$lib/rpc/TagSelection.remote';
 
 	type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
@@ -31,15 +32,21 @@
 		allTags,
 		initialExistingImageUrls = [],
 		showAutofillControl = false,
+		fieldsHidden = false,
 		onDirty,
 		onSuccess,
+		onsubmit,
+		children,
 	}: {
 		remoteForm: EventFormRemoteForm;
 		allTags: UiTag[];
 		initialExistingImageUrls?: string[];
 		showAutofillControl?: boolean;
+		fieldsHidden?: boolean;
 		onDirty?: () => void;
 		onSuccess?: () => void | Promise<void>;
+		onsubmit?: (event: SubmitEvent) => void;
+		children?: Snippet;
 	} = $props();
 
 	function isUpdateEventForm(remoteForm: EventFormRemoteForm): remoteForm is UpdateEventForm {
@@ -77,12 +84,14 @@
 
 <form
 	{...formProps}
+	{...onsubmit ? { onsubmit } : {}}
 	enctype="multipart/form-data"
 	class="flex flex-col gap-5"
 	id="event-form"
 	oninput={() => onDirty?.()}
 	onchange={() => onDirty?.()}
 >
+	<section class={[`flex flex-col gap-5`, fieldsHidden && `hidden`]} data-wizard-step="event">
 	{#if showAutofillControl && isCreateEventForm(remoteForm)}
 		<EventAutofill {remoteForm} />
 	{/if}
@@ -95,7 +104,7 @@
 
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 		<fieldset class="fieldset md:col-span-2">
-			<input class="input w-full peer user-invalid:validator" {...remoteForm.fields.name.as('text')} required />
+			<input class="input w-full peer user-invalid:validator" data-testid="event-name-input" {...remoteForm.fields.name.as('text')} required />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Name *</legend>
 			<FormFieldIssues field={remoteForm.fields.name} />
 		</fieldset>
@@ -121,7 +130,7 @@
 		</fieldset>
 	</div>
 
-	<fieldset class="fieldset md:col-span-2">
+	<fieldset class="fieldset md:col-span-2" data-testid="event-description-editor">
 		<LexicalEditor
 			field={remoteForm.fields.description}
 			placeholder="Beschreibe deinen Event"
@@ -134,7 +143,7 @@
 	<div class="flex flex-wrap md:gap-4 gap-6 flex-col md:flex-row md:flex-nowrap">
 		<fieldset class="fieldset w-full">
 			<label class="label cursor-pointer justify-start gap-2">
-				<input class="checkbox" {...remoteForm.fields.isOnline.as('checkbox')} />
+				<input class="checkbox" data-testid="event-online-checkbox" {...remoteForm.fields.isOnline.as('checkbox')} />
 				<legend class="font-bold text-base-content text-wrap">Online Event
 					<p class="text-xs text-base-content/65 font-normal">Event wird über Video-Call angeboten (Zoom etc.)</p>
 				</legend>
@@ -242,6 +251,8 @@
 		<FormFieldIssues field={remoteForm.fields.contact} />
 	</fieldset>
 
+	</section>
+
 	<div class="hidden">
 		<input readonly {...remoteForm.fields.timeZone.as('text')} />
 		{#if updateFields.eventId}
@@ -251,6 +262,8 @@
 			<input readonly {...updateFields.hostSecret.as('text')} />
 		{/if}
 	</div>
+
+	{@render children?.()}
 
 	{#if remoteForm.fields.allIssues()?.length}
 		<div class="alert alert-error alert-soft">

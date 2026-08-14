@@ -12,6 +12,13 @@ import {
 	getProfileById,
 } from "./helpers/seed";
 import { chooseLocation, mockGooglePlacesAutocomplete, mockSupabaseOtpRequest, setGermanLocale } from "./helpers/offering-test-utils";
+import {
+	addSocialLink,
+	clickWizardPrimary,
+	enterOtp,
+	fillProfileBio,
+	uploadRequiredProfileImages,
+} from "./helpers/create-flow";
 
 const anonymousNewEmail = `offering-new@example.com`;
 const anonymousCompleteEmail = `offering-complete@example.com`;
@@ -161,6 +168,44 @@ test.describe("Offering creation", () => {
 		expect(profile.bio).toContain(`Completed bio`);
 	});
 
+	test("signed-in user with name and social skips the profile step even without a bio", async ({ page }) => {
+		await createProfile(
+			page,
+			createCompleteProfile({
+				bio: null,
+			}),
+		);
+		await signInAsE2EUser(page);
+		await page.goto(`/offerings/new`);
+
+		await fillOfferingBasics(page, { title: `E2E Partial Profile Offering`, format: `online` });
+		await clickWizardPrimary(page);
+		await expect(page.getByTestId(`offering-wizard-heading`)).not.toHaveAttribute(`data-step`, `profile`);
+		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
+		expect((await getOfferingBySlug(page, getCreatedSlugFromUrl(page))).title).toBe(`E2E Partial Profile Offering`);
+	});
+
+	test("signed-in user with a name still enters the profile step when social contact is missing", async ({ page }) => {
+		await createProfile(
+			page,
+			createCompleteProfile({
+				socialLinks: [],
+			}),
+		);
+		await signInAsE2EUser(page);
+		await page.goto(`/offerings/new`);
+
+		await fillOfferingBasics(page, { title: `E2E Missing Social Offering`, format: `online` });
+		await clickWizardPrimary(page);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`);
+		await addSocialLink(page);
+		await clickWizardPrimary(page);
+		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
+		expect(await getProfileById(page, E2E_DEFAULT_USER_ID)).toMatchObject({
+			socialLinks: [{ type: `website`, value: `https://example.com/e2e-user` }],
+		});
+	});
+
 	test("removing an invalid social link clears the validation error so the user can proceed", async ({ page }) => {
 		await createProfile(
 			page,
@@ -282,6 +327,36 @@ test.describe("Offering creation", () => {
 		const slug = getCreatedSlugFromUrl(page);
 		expect((await getOfferingBySlug(page, slug)).title).toBe(`E2E Existing Email Offering`);
 	});
+
+	test("anonymous existing email with a name still needs social contact", async ({ page }) => {
+		await createProfile(
+			page,
+			createCompleteProfile({
+				id: getE2EUserIdForEmail(anonymousCompleteEmail),
+				slug: `anonymous-named-no-social`,
+				displayName: `Named Without Social`,
+				bio: null,
+				socialLinks: [],
+			}),
+		);
+		await mockSupabaseOtpRequest(page);
+		await page.goto(`/offerings/new`);
+		await fillOfferingBasics(page, { title: `E2E Named No Social Offering`, format: `online` });
+		await page.getByTestId(`offering-email-input`).fill(anonymousCompleteEmail);
+		await clickWizardPrimary(page);
+
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`, {
+			timeout: 10000,
+		});
+		await addSocialLink(page);
+		await clickWizardPrimary(page);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`);
+		await enterOtp(page, E2E_OTP_CODE);
+		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
+		expect(await getProfileById(page, getE2EUserIdForEmail(anonymousCompleteEmail))).toMatchObject({
+			socialLinks: [{ type: `website`, value: `https://example.com/e2e-user` }],
+		});
+	});
 });
 
 async function fillOfferingBasics(page: Page, args: { title: string; format: `offline` | `online` | `offline+online` }) {
@@ -289,43 +364,6 @@ async function fillOfferingBasics(page: Page, args: { title: string; format: `of
 	await page.getByTestId(`offering-title-input`).fill(args.title);
 	await page.getByTestId(`offering-format-${args.format}`).click();
 	await expect(page.getByTestId(`offering-format-${args.format}`).locator(`input`)).toBeChecked();
-}
-
-async function fillProfileBio(page: Page, text: string) {
-	const bioEditor = page.getByTestId(`profile-bio-editor`).locator(`[contenteditable="true"]`);
-	await bioEditor.click();
-	await page.keyboard.press(`ControlOrMeta+A`);
-	await page.keyboard.type(text);
-	await expect(page.getByTestId(`profile-bio-editor`).locator(`textarea`)).toHaveValue(new RegExp(text));
-}
-
-async function clickWizardPrimary(page: Page) {
-	await page.getByTestId(`wizard-primary`).click();
-}
-
-async function addSocialLink(page: Page, value = `https://example.com/e2e-user`) {
-	await page.getByTestId(`add-social-link`).click();
-	const dialog = page.getByTestId(`add-social-link-dialog`);
-	await dialog.getByTestId(`add-social-link-value`).fill(value);
-	await dialog.getByTestId(`add-social-link-submit`).click();
-	await expect(dialog).toBeHidden();
-}
-
-async function uploadRequiredProfileImages(page: Page) {
-	for (const kind of [`profile`, `banner`]) {
-		const crop = page.getByTestId(`${kind}-image-crop`);
-		if (await crop.evaluate((el) => el.classList.contains(`hidden`))) continue;
-		await page.getByTestId(`${kind}-image-file`).setInputFiles(`static/pwa-192-maskable.png`);
-		await page.getByTestId(`${kind}-crop-done`).click();
-		await expect(page.getByTestId(`${kind}-image-file`)).toBeEnabled({ timeout: 30000 });
-	}
-}
-
-async function enterOtp(page: Page, code: string) {
-	const otp = page.getByTestId(`otp-input`);
-	await otp.click();
-	await page.keyboard.press(`ControlOrMeta+A`);
-	await page.keyboard.type(code);
 }
 
 function getCreatedSlugFromUrl(page: Page) {

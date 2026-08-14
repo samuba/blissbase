@@ -115,14 +115,15 @@ const supabaseAuth: Handle = async ({ event, resolve }) => {
 };
 
 const guardRoutesWithLogin: Handle = async ({ event, resolve }) => {
-    if (event.url.pathname.startsWith("/_app/remote/")) return resolve(event); // never guard remote functions
-    
-    const { userId } = event.locals;
-    ["/events", "/profile"].forEach(route => {
-        if (event.url.pathname.startsWith(route) && !userId) {
-            redirect(302, resolveRoute('/auth/login'));
-        }
-    });
+    const { userId } = event.locals, { pathname } = event.url;
+    if (pathname.startsWith("/_app/remote/")) return resolve(event); // never guard remote functions
+    if (userId) return resolve(event);
+    if (pathname.startsWith("/profile")) {
+        redirect(302, resolveRoute('/auth/login'));
+    }
+    if (pathname.startsWith("/events") && pathname !== "/events/new") {
+        redirect(302, resolveRoute('/auth/login'));
+    }
     return resolve(event);
 }
 

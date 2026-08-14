@@ -63,6 +63,19 @@ describe(`event schemas`, () => {
 		expect(result.issues?.some((issue) => issue.message === `Start date must be in the future`)).toBe(true);
 	});
 
+	it(`accepts optional create-flow auth fields`, () => {
+		const result = v.safeParse(createEventSchema, createEventPayload({
+			email: `host@example.com`,
+			authToken: `token`,
+			profile: {
+				displayName: `Host`,
+				bio: `Host bio`,
+			},
+		}));
+
+		expect(result.success).toBe(true);
+	});
+
 	it(`allows updating an event that already started`, () => {
 		const result = v.safeParse(updateEventSchema, {
 			...createEventPayload({
@@ -116,4 +129,10 @@ type CreateEventPayload = {
 	contact?: string;
 	contactMethod?: string;
 	images: File[];
+	email?: string;
+	authToken?: string;
+	profile?: {
+		displayName?: string;
+		bio?: string;
+	};
 };

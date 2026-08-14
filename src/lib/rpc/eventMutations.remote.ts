@@ -11,10 +11,13 @@ import {
 import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from '$lib/events.remote.common';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import { routes, withEventSlug } from '$lib/routes';
-import { ensureUserId } from '$lib/server/common';
 import { db, eq, s, sql } from '$lib/server/db';
 import { sendEventCreatedEmail } from '$lib/server/email';
 import { geocodeAddressCached } from '$lib/server/google';
+import { isPublicProfile } from '$lib/server/profile';
+import { hasPublicProfileChanges, mergeProfileFromForm, savePublicProfile } from '$lib/server/savePublicProfile';
+import { verifySubmitAuthToken } from '$lib/server/submitAuth';
+import { getMyPublicProfile } from '$lib/rpc/profile.remote';
 import type { SelectEvent } from '$lib/server/schema';
 import type { InsertEvent } from '$lib/types';
 import { error, invalid, redirect } from '@sveltejs/kit';
@@ -73,9 +76,29 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 export const createEvent = form(createEventSchema, async (data, issue) => {
 	console.time('createEvent');
 	const { locals } = getRequestEvent();
-	const userId = ensureUserId({ locals, msg: `You must be signed in to create an event` });
-	const userEmail = locals.jwtClaims?.email;
-	if (!userEmail) throw error(400, `Signed-in user does not have an email`);
+	const sessionUserId = locals.userId;
+	const userId = sessionUserId ? sessionUserId : verifySubmitAuthToken(data.authToken);
+	if (!userId) return invalid(issue.email(`Bitte bestätige deine E-Mail erneut.`));
+
+	const userEmail = locals.jwtClaims?.email || data.email;
+	if (!userEmail) {
+		return invalid(issue.email(sessionUserId ? `Signed-in user does not have an email` : `Bitte gib deine E-Mail-Adresse ein.`));
+	}
+
+	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
+	if (!currentProfile) throw error(404, `Profile not found`);
+	const nextProfile = await mergeProfileFromForm({
+		currentProfile,
+		data: data.profile ?? {},
+		issue,
+	});
+	if (!isPublicProfile(nextProfile)) {
+		return invalid(issue.profile.displayName(`Bitte vervollständige dein öffentliches Profil.`));
+	}
+	if (hasPublicProfileChanges({ current: currentProfile, next: nextProfile })) {
+		await savePublicProfile(nextProfile);
+		if (sessionUserId) getMyPublicProfile().refresh();
+	}
 
 	const address = toAddressLines(data.address);
 	const coords = await geocodeAddressCached({
@@ -126,14 +149,16 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		}
 	});
 
-	await sendEventCreatedEmail({
-		to: userEmail,
-		eventName: createdEvent!.name,
-		eventSlug: createdEvent!.slug,
-		startAt: createdEvent!.startAt,
-		endAt: createdEvent!.endAt,
-		isOnline: createdEvent!.attendanceMode === `online`,
-	});
+	if (E2E_TEST !== `true`) {
+		await sendEventCreatedEmail({
+			to: userEmail,
+			eventName: createdEvent!.name,
+			eventSlug: createdEvent!.slug,
+			startAt: createdEvent!.startAt,
+			endAt: createdEvent!.endAt,
+			isOnline: createdEvent!.attendanceMode === `online`,
+		});
+	}
 
 	console.timeEnd('createEvent');
 	redirect(303, withEventSlug({ eventSlug: createdEvent!.slug }));
@@ -203,8 +228,27 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 		else contact = [`https://${args.data.contact}`];
 	}
 
+	const {
+		email: _email,
+		authToken: _authToken,
+		profile: _profile,
+		images: _images,
+		isOnline: _isOnline,
+		isNotListed: _isNotListed,
+		contact: _contact,
+		contactMethod: _contactMethod,
+		startAt: _startAt,
+		endAt: _endAt,
+		timeZone: _timeZone,
+		...eventFields
+	} = args.data as CreateEventData & {
+		eventId?: number;
+		hostSecret?: string;
+		existingImageUrls?: string[];
+	};
+
 	return {
-		...args.data,
+		...eventFields,
 		listed,
 		startAt,
 		endAt,
@@ -375,7 +419,7 @@ type UploadImagesArgs = {
 };
 
 type FormDataToDbDataArgs = {
-	data: CreateEventData;
+	data: Omit<CreateEventData, `email` | `authToken` | `profile`>;
 	timezone: string;
 	address: string[];
 };

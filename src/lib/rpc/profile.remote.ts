@@ -18,6 +18,7 @@ import {
 } from "$lib/server/profile";
 import { resolveProfileImageUrl, signProfileImageClaim } from "$lib/server/profileImages";
 import { error, invalid, redirect } from "@sveltejs/kit";
+import type { Profile } from "$lib/server/schema";
 import * as v from "valibot";
 
 const isE2eTestMode = E2E_TEST === `true` && dev;
@@ -60,19 +61,15 @@ export const checkEmailProfileComplete = command(
 			const profile = await db.query.profiles.findFirst({
 				where: eq(s.profiles.id, getE2EUserIdForEmail(email)),
 			});
-			return {
-				profileComplete: isPublicProfile(profile) && hasSocialLink(profile),
-			};
+			return emailProfileCompleteness(profile);
 		}
 
 		const rows = await db.execute<{ id: string }>(sql`select id::text as id from auth.users where lower(email) = lower(${email}) limit 1`);
 		const userId = rows[0]?.id;
-		if (!userId) return { profileComplete: false };
+		if (!userId) return emailProfileCompleteness(null);
 
 		const profile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
-		return {
-			profileComplete: isPublicProfile(profile) && hasSocialLink(profile),
-		};
+		return emailProfileCompleteness(profile);
 	},
 );
 
@@ -243,6 +240,18 @@ async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
 	const orphanKeys = allKeys.filter((key) => key !== keepKey);
 	if (!orphanKeys?.length) return;
 	await assets.deleteObjects(orphanKeys, eventAssetsCreds);
+}
+
+function emailProfileCompleteness(profile: Profile | null | undefined) {
+	return {
+		isPublic: isPublicProfile(profile),
+		hasSocialLink: hasSocialLink(profile),
+		displayName: profile?.displayName ?? ``,
+		bio: profile?.bio ?? ``,
+		profileImageUrl: profile?.profileImageUrl ?? ``,
+		bannerImageUrl: profile?.bannerImageUrl ?? ``,
+		socialLinks: profile?.socialLinks ?? [],
+	};
 }
 
 type SweepProfileImagePrefixArgs = {

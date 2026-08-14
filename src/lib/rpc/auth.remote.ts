@@ -5,7 +5,7 @@ import { resolveSupportedLocale } from "$lib/common";
 import { refreshAuthLocalsFromSupabase } from "$lib/server/authLocals";
 import { db, s } from "$lib/server/db";
 import { E2E_OTP_CODE, getE2EUserIdForEmail } from "$lib/server/e2eAuth";
-import { signOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
+import { signSubmitAuthToken } from "$lib/server/submitAuth";
 import * as v from "valibot";
 
 export const getUserSession = query(async () => {
@@ -41,7 +41,7 @@ export const verifyEmailOtp = command(verifyEmailOtpInputSchema, async ({ email,
 		});
 		return {
 			ok: true as const,
-			offeringSubmitAuthToken: signOfferingSubmitAuthToken({ userId }),
+			submitAuthToken: signSubmitAuthToken({ userId }),
 		};
 	}
 
@@ -71,7 +71,7 @@ export const verifyEmailOtp = command(verifyEmailOtpInputSchema, async ({ email,
 	});
 	return {
 		ok: true as const,
-		offeringSubmitAuthToken: signOfferingSubmitAuthToken({ userId: data.user.id }),
+		submitAuthToken: signSubmitAuthToken({ userId: data.user.id }),
 	};
 });
 

@@ -69,6 +69,13 @@ export const POST: RequestHandler = async ({ request }) => {
 				return json({ success: true, event });
 			}
 
+			case "getEventBySlug": {
+				const event = await db.query.events.findFirst({
+					where: eq(s.events.slug, data.slug),
+				});
+				return json({ success: true, event });
+			}
+
 			case "createProfile": {
 				const [profile] = await db
 					.insert(s.profiles)

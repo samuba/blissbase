@@ -23,6 +23,8 @@ export function getDefaultCreateEventFieldBase(args: { timeZone: string }) {
 		isNotListed: false,
 		contact: ``,
 		contactMethod: `none`,
-		images: [] as File[]
+		images: [] as File[],
+		email: ``,
+		authToken: ``,
 	};
 }

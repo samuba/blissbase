@@ -199,6 +199,20 @@ export const publicProfileFields = {
 
 export const publicProfileFormSchema = v.object(publicProfileFields);
 
+export const publicProfilePatchSchema = v.pipe(
+	v.partial(
+		v.object({
+			displayName: publicProfileFields.displayName,
+			bio: publicProfileFields.bio,
+			profileImageUrl: publicProfileFields.profileImageUrl,
+			bannerImageUrl: publicProfileFields.bannerImageUrl,
+			socialLinks: publicProfileFields.socialLinks,
+			...profileLocationFields,
+		}),
+	),
+	v.check((data) => isValidProfileLocation(data), profileLocationCheckMessage),
+);
+
 /**
  * Converts stored social links into button-ready href entries.
  *

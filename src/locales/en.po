@@ -413,7 +413,6 @@ msgstr "Cancel"
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/edit/[id]/+page.svelte
-#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Speichern"
@@ -424,6 +423,7 @@ msgstr "Save"
 msgid "<0/> Alle Events"
 msgstr "<0/> All events"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/events/new/+page.svelte
 msgid "Event erstellen"
 msgstr "Create event"
@@ -460,8 +460,8 @@ msgstr "Error while loading events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
-#: src/routes/offerings/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/createFlowAuth.svelte.ts
+#: src/lib/createFlowAuth.svelte.ts
 msgid "Ein Fehler ist aufgetreten"
 msgstr "An error occurred"
 
@@ -1066,7 +1066,7 @@ msgstr "Select type"
 msgid "Hinzufügen"
 msgstr "Add"
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/createFlowAuth.svelte.ts
 msgid "Bitte gib den 6-stelligen Code ein."
 msgstr "Please enter the 6-digit code."
 
@@ -1075,6 +1075,7 @@ msgid "<0/> Code senden"
 msgstr "<0/> Send code"
 
 #: src/lib/components/Login.svelte
+#: src/lib/components/OtpStep.svelte
 #: src/routes/offerings/new/OtpStep.svelte
 msgid "Einmalcode"
 msgstr "One-time code"
@@ -1088,6 +1089,7 @@ msgid "<0/> Anmelden"
 msgstr "<0/> Log in"
 
 #: src/lib/components/Login.svelte
+#: src/lib/components/OtpStep.svelte
 #: src/routes/offerings/new/OtpStep.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Use a different email"
@@ -1121,10 +1123,12 @@ msgstr "Resend code <0/>"
 msgid "<0/> <1/> <2/> <3/> <4/> Social-Link hinzufügen"
 msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "E-Mail bestätigen"
 msgstr "Confirm email"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Checking…"
@@ -1164,8 +1168,8 @@ msgstr "Add a contact link so people can reach you."
 msgid "<0/> Angebot erstellen"
 msgstr "<0/> Create offering"
 
-#: src/routes/offerings/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/createFlowAuth.svelte.ts
+#: src/lib/createFlowAuth.svelte.ts
 msgid "Bitte gib deine E-Mail-Adresse ein."
 msgstr "Please enter your email address."
 
@@ -1182,7 +1186,7 @@ msgstr "Title *"
 msgid "Format *"
 msgstr "Format *"
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/CreateFlowProfileFields.svelte
 msgid "Profilbeschreibung"
 msgstr "Profile description"
 
@@ -1194,7 +1198,7 @@ msgstr "In-person & Online"
 msgid "Video-Call oder anderes Online-Format."
 msgstr "Video call or other online format."
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/CreateFlowProfileFields.svelte
 msgid "Dein Name *"
 msgstr "Your Name *"
 
@@ -1246,6 +1250,7 @@ msgstr "No more search results for \"{0}\""
 msgid "Find conscious events near you."
 msgstr "Find conscious events near you."
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "<0/> Bilder werden hochgeladen…"
@@ -1271,6 +1276,8 @@ msgstr "Upload failed"
 msgid "Wird hochgeladen"
 msgstr "Uploading"
 
+#: src/routes/events/new/+page.svelte
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte warte, bis alle Bilder hochgeladen sind."
@@ -1304,6 +1311,8 @@ msgstr "Show events <0/>"
 msgid "<0/>Bilder werden lokal verarbeitet und hochgeladen."
 msgstr "<0/>Images are processed locally and uploaded."
 
+#: src/lib/createFlowAuth.svelte.ts
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut."
 msgstr "Registration could not be confirmed. Please try again."
@@ -1416,31 +1425,38 @@ msgstr "Invalid offering slug"
 msgid "Angebot"
 msgstr "Offer"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Möchtest du dein Profil bearbeiten? <0><0/> Profil bearbeiten</0>"
 msgstr "Do you want to edit your profile? <0><0/> Edit profile</0>"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Zurück"
 msgstr "Back"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "<0/> E-Mail wird geprüft…"
 msgstr "<0/> Email is being checked…"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Weiter"
 msgstr "Next"
 
+#: src/lib/components/OtpStep.svelte
 #: src/routes/offerings/new/OtpStep.svelte
 msgid "Code erneut senden"
 msgstr "Resend code"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "E-Mail für Login *"
 msgstr "Email for login *"
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
 msgstr "Not public. We’ll send you a code to verify your email address."
@@ -1457,7 +1473,7 @@ msgstr "Confirm email and publish offer"
 msgid "Bitte füge mindestens einen Social-Link hinzu."
 msgstr "Please add at least one social link."
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/CreateFlowProfileFields.svelte
 msgid "Social Links *"
 msgstr "Social Links *"
 
@@ -1609,7 +1625,7 @@ msgstr "Repeat"
 msgid "Redo"
 msgstr "Redo"
 
-#: src/routes/offerings/new/+page.svelte
+#: src/lib/components/CreateFlowProfileFields.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Erzähl etwas über dich…"
 msgstr "Tell me something about yourself…"
@@ -1679,6 +1695,7 @@ msgstr "<0/> Analyzing …"
 msgid "Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. Jeder kann es in deinem Profil und auf der Angebote-Seite sehen."
 msgstr "An offering is a service you provide on request. Everyone can see it in your profile and on the offerings page."
 
+#: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Fülle dein Profil aus"
 msgstr "Fill out your profile"
@@ -2212,3 +2229,30 @@ msgstr "Default time zone * <0/>"
 #: src/routes/+page.svelte
 msgid "<0/> Achtsame Events in deiner Nähe <1/>"
 msgstr "<0/> Mindful events near you <1/>"
+
+#~ msgid "<0/> <1/> <2/> <3/> width={0} height={1} alt=\"Hero\" class=\"h-72 w-full object-cover md:h-auto md:max-h-[550px]\" />"
+#~ msgstr "<0/> <1/> <2/> <3/> width={0} height={1} alt=\"Hero\" class=\"h-72 w-full object-cover md:h-auto md:max-h-[550px]\" />"
+
+#: src/routes/events/new/+page.svelte
+msgid "Event"
+msgstr "Event"
+
+#: src/routes/events/new/+page.svelte
+msgid "Event erstellen | Blissbase"
+msgstr "Create event | Blissbase"
+
+#: src/routes/events/new/+page.svelte
+msgid "Ein vollständiges Profil hilft, dass dir Menschen mehr vertrauen. Dein Profil wird bei deinen Events angezeigt."
+msgstr "A complete profile helps people trust you more. Your profile will be displayed with your events."
+
+#: src/routes/events/new/+page.svelte
+msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Event geht erst live, wenn die Bestätigung abgeschlossen ist."
+msgstr "We sent a 6-digit code to <0/>. Enter it here to verify your email address. Your event will only go live once verification is complete."
+
+#: src/routes/events/new/+page.svelte
+msgid "E-Mail bestätigen und Event veröffentlichen"
+msgstr "Verify email address and publish event"
+
+#: src/lib/components/CreateFlowProfileFields.svelte
+msgid "Social Links"
+msgstr "Social Links"

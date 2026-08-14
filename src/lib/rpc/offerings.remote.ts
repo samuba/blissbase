@@ -10,11 +10,10 @@ import { BASE_URL, routes, safeReturnToPath, withOfferingSlug } from "$lib/route
 import { eventAssetsCreds } from "$lib/events.remote.shared";
 import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
-import { and, db, eq, ne, or, s, sql } from "$lib/server/db";
-import { verifyOfferingSubmitAuthToken } from "$lib/server/offeringSubmitAuth";
-import { createPublicProfileSlug, hasSocialLink, isPublicProfile } from "$lib/server/profile";
-import { resolveProfileImageUrl } from "$lib/server/profileImages";
-import type { Profile } from "$lib/server/schema";
+import { and, db, eq, or, s, sql } from "$lib/server/db";
+import { verifySubmitAuthToken } from "$lib/server/submitAuth";
+import { hasSocialLink, isPublicProfile } from "$lib/server/profile";
+import { mergeProfileFromForm, savePublicProfile } from "$lib/server/savePublicProfile";
 import { error, invalid, redirect } from "@sveltejs/kit";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import * as v from "valibot";
@@ -291,14 +290,14 @@ export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, a
 
 export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	const sessionUserId = getRequestEvent().locals.userId;
-	const userId = sessionUserId ? sessionUserId : verifyOfferingSubmitAuthToken(data.authToken);
+	const userId = sessionUserId ? sessionUserId : verifySubmitAuthToken(data.authToken);
 
 	if (!userId) return invalid(issue.email(`Bitte bestätige deine E-Mail erneut.`));
 
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, userId) });
 	if (!currentProfile) throw error(404, `Profile not found`);
 
-	const nextProfile = await mergeProfileFromOfferingForm({
+	const nextProfile = await mergeProfileFromForm({
 		currentProfile,
 		data: data.profile ?? {},
 		issue,
@@ -319,7 +318,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 		return invalid(issue.imageClaims(imageClaims.message));
 	}
 
-	await saveOfferingProfile(nextProfile);
+	await savePublicProfile(nextProfile);
 
 	const slug = `${randomString(6).toLowerCase()}-${slugify(data.title)}`;
 
@@ -375,7 +374,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	const ownerId = offering.profileId;
 	const currentProfile = await db.query.profiles.findFirst({ where: eq(s.profiles.id, ownerId) });
 	if (!currentProfile) throw error(404, `Profile not found`);
-	const nextProfile = data.profile ? await mergeProfileFromOfferingForm({ currentProfile, data: data.profile, issue }) : currentProfile;
+	const nextProfile = data.profile ? await mergeProfileFromForm({ currentProfile, data: data.profile, issue }) : currentProfile;
 	if (offeringNeedsLocation(data.format) && !hasValidCoordinates({ lat: nextProfile.latitude, lng: nextProfile.longitude })) {
 		return invalid(issue.profile.locationLabel(`Bitte wähle einen Ort für dein Angebot aus.`));
 	}
@@ -386,7 +385,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	}
 
 	if (data.profile) {
-		await saveOfferingProfile(nextProfile);
+		await savePublicProfile(nextProfile);
 	}
 
 	const uploadedImageUrls = await finalizeOfferingImageClaims({
@@ -607,119 +606,6 @@ function getOfferingImageSuffixFromObjectKey(objectKey: string) {
 	return fileName?.replace(/\.(webp|jpg)$/, ``);
 }
 
-/**
- * Merges the submitted offering profile patch into the authenticated profile.
- *
- * @example
- * await mergeProfileFromOfferingForm({ currentProfile, data, issue });
- */
-async function mergeProfileFromOfferingForm(args: UpdateProfileFromOfferingFormArgs) {
-	const currentSlug = args.currentProfile.slug?.trim();
-	const displayName = args.data.displayName?.trim() ?? args.currentProfile.displayName;
-	const slug =
-		currentSlug ||
-		(await createAvailableProfileSlug({
-			displayName: displayName ?? ``,
-			profileId: args.currentProfile.id,
-		}));
-
-	const submittedProfileImageUrl = args.data.profileImageUrl?.trim();
-	const nextProfileImageUrl = submittedProfileImageUrl
-		? await resolveProfileImageUrl({
-				submittedUrl: submittedProfileImageUrl,
-				currentUrl: args.currentProfile.profileImageUrl,
-				userId: args.currentProfile.id,
-				expectedType: `profile`,
-			})
-		: args.currentProfile.profileImageUrl;
-	if (nextProfileImageUrl instanceof Error) {
-		return invalid(args.issue.profile.profileImageUrl(nextProfileImageUrl.message));
-	}
-
-	const submittedBannerImageUrl = args.data.bannerImageUrl?.trim();
-	const nextBannerImageUrl = submittedBannerImageUrl
-		? await resolveProfileImageUrl({
-				submittedUrl: submittedBannerImageUrl,
-				currentUrl: args.currentProfile.bannerImageUrl,
-				userId: args.currentProfile.id,
-				expectedType: `banner`,
-			})
-		: args.currentProfile.bannerImageUrl;
-	if (nextBannerImageUrl instanceof Error) {
-		return invalid(args.issue.profile.bannerImageUrl(nextBannerImageUrl.message));
-	}
-
-	const submittedLocationLabel = args.data.locationLabel?.trim();
-	const hasSubmittedLocation = `locationLabel` in args.data || `latitude` in args.data || `longitude` in args.data;
-
-	return {
-		...args.currentProfile,
-		displayName,
-		slug,
-		bio: `bio` in args.data ? args.data.bio?.trim() || null : args.currentProfile.bio,
-		locationLabel: hasSubmittedLocation ? submittedLocationLabel || null : args.currentProfile.locationLabel,
-		latitude: hasSubmittedLocation ? (args.data.latitude ?? null) : args.currentProfile.latitude,
-		longitude: hasSubmittedLocation ? (args.data.longitude ?? null) : args.currentProfile.longitude,
-		socialLinks: args.data.socialLinks ?? args.currentProfile.socialLinks,
-		profileImageUrl: nextProfileImageUrl,
-		bannerImageUrl: nextBannerImageUrl,
-	};
-}
-
-async function saveOfferingProfile(profile: Profile) {
-	const [updatedProfile] = await db
-		.update(s.profiles)
-		.set({
-			displayName: profile.displayName,
-			slug: profile.slug,
-			bio: profile.bio,
-			locationLabel: profile.locationLabel,
-			latitude: profile.latitude,
-			longitude: profile.longitude,
-			socialLinks: profile.socialLinks,
-			profileImageUrl: profile.profileImageUrl,
-			bannerImageUrl: profile.bannerImageUrl,
-			updatedAt: sql`now()`,
-		})
-		.where(eq(s.profiles.id, profile.id))
-		.returning();
-
-	await Promise.all([
-		sweepProfileImagePrefix({
-			userId: profile.id,
-			kind: `profile`,
-			keepUrl: profile.profileImageUrl,
-		}),
-		sweepProfileImagePrefix({
-			userId: profile.id,
-			kind: `banner`,
-			keepUrl: profile.bannerImageUrl,
-		}),
-	]);
-
-	return updatedProfile ?? profile;
-}
-
-async function createAvailableProfileSlug(args: { displayName: string; profileId: string }) {
-	const baseSlug = createPublicProfileSlug(args.displayName);
-	for (let attempt = 0; attempt < 100; attempt++) {
-		const suffix = attempt === 0 ? `` : `-${randomString(2).toLowerCase()}`;
-		const slug = `${baseSlug.slice(0, 80 - suffix.length)}${suffix}`;
-		if (await isProfileSlugAvailable({ slug, profileId: args.profileId })) return slug;
-	}
-
-	throw error(409, `Could not create a unique profile slug`);
-}
-
-async function isProfileSlugAvailable(args: { slug: string; profileId: string }) {
-	const existingSlugOwner = await db.query.profiles.findFirst({
-		where: and(eq(s.profiles.slug, args.slug), ne(s.profiles.id, args.profileId)),
-		columns: { id: true },
-	});
-
-	return !existingSlugOwner;
-}
-
 function keepSubmittedOfferingImages(args: { currentImageUrls: string[]; submittedImageUrls: string[] }) {
 	if (!args.currentImageUrls?.length || !args.submittedImageUrls?.length) return [];
 
@@ -807,38 +693,6 @@ function refreshOfferingLists(args: { returnTo?: string | null } = {}) {
 		userHasOfferings().refresh();
 	}
 }
-
-async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
-	if (isE2eTestMode) return;
-
-	const prefix = `profiles/${args.userId}/${args.kind}`;
-	const keepKey = assets.objectKeyFromPublicUrl(args.keepUrl);
-	const allKeys = await assets.listObjectKeysByPrefix({ prefix, creds: eventAssetsCreds });
-	const orphanKeys = allKeys.filter((key) => key !== keepKey);
-	if (!orphanKeys?.length) return;
-	await assets.deleteObjects(orphanKeys, eventAssetsCreds);
-}
-
-type UpdateProfileFromOfferingFormArgs = {
-	currentProfile: Profile;
-	data: NonNullable<v.InferOutput<typeof offeringFormSchema>["profile"]>;
-	issue: OfferingFormIssue;
-};
-
-type OfferingFormIssue = {
-	profile: {
-		profileImageUrl: (message: string) => InvalidIssue;
-		bannerImageUrl: (message: string) => InvalidIssue;
-	};
-};
-
-type InvalidIssue = Parameters<typeof invalid>[0];
-
-type SweepProfileImagePrefixArgs = {
-	userId: string;
-	kind: `profile` | `banner`;
-	keepUrl: string | null;
-};
 
 type FinalizeOfferingImageClaimsArgs = {
 	claims: OfferingImageClaim[];

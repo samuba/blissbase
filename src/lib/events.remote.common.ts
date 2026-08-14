@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { publicProfilePatchSchema } from '$lib/rpc/profile.common';
 
 export type ContactMethod = `none` | `email` | `phone` | `website` | `telegram` | `whatsapp`;
 
@@ -89,7 +90,12 @@ const eventSchemaEntries = {
 } satisfies v.ObjectEntries;
 
 export const createEventSchema = v.pipe(
-	v.object(eventSchemaEntries),
+	v.object({
+		...eventSchemaEntries,
+		email: v.optional(v.pipe(v.string(), v.trim(), v.email(`Email is invalid`))),
+		authToken: v.optional(v.pipe(v.string(), v.trim()), ``),
+		profile: v.optional(publicProfilePatchSchema),
+	}),
 	v.forward(
 		v.partialCheck(
 			[['startAt']],

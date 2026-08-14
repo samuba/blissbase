@@ -147,18 +147,20 @@ test.describe('Navigation Menu', () => {
 		await clearTestEvents(page);
 	});
 
-	test('create event page is accessible', async ({ page }) => {
+	test('create event page is accessible while logged out', async ({ page }) => {
+		await page.context().clearCookies();
 		for (let attempt = 0; attempt < 3; attempt++) {
 			try {
 				await page.goto('/events/new', { waitUntil: 'domcontentloaded' });
 				break;
 			} catch {
-				if (attempt === 2) throw new Error(`Failed to open /new after 3 attempts`);
+				if (attempt === 2) throw new Error(`Failed to open /events/new after 3 attempts`);
 				await page.waitForTimeout(400);
 			}
 		}
 		await expect(page.locator('body')).toBeVisible();
-		await expect(page.getByTestId('create-event-heading')).toBeVisible();
+		await expect(page.getByTestId('create-event-heading')).toHaveAttribute('data-step', 'event');
+		await expect(page.getByTestId('event-email-input')).toBeVisible();
 	});
 
 	test('event sources page is accessible', async ({ page }) => {

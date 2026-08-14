@@ -1,6 +1,5 @@
 import * as v from 'valibot';
 import { command } from '$app/server';
-import { ensureUserId } from '$lib/server/common';
 import { aiExtractEventData } from '../server/ai';
 import { mapAiAnswerToCreateEventPrefill } from '$lib/server/mapAiAnswerToCreateEventPrefill';
 
@@ -39,7 +38,6 @@ const prefillSchema = v.pipe(
  * });
  */
 export const prefillEventFromDescription = command(prefillSchema, async ({ text, timeZone, images }) => {
-	ensureUserId({ msg: `Du musst angemeldet sein, um Events importieren zu können.` });
 
 	const trimmed = text?.trim() ?? ``;
 	const imageInputs = [];

@@ -1,24 +1,17 @@
 <script lang="ts">
-	import { invalidateAll } from "$app/navigation";
 	import { page } from "$app/state";
 	import { onDestroy, onMount } from "svelte";
-	import { SvelteMap } from "svelte/reactivity";
-	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
-	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
-	import PublicProfileSocialLinksEditor from "$lib/components/PublicProfileSocialLinksEditor.svelte";
-	import { verifyEmailOtp } from "$lib/rpc/auth.remote";
+	import CreateFlowProfileFields, { type CreateFlowProfileRemoteFields } from "$lib/components/CreateFlowProfileFields.svelte";
+	import OtpStep from "$lib/components/OtpStep.svelte";
+	import { CreateFlowAuth, fieldHasIssues } from "$lib/createFlowAuth.svelte";
 	import { offeringNeedsLocation, type OfferingFormat } from "$lib/rpc/offerings.common";
 	import { createOffering } from "$lib/rpc/offerings.remote";
 	import { profileLocationCheckMessage, type PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-	import { checkEmailProfileComplete } from "$lib/rpc/profile.remote";
 	import { hasValidCoordinates } from "$lib/locationFilter";
 	import { routes, safeReturnToPath } from "$lib/routes";
-	import { getSupabaseBrowserClient } from "$lib/supabase";
 	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
-	import { localeStore } from "../../../locales/localeStore.svelte";
-	import OtpStep from "./OtpStep.svelte";
 	import { loadFiltersFromBrowserCookie } from "$lib/cookie-utils";
 
 	type WizardStep = `offering` | `profile` | `otp`;
@@ -26,47 +19,30 @@
 		id: WizardStep;
 		label: string;
 	};
-	type FormFieldWithIssues = {
-		issues?: () => unknown[] | undefined;
-		allIssues?: () => unknown[] | undefined;
-	};
 
 	let { data } = $props();
 	const isSignedIn = Boolean(page.data.userId);
 	// svelte-ignore state_referenced_locally
 	let profile = $state(data.profile);
-	const EMAIL_CHECK_DEBOUNCE_MS = 500;
 	const missingDisplayName = !profile?.displayName?.trim();
-	const missingProfileImageUrl = !profile?.profileImageUrl?.trim();
-	const missingBannerImageUrl = !profile?.bannerImageUrl?.trim();
-	const missingBio = !profile?.bio?.trim();
 	const missingSocialLinks = !profile?.socialLinks?.some((link) => link.value?.trim());
-	const signedInProfileIncomplete =
-		missingDisplayName || missingProfileImageUrl || missingBio || missingSocialLinks;
+	const signedInProfileIncomplete = missingDisplayName || missingSocialLinks;
 
 	let requestedStep = $state<WizardStep>(`offering`);
-	let clientReady = $state(false);
 	let format = $state<OfferingFormat>(`offline`);
 	let offeringImagesBusy = $state(false);
 	let profileImageBusy = $state(false);
 	let bannerImageBusy = $state(false);
-	let email = $state(``);
-	let checkedEmail = $state(``);
-	let emailProfileComplete = $state<boolean | null>(isSignedIn);
-	let emailCheckBusy = $state(false);
-	let emailCheckError = $state(``);
-	const emailProfileCheckPromises = new SvelteMap<string, Promise<EmailProfileCheckResult>>();
-	let emailProfileCheckDebounce: ReturnType<typeof setTimeout> | null = null;
-	let pendingEmail = $state(``);
-	let otpCode = $state(``);
-	let authBusy = $state(false);
-	let authError = $state(``);
-	let authVerified = $state(isSignedIn);
-	let offeringSubmitAuthToken = $state(``);
 	let submitError = $state(``);
 	let locationError = $state(``);
 	let profileSocialLinkError = $state(``);
 	let socialLinks = $state([...(profile?.socialLinks ?? [])] as PublicProfileSocialLinks);
+
+	const auth = new CreateFlowAuth({
+		isSignedIn,
+		onSubmitAuthTokenChange: (token) => createOffering.fields.authToken.set(token),
+	});
+	const wizardProfile = $derived(profile ?? auth.emailLoadedProfile);
 
 	const anyImageUploadInFlight = $derived(offeringImagesBusy || profileImageBusy || bannerImageBusy);
 	const profileHasSocialLink = $derived(hasSocialLink(socialLinks));
@@ -79,7 +55,7 @@
 	});
 	const profileFieldIssues = $derived(hasProfileFieldIssues());
 	const profileStepApplies = $derived(
-		isSignedIn ? signedInProfileIncomplete || profileFieldIssues : emailProfileComplete !== true || profileFieldIssues,
+		isSignedIn ? signedInProfileIncomplete || profileFieldIssues : auth.emailProfileComplete !== true || profileFieldIssues,
 	);
 	const currentStep = $derived.by<WizardStep>(() => {
 		if (profileFieldIssues && profileStepApplies) return `profile`;
@@ -105,7 +81,7 @@
 	const renderProfileFields = $derived(profileStepApplies);
 	const profileFieldsHidden = $derived(currentStep !== `profile`);
 	const showOtpStep = $derived(currentStep === `otp` && !isSignedIn);
-	const primaryBusy = $derived(createOffering.pending > 0 || authBusy || emailCheckBusy || anyImageUploadInFlight);
+	const primaryBusy = $derived(createOffering.pending > 0 || auth.authBusy || auth.emailCheckBusy || anyImageUploadInFlight);
 	const returnHref = $derived(
 		safeReturnToPath({
 			returnTo: page.url.searchParams.get(`returnTo`),
@@ -135,10 +111,6 @@
 		}
 	});
 
-	function fieldHasIssues(field: FormFieldWithIssues) {
-		return Boolean(field.issues?.()?.length || field.allIssues?.()?.length);
-	}
-
 	function hasProfileFieldIssues() {
 		const profileFields = createOffering.fields.profile;
 		return Boolean(
@@ -163,7 +135,7 @@
 		for (const section of sections) {
 			const controls = section.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`input, select, textarea`);
 			for (const control of controls) {
-				if (control.disabled || control.type === `hidden`) continue;
+				if (control.disabled || control.type === `hidden` || control.closest(`.hidden, [hidden]`)) continue;
 				if (control.checkValidity()) continue;
 				control.reportValidity();
 				return false;
@@ -205,10 +177,6 @@
 		return links.some((link) => link.value?.trim());
 	}
 
-	function getSocialLinks() {
-		return socialLinks;
-	}
-
 	function setSocialLinks(nextSocialLinks: PublicProfileSocialLinks) {
 		socialLinks = nextSocialLinks;
 		unsaved.markDirty();
@@ -216,181 +184,29 @@
 		profileSocialLinkError = ``;
 	}
 
-	function resetEmailProfileCheck(emailValue = email) {
-		const trimmed = emailValue.trim();
-		clearEmailProfileCheckDebounce();
-		if (checkedEmail !== trimmed) {
-			emailProfileComplete = null;
-			checkedEmail = ``;
-		}
-		emailCheckError = ``;
-		authVerified = false;
-		offeringSubmitAuthToken = ``;
-		createOffering.fields.authToken.set(``);
-		if (!trimmed) return;
-		emailProfileCheckDebounce = setTimeout(() => {
-			emailProfileCheckDebounce = null;
-			void checkEmailProfileStatus({ showError: false });
-		}, EMAIL_CHECK_DEBOUNCE_MS);
-	}
-
-	function onEmailInput(event: Event) {
-		const input = event.currentTarget;
-		if (!(input instanceof HTMLInputElement)) return;
-		email = input.value;
-		resetEmailProfileCheck(input.value);
-	}
-
-	function clearEmailProfileCheckDebounce() {
-		if (!emailProfileCheckDebounce) return;
-		clearTimeout(emailProfileCheckDebounce);
-		emailProfileCheckDebounce = null;
-	}
-
-	function getEmailProfileCheck(trimmed: string) {
-		const existingPromise = emailProfileCheckPromises.get(trimmed);
-		if (existingPromise) return existingPromise;
-
-		const promise = checkEmailProfileComplete({ email: trimmed })
-			.then(
-				(result) =>
-					({
-						ok: true,
-						profileComplete: result.profileComplete,
-					}) satisfies EmailProfileCheckResult,
-			)
-			.catch(
-				(err: unknown) =>
-					({
-						ok: false,
-						message: err instanceof Error ? err.message : `E-Mail konnte nicht geprüft werden.`,
-					}) satisfies EmailProfileCheckResult,
-			)
-			.finally(() => {
-				if (emailProfileCheckPromises.get(trimmed) !== promise) return;
-				emailProfileCheckPromises.delete(trimmed);
-			});
-		emailProfileCheckPromises.set(trimmed, promise);
-		return promise;
-	}
-
-	async function checkEmailProfileStatus(args: { showError: boolean }) {
-		const trimmed = email.trim();
-		if (isSignedIn) return true;
-		if (!trimmed) {
-			if (args.showError) emailCheckError = `Bitte gib deine E-Mail-Adresse ein.`;
-			emailProfileComplete = null;
-			return false;
-		}
-		if (checkedEmail === trimmed && emailProfileComplete !== null) return true;
-
-		if (args.showError) emailCheckError = ``;
-		const result = await getEmailProfileCheck(trimmed);
-		if (email.trim() !== trimmed) return false;
-		if (result.ok) {
-			emailCheckError = ``;
-			checkedEmail = trimmed;
-			emailProfileComplete = result.profileComplete;
-			return true;
-		}
-
-		emailProfileComplete = null;
-		if (args.showError) emailCheckError = result.message;
-		return false;
-	}
-
-	async function onEmailBlur() {
-		clearEmailProfileCheckDebounce();
-		await checkEmailProfileStatus({ showError: false });
-	}
-
-	async function sendOtpCode(args: { emailAddress?: string; resetCode?: boolean } = {}) {
-		const trimmed = (args.emailAddress ?? email).trim();
-		if (!trimmed || authBusy) {
-			authError = `Bitte gib deine E-Mail-Adresse ein.`;
-			return false;
-		}
-
-		authBusy = true;
-		authError = ``;
-		submitError = ``;
-		try {
-			const supabase = getSupabaseBrowserClient();
-			const emailRedirectTo = `${window.location.origin}/auth/callback`;
-			const { error } = await supabase.auth.signInWithOtp({
-				email: trimmed,
-				options: {
-					emailRedirectTo,
-					data: {
-						locale: localeStore.locale,
-					},
-				},
-			});
-			if (error) throw error;
-			pendingEmail = trimmed;
-			if (args.resetCode !== false) otpCode = ``;
-			return true;
-		} catch (err: unknown) {
-			authError = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
-			submitError = authError;
-			console.error(`Auth error:`, err);
-			return false;
-		} finally {
-			authBusy = false;
-		}
-	}
-
 	async function enterOtpStep() {
-		const trimmed = email.trim();
-		const sent = await sendOtpCode({ emailAddress: trimmed });
-		if (!sent) return;
+		const sent = await auth.enterOtpStep();
+		if (!sent) {
+			submitError = auth.authError;
+			return;
+		}
 		requestedStep = `otp`;
 	}
 
 	async function verifyCodeAndSubmit() {
-		const token = otpCode.replace(/\D/g, ``).slice(0, 6);
-		if (token.length !== 6 || authBusy) {
-			authError = `Bitte gib den 6-stelligen Code ein.`;
+		if (!validateOfferingLocation()) return;
+		const verified = await auth.verifyCode();
+		if (!verified) return;
+		if (!page.data.userId && !auth.submitAuthToken) {
+			auth.authError = `Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut.`;
 			return;
 		}
-		if (!validateOfferingLocation()) return;
-
-		authBusy = true;
-		authError = ``;
-		try {
-			const result = await verifyEmailOtp({ email: pendingEmail, token });
-			if (!result.ok) {
-				authError = result.message;
-				return;
-			}
-			offeringSubmitAuthToken = result.offeringSubmitAuthToken;
-			createOffering.fields.authToken.set(offeringSubmitAuthToken);
-			await invalidateAll();
-			if (!page.data.userId && !offeringSubmitAuthToken) {
-				authError = `Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut.`;
-				return;
-			}
-
-			authVerified = true;
-			requestOfferingSubmit();
-		} catch (err: unknown) {
-			authError = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
-			console.error(`Auth error:`, err);
-		} finally {
-			authBusy = false;
-		}
+		requestOfferingSubmit();
 	}
 
 	function useAnotherEmail() {
 		requestedStep = `offering`;
-		pendingEmail = ``;
-		otpCode = ``;
-		authError = ``;
-		resetEmailProfileCheck();
-	}
-
-	async function resendCode() {
-		await sendOtpCode({ emailAddress: pendingEmail || email });
+		auth.useAnotherEmail();
 	}
 
 	async function goNext() {
@@ -403,15 +219,15 @@
 			if (!validateCurrentStep()) return;
 			if (!validateOfferingLocation()) return;
 			if (!isSignedIn) {
-				const trimmed = email.trim();
-				const hasCachedEmailCheck = checkedEmail === trimmed && emailProfileComplete !== null;
-				emailCheckBusy = !hasCachedEmailCheck;
-				clearEmailProfileCheckDebounce();
+				const trimmed = auth.email.trim();
+				const hasCachedEmailCheck = auth.checkedEmail === trimmed && auth.emailProfileComplete !== null;
+				auth.emailCheckBusy = !hasCachedEmailCheck;
+				auth.clearEmailProfileCheckDebounce();
 				try {
-					const emailChecked = await checkEmailProfileStatus({ showError: true });
+					const emailChecked = await auth.checkEmailProfileStatus({ showError: true });
 					if (!emailChecked) return;
 				} finally {
-					emailCheckBusy = false;
+					auth.emailCheckBusy = false;
 				}
 			}
 			if (profileStepApplies) {
@@ -452,7 +268,7 @@
 			submitError = `Bitte warte, bis alle Bilder hochgeladen sind.`;
 			return;
 		}
-		if (authVerified && (page.data.userId || offeringSubmitAuthToken)) {
+		if (auth.authVerified && (page.data.userId || auth.submitAuthToken)) {
 			if (!validateOfferingLocation()) {
 				event.preventDefault();
 				return;
@@ -465,25 +281,10 @@
 	}
 
 	onMount(() => {
-		void initializeClient();
+		void auth.initializeClient();
 	});
 
-	onDestroy(clearEmailProfileCheckDebounce);
-
-	async function initializeClient() {
-		await getSupabaseBrowserClient().auth.getSession();
-		clientReady = true;
-	}
-
-	type EmailProfileCheckResult =
-		| {
-				ok: true;
-				profileComplete: boolean;
-		  }
-		| {
-				ok: false;
-				message: string;
-		  };
+	onDestroy(() => auth.destroy());
 </script>
 
 <svelte:head>
@@ -505,7 +306,7 @@
 				{:else if currentStep === `otp`}
 					<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-wizard-heading" data-step="otp">E-Mail bestätigen</h1>
 					<p class="text-base-content/70 text-sm">
-						Wir haben einen 6-stelligen Code an <b>{pendingEmail}</b> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht
+						Wir haben einen 6-stelligen Code an <b>{auth.pendingEmail}</b> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht
 						erst live, wenn die Bestätigung abgeschlossen ist.
 					</p>
 				{:else}
@@ -517,7 +318,7 @@
 				{/if}
 			</div>
 
-			{#if clientReady}
+			{#if auth.clientReady}
 				<OfferingForm
 					remoteForm={createOffering}
 					returnTo={returnHref}
@@ -531,7 +332,7 @@
 					onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
 					onsubmit={onSubmit}
 				>
-					<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={offeringSubmitAuthToken} />
+					<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={auth.submitAuthToken} />
 
 					{#if showAnonymousEmailField}
 						<fieldset class="fieldset" data-wizard-step="offering">
@@ -539,87 +340,37 @@
 								class="input peer w-full"
 								data-testid="offering-email-input"
 								{...createOffering.fields.email.as(`email`)}
-								bind:value={email}
+								bind:value={auth.email}
 								autocomplete="email"
 								required
 								placeholder="deine@email.de"
-								oninput={onEmailInput}
-								onblur={onEmailBlur}
+								oninput={(event) => auth.onEmailInput(event)}
+								onblur={() => auth.onEmailBlur()}
 							/>
 							<legend class="fieldset-legend peer-aria-invalid:text-red-600">E-Mail für Login * </legend>
 							<p class="label whitespace-pre-line">Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren.</p>
 							<FormFieldIssues field={createOffering.fields.email} />
-							{#if emailCheckError}
-								<p class="text-error text-xs">{emailCheckError}</p>
+							{#if auth.emailCheckError}
+								<p class="text-error text-xs">{auth.emailCheckError}</p>
 							{/if}
 						</fieldset>
 					{/if}
 
 					{#if renderProfileFields}
-						<section class={[`flex flex-col gap-5`, profileFieldsHidden && `hidden`]} data-wizard-step="profile">
-							<div class="grid gap-5 sm:grid-cols-2">
-								<fieldset class={[`fieldset`, !missingDisplayName && `hidden`]}>
-									<input
-										class="input peer w-full"
-										data-testid="profile-name-input"
-										{...createOffering.fields.profile.displayName.as(`text`)}
-										value={profile?.displayName ?? ``}
-										autocomplete="name"
-										required
-									/>
-									<legend class="fieldset-legend peer-aria-invalid:text-red-600">Dein Name *</legend>
-									<FormFieldIssues field={createOffering.fields.profile.displayName} />
-								</fieldset>
-							</div>
-
-							<div class={[`grid gap-6 sm:grid-cols-2`, !missingProfileImageUrl && !missingBannerImageUrl && `hidden`]}>
-								<ProfileImageCropInput
-									class={!missingProfileImageUrl ? `hidden` : ``}
-									kind="profile"
-									field={createOffering.fields.profile.profileImageUrl}
-									initialUrl={profile?.profileImageUrl ?? ``}
-									onBusyChange={(busy) => {
-										profileImageBusy = busy;
-										if (busy) unsaved.markDirty();
-									}}
-								/>
-
-								<ProfileImageCropInput
-									class={!missingBannerImageUrl ? `hidden` : ``}
-									kind="banner"
-									field={createOffering.fields.profile.bannerImageUrl}
-									initialUrl={profile?.bannerImageUrl ?? ``}
-									onBusyChange={(busy) => {
-										bannerImageBusy = busy;
-										if (busy) unsaved.markDirty();
-									}}
-								/>
-							</div>
-
-							<fieldset class={[`fieldset`, !missingBio && `hidden`]} data-testid="profile-bio-editor">
-								<LexicalEditor
-									field={createOffering.fields.profile.bio}
-									value={profile?.bio ?? ``}
-									placeholder="Erzähl etwas über dich…"
-									onDirty={unsaved.markDirty}
-								/>
-								<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profilbeschreibung</legend>
-								<FormFieldIssues field={createOffering.fields.profile.bio} />
-							</fieldset>
-
-							<fieldset class={[`fieldset`, !missingSocialLinks && `hidden`]}>
-								<legend class="fieldset-legend">Social Links *</legend>
-								<PublicProfileSocialLinksEditor
-									bind:socialLinks={getSocialLinks, setSocialLinks}
-									field={createOffering.fields.profile.socialLinks}
-									markDirty={unsaved.markDirty}
-									revalidate={() => createOffering.validate({ preflightOnly: true })}
-								/>
-								{#if profileSocialLinkError}
-									<p class="text-error text-sm">{profileSocialLinkError}</p>
-								{/if}
-							</fieldset>
-						</section>
+						<CreateFlowProfileFields
+							fields={createOffering.fields.profile as CreateFlowProfileRemoteFields}
+							profile={wizardProfile}
+							bind:socialLinks={
+								() => socialLinks,
+								(next) => setSocialLinks(next)
+							}
+							{profileSocialLinkError}
+							hidden={profileFieldsHidden}
+							onDirty={unsaved.markDirty}
+							onProfileImageBusyChange={(busy) => (profileImageBusy = busy)}
+							onBannerImageBusyChange={(busy) => (bannerImageBusy = busy)}
+							revalidate={() => createOffering.validate({ preflightOnly: true })}
+						/>
 					{:else if isSignedIn && currentStep === `offering`}
 						<div class="alert">
 							Möchtest du dein Profil bearbeiten?
@@ -632,12 +383,15 @@
 
 					{#if showOtpStep}
 						<OtpStep
-							bind:otpCode
-							{authBusy}
-							{authError}
+							bind:otpCode={
+								() => auth.otpCode,
+								(value) => (auth.otpCode = value)
+							}
+							authBusy={auth.authBusy}
+							authError={auth.authError}
 							onVerify={verifyCodeAndSubmit}
 							onUseAnotherEmail={useAnotherEmail}
-							onResendCode={resendCode}
+							onResendCode={() => auth.resendCode()}
 						/>
 					{/if}
 
@@ -660,14 +414,14 @@
 				{:else}
 					<button type="button" class="btn btn-ghost" disabled={primaryBusy} onclick={goBack}>Zurück</button>
 				{/if}
-				<button type="button" class="btn btn-primary" data-testid="wizard-primary" disabled={!clientReady || primaryBusy} onclick={goNext}>
+				<button type="button" class="btn btn-primary" data-testid="wizard-primary" disabled={!auth.clientReady || primaryBusy} onclick={goNext}>
 					{#if anyImageUploadInFlight}
 						<span class="loading loading-spinner loading-sm"></span>
 						Bilder werden hochgeladen…
-					{:else if emailCheckBusy}
+					{:else if auth.emailCheckBusy}
 						<span class="loading loading-spinner loading-sm"></span>
 						E-Mail wird geprüft…
-					{:else if authBusy}
+					{:else if auth.authBusy}
 						<span class="loading loading-spinner loading-sm"></span>
 						Wird geprüft…
 					{:else if createOffering.pending > 0}

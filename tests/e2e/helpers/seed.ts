@@ -128,6 +128,11 @@ export async function getEventById(page: Page, id: number) {
 	return response.json();
 }
 
+export async function getEventBySlug(page: Page, slug: string) {
+	const response = await callSeed(page, `getEventBySlug`, { slug });
+	return response.event;
+}
+
 export function createMeditationEvent(overrides: TestEvent = {}): TestEvent {
 	return {
 		name: "Meditation Workshop",
