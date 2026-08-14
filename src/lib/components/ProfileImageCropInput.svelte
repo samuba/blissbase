@@ -10,13 +10,13 @@
 	let {
 		kind,
 		field,
-		initialUrl,
+		initialUrl = ``,
 		onBusyChange,
 		class: className
 	}: {
 		kind: 'profile' | 'banner';
 		field: RemoteFormField<string>;
-		initialUrl: string;
+		initialUrl?: string;
 		onBusyChange?: (busy: boolean) => void;
 		class?: string;
 	} = $props();
@@ -27,8 +27,7 @@
 	const aspect = $derived(targetSize.width / targetSize.height);
 	const cropShape = $derived(kind === `profile` ? `round` : `rect`);
 
-	// svelte-ignore state_referenced_locally
-	let previewUrl = $state(initialUrl);
+	let previewUrl = $state(``);
 	let fileInputEl = $state<HTMLInputElement | undefined>();
 	let originalDataUrl = $state(``);
 	let originalImage = $state<HTMLImageElement | undefined>();
@@ -40,10 +39,10 @@
 	let uploading = $state(false);
 	let windowInnerHeight = $state(0);
 
-	const currentFieldUrl = $derived(field.value() ?? ``);
+	const storedUrl = $derived((field.value() ?? initialUrl ?? ``).trim());
 	// During upload, prefer the local blob preview over the stored field URL so
 	// the user sees the new image immediately instead of the previous one.
-	const displayedUrl = $derived(uploading ? previewUrl : currentFieldUrl || previewUrl);
+	const displayedUrl = $derived(uploading ? previewUrl : storedUrl);
 
 	$effect(() => {
 		onBusyChange?.(busy);
@@ -212,73 +211,103 @@
 <fieldset class={[`fieldset`, className]} data-testid={`${kind}-image-crop`}>
 	<legend class="fieldset-legend">{kind === `profile` ? `Profilbild` : `Banner`}</legend>
 
-	{#if displayedUrl}
-		{#if kind === `profile`}
-			<div class="relative size-22 transition-opacity ring-2 ring-base-500 rounded-full">
-				<img
-					src={displayedUrl}
-					alt=""
-					class={[
-						`border-base-300 size-22 rounded-full border object-cover cursor-pointer hover:opacity-80`,
-						uploading && `opacity-70`
-					]}
+	{#if kind === `profile`}
+		<div class="relative size-22 transition-opacity ring-2 ring-base-500 rounded-full">
+			{#if displayedUrl}
+				<button
+					type="button"
+					class={[`cursor-pointer hover:opacity-80`, uploading && `opacity-70`]}
 					title="Bild ändern"
 					onclick={openPicker}
-				/>
-				{#if displayedUrl}
-					<button
-						type="button"
-						class="btn btn-circle btn-warning btn-xs absolute bottom-0 right-0"
-						title="Bild entfernen"
-						onclick={removeImage}
-						disabled={busy}
-					>
-						<i class="icon-[ph--trash] size-4"></i>
-					</button>
-				{/if}
-				{#if uploading}
-					<div
-						class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50"
-					>
-						<span class="loading loading-spinner loading-xl text-primary"></span>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<div
-				class="bg-base-200 relative w-full overflow-hidden max-h-22 ring-2 ring-base-500 rounded-2xl"
-			>
-				<img
-					src={displayedUrl}
-					alt=""
-					class={[`size-full object-cover  cursor-pointer hover:opacity-80 transition-opacity `, uploading && `opacity-70`]}
+					disabled={busy}
+				>
+					<img
+						src={displayedUrl}
+						alt=""
+						class="border-base-300 size-22 rounded-full border object-cover"
+					/>
+				</button>
+			{:else}
+				<button
+					type="button"
+					class="bg-primary/15 text-primary border-base-300 flex size-22 cursor-pointer items-center justify-center rounded-full border hover:opacity-80"
+					title="Bild hochladen"
+					onclick={openPicker}
+					disabled={busy}
+				>
+					<i class="icon-[ph--user-circle] size-12"></i>
+				</button>
+			{/if}
+			{#if displayedUrl}
+				<button
+					type="button"
+					class="btn btn-circle btn-warning btn-xs absolute bottom-0 right-0"
+					title="Bild entfernen"
+					onclick={removeImage}
+					disabled={busy}
+				>
+					<i class="icon-[ph--trash] size-4"></i>
+				</button>
+			{/if}
+			{#if uploading}
+				<div
+					class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50"
+				>
+					<span class="loading loading-spinner loading-xl text-primary"></span>
+				</div>
+			{/if}
+		</div>
+	{:else}
+		<div
+			class="bg-base-200 relative h-22 w-full overflow-hidden ring-2 ring-base-500 rounded-2xl"
+		>
+			{#if displayedUrl}
+				<button
+					type="button"
+					class={[`size-full cursor-pointer hover:opacity-80 transition-opacity`, uploading && `opacity-70`]}
 					title="Bild ändern"
 					onclick={openPicker}
-				/>
-				{#if displayedUrl}
-					<button
-						type="button"
-						class="btn btn-circle btn-warning btn-xs absolute bottom-1.5 right-1.5"
-						title="Bild entfernen"
-						onclick={removeImage}
-						disabled={busy}
-					>
-						<i class="icon-[ph--trash] size-4"></i>
-					</button>
-				{/if}
-				{#if uploading}
-					<div class="absolute inset-0 flex items-center justify-center bg-black/50">
-						<span class="loading loading-spinner loading-xl text-primary"></span>
-					</div>
-				{/if}
-			</div>
-		{/if}
+					disabled={busy}
+				>
+					<img
+						src={displayedUrl}
+						alt=""
+						class="size-full object-cover"
+					/>
+				</button>
+			{:else}
+				<button
+					type="button"
+					class="text-base-content/40 flex size-full cursor-pointer items-center justify-center hover:opacity-80"
+					title="Bild hochladen"
+					onclick={openPicker}
+					disabled={busy}
+				>
+					<i class="icon-[ph--image] size-12"></i>
+				</button>
+			{/if}
+			{#if displayedUrl}
+				<button
+					type="button"
+					class="btn btn-circle btn-warning btn-xs absolute bottom-1.5 right-1.5"
+					title="Bild entfernen"
+					onclick={removeImage}
+					disabled={busy}
+				>
+					<i class="icon-[ph--trash] size-4"></i>
+				</button>
+			{/if}
+			{#if uploading}
+				<div class="absolute inset-0 flex items-center justify-center bg-black/50">
+					<span class="loading loading-spinner loading-xl text-primary"></span>
+				</div>
+			{/if}
+		</div>
 	{/if}
 
 	<input
 		type="hidden"
-		{...field.as(`text`)}
-		value={field.value() ?? initialUrl}
+		{...field.as(`text`, initialUrl)}
 	/>
 
 	<input
@@ -290,20 +319,6 @@
 		onchange={onFileChange}
 		disabled={busy}
 	/>
-
-	{#if !displayedUrl}
-		<div class="flex flex-wrap items-center gap-2">
-			<button
-				type="button"
-				class="btn"
-				onclick={openPicker} 
-				disabled={busy}
-			>
-				<i class="icon-[ph--upload-simple] size-4"></i>
-				Bild hochladen
-			</button>
-		</div>
-	{/if}
 
 	{#if field.issues()?.length}
 		<div class="mt-2 flex flex-col gap-1">

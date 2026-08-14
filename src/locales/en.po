@@ -926,9 +926,8 @@ msgstr "Change image"
 msgid "Bild entfernen"
 msgstr "Remove image"
 
-#: src/lib/components/ProfileImageCropInput.svelte
-msgid "<0/> Bild hochladen"
-msgstr "<0/> Upload image"
+#~ msgid "<0/> Bild hochladen"
+#~ msgstr "<0/> Upload image"
 
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Profilbild zuschneiden"
@@ -2256,3 +2255,14 @@ msgstr "Verify email address and publish event"
 #: src/lib/components/CreateFlowProfileFields.svelte
 msgid "Social Links"
 msgstr "Social Links"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Bild hochladen"
+msgstr "Upload image"
+
+#~ msgid "Banner Bild"
+#~ msgstr "Banner image"
+
+#~ msgid "Bannerbild"
+#~ msgstr "Banner image"
