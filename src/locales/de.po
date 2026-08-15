@@ -2275,3 +2275,7 @@ msgstr "Bild auswählen <0>oder ablegen</0>"
 
 #~ msgid "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0> <1>Profil ansehen</1>"
 #~ msgstr "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0> <1>Profil ansehen</1>"
+
+#: src/lib/flashToast.svelte.ts
+msgid "Event erstellt!"
+msgstr "Event erstellt!"

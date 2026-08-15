@@ -19,6 +19,7 @@ import { isPublicProfile } from '$lib/server/profile';
 import { hasPublicProfileChanges, mergeProfileFromForm, savePublicProfile } from '$lib/server/savePublicProfile';
 import { verifySubmitAuthToken } from '$lib/server/submitAuth';
 import { getMyPublicProfile } from '$lib/rpc/profile.remote';
+import { setFlash } from '$lib/server/flash';
 import type { SelectEvent } from '$lib/server/schema';
 import type { InsertEvent } from '$lib/types';
 import { error, invalid, redirect } from '@sveltejs/kit';
@@ -170,6 +171,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	}
 
 	console.timeEnd('createEvent');
+	setFlash(`eventCreated`);
 	redirect(303, withEventSlug({ eventSlug: createdEvent!.slug }));
 });
 
