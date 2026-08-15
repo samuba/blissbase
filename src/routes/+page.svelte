@@ -89,7 +89,7 @@
 	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-4 sm:gap-8 items-center sm:justify-center">
 		<div class="flex flex-col gap-3 w-full items-center justify-center px-4 mt-6 sm:mt-0">
 			<div class="flex justify-center items-center gap-3">
-				<img src="/logo.svg" alt="" class="size-12 md:size-16 drop-shadow-xl" data-testid="hero-logo" />
+				<img src="/logo-transparent.svg" alt="" class="size-12 md:size-16 drop-shadow-xl" data-testid="hero-logo" />
 				<h1 class="md:text-5xl text-4xl font-semibold text-base-100 font-brand" >
 					Blissbase
 				</h1>
