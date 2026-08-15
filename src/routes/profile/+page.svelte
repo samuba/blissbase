@@ -28,7 +28,7 @@
 
 
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:py-0 md:pb-10">
-	<div class="card bg-base-100 mt-4 overflow-hidden shadow">
+	<div class="card bg-base-100 overflow-hidden shadow">
 		<ul class="list">
 			<li>
 				<div class="list-row hover:bg-base-200 relative items-start">
@@ -110,7 +110,7 @@
 			<li>
 				<div class="list-row">
 					<div class="list-col-grow flex flex-col gap-3">
-						<span class="text-base">Du bist eingeloggt als <strong>{data.session.email}</strong></span>
+						<span class="text-base">Du bist eingeloggt als <strong class="text-sm text-base-content">{data.session.email}</strong></span>
 						<button class="btn w-fit" onclick={handleLogout} disabled={isLoggingOut}>
 							{#if isLoggingOut}
 								<span class="loading loading-spinner loading-sm"></span>
