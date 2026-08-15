@@ -961,7 +961,6 @@ msgstr "Profil bearbeiten"
 msgid "Profil erstellen"
 msgstr "Profil erstellen"
 
-#: src/routes/profile/+page.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "<0/> Profil ansehen"
 msgstr "<0/> Profil ansehen"
@@ -2266,3 +2265,15 @@ msgstr "Hinweis (optional) z.B. Eingang 2, Stock 3"
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bild auswählen <0>oder ablegen</0>"
 msgstr "Bild auswählen <0>oder ablegen</0>"
+
+#~ msgid "blissbase.app/@/{0}"
+#~ msgstr "blissbase.app/@/{0}"
+
+#~ msgid "Profil ansehen"
+#~ msgstr "Profil ansehen"
+
+#~ msgid "<0/> <1/> <2>Öffentliches Profilblissbase.app/@/{0}Profil ansehenErstelle dein öffentliches Profil.</2> div <3/>"
+#~ msgstr "<0/> <1/> <2>Öffentliches Profilblissbase.app/@/{0}Profil ansehenErstelle dein öffentliches Profil.</2> div <3/>"
+
+#~ msgid "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0> <1>Profil ansehen</1>"
+#~ msgstr "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0> <1>Profil ansehen</1>"
