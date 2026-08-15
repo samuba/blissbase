@@ -1,3 +1,5 @@
+I'm Sam, youre my Agent. I love building complex things as simple as possible and also to find ways to reduce complexity when solving a problem.
+
 ## Runtime
 This project uses bun for dependency management and task/script running.
 Node is used in dev and prod as runtime.
@@ -29,7 +31,7 @@ Scrape scripts should have a function for every field in the event object. Like 
 Each scrape script should get the entire html and pass it down to the individual field functions, e.g. `getName(html)`, `getTags(html)`
 
 ## Typescript
-Always use early returns, early continues and early breaks. 
+Use early returns, early continues and early breaks. 
 Always use backticks for strings except for: imports, nested strings, console.log, console.error.
 Always use string interpolation when possible instead of concatenating strings. Do this: `${foo} ${bar}` Instead of this: foo + " " + bar
 When a function has 3 params or more use named arguments: foo({a,b}: {a:bool, b:bool}).
