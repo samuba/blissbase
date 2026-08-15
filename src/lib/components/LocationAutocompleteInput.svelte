@@ -25,6 +25,10 @@
 		onChange?: (event: LocationAutocompleteChangeEvent) => void;
 		onSelect?: (event: LocationAutocompleteChangeEvent) => void | Promise<void>;
 		disabled?: boolean;
+		placeholder?: string;
+		required?: boolean;
+		showCurrentLocation?: boolean;
+		formatPlaceLabel?: (place: { displayName: string; formattedAddress: string }) => string;
 	}
 
 	let {
@@ -38,6 +42,10 @@
 		onChange,
 		onSelect,
 		disabled,
+		placeholder = `Stadt / PLZ`,
+		required = false,
+		showCurrentLocation = true,
+		formatPlaceLabel,
 	}: LocationAutocompleteInputProps = $props();
 
 	let autocomplete = $state<PlacesAutocompleteController | null>(null);
@@ -104,7 +112,10 @@
 	let inputLocationText = $derived(usingCurrentLocation ? displayLocationText : typedLocation);
 	let useGoogleAutocomplete = $derived((autocomplete?.isAvailable ?? false) && !usingCurrentLocation);
 	let showAutocompletePanel = $derived(
-		isInputFocused && (autocomplete?.keepPanelOpen ?? false) && !usingCurrentLocation,
+		isInputFocused &&
+			(autocomplete?.keepPanelOpen ?? false) &&
+			!usingCurrentLocation &&
+			!autocomplete?.loadFailed,
 	);
 	let showGoogleLoadingHint = $derived(
 		showAutocompletePanel && !autocomplete?.isAvailable && !autocomplete?.loadFailed,
@@ -271,17 +282,18 @@
 
 	async function applySelectedPlace(args: {
 		displayName: string;
+		formattedAddress: string;
 		latitude: number;
 		longitude: number;
 	}) {
 		usingCurrentLocation = false;
 		resolvedLat = args.latitude;
 		resolvedLng = args.longitude;
-		typedLocation = args.displayName;
+		typedLocation = formatPlaceLabel?.(args) || args.displayName || args.formattedAddress;
 
 		try {
 			await notifySelect({
-				locationLabel: args.displayName,
+				locationLabel: typedLocation,
 				latitude: args.latitude,
 				longitude: args.longitude,
 			});
@@ -313,6 +325,7 @@
 
 		await applySelectedPlace({
 			displayName: place.displayName || place.formattedAddress,
+			formattedAddress: place.formattedAddress || place.displayName,
 			latitude: place.latitude,
 			longitude: place.longitude,
 		});
@@ -508,17 +521,19 @@
 	</div>
 {/snippet}
 
-<svelte:boundary
-	onerror={(error) => {
-		console.error(`Google Maps Autocomplete Fehler:`, error);
-	}}
->
-	{#if autocomplete?.loadFailed}
-		{@render googleAutocompleteError(retryGoogleAutocomplete)}
-	{:else}
-		<div class="relative flex min-w-0 items-center gap-2.5" data-testid="location-autocomplete-input">
+<div class="flex w-full min-w-0 flex-col gap-1.5">
+	<svelte:boundary
+		onerror={(error) => {
+			console.error(`Google Maps Autocomplete Fehler:`, error);
+		}}
+	>
+		{#if autocomplete?.loadFailed}
+			{@render googleAutocompleteError(retryGoogleAutocomplete)}
+		{/if}
+
+		<div class="relative flex w-full min-w-0 items-center gap-2.5" data-testid="location-autocomplete-input">
 			<div bind:this={container} class="relative min-w-0 flex-1">
-				<label class="input peer group w-full">
+				<label class="input peer group w-full min-w-0">
 					<div class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex">
 						<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
 					</div>
@@ -527,17 +542,18 @@
 						type="text"
 						id={inputId}
 						data-testid={inputId}
-						role="combobox"
-						aria-expanded={showAutocompletePanel}
-						aria-controls="{inputId}-listbox"
-						aria-autocomplete="list"
-						aria-activedescendant={autocomplete && autocomplete.highlightedIndex >= 0
+						role={autocomplete?.loadFailed ? undefined : `combobox`}
+						aria-expanded={autocomplete?.loadFailed ? undefined : showAutocompletePanel}
+						aria-controls={autocomplete?.loadFailed ? undefined : `${inputId}-listbox`}
+						aria-autocomplete={autocomplete?.loadFailed ? undefined : `list`}
+						aria-activedescendant={!autocomplete?.loadFailed && autocomplete && autocomplete.highlightedIndex >= 0
 							? `${inputId}-option-${autocomplete.highlightedIndex}`
 							: undefined}
-						placeholder="Stadt / PLZ"
-						class="w-full"
+						placeholder={placeholder}
+						class="min-w-0 w-full"
 						value={inputLocationText}
 						disabled={inputDisabled}
+						{required}
 						oninput={(event) => handleInputChange(event.currentTarget.value)}
 						onchange={handleInputCommit}
 						onkeydown={handleInputKeydown}
@@ -547,101 +563,125 @@
 					/>
 				</label>
 
-		{#if showAutocompletePanel}
-			<ul
-				{@attach portalToBody}
-				id="{inputId}-listbox"
-				role="listbox"
-				data-testid="location-suggestions"
-				class="bg-base-100 border-base-300 fixed z-[200] max-h-64 overflow-y-auto rounded-box border shadow-lg"
-				style:top="{dropdownPosition.top}px"
-				style:left="{dropdownPosition.left}px"
-				style:width="{dropdownPosition.width}px"
-				onmousedown={cancelBlurClose}
-			>
-				{#if showGoogleLoadingHint}
-					<li class="text-base-content/60 flex items-center gap-2 px-3 py-2 text-sm">
-						<span class="loading loading-spinner loading-xs"></span>
-						Vorschläge werden geladen…
-					</li>
-				{:else if autocomplete?.isLoading}
-					<li class="text-base-content/60 flex items-center gap-2 px-3 py-2 text-sm">
-						<span class="loading loading-spinner loading-xs"></span>
-						Suche…
-					</li>
-				{:else if showTypeForSuggestionsHint}
-					<li class="text-base-content/60 px-3 py-2 text-sm">Tippen für Vorschläge</li>
-				{:else if showNoResultsHint}
-					<li class="text-base-content/60 px-3 py-2 text-sm">Ort mit diesem Namen nicht gefunden</li>
-				{:else}
-					{#each autocomplete?.suggestions ?? [] as suggestion, index (suggestion.text)}
-						{@const controller = autocomplete}
-						{#if controller}
-							<li
-								id="{inputId}-option-{index}"
-								role="option"
-								data-testid="location-option"
-								aria-selected={controller.highlightedIndex === index}
-								class={[
-									`cursor-pointer px-3 py-2 text-sm border-base-300`,
-									controller.highlightedIndex === index && `bg-primary/20`,
-								]}
-								onmouseenter={() => {
-									controller.highlightedIndex = index;
-								}}
-								onmousedown={(event) => {
-									event.preventDefault();
-									void handleSuggestionSelect(index);
-								}}
-							>
-								{suggestion.text}
+				{#if showAutocompletePanel}
+					<ul
+						{@attach portalToBody}
+						id="{inputId}-listbox"
+						role="listbox"
+						data-testid="location-suggestions"
+						class="bg-base-100 border-base-300 fixed z-[200] max-h-64 overflow-y-auto rounded-box border shadow-lg"
+						style:top="{dropdownPosition.top}px"
+						style:left="{dropdownPosition.left}px"
+						style:width="{dropdownPosition.width}px"
+						onmousedown={cancelBlurClose}
+					>
+						{#if showGoogleLoadingHint}
+							<li class="text-base-content/60 flex items-center gap-2 px-3 py-2 text-sm">
+								<span class="loading loading-spinner loading-xs"></span>
+								Vorschläge werden geladen…
 							</li>
+						{:else if autocomplete?.isLoading}
+							<li class="text-base-content/60 flex items-center gap-2 px-3 py-2 text-sm">
+								<span class="loading loading-spinner loading-xs"></span>
+								Suche…
+							</li>
+						{:else if showTypeForSuggestionsHint}
+							<li class="text-base-content/60 px-3 py-2 text-sm">Tippen für Vorschläge</li>
+						{:else if showNoResultsHint}
+							<li class="text-base-content/60 px-3 py-2 text-sm">Ort mit diesem Namen nicht gefunden</li>
+						{:else}
+							{#each autocomplete?.suggestions ?? [] as suggestion, index (suggestion.text)}
+								{@const controller = autocomplete}
+								{#if controller}
+									<li
+										id="{inputId}-option-{index}"
+										role="option"
+										data-testid="location-option"
+										aria-selected={controller.highlightedIndex === index}
+										class={[
+											`cursor-pointer px-3 py-2 text-sm border-base-300`,
+											controller.highlightedIndex === index && `bg-primary/20`,
+										]}
+										onmouseenter={() => {
+											controller.highlightedIndex = index;
+										}}
+										onmousedown={(event) => {
+											event.preventDefault();
+											void handleSuggestionSelect(index);
+										}}
+									>
+										{suggestion.text}
+									</li>
+								{/if}
+							{/each}
 						{/if}
-					{/each}
+						<li class="border-base-300 text-base-content/60 border-t px-3 py-1.5 text-xs">
+							<span class="flex items-center gap-1">
+								<i class="icon-[ph--map-trifold] size-3.5"></i>
+								Google Maps
+							</span>
+						</li>
+					</ul>
 				{/if}
-				<li class="border-base-300 text-base-content/60 border-t px-3 py-1.5 text-xs">
-					<span class="flex items-center gap-1">
-						<i class="icon-[ph--map-trifold] size-3.5"></i>
-						Google Maps
-					</span>
-				</li>
-			</ul>
-		{/if}
 
-		<div class="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1">
-			{#if typedLocation.trim() && !usingCurrentLocation}
-				<button
-					type="button"
-					data-testid="clear-location-button"
-					title="Eingabe löschen"
-					class="btn-ghost bg-base-100 text-base-600 flex h-full items-center justify-center px-1"
-					onmousedown={(event) => event.preventDefault()}
-					onclick={handleResetLocationClick}
-					disabled={inputDisabled}
-				>
-					<i class="icon-[ph--x] size-5"></i>
-				</button>
-			{/if}
-			<button
-				type="button"
-				class="btn btn-xs mr-0.5 flex h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden"
-				title="Aktuellen Standort verwenden"
-				onmousedown={(event) => {
-					if (usingCurrentLocation && !isLoadingLocation) event.preventDefault();
-				}}
-				onclick={usingCurrentLocation && !isLoadingLocation ? handleResetLocationClick : handleUseCurrentLocationClick}
-				disabled={inputDisabled}
-			>
-				{#if isLoadingLocation}
-					<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
-				{:else if usingCurrentLocation}
-					<i class="icon-[ph--x] size-4.5"></i>
-				{:else}
-					<i class="icon-[ph--gps-fix] size-5"></i>
-				{/if}
-			</button>
+				<div class="absolute top-1/2 right-1 flex -translate-y-1/2 items-center">
+					{#if typedLocation.trim() && !usingCurrentLocation}
+						<button
+							type="button"
+							data-testid="clear-location-button"
+							title="Eingabe löschen"
+							class="btn-ghost bg-base-100 text-base-600 flex h-full items-center justify-center px-1"
+							onmousedown={(event) => event.preventDefault()}
+							onclick={handleResetLocationClick}
+							disabled={inputDisabled}
+						>
+							<i class="icon-[ph--x] size-5"></i>
+						</button>
+					{/if}
+					{#if showCurrentLocation}
+						<button
+							type="button"
+							data-testid="use-current-location-button"
+							class="btn btn-xs mr-0.5 flex h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden"
+							title="Aktuellen Standort verwenden"
+							onmousedown={(event) => {
+								if (usingCurrentLocation && !isLoadingLocation) event.preventDefault();
+							}}
+							onclick={usingCurrentLocation && !isLoadingLocation ? handleResetLocationClick : handleUseCurrentLocationClick}
+							disabled={inputDisabled}
+						>
+							{#if isLoadingLocation}
+								<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
+							{:else if usingCurrentLocation}
+								<i class="icon-[ph--x] size-4.5"></i>
+							{:else}
+								<i class="icon-[ph--gps-fix] size-5"></i>
+							{/if}
+						</button>
+					{/if}
+				</div>
+			</div>
 		</div>
-	</div>
+
+		{#snippet failed(_error, reset)}
+			{@render googleAutocompleteError(() => {
+				resetGoogleMapsPlacesLoader();
+				reset();
+			})}
+			<label class="input peer group w-full min-w-0">
+				<input
+					type="text"
+					id={inputId}
+					data-testid={inputId}
+					placeholder={placeholder}
+					class="min-w-0 w-full"
+					value={inputLocationText}
+					{required}
+					oninput={(event) => handleInputChange(event.currentTarget.value)}
+				/>
+			</label>
+		{/snippet}
+	</svelte:boundary>
 
 	{#if locationLabelField}
 		<input type="hidden" {...locationLabelField.as(`text`)} value={locationLabelField.value() ?? ``} />
@@ -652,13 +692,4 @@
 	{#if longitudeField}
 		<input type="hidden" {...longitudeField.as(`text`)} value={longitudeField.value() ?? ``} />
 	{/if}
-		</div>
-	{/if}
-
-	{#snippet failed(_error, reset)}
-		{@render googleAutocompleteError(() => {
-			resetGoogleMapsPlacesLoader();
-			reset();
-		})}
-	{/snippet}
-</svelte:boundary>
+</div>

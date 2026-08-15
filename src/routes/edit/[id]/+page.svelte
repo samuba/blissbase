@@ -61,6 +61,9 @@
 				remoteForm={updateEvent}
 				allTags={data.tags.allTags}
 				initialExistingImageUrls={editFormValues.existingImageUrls}
+				initialLocationLabel={editFormValues.address}
+				initialLocationLat={editFormValues.latitude}
+				initialLocationLng={editFormValues.longitude}
 			/>
 
 			<div class="flex flex-col-reverse sm:flex-row gap-6">
@@ -70,7 +73,7 @@
 						onclick={handleDeleteEvent}
 						disabled={isDeletingEvent || isSubmitting}
 						type="button"
-						class="btn btn-warning disabled:bg-warning disabled:text-warning-content"
+						class="btn"
 					>
 						{#if isDeletingEvent}
 							<span class="loading loading-spinner loading-sm"></span>

@@ -10,6 +10,7 @@ import { geocodeCache, reverseGeocodeCache } from './schema';
  */
 export function createGoogleCacheApi(db: DB) {
 	const geocodeLocalCache = new Map<string, GeocodeResult | null>();
+	const timezoneLocalCache = new Map<string, string | null>();
 
 	async function geocodeAddressCached(args: GeocodeAddressArgs): Promise<GeocodeResult | null> {
 		const { addressLines, apiKey, biasAddressLines } = args;
@@ -183,9 +184,65 @@ export function createGoogleCacheApi(db: DB) {
 		}
 	}
 
+	/**
+	 * Returns a timezone for coordinates, using geocode_cache keyed by rounded lat/lng.
+	 *
+	 * @example
+	 * await getTimezoneForCoordinatesCached({ lat: 52.52, lng: 13.405, apiKey })
+	 */
+	async function getTimezoneForCoordinatesCached(args: {
+		lat: number;
+		lng: number;
+		apiKey: string;
+	}): Promise<string | null> {
+		const cacheKey = timezoneCacheKey({ lat: args.lat, lng: args.lng });
+		if (timezoneLocalCache.has(cacheKey)) {
+			return timezoneLocalCache.get(cacheKey) ?? null;
+		}
+
+		try {
+			const dbCachedResult = await db.query.geocodeCache.findFirst({
+				where: eq(geocodeCache.address, cacheKey)
+			});
+			if (dbCachedResult?.timezone) {
+				timezoneLocalCache.set(cacheKey, dbCachedResult.timezone);
+				return dbCachedResult.timezone;
+			}
+
+			const timezone = await getTimezoneForCoordinates(args);
+
+			try {
+				await db.insert(geocodeCache).values({
+					address: cacheKey,
+					latitude: args.lat,
+					longitude: args.lng,
+					timezone,
+					cachedAt: new Date()
+				}).onConflictDoUpdate({
+					target: geocodeCache.address,
+					set: {
+						latitude: args.lat,
+						longitude: args.lng,
+						timezone,
+						cachedAt: new Date()
+					}
+				});
+			} catch (cacheError) {
+				console.error(`Error caching timezone: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
+			}
+
+			timezoneLocalCache.set(cacheKey, timezone);
+			return timezone;
+		} catch (error) {
+			console.error(`Error looking up timezone for ${cacheKey}:`, error instanceof Error ? error.message : String(error));
+			return null;
+		}
+	}
+
 	return {
 		geocodeAddressCached,
-		reverseGeocodeCityCached
+		reverseGeocodeCityCached,
+		getTimezoneForCoordinatesCached
 	};
 }
 
@@ -195,7 +252,7 @@ export function createGoogleCacheApi(db: DB) {
  * @example
  * await getTimezoneForCoordinates({ lat: 48.1351, lng: 11.582, apiKey })
  */
-async function getTimezoneForCoordinates(args: { lat: number; lng: number; apiKey: string }): Promise<string | null> {
+export async function getTimezoneForCoordinates(args: { lat: number; lng: number; apiKey: string }): Promise<string | null> {
 	if (!args.apiKey) {
 		console.error(`Google Maps API key is not set. Skipping timezone lookup.`);
 		return null;
@@ -277,6 +334,16 @@ async function geocodeLocation(args: {
  */
 function normalizeAddressLines(addressLines: string[] | null | undefined) {
 	return addressLines?.filter((x) => x?.trim()).join(`, `).trim();
+}
+
+/**
+ * Stable geocode_cache key for a coordinate pair. Five decimals is about 1.1m.
+ *
+ * @example
+ * timezoneCacheKey({ lat: 52.52, lng: 13.405 })
+ */
+export function timezoneCacheKey(args: { lat: number; lng: number }) {
+	return `coord:${args.lat.toFixed(5)},${args.lng.toFixed(5)}`;
 }
 
 /**

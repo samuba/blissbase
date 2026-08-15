@@ -1,8 +1,8 @@
-create event flow auch account frei machen wie offerings
-lexical padding of placeholder wrong for profile bio
-have location auto complete in event creation + location note
+banner image text for input
 
-put my events also in its own page like my offerings
+random order for offerings?
+
+update wuchale
 
 adjust PWA icons
 

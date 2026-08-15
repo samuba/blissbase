@@ -40,7 +40,9 @@ test.describe('Event Details Modal', () => {
 		await firstCard.click();
 		const dialog = page.getByTestId('details-dialog');
 		await expect(dialog).toBeVisible({ timeout: 15000 });
-		await expect(dialog.getByText(/Zen Center.*Berlin/)).toBeVisible();
+		await expect(dialog.getByTestId(`event-address-link`)).toContainText(`Zen Center`);
+		await expect(dialog.getByTestId(`event-address-link`)).toContainText(`Berlin`);
+		await expect(dialog.getByTestId(`event-address-note`)).toHaveCount(0);
 	});
 
 	test('dialog stays synchronized across repeated close methods', async ({ page }) => {

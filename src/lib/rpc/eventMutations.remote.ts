@@ -1,7 +1,7 @@
 import { form, getRequestEvent, query } from '$app/server';
 import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import * as assets from '$lib/assets';
-import { deduplicateItems, generateSlug, randomString } from '$lib/common';
+import { deduplicateItems, generateSlug, randomString, toAddressLines } from '$lib/common';
 import {
     IMAGE_UPLOAD_ACCEPTED_MIME_TYPES,
     IMAGE_UPLOAD_HASH_LENGTH,
@@ -9,11 +9,12 @@ import {
     getStableContentHash
 } from '$lib/imageUpload.shared';
 import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from '$lib/events.remote.common';
+import { coordinatesMatch, hasValidCoordinates } from '$lib/locationFilter';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import { routes, withEventSlug } from '$lib/routes';
 import { db, eq, s, sql } from '$lib/server/db';
 import { sendEventCreatedEmail } from '$lib/server/email';
-import { geocodeAddressCached } from '$lib/server/google';
+import { geocodeAddressCached, getTimezoneForCoordinatesCached } from '$lib/server/google';
 import { isPublicProfile } from '$lib/server/profile';
 import { hasPublicProfileChanges, mergeProfileFromForm, savePublicProfile } from '$lib/server/savePublicProfile';
 import { verifySubmitAuthToken } from '$lib/server/submitAuth';
@@ -28,9 +29,10 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
 	const address = toAddressLines(data.address);
 	const [coords, uploadedImageUrls] = await Promise.all([
-		geocodeAddressCached({
-			addressLines: address,
-			apiKey: GOOGLE_MAPS_API_KEY
+		resolveEventCoordinates({
+			address: data.address,
+			latitude: data.latitude,
+			longitude: data.longitude,
 		}),
 		uploadImages({ files: data.images, slug: eventFromDb.slug })
 	]);
@@ -40,7 +42,13 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	}
 	const formData = formDataToDbData({
 		data,
-		timezone: coords?.timezone ?? data.timeZone ?? `Europe/Berlin`,
+		timezone: resolveUpdateTimezone({
+			coords,
+			previousLat: eventFromDb.latitude,
+			previousLng: eventFromDb.longitude,
+			previousTimezone: eventFromDb.timezone,
+			formTimeZone: data.timeZone,
+		}),
 		address
 	});
 
@@ -101,9 +109,10 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 	}
 
 	const address = toAddressLines(data.address);
-	const coords = await geocodeAddressCached({
-		addressLines: address,
-		apiKey: GOOGLE_MAPS_API_KEY
+	const coords = await resolveEventCoordinates({
+		address: data.address,
+		latitude: data.latitude,
+		longitude: data.longitude,
 	});
 
 	if (address.length && !coords) {
@@ -240,6 +249,9 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 		startAt: _startAt,
 		endAt: _endAt,
 		timeZone: _timeZone,
+		addressNote: _addressNote,
+		latitude: _latitude,
+		longitude: _longitude,
 		...eventFields
 	} = args.data as CreateEventData & {
 		eventId?: number;
@@ -254,19 +266,74 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 		endAt,
 		timezone: args.timezone,
 		address: args.address,
+		addressNote: args.data.addressNote?.trim() || null,
 		attendanceMode,
 		contact,
 	} satisfies Omit<InsertEvent, 'source' | 'slug'>;
 }
 
 /**
- * Normalizes the free-text event address into cached address lines.
+ * Prefers the place timezone; if lookup fails, keep the stored zone unless the venue moved.
  *
  * @example
- * toAddressLines(`Studio\nBerlin`)
+ * resolveUpdateTimezone({
+ *   coords: { lat: 52.52, lng: 13.405, timezone: null },
+ *   previousLat: 52.52,
+ *   previousLng: 13.405,
+ *   previousTimezone: `Europe/Berlin`,
+ *   formTimeZone: `Europe/Berlin`,
+ * })
  */
-function toAddressLines(address: string | undefined) {
-	return address?.split(/,|\n/).map((x) => x.trim()).filter((x) => x) ?? [];
+function resolveUpdateTimezone(args: {
+	coords: { lat: number; lng: number; timezone: string | null } | null;
+	previousLat?: number | null;
+	previousLng?: number | null;
+	previousTimezone?: string | null;
+	formTimeZone?: string;
+}) {
+	if (args.coords?.timezone) return args.coords.timezone;
+
+	const venueMoved = Boolean(args.coords) && !coordinatesMatch({
+		a: { lat: args.coords?.lat, lng: args.coords?.lng },
+		b: { lat: args.previousLat, lng: args.previousLng },
+	});
+	if (venueMoved) return args.formTimeZone ?? args.previousTimezone ?? `Europe/Berlin`;
+	return args.previousTimezone ?? args.formTimeZone ?? `Europe/Berlin`;
+}
+
+/**
+ * Uses Places coordinates when the user picked a suggestion, otherwise geocodes the label.
+ *
+ * @example
+ * await resolveEventCoordinates({ address: `Berlin`, latitude: 52.52, longitude: 13.405 })
+ */
+async function resolveEventCoordinates(args: {
+	address?: string;
+	latitude?: number | null;
+	longitude?: number | null;
+}) {
+	if (hasValidCoordinates({ lat: args.latitude, lng: args.longitude })) {
+		const lat = args.latitude as number;
+		const lng = args.longitude as number;
+		if (E2E_TEST === `true`) return { lat, lng, timezone: null };
+		return {
+			lat,
+			lng,
+			timezone: await getTimezoneForCoordinatesCached({
+				lat,
+				lng,
+				apiKey: GOOGLE_MAPS_API_KEY,
+			}),
+		};
+	}
+
+	const label = args.address?.trim();
+	if (!label) return null;
+
+	return geocodeAddressCached({
+		addressLines: [label],
+		apiKey: GOOGLE_MAPS_API_KEY,
+	});
 }
 
 /**

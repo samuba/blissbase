@@ -48,7 +48,7 @@ export async function mapAiAnswerToCreateEventPrefill(
 		description,
 		tagIds,
 		price: (analysis.price ?? ``).trim(),
-		address: addressLines.join(`\n`),
+		address: addressLines.join(`, `),
 		startAtIso: analysis.startDate ? parseIsoToValid(analysis.startDate) : null,
 		endAtIso: analysis.endDate ? parseIsoToValid(analysis.endDate) : null,
 		isOnline,

@@ -1,4 +1,4 @@
-import { deduplicateItems, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel } from '../lib/common';
+import { calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel, googleMapsSearchUrl, toAddressLines } from '../lib/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /** Fixed "now": Wed 4 Jun 2025, 12:00 local — used by relative-date logic. */
@@ -10,6 +10,60 @@ describe(`getWebsiteDomainLabel`, () => {
 		expect(getWebsiteDomainLabel(`https://www.shop.megatix.co.id/path`)).toBe(`megatix`);
 		expect(getWebsiteDomainLabel(`https://blog.yogabarn.de`)).toBe(`yogabarn`);
 		expect(getWebsiteDomainLabel(`https://www.example.com`)).toBe(`example`);
+	});
+});
+
+describe(`toAddressLines`, () => {
+	it(`splits comma-separated Google autocomplete labels`, () => {
+		expect(toAddressLines(`Yoga Studio, Musterstraße 1, 10115 Berlin, Deutschland`)).toEqual([
+			`Yoga Studio`,
+			`Musterstraße 1`,
+			`10115 Berlin`,
+			`Deutschland`,
+		]);
+	});
+
+	it(`returns an empty array for blank input`, () => {
+		expect(toAddressLines(undefined)).toEqual([]);
+		expect(toAddressLines(`  `)).toEqual([]);
+	});
+});
+
+describe(`googleMapsSearchUrl`, () => {
+	it(`prefers coordinates over the address query`, () => {
+		expect(googleMapsSearchUrl({
+			latitude: 52.52,
+			longitude: 13.405,
+			query: `Berlin, Germany`,
+		})).toBe(`https://www.google.com/maps/search/?api=1&query=52.52,13.405`);
+	});
+
+	it(`falls back to the address query when coordinates are missing`, () => {
+		expect(googleMapsSearchUrl({
+			query: `Berlin, Germany`,
+		})).toBe(`https://www.google.com/maps/search/?api=1&query=Berlin%2C%20Germany`);
+	});
+});
+
+describe(`calendarLocation`, () => {
+	it(`appends the address note after the address lines`, () => {
+		expect(calendarLocation({
+			address: [`Berlin`, `Germany`],
+			addressNote: `3. Stock`,
+		})).toBe(`Berlin, Germany, 3. Stock`);
+	});
+
+	it(`omits a missing note and blank parts`, () => {
+		expect(calendarLocation({ address: [`Berlin`] })).toBe(`Berlin`);
+		expect(calendarLocation({ address: [], addressNote: `  ` })).toBeUndefined();
+	});
+});
+
+describe(`formatAddress`, () => {
+	it(`joins split Google address parts with middle dots`, () => {
+		expect(formatAddress(toAddressLines(`Yoga Studio, Musterstraße 1, 10115 Berlin, Deutschland`))).toBe(
+			`Yoga Studio · Musterstraße 1 · Berlin · DE`,
+		);
 	});
 });
 

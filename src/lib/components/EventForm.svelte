@@ -7,6 +7,7 @@
 	import EventAutofill from './EventAutofill.svelte';
 	import {
 		createEventSchema,
+		eventPlaceLabel,
 		updateEventSchema,
 		type UpdateEventSchema,
 		type ContactMethod
@@ -16,6 +17,7 @@
 	import LexicalEditor from '$lib/components/LexicalEditor.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
+	import LocationAutocompleteInput from '$lib/components/LocationAutocompleteInput.svelte';
 	import type { RemoteFormFields } from '@sveltejs/kit';
 	import type { Snippet } from 'svelte';
 	import type { UiTag } from '$lib/rpc/TagSelection.remote';
@@ -31,6 +33,9 @@
 		remoteForm,
 		allTags,
 		initialExistingImageUrls = [],
+		initialLocationLabel = null,
+		initialLocationLat = null,
+		initialLocationLng = null,
 		showAutofillControl = false,
 		fieldsHidden = false,
 		onDirty,
@@ -41,6 +46,9 @@
 		remoteForm: EventFormRemoteForm;
 		allTags: UiTag[];
 		initialExistingImageUrls?: string[];
+		initialLocationLabel?: string | null;
+		initialLocationLat?: string | number | null;
+		initialLocationLng?: string | number | null;
 		showAutofillControl?: boolean;
 		fieldsHidden?: boolean;
 		onDirty?: () => void;
@@ -74,6 +82,32 @@
 		(remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ?? `none`
 	);
 
+	function numericFieldValue(value: string | number | null | undefined) {
+		if (value == null || value === ``) return null;
+		const numberValue = Number(value);
+		if (!Number.isFinite(numberValue)) return null;
+		return numberValue;
+	}
+
+	let prefillLocation = $state.raw<{
+		label: string | null;
+		lat: number | null;
+		lng: number | null;
+	} | null>(null);
+	const resolvedLocation = $derived(prefillLocation ?? {
+		label: initialLocationLabel,
+		lat: numericFieldValue(initialLocationLat),
+		lng: numericFieldValue(initialLocationLng),
+	});
+
+	function applyLocationPrefill() {
+		prefillLocation = {
+			label: remoteForm.fields.address.value() ?? null,
+			lat: numericFieldValue(remoteForm.fields.latitude.value()),
+			lng: numericFieldValue(remoteForm.fields.longitude.value()),
+		};
+	}
+
 	onMount(() => {
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		remoteForm.fields.timeZone.set(timeZone);
@@ -93,7 +127,7 @@
 >
 	<section class={[`flex flex-col gap-5`, fieldsHidden && `hidden`]} data-wizard-step="event">
 	{#if showAutofillControl && isCreateEventForm(remoteForm)}
-		<EventAutofill {remoteForm} />
+		<EventAutofill {remoteForm} onPrefill={applyLocationPrefill} />
 	{/if}
 
 	<ImageInput
@@ -140,23 +174,23 @@
 		<FormFieldIssues field={remoteForm.fields.description} />
 	</fieldset>
 
-	<div class="flex flex-wrap md:gap-4 gap-6 flex-col md:flex-row md:flex-nowrap">
-		<fieldset class="fieldset w-full">
-			<label class="label cursor-pointer justify-start gap-2">
-				<input class="checkbox" data-testid="event-online-checkbox" {...remoteForm.fields.isOnline.as('checkbox')} />
-				<legend class="font-bold text-base-content text-wrap">Online Event
+	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+		<fieldset class="fieldset min-w-0">
+			<label class="fieldset-label items-start">
+				<input class="checkbox shrink-0" data-testid="event-online-checkbox" {...remoteForm.fields.isOnline.as('checkbox')} />
+				<span class="font-bold text-base-content text-wrap">Online Event
 					<p class="text-xs text-base-content/65 font-normal">Event wird über Video-Call angeboten (Zoom etc.)</p>
-				</legend>
+				</span>
 			</label>
 			<FormFieldIssues field={remoteForm.fields.isOnline} />
 		</fieldset>
 
-		<fieldset class="fieldset w-full">
-			<label class="label cursor-pointer justify-start gap-2">
-				<input class="checkbox" {...remoteForm.fields.isNotListed.as('checkbox')} />
-				<legend class="font-bold text-base-content">Event <span class="underline">nicht</span> in Suche anzeigen
-					<p class="text-xs text-base-content/65 font-normal text-wrap">Privater Event. Nur sichtbar für Leute denen du den Link gibst.</p>
-				</legend>
+		<fieldset class="fieldset min-w-0">
+			<label class="fieldset-label items-start">
+				<input class="checkbox shrink-0" {...remoteForm.fields.isNotListed.as('checkbox')} />
+				<span class="font-bold text-base-content text-wrap">Event <span class="underline">nicht</span> in Suche anzeigen
+					<p class="text-xs text-base-content/65 font-normal">Privater Event. Nur sichtbar für Leute denen du den Link gibst.</p>
+				</span>
 			</label>
 			<FormFieldIssues field={remoteForm.fields.isNotListed} />
 		</fieldset>
@@ -178,13 +212,32 @@
 
 	{#if !remoteForm.fields.isOnline.value()}
 		<fieldset class="fieldset" transition:slide={{ duration: 350, easing: cubicInOut }}>
-			<textarea
-				class="textarea min-h-20 w-full peer disabled:opacity-60"
-				{...remoteForm.fields.address.as('text')}
-				placeholder="Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-			></textarea>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Adresse *</legend>
+			<LocationAutocompleteInput
+				inputId="event-location"
+				placeholder="Adresse oder Ort suchen"
+				required
+				initialLabel={resolvedLocation.label}
+				initialLat={resolvedLocation.lat}
+				initialLng={resolvedLocation.lng}
+				locationLabelField={remoteForm.fields.address}
+				latitudeField={remoteForm.fields.latitude}
+				longitudeField={remoteForm.fields.longitude}
+				formatPlaceLabel={eventPlaceLabel}
+				showCurrentLocation={false}
+				onChange={() => onDirty?.()}
+			/>
+			<input
+				class="input peer w-full min-w-0"
+				data-testid="event-address-note-input"
+				aria-label="Adresshinweis"
+				{...remoteForm.fields.addressNote.as(`text`)}
+				placeholder="Hinweis (optional) z.B. Eingang 2, Stock 3"
+			/>
 			<FormFieldIssues field={remoteForm.fields.address} />
+			<FormFieldIssues field={remoteForm.fields.latitude} />
+			<FormFieldIssues field={remoteForm.fields.longitude} />
+			<FormFieldIssues field={remoteForm.fields.addressNote} />
 		</fieldset>
 	{/if}
 

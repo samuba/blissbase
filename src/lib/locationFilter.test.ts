@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	ALLOWED_DISTANCE_VALUES,
 	coarseLatLngForAnalytics,
+	coordinatesMatch,
 	hasValidCoordinates,
 	isValidDistance,
 	isValidLatitude,
@@ -63,6 +64,26 @@ describe(`hasValidCoordinates`, () => {
 	it(`rejects partial or invalid coordinates`, () => {
 		expect(hasValidCoordinates({ lat: 0, lng: null })).toBe(false);
 		expect(hasValidCoordinates({ lat: 200, lng: 0 })).toBe(false);
+	});
+});
+
+describe(`coordinatesMatch`, () => {
+	it(`treats coordinates that round to the same five decimals as equal`, () => {
+		expect(coordinatesMatch({
+			a: { lat: 52.52, lng: 13.405 },
+			b: { lat: 52.520001, lng: 13.405002 },
+		})).toBe(true);
+	});
+
+	it(`rejects a moved venue or missing coordinates`, () => {
+		expect(coordinatesMatch({
+			a: { lat: 52.52, lng: 13.405 },
+			b: { lat: 48.137, lng: 11.575 },
+		})).toBe(false);
+		expect(coordinatesMatch({
+			a: { lat: 52.52, lng: 13.405 },
+			b: { lat: null, lng: null },
+		})).toBe(false);
 	});
 });
 

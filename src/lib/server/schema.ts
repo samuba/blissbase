@@ -30,6 +30,7 @@ export const events = pgTable("events", {
 	endAt: timestamp(),
 	timezone: text(),
 	address: text().notNull().array(),
+	addressNote: text(),
 	price: text(),
 	priceIsHtml: boolean().notNull().default(false),
 	description: text(),

@@ -8,7 +8,7 @@ import {
 	fillProfileBio,
 	uploadRequiredProfileImages,
 } from "./helpers/create-flow";
-import { mockSupabaseOtpRequest, setGermanLocale } from "./helpers/offering-test-utils";
+import { chooseLocation, mockGooglePlacesAutocomplete, mockSupabaseOtpRequest, setGermanLocale } from "./helpers/offering-test-utils";
 import {
 	clearTestEvents,
 	clearTestProfiles,
@@ -70,6 +70,38 @@ test.describe("Event creation", () => {
 			authorId: E2E_DEFAULT_USER_ID,
 			attendanceMode: `online`,
 		});
+	});
+
+	test("signed-in user creates an offline event with location autocomplete and a note", async ({ page }) => {
+		await mockGooglePlacesAutocomplete(page);
+		await createProfile(page, createCompleteProfile());
+		await signInAsE2EUser(page);
+		await page.goto(`/events/new`);
+
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `event`);
+		await expect(page.getByTestId(`use-current-location-button`)).toHaveCount(0);
+		await page.getByTestId(`event-name-input`).fill(`E2E Offline Event`);
+		await fillEventDescription(page, `E2E event description`);
+		await chooseLocation(page, { inputId: `event-location` });
+		await page.getByTestId(`event-address-note-input`).fill(`3. Stock, Klingel 12`);
+		await clickWizardPrimary(page);
+
+		const dialog = page.getByTestId(`details-dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByTestId(`event-title`)).toHaveText(`E2E Offline Event`);
+		await expect(dialog.getByTestId(`event-address-link`)).toContainText(`Berlin · Germany`);
+		await expect(dialog.getByTestId(`event-address-link`)).toHaveAttribute(`href`, /query=52\.52,13\.405/);
+		await expect(dialog.getByTestId(`event-address-note`)).toHaveText(`3. Stock, Klingel 12`);
+		await expect(dialog.getByTestId(`event-address-link`)).not.toContainText(`3. Stock`);
+
+		const event = await getEventBySlug(page, getCreatedEventSlugFromUrl(page));
+		expect(event.name).toBe(`E2E Offline Event`);
+		expect(event.authorId).toBe(E2E_DEFAULT_USER_ID);
+		expect(event.attendanceMode).toBe(`offline`);
+		expect(event.address).toEqual([`Berlin`, `Germany`]);
+		expect(event.addressNote).toBe(`3. Stock, Klingel 12`);
+		expect(event.latitude).toBeCloseTo(52.52, 3);
+		expect(event.longitude).toBeCloseTo(13.405, 3);
 	});
 
 	test("signed-in user with a name skips the profile step even without social links", async ({ page }) => {

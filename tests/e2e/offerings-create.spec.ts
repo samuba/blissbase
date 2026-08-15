@@ -120,6 +120,7 @@ test.describe("Offering creation", () => {
 		await page.goto(`/offerings/new`);
 
 		await fillOfferingBasics(page, { title: `E2E Berlin Bodywork`, format: `offline` });
+		await expect(page.getByTestId(`use-current-location-button`)).toBeVisible();
 		await clickWizardPrimary(page);
 		await expect(page.getByText(/Please select a location from the suggestions/i)).toBeVisible();
 

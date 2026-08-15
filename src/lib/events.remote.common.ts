@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { publicProfilePatchSchema } from '$lib/rpc/profile.common';
+import { profileLocationFields, publicProfilePatchSchema } from '$lib/rpc/profile.common';
 
 export type ContactMethod = `none` | `email` | `phone` | `website` | `telegram` | `whatsapp`;
 
@@ -79,6 +79,9 @@ const eventSchemaEntries = {
 	tagIds: v.optional(v.pipe(v.array(v.string()), v.transform((x) => x.map((y) => parseInt(y)))), []),
 	price: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
 	address: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
+	addressNote: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(500, `Address note is too long`)), ``),
+	latitude: profileLocationFields.latitude,
+	longitude: profileLocationFields.longitude,
 	startAt: v.pipe(v.string(), v.isoDateTime(`Start date is invalid.`)),
 	endAt: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.isoDateTime(`End date is invalid.`)))),
 	timeZone: v.optional(emptyStringIsUndefined(v.pipe(v.string()))),
@@ -206,7 +209,10 @@ export function getEditEventInitialValues(event: EditEventSource, tagIds: number
 		description: event.description ?? ``,
 		tagIds: tagIds.map((x) => x.toString()),
 		price: event.price ?? ``,
-		address: (event.address ?? []).join(`\n`),
+		address: (event.address ?? []).join(`, `),
+		addressNote: event.addressNote ?? ``,
+		latitude: event.latitude == null ? `` : String(event.latitude),
+		longitude: event.longitude == null ? `` : String(event.longitude),
 		startAt: formatDateForLocalInputInTimeZone(event.startAt, event.timezone ?? DEFAULT_EVENT_FORM_TIME_ZONE),
 		endAt: event.endAt
 			? formatDateForLocalInputInTimeZone(event.endAt, event.timezone ?? DEFAULT_EVENT_FORM_TIME_ZONE)
@@ -279,12 +285,37 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	]);
 }
 
+/**
+ * Prefers a full formatted address, prefixed with the place name when it adds information.
+ *
+ * @example
+ * eventPlaceLabel({ displayName: `Yoga Studio`, formattedAddress: `Musterstraße 1, Berlin` })
+ * // `Yoga Studio, Musterstraße 1, Berlin`
+ */
+export function eventPlaceLabel(args: { displayName: string; formattedAddress: string }) {
+	const displayName = args.displayName.trim();
+	const formattedAddress = args.formattedAddress.trim();
+	if (!formattedAddress) return displayName;
+	if (!displayName || formattedAddressHasPlaceName({ formattedAddress, displayName })) return formattedAddress;
+	return `${displayName}, ${formattedAddress}`;
+}
+
+function formattedAddressHasPlaceName(args: { formattedAddress: string; displayName: string }) {
+	const name = args.displayName.trim().toLowerCase();
+	const formatted = args.formattedAddress.trim().toLowerCase();
+	if (formatted === name) return true;
+	return formatted.split(`,`).some((part) => part.trim() === name);
+}
+
 type EditEventSource = {
 	id: number;
 	hostSecret: string | null;
 	name: string;
 	description: string | null;
 	address: string[] | null;
+	addressNote?: string | null;
+	latitude?: number | null;
+	longitude?: number | null;
 	startAt: Date;
 	endAt: Date | null;
 	timezone: string | null;

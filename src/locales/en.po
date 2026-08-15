@@ -425,6 +425,7 @@ msgstr "<0/> All events"
 
 #: src/routes/events/new/+page.svelte
 #: src/routes/events/new/+page.svelte
+#: src/routes/profile/events/+page.svelte
 msgid "Event erstellen"
 msgstr "Create event"
 
@@ -448,7 +449,6 @@ msgstr "Share"
 msgid "Link kopieren"
 msgstr "Copy link"
 
-#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
 msgstr "City / postal code"
@@ -521,9 +521,6 @@ msgstr "Failed to delete event. Please try again."
 msgid "Ergebnisse anzeigen"
 msgstr "Show results"
 
-#~ msgid "✨ Achtsame Events in deiner Nähe ✨"
-#~ msgstr "✨ Find conscious events near you ✨"
-
 #: src/lib/components/HeaderControls.svelte
 msgid "Setze zuerst einen Standort"
 msgstr "Set a location first"
@@ -581,10 +578,6 @@ msgstr "Name *"
 #: src/lib/components/EventForm.svelte
 msgid "Beschreibung *"
 msgstr "Description *"
-
-#: src/lib/components/EventForm.svelte
-msgid "Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-msgstr "One or more lines, e.g. studio name, street, city"
 
 #: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
@@ -746,25 +739,21 @@ msgstr "Mobile main navigation"
 msgid "Hauptnavigation"
 msgstr "Main navigation"
 
-#: src/routes/profile/+page.svelte
+#: src/routes/profile/events/+page.svelte
 msgid "Aktuelle Events"
 msgstr "Current events"
 
-#: src/routes/profile/+page.svelte
+#: src/routes/profile/events/+page.svelte
 msgid "Vergangene Events"
 msgstr "Past events"
 
-#: src/routes/profile/+page.svelte
+#: src/routes/profile/events/+page.svelte
 msgid "Du hast aktuell keine Events."
 msgstr "You currently have no events."
 
-#: src/routes/profile/+page.svelte
+#: src/routes/profile/events/+page.svelte
 msgid "Du hast noch keine vergangenen Events."
 msgstr "You don't have any past events yet."
-
-#: src/routes/profile/+page.svelte
-msgid "Meine erstellten Events"
-msgstr "My created events"
 
 #: src/routes/+page.svelte
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
@@ -817,7 +806,7 @@ msgstr "Online Event <0>The event is offered via video call (Zoom, etc.)</0>"
 
 #: src/lib/components/EventForm.svelte
 msgid "Event <0>nicht</0> in Suche anzeigen <1>Privater Event. Nur sichtbar für Leute denen du den Link gibst.</1>"
-msgstr "Event <0>not</0> shown in search <1>Private event. Only visible to people you give the link to.</1>"
+msgstr "<0>Don't</0> show event in search <1>Private event. Only visible to people you give the link to.</1>"
 
 #: src/routes/EventDetails.svelte
 msgid "Öffne Karte"
@@ -925,9 +914,6 @@ msgstr "Change image"
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bild entfernen"
 msgstr "Remove image"
-
-#~ msgid "<0/> Bild hochladen"
-#~ msgstr "<0/> Upload image"
 
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Profilbild zuschneiden"
@@ -1075,7 +1061,6 @@ msgstr "<0/> Send code"
 
 #: src/lib/components/Login.svelte
 #: src/lib/components/OtpStep.svelte
-#: src/routes/offerings/new/OtpStep.svelte
 msgid "Einmalcode"
 msgstr "One-time code"
 
@@ -1089,7 +1074,6 @@ msgstr "<0/> Log in"
 
 #: src/lib/components/Login.svelte
 #: src/lib/components/OtpStep.svelte
-#: src/routes/offerings/new/OtpStep.svelte
 msgid "Andere E-Mail verwenden"
 msgstr "Use a different email"
 
@@ -1399,10 +1383,6 @@ msgstr "My offerings"
 msgid "Verwalte deine Angebote und aktiviere oder deaktiviere sie."
 msgstr "Manage your offerings and enable or disable them."
 
-#: src/routes/profile/+page.svelte
-msgid "Angebote verwalten"
-msgstr "Manage offerings"
-
 #: src/routes/profile/offerings/+page.svelte
 msgid "Meine Angebote | Blissbase"
 msgstr "My offerings | Blissbase"
@@ -1446,7 +1426,6 @@ msgid "Weiter"
 msgstr "Next"
 
 #: src/lib/components/OtpStep.svelte
-#: src/routes/offerings/new/OtpStep.svelte
 msgid "Code erneut senden"
 msgstr "Resend code"
 
@@ -1765,10 +1744,6 @@ msgstr "<0/> Load again"
 msgid "Admin"
 msgstr "Admin"
 
-#: src/routes/profile/+page.svelte
-msgid "Admin öffnen"
-msgstr "Open Admin"
-
 #: src/lib/components/AdminEventSourceFilter.svelte
 #: src/lib/components/AdminEventSourceFilter.svelte
 msgid "All"
@@ -1817,9 +1792,6 @@ msgstr "<0/> Back to Admin"
 #: src/routes/admin/telegram/+page.svelte
 msgid "roomId *"
 msgstr "roomId *"
-
-#~ msgid "defaultTimezone *"
-#~ msgstr "defaultTimezone *"
 
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/telegram/+page.svelte
@@ -1924,14 +1896,6 @@ msgstr "No WhatsApp scraping targets yet."
 #: src/routes/admin/whatsapp/+page.svelte
 msgid "In WhatsApp öffnen"
 msgstr "Open in WhatsApp"
-
-#: src/routes/admin/+page.svelte
-msgid "<0/> Telegram Scraping"
-msgstr "<0/> Telegram Scraping"
-
-#: src/routes/admin/+page.svelte
-msgid "<0/> WhatsApp Scraping"
-msgstr "<0/> WhatsApp Scraping"
 
 #: src/routes/admin/telegram/+page.svelte
 #: src/routes/admin/whatsapp/+page.svelte
@@ -2229,9 +2193,6 @@ msgstr "Default time zone * <0/>"
 msgid "<0/> Achtsame Events in deiner Nähe <1/>"
 msgstr "<0/> Mindful events near you <1/>"
 
-#~ msgid "<0/> <1/> <2/> <3/> width={0} height={1} alt=\"Hero\" class=\"h-72 w-full object-cover md:h-auto md:max-h-[550px]\" />"
-#~ msgstr "<0/> <1/> <2/> <3/> width={0} height={1} alt=\"Hero\" class=\"h-72 w-full object-cover md:h-auto md:max-h-[550px]\" />"
-
 #: src/routes/events/new/+page.svelte
 msgid "Event"
 msgstr "Event"
@@ -2261,8 +2222,43 @@ msgstr "Social Links"
 msgid "Bild hochladen"
 msgstr "Upload image"
 
-#~ msgid "Banner Bild"
-#~ msgstr "Banner image"
+#: src/routes/profile/+page.svelte
+#: src/routes/profile/events/+page.svelte
+msgid "Meine Events"
+msgstr "My Events"
 
-#~ msgid "Bannerbild"
-#~ msgstr "Banner image"
+#: src/routes/profile/+page.svelte
+msgid "Verwalte deine erstellten Events."
+msgstr "Manage the events you created."
+
+#: src/lib/components/EventForm.svelte
+msgid "Adresse oder Ort suchen"
+msgstr "Search for an address or place"
+
+#: src/lib/components/EventForm.svelte
+msgid "Adresshinweis"
+msgstr "Address details"
+
+#: src/routes/profile/events/+page.svelte
+msgid "Meine Events | Blissbase"
+msgstr "My Events | Blissbase"
+
+#: src/routes/profile/events/+page.svelte
+msgid "Verwalte deine Events. Sie sind für andere Nutzer auf der <0>Events-Seite</0> sichtbar."
+msgstr "Manage your events. They are visible to other users on the <0>Events page</0>."
+
+#: src/routes/profile/events/+page.svelte
+msgid "<0/> Event erstellen"
+msgstr "<0/> Create event"
+
+#: src/routes/admin/+page.svelte
+msgid "Telegram Scraping"
+msgstr "Telegram Scraping"
+
+#: src/routes/admin/+page.svelte
+msgid "WhatsApp Scraping"
+msgstr "WhatsApp Scraping"
+
+#: src/lib/components/EventForm.svelte
+msgid "Hinweis (optional) z.B. Eingang 2, Stock 3"
+msgstr "Note (optional), e.g. Entrance 2, Floor 3"

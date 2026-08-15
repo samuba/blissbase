@@ -6,13 +6,13 @@
 		formatDateForLocalInput,
 		type ContactMethod
 	} from '$lib/events.remote.common';
-	import { getDefaultCreateEventFieldBase } from '$lib/eventCreateDefaults';
+	import { applyCreateEventLocationPrefill, getDefaultCreateEventFieldBase } from '$lib/eventCreateDefaults';
 	import { prefillEventFromDescription } from '$lib/rpc/prefillEventFromDescription.remote';
 	import type { CreateEventPrefillFields } from '$lib/server/mapAiAnswerToCreateEventPrefill';
 
 	type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
 
-	let { remoteForm }: { remoteForm: CreateEventForm } = $props();
+	let { remoteForm, onPrefill }: { remoteForm: CreateEventForm; onPrefill?: () => void } = $props();
 
 	const ALLOWED_IMAGE_TYPES = [`image/jpeg`, `image/png`, `image/webp`, `image/gif`] as const;
 	const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -48,6 +48,9 @@
 			),
 			price: remoteForm.fields.price.value() || defaults.price,
 			address: remoteForm.fields.address.value() || defaults.address,
+			addressNote: remoteForm.fields.addressNote.value() || defaults.addressNote,
+			latitude: remoteForm.fields.latitude.value() || defaults.latitude,
+			longitude: remoteForm.fields.longitude.value() || defaults.longitude,
 			startAt: remoteForm.fields.startAt.value() || defaults.startAt,
 			endAt: remoteForm.fields.endAt.value() || defaults.endAt,
 			timeZone: remoteForm.fields.timeZone.value() || defaults.timeZone,
@@ -73,7 +76,10 @@
 			description: prefill.description || base.description,
 			tagIds: prefill.tagIds?.length ? prefill.tagIds : base.tagIds,
 			price: prefill.price || base.price,
-			address: prefill.address || base.address,
+			...applyCreateEventLocationPrefill({
+				base,
+				prefillAddress: prefill.address,
+			}),
 			startAt: prefill.startAtIso
 				? formatDateForLocalInput(new Date(prefill.startAtIso))
 				: base.startAt,
@@ -115,6 +121,7 @@
 				return;
 			}
 			remoteForm.fields.set(mergePrefill(currentFields, result.fields));
+			onPrefill?.();
 			if (result.fields.notice === `noEventData`) {
 				banner = {
 					kind: `noEvent`,

@@ -1,5 +1,6 @@
 import {
 	createEventSchema,
+	eventPlaceLabel,
 	formatDateForLocalInputInTimeZone,
 	inferContactMethod,
 	storedContactUriToFormFields,
@@ -89,6 +90,70 @@ describe(`event schemas`, () => {
 
 		expect(result.success).toBe(true);
 	});
+
+	it(`allows an offline event with an address and no coordinates`, () => {
+		const result = v.safeParse(createEventSchema, createEventPayload({
+			latitude: ``,
+			longitude: ``
+		}));
+
+		expect(result.success).toBe(true);
+	});
+
+	it(`allows updating an offline event that has an address but no coordinates`, () => {
+		const result = v.safeParse(updateEventSchema, {
+			...createEventPayload({
+				latitude: ``,
+				longitude: ``
+			}),
+			eventId: 42,
+			hostSecret: ``,
+			existingImageUrls: []
+		});
+
+		expect(result.success).toBe(true);
+	});
+
+	it(`does not require a location for online events`, () => {
+		const result = v.safeParse(createEventSchema, createEventPayload({
+			isOnline: true,
+			address: ``,
+			latitude: ``,
+			longitude: ``
+		}));
+
+		expect(result.success).toBe(true);
+	});
+});
+
+describe(`eventPlaceLabel`, () => {
+	it(`prefixes the formatted address with the place name when it adds information`, () => {
+		expect(eventPlaceLabel({
+			displayName: `Yoga Studio`,
+			formattedAddress: `Musterstraße 1, Berlin`
+		})).toBe(`Yoga Studio, Musterstraße 1, Berlin`);
+	});
+
+	it(`uses the formatted address when it already contains the name`, () => {
+		expect(eventPlaceLabel({
+			displayName: `Berlin`,
+			formattedAddress: `Berlin, Germany`
+		})).toBe(`Berlin, Germany`);
+	});
+
+	it(`prefixes when the name is only a substring of a street`, () => {
+		expect(eventPlaceLabel({
+			displayName: `Berlin`,
+			formattedAddress: `Berliner Straße 12, München`
+		})).toBe(`Berlin, Berliner Straße 12, München`);
+	});
+
+	it(`uses the formatted address when a later part equals the name`, () => {
+		expect(eventPlaceLabel({
+			displayName: `Berlin`,
+			formattedAddress: `Musterstraße 1, Berlin`
+		})).toBe(`Musterstraße 1, Berlin`);
+	});
 });
 
 /**
@@ -102,7 +167,10 @@ function createEventPayload(overrides: Partial<CreateEventPayload> = {}): Create
 		description: `Test Beschreibung`,
 		tagIds: [`1`],
 		price: `10 EUR`,
-		address: `Musterstraße 1\nBerlin`,
+		address: `Musterstraße 1, Berlin`,
+		addressNote: `3. Stock`,
+		latitude: `52.52`,
+		longitude: `13.405`,
 		startAt: `2099-01-15T18:00`,
 		endAt: `2099-01-15T20:00`,
 		timeZone: `Europe/Berlin`,
@@ -121,6 +189,9 @@ type CreateEventPayload = {
 	tagIds: string[];
 	price?: string;
 	address?: string;
+	addressNote?: string;
+	latitude?: string;
+	longitude?: string;
 	startAt: string;
 	endAt?: string;
 	timeZone?: string;

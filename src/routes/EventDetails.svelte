@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAddress, getLongLocale, getContactMethod, getWebsiteDomainLabel, type SupportedLocale, resolveSupportedLocale, formatDatesStr, formatTimesStr } from '$lib/common';
+	import { calendarLocation, formatAddress, getLongLocale, getContactMethod, getWebsiteDomainLabel, googleMapsSearchUrl, type SupportedLocale, resolveSupportedLocale, formatDatesStr, formatTimesStr } from '$lib/common';
 	import PopOver from '$lib/components/PopOver.svelte';
 	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
 	import type { UiEvent } from '$lib/server/events';
@@ -51,7 +51,15 @@
 		return Array.from(tags);
 	});
 
-	const mapsUrl = $derived(event.address?.length ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address.join(', '))}` : undefined);
+	const mapsUrl = $derived(googleMapsSearchUrl({
+		latitude: event.latitude,
+		longitude: event.longitude,
+		query: event.address?.length ? event.address.join(`, `) : null,
+	}));
+	const eventCalendarLocation = $derived(calendarLocation({
+		address: event.address,
+		addressNote: event.addressNote,
+	}));
 
 	function getContactUrl(str: string | undefined) {
 		let contact = str ?? event.hostLink;
@@ -213,7 +221,7 @@
 							description: event.description ?? undefined,
 							start: event.startAt.toISOString(),
 							end: event.endAt?.toISOString(),
-							location: event.address?.join(', ')
+							location: eventCalendarLocation
 						}}
 					>
 						{#snippet children({ props })}
@@ -235,7 +243,7 @@
 							description: event.description ?? undefined,
 							start: event.startAt.toISOString(),
 							end: event.endAt?.toISOString(),
-							location: event.address?.join(', ')
+							location: eventCalendarLocation
 						}}
 					>
 						{#snippet children({ props })}
@@ -272,17 +280,25 @@
 						<a href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Öffne Karte" class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
 							<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
 						</a>
-						<a
-							href={mapsUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							class={[ `hover:underline block w-full min-w-0 cursor-pointer text-left font-medium` ]}
-						>
-							<span class={[ `line-clamp-3 min-w-0 wrap-break-word leading-`]}>
-								{formatAddress(event.address)}
-								<i class="icon-[ph--arrow-square-out] ml-0.75 inline-block size-4.5 shrink-0 align-middle mb-1" aria-hidden="true"></i>
-							</span>
-						</a>
+						<div class="flex min-w-0 w-full flex-col items-start">
+							<a
+								href={mapsUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								data-testid="event-address-link"
+								class={[ `hover:underline block w-full min-w-0 cursor-pointer text-left font-medium` ]}
+							>
+								<span class={[ `line-clamp-3 min-w-0 wrap-break-word leading-`]}>
+									{formatAddress(event.address)}
+									<i class="icon-[ph--arrow-square-out] ml-0.75 inline-block size-4.5 shrink-0 align-middle mb-1" aria-hidden="true"></i>
+								</span>
+							</a>
+							{#if event.addressNote}
+								<p class="text-base-content/70 w-full min-w-0 wrap-break-word text-sm whitespace-pre-line" data-testid="event-address-note">
+									{event.addressNote}
+								</p>
+							{/if}
+						</div>
 					{/if}
 	
 					{#if event.price && !event.priceIsHtml}

@@ -1,4 +1,5 @@
 import type { MetaTagsProps } from "svelte-meta-tags";
+import { hasValidCoordinates } from "$lib/locationFilter";
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -148,6 +149,45 @@ function getDateFormatter(args: { locale: string; excludeYear: boolean }) {
 function shouldExcludeYear(args: { date: Date; today: Date; excludeCurrentYear: boolean }) {
     const { date, today, excludeCurrentYear } = args;
     return excludeCurrentYear && date.getFullYear() === today.getFullYear();
+}
+
+export function toAddressLines(address: string | undefined) {
+    if (!address?.trim()) return [];
+    return address.split(/,|\n/).map((x) => x.trim()).filter((x) => x);
+}
+
+/**
+ * Google Maps search URL: coordinates when present, otherwise a free-text query.
+ *
+ * @example
+ * googleMapsSearchUrl({ latitude: 52.52, longitude: 13.405, query: `Berlin` })
+ * // `https://www.google.com/maps/search/?api=1&query=52.52,13.405`
+ */
+export function googleMapsSearchUrl(args: {
+	latitude?: number | null;
+	longitude?: number | null;
+	query?: string | null;
+}) {
+	if (hasValidCoordinates({ lat: args.latitude, lng: args.longitude })) {
+		return `https://www.google.com/maps/search/?api=1&query=${args.latitude},${args.longitude}`;
+	}
+	const query = args.query?.trim();
+	if (!query) return;
+	return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/**
+ * Calendar location: address lines plus an optional venue note.
+ *
+ * @example
+ * calendarLocation({ address: [`Berlin`], addressNote: `3. Stock` })
+ * // `Berlin, 3. Stock`
+ */
+export function calendarLocation(args: {
+	address?: string[] | null;
+	addressNote?: string | null;
+}) {
+	return [...(args.address ?? []), args.addressNote].filter((part) => part?.trim()).join(`, `) || undefined;
 }
 
 export function formatAddress(address: string[]): string {

@@ -35,6 +35,22 @@ export function hasValidCoordinates(args: {
 	return isValidLatitude(args.lat) && isValidLongitude(args.lng);
 }
 
+/**
+ * True when both pairs are valid and match at five decimal places (~1.1m).
+ *
+ * @example
+ * coordinatesMatch({ a: { lat: 52.52, lng: 13.405 }, b: { lat: 52.520001, lng: 13.405002 } })
+ */
+export function coordinatesMatch(args: {
+	a: { lat?: number | null; lng?: number | null };
+	b: { lat?: number | null; lng?: number | null };
+}) {
+	if (!hasValidCoordinates({ lat: args.a.lat, lng: args.a.lng })) return false;
+	if (!hasValidCoordinates({ lat: args.b.lat, lng: args.b.lng })) return false;
+	return args.a.lat!.toFixed(5) === Number(args.b.lat).toFixed(5)
+		&& args.a.lng!.toFixed(5) === Number(args.b.lng).toFixed(5);
+}
+
 export function getDistanceInKm(args: {
 	fromLat: number;
 	fromLng: number;
