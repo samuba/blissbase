@@ -11,6 +11,8 @@ const flashToasts: Record<FlashKey, () => void> = {
 	offeringUnlisted: () => /* @wc-include */ toast.success(`Angebot wurde deaktiviert`, { description: `Andere können es nicht mehr sehen.` }),
 	offeringDeleted: () => /* @wc-include */ toast.success(`Angebot wurde gelöscht.`),
 	offeringUpdated: () => /* @wc-include */ toast.success(`Angebot wurde aktualisiert.`),
+	eventUpdated: () => /* @wc-include */ toast.success(`Event wurde aktualisiert.`),
+	eventDeleted: () => /* @wc-include */ toast.success(`Event wurde gelöscht.`),
 };
 
 const celebrateKeys = new Set<FlashKey>([`offeringCreated`, `eventCreated`]);

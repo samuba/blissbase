@@ -1,27 +1,27 @@
 <script lang="ts">
 	import EventCard from '$lib/components/EventCard.svelte';
-	import { getMyAuthoredPastEvents } from '$lib/rpc/events.remote';
+	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
 	import { routes } from '$lib/routes';
 
 	let { data } = $props();
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
-	let pastEvents = $state<Awaited<ReturnType<typeof getMyAuthoredPastEvents>>>([]);
-	let pastEventsStatus = $state<`idle` | `loading` | `loaded`>(`idle`);
+	let pastEventsRequested = $state(false);
 
-	async function fetchPastEvents() {
-		if (pastEventsStatus !== `idle`) return;
+	const upcomingEventsQuery = getMyAuthoredUpcomingEvents();
+	const upcomingEvents = $derived(upcomingEventsQuery.current ?? data.upcomingEvents);
+	const pastEventsQuery = $derived(pastEventsRequested ? getMyAuthoredPastEvents() : undefined);
+	const pastEvents = $derived(pastEventsQuery?.current ?? []);
+	const pastEventsLoading = $derived(Boolean(pastEventsQuery?.loading && !pastEventsQuery.current));
 
-		pastEventsStatus = `loading`;
-		pastEvents = await getMyAuthoredPastEvents();
-		pastEventsStatus = `loaded`;
+	function fetchPastEvents() {
+		pastEventsRequested = true;
 	}
 
-	async function selectTab(tab: `upcoming` | `past`) {
+	function selectTab(tab: `upcoming` | `past`) {
 		if (selectedTab === tab) return;
 		selectedTab = tab;
-
 		if (tab !== `past`) return;
-		await fetchPastEvents();
+		fetchPastEvents();
 	}
 </script>
 
@@ -67,9 +67,9 @@
 	</div>
 
 	<div class={[selectedTab !== `upcoming` && `hidden`]}>
-		{#if data.upcomingEvents.length}
+		{#if upcomingEvents.length}
 			<div class="mt-4 flex w-full flex-col gap-6">
-				{#each data.upcomingEvents as event (event.id)}
+				{#each upcomingEvents as event (event.id)}
 					<EventCard {event} />
 				{/each}
 			</div>
@@ -82,7 +82,7 @@
 	</div>
 
 	<div class={[selectedTab !== `past` && `hidden`]}>
-		{#if pastEventsStatus === `loading`}
+		{#if pastEventsLoading}
 			<div class="mt-12 flex justify-center">
 				<span class="loading loading-spinner"></span>
 			</div>

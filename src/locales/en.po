@@ -2279,3 +2279,11 @@ msgstr "Select image <0>or drop it</0>"
 #: src/lib/flashToast.svelte.ts
 msgid "Event erstellt!"
 msgstr "Event created!"
+
+#: src/lib/flashToast.svelte.ts
+msgid "Event wurde aktualisiert."
+msgstr "Event was updated."
+
+#: src/lib/flashToast.svelte.ts
+msgid "Event wurde gelöscht."
+msgstr "Event was deleted."

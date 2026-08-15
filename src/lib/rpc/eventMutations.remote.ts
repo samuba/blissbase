@@ -79,6 +79,7 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	}
 
 	console.timeEnd('updateEvent');
+	setFlash(`eventUpdated`);
 	redirect(303, routes.eventDetails(eventFromDb.slug));
 });
 

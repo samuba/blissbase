@@ -5,6 +5,8 @@ import * as assets from '$lib/assets';
 import { db, eq, s } from '$lib/server/db';
 import { E2E_TEST } from '$env/static/private';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
+import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
+import { setFlash } from '$lib/server/flash';
 
 const deleteEventSchema = v.object({
 	eventId: v.number(),
@@ -24,6 +26,9 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 			await assets.deleteObjects(result[0].imageUrls, eventAssetsCreds);
 		}
 
+		getMyAuthoredUpcomingEvents().refresh();
+		getMyAuthoredPastEvents().refresh();
+		setFlash(`eventDeleted`);
 		return {
 			success: true,
 			deletedEvent: result[0],
