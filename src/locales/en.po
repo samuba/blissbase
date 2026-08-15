@@ -2191,7 +2191,7 @@ msgstr "Default time zone * <0/>"
 
 #: src/routes/+page.svelte
 msgid "<0/> Achtsame Events in deiner Nähe <1/>"
-msgstr "<0/> Mindful events near you <1/>"
+msgstr "<0/> Conscious events near you <1/>"
 
 #: src/routes/events/new/+page.svelte
 msgid "Event"

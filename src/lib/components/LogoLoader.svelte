@@ -22,22 +22,22 @@
 		stroke="oklch(85.2% 0.199 91.936)"
 		stroke-width="23.625"
 	/>
-	<circle class="ripple" cx="100" cy="100" r="12" fill="oklch(85.2% 0.199 91.936)" />
+	<circle class="ripple" cx="100" cy="100" r="6.1" fill="oklch(85.2% 0.199 91.936)" />
 	<circle
 		class="ripple"
 		cx="100"
 		cy="100"
-		r="31"
+		r="20.728"
 		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="5"
+		stroke-width="11.3"
 	/>
 	<circle
 		class="ripple"
 		cx="100"
 		cy="100"
-		r="52"
+		r="47.578"
 		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="5"
+		stroke-width="16"
 	/>
 </svg>
 

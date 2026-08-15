@@ -33,7 +33,7 @@ CI scrapen von https://t.me/citreasurehunt/174/175
 MAYBE: go for CI community. They dont have anything, espectially for retreats/big stuff + jams
 
 
-Check whatsapp events quality
+Check whatsapp events qualityincrease the gap between the circles.
 
 BUG: sometime tags show als erstes: 1 tages retreat, 1zu1 retreat (sollte eh raus)
 add more whatsapp groups
