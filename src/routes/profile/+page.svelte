@@ -43,9 +43,9 @@
 					<div class="list-col-grow">
 						<h3 class="text-lg font-semibold">Öffentliches Profil</h3>
 						{#if hasPublicProfile && myPublic.slug}
-							<p class="text-base-content/80 flex flex-wrap items-center text-sm leading-relaxed">
+							<p class="text-base-content/80 text-sm leading-relaxed">
 								Dein öffentliches Profil ist sichtbar unter
-								<a href={routes.publicProfile(myPublic.slug)} class="link relative z-10 pl-1">
+								<a href={routes.publicProfile(myPublic.slug)} class="link relative z-10 wrap-anywhere">
 									blissbase.app/@/{myPublic.slug}
 								</a>
 							</p>
