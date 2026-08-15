@@ -2262,3 +2262,7 @@ msgstr "WhatsApp Scraping"
 #: src/lib/components/EventForm.svelte
 msgid "Hinweis (optional) z.B. Eingang 2, Stock 3"
 msgstr "Hinweis (optional) z.B. Eingang 2, Stock 3"
+
+#: src/lib/components/ProfileImageCropInput.svelte
+msgid "Bild auswählen <0>oder ablegen</0>"
+msgstr "Bild auswählen <0>oder ablegen</0>"

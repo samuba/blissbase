@@ -230,12 +230,12 @@
 			{:else}
 				<button
 					type="button"
-					class="bg-primary/15 text-primary border-base-300 flex size-22 cursor-pointer items-center justify-center rounded-full border hover:opacity-80"
+					class="bg-base-200 text-primary border-base-300 flex size-22 cursor-pointer items-center justify-center rounded-full border hover:opacity-80"
 					title="Bild hochladen"
 					onclick={openPicker}
 					disabled={busy}
 				>
-					<i class="icon-[ph--user-circle] size-12"></i>
+					<i class="icon-[ph--user-circle] size-14"></i>
 				</button>
 			{/if}
 			{#if displayedUrl}
@@ -278,12 +278,16 @@
 			{:else}
 				<button
 					type="button"
-					class="text-base-content/40 flex size-full cursor-pointer items-center justify-center hover:opacity-80"
+					class="text-primary-content flex gap-4 size-full cursor-pointer items-center justify-center hover:opacity-80"
 					title="Bild hochladen"
 					onclick={openPicker}
 					disabled={busy}
 				>
-					<i class="icon-[ph--image] size-12"></i>
+					<i class="icon-[ph--image] size-12 text-primary"></i>
+					<div class="text-sm ">
+						Bild auswählen
+						<p class="hidden sm:block">oder ablegen</p>
+					</div>
 				</button>
 			{/if}
 			{#if displayedUrl}
