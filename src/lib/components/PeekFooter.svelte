@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { routes } from '$lib/routes';
 	import { peekFooter } from '$lib/peekFooter.svelte';
+	import { user } from '$lib/user.svelte';
 
 	const SCROLL_THRESHOLD = 8;
 	const TOP_REVEAL_Y = 24;
@@ -45,8 +46,9 @@
 
 	const links = [
 		{ label: `Über`, href: routes.about() },
-		{ label: `FAQ`, href: routes.faq() }
-	] as const;
+		{ label: `FAQ`, href: routes.faq() },
+		{ label: `Admin`, href: routes.admin() }
+	].filter(x => user.isAdmin ? true : x.href !== routes.admin());
 
 	function handleScroll() {
 		if (!canAutoHide) return;

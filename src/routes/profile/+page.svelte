@@ -86,22 +86,6 @@
 					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
 				</a>
 			</li>
-			{#if user.isAdmin}
-				<li>
-					<a href={routes.admin()} class="list-row hover:bg-base-200 items-start no-underline">
-						<div class="bg-primary/15 text-primary-content flex size-12 shrink-0 items-center justify-center rounded-xl">
-							<i class="icon-[ph--shield-star] block size-7"></i>
-						</div>
-						<div class="list-col-grow">
-							<h3 class="text-lg font-semibold">Admin</h3>
-							<p class="text-base-content/80 text-sm leading-relaxed">
-								Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools.
-							</p>
-						</div>
-						<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
-					</a>
-				</li>
-			{/if}
 		</ul>
 	</div>
 

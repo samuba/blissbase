@@ -1739,7 +1739,6 @@ msgid "<0/> Erneut laden"
 msgstr "<0/> Load again"
 
 #: src/routes/admin/+page.svelte
-#: src/routes/profile/+page.svelte
 msgid "Admin"
 msgstr "Admin"
 
@@ -1939,9 +1938,8 @@ msgstr "<0/> WhatsApp Scraping Targets"
 msgid "Event-Quellenfilter findest du im Filter-Dialog auf der Startseite."
 msgstr "You can find the event source filter in the filter dialog on the home page."
 
-#: src/routes/profile/+page.svelte
-msgid "Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools."
-msgstr "Telegram and WhatsApp scraping, as well as other admin tools."
+#~ msgid "Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools."
+#~ msgstr "Telegram and WhatsApp scraping, as well as other admin tools."
 
 #: src/lib/components/AdminEventSourceFilter.svelte
 msgid "<0/> Admin Zeug"
