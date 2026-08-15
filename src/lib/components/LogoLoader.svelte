@@ -14,39 +14,30 @@
 	class={['overflow-visible', className]}
 	{...restProps}
 >
-	<circle cx="100" cy="100" r="82.390" fill="#ffffff" />
-	<circle class="ripple" cx="100" cy="100" r="9.884" fill="oklch(85.2% 0.199 91.936)" />
 	<circle
-		class="ripple"
-		cx="100"
-		cy="100"
-		r="27.304"
-		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="2.411"
-	/>
-	<circle
-		class="ripple"
-		cx="100"
-		cy="100"
-		r="42.340"
-		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="2.589"
-	/>
-	<circle
-		class="ripple"
-		cx="100"
-		cy="100"
-		r="57.620"
-		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="2.531"
-	/>
-	<circle
-		class="ripple"
 		cx="100"
 		cy="100"
 		r="82.390"
+		fill="#ffffff"
 		stroke="oklch(85.2% 0.199 91.936)"
 		stroke-width="23.625"
+	/>
+	<circle class="ripple" cx="100" cy="100" r="12" fill="oklch(85.2% 0.199 91.936)" />
+	<circle
+		class="ripple"
+		cx="100"
+		cy="100"
+		r="31"
+		stroke="oklch(85.2% 0.199 91.936)"
+		stroke-width="5"
+	/>
+	<circle
+		class="ripple"
+		cx="100"
+		cy="100"
+		r="52"
+		stroke="oklch(85.2% 0.199 91.936)"
+		stroke-width="5"
 	/>
 </svg>
 
@@ -58,19 +49,11 @@
 	}
 
 	circle.ripple:nth-of-type(3) {
-		animation-delay: 0.12s;
+		animation-delay: 0.16s;
 	}
 
 	circle.ripple:nth-of-type(4) {
-		animation-delay: 0.24s;
-	}
-
-	circle.ripple:nth-of-type(5) {
-		animation-delay: 0.36s;
-	}
-
-	circle.ripple:nth-of-type(6) {
-		animation-delay: 0.48s;
+		animation-delay: 0.32s;
 	}
 
 	@keyframes ripple {
