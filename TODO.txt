@@ -257,13 +257,6 @@ I haven't included it in the 11 core categories above because I think that's a p
 
 
 
-
-
-
-random order for offerings?
-
-update wuchale
-
 adjust PWA icons
 
 have tags also in the filter dialog

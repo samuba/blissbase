@@ -24,7 +24,7 @@ export default defineConfig({
 				})
 			: undefined,
 		SvelteKitPWA({
-			includeAssets: ["pwa-192x192.png", "pwa-512x512.png", "pwa-512-maskable.png", "pwa-192-maskable.png", "logo.svg"],
+			includeAssets: ["favicon.png", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png", "pwa-512-maskable.png", "pwa-192-maskable.png", "logo.svg"],
 			registerType: "autoUpdate",
 			injectRegister: false,
 			kit: {
@@ -42,15 +42,16 @@ export default defineConfig({
 				display_override: ["window-controls-overlay"],
 				icons: [
 					{
-						src: "pwa-512-maskable.png",
-						sizes: "512x512",
+						src: "pwa-192x192.png",
+						sizes: "192x192",
 						type: "image/png",
-						purpose: "maskable",
+						purpose: "any",
 					},
 					{
-						src: "pwa-512-maskable.png",
+						src: "pwa-512x512.png",
 						sizes: "512x512",
 						type: "image/png",
+						purpose: "any",
 					},
 					{
 						src: "pwa-192-maskable.png",
@@ -59,9 +60,10 @@ export default defineConfig({
 						purpose: "maskable",
 					},
 					{
-						src: "pwa-192-maskable.png",
-						sizes: "192x192",
+						src: "pwa-512-maskable.png",
+						sizes: "512x512",
 						type: "image/png",
+						purpose: "maskable",
 					},
 				],
 			},
