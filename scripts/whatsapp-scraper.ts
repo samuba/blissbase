@@ -1099,15 +1099,17 @@ async function processMessages(args: {
     if (beforePastFilter > events.length) {
         console.log(`[whatsapp] Removed ${beforePastFilter - events.length} past event(s) after merge`)
     }
+    let lastEventCreatedAt: Date | undefined
     if (events.length > 0) {
         console.log(`[whatsapp] Inserting ${events.length} event(s): ${events.map((e) => e.slug).join(`, `)}`)
-        await upsertEvents(events)
+        const upserted = await upsertEvents(events)
         console.log("events", events)
+        lastEventCreatedAt = upserted.find((event) => event.wasInserted)?.createdAt
     } else {
         console.log(`[whatsapp] No events to insert for this batch`)
     }
 
-    return { scrapedEventsCount: events.length }
+    return { scrapedEventsCount: events.length, lastEventCreatedAt }
 }
 
 /**
@@ -1146,7 +1148,7 @@ async function processScrapingTarget(args: {
             return { success: true, target }
         }
 
-        const { scrapedEventsCount } = await processMessages({ messages, target, s3 })
+        const { scrapedEventsCount, lastEventCreatedAt } = await processMessages({ messages, target, s3 })
         const latestMessage = messages[messages.length - 1]
         console.log(
             `[whatsapp] Done ${label}: +${scrapedEventsCount} event(s), cursor ${latestMessage.messageId} @ ${new Date(latestMessage.timestamp * 1000).toISOString()}`
@@ -1160,7 +1162,8 @@ async function processScrapingTarget(args: {
                 lastError: null,
                 scrapedEvents: target.scrapedEvents + scrapedEventsCount,
                 messagesConsumed: target.messagesConsumed + messages.length,
-                lastRunFinishedAt: new Date()
+                lastRunFinishedAt: new Date(),
+                ...(lastEventCreatedAt ? { lastEventCreatedAt } : {})
             })
             .where(eq(s.whatsappScrapingTargets.chatJid, target.chatJid))
 

@@ -1,7 +1,7 @@
+import { getTableColumns, sql } from 'drizzle-orm';
 import { deduplicateItems, generateSlug } from '../common';
 import type { InsertEvent } from '../types';
 import { buildConflictUpdateColumns, type DB, s } from './db.shared';
-import { sql } from 'drizzle-orm';
 
 export const FORM_CREATED_EVENT_SOURCE = `website-form`;
 
@@ -124,7 +124,10 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 				`
 			}
 		})
-		.returning();
+		.returning({
+			...getTableColumns(s.events),
+			wasInserted: sql<boolean>`(xmax = 0)::boolean`
+		});
 }
 
 /**

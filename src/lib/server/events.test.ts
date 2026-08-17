@@ -224,6 +224,30 @@ describe('Events Module - Happy Flow Tests', () => {
             ]);
         });
 
+        it(`should flag newly inserted events and not flag updates`, async () => {
+            const event = createTestEvent({
+                name: `Insert Flag Event`,
+                startAt: new Date(`2024-12-20T19:00:00Z`),
+                endAt: new Date(`2024-12-20T22:00:00Z`),
+                slug: ``
+            });
+
+            const inserted = await upsertEvents([event]);
+            expect(inserted[0].wasInserted).toBe(true);
+
+            const updated = await upsertEvents([
+                createTestEvent({
+                    name: `Insert Flag Event`,
+                    startAt: new Date(`2024-12-20T19:00:00Z`),
+                    endAt: new Date(`2024-12-20T22:00:00Z`),
+                    slug: ``,
+                    description: `Updated description`
+                })
+            ]);
+            expect(updated[0].wasInserted).toBe(false);
+            expect(updated[0].description).toBe(`Updated description`);
+        });
+
         it.skip('should handle conflict resolution for duplicate slugs', async () => {
             // Insert both events at once to test conflict resolution
             // Since upsertEvents auto-generates slugs, we need to use the same name to get the same slug

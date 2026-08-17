@@ -909,9 +909,10 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
         }
 
         let scrapedEventsCount = 0;
+        let lastEventCreatedAt: Date | undefined;
         if (messages.length > 0) {
             if (messagesToProcess.length > 0) {
-                ({ scrapedEventsCount } = await processMessages(
+                ({ scrapedEventsCount, lastEventCreatedAt } = await processMessages(
                     messagesToProcess,
                     resolvedRoomId,
                     client,
@@ -937,6 +938,7 @@ async function processScrapingTarget(target: TelegramScrapingTarget, client: Tel
                     lastError: null,
                     scrapedEvents: target.scrapedEvents + scrapedEventsCount,
                     lastRunFinishedAt: new Date(),
+                    ...(lastEventCreatedAt ? { lastEventCreatedAt } : {}),
                 })
                 .where(eq(s.telegramScrapingTargets.roomId, target.roomId));
         } else {
@@ -1036,17 +1038,19 @@ async function processMessages(
     events = mergeDuplicateEvents(events);
     events.forEach(x => x.sourceChatIdsTelegram = Array.from(new Set([chatId, ...(x.sourceChatIdsTelegram ?? [])])))
 
+    let lastEventCreatedAt: Date | undefined;
     if (events.length > 0) {
         console.log("inserting into db:", events)
         console.log("inserting these slugs:", events.map(e => e.slug))
-        await upsertEvents(events);
+        const upserted = await upsertEvents(events);
+        lastEventCreatedAt = upserted.find((event) => event.wasInserted)?.createdAt;
     } else {
         console.log("no events to insert")
     }
 
-    // return newest message id and time
     return {
         scrapedEventsCount: events.length,
+        lastEventCreatedAt,
     }
 }
 

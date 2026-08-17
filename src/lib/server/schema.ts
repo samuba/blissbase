@@ -114,6 +114,7 @@ export const telegramScrapingTargets = pgTable("telegram_scraping_targets", {
 	messagesConsumed: integer().notNull().default(0),
 	lastError: text(),
 	scrapedEvents: integer().notNull().default(0),
+	lastEventCreatedAt: timestamp(),
 	lastRunFinishedAt: timestamp(),
 	topicIds: bigint({ mode: "bigint" }).array().notNull().default([]),
 	defaultTimezone: text().notNull().default("germany"),
@@ -132,6 +133,7 @@ export const whatsappScrapingTargets = pgTable("whatsapp_scraping_targets", {
 	messagesConsumed: integer().notNull().default(0),
 	lastError: text(),
 	scrapedEvents: integer().notNull().default(0),
+	lastEventCreatedAt: timestamp(),
 	lastRunFinishedAt: timestamp(),
 	defaultTimezone: text().notNull().default("germany"),
 });

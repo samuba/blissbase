@@ -88,6 +88,7 @@
 		{ key: `defaultTimezone`, label: `Timezone` },
 		{ key: `hasOnlyConsciousEvents`, label: `Conscious only` },
 		{ key: `scrapedEvents`, label: `Events` },
+		{ key: `lastEventCreatedAt`, label: `Letztes Event` },
 		{ key: `lastRunFinishedAt`, label: `Letzter Lauf` },
 		{ key: `lastError`, label: `Fehler` },
 	];
@@ -294,11 +295,10 @@
 		if (key === `defaultTimezone`) return target.defaultTimezone;
 		if (key === `hasOnlyConsciousEvents`) return target.hasOnlyConsciousEvents ? 1 : 0;
 		if (key === `scrapedEvents`) return target.scrapedEvents;
-		if (key === `lastRunFinishedAt`) {
-			if (!target.lastRunFinishedAt) return null;
-			const date = target.lastRunFinishedAt instanceof Date
-				? target.lastRunFinishedAt
-				: new Date(target.lastRunFinishedAt);
+		if (key === `lastEventCreatedAt` || key === `lastRunFinishedAt`) {
+			const value = target[key];
+			if (!value) return null;
+			const date = value instanceof Date ? value : new Date(value);
 			return Number.isNaN(date.getTime()) ? null : date.getTime();
 		}
 		return target.lastError?.trim() || null;
@@ -360,6 +360,7 @@
 		| `defaultTimezone`
 		| `hasOnlyConsciousEvents`
 		| `scrapedEvents`
+		| `lastEventCreatedAt`
 		| `lastRunFinishedAt`
 		| `lastError`;
 </script>
@@ -491,6 +492,7 @@
 										{/if}
 									</td>
 									<td>{target.scrapedEvents}</td>
+									<td class="whitespace-nowrap text-xs">{formatDate(target.lastEventCreatedAt)}</td>
 									<td class="whitespace-nowrap text-xs">{formatDate(target.lastRunFinishedAt)}</td>
 									<td class="text-error max-w-48 truncate text-xs" title={target.lastError ?? ``}>
 										{target.lastError ?? `—`}

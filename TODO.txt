@@ -257,7 +257,7 @@ I haven't included it in the 11 core categories above because I think that's a p
 
 
 
-adjust PWA icons
+adjust og images
 
 have tags also in the filter dialog
 
