@@ -27,6 +27,7 @@ const blackListWords = [
     'slow flow',
     'pilates',
     'beginner yoga',
+    'Engpassdehnungs',
     // no crypto 
     'bitcoin', 
     'crypto',
