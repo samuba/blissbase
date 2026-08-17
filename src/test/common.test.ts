@@ -30,15 +30,22 @@ describe(`toAddressLines`, () => {
 });
 
 describe(`googleMapsSearchUrl`, () => {
-	it(`prefers coordinates over the address query`, () => {
+	it(`uses the address query so Maps can show the venue`, () => {
 		expect(googleMapsSearchUrl({
 			latitude: 52.52,
 			longitude: 13.405,
-			query: `Berlin, Germany`,
+			query: `Yoga Studio, Berlin, Germany`,
+		})).toBe(`https://www.google.com/maps/search/?api=1&query=Yoga%20Studio%2C%20Berlin%2C%20Germany`);
+	});
+
+	it(`falls back to coordinates when the address query is missing`, () => {
+		expect(googleMapsSearchUrl({
+			latitude: 52.52,
+			longitude: 13.405,
 		})).toBe(`https://www.google.com/maps/search/?api=1&query=52.52,13.405`);
 	});
 
-	it(`falls back to the address query when coordinates are missing`, () => {
+	it(`uses the address query when coordinates are missing`, () => {
 		expect(googleMapsSearchUrl({
 			query: `Berlin, Germany`,
 		})).toBe(`https://www.google.com/maps/search/?api=1&query=Berlin%2C%20Germany`);

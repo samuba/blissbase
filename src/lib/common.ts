@@ -157,23 +157,26 @@ export function toAddressLines(address: string | undefined) {
 }
 
 /**
- * Google Maps search URL: coordinates when present, otherwise a free-text query.
+ * Google Maps search URL. Prefers a place name/address so Maps can open the
+ * venue details page. Coordinates alone only drop a nameless pin, and mixing
+ * them into `query` (e.g. `Name, lat, lng`) also hides place details.
  *
  * @example
- * googleMapsSearchUrl({ latitude: 52.52, longitude: 13.405, query: `Berlin` })
- * // `https://www.google.com/maps/search/?api=1&query=52.52,13.405`
+ * googleMapsSearchUrl({ latitude: 52.52, longitude: 13.405, query: `Yoga Studio, Berlin` })
+ * // `https://www.google.com/maps/search/?api=1&query=Yoga%20Studio%2C%20Berlin`
  */
 export function googleMapsSearchUrl(args: {
 	latitude?: number | null;
 	longitude?: number | null;
 	query?: string | null;
 }) {
+	const query = args.query?.trim();
+	if (query) {
+		return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+	}
 	if (hasValidCoordinates({ lat: args.latitude, lng: args.longitude })) {
 		return `https://www.google.com/maps/search/?api=1&query=${args.latitude},${args.longitude}`;
 	}
-	const query = args.query?.trim();
-	if (!query) return;
-	return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
 /**
