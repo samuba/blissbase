@@ -1,15 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { sortOfferingsForDailyList } from '$lib/rpc/offerings.remote';
-
-vi.mock(`$app/environment`, () => ({
-	dev: false,
-	browser: false,
-	building: false,
-}));
-
-vi.mock(`$app/paths`, () => ({
-	resolve: (path: string) => path,
-}));
+import { describe, expect, it } from 'vitest';
+import { sortOfferingsForDailyList } from '$lib/rpc/offerings.common';
 
 const mondayNoonUtc = new Date(`2026-08-17T10:00:00.000Z`);
 const tuesdayNoonUtc = new Date(`2026-08-18T10:00:00.000Z`);

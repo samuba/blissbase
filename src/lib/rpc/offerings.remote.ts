@@ -2,7 +2,7 @@ import { command, form, getRequestEvent, query, requested } from "$app/server";
 import { dev } from "$app/environment";
 import * as assets from "$lib/assets";
 import { randomString, slugify } from "$lib/common";
-import { OFFERING_IMAGE_MAX_COUNT, offeringFormSchema, offeringNeedsLocation, updateOfferingFormSchema } from "$lib/rpc/offerings.common";
+import { OFFERING_IMAGE_MAX_COUNT, offeringFormSchema, offeringNeedsLocation, sortOfferingsForDailyList, updateOfferingFormSchema } from "$lib/rpc/offerings.common";
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
@@ -694,48 +694,6 @@ function refreshOfferingLists(args: { returnTo?: string | null } = {}) {
 		getMyOfferings().refresh();
 		userHasOfferings().refresh();
 	}
-}
-
-/**
- * Stable per-day offering order: same-day creations stay on top (newest first),
- * everything else is a deterministic shuffle for that Berlin calendar day.
- */
-export function sortOfferingsForDailyList<T extends { id: number; createdAt: Date }>(
-	offerings: T[],
-	now = new Date(),
-) {
-	if (!offerings?.length) return [];
-
-	const todayKey = berlinDayKey(now);
-	return [...offerings].sort((a, b) => {
-		const aIsNew = berlinDayKey(a.createdAt) === todayKey;
-		const bIsNew = berlinDayKey(b.createdAt) === todayKey;
-		if (aIsNew !== bIsNew) return aIsNew ? -1 : 1;
-
-		if (aIsNew) {
-			const createdDiff = b.createdAt.getTime() - a.createdAt.getTime();
-			if (createdDiff !== 0) return createdDiff;
-			return b.id - a.id;
-		}
-
-		const rankDiff = dailyShuffleRank({ id: a.id, day: todayKey }) - dailyShuffleRank({ id: b.id, day: todayKey });
-		if (rankDiff !== 0) return rankDiff;
-		return a.id - b.id;
-	});
-}
-
-function berlinDayKey(date: Date) {
-	return date.toLocaleDateString(`en-CA`, { timeZone: `Europe/Berlin` });
-}
-
-function dailyShuffleRank({ id, day }: { id: number; day: string }) {
-	let hash = 2166136261;
-	const input = `${day}:${id}`;
-	for (let i = 0; i < input.length; i++) {
-		hash ^= input.charCodeAt(i);
-		hash = Math.imul(hash, 16777619);
-	}
-	return hash >>> 0;
 }
 
 type FinalizeOfferingImageClaimsArgs = {

@@ -44,3 +44,45 @@ export type OfferingFormat = (typeof OFFERING_FORMATS)[number];
 export function offeringNeedsLocation(format: OfferingFormat) {
 	return format === `offline` || format === `offline+online`;
 }
+
+/**
+ * Stable per-day offering order: same-day creations stay on top (newest first),
+ * everything else is a deterministic shuffle for that Berlin calendar day.
+ */
+export function sortOfferingsForDailyList<T extends { id: number; createdAt: Date }>(
+	offerings: T[],
+	now = new Date(),
+) {
+	if (!offerings?.length) return [];
+
+	const todayKey = berlinDayKey(now);
+	return [...offerings].sort((a, b) => {
+		const aIsNew = berlinDayKey(a.createdAt) === todayKey;
+		const bIsNew = berlinDayKey(b.createdAt) === todayKey;
+		if (aIsNew !== bIsNew) return aIsNew ? -1 : 1;
+
+		if (aIsNew) {
+			const createdDiff = b.createdAt.getTime() - a.createdAt.getTime();
+			if (createdDiff !== 0) return createdDiff;
+			return b.id - a.id;
+		}
+
+		const rankDiff = dailyShuffleRank({ id: a.id, day: todayKey }) - dailyShuffleRank({ id: b.id, day: todayKey });
+		if (rankDiff !== 0) return rankDiff;
+		return a.id - b.id;
+	});
+}
+
+function berlinDayKey(date: Date) {
+	return date.toLocaleDateString(`en-CA`, { timeZone: `Europe/Berlin` });
+}
+
+function dailyShuffleRank({ id, day }: { id: number; day: string }) {
+	let hash = 2166136261;
+	const input = `${day}:${id}`;
+	for (let i = 0; i < input.length; i++) {
+		hash ^= input.charCodeAt(i);
+		hash = Math.imul(hash, 16777619);
+	}
+	return hash >>> 0;
+}
