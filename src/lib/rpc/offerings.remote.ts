@@ -74,6 +74,7 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 			format: true,
 			imageUrls: true,
 			listed: true,
+			createdAt: true,
 		},
 		with: {
 			profile: {
@@ -91,42 +92,43 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 				},
 			},
 		},
-		orderBy: (offerings, { desc }) => [desc(offerings.updatedAt)],
 	});
 
 	return {
 		filter,
-		offerings: filterOfferingsByIncludeOnline({
-			offerings: offerings
-				.filter((offering) => {
-					if (!offering.profile || !isPublicProfile(offering.profile)) return false;
-					if (!hasSocialLink(offering.profile)) return false;
-					if (!filterCoords || distanceKm == null || Number.isNaN(distanceKm)) return true;
+		offerings: sortOfferingsForDailyList(
+			filterOfferingsByIncludeOnline({
+				offerings: offerings
+					.filter((offering) => {
+						if (!offering.profile || !isPublicProfile(offering.profile)) return false;
+						if (!hasSocialLink(offering.profile)) return false;
+						if (!filterCoords || distanceKm == null || Number.isNaN(distanceKm)) return true;
 
-					return shouldIncludeOfferingInLocationFilter({
-						format: offering.format,
-						includeOnline: filter.includeOnline,
-						profileLatitude: offering.profile.latitude,
-						profileLongitude: offering.profile.longitude,
-						filterCoords,
-						distanceKm,
-					});
-				})
-				.map((offering) => ({
-					...offering,
-					descriptionHtml: offering.descriptionHtml ?? ``,
-					imageUrls: offering.imageUrls ?? [],
-					profile: {
-						...offering.profile,
-						bio: offering.profile.bio ?? ``,
-						profileImageUrl: offering.profile.profileImageUrl ?? ``,
-						bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
-						locationLabel: offering.profile.locationLabel ?? ``,
-					},
-					canManage: userId === offering.profile.id || isAdminSession,
-				})),
-			includeOnline: filter.includeOnline,
-		}),
+						return shouldIncludeOfferingInLocationFilter({
+							format: offering.format,
+							includeOnline: filter.includeOnline,
+							profileLatitude: offering.profile.latitude,
+							profileLongitude: offering.profile.longitude,
+							filterCoords,
+							distanceKm,
+						});
+					})
+					.map((offering) => ({
+						...offering,
+						descriptionHtml: offering.descriptionHtml ?? ``,
+						imageUrls: offering.imageUrls ?? [],
+						profile: {
+							...offering.profile,
+							bio: offering.profile.bio ?? ``,
+							profileImageUrl: offering.profile.profileImageUrl ?? ``,
+							bannerImageUrl: offering.profile.bannerImageUrl ?? ``,
+							locationLabel: offering.profile.locationLabel ?? ``,
+						},
+						canManage: userId === offering.profile.id || isAdminSession,
+					})),
+				includeOnline: filter.includeOnline,
+			}),
+		),
 	};
 });
 
@@ -692,6 +694,48 @@ function refreshOfferingLists(args: { returnTo?: string | null } = {}) {
 		getMyOfferings().refresh();
 		userHasOfferings().refresh();
 	}
+}
+
+/**
+ * Stable per-day offering order: same-day creations stay on top (newest first),
+ * everything else is a deterministic shuffle for that Berlin calendar day.
+ */
+export function sortOfferingsForDailyList<T extends { id: number; createdAt: Date }>(
+	offerings: T[],
+	now = new Date(),
+) {
+	if (!offerings?.length) return [];
+
+	const todayKey = berlinDayKey(now);
+	return [...offerings].sort((a, b) => {
+		const aIsNew = berlinDayKey(a.createdAt) === todayKey;
+		const bIsNew = berlinDayKey(b.createdAt) === todayKey;
+		if (aIsNew !== bIsNew) return aIsNew ? -1 : 1;
+
+		if (aIsNew) {
+			const createdDiff = b.createdAt.getTime() - a.createdAt.getTime();
+			if (createdDiff !== 0) return createdDiff;
+			return b.id - a.id;
+		}
+
+		const rankDiff = dailyShuffleRank({ id: a.id, day: todayKey }) - dailyShuffleRank({ id: b.id, day: todayKey });
+		if (rankDiff !== 0) return rankDiff;
+		return a.id - b.id;
+	});
+}
+
+function berlinDayKey(date: Date) {
+	return date.toLocaleDateString(`en-CA`, { timeZone: `Europe/Berlin` });
+}
+
+function dailyShuffleRank({ id, day }: { id: number; day: string }) {
+	let hash = 2166136261;
+	const input = `${day}:${id}`;
+	for (let i = 0; i < input.length; i++) {
+		hash ^= input.charCodeAt(i);
+		hash = Math.imul(hash, 16777619);
+	}
+	return hash >>> 0;
 }
 
 type FinalizeOfferingImageClaimsArgs = {
