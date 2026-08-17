@@ -5,8 +5,8 @@ import brandFontDataUrl from '$lib/fonts/Baloo2-SemiBold.ttf?inline';
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const PRIMARY = `#43ebd3`;
-const TEXT = `#0f3d36`;
+const PRIMARY = `#eab308`;
+const TEXT = `#713f12`;
 const MAX_COVERS = 15;
 const brandFont = opentype.parse(dataUrlToArrayBuffer(brandFontDataUrl));
 
@@ -33,7 +33,7 @@ export async function createOfferingsOgImage({
 
 	return sharp(collage)
 		.composite([
-			{ input: await softTealWash(), blend: `over` },
+			{ input: await softYellowWash(), blend: `over` },
 			{ input: branding, blend: `over` },
 		])
 		.jpeg({ quality: 84, mozjpeg: true })
@@ -81,7 +81,7 @@ async function buildCollageBackground({ imageUrls }: { imageUrls: string[] }) {
 			width: OG_WIDTH,
 			height: OG_HEIGHT,
 			channels: 3,
-			background: hexToRgb(`#12665c`),
+			background: hexToRgb(`#854d0e`),
 		},
 	})
 		.composite(composites)
@@ -205,18 +205,18 @@ async function solidBrandBackground() {
 		.toBuffer();
 }
 
-async function softTealWash() {
+async function softYellowWash() {
 	const svg = `
 		<svg xmlns="http://www.w3.org/2000/svg" width="${OG_WIDTH}" height="${OG_HEIGHT}">
 			<defs>
 				<linearGradient id="wash" x1="0" y1="0" x2="1" y2="1">
 					<stop offset="0%" stop-color="${PRIMARY}" stop-opacity="0.10"/>
 					<stop offset="55%" stop-color="${PRIMARY}" stop-opacity="0.18"/>
-					<stop offset="100%" stop-color="#06332e" stop-opacity="0.40"/>
+					<stop offset="100%" stop-color="#422006" stop-opacity="0.40"/>
 				</linearGradient>
 				<linearGradient id="bottom" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="#06332e" stop-opacity="0"/>
-					<stop offset="100%" stop-color="#06332e" stop-opacity="0.22"/>
+					<stop offset="0%" stop-color="#422006" stop-opacity="0"/>
+					<stop offset="100%" stop-color="#422006" stop-opacity="0.22"/>
 				</linearGradient>
 			</defs>
 			<rect width="100%" height="100%" fill="url(#wash)"/>
