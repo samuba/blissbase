@@ -1,69 +1,66 @@
 <script lang="ts">
-	import type { ClassValue, SVGAttributes } from 'svelte/elements';
+	import type { ClassValue, HTMLAttributes } from 'svelte/elements';
 
 	let { class: className, ...restProps }: Props = $props();
 
-	type Props = { class?: ClassValue } & SVGAttributes<SVGSVGElement>;
+	const rings = [
+		{ inner: `0%`, outer: `6.3%` },
+		{ inner: `19.8%`, outer: `30%` },
+		{ inner: `43.5%`, outer: `56.4%` },
+		{ inner: `69.8%`, outer: `95.5%` }
+	];
+
+	type Props = { class?: ClassValue } & HTMLAttributes<HTMLDivElement>;
 </script>
 
-<svg
-	xmlns="http://www.w3.org/2000/svg"
-	viewBox="0 0 200 200"
-	fill="none"
-	role="img"
-	class={['overflow-visible', className]}
-	{...restProps}
->
-	<circle
-		cx="100"
-		cy="100"
-		r="82.390"
-		fill="#ffffff"
-		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="23.625"
-	/>
-	<circle class="ripple" cx="100" cy="100" r="6.1" fill="oklch(85.2% 0.199 91.936)" />
-	<circle
-		class="ripple"
-		cx="100"
-		cy="100"
-		r="20.728"
-		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="11.3"
-	/>
-	<circle
-		class="ripple"
-		cx="100"
-		cy="100"
-		r="47.578"
-		stroke="oklch(85.2% 0.199 91.936)"
-		stroke-width="16"
-	/>
-</svg>
+<div role="img" class={['relative overflow-visible', className]} {...restProps}>
+	{#each rings as ring, i (ring.inner)}
+		<img
+			src="/logo-90x90.png"
+			alt=""
+			class={['ripple size-full object-contain', i !== 0 && `absolute inset-0`]}
+			style:--inner={ring.inner}
+			style:--outer={ring.outer}
+			style:animation-delay={`${i * 0.28}s`}
+		/>
+	{/each}
+</div>
 
 <style>
 	.ripple {
-		transform-box: fill-box;
 		transform-origin: center;
-		animation: ripple 2s ease-out infinite;
-	}
-
-	circle.ripple:nth-of-type(3) {
-		animation-delay: 0.16s;
-	}
-
-	circle.ripple:nth-of-type(4) {
-		animation-delay: 0.32s;
+		animation: ripple 1.6s ease-in-out infinite;
+		mask-image: radial-gradient(
+			circle closest-side,
+			transparent max(0%, calc(var(--inner) - 0.5%)),
+			#fff var(--inner),
+			#fff var(--outer),
+			transparent calc(var(--outer) + 0.5%)
+		);
+		mask-mode: alpha;
+		mask-repeat: no-repeat;
+		mask-position: center;
+		mask-size: 100% 100%;
+		-webkit-mask-image: radial-gradient(
+			circle closest-side,
+			transparent max(0%, calc(var(--inner) - 0.5%)),
+			#fff var(--inner),
+			#fff var(--outer),
+			transparent calc(var(--outer) + 0.5%)
+		);
+		-webkit-mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		-webkit-mask-size: 100% 100%;
 	}
 
 	@keyframes ripple {
 		0%,
 		100% {
-			transform: scale(0.86);
-			opacity: 0.35;
+			transform: scale(0.7);
+			opacity: 0.2;
 		}
-		40% {
-			transform: scale(1);
+		50% {
+			transform: scale(1.18);
 			opacity: 1;
 		}
 	}

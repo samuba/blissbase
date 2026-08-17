@@ -15,7 +15,7 @@
 	<nav class={['hidden md:flex justify-center md:shrink-0 bg-base-200', rest.class]} aria-label="Hauptnavigation">
 		<div class="flex w-2xl ">
 			<a class="flex items-center gap-3" href={resolve('/')} data-testid="nav-home">
-				<img src="/logo.svg" alt="" class="size-10" data-testid="nav-logo" />
+				<img src="/logo-90x90.png" alt="" class="size-10" data-testid="nav-logo" />
 				<h2 class="text-xl font-brand text-primary-content">Blissbase</h2>
 			</a>
 			<div class="grow"></div>
@@ -66,7 +66,7 @@
 		<nav class={['hidden md:block md:shrink-0 bg-base-200', rest.class]} aria-label="Hauptnavigation">
 			<div class="flex w-3xl items-center gap-3">
 				<a class="flex items-center gap-3" href={resolve('/')}>
-					<img src="/logo.svg" alt="" class="size-10" data-testid="nav-logo" />
+					<img src="/logo-90x90.png" alt="" class="size-10" data-testid="nav-logo" />
 					<h2 class="text-xl font-brand text-primary-content">Blissbase</h2>
 				</a>
 				<div class="grow"></div>

@@ -5,9 +5,9 @@
 
 <div class="bg-base-100 flex min-h-screen items-center justify-center text-center">
 	<div class="flex flex-col gap-8">
-		<a href="/" class="flex items-center gap-3">
-			<img src="/logo.svg" alt="Blissbase" class="size-12" />
-			<h1 class="text-3xl font-bold font-brand">Blissbase</h1>
+		<a href={routes.root()} class="flex items-center gap-3">
+			<img src="/logo-90x90.png" alt="Blissbase" class="size-12" />
+			<h1 class="text-3xl font-bold font-brand text-primary-content">Blissbase</h1>
 		</a>
 
 		<div>

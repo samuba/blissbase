@@ -89,7 +89,7 @@
 	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-4 sm:gap-8 items-center justify-center">
 		<div class="flex flex-col gap-4 w-full items-center justify-center px-4">
 			<div class="flex justify-center items-center gap-3">
-				<img src="/logo-transparent.svg" alt="" class="size-12 md:size-16 lg:size-18 drop-shadow-xl" data-testid="hero-logo" />
+				<img src="/logo-90x90.png" alt="" class="size-12 md:size-16 lg:size-18 drop-shadow-xl" data-testid="hero-logo" />
 				<h1 class="md:text-5xl text-4xl font-semibold text-base-100 font-brand" >
 					Blissbase
 				</h1>
@@ -218,7 +218,6 @@
 		id="events-loading-spinner" 
 	>
 	<span class="loading loading-spinner loading-xl"></span>
-		<!-- <img src="/logo.svg" alt="Blissbase" class="size-10 min-w-10 animate-spin" /> -->
 		<p class="">Lade...</p>
 	</div>
 {/snippet}
