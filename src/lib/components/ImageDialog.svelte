@@ -131,7 +131,8 @@
 	function handleKeydown(event: KeyboardEvent) {
 		if (!open) return;
 
-		switch (event.key) {
+		// @wc-ignore
+		switch (event.key)  {
 			case `ArrowLeft`:
 				event.preventDefault();
 				goToPrevious();

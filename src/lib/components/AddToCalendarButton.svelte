@@ -88,7 +88,7 @@
 			<div class="bg-base-200 p-2 px-4 text-xs font-semibold rounded-t-xl text-center">
 				Zum Kalender hinzufügen
 			</div>
-			<div class="flex flex-col p-2 gap-2">
+			<div class="flex flex-col p-2 gap-2"> 
 				{#each calendarProviders as provider (provider.name)}
 					<a
 						href={provider.getUrl(event)}
@@ -114,7 +114,7 @@
 								class="size-6"
 							/>
 						{:else}
-							<i class={`${provider.icon} size-6`}></i>
+							<i class="{provider.icon} size-6"></i>
 						{/if}
 						<span>{provider.name}</span>
 					</a>

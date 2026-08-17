@@ -16,8 +16,8 @@ import { E2E_TEST } from '$env/static/private';
 import { resolve as resolveRoute } from '$app/paths';
 
 // load at server startup
-loadLocales(main.key, main.loadIDs, main.loadCatalog, locales)
-loadLocales(js.key, js.loadIDs, js.loadCatalog, locales)
+loadLocales(main.key, main.loadCount, main.loadCatalog, locales)
+loadLocales(js.key, js.loadCount, js.loadCatalog, locales)
 const wuchaleLocalization: Handle = async ({ event, resolve }) => {
     let locale = event.cookies.get('locale')
     const browserLang = (event.request.headers.get('accept-language') ?? '').split(',')[0]?.split('-')[0]?.trim();

@@ -4,15 +4,16 @@ import { fireConfetti } from "$lib/confetti";
 import { FLASH_COOKIE_NAME, FLASH_KEYS, type FlashKey } from "$lib/flash";
 import { toast } from "svelte-sonner";
 
+// @wc-include
 const flashToasts: Record<FlashKey, () => void> = {
-	offeringCreated: () => /* @wc-include */ toast.success(`Angebot erstellt!`),
-	eventCreated: () => /* @wc-include */ toast.success(`Event erstellt!`),
-	offeringListed: () => /* @wc-include */ toast.success(`Angebot wurde aktiviert`, { description: `Es ist jetzt für andere Nutzer sichtbar.` }),
-	offeringUnlisted: () => /* @wc-include */ toast.success(`Angebot wurde deaktiviert`, { description: `Andere können es nicht mehr sehen.` }),
-	offeringDeleted: () => /* @wc-include */ toast.success(`Angebot wurde gelöscht.`),
-	offeringUpdated: () => /* @wc-include */ toast.success(`Angebot wurde aktualisiert.`),
-	eventUpdated: () => /* @wc-include */ toast.success(`Event wurde aktualisiert.`),
-	eventDeleted: () => /* @wc-include */ toast.success(`Event wurde gelöscht.`),
+	offeringCreated: () =>  toast.success(`Angebot erstellt!`),
+	eventCreated: () => toast.success(`Event erstellt!`),
+	offeringListed: () => toast.success(`Angebot wurde aktiviert`, { description: `Es ist jetzt für andere Nutzer sichtbar.` }),
+	offeringUnlisted: () => toast.success(`Angebot wurde deaktiviert`, { description: `Andere können es nicht mehr sehen.` }),
+	offeringDeleted: () => toast.success(`Angebot wurde gelöscht.`),
+	offeringUpdated: () => toast.success(`Angebot wurde aktualisiert.`),
+	eventUpdated: () => toast.success(`Event wurde aktualisiert.`),
+	eventDeleted: () => toast.success(`Event wurde gelöscht.`),
 };
 
 const celebrateKeys = new Set<FlashKey>([`offeringCreated`, `eventCreated`]);
@@ -42,6 +43,7 @@ export function registerFlashToast() {
 	});
 }
 
+// @wc-ignore
 function consumeFlashCookie(): FlashKey | undefined {
 	const entry = document.cookie.split(`; `).find((row) => row.startsWith(`${FLASH_COOKIE_NAME}=`));
 	if (!entry) return undefined;

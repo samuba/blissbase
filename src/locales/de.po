@@ -14,6 +14,7 @@ msgstr ""
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
 #: src/routes/+page.svelte
+#: src/routes/@/[slug]/+page.server.ts
 msgid "Blissbase"
 msgstr "Blissbase"
 
@@ -631,9 +632,13 @@ msgstr "Bilder auswählen <0>oder ablegen</0>"
 msgid "Cover Bild"
 msgstr "Cover Bild"
 
+#. 0: index + 1
 #. 0: i + 1
+#. 0: index + 1
 #. 0: i + 1
 #: src/lib/components/ImageInput.svelte
+#: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
 #: src/lib/components/OfferingImageUploadInput.svelte
 msgid "Bild #{0}"
 msgstr "Bild #{0}"
@@ -944,6 +949,7 @@ msgstr "<0/> Fertig"
 msgid "Öffentliches Profil"
 msgstr "Öffentliches Profil"
 
+#. 0.0: myPublic.slug
 #: src/routes/profile/+page.svelte
 msgid "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0>"
 msgstr "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0>"
@@ -1133,6 +1139,7 @@ msgstr "Suchen"
 msgid "Vor Ort"
 msgstr "Vor Ort"
 
+#. 1.0: eventsStore.locationFilter.plzCity; 1.1: eventsStore.locationFilter.distance
 #: src/routes/+page.svelte
 msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
 msgstr "in <0/> <1>{0} ({1}km Radius)</1><2/>"
@@ -1325,6 +1332,7 @@ msgstr "Angebot konnte nicht deaktiviert werden."
 msgid "Angebot konnte nicht aktiviert werden."
 msgstr "Angebot konnte nicht aktiviert werden."
 
+#: src/routes/offerings/[slug]/+page.server.ts
 #: src/routes/offerings/[slug]/edit/+page.server.ts
 msgid "Offering not found"
 msgstr "Offering not found"
@@ -1938,9 +1946,6 @@ msgstr "<0/> WhatsApp Scraping Targets"
 msgid "Event-Quellenfilter findest du im Filter-Dialog auf der Startseite."
 msgstr "Event-Quellenfilter findest du im Filter-Dialog auf der Startseite."
 
-#~ msgid "Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools."
-#~ msgstr "Telegram- und WhatsApp-Scraping sowie weitere Admin-Tools."
-
 #: src/lib/components/AdminEventSourceFilter.svelte
 msgid "<0/> Admin Zeug"
 msgstr "<0/> Admin Zeug"
@@ -2264,18 +2269,6 @@ msgstr "Hinweis (optional) z.B. Eingang 2, Stock 3"
 msgid "Bild auswählen <0>oder ablegen</0>"
 msgstr "Bild auswählen <0>oder ablegen</0>"
 
-#~ msgid "blissbase.app/@/{0}"
-#~ msgstr "blissbase.app/@/{0}"
-
-#~ msgid "Profil ansehen"
-#~ msgstr "Profil ansehen"
-
-#~ msgid "<0/> <1/> <2>Öffentliches Profilblissbase.app/@/{0}Profil ansehenErstelle dein öffentliches Profil.</2> div <3/>"
-#~ msgstr "<0/> <1/> <2>Öffentliches Profilblissbase.app/@/{0}Profil ansehenErstelle dein öffentliches Profil.</2> div <3/>"
-
-#~ msgid "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0> <1>Profil ansehen</1>"
-#~ msgstr "Dein öffentliches Profil ist sichtbar unter <0>blissbase.app/@/{0}</0> <1>Profil ansehen</1>"
-
 #: src/lib/flashToast.svelte.ts
 msgid "Event erstellt!"
 msgstr "Event erstellt!"
@@ -2287,3 +2280,73 @@ msgstr "Event wurde aktualisiert."
 #: src/lib/flashToast.svelte.ts
 msgid "Event wurde gelöscht."
 msgstr "Event wurde gelöscht."
+
+#: src/routes/admin/+layout.server.ts
+msgid "Admin only"
+msgstr "Admin only"
+
+#. 0: location
+#: src/routes/offerings/+page.server.ts
+msgid "{0}'s Conscious Offerings"
+msgstr "{0}'s Conscious Offerings"
+
+#: src/routes/offerings/+page.server.ts
+msgid "Conscious Offerings"
+msgstr "Conscious Offerings"
+
+#. 0: location
+#: src/routes/offerings/+page.server.ts
+msgid "Discover conscious offerings in {0}."
+msgstr "Discover conscious offerings in {0}."
+
+#: src/routes/offerings/+page.server.ts
+msgid "Find conscious offerings near you."
+msgstr "Find conscious offerings near you."
+
+#: src/routes/p/[slug]/+page.server.ts
+msgid "Place \""
+msgstr "Place \""
+
+#: src/lib/createFlowAuth.svelte.ts
+msgid "E-Mail konnte nicht geprüft werden."
+msgstr "E-Mail konnte nicht geprüft werden."
+
+#. 0: preview.name
+#. 0: preview.name
+#: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "{0} verschieben"
+msgstr "{0} verschieben"
+
+#. 0: preview.name
+#. 0: preview.name
+#: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "{0} nach links verschieben"
+msgstr "{0} nach links verschieben"
+
+#. 0: preview.name
+#. 0: preview.name
+#: src/lib/components/ImageInput.svelte
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "{0} nach rechts verschieben"
+msgstr "{0} nach rechts verschieben"
+
+#: src/lib/components/OfferingImageUploadInput.svelte
+msgid "Bereits hochgeladen"
+msgstr "Bereits hochgeladen"
+
+#. 0: socialLabel(link.type)
+#: src/lib/components/PublicProfileSocialLinksEditor.svelte
+msgid "{0} entfernen"
+msgstr "{0} entfernen"
+
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Profil"
+msgstr "Profil"
+
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Bestätigung"
+msgstr "Bestätigung"
