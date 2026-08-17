@@ -82,7 +82,7 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
                 {
                     url: posterUrl,
                     width: 1200,
-                    height: 627,
+                    height: 630,
                     secureUrl: posterUrl,
                     type: 'image/jpeg'
                 }
