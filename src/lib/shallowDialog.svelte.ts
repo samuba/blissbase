@@ -8,9 +8,9 @@ export class ShallowDialog {
 		this.returnToPath = fallbackReturnTo;
 	}
 
-	open({ href, state }: { href: string; state: App.PageState }) {
+	open({ href, state, replace = false }: { href: string; state: App.PageState; replace?: boolean }) {
 		if (sameDialogState(page.state, state)) return;
-		if (hasDialogState(page.state)) {
+		if (replace || hasDialogState(page.state)) {
 			replaceState(href, state);
 			return;
 		}

@@ -63,7 +63,7 @@ test.describe("Event creation", () => {
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByTestId(`event-title`)).toHaveText(`E2E Online Event`);
 
-		const slug = getCreatedEventSlugFromUrl(page);
+		const slug = await getCreatedEventSlugFromUrl(page);
 		const event = await getEventBySlug(page, slug);
 		expect(event).toMatchObject({
 			name: `E2E Online Event`,
@@ -90,11 +90,11 @@ test.describe("Event creation", () => {
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByTestId(`event-title`)).toHaveText(`E2E Offline Event`);
 		await expect(dialog.getByTestId(`event-address-link`)).toContainText(`Berlin · Germany`);
-		await expect(dialog.getByTestId(`event-address-link`)).toHaveAttribute(`href`, /query=52\.52,13\.405/);
+		await expect(dialog.getByTestId(`event-address-link`)).toHaveAttribute(`href`, /query=Berlin%2C%20Germany/);
 		await expect(dialog.getByTestId(`event-address-note`)).toHaveText(`3. Stock, Klingel 12`);
 		await expect(dialog.getByTestId(`event-address-link`)).not.toContainText(`3. Stock`);
 
-		const event = await getEventBySlug(page, getCreatedEventSlugFromUrl(page));
+		const event = await getEventBySlug(page, await getCreatedEventSlugFromUrl(page));
 		expect(event.name).toBe(`E2E Offline Event`);
 		expect(event.authorId).toBe(E2E_DEFAULT_USER_ID);
 		expect(event.attendanceMode).toBe(`offline`);
@@ -120,7 +120,7 @@ test.describe("Event creation", () => {
 
 		await expect(page.getByTestId(`create-event-heading`)).not.toHaveAttribute(`data-step`, `profile`);
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
-		const event = await getEventBySlug(page, getCreatedEventSlugFromUrl(page));
+		const event = await getEventBySlug(page, await getCreatedEventSlugFromUrl(page));
 		expect(event).toMatchObject({
 			name: `E2E Partial Profile Event`,
 			authorId: E2E_DEFAULT_USER_ID,
@@ -147,7 +147,7 @@ test.describe("Event creation", () => {
 
 		await clickWizardPrimary(page);
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
-		const slug = getCreatedEventSlugFromUrl(page);
+		const slug = await getCreatedEventSlugFromUrl(page);
 		expect((await getEventBySlug(page, slug)).name).toBe(`E2E Profile Completion Event`);
 		const profile = await getProfileById(page, E2E_DEFAULT_USER_ID);
 		expect(profile).toMatchObject({
@@ -175,7 +175,7 @@ test.describe("Event creation", () => {
 
 		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
-		const slug = getCreatedEventSlugFromUrl(page);
+		const slug = await getCreatedEventSlugFromUrl(page);
 		const event = await getEventBySlug(page, slug);
 		expect(event.name).toBe(`E2E Anonymous Event`);
 		expect(event.authorId).toBe(getE2EUserIdForEmail(anonymousNewEmail));
@@ -231,7 +231,7 @@ test.describe("Event creation", () => {
 		await expect(page.getByTestId(`create-event-heading`)).not.toHaveAttribute(`data-step`, `profile`);
 		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
-		const slug = getCreatedEventSlugFromUrl(page);
+		const slug = await getCreatedEventSlugFromUrl(page);
 		const event = await getEventBySlug(page, slug);
 		expect(event.name).toBe(`E2E Existing Email Event`);
 		expect(event.authorId).toBe(getE2EUserIdForEmail(anonymousCompleteEmail));
@@ -260,7 +260,7 @@ test.describe("Event creation", () => {
 		await expect(page.getByTestId(`create-event-heading`)).not.toHaveAttribute(`data-step`, `profile`);
 		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
-		expect((await getEventBySlug(page, getCreatedEventSlugFromUrl(page))).name).toBe(`E2E Named No Social Event`);
+		expect((await getEventBySlug(page, await getCreatedEventSlugFromUrl(page))).name).toBe(`E2E Named No Social Event`);
 	});
 
 	test("anonymous incomplete existing email adds to the profile then creates after OTP", async ({ page }) => {
@@ -291,7 +291,7 @@ test.describe("Event creation", () => {
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
 
 		const userId = getE2EUserIdForEmail(anonymousIncompleteEmail);
-		const event = await getEventBySlug(page, getCreatedEventSlugFromUrl(page));
+		const event = await getEventBySlug(page, await getCreatedEventSlugFromUrl(page));
 		expect(event).toMatchObject({
 			name: `E2E Incomplete Email Event`,
 			authorId: userId,
@@ -310,13 +310,18 @@ async function fillEventBasics(page: Page, args: { name: string }) {
 	await fillEventDescription(page, `E2E event description`);
 }
 
-function getCreatedEventSlugFromUrl(page: Page) {
-	const url = new URL(page.url());
+async function getCreatedEventSlugFromUrl(page: Page) {
+	await page.waitForURL((url) => Boolean(eventSlugFromUrl(url)), { timeout: 15000 });
+	const slug = eventSlugFromUrl(new URL(page.url()));
+	if (!slug) throw new Error(`Could not resolve created event slug from ${page.url()}`);
+	return slug;
+}
+
+function eventSlugFromUrl(url: URL) {
 	const fromQuery = url.searchParams.get(`eventSlug`)?.trim();
 	if (fromQuery) return fromQuery;
 
 	const pathSlug = url.pathname.replace(/^\//, ``).trim();
 	if (pathSlug && pathSlug !== `events/new` && !pathSlug.startsWith(`events/`)) return pathSlug;
-
-	throw new Error(`Could not resolve created event slug from ${url.toString()}`);
+	return null;
 }

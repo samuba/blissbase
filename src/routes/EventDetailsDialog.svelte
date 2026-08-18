@@ -1,6 +1,5 @@
 <script lang="ts" module>
 	import type { UiEvent } from '$lib/server/events';
-	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { afterClientHydration, ShallowDialog } from '$lib/shallowDialog.svelte';
 	import { routes, takeEventSlugQuery } from '$lib/routes';
@@ -8,12 +7,13 @@
 	let event = $state<UiEvent | undefined>(undefined);
 	const dialog = new ShallowDialog(routes.root());
 
-	export function showEventDetailsDialog(eventToShow: UiEvent) {
+	export function showEventDetailsDialog(eventToShow: UiEvent, args: { replace?: boolean } = {}) {
 		snapshotReturnTo();
 		event = eventToShow;
 		dialog.open({
 			href: routes.eventDetails(eventToShow.slug),
 			state: { selectedEventId: eventToShow.id },
+			replace: args.replace,
 		});
 	}
 
@@ -53,16 +53,15 @@
 		if (event?.slug === eventSlug && page.state.selectedEventId === event.id) return;
 		if (openingEventSlug === eventSlug) return;
 
-		const hostPath = routes.currentPath(url);
 		openingEventSlug = eventSlug;
 		try {
 			await afterClientHydration();
 			if (page.url.href !== queryHref) return;
-			replaceState(hostPath, {});
 			const eventToShow = await getEventBySlug({ slug: eventSlug });
 			if (!eventToShow) return;
+			if (page.url.href !== queryHref) return;
 			if (page.state.selectedEventId) return;
-			showEventDetailsDialog(eventToShow);
+			showEventDetailsDialog(eventToShow, { replace: true });
 		} finally {
 			if (openingEventSlug === eventSlug) openingEventSlug = undefined;
 		}

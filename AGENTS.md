@@ -42,6 +42,7 @@ Always check if an array is defined and has values like this: `arr?.length` not 
 Only create doc comments when the complexity of the function calls for it or the semantics/context is needed to understand.
 Stay true to YAGNI principle.
 Prefer elegant, simple solutions.
+Make sure the whole test suite runs succesfull after doing non trivial changes. 
 
 ## i18n
 Wuchale is used for i18n.
