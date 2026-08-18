@@ -8,11 +8,11 @@
 	import {
 		createEventSchema,
 		eventPlaceLabel,
+		formatDateForLocalInput,
 		updateEventSchema,
 		type UpdateEventSchema,
 		type ContactMethod
 	} from '$lib/events.remote.common';
-	import { useDuplicateEventDraftToast } from '$lib/eventDuplicateDraftToast.svelte';
 	import TagsInput from '$lib/components/TagsInput.svelte';
 	import LexicalEditor from '$lib/components/LexicalEditor.svelte';
 	import Select from '$lib/components/Select.svelte';
@@ -30,6 +30,7 @@
 	>;
 
 	let {
+		mode,
 		remoteForm,
 		allTags,
 		initialExistingImageUrls = [],
@@ -43,6 +44,7 @@
 		onsubmit,
 		children,
 	}: {
+		mode: `create` | `update`;
 		remoteForm: EventFormRemoteForm;
 		allTags: UiTag[];
 		initialExistingImageUrls?: string[];
@@ -57,18 +59,10 @@
 		children?: Snippet;
 	} = $props();
 
-	function isUpdateEventForm(remoteForm: EventFormRemoteForm): remoteForm is UpdateEventForm {
-		return 'eventId' in remoteForm.fields;
-	}
-
-	function isCreateEventForm(remoteForm: EventFormRemoteForm): remoteForm is CreateEventForm {
-		return !isUpdateEventForm(remoteForm);
-	}
-
 	let formProps = $derived.by(() => {
-		const form = isUpdateEventForm(remoteForm)
-			? remoteForm.preflight(updateEventSchema)
-			: remoteForm.preflight(createEventSchema);
+		const form = mode === `update`
+			? (remoteForm as UpdateEventForm).preflight(updateEventSchema)
+			: (remoteForm as CreateEventForm).preflight(createEventSchema);
 		if (!onSuccess) return form;
 
 		return form.enhance(async ({ submit }) => {
@@ -108,12 +102,15 @@
 		};
 	}
 
+	let createStartAtMin = $state(``);
+
 	onMount(() => {
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		remoteForm.fields.timeZone.set(timeZone);
+		if (mode === `create`) {
+			createStartAtMin = formatDateForLocalInput(new Date());
+		}
 	});
-
-	useDuplicateEventDraftToast(() => remoteForm);
 </script>
 
 <form
@@ -126,8 +123,8 @@
 	onchange={() => onDirty?.()}
 >
 	<section class={[`flex flex-col gap-5`, fieldsHidden && `hidden`]} data-wizard-step="event">
-	{#if showAutofillControl && isCreateEventForm(remoteForm)}
-		<EventAutofill {remoteForm} onPrefill={applyLocationPrefill} />
+	{#if showAutofillControl && mode === `create`}
+		<EventAutofill remoteForm={remoteForm as CreateEventForm} onPrefill={applyLocationPrefill} />
 	{/if}
 
 	<ImageInput
@@ -147,6 +144,8 @@
 			<input
 				class="input w-full peer"
 				{...remoteForm.fields.startAt.as('datetime-local')}
+				data-testid="event-start-at-input"
+				min={createStartAtMin || undefined}
 				required
 			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Startzeit *</legend>
@@ -308,11 +307,9 @@
 
 	<div class="hidden">
 		<input readonly {...remoteForm.fields.timeZone.as('text')} />
-		{#if updateFields.eventId}
-			<input readonly {...updateFields.eventId.as('number')} />
-		{/if}
-		{#if updateFields.hostSecret}
-			<input readonly {...updateFields.hostSecret.as('text')} />
+		{#if mode === `update`}
+			<input readonly {...updateFields.eventId?.as('number')} />
+			<input readonly {...updateFields.hostSecret?.as('text')} />
 		{/if}
 	</div>
 

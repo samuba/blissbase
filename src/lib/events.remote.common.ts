@@ -92,6 +92,30 @@ const eventSchemaEntries = {
 	images: v.optional(v.array(v.pipe(v.file(), v.maxSize(30 * 1024 * 1024, `Images may be at most 30MB`))), [])
 } satisfies v.ObjectEntries;
 
+function isStartAtInTheFuture(input: { startAt: string }) {
+	return new Date(input.startAt).getTime() > Date.now();
+}
+
+function isEndAtAfterStartAt(input: { startAt: string; endAt?: string }) {
+	if (!input.endAt) return true;
+	return new Date(input.endAt).getTime() > new Date(input.startAt).getTime();
+}
+
+function hasAddressWhenOffline(input: { isOnline?: boolean; address?: string }) {
+	if (input.isOnline) return true;
+	return !!input.address;
+}
+
+function isContactMethodValid(input: { contactMethod?: string; contact?: string }) {
+	const { contactMethod, contact } = input;
+	if (contactMethod === `email`) return !!contact?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+	if (contactMethod === `phone`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
+	if (contactMethod === `website`) return !!contact?.match(/^https?:\/\/[^\s]+$/);
+	if (contactMethod === `whatsapp`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
+	if (contactMethod === `telegram`) return !!contact?.match(/^@[^\s]+$/);
+	return true;
+}
+
 export const createEventSchema = v.pipe(
 	v.object({
 		...eventSchemaEntries,
@@ -100,49 +124,20 @@ export const createEventSchema = v.pipe(
 		profile: v.optional(publicProfilePatchSchema),
 	}),
 	v.forward(
-		v.partialCheck(
-			[['startAt']],
-			(input) => new Date(input.startAt).getTime() > Date.now(),
-			`Start date must be in the future`
-		),
-		['startAt']
+		v.partialCheck([[`startAt`]], (input) => isStartAtInTheFuture(input), `Start date must be in the future`),
+		[`startAt`]
 	),
 	v.forward(
-		v.partialCheck(
-			[['startAt'], ['endAt']],
-			(input) => {
-				if (!input.endAt) return true;
-				return new Date(input.endAt).getTime() > new Date(input.startAt).getTime();
-			},
-			`End date must be after the start date`
-		),
-		['endAt']
+		v.partialCheck([[`startAt`], [`endAt`]], (input) => isEndAtAfterStartAt(input), `End date must be after the start date`),
+		[`endAt`]
 	),
 	v.forward(
-		v.partialCheck(
-			[['isOnline'], ['address']],
-			(input) => {
-				if (input.isOnline) return true;
-				return !!input.address;
-			},
-			`Address is required`
-		),
-		['address']
+		v.partialCheck([[`isOnline`], [`address`]], (input) => hasAddressWhenOffline(input), `Address is required`),
+		[`address`]
 	),
 	v.forward(
-		v.partialCheck(
-			[['contactMethod'], ['contact']],
-			({ contactMethod, contact }) => {
-				if (contactMethod === `email`) return !!contact?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-				if (contactMethod === `phone`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
-				if (contactMethod === `website`) return !!contact?.match(/^https?:\/\/[^\s]+$/);
-				if (contactMethod === `whatsapp`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
-				if (contactMethod === `telegram`) return !!contact?.match(/^@[^\s]+$/);
-				return true;
-			},
-			`Contact method is invalid`
-		),
-		['contact']
+		v.partialCheck([[`contactMethod`], [`contact`]], (input) => isContactMethodValid(input), `Contact method is invalid`),
+		[`contact`]
 	)
 );
 
@@ -154,41 +149,16 @@ export const updateEventSchema = v.pipe(
 		existingImageUrls: v.optional(v.array(v.string()), []),
 	}),
 	v.forward(
-		v.partialCheck(
-			[['startAt'], ['endAt']],
-			(input) => {
-				if (!input.endAt) return true;
-				return new Date(input.endAt).getTime() > new Date(input.startAt).getTime();
-			},
-			`End date must be after the start date`
-		),
-		['endAt']
+		v.partialCheck([[`startAt`], [`endAt`]], (input) => isEndAtAfterStartAt(input), `End date must be after the start date`),
+		[`endAt`]
 	),
 	v.forward(
-		v.partialCheck(
-			[['isOnline'], ['address']],
-			(input) => {
-				if (input.isOnline) return true;
-				return !!input.address;
-			},
-			`Address is required`
-		),
-		['address']
+		v.partialCheck([[`isOnline`], [`address`]], (input) => hasAddressWhenOffline(input), `Address is required`),
+		[`address`]
 	),
 	v.forward(
-		v.partialCheck(
-			[['contactMethod'], ['contact']],
-			({ contactMethod, contact }) => {
-				if (contactMethod === `email`) return !!contact?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-				if (contactMethod === `phone`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
-				if (contactMethod === `website`) return !!contact?.match(/^https?:\/\/[^\s]+$/);
-				if (contactMethod === `whatsapp`) return !!contact?.match(/^\+?\d[\d\s\-()]+\d$/);
-				if (contactMethod === `telegram`) return !!contact?.match(/^@[^\s]+$/);
-				return true;
-			},
-			`Contact method is invalid`
-		),
-		['contact']
+		v.partialCheck([[`contactMethod`], [`contact`]], (input) => isContactMethodValid(input), `Contact method is invalid`),
+		[`contact`]
 	)
 );
 

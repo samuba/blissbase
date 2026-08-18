@@ -7,6 +7,7 @@
 	import OtpStep from "$lib/components/OtpStep.svelte";
 	import { CreateFlowAuth, fieldHasIssues } from "$lib/createFlowAuth.svelte";
 	import { getDefaultCreateEventFieldBase } from "$lib/eventCreateDefaults";
+	import { useDuplicateEventDraftToast } from "$lib/eventDuplicateDraftToast.svelte";
 	import { createEvent } from "$lib/rpc/eventMutations.remote";
 	import { routes } from "$lib/routes";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
@@ -71,6 +72,8 @@
 	const primaryBusy = $derived(createEvent.pending > 0 || auth.authBusy || auth.emailCheckBusy || anyImageUploadInFlight);
 
 	const unsaved = new UnsavedChangesGuard();
+
+	useDuplicateEventDraftToast(() => createEvent);
 
 	let hasMountedWizardStep = false;
 	function scrollToTopOnStepChange() {
@@ -264,6 +267,7 @@
 
 			{#if auth.clientReady && hasInitializedCreateFields}
 				<EventForm
+					mode="create"
 					remoteForm={createEvent}
 					allTags={data.tags.allTags}
 					showAutofillControl

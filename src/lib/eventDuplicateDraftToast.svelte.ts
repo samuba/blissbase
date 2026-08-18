@@ -7,11 +7,10 @@ const DUPLICATE_SLUG_TOAST_ID = `event-draft-duplicate-slug`;
 
 /**
  * For create-event drafts: debounced duplicate check and sonner toast when a matching event exists.
- * Update forms are ignored automatically.
  * @example
  * useDuplicateEventDraftToast(() => remoteForm);
  */
-export function useDuplicateEventDraftToast(getRemoteForm: () => EventDraftRemoteForm): void {
+export function useDuplicateEventDraftToast(getRemoteForm: () => CreateEventForm): void {
 	let duplicateCheckGeneration = 0;
 
 	onDestroy(() => {
@@ -44,12 +43,6 @@ export function useDuplicateEventDraftToast(getRemoteForm: () => EventDraftRemot
 
 	$effect(() => {
 		const remoteForm = getRemoteForm();
-		if (`eventId` in remoteForm.fields) {
-			duplicateCheckGeneration += 1;
-			toast.dismiss(DUPLICATE_SLUG_TOAST_ID);
-			return;
-		}
-
 		const name = remoteForm.fields.name.value()?.trim() ?? ``;
 		const startAt = remoteForm.fields.startAt.value()?.trim() ?? ``;
 		const endAt = remoteForm.fields.endAt.value()?.trim() ?? ``;
@@ -70,15 +63,7 @@ export function useDuplicateEventDraftToast(getRemoteForm: () => EventDraftRemot
 	});
 }
 
-type EventDraftRemoteForm = {
-	fields: {
-		name: { value(): string | undefined };
-		startAt: { value(): string | undefined };
-		endAt: { value(): string | undefined };
-		timeZone: { value(): string | undefined };
-		[key: string]: unknown;
-	};
-};
+type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
 
 type DuplicateCheckArgs = {
 	name: string;

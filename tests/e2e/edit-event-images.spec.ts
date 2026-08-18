@@ -59,6 +59,41 @@ test.describe('Edit event images', () => {
 	});
 });
 
+test.describe(`Edit past event`, () => {
+	test.beforeEach(async ({ page }) => {
+		await clearTestEvents(page);
+	});
+
+	test.afterEach(async ({ page }) => {
+		await clearTestEvents(page);
+	});
+
+	test(`can save an event that already started`, async ({ page }) => {
+		const { event } = await createEvent(page, {
+			name: `Past workshop`,
+			attendanceMode: `online`,
+			address: [],
+			startAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+			hostSecret: `test-secret`
+		});
+
+		await page.goto(`/edit/${event.id}?hostSecret=${event.hostSecret}`);
+		await expect(page.getByTestId(`event-edit-heading`)).toBeVisible();
+		await expect(page.getByTestId(`event-name-input`)).toHaveValue(`Past workshop`);
+
+		await page.getByTestId(`event-name-input`).fill(`Past workshop (korrigiert)`);
+		await page.getByTestId(`event-save`).click();
+		await page.waitForURL(`**/${event.slug}`);
+
+		await expect
+			.poll(async () => {
+				const result = await getEventById(page, event.id);
+				return result.event?.name;
+			})
+			.toBe(`Past workshop (korrigiert)`);
+	});
+});
+
 function createTinyPngBuffer() {
 	return Buffer.from(
 		`iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9pGdb9sAAAAASUVORK5CYII=`,

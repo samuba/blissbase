@@ -58,6 +58,7 @@
 			<h1 class="card-title text-2xl" data-testid="event-edit-heading">Event bearbeiten</h1>
 
 			<EventForm
+				mode="update"
 				remoteForm={updateEvent}
 				allTags={data.tags.allTags}
 				initialExistingImageUrls={editFormValues.existingImageUrls}
