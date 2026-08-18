@@ -312,7 +312,7 @@
 
 			<div class="flex w-full flex-wrap justify-center gap-4 pt-1">
 				{#if isAuthor}
-					<a href={resolve(`/edit/${event.id}`)} class="btn btn-warning">
+					<a href={resolve(`/edit/${event.id}`)} class="btn">
 						<i class="icon-[ph--pencil] mr-1 size-4"></i>
 						Bearbeiten
 					</a>
