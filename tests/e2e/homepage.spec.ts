@@ -8,7 +8,13 @@ test.describe('Homepage', () => {
 		await createEvents(page, [
 			createMeditationEvent(),
 			createYogaEvent(),
-			createOnlineEvent()
+			createOnlineEvent(),
+			createMeditationEvent({
+				name: `Ecstatic Dance Night`,
+				description: `A conscious dance evening`,
+				tags: [`Ecstatic Dance`],
+				sourceUrl: `https://example.com/ecstatic-dance`,
+			}),
 		]);
 		await page.goto('/');
 		await page.getByTestId('event-card').first().waitFor({ timeout: 15000 });
@@ -34,12 +40,51 @@ test.describe('Homepage', () => {
 		await expect(firstCard.getByTestId('event-card-title')).toBeVisible();
 	});
 
-	test('clicking category chip filters events', async ({ page }) => {
-		const meditationChip = page.getByTestId('tag-chip-meditation');
-		if (await meditationChip.isVisible().catch(() => false)) {
-			await meditationChip.click();
-			await page.waitForTimeout(500);
-		}
+	test('clicking a category chip filters events', async ({ page }) => {
+		await page.getByTestId(`category-chip-meditation`).click();
+
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toBeVisible({
+			timeout: 15000,
+		});
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Yoga Flow Class` })).toHaveCount(0);
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Ecstatic Dance Night` })).toHaveCount(0);
+	});
+
+	test('selecting a second category unions results', async ({ page }) => {
+		await page.getByTestId(`category-chip-meditation`).click();
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toBeVisible({
+			timeout: 15000,
+		});
+
+		await page.getByTestId(`category-chip-dance`).click();
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toBeVisible({
+			timeout: 15000,
+		});
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Ecstatic Dance Night` })).toBeVisible();
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Yoga Flow Class` })).toHaveCount(0);
+	});
+
+	test('deselecting a category restores unfiltered results for that category', async ({ page }) => {
+		await page.getByTestId(`category-chip-meditation`).click();
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Yoga Flow Class` })).toHaveCount(0);
+
+		await page.getByTestId(`category-chip-meditation`).click();
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Yoga Flow Class` })).toBeVisible({
+			timeout: 15000,
+		});
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toBeVisible();
+	});
+
+	test('text search still filters events', async ({ page }) => {
+		const searchInput = page.getByTestId(`event-search-input`);
+		await searchInput.click();
+		await searchInput.fill(`Yoga`);
+		await searchInput.press(`Enter`);
+
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Yoga Flow Class` })).toBeVisible({
+			timeout: 15000,
+		});
+		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toHaveCount(0);
 	});
 
 	test('search by city filters events', async ({ page }) => {

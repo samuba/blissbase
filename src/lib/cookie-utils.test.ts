@@ -23,6 +23,7 @@ describe(`cookie filter validation`, () => {
 			sortBy: null,
 			sortOrder: null,
 			tagIds: null,
+			categorySlugs: null,
 			attendanceMode: null,
 			source: null
 		});
@@ -54,5 +55,15 @@ describe(`cookie filter validation`, () => {
 				lng: 13
 			})
 		).toBeNull();
+	});
+
+	it(`keeps known category slugs and drops unknown ones`, () => {
+		expect(
+			validateFilterData({
+				categorySlugs: [`dance`, `not-a-category`, `meditation`],
+			})
+		).toMatchObject({
+			categorySlugs: [`dance`, `meditation`],
+		});
 	});
 });

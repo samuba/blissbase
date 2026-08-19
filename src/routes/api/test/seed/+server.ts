@@ -4,7 +4,7 @@ import { inArray, sql } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 import { E2E_TEST } from "$env/static/private";
 import { dev } from "$app/environment";
-import { deduplicateItems } from "$lib/common";
+import { deduplicateItems, slugify } from "$lib/common";
 import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -45,6 +45,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						updatedAt: new Date(),
 					})
 					.returning();
+				await linkEventTags(event.id, data.tags || [`Meditation`]);
 				return json({ success: true, event });
 			}
 
@@ -174,3 +175,22 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: String(error) }, { status: 500 });
 	}
 };
+
+async function linkEventTags(eventId: number, tagNames: string[]) {
+	if (!tagNames?.length) return;
+
+	for (const name of tagNames) {
+		const trimmed = name.trim();
+		if (!trimmed) continue;
+		const slug = slugify(trimmed);
+		let tag = await db.query.tags.findFirst({ where: eq(s.tags.slug, slug) });
+		if (!tag) {
+			[tag] = await db.insert(s.tags).values({ slug }).returning();
+			await db.insert(s.tagTranslations).values([
+				{ tagId: tag.id, locale: `en`, name: trimmed },
+				{ tagId: tag.id, locale: `de`, name: trimmed },
+			]);
+		}
+		await db.insert(s.eventTags).values({ eventId, tagId: tag.id }).onConflictDoNothing();
+	}
+}

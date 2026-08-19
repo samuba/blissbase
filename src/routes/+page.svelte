@@ -135,7 +135,6 @@
 
 	<HeaderControls
 		onLocationDistanceChange={handleLocationDistanceChange}
-		allTags={data.tags.allTags}
 		eventSources={data.eventSources}
 		eventSourceFilter={data.eventSourceFilter}
 	/>

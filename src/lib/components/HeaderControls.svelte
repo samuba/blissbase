@@ -4,23 +4,20 @@
 	import type { LocationChangeEvent } from "./LocationDistanceInput.svelte";
 	import { parseDate } from "@internationalized/date";
 	import { eventsStore } from "$lib/eventsStore.svelte";
-	import TagSelection from "./TagSelection.svelte";
+	import CategorySelection from "./CategorySelection.svelte";
 	import { Dialog } from "$lib/components/dialog";
 	import ToggleButton from "./ToggleButton.svelte";
 	import TabsNavDesktop from "./TabsNavDesktop.svelte";
 	import { routes } from "$lib/routes";
 	import { user } from "$lib/user.svelte";
 	import AdminEventSourceFilter from "./AdminEventSourceFilter.svelte";
-	import type { UiTag } from "$lib/rpc/TagSelection.remote";
 
 	let {
 		onLocationDistanceChange = eventsStore.handleLocationDistanceChange,
-		allTags,
 		eventSources = null,
 		eventSourceFilter = null,
 	}: {
 		onLocationDistanceChange?: (event: LocationChangeEvent) => void;
-		allTags: UiTag[];
 		eventSources?: string[] | null;
 		eventSourceFilter?: string | null;
 	} = $props();
@@ -118,7 +115,7 @@
 		</div>
 
 		<div class="mx-auto flex w-full max-w-2xl items-center gap-4 px-4 sm:px-0">
-			<TagSelection {allTags} />
+			<CategorySelection />
 		</div>
 
 		{#if showOfferingsLink}

@@ -2093,14 +2093,6 @@ msgstr "<0/> Was hast du zu geben?"
 msgid "Seitenlinks"
 msgstr "Seitenlinks"
 
-#: src/lib/components/TagSelection.svelte
-msgid "Tags nach links scrollen"
-msgstr "Tags nach links scrollen"
-
-#: src/lib/components/TagSelection.svelte
-msgid "Tags nach rechts scrollen"
-msgstr "Tags nach rechts scrollen"
-
 #: src/lib/components/TextSearchInput.svelte
 #: src/lib/components/TextSearchInput.svelte
 msgid "Suche öffnen"
@@ -2350,3 +2342,1445 @@ msgstr "Profil"
 #: src/routes/offerings/new/+page.svelte
 msgid "Bestätigung"
 msgstr "Bestätigung"
+
+#: src/lib/components/CategorySelection.svelte
+msgid "Kategorien nach links scrollen"
+msgstr "Kategorien nach links scrollen"
+
+#: src/lib/components/CategorySelection.svelte
+msgid "Kategorien nach rechts scrollen"
+msgstr "Kategorien nach rechts scrollen"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Tanz"
+msgstr "Tanz"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Meditation"
+msgstr "Meditation"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Breathwork"
+msgstr "Breathwork"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Körperarbeit"
+msgstr "Körperarbeit"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Musik"
+msgstr "Musik"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Tantra"
+msgstr "Tantra"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Beziehungen"
+msgstr "Beziehungen"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Persönliche Entwicklung"
+msgstr "Persönliche Entwicklung"
+
+#: src/lib/eventCategories.ts
+msgid "Spiritualität"
+msgstr "Spiritualität"
+
+#: src/lib/eventCategories.ts
+msgid "Zeremonie"
+msgstr "Zeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Sonstiges"
+msgstr "Sonstiges"
+
+#: src/lib/eventCategories.ts
+msgid "Bewegung"
+msgstr "Bewegung"
+
+#: src/lib/eventCategories.ts
+msgid "Heilung"
+msgstr "Heilung"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Energiearbeit"
+msgstr "Energiearbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Ecstatic Dance"
+msgstr "Ecstatic Dance"
+
+#: src/lib/eventCategories.ts
+msgid "Conscious Dance"
+msgstr "Conscious Dance"
+
+#: src/lib/eventCategories.ts
+msgid "Contact Improvisation"
+msgstr "Contact Improvisation"
+
+#: src/lib/eventCategories.ts
+msgid "Biodanza"
+msgstr "Biodanza"
+
+#: src/lib/eventCategories.ts
+msgid "Movement Medicine"
+msgstr "Movement Medicine"
+
+#: src/lib/eventCategories.ts
+msgid "Open Floor"
+msgstr "Open Floor"
+
+#: src/lib/eventCategories.ts
+msgid "Somatischer Tanz"
+msgstr "Somatischer Tanz"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Tanzmeditation"
+msgstr "Tanzmeditation"
+
+#: src/lib/eventCategories.ts
+msgid "Tanzimprovisation"
+msgstr "Tanzimprovisation"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Tantrischer Tanz"
+msgstr "Tantrischer Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Trance Dance"
+msgstr "Trance Dance"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Schamanischer Tanz"
+msgstr "Schamanischer Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Intuitiver Tanz"
+msgstr "Intuitiver Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Freier Tanz"
+msgstr "Freier Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Tanzen in Verbindung"
+msgstr "Tanzen in Verbindung"
+
+#: src/lib/eventCategories.ts
+msgid "Ritueller Tanz"
+msgstr "Ritueller Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Tanzimpro"
+msgstr "Tanzimpro"
+
+#: src/lib/eventCategories.ts
+msgid "Zouk"
+msgstr "Zouk"
+
+#: src/lib/eventCategories.ts
+msgid "Sufi-Tanz"
+msgstr "Sufi-Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Tanzperformance"
+msgstr "Tanzperformance"
+
+#: src/lib/eventCategories.ts
+msgid "Tanzworkshop"
+msgstr "Tanzworkshop"
+
+#: src/lib/eventCategories.ts
+msgid "Conscious Clubbing"
+msgstr "Conscious Clubbing"
+
+#: src/lib/eventCategories.ts
+msgid "Sinnlicher Tanz"
+msgstr "Sinnlicher Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Bauchtanz"
+msgstr "Bauchtanz"
+
+#: src/lib/eventCategories.ts
+msgid "Tanzcoaching"
+msgstr "Tanzcoaching"
+
+#: src/lib/eventCategories.ts
+msgid "Heiliger Tanz"
+msgstr "Heiliger Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Embodiment Dance"
+msgstr "Embodiment Dance"
+
+#: src/lib/eventCategories.ts
+msgid "Contact Beyond Contact"
+msgstr "Contact Beyond Contact"
+
+#: src/lib/eventCategories.ts
+msgid "Tanz im Freien"
+msgstr "Tanz im Freien"
+
+#: src/lib/eventCategories.ts
+msgid "Forró"
+msgstr "Forró"
+
+#: src/lib/eventCategories.ts
+msgid "Yogadanza"
+msgstr "Yogadanza"
+
+#: src/lib/eventCategories.ts
+msgid "Achtsamkeit"
+msgstr "Achtsamkeit"
+
+#: src/lib/eventCategories.ts
+msgid "Yoga Nidra"
+msgstr "Yoga Nidra"
+
+#: src/lib/eventCategories.ts
+msgid "Insight Dialogue"
+msgstr "Insight Dialogue"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Satsang"
+msgstr "Satsang"
+
+#: src/lib/eventCategories.ts
+msgid "Seinsorientierung"
+msgstr "Seinsorientierung"
+
+#: src/lib/eventCategories.ts
+msgid "Vipassana"
+msgstr "Vipassana"
+
+#: src/lib/eventCategories.ts
+msgid "Zen-Meditation"
+msgstr "Zen-Meditation"
+
+#: src/lib/eventCategories.ts
+msgid "Geführte Meditation"
+msgstr "Geführte Meditation"
+
+#: src/lib/eventCategories.ts
+msgid "Stille Meditation"
+msgstr "Stille Meditation"
+
+#: src/lib/eventCategories.ts
+msgid "Gehmeditation"
+msgstr "Gehmeditation"
+
+#: src/lib/eventCategories.ts
+msgid "Visualisierung"
+msgstr "Visualisierung"
+
+#: src/lib/eventCategories.ts
+msgid "Kontemplative Praxis"
+msgstr "Kontemplative Praxis"
+
+#: src/lib/eventCategories.ts
+msgid "Bewusste Sexualität"
+msgstr "Bewusste Sexualität"
+
+#: src/lib/eventCategories.ts
+msgid "Transformative Sexualität"
+msgstr "Transformative Sexualität"
+
+#: src/lib/eventCategories.ts
+msgid "Tempel"
+msgstr "Tempel"
+
+#: src/lib/eventCategories.ts
+msgid "Sinnlichkeit"
+msgstr "Sinnlichkeit"
+
+#: src/lib/eventCategories.ts
+msgid "Intimität"
+msgstr "Intimität"
+
+#: src/lib/eventCategories.ts
+msgid "Sexualität"
+msgstr "Sexualität"
+
+#: src/lib/eventCategories.ts
+msgid "Shibari"
+msgstr "Shibari"
+
+#: src/lib/eventCategories.ts
+msgid "Klassisches Tantra"
+msgstr "Klassisches Tantra"
+
+#: src/lib/eventCategories.ts
+msgid "Neotantra"
+msgstr "Neotantra"
+
+#: src/lib/eventCategories.ts
+msgid "Sexuelles Embodiment"
+msgstr "Sexuelles Embodiment"
+
+#: src/lib/eventCategories.ts
+msgid "Bewusste Berührung"
+msgstr "Bewusste Berührung"
+
+#: src/lib/eventCategories.ts
+msgid "Intimitätspraxis"
+msgstr "Intimitätspraxis"
+
+#: src/lib/eventCategories.ts
+msgid "Erotische Energie"
+msgstr "Erotische Energie"
+
+#: src/lib/eventCategories.ts
+msgid "Polarität"
+msgstr "Polarität"
+
+#: src/lib/eventCategories.ts
+msgid "Tempelkünste"
+msgstr "Tempelkünste"
+
+#: src/lib/eventCategories.ts
+msgid "Play Party"
+msgstr "Play Party"
+
+#: src/lib/eventCategories.ts
+msgid "Atem"
+msgstr "Atem"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Atemkreis"
+msgstr "Atemkreis"
+
+#: src/lib/eventCategories.ts
+msgid "Rebirthing"
+msgstr "Rebirthing"
+
+#: src/lib/eventCategories.ts
+msgid "Rebirthing Breathwork"
+msgstr "Rebirthing Breathwork"
+
+#: src/lib/eventCategories.ts
+msgid "Wim-Hof-Methode"
+msgstr "Wim-Hof-Methode"
+
+#: src/lib/eventCategories.ts
+msgid "Eisbad"
+msgstr "Eisbad"
+
+#: src/lib/eventCategories.ts
+msgid "Conscious Connected Breathwork"
+msgstr "Conscious Connected Breathwork"
+
+#: src/lib/eventCategories.ts
+msgid "Funktionales Atmen"
+msgstr "Funktionales Atmen"
+
+#: src/lib/eventCategories.ts
+msgid "Pranayama"
+msgstr "Pranayama"
+
+#: src/lib/eventCategories.ts
+msgid "Atem und Kälte"
+msgstr "Atem und Kälte"
+
+#: src/lib/eventCategories.ts
+msgid "Playfight"
+msgstr "Playfight"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Acro Yoga"
+msgstr "Acro Yoga"
+
+#: src/lib/eventCategories.ts
+msgid "Partnerbewegung"
+msgstr "Partnerbewegung"
+
+#: src/lib/eventCategories.ts
+msgid "Authentic Movement"
+msgstr "Authentic Movement"
+
+#: src/lib/eventCategories.ts
+msgid "Primal Movement"
+msgstr "Primal Movement"
+
+#: src/lib/eventCategories.ts
+msgid "Somatische Bewegung"
+msgstr "Somatische Bewegung"
+
+#: src/lib/eventCategories.ts
+msgid "Funktionale Bewegung"
+msgstr "Funktionale Bewegung"
+
+#: src/lib/eventCategories.ts
+msgid "Qigong"
+msgstr "Qigong"
+
+#: src/lib/eventCategories.ts
+msgid "Tai Chi"
+msgstr "Tai Chi"
+
+#: src/lib/eventCategories.ts
+msgid "Mobilität"
+msgstr "Mobilität"
+
+#: src/lib/eventCategories.ts
+msgid "Mobilität / Funktionale Bewegung"
+msgstr "Mobilität / Funktionale Bewegung"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Feldenkrais"
+msgstr "Feldenkrais"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Reiki"
+msgstr "Reiki"
+
+#: src/lib/eventCategories.ts
+msgid "Energiemedizin"
+msgstr "Energiemedizin"
+
+#: src/lib/eventCategories.ts
+msgid "Chakra-Arbeit"
+msgstr "Chakra-Arbeit"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Chakren"
+msgstr "Chakren"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Kundalini-Aktivierung"
+msgstr "Kundalini-Aktivierung"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Kundalini"
+msgstr "Kundalini"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Lichtsprache"
+msgstr "Lichtsprache"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Sound Healing"
+msgstr "Sound Healing"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Klangbad"
+msgstr "Klangbad"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Klangreise"
+msgstr "Klangreise"
+
+#: src/lib/eventCategories.ts
+msgid "Gong"
+msgstr "Gong"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Klangschalen"
+msgstr "Klangschalen"
+
+#: src/lib/eventCategories.ts
+msgid "Massage"
+msgstr "Massage"
+
+#: src/lib/eventCategories.ts
+msgid "Shiatsu"
+msgstr "Shiatsu"
+
+#: src/lib/eventCategories.ts
+msgid "Haptonomie"
+msgstr "Haptonomie"
+
+#: src/lib/eventCategories.ts
+msgid "Berührung"
+msgstr "Berührung"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Kuscheln"
+msgstr "Kuscheln"
+
+#: src/lib/eventCategories.ts
+msgid "Somatic Experiencing"
+msgstr "Somatic Experiencing"
+
+#: src/lib/eventCategories.ts
+msgid "Polyvagal-Theorie"
+msgstr "Polyvagal-Theorie"
+
+#: src/lib/eventCategories.ts
+msgid "Gesundheit"
+msgstr "Gesundheit"
+
+#: src/lib/eventCategories.ts
+msgid "Entspannung"
+msgstr "Entspannung"
+
+#: src/lib/eventCategories.ts
+msgid "Stress"
+msgstr "Stress"
+
+#: src/lib/eventCategories.ts
+msgid "Focusing"
+msgstr "Focusing"
+
+#: src/lib/eventCategories.ts
+msgid "Yoni-Dampfbad"
+msgstr "Yoni-Dampfbad"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Womb Healing"
+msgstr "Womb Healing"
+
+#: src/lib/eventCategories.ts
+msgid "Aromatherapie"
+msgstr "Aromatherapie"
+
+#: src/lib/eventCategories.ts
+msgid "Ayurveda"
+msgstr "Ayurveda"
+
+#: src/lib/eventCategories.ts
+msgid "Germanische Heilkunde"
+msgstr "Germanische Heilkunde"
+
+#: src/lib/eventCategories.ts
+msgid "Sauna"
+msgstr "Sauna"
+
+#: src/lib/eventCategories.ts
+msgid "Selbstfürsorge"
+msgstr "Selbstfürsorge"
+
+#: src/lib/eventCategories.ts
+msgid "Körperbewusstsein"
+msgstr "Körperbewusstsein"
+
+#: src/lib/eventCategories.ts
+msgid "Embodiment"
+msgstr "Embodiment"
+
+#: src/lib/eventCategories.ts
+msgid "Nervensystem-Regulation"
+msgstr "Nervensystem-Regulation"
+
+#: src/lib/eventCategories.ts
+msgid "TRE"
+msgstr "TRE"
+
+#: src/lib/eventCategories.ts
+msgid "Embodied Release"
+msgstr "Embodied Release"
+
+#: src/lib/eventCategories.ts
+msgid "Therapeutische Berührung"
+msgstr "Therapeutische Berührung"
+
+#: src/lib/eventCategories.ts
+msgid "Myofasziale Entspannung"
+msgstr "Myofasziale Entspannung"
+
+#: src/lib/eventCategories.ts
+msgid "Craniosacrale Arbeit"
+msgstr "Craniosacrale Arbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Strukturelle Integration"
+msgstr "Strukturelle Integration"
+
+#: src/lib/eventCategories.ts
+msgid "Alexander-Technik"
+msgstr "Alexander-Technik"
+
+#: src/lib/eventCategories.ts
+msgid "Kirtan"
+msgstr "Kirtan"
+
+#: src/lib/eventCategories.ts
+msgid "Trommelkreis"
+msgstr "Trommelkreis"
+
+#: src/lib/eventCategories.ts
+msgid "Livemusik"
+msgstr "Livemusik"
+
+#: src/lib/eventCategories.ts
+msgid "Handpan"
+msgstr "Handpan"
+
+#: src/lib/eventCategories.ts
+msgid "Auftritt"
+msgstr "Auftritt"
+
+#: src/lib/eventCategories.ts
+msgid "Musikunterricht"
+msgstr "Musikunterricht"
+
+#: src/lib/eventCategories.ts
+msgid "Liegekonzert"
+msgstr "Liegekonzert"
+
+#: src/lib/eventCategories.ts
+msgid "Singkreis"
+msgstr "Singkreis"
+
+#: src/lib/eventCategories.ts
+msgid "Stimmausdruck"
+msgstr "Stimmausdruck"
+
+#: src/lib/eventCategories.ts
+msgid "Musiktherapie"
+msgstr "Musiktherapie"
+
+#: src/lib/eventCategories.ts
+msgid "Stimmaktivierung"
+msgstr "Stimmaktivierung"
+
+#: src/lib/eventCategories.ts
+msgid "Singkreise"
+msgstr "Singkreise"
+
+#: src/lib/eventCategories.ts
+msgid "Medizinmusik"
+msgstr "Medizinmusik"
+
+#: src/lib/eventCategories.ts
+msgid "Trommelkreise"
+msgstr "Trommelkreise"
+
+#: src/lib/eventCategories.ts
+msgid "Ukulele"
+msgstr "Ukulele"
+
+#: src/lib/eventCategories.ts
+msgid "Didgeridoo"
+msgstr "Didgeridoo"
+
+#: src/lib/eventCategories.ts
+msgid "Harfe"
+msgstr "Harfe"
+
+#: src/lib/eventCategories.ts
+msgid "Jam-Session"
+msgstr "Jam-Session"
+
+#: src/lib/eventCategories.ts
+msgid "Konzert"
+msgstr "Konzert"
+
+#: src/lib/eventCategories.ts
+msgid "Seelenstimme"
+msgstr "Seelenstimme"
+
+#: src/lib/eventCategories.ts
+msgid "Trommelbau"
+msgstr "Trommelbau"
+
+#: src/lib/eventCategories.ts
+msgid "Authentic Relating"
+msgstr "Authentic Relating"
+
+#: src/lib/eventCategories.ts
+msgid "Dating"
+msgstr "Dating"
+
+#: src/lib/eventCategories.ts
+msgid "Offene Beziehungen"
+msgstr "Offene Beziehungen"
+
+#: src/lib/eventCategories.ts
+msgid "Gewaltfreie Kommunikation"
+msgstr "Gewaltfreie Kommunikation"
+
+#: src/lib/eventCategories.ts
+msgid "Grenzen"
+msgstr "Grenzen"
+
+#: src/lib/eventCategories.ts
+msgid "Verbindung"
+msgstr "Verbindung"
+
+#: src/lib/eventCategories.ts
+msgid "Herzverbindung"
+msgstr "Herzverbindung"
+
+#: src/lib/eventCategories.ts
+msgid "Liebe"
+msgstr "Liebe"
+
+#: src/lib/eventCategories.ts
+msgid "Familie"
+msgstr "Familie"
+
+#: src/lib/eventCategories.ts
+msgid "Familiensystem"
+msgstr "Familiensystem"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Familienaufstellung"
+msgstr "Familienaufstellung"
+
+#: src/lib/eventCategories.ts
+msgid "Bewusste Elternschaft"
+msgstr "Bewusste Elternschaft"
+
+#: src/lib/eventCategories.ts
+msgid "Mutterschaft"
+msgstr "Mutterschaft"
+
+#: src/lib/eventCategories.ts
+msgid "Vaterschaft"
+msgstr "Vaterschaft"
+
+#: src/lib/eventCategories.ts
+msgid "Eltern-Kind"
+msgstr "Eltern-Kind"
+
+#: src/lib/eventCategories.ts
+msgid "Mutter-Tochter"
+msgstr "Mutter-Tochter"
+
+#: src/lib/eventCategories.ts
+msgid "Vater-Sohn"
+msgstr "Vater-Sohn"
+
+#: src/lib/eventCategories.ts
+msgid "Vater-Tochter"
+msgstr "Vater-Tochter"
+
+#: src/lib/eventCategories.ts
+msgid "Schwangerschaft"
+msgstr "Schwangerschaft"
+
+#: src/lib/eventCategories.ts
+msgid "Wochenbett"
+msgstr "Wochenbett"
+
+#: src/lib/eventCategories.ts
+msgid "Mutterkreis"
+msgstr "Mutterkreis"
+
+#: src/lib/eventCategories.ts
+msgid "Kinderworkshop"
+msgstr "Kinderworkshop"
+
+#: src/lib/eventCategories.ts
+msgid "Queer"
+msgstr "Queer"
+
+#: src/lib/eventCategories.ts
+msgid "Weiblichkeit"
+msgstr "Weiblichkeit"
+
+#: src/lib/eventCategories.ts
+msgid "Männlichkeit"
+msgstr "Männlichkeit"
+
+#: src/lib/eventCategories.ts
+msgid "Sharing-Kreis"
+msgstr "Sharing-Kreis"
+
+#: src/lib/eventCategories.ts
+msgid "Gemischter Kreis"
+msgstr "Gemischter Kreis"
+
+#: src/lib/eventCategories.ts
+msgid "Beziehungsaufstellung"
+msgstr "Beziehungsaufstellung"
+
+#: src/lib/eventCategories.ts
+msgid "Bewusste Beziehung"
+msgstr "Bewusste Beziehung"
+
+#: src/lib/eventCategories.ts
+msgid "Paararbeit"
+msgstr "Paararbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Bindung"
+msgstr "Bindung"
+
+#: src/lib/eventCategories.ts
+msgid "Kommunikation"
+msgstr "Kommunikation"
+
+#: src/lib/eventCategories.ts
+msgid "Konfliktklärung"
+msgstr "Konfliktklärung"
+
+#: src/lib/eventCategories.ts
+msgid "Verbindungspraxis"
+msgstr "Verbindungspraxis"
+
+#: src/lib/eventCategories.ts
+msgid "Kuscheln / Bewusste Berührung"
+msgstr "Kuscheln / Bewusste Berührung"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Selbstliebe"
+msgstr "Selbstliebe"
+
+#: src/lib/eventCategories.ts
+msgid "Unternehmertum"
+msgstr "Unternehmertum"
+
+#: src/lib/eventCategories.ts
+msgid "Yoga"
+msgstr "Yoga"
+
+#: src/lib/eventCategories.ts
+msgid "Kundalini Yoga"
+msgstr "Kundalini Yoga"
+
+#: src/lib/eventCategories.ts
+msgid "Kinderyoga"
+msgstr "Kinderyoga"
+
+#: src/lib/eventCategories.ts
+msgid "SUP-Yoga"
+msgstr "SUP-Yoga"
+
+#: src/lib/eventCategories.ts
+msgid "Therapie"
+msgstr "Therapie"
+
+#: src/lib/eventCategories.ts
+msgid "Psychologie"
+msgstr "Psychologie"
+
+#: src/lib/eventCategories.ts
+msgid "Inneres Kind"
+msgstr "Inneres Kind"
+
+#: src/lib/eventCategories.ts
+msgid "Schattenarbeit"
+msgstr "Schattenarbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Wutarbeit"
+msgstr "Wutarbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Männer-Workshop"
+msgstr "Männer-Workshop"
+
+#: src/lib/eventCategories.ts
+msgid "Frauen-Workshop"
+msgstr "Frauen-Workshop"
+
+#: src/lib/eventCategories.ts
+msgid "Männerkreis"
+msgstr "Männerkreis"
+
+#: src/lib/eventCategories.ts
+msgid "Frauenkreis"
+msgstr "Frauenkreis"
+
+#: src/lib/eventCategories.ts
+msgid "Hypnose"
+msgstr "Hypnose"
+
+#: src/lib/eventCategories.ts
+msgid "Aufstellungen"
+msgstr "Aufstellungen"
+
+#: src/lib/eventCategories.ts
+msgid "Organisationsaufstellungen"
+msgstr "Organisationsaufstellungen"
+
+#: src/lib/eventCategories.ts
+msgid "Systemische Arbeit"
+msgstr "Systemische Arbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Wissen"
+msgstr "Wissen"
+
+#: src/lib/eventCategories.ts
+msgid "Kurs"
+msgstr "Kurs"
+
+#: src/lib/eventCategories.ts
+msgid "Jahrestraining"
+msgstr "Jahrestraining"
+
+#: src/lib/eventCategories.ts
+msgid "Programm"
+msgstr "Programm"
+
+#: src/lib/eventCategories.ts
+msgid "Arbeit und Karriere"
+msgstr "Arbeit und Karriere"
+
+#: src/lib/eventCategories.ts
+msgid "Emotionscoaching"
+msgstr "Emotionscoaching"
+
+#: src/lib/eventCategories.ts
+msgid "Lachworkshop"
+msgstr "Lachworkshop"
+
+#: src/lib/eventCategories.ts
+msgid "Selbstausdruck"
+msgstr "Selbstausdruck"
+
+#: src/lib/eventCategories.ts
+msgid "Kreativität"
+msgstr "Kreativität"
+
+#: src/lib/eventCategories.ts
+msgid "Verspieltheit"
+msgstr "Verspieltheit"
+
+#: src/lib/eventCategories.ts
+msgid "Hochbegabt"
+msgstr "Hochbegabt"
+
+#: src/lib/eventCategories.ts
+msgid "HSP (Hochsensible Person)"
+msgstr "HSP (Hochsensible Person)"
+
+#: src/lib/eventCategories.ts
+msgid "Hochsensibel"
+msgstr "Hochsensibel"
+
+#: src/lib/eventCategories.ts
+msgid "Sucht"
+msgstr "Sucht"
+
+#: src/lib/eventCategories.ts
+msgid "Trauer und Verlust"
+msgstr "Trauer und Verlust"
+
+#: src/lib/eventCategories.ts
+msgid "Menopause / Wechseljahre"
+msgstr "Menopause / Wechseljahre"
+
+#: src/lib/eventCategories.ts
+msgid "Alleingeborener Zwilling"
+msgstr "Alleingeborener Zwilling"
+
+#: src/lib/eventCategories.ts
+msgid "Kreativtherapie"
+msgstr "Kreativtherapie"
+
+#: src/lib/eventCategories.ts
+msgid "Dramatherapie"
+msgstr "Dramatherapie"
+
+#: src/lib/eventCategories.ts
+msgid "Schreiben"
+msgstr "Schreiben"
+
+#: src/lib/eventCategories.ts
+msgid "Kunst"
+msgstr "Kunst"
+
+#: src/lib/eventCategories.ts
+msgid "Intuitives Malen"
+msgstr "Intuitives Malen"
+
+#: src/lib/eventCategories.ts
+msgid "Co-Kreation"
+msgstr "Co-Kreation"
+
+#: src/lib/eventCategories.ts
+msgid "Kollektive Evolution"
+msgstr "Kollektive Evolution"
+
+#: src/lib/eventCategories.ts
+msgid "Bewusstseinsentwicklung"
+msgstr "Bewusstseinsentwicklung"
+
+#: src/lib/eventCategories.ts
+msgid "Lebenssinn / Ausrichtung"
+msgstr "Lebenssinn / Ausrichtung"
+
+#: src/lib/eventCategories.ts
+msgid "Mindset"
+msgstr "Mindset"
+
+#: src/lib/eventCategories.ts
+msgid "Selbstvertrauen"
+msgstr "Selbstvertrauen"
+
+#: src/lib/eventCategories.ts
+msgid "Emotionale Intelligenz"
+msgstr "Emotionale Intelligenz"
+
+#: src/lib/eventCategories.ts
+msgid "Teilearbeit"
+msgstr "Teilearbeit"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Intuition"
+msgstr "Intuition"
+
+#: src/lib/eventCategories.ts
+msgid "Systemische Aufstellungen"
+msgstr "Systemische Aufstellungen"
+
+#: src/lib/eventCategories.ts
+msgid "Regression"
+msgstr "Regression"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Rückführung in frühere Leben"
+msgstr "Rückführung in frühere Leben"
+
+#: src/lib/eventCategories.ts
+msgid "Schamanismus"
+msgstr "Schamanismus"
+
+#: src/lib/eventCategories.ts
+msgid "Lichtarbeit"
+msgstr "Lichtarbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Astrologie"
+msgstr "Astrologie"
+
+#: src/lib/eventCategories.ts
+msgid "Human Design"
+msgstr "Human Design"
+
+#: src/lib/eventCategories.ts
+msgid "Gene Keys"
+msgstr "Gene Keys"
+
+#: src/lib/eventCategories.ts
+msgid "Channeling"
+msgstr "Channeling"
+
+#: src/lib/eventCategories.ts
+msgid "Medialität"
+msgstr "Medialität"
+
+#: src/lib/eventCategories.ts
+msgid "Tarot"
+msgstr "Tarot"
+
+#: src/lib/eventCategories.ts
+msgid "Kartenlegungen"
+msgstr "Kartenlegungen"
+
+#: src/lib/eventCategories.ts
+msgid "Seelenverbindung"
+msgstr "Seelenverbindung"
+
+#: src/lib/eventCategories.ts
+msgid "Neue Erde"
+msgstr "Neue Erde"
+
+#: src/lib/eventCategories.ts
+msgid "Manifestieren"
+msgstr "Manifestieren"
+
+#: src/lib/eventCategories.ts
+msgid "Quantum Jumping"
+msgstr "Quantum Jumping"
+
+#: src/lib/eventCategories.ts
+msgid "Gesetz der Anziehung"
+msgstr "Gesetz der Anziehung"
+
+#: src/lib/eventCategories.ts
+msgid "Triff deine Guides"
+msgstr "Triff deine Guides"
+
+#: src/lib/eventCategories.ts
+msgid "Tzolkin / Maya-Kalender"
+msgstr "Tzolkin / Maya-Kalender"
+
+#: src/lib/eventCategories.ts
+msgid "Sufismus"
+msgstr "Sufismus"
+
+#: src/lib/eventCategories.ts
+msgid "Taoismus"
+msgstr "Taoismus"
+
+#: src/lib/eventCategories.ts
+msgid "Alchemie"
+msgstr "Alchemie"
+
+#: src/lib/eventCategories.ts
+msgid "Ein Kurs in Wundern"
+msgstr "Ein Kurs in Wundern"
+
+#: src/lib/eventCategories.ts
+msgid "Pendeln"
+msgstr "Pendeln"
+
+#: src/lib/eventCategories.ts
+msgid "Medizinrad"
+msgstr "Medizinrad"
+
+#: src/lib/eventCategories.ts
+msgid "Kraftort"
+msgstr "Kraftort"
+
+#: src/lib/eventCategories.ts
+msgid "Labyrinth"
+msgstr "Labyrinth"
+
+#: src/lib/eventCategories.ts
+msgid "Kosmischer Kontakt"
+msgstr "Kosmischer Kontakt"
+
+#: src/lib/eventCategories.ts
+msgid "Multidimensionalität"
+msgstr "Multidimensionalität"
+
+#: src/lib/eventCategories.ts
+msgid "Multidimensionale Embodiment-Transmission"
+msgstr "Multidimensionale Embodiment-Transmission"
+
+#: src/lib/eventCategories.ts
+msgid "Numerologie"
+msgstr "Numerologie"
+
+#: src/lib/eventCategories.ts
+msgid "Edelsteine"
+msgstr "Edelsteine"
+
+#: src/lib/eventCategories.ts
+msgid "Feng Shui"
+msgstr "Feng Shui"
+
+#: src/lib/eventCategories.ts
+msgid "Träume"
+msgstr "Träume"
+
+#: src/lib/eventCategories.ts
+msgid "Universelle Einheit"
+msgstr "Universelle Einheit"
+
+#: src/lib/eventCategories.ts
+msgid "Seelenglück"
+msgstr "Seelenglück"
+
+#: src/lib/eventCategories.ts
+msgid "Seelenmission"
+msgstr "Seelenmission"
+
+#: src/lib/eventCategories.ts
+msgid "Mutter Erde"
+msgstr "Mutter Erde"
+
+#: src/lib/eventCategories.ts
+msgid "Osho"
+msgstr "Osho"
+
+#: src/lib/eventCategories.ts
+msgid "Spirituelles Erwachen"
+msgstr "Spirituelles Erwachen"
+
+#: src/lib/eventCategories.ts
+msgid "Mystik"
+msgstr "Mystik"
+
+#: src/lib/eventCategories.ts
+msgid "Spirituelle Lehren"
+msgstr "Spirituelle Lehren"
+
+#: src/lib/eventCategories.ts
+msgid "Advaita"
+msgstr "Advaita"
+
+#: src/lib/eventCategories.ts
+msgid "Buddhistische Lehren"
+msgstr "Buddhistische Lehren"
+
+#: src/lib/eventCategories.ts
+msgid "Devotionale Praxis"
+msgstr "Devotionale Praxis"
+
+#: src/lib/eventCategories.ts
+msgid "Enneagramm"
+msgstr "Enneagramm"
+
+#: src/lib/eventCategories.ts
+msgid "Kartenlegung"
+msgstr "Kartenlegung"
+
+#: src/lib/eventCategories.ts
+msgid "I Ging"
+msgstr "I Ging"
+
+#: src/lib/eventCategories.ts
+msgid "Archetypenarbeit"
+msgstr "Archetypenarbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Schwitzhütte"
+msgstr "Schwitzhütte"
+
+#: src/lib/eventCategories.ts
+msgid "Kakaozeremonie"
+msgstr "Kakaozeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Einweihungen"
+msgstr "Einweihungen"
+
+#: src/lib/eventCategories.ts
+msgid "Silvester"
+msgstr "Silvester"
+
+#: src/lib/eventCategories.ts
+msgid "Pflanzenmedizin"
+msgstr "Pflanzenmedizin"
+
+#: src/lib/eventCategories.ts
+msgid "Ritual"
+msgstr "Ritual"
+
+#: src/lib/eventCategories.ts
+msgid "Detox"
+msgstr "Detox"
+
+#: src/lib/eventCategories.ts
+msgid "Trüffelzeremonie"
+msgstr "Trüffelzeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Wasserzeremonie"
+msgstr "Wasserzeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Feuerzeremonie"
+msgstr "Feuerzeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Visionssuche"
+msgstr "Visionssuche"
+
+#: src/lib/eventCategories.ts
+msgid "Kambo"
+msgstr "Kambo"
+
+#: src/lib/eventCategories.ts
+msgid "Neumond"
+msgstr "Neumond"
+
+#: src/lib/eventCategories.ts
+msgid "Vollmond"
+msgstr "Vollmond"
+
+#: src/lib/eventCategories.ts
+msgid "Rapé"
+msgstr "Rapé"
+
+#: src/lib/eventCategories.ts
+msgid "Innere Reise"
+msgstr "Innere Reise"
+
+#: src/lib/eventCategories.ts
+msgid "Teezeremonie"
+msgstr "Teezeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Rite of the Womb"
+msgstr "Rite of the Womb"
+
+#: src/lib/eventCategories.ts
+msgid "Feuerlauf"
+msgstr "Feuerlauf"
+
+#: src/lib/eventCategories.ts
+msgid "Trancereise"
+msgstr "Trancereise"
+
+#: src/lib/eventCategories.ts
+msgid "Seelenrückholung"
+msgstr "Seelenrückholung"
+
+#: src/lib/eventCategories.ts
+msgid "Keltische Jahresfeste"
+msgstr "Keltische Jahresfeste"
+
+#: src/lib/eventCategories.ts
+msgid "Despacho-Zeremonie"
+msgstr "Despacho-Zeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Vollmondzeremonie"
+msgstr "Vollmondzeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Neumondzeremonie"
+msgstr "Neumondzeremonie"
+
+#: src/lib/eventCategories.ts
+msgid "Temazcal"
+msgstr "Temazcal"
+
+#: src/lib/eventCategories.ts
+msgid "Schamanische Reise"
+msgstr "Schamanische Reise"
+
+#: src/lib/eventCategories.ts
+msgid "Ahnenheilung"
+msgstr "Ahnenheilung"
+
+#: src/lib/eventCategories.ts
+msgid "Womb-Ritual"
+msgstr "Womb-Ritual"
+
+#: src/lib/eventCategories.ts
+msgid "Sacred Sexuality"
+msgstr "Sacred Sexuality"
+
+#: src/lib/eventCategories.ts
+msgid "5Rhythmen"
+msgstr "5Rhythmen"
+
+#: src/lib/eventCategories.ts
+msgid "Wirbeltanz"
+msgstr "Wirbeltanz"
+
+#: src/lib/eventCategories.ts
+msgid "Nonduale Meditation"
+msgstr "Nonduale Meditation"
+
+#: src/lib/eventCategories.ts
+msgid "Holotropes Atmen"
+msgstr "Holotropes Atmen"
+
+#: src/lib/eventCategories.ts
+msgid "Transformatives Atmen"
+msgstr "Transformatives Atmen"
+
+#: src/lib/eventCategories.ts
+msgid "Atemanhalten"
+msgstr "Atemanhalten"
+
+#: src/lib/eventCategories.ts
+msgid "Acro- und Partnerbewegung"
+msgstr "Acro- und Partnerbewegung"
+
+#: src/lib/eventCategories.ts
+msgid "Prana-Heilung"
+msgstr "Prana-Heilung"
+
+#: src/lib/eventCategories.ts
+msgid "Biofeldheilung"
+msgstr "Biofeldheilung"
+
+#: src/lib/eventCategories.ts
+msgid "Hands-on-Energieheilung"
+msgstr "Hands-on-Energieheilung"
+
+#: src/lib/eventCategories.ts
+msgid "Traumaauflösung"
+msgstr "Traumaauflösung"
+
+#: src/lib/eventCategories.ts
+msgid "Aura-Lesen"
+msgstr "Aura-Lesen"
+
+#: src/lib/eventCategories.ts
+msgid "Mantrasingen"
+msgstr "Mantrasingen"
+
+#: src/lib/eventCategories.ts
+msgid "Stimmbefreiung"
+msgstr "Stimmbefreiung"
+
+#: src/lib/eventCategories.ts
+msgid "Sanskrit-Mantra-Rezitation"
+msgstr "Sanskrit-Mantra-Rezitation"
+
+#: src/lib/eventCategories.ts
+msgid "Psytrance"
+msgstr "Psytrance"
+
+#: src/lib/eventCategories.ts
+msgid "Selbstführung"
+msgstr "Selbstführung"
+
+#: src/lib/eventCategories.ts
+msgid "Psychiatrische Diagnosen"
+msgstr "Psychiatrische Diagnosen"
+
+#: src/lib/eventCategories.ts
+msgid "Talentspiel"
+msgstr "Talentspiel"
+
+#: src/lib/eventCategories.ts
+msgid "Die innere Stimme"
+msgstr "Die innere Stimme"
+
+#: src/lib/eventCategories.ts
+msgid "Glaubenssatzarbeit"
+msgstr "Glaubenssatzarbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Erforschung früherer Leben"
+msgstr "Erforschung früherer Leben"
+
+#: src/lib/eventCategories.ts
+msgid "Nondualität"
+msgstr "Nondualität"
+
+#: src/lib/eventCategories.ts
+msgid "Bewusstseinserkundung"
+msgstr "Bewusstseinserkundung"
+
+#: src/lib/eventCategories.ts
+msgid "Medizinwanderung"
+msgstr "Medizinwanderung"
+
+#: src/lib/eventCategories.ts
+msgid "Blauer Lotus"
+msgstr "Blauer Lotus"
+
+#: src/lib/eventCategories.ts
+msgid "Übergangsriten"
+msgstr "Übergangsriten"
+
+#: src/lib/eventCategories.ts
+msgid "Achtsames Dating"
+msgstr "Achtsames Dating"
+
+#: src/lib/eventCategories.ts
+msgid "Sonnenwende"
+msgstr "Sonnenwende"
+
+#: src/lib/eventCategories.ts
+msgid "Tagundnachtgleiche"
+msgstr "Tagundnachtgleiche"

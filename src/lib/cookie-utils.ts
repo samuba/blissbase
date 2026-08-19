@@ -1,5 +1,6 @@
 import type { Cookies } from '@sveltejs/kit';
 import { sanitizeLocationParams } from '$lib/locationFilter';
+import { eventCategorySlugs } from '$lib/eventCategories';
 import type { AttendanceMode } from './server/schema';
 
 const COOKIE_NAME = 'blissbase_filters';
@@ -28,6 +29,7 @@ export type FilterCookieData = {
     sortBy?: string | null;
     sortOrder?: string | null;
     tagIds?: number[] | null;
+    categorySlugs?: string[] | null;
     attendanceMode?: AttendanceMode | null;
     /** Admin-only: filter events list by `events.source`. `null` means all sources. */
     source?: string | null;
@@ -46,6 +48,9 @@ export function validateFilterData(data: unknown): FilterCookieData | null {
     // Validate tagIds array
     const tagIds = Array.isArray(filterData.tagIds)
         ? filterData.tagIds.filter((id): id is number => typeof id === 'number' && !isNaN(id))
+        : null;
+    const categorySlugs = Array.isArray(filterData.categorySlugs)
+        ? filterData.categorySlugs.filter((slug): slug is string => typeof slug === 'string' && eventCategorySlugs.has(slug))
         : null;
 
     const location = sanitizeLocationParams({
@@ -75,6 +80,7 @@ export function validateFilterData(data: unknown): FilterCookieData | null {
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
         sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
         tagIds: tagIds?.length ? tagIds : null,
+        categorySlugs: categorySlugs?.length ? categorySlugs : null,
         attendanceMode: typeof filterData.attendanceMode === 'string' ? filterData.attendanceMode as AttendanceMode : null,
         source: typeof filterData.source === 'string' && filterData.source.trim() ? filterData.source.trim() : null,
     };

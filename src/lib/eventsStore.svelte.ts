@@ -22,6 +22,7 @@ type PaginationState = {
     sortBy?: string | null;
     sortOrder?: string | null;
     tagIds?: number[] | null;
+    categorySlugs?: string[] | null;
     attendanceMode?: AttendanceMode | null;
     source?: string | null;
     totalEvents?: number | null;
@@ -65,9 +66,10 @@ export class EventsStore {
     hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat != null && this.pagination.lng != null)));
     hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
     hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
+    hasCategoryFilter = $derived(Boolean(this.pagination.categorySlugs?.length));
     hasAttendanceModeFilter = $derived(this.pagination.attendanceMode);
     sortFilter = $derived({ sortBy: this.pagination.sortBy, sortOrder: this.pagination.sortOrder });
-    hasAnyFilter = $derived(Boolean(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter || this.hasAttendanceModeFilter));
+    hasAnyFilter = $derived(Boolean(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter || this.hasCategoryFilter || this.hasAttendanceModeFilter));
     hasFilterBehindButton = $derived(this.hasDateFilter || this.hasAttendanceModeFilter || this.sortFilter.sortBy !== 'time');
     searchFilter = $derived(this.pagination.searchTerm?.trim());
     dateFilter = $derived({ start: this.pagination.startDate, end: this.pagination.endDate });
@@ -112,6 +114,7 @@ export class EventsStore {
                     sortBy: params.sortBy ?? null,
                     sortOrder: params.sortOrder ?? null,
                     tagIds: params.tagIds ?? null,
+                    categorySlugs: params.categorySlugs ?? null,
                     attendanceMode: params.attendanceMode ?? null,
                     source: params.source ?? null,
                     totalEvents: `totalEvents` in params ? params.totalEvents ?? null : this.pagination.totalEvents,
@@ -162,6 +165,7 @@ export class EventsStore {
                 sortBy: this.pagination.sortBy,
                 sortOrder: this.pagination.sortOrder,
                 tagIds: this.pagination.tagIds,
+                categorySlugs: this.pagination.categorySlugs,
                 attendanceMode: this.pagination.attendanceMode,
                 source: this.pagination.source,
             },
@@ -216,9 +220,20 @@ export class EventsStore {
         this.loadEvents({
             ...this.pagination,
             tagIds: null,
+            categorySlugs: value.trim() ? null : this.pagination.categorySlugs,
             searchTerm: value,
             page: 1,
         })
+    }
+
+    handleCategoryChange(categorySlugs: string[]) {
+        this.loadEvents({
+            ...this.pagination,
+            categorySlugs: categorySlugs.length ? categorySlugs : null,
+            searchTerm: null,
+            tagIds: null,
+            page: 1,
+        });
     }
 
     handleAttendanceModeChange(value: AttendanceMode | null) {

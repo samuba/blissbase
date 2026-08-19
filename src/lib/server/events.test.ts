@@ -1380,6 +1380,179 @@ describe('Events Module - Happy Flow Tests', () => {
             });
         });
 
+        describe('Category filtering', () => {
+            async function ensureTag(slug: string) {
+                const existing = await db.query.tags.findFirst({ where: eq(s.tags.slug, slug) });
+                if (existing) return existing;
+                const [tag] = await db.insert(s.tags).values({ slug }).returning();
+                return tag;
+            }
+
+            it('should return dance-tagged events for the dance category and not yoga-only events', async () => {
+                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const danceTag = await ensureTag(`ecstatic-dance`);
+                const yogaTag = await ensureTag(`yoga`);
+                const events = await upsertEvents([
+                    createTestEvent({
+                        name: `Ecstatic Dance Night`,
+                        slug: `ecstatic-dance-night`,
+                        sourceUrl: `https://example.com/ecstatic-dance-night`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Yoga Workshop`,
+                        slug: `yoga-workshop-category`,
+                        sourceUrl: `https://example.com/yoga-workshop-category`,
+                        startAt: futureDate,
+                    }),
+                ]);
+                const danceEvent = events.find((event) => event.name === `Ecstatic Dance Night`);
+                const yogaEvent = events.find((event) => event.name === `Yoga Workshop`);
+                await db.insert(s.eventTags).values([
+                    { eventId: danceEvent!.id, tagId: danceTag.id },
+                    { eventId: yogaEvent!.id, tagId: yogaTag.id },
+                ]);
+
+                const result = prepareEventsResultForUi(await fetchEvents({
+                    categorySlugs: [`dance`],
+                }));
+
+                expect(result.events.map((event) => event.name)).toEqual([`Ecstatic Dance Night`]);
+                expect(result.pagination.totalEvents).toBe(1);
+                expect(result.pagination.categorySlugs).toEqual([`dance`]);
+            });
+
+            it('should union events across selected categories', async () => {
+                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const danceTag = await ensureTag(`ecstatic-dance`);
+                const meditationTag = await ensureTag(`meditation`);
+                const yogaTag = await ensureTag(`yoga`);
+                const events = await upsertEvents([
+                    createTestEvent({
+                        name: `Ecstatic Dance Night`,
+                        slug: `ecstatic-dance-union`,
+                        sourceUrl: `https://example.com/ecstatic-dance-union`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Meditation Session`,
+                        slug: `meditation-union`,
+                        sourceUrl: `https://example.com/meditation-union`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Yoga Workshop`,
+                        slug: `yoga-union`,
+                        sourceUrl: `https://example.com/yoga-union`,
+                        startAt: futureDate,
+                    }),
+                ]);
+                await db.insert(s.eventTags).values([
+                    { eventId: events.find((event) => event.name === `Ecstatic Dance Night`)!.id, tagId: danceTag.id },
+                    { eventId: events.find((event) => event.name === `Meditation Session`)!.id, tagId: meditationTag.id },
+                    { eventId: events.find((event) => event.name === `Yoga Workshop`)!.id, tagId: yogaTag.id },
+                ]);
+
+                const result = prepareEventsResultForUi(await fetchEvents({
+                    categorySlugs: [`dance`, `meditation`],
+                }));
+
+                expect(result.events.map((event) => event.name).sort()).toEqual([
+                    `Ecstatic Dance Night`,
+                    `Meditation Session`,
+                ]);
+                expect(result.pagination.totalEvents).toBe(2);
+            });
+
+            it('should return events with no mapped category tags for others', async () => {
+                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const danceTag = await ensureTag(`ecstatic-dance`);
+                const festivalTag = await ensureTag(`festival`);
+                const events = await upsertEvents([
+                    createTestEvent({
+                        name: `Ecstatic Dance Night`,
+                        slug: `ecstatic-dance-others`,
+                        sourceUrl: `https://example.com/ecstatic-dance-others`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Summer Festival`,
+                        slug: `summer-festival-others`,
+                        sourceUrl: `https://example.com/summer-festival-others`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Dance And Festival Mix`,
+                        slug: `dance-festival-mix-others`,
+                        sourceUrl: `https://example.com/dance-festival-mix-others`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Untagged Gathering`,
+                        slug: `untagged-gathering-others`,
+                        sourceUrl: `https://example.com/untagged-gathering-others`,
+                        startAt: futureDate,
+                    }),
+                ]);
+                await db.insert(s.eventTags).values([
+                    { eventId: events.find((event) => event.name === `Ecstatic Dance Night`)!.id, tagId: danceTag.id },
+                    { eventId: events.find((event) => event.name === `Summer Festival`)!.id, tagId: festivalTag.id },
+                    { eventId: events.find((event) => event.name === `Dance And Festival Mix`)!.id, tagId: danceTag.id },
+                    { eventId: events.find((event) => event.name === `Dance And Festival Mix`)!.id, tagId: festivalTag.id },
+                ]);
+
+                const result = prepareEventsResultForUi(await fetchEvents({
+                    categorySlugs: [`others`],
+                }));
+
+                expect(result.events.map((event) => event.name).sort()).toEqual([
+                    `Summer Festival`,
+                    `Untagged Gathering`,
+                ]);
+            });
+
+            it('should union mapped categories with residual others events', async () => {
+                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const danceTag = await ensureTag(`ecstatic-dance`);
+                const yogaTag = await ensureTag(`yoga`);
+                const festivalTag = await ensureTag(`festival`);
+                const events = await upsertEvents([
+                    createTestEvent({
+                        name: `Ecstatic Dance Night`,
+                        slug: `dance-others-union`,
+                        sourceUrl: `https://example.com/dance-others-union`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Yoga Workshop`,
+                        slug: `yoga-others-union`,
+                        sourceUrl: `https://example.com/yoga-others-union`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Summer Festival`,
+                        slug: `festival-others-union`,
+                        sourceUrl: `https://example.com/festival-others-union`,
+                        startAt: futureDate,
+                    }),
+                ]);
+                await db.insert(s.eventTags).values([
+                    { eventId: events.find((event) => event.name === `Ecstatic Dance Night`)!.id, tagId: danceTag.id },
+                    { eventId: events.find((event) => event.name === `Yoga Workshop`)!.id, tagId: yogaTag.id },
+                    { eventId: events.find((event) => event.name === `Summer Festival`)!.id, tagId: festivalTag.id },
+                ]);
+
+                const result = prepareEventsResultForUi(await fetchEvents({
+                    categorySlugs: [`dance`, `others`],
+                }));
+
+                expect(result.events.map((event) => event.name).sort()).toEqual([
+                    `Ecstatic Dance Night`,
+                    `Summer Festival`,
+                ]);
+            });
+        });
+
         describe('Sorting', () => {
             it('should sort events by time (ascending)', async () => {
                 const baseTime = new Date();
@@ -1877,16 +2050,13 @@ describe('Events Module - Happy Flow Tests', () => {
             it('should return events with tags2 field populated from eventTags relation', async () => {
                 const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
 
-                // Create tags
-                const [yogaTag] = await db.insert(s.tags).values([
-                    { slug: 'yoga' }
-                ]).returning();
+                const existingYogaTag = await db.query.tags.findFirst({ where: eq(s.tags.slug, `yoga`) });
+                const yogaTag = existingYogaTag ?? (await db.insert(s.tags).values({ slug: `yoga` }).returning())[0];
 
-                // Insert translations
                 await db.insert(s.tagTranslations).values([
-                    { tagId: yogaTag.id, locale: 'en', name: 'Yoga' },
-                    { tagId: yogaTag.id, locale: 'de', name: 'Yoga' }
-                ]);
+                    { tagId: yogaTag.id, locale: `en`, name: `Yoga` },
+                    { tagId: yogaTag.id, locale: `de`, name: `Yoga` }
+                ]).onConflictDoNothing();
 
                 // Create event
                 const events = await upsertEvents([

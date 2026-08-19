@@ -4,7 +4,6 @@ import { loadFiltersFromCookie, LOCATION_INTERACTED_COOKIE_NAME, saveFiltersToCo
 import { coarseLatLngForAnalytics } from "$lib/locationFilter";
 import { posthogCapture } from "$lib/server/common";
 import { getEventSourceFilter, getEventSources } from "$lib/rpc/admin.remote";
-import { getTags } from "$lib/rpc/TagSelection.remote";
 
 export const load = (async ({ cookies, locals }) => {
     // Load saved filters from cookie
@@ -53,7 +52,6 @@ export const load = (async ({ cookies, locals }) => {
         source: locals.isAdminSession ? (pagination.source ?? null) : (savedFilters?.source ?? null),
     });
 
-    const tags = await getTags();
     const [eventSources, eventSourceFilter] = locals.isAdminSession
         ? await Promise.all([getEventSources(), getEventSourceFilter()])
         : [null, null];
@@ -69,6 +67,7 @@ export const load = (async ({ cookies, locals }) => {
         sortBy: pagination.sortBy,
         sortOrder: pagination.sortOrder,
         tagIds: pagination.tagIds,
+        categorySlugs: pagination.categorySlugs,
         attendanceMode: pagination.attendanceMode
     })
 
@@ -77,7 +76,6 @@ export const load = (async ({ cookies, locals }) => {
         pagination,
         savedFilters,
         autoDetectedCity,
-        tags,
         eventSources,
         eventSourceFilter,
     };
