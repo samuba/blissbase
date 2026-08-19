@@ -25,7 +25,7 @@ import type { InsertEvent } from '$lib/types';
 import { type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
-import { eventCategories, eventCategorySlugs, getAssignedTagSlugs, OTHERS_CATEGORY_SLUG, resolveTagIdsForCategories } from '$lib/eventCategories';
+import { eventCategories, eventCategorySlugs, OTHERS_CATEGORY_SLUG, resolveTagIdsForCategories } from '$lib/eventCategories';
 import { attendanceModeEnum, type AttendanceMode } from './schema';
 import { upsertEvents as upsertEventsShared } from './events.shared';
 import { getPublicProfileBioExcerpt } from './profile';
@@ -246,9 +246,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 
 	if (categorySlugs.length) {
 		const includeOthers = categorySlugs.includes(OTHERS_CATEGORY_SLUG);
-		const mappedTagIds = await resolveCategoryTagIds(
-			categorySlugs.filter((slug) => slug !== OTHERS_CATEGORY_SLUG)
-		);
+		const mappedTagIds = await resolveCategoryTagIds(categorySlugs);
 		const categoryConditions = [];
 
 		if (mappedTagIds.length) {
@@ -265,23 +263,15 @@ export async function fetchEvents(params: LoadEventsParams) {
 		}
 
 		if (includeOthers) {
-			const assignedTagIds = await resolveAssignedTagIds();
 			categoryConditions.push(
-				assignedTagIds.length
-					? not(
-							exists(
-								db
-									.select({ tagId: s.eventTags.tagId })
-									.from(s.eventTags)
-									.where(
-										and(
-											eq(s.eventTags.eventId, s.events.id),
-											inArray(s.eventTags.tagId, assignedTagIds)
-										)
-									)
-							)
-						)
-					: sql`true`
+				not(
+					exists(
+						db
+							.select({ tagId: s.eventTags.tagId })
+							.from(s.eventTags)
+							.where(eq(s.eventTags.eventId, s.events.id))
+					)
+				)
 			);
 		}
 
@@ -368,6 +358,7 @@ function uniqueCategorySlugs(categorySlugs?: string[] | null) {
 
 async function resolveCategoryTagIds(categorySlugs: string[]) {
 	if (!categorySlugs.length) return [];
+	const includeOthers = categorySlugs.includes(OTHERS_CATEGORY_SLUG);
 	const mappedSlugs = [
 		...new Set(
 			categorySlugs.flatMap(
@@ -375,22 +366,14 @@ async function resolveCategoryTagIds(categorySlugs: string[]) {
 			)
 		)
 	];
-	if (!mappedSlugs.length) return [];
-	const tags = await db
-		.select({ id: s.tags.id, slug: s.tags.slug })
-		.from(s.tags)
-		.where(inArray(s.tags.slug, mappedSlugs));
+	if (!includeOthers && !mappedSlugs.length) return [];
+	const tags = includeOthers
+		? await db.select({ id: s.tags.id, slug: s.tags.slug }).from(s.tags)
+		: await db
+			.select({ id: s.tags.id, slug: s.tags.slug })
+			.from(s.tags)
+			.where(inArray(s.tags.slug, mappedSlugs));
 	return resolveTagIdsForCategories({ categorySlugs, tags });
-}
-
-async function resolveAssignedTagIds() {
-	const assignedSlugs = [...getAssignedTagSlugs()];
-	if (!assignedSlugs.length) return [];
-	const tags = await db
-		.select({ id: s.tags.id })
-		.from(s.tags)
-		.where(inArray(s.tags.slug, assignedSlugs));
-	return tags.map((tag) => tag.id);
 }
 
 function parseRelevanceAt(value?: string | null) {

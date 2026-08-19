@@ -1464,10 +1464,12 @@ describe('Events Module - Happy Flow Tests', () => {
                 expect(result.pagination.totalEvents).toBe(2);
             });
 
-            it('should return events with no mapped category tags for others', async () => {
+            it('should return events with others tags, unmapped tags, and no tags', async () => {
                 const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
                 const danceTag = await ensureTag(`ecstatic-dance`);
                 const festivalTag = await ensureTag(`festival`);
+                const natureTag = await ensureTag(`nature`);
+                const yogaTag = await ensureTag(`yoga`);
                 const events = await upsertEvents([
                     createTestEvent({
                         name: `Ecstatic Dance Night`,
@@ -1488,6 +1490,18 @@ describe('Events Module - Happy Flow Tests', () => {
                         startAt: futureDate,
                     }),
                     createTestEvent({
+                        name: `Nature Walk`,
+                        slug: `nature-walk-others`,
+                        sourceUrl: `https://example.com/nature-walk-others`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
+                        name: `Yoga Workshop`,
+                        slug: `yoga-workshop-others`,
+                        sourceUrl: `https://example.com/yoga-workshop-others`,
+                        startAt: futureDate,
+                    }),
+                    createTestEvent({
                         name: `Untagged Gathering`,
                         slug: `untagged-gathering-others`,
                         sourceUrl: `https://example.com/untagged-gathering-others`,
@@ -1499,6 +1513,8 @@ describe('Events Module - Happy Flow Tests', () => {
                     { eventId: events.find((event) => event.name === `Summer Festival`)!.id, tagId: festivalTag.id },
                     { eventId: events.find((event) => event.name === `Dance And Festival Mix`)!.id, tagId: danceTag.id },
                     { eventId: events.find((event) => event.name === `Dance And Festival Mix`)!.id, tagId: festivalTag.id },
+                    { eventId: events.find((event) => event.name === `Nature Walk`)!.id, tagId: natureTag.id },
+                    { eventId: events.find((event) => event.name === `Yoga Workshop`)!.id, tagId: yogaTag.id },
                 ]);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
@@ -1506,12 +1522,15 @@ describe('Events Module - Happy Flow Tests', () => {
                 }));
 
                 expect(result.events.map((event) => event.name).sort()).toEqual([
+                    `Dance And Festival Mix`,
+                    `Nature Walk`,
                     `Summer Festival`,
                     `Untagged Gathering`,
                 ]);
+                expect(result.pagination.totalEvents).toBe(4);
             });
 
-            it('should union mapped categories with residual others events', async () => {
+            it('should union mapped categories with others events', async () => {
                 const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
                 const danceTag = await ensureTag(`ecstatic-dance`);
                 const yogaTag = await ensureTag(`yoga`);
@@ -1535,6 +1554,12 @@ describe('Events Module - Happy Flow Tests', () => {
                         sourceUrl: `https://example.com/festival-others-union`,
                         startAt: futureDate,
                     }),
+                    createTestEvent({
+                        name: `Untagged Gathering`,
+                        slug: `untagged-gathering-union`,
+                        sourceUrl: `https://example.com/untagged-gathering-union`,
+                        startAt: futureDate,
+                    }),
                 ]);
                 await db.insert(s.eventTags).values([
                     { eventId: events.find((event) => event.name === `Ecstatic Dance Night`)!.id, tagId: danceTag.id },
@@ -1549,7 +1574,9 @@ describe('Events Module - Happy Flow Tests', () => {
                 expect(result.events.map((event) => event.name).sort()).toEqual([
                     `Ecstatic Dance Night`,
                     `Summer Festival`,
+                    `Untagged Gathering`,
                 ]);
+                expect(result.pagination.totalEvents).toBe(3);
             });
         });
 
