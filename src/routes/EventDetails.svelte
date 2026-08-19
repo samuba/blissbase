@@ -79,7 +79,8 @@
 			contact = contact.replace('https://t.me/', 'tg://resolve?domain=');
 		}
 		if (contact?.startsWith('tg://')) {
-			contact += `&text=${telegramContactMessage}&parse_mode=HTML`;
+			const separator = contact.includes(`?`) ? `&` : `?`;
+			contact += `${separator}text=${telegramContactMessage}&parse_mode=HTML`;
 		}
 
 		if (contact?.startsWith('https://wa.me/')) {
@@ -140,6 +141,29 @@
 
 	function openLink(url: string) {
 		window.open(url, '_blank', 'noopener,noreferrer');
+	}
+
+	// Custom schemes like tg:// are dropped silently by window.open, so navigate
+	// the current document instead and let the OS hand off to the app.
+	function openContact(url: string) {
+		window.location.href = url;
+		if (!url.startsWith(`tg://`)) return;
+		// Open the web client when no Telegram handler took over the tg:// link.
+		const fallback = telegramWebUrl(url);
+		if (fallback) {
+			setTimeout(() => {
+				if (!document.hidden) window.location.href = fallback;
+			}, 2000);
+		}
+	}
+
+	// tg://resolve?domain=USER&text=… or tg://USER?text=… -> https://t.me/USER?text=…
+	function telegramWebUrl(tgUrl: string) {
+		let rest = tgUrl.slice(`tg://`.length);
+		if (rest.startsWith(`resolve?domain=`)) rest = rest.slice(`resolve?domain=`.length);
+		const match = rest.match(/^([^?&]+)(?:[?&](.*))?$/);
+		if (!match?.[1]) return undefined;
+		return match[2] ? `https://t.me/${match[1]}?${match[2]}` : `https://t.me/${match[1]}`;
 	}
 </script>
 
@@ -470,9 +494,9 @@
 
 {#snippet contactButton(method: ReturnType<typeof getContactMethod>, url: string)}
 	{#if method === 'Telegram'}
-		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
+		<button type="button" onclick={() => openContact(url)} class="btn btn-primary">
 			<i class="icon-[ph--telegram-logo] size-5"></i>
-			Nachricht senden
+			Nachricht per Telegram
 		</button>
 		<span class="word-wrap">
 			Eventuell musst du
@@ -482,20 +506,20 @@
 			erst installieren.
 		</span>
 	{:else if method === 'WhatsApp'}
-		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
+		<a href={url} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
 			<i class="icon-[ph--whatsapp-logo] size-5"></i>
-			Nachricht senden
-		</button>
+			Nachricht per WhatsApp
+		</a>
 	{:else if method === 'Telefon'}
-		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
+		<a href={url} class="btn btn-primary">
 			<i class="icon-[ph--phone] size-5"></i>
 			Anrufen
-		</button>
+		</a>
 	{:else if method === 'Email'}
-		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
+		<a href={url} class="btn btn-primary">
 			<i class="icon-[ph--envelope] size-6"></i>
 			Email
-		</button>
+		</a>
 	{:else if method === 'Website'}
 		<a href={url} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
 			<i class="icon-[ph--globe] size-5"></i>
