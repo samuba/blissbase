@@ -136,10 +136,8 @@ msgstr "The event you are looking for does not exist or may have been moved."
 msgid "Go to Homepage"
 msgstr "Go to homepage"
 
-#: src/routes/EventDetails.svelte
-#: src/routes/EventDetails.svelte
-msgid "<0/> Nachricht senden"
-msgstr "<0/> Send message"
+#~ msgid "<0/> Nachricht senden"
+#~ msgstr "<0/> Send message"
 
 #: src/routes/EventDetails.svelte
 msgid "Eventuell musst du <0>Telegram Messenger</0> erst installieren."
@@ -2350,3 +2348,11 @@ msgstr "Profile"
 #: src/routes/offerings/new/+page.svelte
 msgid "Bestätigung"
 msgstr "Confirmation"
+
+#: src/routes/EventDetails.svelte
+msgid "<0/> Nachricht per Telegram"
+msgstr "<0/> Message via Telegram"
+
+#: src/routes/EventDetails.svelte
+msgid "<0/> Nachricht per WhatsApp"
+msgstr "<0/> Message via WhatsApp"
