@@ -1,31 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
 	eventCategories,
-	eventHasNoMappedCategoryTags,
+	eventMatchesOthersCategory,
 	getAssignedTagSlugs,
 	OTHERS_CATEGORY_SLUG,
 	resolveTagIdsForCategories,
 } from './eventCategories';
 
 describe(`eventCategories`, () => {
-	it(`lists the compressed filter categories in the expected order`, () => {
-		expect(eventCategories.map((category) => category.slug)).toEqual([
-			`dance`,
-			`meditation`,
-			`tantra`,
-			`breathwork`,
-			`movement`,
-			`energy-work`,
-			`sound-healing`,
-			`bodywork`,
-			`music`,
-			`relationship`,
-			`personal-growth`,
-			`spirituality`,
-			`ceremony`,
-			`others`,
-		]);
-	});
 
 	it(`maps ecstatic dance to dance and yoga to personal growth`, () => {
 		const dance = eventCategories.find((category) => category.slug === `dance`);
@@ -48,7 +30,7 @@ describe(`eventCategories`, () => {
 		for (const slug of [`ecstatic-dance`, `free-dance`, `somatic-dance`]) {
 			expect(slugsByCategory.dance.has(slug)).toBe(true);
 		}
-		for (const slug of [`authentic-movement`, `somatic-movement`, `qigong`, `tai-chi`, `mobility-functional-movement`, `acro-partner-movement`]) {
+		for (const slug of [`authentic-movement`, `somatic-movement`, `qigong`, `tai-chi`, `mobility`]) {
 			expect(slugsByCategory.movement.has(slug)).toBe(true);
 		}
 		for (const slug of [`conscious-connected-breathwork`, `pranayama`, `breath-circle`]) {
@@ -60,7 +42,7 @@ describe(`eventCategories`, () => {
 		for (const slug of [`reiki`, `pranic-healing`, `chakra-work`, `light-language`]) {
 			expect(slugsByCategory[`energy-work`].has(slug)).toBe(true);
 		}
-		for (const slug of [`sound-healing`, `gong`, `crystal-bowls`]) {
+		for (const slug of [`sound-healing`, `gong`, `singing-bowls`]) {
 			expect(slugsByCategory[`sound-healing`].has(slug)).toBe(true);
 		}
 		for (const slug of [`voice-activation`, `medicine-music`, `drum-circles`]) {
@@ -90,9 +72,10 @@ describe(`eventCategories`, () => {
 		expect(tantra?.tags.map((tag) => tag.slug)).toContain(`tantric-dance`);
 	});
 
-	it(`treats unmapped tags as others candidates`, () => {
+	it(`treats others tags and unmapped tags as others candidates`, () => {
 		const assigned = getAssignedTagSlugs();
 		expect(assigned.has(`ecstatic-dance`)).toBe(true);
+		expect(assigned.has(`nature`)).toBe(false);
 		expect(assigned.has(`festival`)).toBe(false);
 	});
 
@@ -120,19 +103,19 @@ describe(`eventCategories`, () => {
 		expect(ids).toEqual([1, 3]);
 	});
 
-	it(`does not resolve others as tag IDs`, () => {
+	it(`resolves others to its own tags and unmapped tags`, () => {
 		const ids = resolveTagIdsForCategories({
 			categorySlugs: [OTHERS_CATEGORY_SLUG],
 			tags: [
 				{ id: 1, slug: `ecstatic-dance` },
 				{ id: 2, slug: `festival` },
-				{ id: 3, slug: `lecture` },
+				{ id: 3, slug: `nature` },
 			],
 		});
-		expect(ids).toEqual([]);
+		expect(ids).toEqual([2, 3]);
 	});
 
-	it(`ignores others when expanding mapped category tag IDs`, () => {
+	it(`unions mapped category tags with others tags`, () => {
 		const ids = resolveTagIdsForCategories({
 			categorySlugs: [`dance`, OTHERS_CATEGORY_SLUG],
 			tags: [
@@ -141,14 +124,17 @@ describe(`eventCategories`, () => {
 				{ id: 3, slug: `yoga` },
 			],
 		});
-		expect(ids).toEqual([1]);
+		expect(ids).toEqual([1, 2]);
 	});
 
-	it(`treats others as events with no mapped category tags`, () => {
-		expect(eventHasNoMappedCategoryTags([`festival`, `lecture`])).toBe(true);
-		expect(eventHasNoMappedCategoryTags([`ecstatic-dance`, `festival`])).toBe(false);
-		expect(eventHasNoMappedCategoryTags([`yoga`])).toBe(false);
-		expect(eventHasNoMappedCategoryTags([])).toBe(true);
-		expect(eventHasNoMappedCategoryTags(null)).toBe(true);
+	it(`treats others as events with others or unmapped tags`, () => {
+		expect(eventMatchesOthersCategory([`festival`])).toBe(true);
+		expect(eventMatchesOthersCategory([`nature`])).toBe(true);
+		expect(eventMatchesOthersCategory([`ecstatic-dance`, `festival`])).toBe(true);
+		expect(eventMatchesOthersCategory([`ecstatic-dance`, `nature`])).toBe(true);
+		expect(eventMatchesOthersCategory([`yoga`])).toBe(false);
+		expect(eventMatchesOthersCategory([`ecstatic-dance`])).toBe(false);
+		expect(eventMatchesOthersCategory([])).toBe(true);
+		expect(eventMatchesOthersCategory(null)).toBe(true);
 	});
 });

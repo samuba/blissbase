@@ -141,6 +141,22 @@ export const eventCategories: EventCategory[] = [
 				slug: `yogadanza`,
 				get label() { /* @wc-include */ return `Yogadanza`; }
 			},
+			{
+				slug: `balfolk`,
+				get label() { /* @wc-include */ return `Balfolk`; }
+			},
+			{
+				slug: `latin-dance`,
+				get label() { /* @wc-include */ return `Latin Dance`; }
+			},
+			{
+				slug: `systemic-dance`,
+				get label() { /* @wc-include */ return `Systemischer Tanz`; }
+			},
+			{
+				slug: `haka`,
+				get label() { /* @wc-include */ return `Haka`; }
+			},
 		],
 	},
 	{
@@ -266,6 +282,10 @@ export const eventCategories: EventCategory[] = [
 				get label() { /* @wc-include */ return `Bewusste Berührung`; }
 			},
 			{
+				slug: `cuddle`,
+				get label() { /* @wc-include */ return `Kuscheln`; }
+			},
+			{
 				slug: `intimacy-practice`,
 				get label() { /* @wc-include */ return `Intimitätspraxis`; }
 			},
@@ -351,6 +371,10 @@ export const eventCategories: EventCategory[] = [
 				slug: `contemplative-practice`,
 				get label() { /* @wc-include */ return `Kontemplative Praxis`; }
 			},
+			{
+				slug: `silence`,
+				get label() { /* @wc-include */ return `Stille`; }
+			},
 		],
 	},
 	{
@@ -397,17 +421,14 @@ export const eventCategories: EventCategory[] = [
 				slug: `mobility`,
 				get label() { /* @wc-include */ return `Mobilität`; }
 			},
-			{
-				slug: `mobility-functional-movement`,
-				get label() { /* @wc-include */ return `Mobilität / Funktionale Bewegung`; }
-			},
-			{
-				slug: `acro-partner-movement`,
-				get label() { /* @wc-include */ return `Acro- und Partnerbewegung`; }
-			},
+
 			{
 				slug: `feldenkrais`,
 				get label() { /* @wc-include */ return `Feldenkrais`; }
+			},
+			{
+				slug: `hiking`,
+				get label() { /* @wc-include */ return `Wandern`; }
 			},
 		],
 	},
@@ -449,7 +470,7 @@ export const eventCategories: EventCategory[] = [
 			},
 			{
 				slug: `handson-energy-healing`,
-				get label() { /* @wc-include */ return `Hands-on-Energieheilung`; }
+				get label() { /* @wc-include */ return `Handauflegen`; }
 			},
 			{
 				slug: `light-language`,
@@ -480,7 +501,7 @@ export const eventCategories: EventCategory[] = [
 			{
 				slug: `singing-bowls`,
 				get label() { /* @wc-include */ return `Klangschalen`; }
-			}
+			},
 		],
 	},
 	{
@@ -639,6 +660,26 @@ export const eventCategories: EventCategory[] = [
 				slug: `alexander-technique`,
 				get label() { /* @wc-include */ return `Alexander-Technik`; }
 			},
+			{
+				slug: `fasting`,
+				get label() { /* @wc-include */ return `Fasten`; }
+			},
+			{
+				slug: `forest-bathing`,
+				get label() { /* @wc-include */ return `Waldbaden`; }
+			},
+			{
+				slug: `herbalism`,
+				get label() { /* @wc-include */ return `Kräuterkunde`; }
+			},
+			{
+				slug: `herbs`,
+				get label() { /* @wc-include */ return `Kräuter`; }
+			},
+			{
+				slug: `foraging`,
+				get label() { /* @wc-include */ return `Wildkräutersammeln`; }
+			},
 		],
 	},
 	{
@@ -773,11 +814,11 @@ export const eventCategories: EventCategory[] = [
 	},
 	{
 		slug: `relationship`,
-		get label() { return /* @wc-include */ `Beziehungen`; },
+		get label() { return /* @wc-include */ `Beziehung`; },
 		tags: [
 			{
-				slug: `relationships`,
-				get label() { /* @wc-include */ return `Beziehungen`; }
+				slug: `relationship`,
+				get label() { /* @wc-include */ return `Beziehung`; }
 			},
 			{
 				slug: `authentic-relating`,
@@ -916,8 +957,8 @@ export const eventCategories: EventCategory[] = [
 				get label() { /* @wc-include */ return `Verbindungspraxis`; }
 			},
 			{
-				slug: `cuddle-conscious-touch`,
-				get label() { /* @wc-include */ return `Kuscheln / Bewusste Berührung`; }
+				slug: `conscious-touch`,
+				get label() { /* @wc-include */ return `Bewusste Berührung`; }
 			},
 			{
 				slug: `cuddle`,
@@ -930,6 +971,10 @@ export const eventCategories: EventCategory[] = [
 			{
 				slug: `selflove`,
 				get label() { /* @wc-include */ return `Selbstliebe`; }
+			},
+			{
+				slug: `gathering`,
+				get label() { /* @wc-include */ return `Gathering`; }
 			},
 		],
 	},
@@ -1184,6 +1229,22 @@ export const eventCategories: EventCategory[] = [
 			{
 				slug: `past-life-regression`,
 				get label() { /* @wc-include */ return `Rückführung in frühere Leben`; }
+			},
+			{
+				slug: `theatre`,
+				get label() { /* @wc-include */ return `Theater`; }
+			},
+			{
+				slug: `storytelling`,
+				get label() { /* @wc-include */ return `Storytelling`; }
+			},
+			{
+				slug: `poetry`,
+				get label() { /* @wc-include */ return `Poesie`; }
+			},
+			{
+				slug: `lecture`,
+				get label() { /* @wc-include */ return `Vortrag`; }
 			},
 		],
 	},
@@ -1494,14 +1555,6 @@ export const eventCategories: EventCategory[] = [
 				get label() { /* @wc-include */ return `Medizinwanderung`; }
 			},
 			{
-				slug: `solstice`,
-				get label() { /* @wc-include */ return `Sonnenwende`; }
-			},
-			{
-				slug: `equinox`,
-				get label() { /* @wc-include */ return `Tagundnachtgleiche`; }
-			},
-			{
 				slug: `firewalk`,
 				get label() { /* @wc-include */ return `Feuerlauf`; }
 			},
@@ -1557,12 +1610,41 @@ export const eventCategories: EventCategory[] = [
 				slug: `womb-ritual`,
 				get label() { /* @wc-include */ return `Womb-Ritual`; }
 			},
+			{
+				slug: `equinoxsolstice`,
+				get label() { /* @wc-include */ return `Tagundnachtgleiche/Sonnenwende`; }
+			},
 		],
 	},
 	{
 		slug: OTHERS_CATEGORY_SLUG,
 		get label() { return /* @wc-include */ `Sonstiges`; },
-		tags: [],
+		tags: [
+			{
+				slug: `nature`,
+				get label() { /* @wc-include */ return `Natur`; }
+			},
+			{
+				slug: `fair`,
+				get label() { /* @wc-include */ return `Messe`; }
+			},
+			{
+				slug: `film`,
+				get label() { /* @wc-include */ return `Film`; }
+			},
+			{
+				slug: `cabaret`,
+				get label() { /* @wc-include */ return `Kabarett`; }
+			},
+			{
+				slug: `selfsufficient-living`,
+				get label() { /* @wc-include */ return `Autarkes Leben`; }
+			},
+			{
+				slug: `animals`,
+				get label() { /* @wc-include */ return `Tiere`; }
+			},
+		],
 	},
 ];
 
@@ -1577,10 +1659,10 @@ export function getAssignedTagSlugs() {
 	return slugs;
 }
 
-export function eventHasNoMappedCategoryTags(tags?: string[] | null) {
+export function eventMatchesOthersCategory(tags?: string[] | null) {
 	if (!tags?.length) return true;
 	const assigned = getAssignedTagSlugs();
-	return !tags.some((slug) => assigned.has(slug));
+	return tags.some((slug) => !assigned.has(slug));
 }
 
 export function resolveTagIdsForCategories(args: {
@@ -1589,6 +1671,8 @@ export function resolveTagIdsForCategories(args: {
 }) {
 	if (!args.categorySlugs?.length) return [];
 
+	const includeOthers = args.categorySlugs.includes(OTHERS_CATEGORY_SLUG);
+	const assigned = includeOthers ? getAssignedTagSlugs() : null;
 	const mappedSlugs = new Set<string>();
 	for (const categorySlug of args.categorySlugs) {
 		if (categorySlug === OTHERS_CATEGORY_SLUG) continue;
@@ -1599,7 +1683,11 @@ export function resolveTagIdsForCategories(args: {
 
 	const ids: number[] = [];
 	for (const tag of args.tags) {
-		if (mappedSlugs.has(tag.slug)) ids.push(tag.id);
+		if (mappedSlugs.has(tag.slug)) {
+			ids.push(tag.id);
+			continue;
+		}
+		if (includeOthers && assigned && !assigned.has(tag.slug)) ids.push(tag.id);
 	}
 	return ids;
 }

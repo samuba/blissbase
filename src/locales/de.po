@@ -2383,11 +2383,6 @@ msgstr "Tantra"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
-msgid "Beziehungen"
-msgstr "Beziehungen"
-
-#: src/lib/eventCategories.ts
-#: src/lib/eventCategories.ts
 msgid "Persönliche Entwicklung"
 msgstr "Persönliche Entwicklung"
 
@@ -2633,6 +2628,7 @@ msgid "Sexuelles Embodiment"
 msgstr "Sexuelles Embodiment"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Bewusste Berührung"
 msgstr "Bewusste Berührung"
 
@@ -2739,10 +2735,6 @@ msgid "Mobilität"
 msgstr "Mobilität"
 
 #: src/lib/eventCategories.ts
-msgid "Mobilität / Funktionale Bewegung"
-msgstr "Mobilität / Funktionale Bewegung"
-
-#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Feldenkrais"
 msgstr "Feldenkrais"
@@ -2823,6 +2815,7 @@ msgstr "Haptonomie"
 msgid "Berührung"
 msgstr "Berührung"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Kuscheln"
@@ -3141,10 +3134,6 @@ msgstr "Konfliktklärung"
 #: src/lib/eventCategories.ts
 msgid "Verbindungspraxis"
 msgstr "Verbindungspraxis"
-
-#: src/lib/eventCategories.ts
-msgid "Kuscheln / Bewusste Berührung"
-msgstr "Kuscheln / Bewusste Berührung"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
@@ -3690,20 +3679,12 @@ msgid "Atemanhalten"
 msgstr "Atemanhalten"
 
 #: src/lib/eventCategories.ts
-msgid "Acro- und Partnerbewegung"
-msgstr "Acro- und Partnerbewegung"
-
-#: src/lib/eventCategories.ts
 msgid "Prana-Heilung"
 msgstr "Prana-Heilung"
 
 #: src/lib/eventCategories.ts
 msgid "Biofeldheilung"
 msgstr "Biofeldheilung"
-
-#: src/lib/eventCategories.ts
-msgid "Hands-on-Energieheilung"
-msgstr "Hands-on-Energieheilung"
 
 #: src/lib/eventCategories.ts
 msgid "Traumaauflösung"
@@ -3778,9 +3759,102 @@ msgid "Achtsames Dating"
 msgstr "Achtsames Dating"
 
 #: src/lib/eventCategories.ts
-msgid "Sonnenwende"
-msgstr "Sonnenwende"
+msgid "Balfolk"
+msgstr "Balfolk"
 
 #: src/lib/eventCategories.ts
-msgid "Tagundnachtgleiche"
-msgstr "Tagundnachtgleiche"
+msgid "Latin Dance"
+msgstr "Latin Dance"
+
+#: src/lib/eventCategories.ts
+msgid "Systemischer Tanz"
+msgstr "Systemischer Tanz"
+
+#: src/lib/eventCategories.ts
+msgid "Haka"
+msgstr "Haka"
+
+#: src/lib/eventCategories.ts
+msgid "Wandern"
+msgstr "Wandern"
+
+#: src/lib/eventCategories.ts
+msgid "Fasten"
+msgstr "Fasten"
+
+#: src/lib/eventCategories.ts
+msgid "Waldbaden"
+msgstr "Waldbaden"
+
+#: src/lib/eventCategories.ts
+msgid "Kräuterkunde"
+msgstr "Kräuterkunde"
+
+#: src/lib/eventCategories.ts
+msgid "Kräuter"
+msgstr "Kräuter"
+
+#: src/lib/eventCategories.ts
+msgid "Wildkräutersammeln"
+msgstr "Wildkräutersammeln"
+
+#: src/lib/eventCategories.ts
+msgid "Theater"
+msgstr "Theater"
+
+#: src/lib/eventCategories.ts
+msgid "Storytelling"
+msgstr "Storytelling"
+
+#: src/lib/eventCategories.ts
+msgid "Poesie"
+msgstr "Poesie"
+
+#: src/lib/eventCategories.ts
+msgid "Tagundnachtgleiche/Sonnenwende"
+msgstr "Tagundnachtgleiche/Sonnenwende"
+
+#: src/lib/eventCategories.ts
+msgid "Gathering"
+msgstr "Gathering"
+
+#: src/lib/eventCategories.ts
+msgid "Natur"
+msgstr "Natur"
+
+#: src/lib/eventCategories.ts
+msgid "Vortrag"
+msgstr "Vortrag"
+
+#: src/lib/eventCategories.ts
+msgid "Messe"
+msgstr "Messe"
+
+#: src/lib/eventCategories.ts
+msgid "Film"
+msgstr "Film"
+
+#: src/lib/eventCategories.ts
+msgid "Kabarett"
+msgstr "Kabarett"
+
+#: src/lib/eventCategories.ts
+msgid "Autarkes Leben"
+msgstr "Autarkes Leben"
+
+#: src/lib/eventCategories.ts
+msgid "Tiere"
+msgstr "Tiere"
+
+#: src/lib/eventCategories.ts
+msgid "Stille"
+msgstr "Stille"
+
+#: src/lib/eventCategories.ts
+msgid "Handauflegen"
+msgstr "Handauflegen"
+
+#: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
+msgid "Beziehung"
+msgstr "Beziehung"
