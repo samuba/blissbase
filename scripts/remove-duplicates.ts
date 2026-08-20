@@ -133,11 +133,6 @@ async function mergeEvents(args: {
         });
         console.log(`Deleting event ${eventToDelete.id} cuz the other has superior website source`);
         await db.transaction(async (tx) => {
-            await mergeEventTags({
-                tx,
-                survivingEventId: eventToSurvive.id,
-                deletedEventId: eventToDelete.id
-            });
             await tx.update(s.events).set(survivingEventUpdate).where(eq(s.events.id, eventToSurvive.id));
             await tx.delete(s.events).where(eq(s.events.id, eventToDelete.id));
         });
@@ -188,6 +183,7 @@ async function mergeAndDeleteDuplicateEvents(args: {
     }
     // merge array properties
     eventToSurvive.tags = mergeArrayDeduplicated(eventToSurvive.tags, eventToDelete.tags)
+    eventToSurvive.tagSlugs = mergeArrayDeduplicated(eventToSurvive.tagSlugs, eventToDelete.tagSlugs)
     eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsTelegram, eventToDelete.sourceChatIdsTelegram)
     eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsWhatsapp, eventToDelete.sourceChatIdsWhatsapp)
     if (eventToDelete.imageUrls?.length) {
@@ -213,11 +209,6 @@ async function mergeAndDeleteDuplicateEvents(args: {
     console.log("Surviving event after merging:", eventToSurvive);
     const { id: _id, ...eventToSurviveWithoutId } = eventToSurvive;
     await db.transaction(async (tx) => {
-        await mergeEventTags({
-            tx,
-            survivingEventId: eventToSurvive.id,
-            deletedEventId: eventToDelete.id
-        });
         await tx.update(s.events).set(eventToSurviveWithoutId).where(eq(s.events.id, eventToSurvive.id));
         console.log(`Deleting ${eventToDelete.slug} (${eventToDelete.id})`);
         await tx.delete(s.events).where(eq(s.events.id, eventToDelete.id));
@@ -274,38 +265,6 @@ export function getMergedSourceUrl(args: {
     const survivingSourceUrl = normalizeSourceUrl(args.survivingSourceUrl);
     if (survivingSourceUrl) return survivingSourceUrl;
     return normalizeSourceUrl(args.deletedSourceUrl);
-}
-
-/**
- * Moves all tag relations from the deleted event onto the surviving event.
- *
- * @example
- * await mergeEventTags({ tx, survivingEventId: 1, deletedEventId: 2 });
- */
-async function mergeEventTags(args: {
-    tx: DbTx,
-    survivingEventId: number,
-    deletedEventId: number,
-}) {
-    const mergedTagRows = await args.tx
-        .select({ tagId: s.eventTags.tagId })
-        .from(s.eventTags)
-        .where(inArray(s.eventTags.eventId, [args.survivingEventId, args.deletedEventId]));
-
-    const mergedTagIds = Array.from(new Set(mergedTagRows.map((row) => row.tagId)));
-    await args.tx
-        .delete(s.eventTags)
-        .where(inArray(s.eventTags.eventId, [args.survivingEventId, args.deletedEventId]));
-
-    if (!mergedTagIds.length) return;
-
-    await args.tx
-        .insert(s.eventTags)
-        .values(mergedTagIds.map((tagId) => ({
-            eventId: args.survivingEventId,
-            tagId,
-        })))
-        .onConflictDoNothing();
 }
 
 /**
@@ -398,8 +357,6 @@ async function getDuplicateEventsByTextSimilarity(descriptionSimilarityThreshold
     }));
 }
 
-type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
 /**
  * Processes duplicate pairs against a live in-memory event map so later pairs
  * cannot accidentally reuse rows that were already deleted in an earlier merge.
@@ -457,12 +414,13 @@ export function mergeArrayDeduplicated(arrayA: string[] | null, arrayB: string[]
  *
  * @example
  * preparePreferredSourceEventUpdate({
- *   eventToSurvive: { tags: [`music`], sourceChatIdsTelegram: null, sourceChatIdsWhatsapp: null },
- *   eventToDelete: { tags: [`workshop`], sourceChatIdsTelegram: [`room1`], sourceChatIdsWhatsapp: null },
+ *   eventToSurvive: { tags: [`music`], tagSlugs: [`yoga`], sourceChatIdsTelegram: null, sourceChatIdsWhatsapp: null },
+ *   eventToDelete: { tags: [`workshop`], tagSlugs: [`meditation`], sourceChatIdsTelegram: [`room1`], sourceChatIdsWhatsapp: null },
  * });
  */
 export function preparePreferredSourceEventUpdate<TEvent extends {
     tags: string[] | null
+    tagSlugs: string[] | null
     sourceChatIdsTelegram: string[] | null
     sourceChatIdsWhatsapp: string[] | null
 }>(args: {
@@ -470,6 +428,7 @@ export function preparePreferredSourceEventUpdate<TEvent extends {
     eventToDelete: TEvent,
 }) {
     args.eventToSurvive.tags = mergeArrayDeduplicated(args.eventToSurvive.tags, args.eventToDelete.tags);
+    args.eventToSurvive.tagSlugs = mergeArrayDeduplicated(args.eventToSurvive.tagSlugs, args.eventToDelete.tagSlugs);
     args.eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(
         args.eventToSurvive.sourceChatIdsTelegram,
         args.eventToDelete.sourceChatIdsTelegram,
@@ -481,6 +440,7 @@ export function preparePreferredSourceEventUpdate<TEvent extends {
 
     return {
         tags: args.eventToSurvive.tags,
+        tagSlugs: args.eventToSurvive.tagSlugs,
         sourceChatIdsTelegram: args.eventToSurvive.sourceChatIdsTelegram,
         sourceChatIdsWhatsapp: args.eventToSurvive.sourceChatIdsWhatsapp,
     };

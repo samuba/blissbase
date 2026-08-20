@@ -21,7 +21,6 @@ type PaginationState = {
     searchTerm?: string | null;
     sortBy?: string | null;
     sortOrder?: string | null;
-    tagIds?: number[] | null;
     categorySlugs?: string[] | null;
     attendanceMode?: AttendanceMode | null;
     source?: string | null;
@@ -65,11 +64,10 @@ export class EventsStore {
     hasDateFilter = $derived(this.pagination.startDate || this.pagination.endDate);
     hasLocationFilter = $derived(Boolean(this.pagination.plzCity || (this.pagination.lat != null && this.pagination.lng != null)));
     hasSortFilter = $derived(this.pagination.sortBy !== 'time' || this.pagination.sortOrder !== 'asc');
-    hasTagFilter = $derived(Boolean(this.pagination.tagIds?.length));
     hasCategoryFilter = $derived(Boolean(this.pagination.categorySlugs?.length));
     hasAttendanceModeFilter = $derived(this.pagination.attendanceMode);
     sortFilter = $derived({ sortBy: this.pagination.sortBy, sortOrder: this.pagination.sortOrder });
-    hasAnyFilter = $derived(Boolean(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasTagFilter || this.hasCategoryFilter || this.hasAttendanceModeFilter));
+    hasAnyFilter = $derived(Boolean(this.hasDateFilter || this.hasLocationFilter || this.hasSearchFilter || this.hasSortFilter || this.hasCategoryFilter || this.hasAttendanceModeFilter));
     hasFilterBehindButton = $derived(this.hasDateFilter || this.hasAttendanceModeFilter || this.sortFilter.sortBy !== 'time');
     searchFilter = $derived(this.pagination.searchTerm?.trim());
     dateFilter = $derived({ start: this.pagination.startDate, end: this.pagination.endDate });
@@ -113,7 +111,6 @@ export class EventsStore {
                     searchTerm: params.searchTerm ?? null,
                     sortBy: params.sortBy ?? null,
                     sortOrder: params.sortOrder ?? null,
-                    tagIds: params.tagIds ?? null,
                     categorySlugs: params.categorySlugs ?? null,
                     attendanceMode: params.attendanceMode ?? null,
                     source: params.source ?? null,
@@ -164,7 +161,6 @@ export class EventsStore {
                 searchTerm: this.pagination.searchTerm,
                 sortBy: this.pagination.sortBy,
                 sortOrder: this.pagination.sortOrder,
-                tagIds: this.pagination.tagIds,
                 categorySlugs: this.pagination.categorySlugs,
                 attendanceMode: this.pagination.attendanceMode,
                 source: this.pagination.source,
@@ -219,7 +215,6 @@ export class EventsStore {
     handleSearchTermChange(value: string) {
         this.loadEvents({
             ...this.pagination,
-            tagIds: null,
             categorySlugs: value.trim() ? null : this.pagination.categorySlugs,
             searchTerm: value,
             page: 1,
@@ -231,7 +226,6 @@ export class EventsStore {
             ...this.pagination,
             categorySlugs: categorySlugs.length ? categorySlugs : null,
             searchTerm: null,
-            tagIds: null,
             page: 1,
         });
     }

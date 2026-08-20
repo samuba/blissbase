@@ -65,12 +65,14 @@ describe(`preparePreferredSourceEventUpdate`, () => {
         const eventToSurvive = {
             id: 2,
             tags: [`music`],
+            tagSlugs: [`yoga`],
             sourceChatIdsTelegram: [`room1`],
             sourceChatIdsWhatsapp: null as string[] | null,
         };
         const eventToDelete = {
             id: 1,
             tags: [`workshop`, `music`],
+            tagSlugs: [`meditation`, `yoga`],
             sourceChatIdsTelegram: [`room2`],
             sourceChatIdsWhatsapp: [`120363@g.us`],
         };
@@ -82,10 +84,12 @@ describe(`preparePreferredSourceEventUpdate`, () => {
 
         expect(update).toEqual({
             tags: [`music`, `workshop`],
+            tagSlugs: [`yoga`, `meditation`],
             sourceChatIdsTelegram: [`room1`, `room2`],
             sourceChatIdsWhatsapp: [`120363@g.us`],
         });
         expect(eventToSurvive.tags).toEqual([`music`, `workshop`]);
+        expect(eventToSurvive.tagSlugs).toEqual([`yoga`, `meditation`]);
         expect(eventToSurvive.sourceChatIdsTelegram).toEqual([`room1`, `room2`]);
         expect(eventToSurvive.sourceChatIdsWhatsapp).toEqual([`120363@g.us`]);
     });

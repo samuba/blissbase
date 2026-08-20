@@ -124,6 +124,16 @@ describe(`event schemas`, () => {
 
 		expect(result.success).toBe(true);
 	});
+
+	it(`keeps known tag slugs and drops unknown ones`, () => {
+		const result = v.safeParse(createEventSchema, createEventPayload({
+			tagSlugs: [`yoga`, `not-a-real-tag`, `meditation`]
+		}));
+
+		expect(result.success).toBe(true);
+		if (!result.success) return;
+		expect(result.output.tagSlugs).toEqual([`yoga`, `meditation`]);
+	});
 });
 
 describe(`eventPlaceLabel`, () => {
@@ -165,7 +175,7 @@ function createEventPayload(overrides: Partial<CreateEventPayload> = {}): Create
 	return {
 		name: `Test Event`,
 		description: `Test Beschreibung`,
-		tagIds: [`1`],
+		tagSlugs: [`yoga`],
 		price: `10 EUR`,
 		address: `Musterstraße 1, Berlin`,
 		addressNote: `3. Stock`,
@@ -186,7 +196,7 @@ function createEventPayload(overrides: Partial<CreateEventPayload> = {}): Create
 type CreateEventPayload = {
 	name: string;
 	description: string;
-	tagIds: string[];
+	tagSlugs: string[];
 	price?: string;
 	address?: string;
 	addressNote?: string;

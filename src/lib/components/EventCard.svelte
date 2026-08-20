@@ -7,6 +7,7 @@
 	import { now } from "$lib/now.svelte";
 	import { localeStore } from "../../locales/localeStore.svelte";
 	import { showEventDetailsDialog } from "../../routes/EventDetailsDialog.svelte";
+	import { labelsForTagSlugs } from "$lib/eventCategories";
 
 	const {
 		event,
@@ -33,11 +34,11 @@
 
 	const tags = $derived.by(() => {
 		const tags = new Set<string>();
-		event.tags2?.filter((x) => x.locale === localeStore.locale)?.forEach((x) => tags.add(x.name));
 		event.tags?.forEach((x) => {
 			if (x[localeStore.locale]) tags.add(x[localeStore.locale]);
 			else tags.add(x);
 		});
+		labelsForTagSlugs(event.tagSlugs).forEach((label) => tags.add(label));
 		return Array.from(tags);
 	});
 

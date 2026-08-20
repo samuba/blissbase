@@ -33,7 +33,6 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         params.searchTerm !== savedFilters.searchTerm ||
         params.sortBy !== savedFilters.sortBy ||
         params.sortOrder !== savedFilters.sortOrder ||
-        JSON.stringify(params.tagIds) !== JSON.stringify(savedFilters.tagIds) ||
         JSON.stringify(params.categorySlugs) !== JSON.stringify(savedFilters.categorySlugs) ||
         params.attendanceMode !== savedFilters.attendanceMode ||
         source !== (savedFilters.source ?? null)
@@ -56,7 +55,6 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
         searchTerm: result.pagination.searchTerm,
         sortBy: result.pagination.sortBy,
         sortOrder: result.pagination.sortOrder,
-        tagIds: result.pagination.tagIds,
         categorySlugs: result.pagination.categorySlugs,
         attendanceMode: result.pagination.attendanceMode,
         source: result.pagination.source
@@ -75,7 +73,6 @@ export const fetchEventsWithCookiePersistence = command(loadEventsParamsSchema, 
             searchTerm: params.searchTerm,
             sortBy: params.sortBy,
             sortOrder: params.sortOrder,
-            tagIds: params.tagIds,
             categorySlugs: params.categorySlugs,
             attendanceMode: params.attendanceMode,
             source: locals.isAdminSession ? source : (savedFilters?.source ?? null),

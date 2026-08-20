@@ -62,7 +62,7 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		.onConflictDoUpdate({
 			target: s.events.slug,
 			set: {
-				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`]),
+				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`, `tagSlugs`]),
 				source: sql`
 					case
 						when ${s.events.source} = ${FORM_CREATED_EVENT_SOURCE} then ${s.events.source}
@@ -87,6 +87,13 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 						when excluded.source_url is not null then excluded.source_url
 						when ${s.events.sourceUrl} is not null and ${s.events.sourceUrl} ~* ${sql.raw(`'${BLISSBASE_HOST_PATTERN}'`)} then null
 						else excluded.source_url
+					end
+				`,
+				// Keep existing catalog tags; fill them from the incoming row when the event is still untagged.
+				tagSlugs: sql`
+					case
+						when coalesce(cardinality(${s.events.tagSlugs}), 0) > 0 then ${s.events.tagSlugs}
+						else coalesce(excluded.tag_slugs, ARRAY[]::text[])
 					end
 				`,
 				// Preserve existing legacy tags when a scrape has no tags, otherwise merge both sides.

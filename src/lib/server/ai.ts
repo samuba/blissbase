@@ -1,7 +1,10 @@
 import { generateText, jsonSchema, NoObjectGeneratedError, NoOutputGeneratedError, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { allTags } from './tags';
+import { allTagSlugs, knownTagSlugs } from '../eventCategories';
 import { WEBSITE_SCRAPE_SOURCE_URLS } from '../commonWithScripts';
+import { stripHtml, trimAllWhitespaces } from '../common';
+
+const TAG_SLUGS_AI_DESCRIPTION = `Maximum 4 Tags (most relevant first) that describe the event. Only use these exact catalog tags: ${Array.from(allTagSlugs).join(`, `)}.`;
 
 /**
  * Extracts structured event fields from free text (same pipeline as the Telegram bot).
@@ -399,7 +402,7 @@ function buildMsgAnalysisSchema(timezone: string) {
 			tags: {
 				type: [`array`, `null`],
 				items: { type: `string` },
-				description: `Maximum 3 Tags (most relevant first) that describe the event. Prefer tags from this list; only use a tag not on the list if you think it is really necessary: ${allTags.map((x) => x.en).join(`, `)}.`
+				description: TAG_SLUGS_AI_DESCRIPTION
 			},
 			isConscious: {
 				type: [`boolean`, `null`],
@@ -426,6 +429,62 @@ function buildMsgAnalysisSchema(timezone: string) {
 		],
 		additionalProperties: false
 	});
+}
+
+/**
+ * Suggests catalog tag slugs from an event title and description.
+ * @example
+ * aiSuggestTagSlugs({ name: `Ecstatic Dance Berlin`, description: `<p>Barefoot dance</p>` })
+ */
+export async function aiSuggestTagSlugs({
+	name,
+	description,
+}: {
+	name: string;
+	description?: string | null;
+}): Promise<string[]> {
+	const descriptionText = trimAllWhitespaces(stripHtml(description ?? ``)) ?? ``;
+	const userMessage = descriptionText
+		? `Title: ${name}\n\nDescription: ${descriptionText}`
+		: `Title: ${name}`;
+
+	try {
+		const { output } = await generateText({
+			model: openai(`gpt-5.6-luna`),
+			output: Output.object({
+				name: `eventTagSlugs`,
+				schema: jsonSchema<{ tags: string[] }>({
+					type: `object`,
+					properties: {
+						tags: {
+							type: `array`,
+							items: { type: `string` },
+							description: TAG_SLUGS_AI_DESCRIPTION,
+						},
+					},
+					required: [`tags`],
+					additionalProperties: false,
+				}),
+			}),
+			instructions: `You assign catalog tags to an event from its title and description.
+Do not explain anything.
+Never make up information that is not in the title or description.
+${TAG_SLUGS_AI_DESCRIPTION}`,
+			messages: [
+				{
+					role: `user`,
+					content: userMessage,
+				},
+			],
+		});
+
+		console.log(`[ai] Tag slugs generated for "${name}":`, output.tags);
+		return knownTagSlugs(output.tags);
+	} catch (error) {
+		if (!isNoGeneratedEventOutputError(error)) throw error;
+		console.warn(`[ai] No tag slugs generated for "${name}"`);
+		return [];
+	}
 }
 
 /**

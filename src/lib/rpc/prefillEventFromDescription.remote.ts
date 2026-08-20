@@ -64,6 +64,6 @@ export const prefillEventFromDescription = command(prefillSchema, async ({ text,
 		imageInputs,
 		eventIsDefinitelyConscious: true
 	});
-	const fields = await mapAiAnswerToCreateEventPrefill(analysis);
+	const fields = mapAiAnswerToCreateEventPrefill(analysis);
 	return { kind: `ok` as const, fields };
 });

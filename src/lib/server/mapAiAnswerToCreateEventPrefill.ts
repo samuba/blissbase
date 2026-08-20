@@ -1,17 +1,17 @@
 import { inferContactMethod } from '$lib/events.remote.common';
+import { knownTagSlugs } from '$lib/eventCategories';
 import type { MsgAnalysisAnswer } from './ai';
-import { db } from '$lib/server/db';
 
 /**
  * Maps AI extraction output to values for the website create-event form (plus ISO dates for client-side local formatting).
  *
  * @example
- * await mapAiAnswerToCreateEventPrefill({ hasEventData: true, contact: [], tags: [], name: `Yoga` });
+ * mapAiAnswerToCreateEventPrefill({ hasEventData: true, contact: [], tags: [], name: `Yoga` });
  */
-export async function mapAiAnswerToCreateEventPrefill(
+export function mapAiAnswerToCreateEventPrefill(
 	analysis: MsgAnalysisAnswer
-): Promise<CreateEventPrefillFields> {
-	const tagIds = await resolveTagIdsFromAiNames(analysis.tags ?? []);
+): CreateEventPrefillFields {
+	const tagSlugs = knownTagSlugs(analysis.tags);
 
 	let addressLines: string[] = [];
 	if (analysis.address) {
@@ -46,7 +46,7 @@ export async function mapAiAnswerToCreateEventPrefill(
 	return {
 		name: (analysis.name ?? ``).trim(),
 		description,
-		tagIds,
+		tagSlugs,
 		price: (analysis.price ?? ``).trim(),
 		address: addressLines.join(`, `),
 		startAtIso: analysis.startDate ? parseIsoToValid(analysis.startDate) : null,
@@ -57,42 +57,6 @@ export async function mapAiAnswerToCreateEventPrefill(
 		isNotListed: false,
 		...(notice ? { notice, ...(existingSource ? { existingSource } : {}) } : {})
 	};
-}
-
-/**
- * Resolves AI tag labels (English) to tag id strings for the form.
- *
- * @example
- * await resolveTagIdsFromAiNames([`Yoga`, `Meditation`]);
- */
-async function resolveTagIdsFromAiNames(names: string[]): Promise<string[]> {
-	if (!names?.length) return [];
-
-	const rows = await db.query.tags.findMany({
-		columns: { id: true, slug: true },
-		with: { translations: true }
-	});
-
-	const labelToId = new Map<string, number>();
-	for (const row of rows) {
-		labelToId.set(row.slug.trim().toLowerCase(), row.id);
-		for (const translation of row.translations) {
-			if (!translation.name) continue;
-			labelToId.set(translation.name.trim().toLowerCase(), row.id);
-		}
-	}
-
-	const ids: string[] = [];
-	const seen = new Set<number>();
-	for (const name of names) {
-		const id = labelToId.get(name.trim().toLowerCase());
-		if (id === undefined) continue;
-		if (seen.has(id)) continue;
-		seen.add(id);
-		ids.push(String(id));
-	}
-
-	return ids;
 }
 
 function pickPrimaryContact(analysis: MsgAnalysisAnswer): string {
@@ -121,7 +85,7 @@ function parseIsoToValid(iso: string): string | null {
 export type CreateEventPrefillFields = {
 	name: string;
 	description: string;
-	tagIds: string[];
+	tagSlugs: string[];
 	price: string;
 	address: string;
 	startAtIso: string | null;

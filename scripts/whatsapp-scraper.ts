@@ -15,6 +15,7 @@ import type { WhatsappScrapingTarget } from "../src/lib/server/schema"
 import * as assets from "../src/lib/assets"
 import { extractVideoFrame } from "./extractVideoFrame"
 import { resolveEventImageUrls } from "./ogImageFallback"
+import { knownTagSlugs } from "../src/lib/eventCategories"
 
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!
 const sqliteObjectKey = `whatsapp.sqlite`
@@ -729,6 +730,7 @@ function mergeDuplicateEvents(events: InsertEvent[]) {
             : existing.description
         const imageUrls = mergeUniqueStrings(existing.imageUrls, event.imageUrls)
         const tags = mergeUniqueStrings(existing.tags, event.tags)
+        const tagSlugs = mergeUniqueStrings(existing.tagSlugs, event.tagSlugs)
         const contact = mergeUniqueStrings(existing.contact, event.contact)
         const sourceChatIdsWhatsapp = mergeUniqueStrings(existing.sourceChatIdsWhatsapp, event.sourceChatIdsWhatsapp)
         const coords = mergeCoords({
@@ -743,6 +745,7 @@ function mergeDuplicateEvents(events: InsertEvent[]) {
             description,
             imageUrls,
             tags,
+            tagSlugs,
             contact,
             sourceChatIdsWhatsapp,
             latitude: coords.latitude,
@@ -775,6 +778,7 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent) {
     merged.slug = existingEvent.slug // never change slug
     merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls)
     merged.tags = mergeUniqueStrings(existingEvent.tags, merged.tags)
+    merged.tagSlugs = mergeUniqueStrings(existingEvent.tagSlugs, merged.tagSlugs)
     merged.contact = mergeUniqueStrings(existingEvent.contact, merged.contact)
     merged.sourceChatIdsWhatsapp = mergeUniqueStrings(existingEvent.sourceChatIdsWhatsapp, merged.sourceChatIdsWhatsapp)
     const coords = mergeCoords({
@@ -988,7 +992,7 @@ async function validateAndBuildEventBase(args: {
         endAt,
         attendanceMode: aiAnswer.attendanceMode,
         address: addressArr,
-        tags: aiAnswer.tags,
+        tagSlugs: knownTagSlugs(aiAnswer.tags),
         latitude,
         longitude,
         price: aiAnswer.price,

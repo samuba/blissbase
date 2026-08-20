@@ -3,8 +3,10 @@ import {
 	eventCategories,
 	eventMatchesOthersCategory,
 	getAssignedTagSlugs,
+	getTagSlugsForCategories,
 	OTHERS_CATEGORY_SLUG,
-	resolveTagIdsForCategories,
+	knownTagSlugs,
+	slugsForTagInput,
 } from './eventCategories';
 
 describe(`eventCategories`, () => {
@@ -30,7 +32,7 @@ describe(`eventCategories`, () => {
 		for (const slug of [`ecstatic-dance`, `free-dance`, `somatic-dance`]) {
 			expect(slugsByCategory.dance.has(slug)).toBe(true);
 		}
-		for (const slug of [`authentic-movement`, `somatic-movement`, `qigong`, `tai-chi`, `mobility`]) {
+		for (const slug of [`authentic-movement`, `somatic-movement`, `qigong`, `tai-chi`, `mobility`, `pilates`, `martial-arts`, `fitness`, `flow-arts`]) {
 			expect(slugsByCategory.movement.has(slug)).toBe(true);
 		}
 		for (const slug of [`conscious-connected-breathwork`, `pranayama`, `breath-circle`]) {
@@ -45,7 +47,7 @@ describe(`eventCategories`, () => {
 		for (const slug of [`sound-healing`, `gong`, `singing-bowls`]) {
 			expect(slugsByCategory[`sound-healing`].has(slug)).toBe(true);
 		}
-		for (const slug of [`voice-activation`, `medicine-music`, `drum-circles`]) {
+		for (const slug of [`voice-activation`, `medicine-music`, `drum-circle`]) {
 			expect(slugsByCategory.music.has(slug)).toBe(true);
 		}
 		for (const slug of [`classical-tantra`, `neotantra`, `temple-arts`]) {
@@ -57,10 +59,10 @@ describe(`eventCategories`, () => {
 		for (const slug of [`mindset`, `parts-work`, `family-constellations`]) {
 			expect(slugsByCategory[`personal-growth`].has(slug)).toBe(true);
 		}
-		for (const slug of [`spiritual-awakening`, `advaita`, `enneagram`, `i-ching`]) {
+		for (const slug of [`spiritual-awakening`, `advaita`, `enneagram`, `i-ching`, `philosophy`, `witchcraft`, `mythology`]) {
 			expect(slugsByCategory.spirituality.has(slug)).toBe(true);
 		}
-		for (const slug of [`temazcal`, `shamanic-journey`, `ancestral-healing`, `full-moon-ceremony`]) {
+		for (const slug of [`temazcal`, `shamanic-journey`, `ancestral-healing`, `full-moon`]) {
 			expect(slugsByCategory.ceremony.has(slug)).toBe(true);
 		}
 	});
@@ -77,54 +79,16 @@ describe(`eventCategories`, () => {
 		expect(assigned.has(`ecstatic-dance`)).toBe(true);
 		expect(assigned.has(`nature`)).toBe(false);
 		expect(assigned.has(`festival`)).toBe(false);
+		expect(assigned.has(`creative-expression`)).toBe(false);
 	});
 
-	it(`expands a category to matching tag IDs`, () => {
-		const ids = resolveTagIdsForCategories({
-			categorySlugs: [`dance`],
-			tags: [
-				{ id: 1, slug: `ecstatic-dance` },
-				{ id: 2, slug: `yoga` },
-				{ id: 3, slug: `contact-improvisation` },
-			],
-		});
-		expect(ids).toEqual([1, 3]);
-	});
-
-	it(`unions tag IDs across selected categories`, () => {
-		const ids = resolveTagIdsForCategories({
-			categorySlugs: [`dance`, `meditation`],
-			tags: [
-				{ id: 1, slug: `ecstatic-dance` },
-				{ id: 2, slug: `yoga` },
-				{ id: 3, slug: `meditation` },
-			],
-		});
-		expect(ids).toEqual([1, 3]);
-	});
-
-	it(`resolves others to its own tags and unmapped tags`, () => {
-		const ids = resolveTagIdsForCategories({
-			categorySlugs: [OTHERS_CATEGORY_SLUG],
-			tags: [
-				{ id: 1, slug: `ecstatic-dance` },
-				{ id: 2, slug: `festival` },
-				{ id: 3, slug: `nature` },
-			],
-		});
-		expect(ids).toEqual([2, 3]);
-	});
-
-	it(`unions mapped category tags with others tags`, () => {
-		const ids = resolveTagIdsForCategories({
-			categorySlugs: [`dance`, OTHERS_CATEGORY_SLUG],
-			tags: [
-				{ id: 1, slug: `ecstatic-dance` },
-				{ id: 2, slug: `festival` },
-				{ id: 3, slug: `yoga` },
-			],
-		});
-		expect(ids).toEqual([1, 2]);
+	it(`expands a category to matching tag slugs`, () => {
+		expect(getTagSlugsForCategories([`dance`])).toEqual(expect.arrayContaining([
+			`ecstatic-dance`,
+			`contact-improvisation`,
+		]));
+		expect(getTagSlugsForCategories([`dance`])).not.toContain(`yoga`);
+		expect(getTagSlugsForCategories([OTHERS_CATEGORY_SLUG])).toEqual([]);
 	});
 
 	it(`treats others as events with others or unmapped tags`, () => {
@@ -136,5 +100,24 @@ describe(`eventCategories`, () => {
 		expect(eventMatchesOthersCategory([`ecstatic-dance`])).toBe(false);
 		expect(eventMatchesOthersCategory([])).toBe(true);
 		expect(eventMatchesOthersCategory(null)).toBe(true);
+	});
+
+	it(`keeps known tag slugs and drops unknown ones`, () => {
+		expect(knownTagSlugs([`yoga`, `not-a-real-tag`, `meditation`, `yoga`])).toEqual([`yoga`, `meditation`]);
+		expect(knownTagSlugs([])).toEqual([]);
+		expect(knownTagSlugs(null)).toEqual([]);
+	});
+
+	it(`resolves synonyms and retired slugs to canonical tags`, () => {
+		const breathwork = eventCategories
+			.find((category) => category.slug === `breathwork`)
+			?.tags.find((tag) => tag.slug === `breathwork`);
+		expect(breathwork?.synonyms).toEqual(expect.arrayContaining([`Atemarbeit`, `Atemtechniken`, `Atemübungen`]));
+		expect(slugsForTagInput(`Atemarbeit`)).toEqual([`breathwork`]);
+		expect(slugsForTagInput(`Hexen`)).toEqual([`witchcraft`]);
+		expect(slugsForTagInput(`Witchcraft`)).toEqual([`witchcraft`]);
+		expect(slugsForTagInput(`Creative Expression`)).toEqual([`creative-expression`]);
+		expect(slugsForTagInput(`dance-impro`)).toEqual([`dance-improvisation`]);
+		expect(knownTagSlugs([`yoga`, `dance-impro`, `not-a-real-tag`])).toEqual([`yoga`, `dance-improvisation`]);
 	});
 });

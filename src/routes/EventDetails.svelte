@@ -13,6 +13,7 @@
 	import { user } from '$lib/user.svelte';
 	import { resolve } from '$app/paths';
 	import PublicProfileCard from '$lib/components/PublicProfileCard.svelte';
+	import { labelsForTagSlugs } from '$lib/eventCategories';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
@@ -43,11 +44,11 @@
 
 	const tags = $derived.by(() => {
 		const tags = new Set<string>();
-		event.tags2?.filter((x) => x.locale === localeStore.locale)?.forEach((x) => tags.add(x.name));
 		event.tags?.forEach((x) => {
 			if (x[localeStore.locale]) tags.add(x[localeStore.locale]);
 			else tags.add(x);
 		});
+		labelsForTagSlugs(event.tagSlugs).forEach((label) => tags.add(label));
 		return Array.from(tags);
 	});
 

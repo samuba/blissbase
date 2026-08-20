@@ -59,20 +59,13 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 		uploadedImageUrls
 	});
 
-	await db.transaction(async (tx) => {
-		await tx.update(s.events).set({
-			...formData,
-			latitude: coords?.lat,
-			longitude: coords?.lng,
-			imageUrls: deduplicateItems(imageUrls),
-			updatedAt: sql`now()`,
-		}).where(eq(s.events.id, eventFromDb.id));
-
-		await tx.delete(s.eventTags).where(eq(s.eventTags.eventId, eventFromDb.id));
-		if (data.tagIds?.length) {
-			await tx.insert(s.eventTags).values(data.tagIds.map((tagId: number) => ({ eventId: eventFromDb.id, tagId })));
-		}
-	});
+	await db.update(s.events).set({
+		...formData,
+		latitude: coords?.lat,
+		longitude: coords?.lng,
+		imageUrls: deduplicateItems(imageUrls),
+		updatedAt: sql`now()`,
+	}).where(eq(s.events.id, eventFromDb.id));
 
 	if (deletedImageUrls?.length && E2E_TEST !== `true`) {
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
@@ -137,28 +130,19 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		return invalid(issue.name(`An event with this name and start date already exists.`));
 	}
 
-	await db.transaction(async (tx) => {
-		const createdRows = await tx.insert(s.events).values({
-			...event,
-			source: `website-form`,
-			slug,
-			imageUrls: deduplicateItems(imageUrls),
-			latitude: coords?.lat,
-			longitude: coords?.lng,
-			authorId: userId,
-			hostSecret: randomString(16),
-		} satisfies InsertEvent).returning();
+	const createdRows = await db.insert(s.events).values({
+		...event,
+		source: `website-form`,
+		slug,
+		imageUrls: deduplicateItems(imageUrls),
+		latitude: coords?.lat,
+		longitude: coords?.lng,
+		authorId: userId,
+		hostSecret: randomString(16),
+	} satisfies InsertEvent).returning();
 
-		createdEvent = createdRows[0];
-		if (!createdEvent) throw error(500, `Failed to create event`);
-
-		if (data.tagIds.length > 0) {
-			await tx.insert(s.eventTags).values(data.tagIds.map((tagId) => ({
-				eventId: createdEvent!.id,
-				tagId,
-			})));
-		}
-	});
+	createdEvent = createdRows[0];
+	if (!createdEvent) throw error(500, `Failed to create event`);
 
 	if (E2E_TEST !== `true`) {
 		await sendEventCreatedEmail({

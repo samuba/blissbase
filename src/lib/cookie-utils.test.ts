@@ -22,7 +22,6 @@ describe(`cookie filter validation`, () => {
 			includeOnline: null,
 			sortBy: null,
 			sortOrder: null,
-			tagIds: null,
 			categorySlugs: null,
 			attendanceMode: null,
 			source: null

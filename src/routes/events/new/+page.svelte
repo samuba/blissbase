@@ -269,7 +269,6 @@
 				<EventForm
 					mode="create"
 					remoteForm={createEvent}
-					allTags={data.tags.allTags}
 					showAutofillControl
 					{fieldsHidden}
 					onDirty={unsaved.markDirty}

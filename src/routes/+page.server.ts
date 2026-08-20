@@ -66,7 +66,6 @@ export const load = (async ({ cookies, locals }) => {
         searchTerm: pagination.searchTerm,
         sortBy: pagination.sortBy,
         sortOrder: pagination.sortOrder,
-        tagIds: pagination.tagIds,
         categorySlugs: pagination.categorySlugs,
         attendanceMode: pagination.attendanceMode
     })

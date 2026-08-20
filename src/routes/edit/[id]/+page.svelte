@@ -60,7 +60,6 @@
 			<EventForm
 				mode="update"
 				remoteForm={updateEvent}
-				allTags={data.tags.allTags}
 				initialExistingImageUrls={editFormValues.existingImageUrls}
 				initialLocationLabel={editFormValues.address}
 				initialLocationLat={editFormValues.latitude}

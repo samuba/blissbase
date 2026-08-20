@@ -20,7 +20,6 @@
 	import LocationAutocompleteInput from '$lib/components/LocationAutocompleteInput.svelte';
 	import type { RemoteFormFields } from '@sveltejs/kit';
 	import type { Snippet } from 'svelte';
-	import type { UiTag } from '$lib/rpc/TagSelection.remote';
 
 	type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
 	type UpdateEventForm = typeof import('$lib/rpc/eventMutations.remote').updateEvent;
@@ -32,7 +31,6 @@
 	let {
 		mode,
 		remoteForm,
-		allTags,
 		initialExistingImageUrls = [],
 		initialLocationLabel = null,
 		initialLocationLat = null,
@@ -46,7 +44,6 @@
 	}: {
 		mode: `create` | `update`;
 		remoteForm: EventFormRemoteForm;
-		allTags: UiTag[];
 		initialExistingImageUrls?: string[];
 		initialLocationLabel?: string | null;
 		initialLocationLat?: string | number | null;
@@ -204,8 +201,8 @@
 
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Tags</legend>
-			<TagsInput {allTags} field={remoteForm.fields.tagIds} />
-			<FormFieldIssues field={remoteForm.fields.tagIds} />
+			<TagsInput field={remoteForm.fields.tagSlugs} />
+			<FormFieldIssues field={remoteForm.fields.tagSlugs} />
 		</fieldset>
 	</div>
 

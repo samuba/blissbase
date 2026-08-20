@@ -43,6 +43,7 @@ export const events = pgTable("events", {
 	latitude: real(),
 	longitude: real(),
 	tags: text().array(),
+	tagSlugs: text().array().notNull().default([]),
 	source: text().notNull(),
 	createdAt: timestamp().notNull().defaultNow(),
 	updatedAt: timestamp().notNull().defaultNow(),

@@ -12,6 +12,7 @@ import { resizeCoverImage } from '$lib/imageProcessing';
 import { randomString } from '$lib/common';
 import { loadCreds, uploadEventImage } from '$lib/assets';
 import { detectLanguage, t, type BotLanguage } from '$lib/telegramBotI18n';
+import { knownTagSlugs } from '$lib/eventCategories';
 
 const assetsCreds = loadCreds({ S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID })
 
@@ -104,7 +105,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             startAt,
             endAt,
             address: addressArr,
-            tags: aiAnswer.tags,
+            tagSlugs: knownTagSlugs(aiAnswer.tags),
             latitude: coords?.lat,
             longitude: coords?.lng,
             timezone: coords?.timezone,

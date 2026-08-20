@@ -12,10 +12,8 @@ import {
 	sql,
 	ilike,
 	desc,
-	exists,
 	eq,
-	inArray,
-	not
+	arrayOverlaps
 } from 'drizzle-orm';
 import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
 import { reverseGeocodeCityCached } from '$lib/server/google';
@@ -25,7 +23,7 @@ import type { InsertEvent } from '$lib/types';
 import { type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
-import { eventCategories, eventCategorySlugs, OTHERS_CATEGORY_SLUG, resolveTagIdsForCategories } from '$lib/eventCategories';
+import { eventCategorySlugs, OTHERS_CATEGORY_SLUG, getTagSlugsForCategories, getAssignedTagSlugs, allTags } from '$lib/eventCategories';
 import { attendanceModeEnum, type AttendanceMode } from './schema';
 import { upsertEvents as upsertEventsShared } from './events.shared';
 import { getPublicProfileBioExcerpt } from './profile';
@@ -34,23 +32,6 @@ const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
 
 export const eventWith = {
-	eventTags: {
-		columns: {},
-		with: {
-			tag: {
-				columns: {},
-				with: {
-					translations: {
-						columns: {
-							name: true,
-							locale: true,
-							tagId: true
-						}
-					}
-				}
-			}
-		}
-	},
 	author: {
 		columns: {
 			id: true,
@@ -100,7 +81,7 @@ export const eventWith = {
  */
 export async function fetchEvents(params: LoadEventsParams) {
 	const sanitizedParams = sanitizeLocationParams(params);
-	const { plzCity, distance, lat, lng, searchTerm, tagIds, onlyOnlineEvents } = sanitizedParams;
+	const { plzCity, distance, lat, lng, searchTerm, onlyOnlineEvents } = sanitizedParams;
 	const categorySlugs = uniqueCategorySlugs(params.categorySlugs);
 	const timeZone = 'Europe/Berlin';
 	const today = getToday(timeZone);
@@ -222,22 +203,18 @@ export async function fetchEvents(params: LoadEventsParams) {
 				) || [];
 
 		// For each word, create a condition that checks all searchable fields
-		const wordConditions = searchWords.map((word) =>
-			or(
+		const wordConditions = searchWords.map((word) => {
+			const matchingTagSlugs = [...allTags]
+				.filter((tag) => tag.slug.toLowerCase().includes(word.toLowerCase()) || tag.label.toLowerCase().includes(word.toLowerCase()))
+				.map((tag) => tag.slug);
+
+			return or(
 				ilike(s.events.name, `%${word}%`),
 				sql<boolean>`EXISTS (SELECT 1 FROM unnest(${s.events.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${word}%`})`,
 				ilike(s.events.description, `%${word}%`),
-				exists(
-					db
-						.select({ eventId: s.eventTags.eventId })
-						.from(s.eventTags)
-						.innerJoin(s.tagTranslations, eq(s.eventTags.tagId, s.tagTranslations.tagId))
-						.where(
-							and(eq(s.eventTags.eventId, s.events.id), ilike(s.tagTranslations.name, `%${word}%`))
-						)
-				)
-			)
-		);
+				matchingTagSlugs.length ? arrayOverlaps(s.events.tagSlugs, matchingTagSlugs) : undefined,
+			);
+		});
 
 		// All words must match (AND logic)
 		const searchTermCondition = or(...wordConditions);
@@ -246,33 +223,22 @@ export async function fetchEvents(params: LoadEventsParams) {
 
 	if (categorySlugs.length) {
 		const includeOthers = categorySlugs.includes(OTHERS_CATEGORY_SLUG);
-		const mappedTagIds = await resolveCategoryTagIds(categorySlugs);
+		const mappedSlugs = getTagSlugsForCategories(categorySlugs);
 		const categoryConditions = [];
 
-		if (mappedTagIds.length) {
-			categoryConditions.push(
-				exists(
-					db
-						.select({ tagId: s.eventTags.tagId })
-						.from(s.eventTags)
-						.where(
-							and(eq(s.eventTags.eventId, s.events.id), inArray(s.eventTags.tagId, mappedTagIds))
-						)
-				)
-			);
+		if (mappedSlugs.length) {
+			categoryConditions.push(arrayOverlaps(s.events.tagSlugs, mappedSlugs));
 		}
 
 		if (includeOthers) {
+			const assignedSlugs = [...getAssignedTagSlugs()];
 			categoryConditions.push(
-				not(
-					exists(
-						db
-							.select({ tagId: s.eventTags.tagId })
-							.from(s.eventTags)
-							.where(eq(s.eventTags.eventId, s.events.id))
-					)
-				)
+				sql`EXISTS (
+					SELECT 1 FROM unnest(COALESCE(${s.events.tagSlugs}, ARRAY[]::text[])) AS t(slug)
+					WHERE t.slug NOT IN (${sql.join(assignedSlugs.map((slug) => sql`${slug}`), sql`, `)})
+				)`
 			);
+			categoryConditions.push(sql`COALESCE(cardinality(${s.events.tagSlugs}), 0) = 0`);
 		}
 
 		allConditions.push(categoryConditions.length ? or(...categoryConditions) : sql`false`);
@@ -335,7 +301,6 @@ export async function fetchEvents(params: LoadEventsParams) {
 			searchTerm,
 			sortBy,
 			sortOrder,
-			tagIds,
 			categorySlugs: categorySlugs.length ? categorySlugs : undefined,
 			attendanceMode,
 			source,
@@ -354,26 +319,6 @@ function uniqueCategorySlugs(categorySlugs?: string[] | null) {
 		slugs.push(slug);
 	}
 	return slugs;
-}
-
-async function resolveCategoryTagIds(categorySlugs: string[]) {
-	if (!categorySlugs.length) return [];
-	const includeOthers = categorySlugs.includes(OTHERS_CATEGORY_SLUG);
-	const mappedSlugs = [
-		...new Set(
-			categorySlugs.flatMap(
-				(slug) => eventCategories.find((category) => category.slug === slug)?.tags.map((tag) => tag.slug) ?? []
-			)
-		)
-	];
-	if (!includeOthers && !mappedSlugs.length) return [];
-	const tags = includeOthers
-		? await db.select({ id: s.tags.id, slug: s.tags.slug }).from(s.tags)
-		: await db
-			.select({ id: s.tags.id, slug: s.tags.slug })
-			.from(s.tags)
-			.where(inArray(s.tags.slug, mappedSlugs));
-	return resolveTagIdsForCategories({ categorySlugs, tags });
 }
 
 function parseRelevanceAt(value?: string | null) {
@@ -415,8 +360,6 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 				return {
 					...event,
 					tags: event.tags?.map((x) => allTagsMap.get(x) ?? x) as StringOrTagTranslation[],
-					tags2: event.eventTags?.flatMap((x) => x.tag.translations) ?? [],
-					eventTags: undefined,
 					hostSecret: undefined, // never leak this to the ui
 					author: event.author ? {
 						...event.author,
@@ -451,7 +394,6 @@ export const loadEventsParamsSchema = v.partial(
 		searchTerm: v.nullable(v.string()),
 		sortBy: v.nullable(v.string()),
 		sortOrder: v.nullable(v.string()),
-		tagIds: v.nullable(v.array(v.number())),
 		categorySlugs: v.nullable(v.array(v.string())),
 		onlyOnlineEvents: v.nullable(v.boolean()), // TODO: remove after some time
 		attendanceMode: v.nullable(v.picklist(attendanceModeEnum)),

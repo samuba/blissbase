@@ -13,6 +13,7 @@ import { resizeCoverImage } from '../src/lib/imageProcessing';
 import type { Entity } from "teleproto/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml, telegramEntityLookupCandidates } from "../src/lib/telegramCommon";
+import { knownTagSlugs } from "../src/lib/eventCategories";
 import { extractVideoFrame } from "./extractVideoFrame";
 import { resolveEventImageUrls } from "./ogImageFallback";
 
@@ -588,10 +589,8 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
             // Merge imageUrls
             const imageUrls = mergeUniqueStrings(existing.imageUrls, event.imageUrls);
 
-            // Merge tags
             const tags = mergeUniqueStrings(existing.tags, event.tags);
-
-            // Merge sourceChatIdsTelegram
+            const tagSlugs = mergeUniqueStrings(existing.tagSlugs, event.tagSlugs);
             const sourceChatIdsTelegram = mergeUniqueStrings(existing.sourceChatIdsTelegram, event.sourceChatIdsTelegram);
             const coords = mergeCoords({
                 preferredLatitude: existing.latitude,
@@ -606,6 +605,7 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 description,
                 imageUrls,
                 tags,
+                tagSlugs,
                 sourceChatIdsTelegram,
                 latitude: coords.latitude,
                 longitude: coords.longitude,
@@ -635,6 +635,7 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
     merged.slug = existingEvent.slug;
     merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls);
     merged.tags = mergeUniqueStrings(existingEvent.tags, merged.tags);
+    merged.tagSlugs = mergeUniqueStrings(existingEvent.tagSlugs, merged.tagSlugs);
     merged.sourceChatIdsTelegram = mergeUniqueStrings(existingEvent.sourceChatIdsTelegram, merged.sourceChatIdsTelegram);
     const coords = mergeCoords({
         preferredLatitude: merged.latitude,
@@ -814,7 +815,7 @@ async function validateAndBuildEventBase(args: {
         endAt,
         attendanceMode: aiAnswer.attendanceMode,
         address: addressArr,
-        tags: aiAnswer.tags,
+        tagSlugs: knownTagSlugs(aiAnswer.tags),
         latitude,
         longitude,
         price: aiAnswer.price,

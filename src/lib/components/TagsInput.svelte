@@ -1,28 +1,22 @@
 <script lang="ts">
 	import { Combobox } from 'bits-ui';
 	import { tick } from 'svelte';
-	import type { UiTag } from '$lib/rpc/TagSelection.remote';
-	import { localeStore } from '../../locales/localeStore.svelte';
 	import type { RemoteFormField } from '@sveltejs/kit';
+	import { allTags } from '$lib/eventCategories';
 
 	let {
 		field = $bindable(),
-		allTags,
 	}: {
 		field: RemoteFormField<string[]>;
-		allTags: UiTag[];
 	} = $props();
 
-	const sortedTags = $derived(
-		[...allTags].sort(
-			(a, b) => a?.[localeStore.locale]?.localeCompare(b?.[localeStore.locale] ?? '') ?? 0
-		)
-	);
+	const sortedTags = [...allTags].sort((a, b) => a.label.localeCompare(b.label));
+	const tagsBySlug = new Map(sortedTags.map((tag) => [tag.slug, tag]));
 
-	let searchValue = $state('');
+	let searchValue = $state(``);
 	let open = $state(false);
 	let inputRef = $state<HTMLInputElement | null>(null);
-	let selectedTagIds = $derived((field.value() ?? []).filter((id): id is string => !!id));
+	let selectedSlugs = $derived((field.value() ?? []).filter((slug): slug is string => !!slug));
 
 	function clearInput() {
 		if (!inputRef) return;
@@ -30,31 +24,30 @@
 		inputRef.dispatchEvent(new InputEvent(`input`, { bubbles: true, data: `` }));
 	}
 
-	function onSelectedTagIdsChange(next: string[]) {
+	function onSelectedSlugsChange(next: string[]) {
 		field.set(next ?? []);
 		open = false;
 		// Bits-UI synchronously sets inputValue to the selected label inside toggleItem. Wait one tick so that runs first, then clear.
 		tick().then(() => {
-			searchValue = '';
+			searchValue = ``;
 			clearInput();
 		});
 	}
 
-	function removeTag(tagId: string) {
-		field.set(selectedTagIds.filter((id) => id !== tagId));
+	function removeTag(slug: string) {
+		field.set(selectedSlugs.filter((selected) => selected !== slug));
 	}
 
-	const selectedTagIdSet = $derived(new Set(selectedTagIds));
+	const selectedSlugSet = $derived(new Set(selectedSlugs));
 
 	const filteredTags = $derived.by(() => {
-		const unselected = sortedTags.filter((x) => !selectedTagIdSet.has(x.id.toString()));
-		if (searchValue === '') return unselected;
+		const unselected = sortedTags.filter((tag) => !selectedSlugSet.has(tag.slug));
+		if (searchValue === ``) return unselected;
 		const search = searchValue.trim().toLowerCase();
-		return unselected.filter((x) =>
-			x.slug.toLowerCase().includes(search) ||
-			x.en?.toLowerCase().includes(search) ||
-			x.de?.toLowerCase().includes(search) ||
-			x.nl?.toLowerCase().includes(search)
+		return unselected.filter((tag) =>
+			tag.slug.toLowerCase().includes(search)
+			|| tag.label.toLowerCase().includes(search)
+			|| tag.synonyms?.some((synonym) => synonym.toLowerCase().includes(search)),
 		);
 	});
 </script>
@@ -62,8 +55,8 @@
 <Combobox.Root
 	type="multiple"
 	inputValue={searchValue}
-	value={selectedTagIds}
-	onValueChange={onSelectedTagIdsChange}
+	value={selectedSlugs}
+	onValueChange={onSelectedSlugsChange}
 	bind:open
 >
 	<div class="relative">
@@ -88,17 +81,16 @@
 				<i class="icon-[ph--caret-double-up] size-4"></i>
 			</Combobox.ScrollUpButton>
 			<Combobox.Viewport class="p-1">
-				{#each filteredTags as tag (tag.id)}
-					{@const label = tag[localeStore.locale] ?? tag.slug}
+				{#each filteredTags as tag (tag.slug)}
 					<Combobox.Item
 						class="rounded-lg data-highlighted:bg-base-200 flex h-10 w-full items-center py-5 pr-1.5 pl-5 text-sm capitalize outline-hidden select-none data-selected:font-bold"
-						value={tag.id.toString()}
-						label={label}
+						value={tag.slug}
+						label={tag.label}
 					>
-						{label}
+						{tag.label}
 					</Combobox.Item>
 				{:else}
-					<div class="flex items-center justify-center h-full"> Keine Tags gefunden</div>
+					<div class="flex items-center justify-center h-full">Keine Tags gefunden</div>
 				{/each}
 			</Combobox.Viewport>
 			<Combobox.ScrollDownButton class="flex w-full items-center justify-center pb-1 pt-2">
@@ -108,17 +100,17 @@
 	</Combobox.Portal>
 </Combobox.Root>
 
-{#if selectedTagIds.length > 0}
+{#if selectedSlugs.length > 0}
 	<div class="flex flex-wrap gap-2 mt-1">
-		{#each selectedTagIds as tagId (tagId)}
-			<input {...field.as('checkbox', tagId)} checked class="hidden" />
+		{#each selectedSlugs as slug (slug)}
+			<input {...field.as('checkbox', slug)} checked class="hidden" />
 			<div class="badge badge-ghost break-keep pr-0 gap-1">
-				{sortedTags.find((t) => t.id.toString() === tagId)?.[localeStore.locale] ?? tagId}
+				{tagsBySlug.get(slug)?.label ?? slug}
 				<button
 					type="button"
 					class="cursor-pointer mx-0 pr-1.5 flex items-center justify-center"
 					aria-label="Entfernen"
-					onclick={() => removeTag(tagId)}
+					onclick={() => removeTag(slug)}
 				>
 					<i class="icon-[ph--x] size-4"></i>
 				</button>

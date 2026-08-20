@@ -28,7 +28,6 @@ export type FilterCookieData = {
     includeOnline?: boolean | null;
     sortBy?: string | null;
     sortOrder?: string | null;
-    tagIds?: number[] | null;
     categorySlugs?: string[] | null;
     attendanceMode?: AttendanceMode | null;
     /** Admin-only: filter events list by `events.source`. `null` means all sources. */
@@ -45,10 +44,6 @@ export function validateFilterData(data: unknown): FilterCookieData | null {
 
     const filterData = data as Record<string, unknown>;
 
-    // Validate tagIds array
-    const tagIds = Array.isArray(filterData.tagIds)
-        ? filterData.tagIds.filter((id): id is number => typeof id === 'number' && !isNaN(id))
-        : null;
     const categorySlugs = Array.isArray(filterData.categorySlugs)
         ? filterData.categorySlugs.filter((slug): slug is string => typeof slug === 'string' && eventCategorySlugs.has(slug))
         : null;
@@ -79,7 +74,6 @@ export function validateFilterData(data: unknown): FilterCookieData | null {
         includeOnline: typeof filterData.includeOnline === 'boolean' ? filterData.includeOnline : null,
         sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
         sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
-        tagIds: tagIds?.length ? tagIds : null,
         categorySlugs: categorySlugs?.length ? categorySlugs : null,
         attendanceMode: typeof filterData.attendanceMode === 'string' ? filterData.attendanceMode as AttendanceMode : null,
         source: typeof filterData.source === 'string' && filterData.source.trim() ? filterData.source.trim() : null,

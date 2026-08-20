@@ -13,7 +13,7 @@ export function getDefaultCreateEventFieldBase(args: { timeZone: string }) {
 	return {
 		name: ``,
 		description: ``,
-		tagIds: [] as string[],
+		tagSlugs: [] as string[],
 		price: ``,
 		address: ``,
 		addressNote: ``,

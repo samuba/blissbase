@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { knownTagSlugs } from '$lib/eventCategories';
 import { profileLocationFields, publicProfilePatchSchema } from '$lib/rpc/profile.common';
 
 export type ContactMethod = `none` | `email` | `phone` | `website` | `telegram` | `whatsapp`;
@@ -76,7 +77,13 @@ const eventSchemaEntries = {
 		v.nonEmpty(`Description is required`),
 		v.maxLength(100_000, `Description is too long`)
 	),
-	tagIds: v.optional(v.pipe(v.array(v.string()), v.transform((x) => x.map((y) => parseInt(y)))), []),
+	tagSlugs: v.optional(
+		v.pipe(
+			v.array(v.string()),
+			v.transform((slugs) => knownTagSlugs(slugs))
+		),
+		[]
+	),
 	price: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
 	address: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
 	addressNote: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(500, `Address note is too long`)), ``),
@@ -166,9 +173,9 @@ export const updateEventSchema = v.pipe(
  * Converts persisted event data into the shared edit form values (including `storedContactUriToFormFields` for `contact`).
  *
  * @example
- * getEditEventInitialValues({ event: { id: 1, name: `Foo`, startAt: new Date(), endAt: null, address: [], description: `x`, price: null, listed: true, attendanceMode: `offline`, contact: [], imageUrls: [] }, tagIds: [] });
+ * getEditEventInitialValues({ id: 1, name: `Foo`, startAt: new Date(), endAt: null, address: [], description: `x`, price: null, listed: true, attendanceMode: `offline`, contact: [], imageUrls: [], tagSlugs: [`yoga`] });
  */
-export function getEditEventInitialValues(event: EditEventSource, tagIds: number[]) {
+export function getEditEventInitialValues(event: EditEventSource) {
 	const firstContact = event.contact?.[0] ?? ``;
 	const { contactMethod, contact } = storedContactUriToFormFields({ storedContactUri: firstContact });
 
@@ -177,7 +184,7 @@ export function getEditEventInitialValues(event: EditEventSource, tagIds: number
 		hostSecret: event.hostSecret ?? ``,
 		name: event.name,
 		description: event.description ?? ``,
-		tagIds: tagIds.map((x) => x.toString()),
+		tagSlugs: event.tagSlugs ?? [],
 		price: event.price ?? ``,
 		address: (event.address ?? []).join(`, `),
 		addressNote: event.addressNote ?? ``,
@@ -294,6 +301,7 @@ type EditEventSource = {
 	attendanceMode: `online` | `offline` | `offline+online`;
 	contact: string[] | null;
 	imageUrls: string[] | null;
+	tagSlugs?: string[] | null;
 };
 
 export type CreateEventSchema = typeof createEventSchema;

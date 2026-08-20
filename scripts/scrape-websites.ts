@@ -20,6 +20,7 @@
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import { db, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
+import { fillMissingEventTagSlugs } from './tagScrapedEvents.ts';
 import { and, inArray, notInArray } from 'drizzle-orm';
 import { parseArgs } from 'util';
 import { cleanProseHtml, customFetch } from './common.ts';
@@ -198,8 +199,10 @@ async function main() {
     // Prepare data for insertion, mapping ScrapedEvent to the schema format
     let eventsToInsert = allEvents.map(x => {
         const { cleanedName, soldOut } = cleanEventNameAndDetectSoldOut(x.name);
+        const { tags, ...scraped } = x;
+        void tags;
         return {
-            ...x,
+            ...scraped,
             name: cleanedName,
             soldOut,
             slug: generateSlug({ name: cleanedName, startAt: new Date(x.startAt), endAt: x.endAt ? new Date(x.endAt) : undefined }),
@@ -208,7 +211,6 @@ async function main() {
             imageUrls: x.imageUrls?.filter(x => x),
             description: cleanProseHtml(x.description),
             listed: shouldBeListed({ name: cleanedName, source: x.source }),
-            tags: [...new Set(x.tags)], // ensure tags are unique
             attendanceMode: detectAttendanceModeFromAddress({ address: x.address }),
         } satisfies InsertEvent;
     });
@@ -254,8 +256,18 @@ async function main() {
         console.log("batch", batch)
 
         try {
-            await upsertEvents(batch);
+            const upserted = await upsertEvents(batch);
             successCount += batch.length;
+            try {
+                await fillMissingEventTagSlugs({
+                    events: upserted,
+                    updateTagSlugs: async ({ ids, tagSlugs }) => {
+                        await db.update(s.events).set({ tagSlugs }).where(inArray(s.events.id, ids));
+                    },
+                });
+            } catch (error) {
+                console.error(`Error tagging batch starting at index ${i}:`, error);
+            }
 
             console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);
         } catch (error) {

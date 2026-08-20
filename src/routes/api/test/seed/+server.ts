@@ -5,6 +5,7 @@ import type { RequestHandler } from "./$types";
 import { E2E_TEST } from "$env/static/private";
 import { dev } from "$app/environment";
 import { deduplicateItems, slugify } from "$lib/common";
+import { knownTagSlugs } from "$lib/eventCategories";
 import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -34,6 +35,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						latitude: data.latitude || null,
 						longitude: data.longitude || null,
 						tags: data.tags || ["Meditation"],
+						tagSlugs: data.tagSlugs ?? knownTagSlugs((data.tags || [`Meditation`]).map((tag) => slugify(tag))),
 						source: data.source || "tribehaus",
 						sourceUrl: data.sourceUrl || "https://example.com",
 						slug: data.slug || `e2e-${Date.now()}`,
@@ -45,7 +47,6 @@ export const POST: RequestHandler = async ({ request }) => {
 						updatedAt: new Date(),
 					})
 					.returning();
-				await linkEventTags(event.id, data.tags || [`Meditation`]);
 				return json({ success: true, event });
 			}
 
@@ -175,22 +176,3 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: String(error) }, { status: 500 });
 	}
 };
-
-async function linkEventTags(eventId: number, tagNames: string[]) {
-	if (!tagNames?.length) return;
-
-	for (const name of tagNames) {
-		const trimmed = name.trim();
-		if (!trimmed) continue;
-		const slug = slugify(trimmed);
-		let tag = await db.query.tags.findFirst({ where: eq(s.tags.slug, slug) });
-		if (!tag) {
-			[tag] = await db.insert(s.tags).values({ slug }).returning();
-			await db.insert(s.tagTranslations).values([
-				{ tagId: tag.id, locale: `en`, name: trimmed },
-				{ tagId: tag.id, locale: `de`, name: trimmed },
-			]);
-		}
-		await db.insert(s.eventTags).values({ eventId, tagId: tag.id }).onConflictDoNothing();
-	}
-}

@@ -1,34 +1,21 @@
 <script lang="ts">
-	import { afterNavigate } from '$app/navigation';
-	import { page } from '$app/state';
-	import { onMount } from 'svelte';
-	import { routes } from '$lib/routes';
-	import { peekFooter } from '$lib/peekFooter.svelte';
-	import { user } from '$lib/user.svelte';
+	import { afterNavigate } from "$app/navigation";
+	import { page } from "$app/state";
+	import { onMount } from "svelte";
+	import { routes } from "$lib/routes";
+	import { peekFooter } from "$lib/peekFooter.svelte";
+	import { user } from "$lib/user.svelte";
 
 	const SCROLL_THRESHOLD = 8;
 	const TOP_REVEAL_Y = 24;
-	const NON_TEXT_INPUT_TYPES = new Set([
-		`button`,
-		`checkbox`,
-		`color`,
-		`file`,
-		`hidden`,
-		`image`,
-		`radio`,
-		`range`,
-		`reset`,
-		`submit`
-	]);
+	const NON_TEXT_INPUT_TYPES = new Set([`button`, `checkbox`, `color`, `file`, `hidden`, `image`, `radio`, `range`, `reset`, `submit`]);
 
 	let visible = $state(true);
 	let keyboardInset = $state(0);
 	let textEntryFocused = $state(false);
 	let lastScrollY = 0;
 
-	const canAutoHide = $derived(
-		isFeedPath({ pathname: page.url.pathname, origin: page.url.origin })
-	);
+	const canAutoHide = $derived(isFeedPath({ pathname: page.url.pathname, origin: page.url.origin }));
 	const keyboardOpen = $derived(textEntryFocused && keyboardInset > 150);
 	// Auto-hide on mobile events/offerings feeds; other routes keep the footer parked.
 	const hidden = $derived(canAutoHide && (!visible || keyboardOpen));
@@ -44,11 +31,15 @@
 		visible = true;
 	});
 
-	const links = [
-		{ label: `Über`, href: routes.about() },
-		{ label: `FAQ`, href: routes.faq() },
-		{ label: `Admin`, href: routes.admin() }
-	].filter(x => user.isAdmin ? true : x.href !== routes.admin());
+	function createLinks() {
+		return [
+			{ label: /* @wc-include */ `Über`, href: routes.about() },
+			{ label: /* @wc-include */ `FAQ`, href: routes.faq() },
+			{ label: /* @wc-include */ `Admin`, href: routes.admin() },
+		];
+	}
+
+	const links = createLinks().filter((x) => (user.isAdmin ? true : x.href !== routes.admin()));
 
 	function handleScroll() {
 		if (!canAutoHide) return;
@@ -87,10 +78,7 @@
 
 		const syncKeyboardInset = () => {
 			const visibleHeight = visualViewport.height * visualViewport.scale;
-			keyboardInset = Math.max(
-				0,
-				window.innerHeight - visibleHeight - visualViewport.offsetTop
-			);
+			keyboardInset = Math.max(0, window.innerHeight - visibleHeight - visualViewport.offsetTop);
 		};
 
 		visualViewport.addEventListener(`resize`, syncKeyboardInset);
@@ -116,10 +104,10 @@
 <footer
 	aria-label="Seitenlinks"
 	class={[
-		`fixed inset-x-0 z-40 border-t border-base-300/70 bg-base-100/95 backdrop-blur-sm`,
+		`border-base-300/70 bg-base-100/95 fixed inset-x-0 z-40 border-t backdrop-blur-sm`,
 		`bottom-[calc(4rem+env(safe-area-inset-bottom))] md:bottom-0`,
 		`transition-transform duration-200 ease-out motion-reduce:transition-none`,
-		hidden && `pointer-events-none translate-y-full md:pointer-events-auto md:translate-y-0`
+		hidden && `pointer-events-none translate-y-full md:pointer-events-auto md:translate-y-0`,
 	]}
 >
 	<nav class="mx-auto flex h-7 max-w-5xl items-center justify-center gap-2 px-3">
@@ -127,7 +115,7 @@
 			{#if index > 0}
 				<span class="text-base-content/30" aria-hidden="true">·</span>
 			{/if}
-			<a href={link.href} class="link link-hover text-xs leading-none text-base-content/50">
+			<a href={link.href} class="link link-hover text-base-content/50 text-xs leading-none">
 				{link.label}
 			</a>
 		{/each}

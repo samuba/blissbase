@@ -43,8 +43,8 @@
 			...defaults,
 			name: remoteForm.fields.name.value() || defaults.name,
 			description: remoteForm.fields.description.value() || defaults.description,
-			tagIds: (remoteForm.fields.tagIds.value() ?? defaults.tagIds).filter(
-				(tagId): tagId is string => !!tagId
+			tagSlugs: (remoteForm.fields.tagSlugs.value() ?? defaults.tagSlugs).filter(
+				(slug): slug is string => !!slug
 			),
 			price: remoteForm.fields.price.value() || defaults.price,
 			address: remoteForm.fields.address.value() || defaults.address,
@@ -74,7 +74,7 @@
 			...base,
 			name: prefill.name || base.name,
 			description: prefill.description || base.description,
-			tagIds: prefill.tagIds?.length ? prefill.tagIds : base.tagIds,
+			tagSlugs: prefill.tagSlugs?.length ? prefill.tagSlugs : base.tagSlugs,
 			price: prefill.price || base.price,
 			...applyCreateEventLocationPrefill({
 				base,
