@@ -1,7 +1,4 @@
-
-unify tags in tagSlugs column 
-after scraper upserted check if tags where written, if not spawn AI to tag it
-find series events by finding events with same title, host, source. tag only once
+tags column löschen (tagSlugs hat abgelöst)
 
 make location input look good with text in it on tiny mobiles. Maybe have a popover and not the raw input + select element
 
