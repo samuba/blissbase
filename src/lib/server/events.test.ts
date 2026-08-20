@@ -1461,6 +1461,67 @@ describe('Events Module - Happy Flow Tests', () => {
                 expect(result.events).toHaveLength(1);
                 expect(result.events[0].name).toBe('Music Concert');
             });
+
+            it('should match whole words and prefix or suffix inside a word', async () => {
+                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                await upsertEvents([
+                    createTestEvent({
+                        name: 'Yoga Workshop',
+                        slug: 'yoga-workshop-whole-word',
+                        sourceUrl: 'https://example.com/yoga-workshop-whole-word',
+                        startAt: futureDate
+                    }),
+                    createTestEvent({
+                        name: 'Tantra, Yoga, Meditation',
+                        slug: 'yoga-comma-whole-word',
+                        sourceUrl: 'https://example.com/yoga-comma-whole-word',
+                        startAt: futureDate
+                    }),
+                    createTestEvent({
+                        name: 'Evening event',
+                        description: 'Come to yoga.',
+                        slug: 'yoga-dot-whole-word',
+                        sourceUrl: 'https://example.com/yoga-dot-whole-word',
+                        startAt: futureDate
+                    }),
+                    createTestEvent({
+                        name: 'Yogakurs Berlin',
+                        slug: 'yogakurs-prefix',
+                        sourceUrl: 'https://example.com/yogakurs-prefix',
+                        startAt: futureDate
+                    }),
+                    createTestEvent({
+                        name: 'Hathayoga Immersion',
+                        slug: 'hathayoga-suffix',
+                        sourceUrl: 'https://example.com/hathayoga-suffix',
+                        startAt: futureDate
+                    }),
+                    createTestEvent({
+                        name: 'Party Workshop',
+                        slug: 'party-mid-word',
+                        sourceUrl: 'https://example.com/party-mid-word',
+                        startAt: futureDate
+                    }),
+                ]);
+
+                const yogaResult = prepareEventsResultForUi(await fetchEvents({
+                    searchTerm: 'yoga'
+                }));
+
+                expect(yogaResult.events.map(e => e.name)).toEqual(expect.arrayContaining([
+                    'Evening event',
+                    'Hathayoga Immersion',
+                    'Tantra, Yoga, Meditation',
+                    'Yoga Workshop',
+                    'Yogakurs Berlin',
+                ]));
+                expect(yogaResult.events.map(e => e.name)).not.toContain('Party Workshop');
+
+                const artResult = prepareEventsResultForUi(await fetchEvents({
+                    searchTerm: 'art'
+                }));
+                expect(artResult.events.map(e => e.name)).not.toContain('Party Workshop');
+            });
         });
 
         describe('Category filtering', () => {

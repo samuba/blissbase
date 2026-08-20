@@ -89,6 +89,9 @@ describe(`eventCategories`, () => {
 		expect(getTagSlugsMatchingSearch(`Contact Jam`)).toContain(`contact-improvisation`);
 		expect(getTagSlugsMatchingSearch(`not-a-real-search`)).toEqual([]);
 		expect(getTagSlugsMatchingSearch(` `)).toEqual([]);
+		expect(getTagSlugsMatchingSearch(`dance`)).toContain(`ecstatic-dance`);
+		expect(getTagSlugsMatchingSearch(`stat`)).not.toContain(`ecstatic-dance`);
+		expect(getTagSlugsMatchingSearch(`art`)).toContain(`martial-arts`);
 	});
 
 	it(`expands a category to matching tag slugs`, () => {

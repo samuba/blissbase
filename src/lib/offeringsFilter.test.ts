@@ -168,6 +168,32 @@ describe('filterOfferingsBySearchTerm', () => {
 		expect(filterOfferingsBySearchTerm({ offerings, searchTerm: `anna` })).toHaveLength(1);
 		expect(filterOfferingsBySearchTerm({ offerings, searchTerm: null })).toHaveLength(2);
 	});
+
+	it('matches whole words and prefix or suffix inside a word', () => {
+		expect(filterOfferingsBySearchTerm({ offerings, searchTerm: `mass` })).toHaveLength(1);
+		expect(filterOfferingsBySearchTerm({
+			offerings: [
+				...offerings,
+				{
+					title: `Yogakurs`,
+					descriptionHtml: `<p>Hathayoga</p>`,
+					profile: { displayName: `Annabelle` },
+				},
+			],
+			searchTerm: `yoga`,
+		})).toHaveLength(2);
+		expect(filterOfferingsBySearchTerm({
+			offerings: [
+				...offerings,
+				{
+					title: `Party`,
+					descriptionHtml: `<p>Celebration</p>`,
+					profile: { displayName: `Carl` },
+				},
+			],
+			searchTerm: `art`,
+		})).toHaveLength(0);
+	});
 });
 
 describe('filterOfferingsByIncludeOnline', () => {

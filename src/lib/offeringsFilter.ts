@@ -1,4 +1,4 @@
-import { stripHtml, trimAllWhitespaces } from '$lib/common';
+import { matchesWholeWord, stripHtml, trimAllWhitespaces } from '$lib/common';
 import type { FilterCookieData } from '$lib/cookie-utils';
 import type { OfferingFormat } from '$lib/rpc/offerings.common';
 import { hasValidCoordinates, isWithinDistanceKm, sanitizeLocationParams } from '$lib/locationFilter';
@@ -96,15 +96,15 @@ export function filterOfferingsBySearchTerm<T extends {
 	descriptionHtml?: string | null;
 	profile: { displayName?: string | null };
 }>(args: { offerings: T[]; searchTerm: string | null }) {
-	const normalizedSearchTerm = args.searchTerm?.trim().toLocaleLowerCase();
-	if (!normalizedSearchTerm) return args.offerings;
+	const searchTerm = args.searchTerm?.trim();
+	if (!searchTerm) return args.offerings;
 
 	return args.offerings.filter((offering) => {
-		const title = offering.title.toLocaleLowerCase();
-		const description = (trimAllWhitespaces(stripHtml(offering.descriptionHtml ?? ``)) ?? ``).toLocaleLowerCase();
-		const host = offering.profile.displayName?.toLocaleLowerCase();
+		const title = offering.title;
+		const description = trimAllWhitespaces(stripHtml(offering.descriptionHtml ?? ``)) ?? ``;
+		const host = offering.profile.displayName ?? ``;
 
-		return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm) || host?.includes(normalizedSearchTerm);
+		return matchesWholeWord(title, searchTerm) || matchesWholeWord(description, searchTerm) || matchesWholeWord(host, searchTerm);
 	});
 }
 

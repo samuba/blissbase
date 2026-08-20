@@ -10,7 +10,6 @@ import {
 	lte,
 	gt,
 	sql,
-	ilike,
 	desc,
 	eq,
 	arrayOverlaps
@@ -20,7 +19,7 @@ import { reverseGeocodeCityCached } from '$lib/server/google';
 import { resolveFilterCoordinates } from '$lib/server/locationDistance';
 import { sanitizeLocationParams } from '$lib/locationFilter';
 import type { InsertEvent } from '$lib/types';
-import { type Modify } from '$lib/common';
+import { escapeRegex, type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
 import { eventCategorySlugs, OTHERS_CATEGORY_SLUG, getTagSlugsForCategories, getAssignedTagSlugs, getTagSlugsMatchingSearch } from '$lib/eventCategories';
@@ -61,7 +60,7 @@ export const eventWith = {
  *
  * 3. **Search Term** (if provided):
  *    - Events where the search term matches the event name, description, or catalog tags (`tagSlugs`)
- *    - Tag matching includes slug, label, and synonyms; case-insensitive partial matching
+ *    - Matches a whole word, or the start or end of a longer word (space and punctuation count as boundaries)
  *
  * 4. **Pagination**: Limited to specified page size (max 20 events per page)
  *
@@ -200,23 +199,26 @@ export async function fetchEvents(params: LoadEventsParams) {
 				.match(/(?:[^\s"]+|"[^"]*")+/g)
 				?.map(
 					(word) => word.replace(/^"|"$/g, '') // Remove surrounding quotes
-				) || [];
+				)
+				.filter(Boolean) || [];
 
 		// For each word, create a condition that checks all searchable fields
 		const wordConditions = searchWords.map((word) => {
 			const matchingTagSlugs = getTagSlugsMatchingSearch(word);
+			const pattern = wholeWordPostgresPattern(word);
 
 			return or(
-				ilike(s.events.name, `%${word}%`),
-				ilike(s.events.description, `%${word}%`),
+				sql`${s.events.name} ~* ${pattern}`,
+				sql`${s.events.description} ~* ${pattern}`,
 				matchingTagSlugs.length ? arrayOverlaps(s.events.tagSlugs, matchingTagSlugs) : undefined,
-				sql<boolean>`EXISTS (SELECT 1 FROM unnest(COALESCE(${s.events.tagSlugs}, ARRAY[]::text[])) AS t(slug) WHERE t.slug ILIKE ${`%${word}%`})`,
+				sql<boolean>`EXISTS (SELECT 1 FROM unnest(COALESCE(${s.events.tagSlugs}, ARRAY[]::text[])) AS t(slug) WHERE t.slug ~* ${pattern})`,
 			);
 		});
 
-		// All words must match (AND logic)
-		const searchTermCondition = or(...wordConditions);
-		allConditions.push(searchTermCondition);
+		if (wordConditions.length) {
+			const searchTermCondition = or(...wordConditions);
+			allConditions.push(searchTermCondition);
+		}
 	}
 
 	if (categorySlugs.length) {
@@ -305,6 +307,11 @@ export async function fetchEvents(params: LoadEventsParams) {
 			relevanceAt: relevanceAtIso
 		} satisfies LoadEventsParams & { totalEvents: number; totalPages: number }
 	};
+}
+
+function wholeWordPostgresPattern(word: string) {
+	const escaped = escapeRegex(word);
+	return `\\m${escaped}|${escaped}\\M`;
 }
 
 function uniqueCategorySlugs(categorySlugs?: string[] | null) {

@@ -245,6 +245,18 @@ export function formatAddress(address: string[]): string {
     return formattedAddress.join(' · ');
 }
 
+export function escapeRegex(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, `\\$&`);
+}
+
+/** True when `needle` is a whole word, or sits at the start or end of a longer word. */
+export function matchesWholeWord(haystack: string, needle: string) {
+    const term = needle.trim();
+    if (!term) return false;
+    const escaped = escapeRegex(term);
+    return new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}|${escaped}(?![\\p{L}\\p{N}_])`, `iu`).test(haystack);
+}
+
 export const slugify = (str: string) =>
     str
         .toString()

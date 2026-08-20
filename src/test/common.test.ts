@@ -1,8 +1,27 @@
-import { calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel, googleMapsSearchUrl, toAddressLines } from '../lib/common';
+import { calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel, googleMapsSearchUrl, matchesWholeWord, toAddressLines } from '../lib/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /** Fixed "now": Wed 4 Jun 2025, 12:00 local — used by relative-date logic. */
 const REFERENCE_NOW = new Date(2025, 5, 4, 12, 0, 0);
+
+describe(`matchesWholeWord`, () => {
+	it(`matches standalone words and punctuation boundaries`, () => {
+		expect(matchesWholeWord(`Yoga Workshop`, `yoga`)).toBe(true);
+		expect(matchesWholeWord(`Tantra, Yoga, Meditation`, `yoga`)).toBe(true);
+		expect(matchesWholeWord(`Come to yoga.`, `yoga`)).toBe(true);
+		expect(matchesWholeWord(`(Yoga)`, `yoga`)).toBe(true);
+		expect(matchesWholeWord(`Hatha-Yoga`, `yoga`)).toBe(true);
+		expect(matchesWholeWord(`MUSIC Concert`, `music`)).toBe(true);
+	});
+
+	it(`does not match the term buried in the middle of a word`, () => {
+		expect(matchesWholeWord(`Yogakurs`, `yoga`)).toBe(true);
+		expect(matchesWholeWord(`Hathayoga`, `yoga`)).toBe(true);
+		expect(matchesWholeWord(`martial-arts`, `art`)).toBe(true);
+		expect(matchesWholeWord(`party`, `art`)).toBe(false);
+		expect(matchesWholeWord(`ecstatic`, `stat`)).toBe(false);
+	});
+});
 
 describe(`getWebsiteDomainLabel`, () => {
 	it(`strips subdomain and compound public suffixes`, () => {
