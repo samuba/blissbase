@@ -2163,6 +2163,28 @@ export function getTagSlugsForCategories(categorySlugs: string[]) {
 	return [...slugs];
 }
 
+/**
+ * Catalog slugs whose slug, label, or synonym contains the search word.
+ *
+ * @example
+ * getTagSlugsMatchingSearch(`Atemarbeit`)
+ */
+export function getTagSlugsMatchingSearch(word: string) {
+	const needle = word.trim().toLowerCase();
+	if (!needle) return [];
+	const slugs: string[] = [];
+	for (const tag of allTags) {
+		if (tag.slug.toLowerCase().includes(needle) || tag.label.toLowerCase().includes(needle)) {
+			slugs.push(tag.slug);
+			continue;
+		}
+		if (tag.synonyms?.some((synonym) => synonym.toLowerCase().includes(needle))) {
+			slugs.push(tag.slug);
+		}
+	}
+	return slugs;
+}
+
 export function labelsForTagSlugs(slugs?: string[] | null) {
 	if (!slugs?.length) return [];
 	return slugs.map((slug) => allTagsBySlug.get(slug)?.label ?? slug);

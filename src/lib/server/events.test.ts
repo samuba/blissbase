@@ -1377,24 +1377,27 @@ describe('Events Module - Happy Flow Tests', () => {
                 expect(result.events.map(e => e.name)).toContain('Event 2');
             });
 
-            it('should search events by tags', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
+            it('should search events by tagSlugs', async () => {
+                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
                 const events = [
                     createTestEvent({
                         name: 'Event 1',
-                        tags: ['music', 'concert'],
+                        tags: [],
+                        tagSlugs: ['yoga', 'meditation'],
                         slug: 'event-1',
                         startAt: futureDate
                     }),
                     createTestEvent({
                         name: 'Event 2',
-                        tags: ['workshop', 'art'],
+                        tags: [],
+                        tagSlugs: ['ecstatic-dance'],
                         slug: 'event-2',
                         startAt: futureDate
                     }),
                     createTestEvent({
                         name: 'Event 3',
-                        tags: ['music', 'workshop'],
+                        tags: [],
+                        tagSlugs: ['yoga'],
                         slug: 'event-3',
                         startAt: futureDate
                     })
@@ -1403,12 +1406,40 @@ describe('Events Module - Happy Flow Tests', () => {
                 await upsertEvents(events);
 
                 const result = prepareEventsResultForUi(await fetchEvents({
-                    searchTerm: 'music'
+                    searchTerm: 'yoga'
                 }));
 
                 expect(result.events).toHaveLength(2);
                 expect(result.events.map(e => e.name)).toContain('Event 1');
                 expect(result.events.map(e => e.name)).toContain('Event 3');
+            });
+
+            it('should search events by tag synonym', async () => {
+                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                await upsertEvents([
+                    createTestEvent({
+                        name: 'Event 1',
+                        tags: [],
+                        tagSlugs: ['breathwork'],
+                        slug: 'synonym-breathwork',
+                        sourceUrl: 'https://example.com/synonym-breathwork',
+                        startAt: futureDate
+                    }),
+                    createTestEvent({
+                        name: 'Event 2',
+                        tags: [],
+                        tagSlugs: ['yoga'],
+                        slug: 'synonym-yoga',
+                        sourceUrl: 'https://example.com/synonym-yoga',
+                        startAt: futureDate
+                    }),
+                ]);
+
+                const result = prepareEventsResultForUi(await fetchEvents({
+                    searchTerm: 'Atemarbeit'
+                }));
+
+                expect(result.events.map((event) => event.name)).toEqual(['Event 1']);
             });
 
             it('should handle case-insensitive search', async () => {

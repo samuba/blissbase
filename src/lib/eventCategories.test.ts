@@ -4,6 +4,7 @@ import {
 	eventMatchesOthersCategory,
 	getAssignedTagSlugs,
 	getTagSlugsForCategories,
+	getTagSlugsMatchingSearch,
 	OTHERS_CATEGORY_SLUG,
 	knownTagSlugs,
 	slugsForTagInput,
@@ -80,6 +81,14 @@ describe(`eventCategories`, () => {
 		expect(assigned.has(`nature`)).toBe(false);
 		expect(assigned.has(`festival`)).toBe(false);
 		expect(assigned.has(`creative-expression`)).toBe(false);
+	});
+
+	it(`matches catalog slugs by label and synonym for search`, () => {
+		expect(getTagSlugsMatchingSearch(`yoga`)).toContain(`yoga`);
+		expect(getTagSlugsMatchingSearch(`Atemarbeit`)).toContain(`breathwork`);
+		expect(getTagSlugsMatchingSearch(`Contact Jam`)).toContain(`contact-improvisation`);
+		expect(getTagSlugsMatchingSearch(`not-a-real-search`)).toEqual([]);
+		expect(getTagSlugsMatchingSearch(` `)).toEqual([]);
 	});
 
 	it(`expands a category to matching tag slugs`, () => {

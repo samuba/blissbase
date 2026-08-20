@@ -23,7 +23,7 @@ import type { InsertEvent } from '$lib/types';
 import { type Modify } from '$lib/common';
 import * as v from 'valibot';
 import { allTagsMap, type TagTranslation } from '$lib/server/tags';
-import { eventCategorySlugs, OTHERS_CATEGORY_SLUG, getTagSlugsForCategories, getAssignedTagSlugs, allTags } from '$lib/eventCategories';
+import { eventCategorySlugs, OTHERS_CATEGORY_SLUG, getTagSlugsForCategories, getAssignedTagSlugs, getTagSlugsMatchingSearch } from '$lib/eventCategories';
 import { attendanceModeEnum, type AttendanceMode } from './schema';
 import { upsertEvents as upsertEventsShared } from './events.shared';
 import { getPublicProfileBioExcerpt } from './profile';
@@ -60,8 +60,8 @@ export const eventWith = {
  *    - Only events with valid latitude/longitude coordinates are included
  *
  * 3. **Search Term** (if provided):
- *    - Events where the search term matches the event name, description, or any tag
- *    - Case-insensitive partial matching
+ *    - Events where the search term matches the event name, description, or catalog tags (`tagSlugs`)
+ *    - Tag matching includes slug, label, and synonyms; case-insensitive partial matching
  *
  * 4. **Pagination**: Limited to specified page size (max 20 events per page)
  *
@@ -204,15 +204,13 @@ export async function fetchEvents(params: LoadEventsParams) {
 
 		// For each word, create a condition that checks all searchable fields
 		const wordConditions = searchWords.map((word) => {
-			const matchingTagSlugs = [...allTags]
-				.filter((tag) => tag.slug.toLowerCase().includes(word.toLowerCase()) || tag.label.toLowerCase().includes(word.toLowerCase()))
-				.map((tag) => tag.slug);
+			const matchingTagSlugs = getTagSlugsMatchingSearch(word);
 
 			return or(
 				ilike(s.events.name, `%${word}%`),
-				sql<boolean>`EXISTS (SELECT 1 FROM unnest(${s.events.tags}) AS t(tag) WHERE t.tag ILIKE ${`%${word}%`})`,
 				ilike(s.events.description, `%${word}%`),
 				matchingTagSlugs.length ? arrayOverlaps(s.events.tagSlugs, matchingTagSlugs) : undefined,
+				sql<boolean>`EXISTS (SELECT 1 FROM unnest(COALESCE(${s.events.tagSlugs}, ARRAY[]::text[])) AS t(slug) WHERE t.slug ILIKE ${`%${word}%`})`,
 			);
 		});
 
