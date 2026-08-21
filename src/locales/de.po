@@ -16,6 +16,7 @@ msgstr ""
 #: src/routes/+layout.ts
 #: src/routes/+page.svelte
 #: src/routes/@/[slug]/+page.server.ts
+#: src/routes/type-specimen/+page.svelte
 msgid "Blissbase"
 msgstr "Blissbase"
 
@@ -2187,6 +2188,7 @@ msgid "defaultTimezone * <0/>"
 msgstr "defaultTimezone * <0/>"
 
 #: src/routes/+page.svelte
+#: src/routes/type-specimen/+page.svelte
 msgid "<0/> Achtsame Events in deiner Nähe <1/>"
 msgstr "<0/> Achtsame Events in deiner Nähe <1/>"
 
@@ -5139,3 +5141,12 @@ msgstr "Kreativer Ausdruck"
 #: src/lib/eventCategories.ts
 msgid "Heilige Sexualität"
 msgstr "Heilige Sexualität"
+
+#: src/routes/type-specimen/+page.ts
+msgid "Type specimen | Blissbase"
+msgstr "Type specimen | Blissbase"
+
+#. 0: font.name
+#: src/routes/type-specimen/+page.svelte
+msgid "Thickness {0}"
+msgstr "Thickness {0}"
