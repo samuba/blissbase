@@ -11,7 +11,8 @@ const TEXT_SOFT = `#733e0a`;
 const MAX_SUBTITLE_WIDTH = 640;
 
 /**
- * Composes the Blissbase OG poster: plaster background, gold mark, title, gold rule, subtitle.
+ * Composes the Blissbase OG poster: background, gold mark, title, gold rule, subtitle.
+ * Use `variant: 'collage'` for a lighter wash so photo tiles stay visible.
  */
 export async function composeOgPoster({
 	title,
@@ -19,29 +20,33 @@ export async function composeOgPoster({
 	background,
 	goldLogo,
 	brandFont,
+	variant = `poster`,
 }: {
 	title: string;
 	subtitle: string;
 	background: Buffer;
 	goldLogo: Buffer;
 	brandFont: Font;
+	variant?: `poster` | `collage`;
 }): Promise<Buffer> {
 	const width = OG_WIDTH * SCALE;
 	const height = OG_HEIGHT * SCALE;
 	const px = (value: number) => Math.round(value * SCALE);
+	const isCollage = variant === `collage`;
 
 	const resizedBackground = await sharp(background).resize(width, height, { fit: `cover`, position: `right` }).png().toBuffer();
 
-	const logoSize = px(252);
+	const logoSize = px(isCollage ? 200 : 252);
 	const logo = await prepareLogo({ goldLogo, size: logoSize });
 	const logoBounds = await opaqueBounds(logo);
 
-	const titleSize = 92 * SCALE;
-	const subtitleSize = 41 * SCALE;
+	const titleSize = safeGlyphFontSize((isCollage ? 78 : 92) * SCALE);
+	const subtitlePointSize = isCollage ? 37 : 41;
+	const subtitleSize = safeGlyphFontSize(subtitlePointSize * SCALE);
 	const subtitleLines = wrapText({
 		text: subtitle,
 		font: brandFont,
-		fontSize: 41,
+		fontSize: subtitlePointSize,
 		maxWidth: MAX_SUBTITLE_WIDTH,
 	});
 	const subtitleLineHeight = Math.round(subtitleSize * 1.2);
@@ -66,9 +71,9 @@ export async function composeOgPoster({
 	const titleBounds = await opaqueBounds(titleGlyphs.png);
 	const subtitleBounds = await Promise.all(subtitleGlyphs.map((glyphs) => opaqueBounds(glyphs.png)));
 	const textVisualWidth = Math.max(titleBounds.width, ...subtitleBounds.map((bounds) => bounds.width));
-	const textBlockHeight = titleSize + px(80) + subtitleBlockHeight;
+	const textBlockHeight = titleSize + px(isCollage ? 68 : 80) + subtitleBlockHeight;
 
-	const gap = px(50);
+	const gap = px(isCollage ? 40 : 50);
 	const groupWidth = logoBounds.width + gap + textVisualWidth;
 	const groupHeight = Math.max(logoBounds.height, textBlockHeight);
 	const groupX = Math.round((width - groupWidth) / 2);
@@ -79,20 +84,40 @@ export async function composeOgPoster({
 	const textX = groupX + logoBounds.width + gap;
 	const textTop = groupY + Math.round((groupHeight - textBlockHeight) / 2);
 	const titleBaseline = textTop + titleSize;
-	const ruleY = titleBaseline + px(26);
-	const firstSubtitleBaseline = ruleY + px(48);
+	const ruleY = titleBaseline + px(isCollage ? 22 : 26);
+	const firstSubtitleBaseline = ruleY + px(isCollage ? 40 : 48);
 	const titleTop = Math.round(titleBaseline - titleGlyphs.baseline);
+
+	const pad = px(36);
+	const panelX = groupX - pad;
+	const panelY = groupY - pad;
+	const panelW = groupWidth + pad * 2;
+	const panelH = groupHeight + pad * 2;
+	const washStops = isCollage
+		? `
+			<stop offset="0%" stop-color="#faf7f5" stop-opacity="0.18"/>
+			<stop offset="50%" stop-color="#faf7f5" stop-opacity="0.28"/>
+			<stop offset="100%" stop-color="#faf7f5" stop-opacity="0.22"/>
+		`
+		: `
+			<stop offset="0%" stop-color="#faf7f5" stop-opacity="0.45"/>
+			<stop offset="50%" stop-color="#faf7f5" stop-opacity="0.38"/>
+			<stop offset="100%" stop-color="#faf7f5" stop-opacity="0.42"/>
+		`;
 
 	const overlay = Buffer.from(`
 		<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
 			<defs>
 				<linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="#faf7f5" stop-opacity="0.45"/>
-					<stop offset="50%" stop-color="#faf7f5" stop-opacity="0.38"/>
-					<stop offset="100%" stop-color="#faf7f5" stop-opacity="0.42"/>
+					${washStops}
 				</linearGradient>
 			</defs>
 			<rect width="100%" height="100%" fill="url(#wash)"/>
+			${
+				isCollage
+					? `<rect x="${panelX}" y="${panelY}" width="${panelW}" height="${panelH}" rx="${px(28)}" fill="#faf7f5" fill-opacity="0.82"/>`
+					: ``
+			}
 			<rect x="${textX}" y="${ruleY}" width="${px(100)}" height="${px(3)}" rx="${1.5 * SCALE}" fill="${PRIMARY}"/>
 		</svg>
 	`);
@@ -160,6 +185,7 @@ async function prepareLogo({ goldLogo, size }: { goldLogo: Buffer; size: number 
 }
 
 async function renderBrandText({ text, font, fontSize, fill }: { text: string; font: Font; fontSize: number; fill: string }) {
+	const size = safeGlyphFontSize(fontSize);
 	const chars = [...text];
 	const parts = chars.map((char) =>
 		char === ` `
@@ -167,10 +193,10 @@ async function renderBrandText({ text, font, fontSize, fill }: { text: string; f
 					svg: null,
 					padding: 0,
 					baseline: 0,
-					advance: font.getAdvanceWidth(` `, fontSize),
+					advance: font.getAdvanceWidth(` `, size),
 					height: 0,
 				}
-			: renderWordPath({ text: char, font, fontSize, fill }),
+			: renderWordPath({ text: char, font, fontSize: size, fill }),
 	);
 	const drawn = parts.filter((part) => part.svg);
 	const padding = Math.max(...drawn.map((part) => part.padding));
@@ -208,7 +234,7 @@ async function renderBrandText({ text, font, fontSize, fill }: { text: string; f
 			.toBuffer(),
 		padding,
 		baseline,
-		advance: font.getAdvanceWidth(text, fontSize),
+		advance: font.getAdvanceWidth(text, size),
 	};
 }
 
@@ -229,6 +255,12 @@ function renderWordPath({ text, font, fontSize, fill }: { text: string; font: Fo
 		advance: font.getAdvanceWidth(text, fontSize),
 		height,
 	};
+}
+
+/** librsvg drops some Baloo glyphs at a few exact px sizes (e.g. `i` at 72). */
+function safeGlyphFontSize(fontSize: number) {
+	if (fontSize === 72 || fontSize === 87 || fontSize === 88) return fontSize + 1;
+	return fontSize;
 }
 
 function wrapText({ text, font, fontSize, maxWidth }: { text: string; font: Font; fontSize: number; maxWidth: number }) {

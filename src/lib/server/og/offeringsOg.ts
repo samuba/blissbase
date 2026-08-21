@@ -97,34 +97,56 @@ export async function loadVisibleListedOfferings(filterInput: OfferingsFilter) {
 }
 
 /**
- * Resolves a cached R2 OG URL for a location-specific poster, or returns the
- * static fallback so crawlers never wait on generation.
+ * Resolves a cached R2 OG URL for the filter, or schedules background generation
+ * and returns the static fallback so crawlers never wait on collage work.
  */
 export async function resolveOfferingsOgImageUrl(filterInput: OfferingsFilter) {
-	const locationLabel = offeringsOgLocationLabel(filterInput);
-	if (!locationLabel) return FALLBACK_OFFERINGS_OG_IMAGE;
+	const { filter, offerings } = await loadVisibleListedOfferings(filterInput);
+	const coverImageUrls = offerings
+		.map((offering) => offering.imageUrls?.[0]?.trim())
+		.filter((imageUrl): imageUrl is string => Boolean(imageUrl));
 
-	const objectKey = offeringsOgObjectKey(offeringsOgCacheKey(locationLabel));
+	if (!coverImageUrls.length) return FALLBACK_OFFERINGS_OG_IMAGE;
+
+	const locationLabel = offeringsOgLocationLabel(filter);
+	const objectKey = offeringsOgObjectKey(offeringsOgCacheKey({ filter, coverImageUrls }));
 	const cachedUrl = publicUrl(objectKey);
 
 	if (await exists(objectKey, creds)) {
 		return cachedUrl;
 	}
 
-	scheduleOfferingsOgWarm({ objectKey, locationLabel });
+	scheduleOfferingsOgWarm({
+		objectKey,
+		imageUrls: coverImageUrls,
+		locationLabel,
+	});
+
 	return FALLBACK_OFFERINGS_OG_IMAGE;
 }
 
 /** Fire-and-forget warm for a filter (e.g. after admin cache bust). */
 export function scheduleOfferingsOgWarmForFilter(filterInput: OfferingsFilter) {
-	const locationLabel = offeringsOgLocationLabel(filterInput);
-	if (!locationLabel) return;
-
-	const objectKey = offeringsOgObjectKey(offeringsOgCacheKey(locationLabel));
 	waitUntil(
-		warmOfferingsOgImage({ objectKey, locationLabel }).catch((error) => {
-			console.error(`Failed warming offerings OG image for filter:`, error);
-		}),
+		(async () => {
+			try {
+				const { filter, offerings } = await loadVisibleListedOfferings(filterInput);
+				const coverImageUrls = offerings
+					.map((offering) => offering.imageUrls?.[0]?.trim())
+					.filter((imageUrl): imageUrl is string => Boolean(imageUrl));
+
+				if (!coverImageUrls.length) return;
+
+				const objectKey = offeringsOgObjectKey(offeringsOgCacheKey({ filter, coverImageUrls }));
+				await warmOfferingsOgImage({
+					objectKey,
+					imageUrls: coverImageUrls,
+					locationLabel: offeringsOgLocationLabel(filter),
+				});
+			} catch (error) {
+				console.error(`Failed warming offerings OG image for filter:`, error);
+			}
+		})(),
 	);
 }
 
@@ -136,7 +158,7 @@ export async function bustOfferingsOgImageCache() {
 	return { deletedCount: keys.length };
 }
 
-function scheduleOfferingsOgWarm(args: { objectKey: string; locationLabel: string }) {
+function scheduleOfferingsOgWarm(args: { objectKey: string; imageUrls: string[]; locationLabel: string | null }) {
 	waitUntil(
 		warmOfferingsOgImage(args).catch((error) => {
 			console.error(`Failed warming offerings OG image:`, error);
@@ -144,7 +166,15 @@ function scheduleOfferingsOgWarm(args: { objectKey: string; locationLabel: strin
 	);
 }
 
-async function warmOfferingsOgImage({ objectKey, locationLabel }: { objectKey: string; locationLabel: string }) {
+async function warmOfferingsOgImage({
+	objectKey,
+	imageUrls,
+	locationLabel,
+}: {
+	objectKey: string;
+	imageUrls: string[];
+	locationLabel: string | null;
+}) {
 	if (warmingKeys.has(objectKey)) return;
 	warmingKeys.add(objectKey);
 
@@ -152,25 +182,29 @@ async function warmOfferingsOgImage({ objectKey, locationLabel }: { objectKey: s
 		if (await exists(objectKey, creds)) return;
 
 		const { createOfferingsOgImage } = await import(`./offeringsOgImage`);
-		const buffer = await createOfferingsOgImage({ locationLabel });
+		const buffer = await createOfferingsOgImage({ imageUrls, locationLabel });
 		await uploadImageAtObjectKey(buffer, objectKey, creds, `image/jpeg`);
 	} finally {
 		warmingKeys.delete(objectKey);
 	}
 }
 
-function offeringsOgLocationLabel(filterInput: OfferingsFilter) {
-	const sanitized = sanitizeLocationParams({
-		location: filterInput.location,
-		distance: filterInput.distance,
-		lat: filterInput.lat,
-		lng: filterInput.lng,
-	});
-	return (sanitized.lat != null && sanitized.lng != null ? sanitized.location : null)?.trim() || sanitized.location?.trim() || null;
+function offeringsOgLocationLabel(filter: OfferingsFilter) {
+	return (filter.lat != null && filter.lng != null ? filter.location : null)?.trim() || filter.location?.trim() || null;
 }
 
-function offeringsOgCacheKey(locationLabel: string) {
-	return createHash(`sha256`).update(locationLabel).digest(`hex`).slice(0, 24);
+function offeringsOgCacheKey({ filter, coverImageUrls }: { filter: OfferingsFilter; coverImageUrls: string[] }) {
+	const payload = JSON.stringify({
+		location: filter.location,
+		distance: filter.distance,
+		lat: filter.lat,
+		lng: filter.lng,
+		searchTerm: filter.searchTerm,
+		includeOnline: filter.includeOnline,
+		// Sort so tile shuffle order does not create duplicate cache entries.
+		coverImageUrls: [...coverImageUrls].sort(),
+	});
+	return createHash(`sha256`).update(payload).digest(`hex`).slice(0, 24);
 }
 
 function offeringsOgObjectKey(cacheKey: string) {
