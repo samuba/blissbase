@@ -66,7 +66,7 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
     const title = 'Blissbase'
     const description = 'Find conscious events near you.'
     const faviconUrl = 'https://www.blissbase.app/favicon.png?v=2'
-    const posterUrl = 'https://www.blissbase.app/og-poster.png'
+    const posterUrl = 'https://www.blissbase.app/og-poster.png?v=3'
     const baseMetaTags = Object.freeze({
         title,
         description,
