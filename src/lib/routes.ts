@@ -13,6 +13,7 @@ export const routes = {
     sources: () => resolve(`/sources`) ,
     about: () => resolve(`/about`) ,
     faq: () => resolve(`/faq`) ,
+    typeSpecimen: () => resolve(`/type-specimen`) ,
     newEvent: () => resolve(`/events/new`) ,
     offeringsList: (args: Partial<OfferingsFilter> = {}) => {
         const url = new URL(resolve(`/offerings`), BASE_URL);
