@@ -35,28 +35,36 @@ async function writeOgPoster() {
 
 	const logoSize = px(252)
 	const logo = await prepareLogo(logoSize)
+	const logoBounds = await opaqueBounds(logo)
 
-	const titleSize = 86 * SCALE
-	const subtitleSize = 38 * SCALE
+	const titleSize = 92 * SCALE
+	const subtitleSize = 41 * SCALE
 	const titleGlyphs = await renderBrandText({ text: title, fontSize: titleSize, fill: TEXT })
 	const subtitleGlyphs = await renderBrandText({
 		text: subtitle,
 		fontSize: subtitleSize,
 		fill: TEXT_SOFT,
 	})
-	const textBlockWidth = Math.max(titleGlyphs.advance, subtitleGlyphs.advance)
+	const titleBounds = await opaqueBounds(titleGlyphs.png)
+	const subtitleBounds = await opaqueBounds(subtitleGlyphs.png)
+	const textVisualWidth = Math.max(titleBounds.width, subtitleBounds.width)
 	const textBlockHeight = titleSize + px(80) + subtitleSize
 
 	const gap = px(50)
-	const groupWidth = logoSize + gap + textBlockWidth
+	const groupWidth = logoBounds.width + gap + textVisualWidth
+	const groupHeight = Math.max(logoBounds.height, textBlockHeight)
 	const groupX = Math.round((width - groupWidth) / 2)
-	const logoX = groupX
-	const logoY = Math.round((height - logoSize) / 2)
-	const textX = logoX + logoSize + gap
-	const textTop = logoY + Math.round((logoSize - textBlockHeight) / 2) + px(8)
+	const groupY = Math.round((height - groupHeight) / 2)
+
+	const logoX = groupX - logoBounds.minX
+	const logoY = groupY - logoBounds.minY + Math.round((groupHeight - logoBounds.height) / 2)
+	const textX = groupX + logoBounds.width + gap
+	const textTop = groupY + Math.round((groupHeight - textBlockHeight) / 2)
 	const titleBaseline = textTop + titleSize
 	const ruleY = titleBaseline + px(26)
 	const subtitleBaseline = ruleY + px(48)
+	const titleTop = Math.round(titleBaseline - titleGlyphs.baseline)
+	const subtitleTop = Math.round(subtitleBaseline - subtitleGlyphs.baseline)
 
 	const overlay = Buffer.from(`
 		<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -78,13 +86,13 @@ async function writeOgPoster() {
 			{ input: logo, left: logoX, top: logoY },
 			{
 				input: titleGlyphs.png,
-				left: textX - titleGlyphs.padding,
-				top: Math.round(titleBaseline - titleGlyphs.baseline),
+				left: textX - titleBounds.minX,
+				top: titleTop,
 			},
 			{
 				input: subtitleGlyphs.png,
-				left: textX - subtitleGlyphs.padding,
-				top: Math.round(subtitleBaseline - subtitleGlyphs.baseline),
+				left: textX - subtitleBounds.minX,
+				top: subtitleTop,
 			},
 		])
 		.png()
@@ -226,5 +234,32 @@ function renderWordPath({
 		baseline,
 		advance: brandFont.getAdvanceWidth(text, fontSize),
 		height,
+	}
+}
+
+async function opaqueBounds(png: Buffer) {
+	const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+	let minX = info.width
+	let minY = info.height
+	let maxX = 0
+	let maxY = 0
+
+	for (let y = 0; y < info.height; y++) {
+		for (let x = 0; x < info.width; x++) {
+			if ((data[(y * info.width + x) * 4 + 3] ?? 0) < 10) continue
+			if (x < minX) minX = x
+			if (x > maxX) maxX = x
+			if (y < minY) minY = y
+			if (y > maxY) maxY = y
+		}
+	}
+
+	return {
+		minX,
+		minY,
+		maxX,
+		maxY,
+		width: maxX - minX + 1,
+		height: maxY - minY + 1,
 	}
 }
