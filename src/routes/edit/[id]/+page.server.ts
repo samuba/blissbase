@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { noindexPageMetaTags } from '$lib/common';
 import { db, s } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { isAdminSession } from '$lib/server/admin';
@@ -27,6 +28,7 @@ export async function load({ url, params: { id } }) {
         return {
             event,
             editFormValues: getEditEventInitialValues(event),
+            pageMetaTags: noindexPageMetaTags,
         };
     }
 

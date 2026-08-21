@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { noindexPageMetaTags } from '$lib/common';
 import type { Config } from '@sveltejs/adapter-vercel';
 import type { LayoutServerLoad } from './$types';
 
@@ -12,5 +13,5 @@ export const load = (({ locals }) => {
 		error(403, `Admin only`);
 	}
 
-	return {};
+	return { pageMetaTags: noindexPageMetaTags };
 }) satisfies LayoutServerLoad;

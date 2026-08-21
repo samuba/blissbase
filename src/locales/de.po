@@ -2386,9 +2386,6 @@ msgstr "Musik"
 msgid "Tantra"
 msgstr "Tantra"
 
-#~ msgid "Beziehungen"
-#~ msgstr "Beziehungen"
-
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Persönliche Entwicklung"
@@ -2488,9 +2485,6 @@ msgstr "Tanzen in Verbindung"
 #: src/lib/eventCategories.ts
 msgid "Ritueller Tanz"
 msgstr "Ritueller Tanz"
-
-#~ msgid "Tanzimpro"
-#~ msgstr "Tanzimpro"
 
 #: src/lib/eventCategories.ts
 msgid "Zouk"
@@ -2675,9 +2669,6 @@ msgstr "Atemkreis"
 msgid "Rebirthing"
 msgstr "Rebirthing"
 
-#~ msgid "Rebirthing Breathwork"
-#~ msgstr "Rebirthing Breathwork"
-
 #: src/lib/eventCategories.ts
 msgid "Wim-Hof-Methode"
 msgstr "Wim-Hof-Methode"
@@ -2742,9 +2733,6 @@ msgstr "Tai Chi"
 #: src/lib/eventCategories.ts
 msgid "Mobilität"
 msgstr "Mobilität"
-
-#~ msgid "Mobilität / Funktionale Bewegung"
-#~ msgstr "Mobilität / Funktionale Bewegung"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
@@ -2969,15 +2957,9 @@ msgstr "Musiktherapie"
 msgid "Stimmaktivierung"
 msgstr "Stimmaktivierung"
 
-#~ msgid "Singkreise"
-#~ msgstr "Singkreise"
-
 #: src/lib/eventCategories.ts
 msgid "Medizinmusik"
 msgstr "Medizinmusik"
-
-#~ msgid "Trommelkreise"
-#~ msgstr "Trommelkreise"
 
 #: src/lib/eventCategories.ts
 msgid "Ukulele"
@@ -3144,9 +3126,6 @@ msgstr "Konfliktklärung"
 msgid "Verbindungspraxis"
 msgstr "Verbindungspraxis"
 
-#~ msgid "Kuscheln / Bewusste Berührung"
-#~ msgstr "Kuscheln / Bewusste Berührung"
-
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Selbstliebe"
@@ -3268,9 +3247,6 @@ msgstr "Verspieltheit"
 #: src/lib/eventCategories.ts
 msgid "Hochbegabt"
 msgstr "Hochbegabt"
-
-#~ msgid "HSP (Hochsensible Person)"
-#~ msgstr "HSP (Hochsensible Person)"
 
 #: src/lib/eventCategories.ts
 msgid "Hochsensibel"
@@ -3534,9 +3510,6 @@ msgstr "Devotionale Praxis"
 msgid "Enneagramm"
 msgstr "Enneagramm"
 
-#~ msgid "Kartenlegung"
-#~ msgstr "Kartenlegung"
-
 #: src/lib/eventCategories.ts
 msgid "I Ging"
 msgstr "I Ging"
@@ -3637,12 +3610,6 @@ msgstr "Keltische Jahresfeste"
 msgid "Despacho-Zeremonie"
 msgstr "Despacho-Zeremonie"
 
-#~ msgid "Vollmondzeremonie"
-#~ msgstr "Vollmondzeremonie"
-
-#~ msgid "Neumondzeremonie"
-#~ msgstr "Neumondzeremonie"
-
 #: src/lib/eventCategories.ts
 msgid "Temazcal"
 msgstr "Temazcal"
@@ -3658,9 +3625,6 @@ msgstr "Ahnenheilung"
 #: src/lib/eventCategories.ts
 msgid "Womb-Ritual"
 msgstr "Womb-Ritual"
-
-#~ msgid "Sacred Sexuality"
-#~ msgstr "Sacred Sexuality"
 
 #: src/lib/eventCategories.ts
 msgid "5Rhythmen"
@@ -3686,9 +3650,6 @@ msgstr "Transformatives Atmen"
 msgid "Atemanhalten"
 msgstr "Atemanhalten"
 
-#~ msgid "Acro- und Partnerbewegung"
-#~ msgstr "Acro- und Partnerbewegung"
-
 #: src/lib/eventCategories.ts
 msgid "Prana-Heilung"
 msgstr "Prana-Heilung"
@@ -3696,9 +3657,6 @@ msgstr "Prana-Heilung"
 #: src/lib/eventCategories.ts
 msgid "Biofeldheilung"
 msgstr "Biofeldheilung"
-
-#~ msgid "Hands-on-Energieheilung"
-#~ msgstr "Hands-on-Energieheilung"
 
 #: src/lib/eventCategories.ts
 msgid "Traumaauflösung"
@@ -3772,1080 +3730,6 @@ msgstr "Übergangsriten"
 msgid "Achtsames Dating"
 msgstr "Achtsames Dating"
 
-#~ msgid "Sonnenwende"
-#~ msgstr "Sonnenwende"
-
-#~ msgid "Tagundnachtgleiche"
-#~ msgstr "Tagundnachtgleiche"
-
-#~ msgid "dance"
-#~ msgstr "dance"
-
-#~ msgid "ecstatic-dance"
-#~ msgstr "ecstatic-dance"
-
-#~ msgid "conscious-dance"
-#~ msgstr "conscious-dance"
-
-#~ msgid "5rhythms"
-#~ msgstr "5rhythms"
-
-#~ msgid "contact-improvisation"
-#~ msgstr "contact-improvisation"
-
-#~ msgid "biodanza"
-#~ msgstr "biodanza"
-
-#~ msgid "movement-medicine"
-#~ msgstr "movement-medicine"
-
-#~ msgid "open-floor"
-#~ msgstr "open-floor"
-
-#~ msgid "somatic-dance"
-#~ msgstr "somatic-dance"
-
-#~ msgid "dance-meditation"
-#~ msgstr "dance-meditation"
-
-#~ msgid "dance-improvisation"
-#~ msgstr "dance-improvisation"
-
-#~ msgid "tantric-dance"
-#~ msgstr "tantric-dance"
-
-#~ msgid "trance-dance"
-#~ msgstr "trance-dance"
-
-#~ msgid "shamanic-dance"
-#~ msgstr "shamanic-dance"
-
-#~ msgid "intuitive-dance"
-#~ msgstr "intuitive-dance"
-
-#~ msgid "free-dance"
-#~ msgstr "free-dance"
-
-#~ msgid "dancing-in-connection"
-#~ msgstr "dancing-in-connection"
-
-#~ msgid "ritual-dance"
-#~ msgstr "ritual-dance"
-
-#~ msgid "dance-impro"
-#~ msgstr "dance-impro"
-
-#~ msgid "zouk"
-#~ msgstr "zouk"
-
-#~ msgid "sufi-dance"
-#~ msgstr "sufi-dance"
-
-#~ msgid "dance-performance"
-#~ msgstr "dance-performance"
-
-#~ msgid "whirling"
-#~ msgstr "whirling"
-
-#~ msgid "dance-workshop"
-#~ msgstr "dance-workshop"
-
-#~ msgid "conscious-clubbing"
-#~ msgstr "conscious-clubbing"
-
-#~ msgid "sensual-dance"
-#~ msgstr "sensual-dance"
-
-#~ msgid "bellydance"
-#~ msgstr "bellydance"
-
-#~ msgid "dance-coaching"
-#~ msgstr "dance-coaching"
-
-#~ msgid "sacred-dance"
-#~ msgstr "sacred-dance"
-
-#~ msgid "embodiment-dance"
-#~ msgstr "embodiment-dance"
-
-#~ msgid "contact-beyond-contact"
-#~ msgstr "contact-beyond-contact"
-
-#~ msgid "outdoor-dance"
-#~ msgstr "outdoor-dance"
-
-#~ msgid "forro"
-#~ msgstr "forro"
-
-#~ msgid "yogadanza"
-#~ msgstr "yogadanza"
-
-#~ msgid "breathwork"
-#~ msgstr "breathwork"
-
-#~ msgid "breath"
-#~ msgstr "breath"
-
-#~ msgid "breath-circle"
-#~ msgstr "breath-circle"
-
-#~ msgid "rebirthing"
-#~ msgstr "rebirthing"
-
-#~ msgid "rebirthing-breathwork"
-#~ msgstr "rebirthing-breathwork"
-
-#~ msgid "wim-hof-method"
-#~ msgstr "wim-hof-method"
-
-#~ msgid "ice-bath"
-#~ msgstr "ice-bath"
-
-#~ msgid "conscious-connected-breathwork"
-#~ msgstr "conscious-connected-breathwork"
-
-#~ msgid "holotropicstyle-breathwork"
-#~ msgstr "holotropicstyle-breathwork"
-
-#~ msgid "transformational-breathwork"
-#~ msgstr "transformational-breathwork"
-
-#~ msgid "functional-breathing"
-#~ msgstr "functional-breathing"
-
-#~ msgid "pranayama"
-#~ msgstr "pranayama"
-
-#~ msgid "breath-retention"
-#~ msgstr "breath-retention"
-
-#~ msgid "breath-cold-exposure"
-#~ msgstr "breath-cold-exposure"
-
-#~ msgid "tantra"
-#~ msgstr "tantra"
-
-#~ msgid "conscious-sexuality"
-#~ msgstr "conscious-sexuality"
-
-#~ msgid "sacred-sexuality"
-#~ msgstr "sacred-sexuality"
-
-#~ msgid "transformational-sexuality"
-#~ msgstr "transformational-sexuality"
-
-#~ msgid "temple"
-#~ msgstr "temple"
-
-#~ msgid "sensuality"
-#~ msgstr "sensuality"
-
-#~ msgid "intimacy"
-#~ msgstr "intimacy"
-
-#~ msgid "sexuality"
-#~ msgstr "sexuality"
-
-#~ msgid "shibari"
-#~ msgstr "shibari"
-
-#~ msgid "classical-tantra"
-#~ msgstr "classical-tantra"
-
-#~ msgid "neotantra"
-#~ msgstr "neotantra"
-
-#~ msgid "sexual-embodiment"
-#~ msgstr "sexual-embodiment"
-
-#~ msgid "conscious-touch"
-#~ msgstr "conscious-touch"
-
-#~ msgid "intimacy-practice"
-#~ msgstr "intimacy-practice"
-
-#~ msgid "erotic-energy"
-#~ msgstr "erotic-energy"
-
-#~ msgid "polarity"
-#~ msgstr "polarity"
-
-#~ msgid "temple-arts"
-#~ msgstr "temple-arts"
-
-#~ msgid "play-party"
-#~ msgstr "play-party"
-
-#~ msgid "meditation"
-#~ msgstr "meditation"
-
-#~ msgid "mindfulness"
-#~ msgstr "mindfulness"
-
-#~ msgid "yoga-nidra"
-#~ msgstr "yoga-nidra"
-
-#~ msgid "insight-dialogue"
-#~ msgstr "insight-dialogue"
-
-#~ msgid "satsang"
-#~ msgstr "satsang"
-
-#~ msgid "being-orientation"
-#~ msgstr "being-orientation"
-
-#~ msgid "vipassana"
-#~ msgstr "vipassana"
-
-#~ msgid "zen-meditation"
-#~ msgstr "zen-meditation"
-
-#~ msgid "guided-meditation"
-#~ msgstr "guided-meditation"
-
-#~ msgid "silent-meditation"
-#~ msgstr "silent-meditation"
-
-#~ msgid "walking-meditation"
-#~ msgstr "walking-meditation"
-
-#~ msgid "non-dual-meditation"
-#~ msgstr "non-dual-meditation"
-
-#~ msgid "visualization"
-#~ msgstr "visualization"
-
-#~ msgid "contemplative-practice"
-#~ msgstr "contemplative-practice"
-
-#~ msgid "movement"
-#~ msgstr "movement"
-
-#~ msgid "playfight"
-#~ msgstr "playfight"
-
-#~ msgid "acro-yoga"
-#~ msgstr "acro-yoga"
-
-#~ msgid "partner-movement"
-#~ msgstr "partner-movement"
-
-#~ msgid "authentic-movement"
-#~ msgstr "authentic-movement"
-
-#~ msgid "primal-movement"
-#~ msgstr "primal-movement"
-
-#~ msgid "somatic-movement"
-#~ msgstr "somatic-movement"
-
-#~ msgid "functional-movement"
-#~ msgstr "functional-movement"
-
-#~ msgid "qigong"
-#~ msgstr "qigong"
-
-#~ msgid "tai-chi"
-#~ msgstr "tai-chi"
-
-#~ msgid "mobility"
-#~ msgstr "mobility"
-
-#~ msgid "mobility-functional-movement"
-#~ msgstr "mobility-functional-movement"
-
-#~ msgid "acro-partner-movement"
-#~ msgstr "acro-partner-movement"
-
-#~ msgid "feldenkrais"
-#~ msgstr "feldenkrais"
-
-#~ msgid "energy-work"
-#~ msgstr "energy-work"
-
-#~ msgid "reiki"
-#~ msgstr "reiki"
-
-#~ msgid "pranic-healing"
-#~ msgstr "pranic-healing"
-
-#~ msgid "energy-medicine"
-#~ msgstr "energy-medicine"
-
-#~ msgid "chakra-work"
-#~ msgstr "chakra-work"
-
-#~ msgid "chakras"
-#~ msgstr "chakras"
-
-#~ msgid "kundalini-activation"
-#~ msgstr "kundalini-activation"
-
-#~ msgid "kundalini"
-#~ msgstr "kundalini"
-
-#~ msgid "biofield-healing"
-#~ msgstr "biofield-healing"
-
-#~ msgid "handson-energy-healing"
-#~ msgstr "handson-energy-healing"
-
-#~ msgid "light-language"
-#~ msgstr "light-language"
-
-#~ msgid "sound-healing"
-#~ msgstr "sound-healing"
-
-#~ msgid "sound-bath"
-#~ msgstr "sound-bath"
-
-#~ msgid "sound-journey"
-#~ msgstr "sound-journey"
-
-#~ msgid "gong"
-#~ msgstr "gong"
-
-#~ msgid "singing-bowls"
-#~ msgstr "singing-bowls"
-
-#~ msgid "bodywork"
-#~ msgstr "bodywork"
-
-#~ msgid "massage"
-#~ msgstr "massage"
-
-#~ msgid "healing"
-#~ msgstr "healing"
-
-#~ msgid "shiatsu"
-#~ msgstr "shiatsu"
-
-#~ msgid "haptonomy"
-#~ msgstr "haptonomy"
-
-#~ msgid "touch"
-#~ msgstr "touch"
-
-#~ msgid "cuddle"
-#~ msgstr "cuddle"
-
-#~ msgid "trauma-release"
-#~ msgstr "trauma-release"
-
-#~ msgid "somatic-experiencing"
-#~ msgstr "somatic-experiencing"
-
-#~ msgid "polyvagal-theory"
-#~ msgstr "polyvagal-theory"
-
-#~ msgid "aura-reading"
-#~ msgstr "aura-reading"
-
-#~ msgid "health"
-#~ msgstr "health"
-
-#~ msgid "relaxation"
-#~ msgstr "relaxation"
-
-#~ msgid "stress"
-#~ msgstr "stress"
-
-#~ msgid "focusing"
-#~ msgstr "focusing"
-
-#~ msgid "yoni-steam"
-#~ msgstr "yoni-steam"
-
-#~ msgid "womb-healing"
-#~ msgstr "womb-healing"
-
-#~ msgid "aromatherapy"
-#~ msgstr "aromatherapy"
-
-#~ msgid "ayurveda"
-#~ msgstr "ayurveda"
-
-#~ msgid "germanic-new-medicine"
-#~ msgstr "germanic-new-medicine"
-
-#~ msgid "sauna"
-#~ msgstr "sauna"
-
-#~ msgid "selfcare"
-#~ msgstr "selfcare"
-
-#~ msgid "body-awareness"
-#~ msgstr "body-awareness"
-
-#~ msgid "embodiment"
-#~ msgstr "embodiment"
-
-#~ msgid "nervous-system-regulation"
-#~ msgstr "nervous-system-regulation"
-
-#~ msgid "tre"
-#~ msgstr "tre"
-
-#~ msgid "embodied-release"
-#~ msgstr "embodied-release"
-
-#~ msgid "therapeutic-touch"
-#~ msgstr "therapeutic-touch"
-
-#~ msgid "myofascial-release"
-#~ msgstr "myofascial-release"
-
-#~ msgid "craniosacral-work"
-#~ msgstr "craniosacral-work"
-
-#~ msgid "structural-integration"
-#~ msgstr "structural-integration"
-
-#~ msgid "alexander-technique"
-#~ msgstr "alexander-technique"
-
-#~ msgid "music"
-#~ msgstr "music"
-
-#~ msgid "mantra-singing"
-#~ msgstr "mantra-singing"
-
-#~ msgid "kirtan"
-#~ msgstr "kirtan"
-
-#~ msgid "drum-circle"
-#~ msgstr "drum-circle"
-
-#~ msgid "voice-liberation"
-#~ msgstr "voice-liberation"
-
-#~ msgid "live-music"
-#~ msgstr "live-music"
-
-#~ msgid "handpan"
-#~ msgstr "handpan"
-
-#~ msgid "performance"
-#~ msgstr "performance"
-
-#~ msgid "music-lesson"
-#~ msgstr "music-lesson"
-
-#~ msgid "lying-concert"
-#~ msgstr "lying-concert"
-
-#~ msgid "singing-circle"
-#~ msgstr "singing-circle"
-
-#~ msgid "voice-expression"
-#~ msgstr "voice-expression"
-
-#~ msgid "music-therapy"
-#~ msgstr "music-therapy"
-
-#~ msgid "sanskrit-mantra-recitation"
-#~ msgstr "sanskrit-mantra-recitation"
-
-#~ msgid "voice-activation"
-#~ msgstr "voice-activation"
-
-#~ msgid "singing-circles"
-#~ msgstr "singing-circles"
-
-#~ msgid "medicine-music"
-#~ msgstr "medicine-music"
-
-#~ msgid "drum-circles"
-#~ msgstr "drum-circles"
-
-#~ msgid "ukulele"
-#~ msgstr "ukulele"
-
-#~ msgid "didgeridoo"
-#~ msgstr "didgeridoo"
-
-#~ msgid "harp"
-#~ msgstr "harp"
-
-#~ msgid "jam-session"
-#~ msgstr "jam-session"
-
-#~ msgid "psy-trance"
-#~ msgstr "psy-trance"
-
-#~ msgid "concert"
-#~ msgstr "concert"
-
-#~ msgid "soul-voice"
-#~ msgstr "soul-voice"
-
-#~ msgid "drum-making"
-#~ msgstr "drum-making"
-
-#~ msgid "relationship"
-#~ msgstr "relationship"
-
-#~ msgid "relationships"
-#~ msgstr "relationships"
-
-#~ msgid "authentic-relating"
-#~ msgstr "authentic-relating"
-
-#~ msgid "dating"
-#~ msgstr "dating"
-
-#~ msgid "open-relationships"
-#~ msgstr "open-relationships"
-
-#~ msgid "nonviolent-communication"
-#~ msgstr "nonviolent-communication"
-
-#~ msgid "boundaries"
-#~ msgstr "boundaries"
-
-#~ msgid "connection"
-#~ msgstr "connection"
-
-#~ msgid "heart-connection"
-#~ msgstr "heart-connection"
-
-#~ msgid "love"
-#~ msgstr "love"
-
-#~ msgid "family"
-#~ msgstr "family"
-
-#~ msgid "family-system"
-#~ msgstr "family-system"
-
-#~ msgid "family-constellations"
-#~ msgstr "family-constellations"
-
-#~ msgid "conscious-parenting"
-#~ msgstr "conscious-parenting"
-
-#~ msgid "motherhood"
-#~ msgstr "motherhood"
-
-#~ msgid "fatherhood"
-#~ msgstr "fatherhood"
-
-#~ msgid "parentchild"
-#~ msgstr "parentchild"
-
-#~ msgid "motherdaughter"
-#~ msgstr "motherdaughter"
-
-#~ msgid "fatherson"
-#~ msgstr "fatherson"
-
-#~ msgid "fatherdaughter"
-#~ msgstr "fatherdaughter"
-
-#~ msgid "pregnancy"
-#~ msgstr "pregnancy"
-
-#~ msgid "postpartum"
-#~ msgstr "postpartum"
-
-#~ msgid "mother-circle"
-#~ msgstr "mother-circle"
-
-#~ msgid "childrens-workshop"
-#~ msgstr "childrens-workshop"
-
-#~ msgid "queer"
-#~ msgstr "queer"
-
-#~ msgid "feminine"
-#~ msgstr "feminine"
-
-#~ msgid "masculine"
-#~ msgstr "masculine"
-
-#~ msgid "sharing-circle"
-#~ msgstr "sharing-circle"
-
-#~ msgid "mixed-circle"
-#~ msgstr "mixed-circle"
-
-#~ msgid "relationship-constellation"
-#~ msgstr "relationship-constellation"
-
-#~ msgid "conscious-relationship"
-#~ msgstr "conscious-relationship"
-
-#~ msgid "couples-work"
-#~ msgstr "couples-work"
-
-#~ msgid "attachment"
-#~ msgstr "attachment"
-
-#~ msgid "communication"
-#~ msgstr "communication"
-
-#~ msgid "conflict-repair"
-#~ msgstr "conflict-repair"
-
-#~ msgid "connection-practice"
-#~ msgstr "connection-practice"
-
-#~ msgid "cuddle-conscious-touch"
-#~ msgstr "cuddle-conscious-touch"
-
-#~ msgid "conscious-dating"
-#~ msgstr "conscious-dating"
-
-#~ msgid "selflove"
-#~ msgstr "selflove"
-
-#~ msgid "personal-growth"
-#~ msgstr "personal-growth"
-
-#~ msgid "personal-development"
-#~ msgstr "personal-development"
-
-#~ msgid "personal-leadership"
-#~ msgstr "personal-leadership"
-
-#~ msgid "entrepreneurship"
-#~ msgstr "entrepreneurship"
-
-#~ msgid "yoga"
-#~ msgstr "yoga"
-
-#~ msgid "kundalini-yoga"
-#~ msgstr "kundalini-yoga"
-
-#~ msgid "childrens-yoga"
-#~ msgstr "childrens-yoga"
-
-#~ msgid "sup-yoga"
-#~ msgstr "sup-yoga"
-
-#~ msgid "therapy"
-#~ msgstr "therapy"
-
-#~ msgid "psychology"
-#~ msgstr "psychology"
-
-#~ msgid "inner-child"
-#~ msgstr "inner-child"
-
-#~ msgid "shadow-work"
-#~ msgstr "shadow-work"
-
-#~ msgid "anger-work"
-#~ msgstr "anger-work"
-
-#~ msgid "mens-workshop"
-#~ msgstr "mens-workshop"
-
-#~ msgid "womens-workshop"
-#~ msgstr "womens-workshop"
-
-#~ msgid "mens-circle"
-#~ msgstr "mens-circle"
-
-#~ msgid "womens-circle"
-#~ msgstr "womens-circle"
-
-#~ msgid "hypnosis"
-#~ msgstr "hypnosis"
-
-#~ msgid "constellations"
-#~ msgstr "constellations"
-
-#~ msgid "organizational-constellations"
-#~ msgstr "organizational-constellations"
-
-#~ msgid "systemic-work"
-#~ msgstr "systemic-work"
-
-#~ msgid "knowledge"
-#~ msgstr "knowledge"
-
-#~ msgid "course"
-#~ msgstr "course"
-
-#~ msgid "year-program"
-#~ msgstr "year-program"
-
-#~ msgid "program"
-#~ msgstr "program"
-
-#~ msgid "work-and-career"
-#~ msgstr "work-and-career"
-
-#~ msgid "emotion-coaching"
-#~ msgstr "emotion-coaching"
-
-#~ msgid "laughter-workshop"
-#~ msgstr "laughter-workshop"
-
-#~ msgid "selfexpression"
-#~ msgstr "selfexpression"
-
-#~ msgid "creativity"
-#~ msgstr "creativity"
-
-#~ msgid "playfulness"
-#~ msgstr "playfulness"
-
-#~ msgid "gifted"
-#~ msgstr "gifted"
-
-#~ msgid "hsp-highly-sensitive-person"
-#~ msgstr "hsp-highly-sensitive-person"
-
-#~ msgid "highly-sensitive"
-#~ msgstr "highly-sensitive"
-
-#~ msgid "addiction"
-#~ msgstr "addiction"
-
-#~ msgid "psychiatric-labels"
-#~ msgstr "psychiatric-labels"
-
-#~ msgid "grief-and-loss"
-#~ msgstr "grief-and-loss"
-
-#~ msgid "menopause-transition"
-#~ msgstr "menopause-transition"
-
-#~ msgid "vanishing-twin"
-#~ msgstr "vanishing-twin"
-
-#~ msgid "talent-game"
-#~ msgstr "talent-game"
-
-#~ msgid "creative-arts-therapy"
-#~ msgstr "creative-arts-therapy"
-
-#~ msgid "drama-therapy"
-#~ msgstr "drama-therapy"
-
-#~ msgid "writing"
-#~ msgstr "writing"
-
-#~ msgid "art"
-#~ msgstr "art"
-
-#~ msgid "intuitive-painting"
-#~ msgstr "intuitive-painting"
-
-#~ msgid "cocreation"
-#~ msgstr "cocreation"
-
-#~ msgid "the-inner-voice"
-#~ msgstr "the-inner-voice"
-
-#~ msgid "collective-evolution"
-#~ msgstr "collective-evolution"
-
-#~ msgid "consciousness-development"
-#~ msgstr "consciousness-development"
-
-#~ msgid "purpose-life-direction"
-#~ msgstr "purpose-life-direction"
-
-#~ msgid "mindset"
-#~ msgstr "mindset"
-
-#~ msgid "confidence-selfesteem"
-#~ msgstr "confidence-selfesteem"
-
-#~ msgid "emotional-intelligence"
-#~ msgstr "emotional-intelligence"
-
-#~ msgid "parts-work"
-#~ msgstr "parts-work"
-
-#~ msgid "belief-pattern-transformation"
-#~ msgstr "belief-pattern-transformation"
-
-#~ msgid "intuition"
-#~ msgstr "intuition"
-
-#~ msgid "systemic-constellations"
-#~ msgstr "systemic-constellations"
-
-#~ msgid "regression"
-#~ msgstr "regression"
-
-#~ msgid "pastlife-exploration"
-#~ msgstr "pastlife-exploration"
-
-#~ msgid "past-life-regression"
-#~ msgstr "past-life-regression"
-
-#~ msgid "spirituality"
-#~ msgstr "spirituality"
-
-#~ msgid "shamanism"
-#~ msgstr "shamanism"
-
-#~ msgid "lightwork"
-#~ msgstr "lightwork"
-
-#~ msgid "astrology"
-#~ msgstr "astrology"
-
-#~ msgid "human-design"
-#~ msgstr "human-design"
-
-#~ msgid "gene-keys"
-#~ msgstr "gene-keys"
-
-#~ msgid "channeling"
-#~ msgstr "channeling"
-
-#~ msgid "mediumship"
-#~ msgstr "mediumship"
-
-#~ msgid "tarot"
-#~ msgstr "tarot"
-
-#~ msgid "card-readings"
-#~ msgstr "card-readings"
-
-#~ msgid "nonduality"
-#~ msgstr "nonduality"
-
-#~ msgid "soul-connection"
-#~ msgstr "soul-connection"
-
-#~ msgid "new-earth"
-#~ msgstr "new-earth"
-
-#~ msgid "manifestation"
-#~ msgstr "manifestation"
-
-#~ msgid "quantum-jumping"
-#~ msgstr "quantum-jumping"
-
-#~ msgid "law-of-attraction"
-#~ msgstr "law-of-attraction"
-
-#~ msgid "meet-your-guides"
-#~ msgstr "meet-your-guides"
-
-#~ msgid "tzolkin-maya-calendar"
-#~ msgstr "tzolkin-maya-calendar"
-
-#~ msgid "sufism"
-#~ msgstr "sufism"
-
-#~ msgid "taoism"
-#~ msgstr "taoism"
-
-#~ msgid "alchemy"
-#~ msgstr "alchemy"
-
-#~ msgid "a-course-in-miracles"
-#~ msgstr "a-course-in-miracles"
-
-#~ msgid "pendulum-dowsing"
-#~ msgstr "pendulum-dowsing"
-
-#~ msgid "medicine-wheel"
-#~ msgstr "medicine-wheel"
-
-#~ msgid "power-place"
-#~ msgstr "power-place"
-
-#~ msgid "labyrinth"
-#~ msgstr "labyrinth"
-
-#~ msgid "cosmic-contact"
-#~ msgstr "cosmic-contact"
-
-#~ msgid "multidimensionality"
-#~ msgstr "multidimensionality"
-
-#~ msgid "multidimensional-embodiment-transmission"
-#~ msgstr "multidimensional-embodiment-transmission"
-
-#~ msgid "numerology"
-#~ msgstr "numerology"
-
-#~ msgid "gemstones"
-#~ msgstr "gemstones"
-
-#~ msgid "feng-shui"
-#~ msgstr "feng-shui"
-
-#~ msgid "dreams"
-#~ msgstr "dreams"
-
-#~ msgid "universal-oneness"
-#~ msgstr "universal-oneness"
-
-#~ msgid "soul-happiness"
-#~ msgstr "soul-happiness"
-
-#~ msgid "soul-mission"
-#~ msgstr "soul-mission"
-
-#~ msgid "mother-earth"
-#~ msgstr "mother-earth"
-
-#~ msgid "osho"
-#~ msgstr "osho"
-
-#~ msgid "spiritual-awakening"
-#~ msgstr "spiritual-awakening"
-
-#~ msgid "consciousness-exploration"
-#~ msgstr "consciousness-exploration"
-
-#~ msgid "mysticism"
-#~ msgstr "mysticism"
-
-#~ msgid "spiritual-teachings"
-#~ msgstr "spiritual-teachings"
-
-#~ msgid "advaita"
-#~ msgstr "advaita"
-
-#~ msgid "buddhist-teachings"
-#~ msgstr "buddhist-teachings"
-
-#~ msgid "devotional-practices"
-#~ msgstr "devotional-practices"
-
-#~ msgid "enneagram"
-#~ msgstr "enneagram"
-
-#~ msgid "card-reading"
-#~ msgstr "card-reading"
-
-#~ msgid "i-ching"
-#~ msgstr "i-ching"
-
-#~ msgid "archetypal-work"
-#~ msgstr "archetypal-work"
-
-#~ msgid "ceremony"
-#~ msgstr "ceremony"
-
-#~ msgid "sweat-lodge"
-#~ msgstr "sweat-lodge"
-
-#~ msgid "cacao-ceremony"
-#~ msgstr "cacao-ceremony"
-
-#~ msgid "initiations"
-#~ msgstr "initiations"
-
-#~ msgid "new-years-eve"
-#~ msgstr "new-years-eve"
-
-#~ msgid "plant-medicine"
-#~ msgstr "plant-medicine"
-
-#~ msgid "ritual"
-#~ msgstr "ritual"
-
-#~ msgid "detox"
-#~ msgstr "detox"
-
-#~ msgid "truffle-ceremony"
-#~ msgstr "truffle-ceremony"
-
-#~ msgid "water-ceremony"
-#~ msgstr "water-ceremony"
-
-#~ msgid "fire-ceremony"
-#~ msgstr "fire-ceremony"
-
-#~ msgid "vision-quest"
-#~ msgstr "vision-quest"
-
-#~ msgid "kambo"
-#~ msgstr "kambo"
-
-#~ msgid "new-moon"
-#~ msgstr "new-moon"
-
-#~ msgid "full-moon"
-#~ msgstr "full-moon"
-
-#~ msgid "rape"
-#~ msgstr "rape"
-
-#~ msgid "inner-journey"
-#~ msgstr "inner-journey"
-
-#~ msgid "tea-ceremony"
-#~ msgstr "tea-ceremony"
-
-#~ msgid "rite-of-the-womb"
-#~ msgstr "rite-of-the-womb"
-
-#~ msgid "medicine-walk"
-#~ msgstr "medicine-walk"
-
-#~ msgid "solstice"
-#~ msgstr "solstice"
-
-#~ msgid "equinox"
-#~ msgstr "equinox"
-
-#~ msgid "firewalk"
-#~ msgstr "firewalk"
-
-#~ msgid "trance-journey"
-#~ msgstr "trance-journey"
-
-#~ msgid "blue-lotus"
-#~ msgstr "blue-lotus"
-
-#~ msgid "rites-of-passage"
-#~ msgstr "rites-of-passage"
-
-#~ msgid "soul-retrieval"
-#~ msgstr "soul-retrieval"
-
-#~ msgid "celtic-year-festivals"
-#~ msgstr "celtic-year-festivals"
-
-#~ msgid "despacho-ceremony"
-#~ msgstr "despacho-ceremony"
-
-#~ msgid "full-moon-ceremony"
-#~ msgstr "full-moon-ceremony"
-
-#~ msgid "new-moon-ceremony"
-#~ msgstr "new-moon-ceremony"
-
-#~ msgid "temazcal"
-#~ msgstr "temazcal"
-
-#~ msgid "shamanic-journey"
-#~ msgstr "shamanic-journey"
-
-#~ msgid "ancestral-healing"
-#~ msgstr "ancestral-healing"
-
-#~ msgid "womb-ritual"
-#~ msgstr "womb-ritual"
-
-#~ msgid "Soun d Healing"
-#~ msgstr "Soun d Healing"
-
-#~ msgid "Persönlich e Entwicklung"
-#~ msgstr "Persönlich e Entwicklung"
-
-#~ msgid "Soun /* @wc-include */d Healing"
-#~ msgstr "Soun /* @wc-include */d Healing"
-
-#~ msgid "Persönlich /* @wc-include */e Entwicklung"
-#~ msgstr "Persönlich /* @wc-include */e Entwicklung"
-
-#~ msgid "CE-5"
-#~ msgstr "CE-5"
-
 #: src/lib/eventCategories.ts
 msgid "Balfolk"
 msgstr "Balfolk"
@@ -4866,21 +3750,9 @@ msgstr "Systemischer Tanz"
 msgid "Haka"
 msgstr "Haka"
 
-#~ msgid "Schweigeretreat"
-#~ msgstr "Schweigeretreat"
-
-#~ msgid "Qi Gong"
-#~ msgstr "Qi Gong"
-
-#~ msgid "Tai Chi / Taiji"
-#~ msgstr "Tai Chi / Taiji"
-
 #: src/lib/eventCategories.ts
 msgid "Kampfkünste"
 msgstr "Kampfkünste"
-
-#~ msgid "Kung Fu"
-#~ msgstr "Kung Fu"
 
 #: src/lib/eventCategories.ts
 msgid "Pilates"
@@ -4898,9 +3770,6 @@ msgstr "Surfen"
 msgid "Segeln"
 msgstr "Segeln"
 
-#~ msgid "Klangreise / Sound Bath"
-#~ msgstr "Klangreise / Sound Bath"
-
 #: src/lib/eventCategories.ts
 msgid "Fasten"
 msgstr "Fasten"
@@ -4909,28 +3778,13 @@ msgstr "Fasten"
 msgid "Waldbaden"
 msgstr "Waldbaden"
 
-#~ msgid "Waldbaden (Shinrin Yoku)"
-#~ msgstr "Waldbaden (Shinrin Yoku)"
-
 #: src/lib/eventCategories.ts
 msgid "Kräuterkunde"
 msgstr "Kräuterkunde"
 
-#~ msgid "Kräuter"
-#~ msgstr "Kräuter"
-
 #: src/lib/eventCategories.ts
 msgid "Wildkräutersammeln"
 msgstr "Wildkräutersammeln"
-
-#~ msgid "Beziehungsaufstellungen"
-#~ msgstr "Beziehungsaufstellungen"
-
-#~ msgid "Selbst etwas herstellen"
-#~ msgstr "Selbst etwas herstellen"
-
-#~ msgid "Schmuck herstellen"
-#~ msgstr "Schmuck herstellen"
 
 #: src/lib/eventCategories.ts
 msgid "Kochen"
@@ -4948,15 +3802,9 @@ msgstr "Storytelling"
 msgid "Poesie"
 msgstr "Poesie"
 
-#~ msgid "Divine Living"
-#~ msgstr "Divine Living"
-
 #: src/lib/eventCategories.ts
 msgid "Tagundnachtgleiche/Sonnenwende"
 msgstr "Tagundnachtgleiche/Sonnenwende"
-
-#~ msgid "Mini-Retreat in der Natur"
-#~ msgstr "Mini-Retreat in der Natur"
 
 #: src/lib/eventCategories.ts
 msgid "Weihnachten"
@@ -4975,15 +3823,6 @@ msgstr "Natur"
 msgid "Retreat"
 msgstr "Retreat"
 
-#~ msgid "Mehrtägiges Retreat"
-#~ msgstr "Mehrtägiges Retreat"
-
-#~ msgid "1-Tages-Retreat"
-#~ msgstr "1-Tages-Retreat"
-
-#~ msgid "1-zu-1-Retreat"
-#~ msgstr "1-zu-1-Retreat"
-
 #: src/lib/eventCategories.ts
 msgid "Vortrag"
 msgstr "Vortrag"
@@ -4997,9 +3836,6 @@ msgstr "Messe"
 msgid "Festival"
 msgstr "Festival"
 
-#~ msgid "Präsentation"
-#~ msgstr "Präsentation"
-
 #: src/lib/eventCategories.ts
 msgid "Kongress"
 msgstr "Kongress"
@@ -5008,28 +3844,13 @@ msgstr "Kongress"
 msgid "Webinar"
 msgstr "Webinar"
 
-#~ msgid "Vorstellung"
-#~ msgstr "Vorstellung"
-
-#~ msgid "Buchpräsentation"
-#~ msgstr "Buchpräsentation"
-
 #: src/lib/eventCategories.ts
 msgid "Film"
 msgstr "Film"
 
-#~ msgid "Urlaub"
-#~ msgstr "Urlaub"
-
 #: src/lib/eventCategories.ts
 msgid "Kabarett"
 msgstr "Kabarett"
-
-#~ msgid "Doppelporträt"
-#~ msgstr "Doppelporträt"
-
-#~ msgid "Erlebnisvorträge"
-#~ msgstr "Erlebnisvorträge"
 
 #: src/lib/eventCategories.ts
 msgid "Autarkes Leben"
@@ -5038,9 +3859,6 @@ msgstr "Autarkes Leben"
 #: src/lib/eventCategories.ts
 msgid "Tiere"
 msgstr "Tiere"
-
-#~ msgid "Pferde"
-#~ msgstr "Pferde"
 
 #: src/lib/eventCategories.ts
 msgid "Stille"
@@ -5064,15 +3882,6 @@ msgstr "Über"
 msgid "Workshop"
 msgstr "Workshop"
 
-#~ msgid "Atemarbeit"
-#~ msgstr "Atemarbeit"
-
-#~ msgid "Atemtechniken"
-#~ msgstr "Atemtechniken"
-
-#~ msgid "Atemübungen"
-#~ msgstr "Atemübungen"
-
 #: src/lib/eventCategories.ts
 msgid "Contemporary Dance"
 msgstr "Contemporary Dance"
@@ -5092,15 +3901,6 @@ msgstr "Chinesische Medizin"
 #: src/lib/eventCategories.ts
 msgid "Singen"
 msgstr "Singen"
-
-#~ msgid "Hatha Yoga"
-#~ msgstr "Hatha Yoga"
-
-#~ msgid "Vinyasa Yoga"
-#~ msgstr "Vinyasa Yoga"
-
-#~ msgid "Yin Yoga"
-#~ msgstr "Yin Yoga"
 
 #: src/lib/eventCategories.ts
 msgid "Aerial Yoga"

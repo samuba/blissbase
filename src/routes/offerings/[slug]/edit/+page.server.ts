@@ -1,3 +1,4 @@
+import { noindexPageMetaTags } from "$lib/common";
 import { db, eq, s } from "$lib/server/db";
 import { error } from "@sveltejs/kit";
 
@@ -28,6 +29,7 @@ export async function load({ locals, params: { slug } }) {
 
 	return {
 		offering,
+		pageMetaTags: noindexPageMetaTags,
 		editFormValues: {
 			offeringId: offering.id,
 			title: offering.title,

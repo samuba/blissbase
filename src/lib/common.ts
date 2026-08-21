@@ -310,6 +310,10 @@ export const trimAllWhitespaces = (text: string | undefined) => {
         .trim();
 }
 
+export const noindexPageMetaTags = {
+    robots: `noindex`,
+} satisfies MetaTagsProps
+
 export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null }) {
     let descriptionTeaser = trimAllWhitespaces(stripHtml(description ?? '')) ?? ''
     descriptionTeaser = descriptionTeaser.length > 140 ? descriptionTeaser.slice(0, 140) + "…" : descriptionTeaser
