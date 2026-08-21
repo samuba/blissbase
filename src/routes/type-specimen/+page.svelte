@@ -6,6 +6,14 @@
 
 	const fonts = [
 		{
+			id: `baloo-2`,
+			name: `Baloo 2`,
+			family: `"Baloo 2", sans-serif`,
+			why: `This is the current one — round, playful, and a bit bouncy.`,
+			weights: [400, 500, 600, 700, 800],
+			defaultWeight: 500,
+		},
+		{
 			id: `nunito`,
 			name: `Nunito`,
 			family: `"Nunito", sans-serif`,
@@ -240,7 +248,7 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
-		href="https://fonts.googleapis.com/css2?family=Anek+Latin:wght@100..800&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Commissioner:wght@100..900&family=Epilogue:wght@100..900&family=Familjen+Grotesk:wght@400..700&family=Figtree:wght@300..900&family=Gabarito:wght@400..900&family=Geologica:wght@100..900&family=Grandstander:wght@100..900&family=Hanken+Grotesk:wght@100..900&family=Inclusive+Sans:wght@300..700&family=Karla:wght@200..800&family=Livvic:wght@100;200;300;400;500;600;700;900&family=Nunito:wght@200..900&family=Onest:wght@100..900&family=Quattrocento+Sans:wght@400;700&family=Red+Hat+Display:wght@300..900&family=Spline+Sans:wght@300..700&family=Syne:wght@400..800&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&family=Anek+Latin:wght@100..800&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Commissioner:wght@100..900&family=Epilogue:wght@100..900&family=Familjen+Grotesk:wght@400..700&family=Figtree:wght@300..900&family=Gabarito:wght@400..900&family=Geologica:wght@100..900&family=Grandstander:wght@100..900&family=Hanken+Grotesk:wght@100..900&family=Inclusive+Sans:wght@300..700&family=Karla:wght@200..800&family=Livvic:wght@100;200;300;400;500;600;700;900&family=Nunito:wght@200..900&family=Onest:wght@100..900&family=Quattrocento+Sans:wght@400;700&family=Red+Hat+Display:wght@300..900&family=Spline+Sans:wght@300..700&family=Syne:wght@400..800&display=swap"
 		rel="stylesheet"
 	/>
 	<link
@@ -258,6 +266,9 @@
 				onclick={() => specimen.shareFont(font.id)}
 			>
 				{font.name}
+				{#if font.id === `baloo-2`}
+					<span class="badge badge-xs">current</span>
+				{/if}
 			</a>
 		{/each}
 	</div>
@@ -270,13 +281,18 @@
 				<div
 					class="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2"
 				>
-					<p
-						class="text-lg"
-						style:font-family={font.family}
-						style:font-weight={specimen.selected[font.id]}
-					>
-						{font.name}
-					</p>
+					<div class="flex items-center gap-2">
+						<p
+							class="text-lg"
+							style:font-family={font.family}
+							style:font-weight={specimen.selected[font.id]}
+						>
+							{font.name}
+						</p>
+						{#if font.id === `baloo-2`}
+							<span class="badge badge-sm">current</span>
+						{/if}
+					</div>
 					<p class="text-sm text-base-content/70 sm:max-w-md">
 						{font.why}
 					</p>

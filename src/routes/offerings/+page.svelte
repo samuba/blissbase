@@ -176,7 +176,7 @@
 
 	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-3 items-center justify-center">
 		<div class="flex flex-col gap-3 w-full items-center justify-center px-4">
-			<h1 class="md:text-5xl text-4xl font-semibold text-base-100 font-brand">Angebote</h1>
+			<h1 class="md:text-5xl text-4xl text-base-100 font-brand">Angebote</h1>
 		</div>
 
 		<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">

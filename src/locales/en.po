@@ -5150,3 +5150,8 @@ msgstr "Type specimen | Blissbase"
 #: src/routes/type-specimen/+page.svelte
 msgid "Thickness {0}"
 msgstr "Thickness {0}"
+
+#: src/routes/type-specimen/+page.svelte
+#: src/routes/type-specimen/+page.svelte
+msgid "current"
+msgstr "current"

@@ -7,7 +7,7 @@
 	<div class="flex flex-col gap-8">
 		<a href={routes.root()} class="flex items-center gap-3">
 			<img src="/logo-90x90.png" alt="Blissbase" class="size-12" />
-			<h1 class="text-3xl font-bold font-brand text-primary-content">Blissbase</h1>
+			<h1 class="text-3xl font-brand text-primary-content">Blissbase</h1>
 		</a>
 
 		<div>

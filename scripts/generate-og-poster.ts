@@ -12,7 +12,7 @@ const TEXT = `#713f12`
 const TEXT_SOFT = `#8a5a24`
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), `..`)
-const fontPath = resolve(root, `src/lib/fonts/Baloo2-SemiBold.ttf`)
+const fontPath = resolve(root, `src/lib/fonts/Baloo2-Medium.ttf`)
 const fontFile = readFileSync(fontPath)
 const brandFont = opentype.parse(
 	fontFile.buffer.slice(fontFile.byteOffset, fontFile.byteOffset + fontFile.byteLength),
@@ -146,6 +146,71 @@ async function renderBrandText({
 	fontSize: number
 	fill: string
 }) {
+	const chars = [...text]
+	const parts = chars.map((char) =>
+		char === ` `
+			? {
+					svg: null,
+					padding: 0,
+					baseline: 0,
+					advance: brandFont.getAdvanceWidth(` `, fontSize),
+					height: 0,
+				}
+			: renderWordPath({ text: char, fontSize, fill }),
+	)
+	const drawn = parts.filter((part) => part.svg)
+	const padding = Math.max(...drawn.map((part) => part.padding))
+	const baseline = Math.max(...drawn.map((part) => part.baseline))
+	const height = Math.ceil(
+		Math.max(...drawn.map((part) => part.height + (baseline - part.baseline))),
+	)
+	const width = Math.ceil(
+		parts.reduce((sum, part) => sum + part.advance, 0) + padding * 2,
+	)
+
+	let x = padding
+	const composites = (
+		await Promise.all(
+			parts.map(async (part) => {
+				const left = Math.round(x)
+				x += part.advance
+				if (!part.svg) return null
+				return {
+					input: await sharp(Buffer.from(part.svg)).png().toBuffer(),
+					left,
+					top: Math.round(baseline - part.baseline),
+				}
+			}),
+		)
+	).filter((part) => part !== null)
+
+	return {
+		png: await sharp({
+			create: {
+				width,
+				height,
+				channels: 4,
+				background: { r: 0, g: 0, b: 0, alpha: 0 },
+			},
+		})
+			.composite(composites)
+			.png()
+			.toBuffer(),
+		padding,
+		baseline,
+		advance: brandFont.getAdvanceWidth(text, fontSize),
+	}
+}
+
+function renderWordPath({
+	text,
+	fontSize,
+	fill,
+}: {
+	text: string
+	fontSize: number
+	fill: string
+}) {
 	const padding = Math.ceil(fontSize * 0.08)
 	const unpositioned = brandFont.getPath(text, padding, 0, fontSize)
 	const rawBox = unpositioned.getBoundingBox()
@@ -154,12 +219,12 @@ async function renderBrandText({
 	const box = path.getBoundingBox()
 	const width = Math.ceil(box.x2) + padding
 	const height = Math.ceil(box.y2) + padding
-	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${path.toSVG(3).replace(`<path`, `<path fill="${fill}"`)}</svg>`
 
 	return {
-		png: await sharp(Buffer.from(svg)).png().toBuffer(),
+		svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${path.toSVG(3).replace(`<path`, `<path fill="${fill}"`)}</svg>`,
 		padding,
 		baseline,
 		advance: brandFont.getAdvanceWidth(text, fontSize),
+		height,
 	}
 }

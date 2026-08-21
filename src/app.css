@@ -89,15 +89,16 @@ select {
 }
 
 @font-face {
-	font-family: 'Baloo-2-SemiBold';
+	font-family: 'Baloo-2';
 	font-style: normal;
-	font-weight: 600;
+	font-weight: 500;
 	font-display: swap;
-	src: url('$lib/fonts/Baloo2-SemiBold.woff2') format('woff2');
+	src: url('$lib/fonts/Baloo2-Medium.woff2') format('woff2');
 }
 
 .font-brand {
-	font-family: 'Baloo-2-SemiBold', 'Arial';
+	font-family: 'Baloo-2', 'Arial';
+	font-weight: 500;
 }
 
 /* no prose text should be too bold */

@@ -1,7 +1,7 @@
 import opentype from 'opentype.js';
 import sharp from 'sharp';
 import logoDataUrl from './blissbase-logo-transparent.png?inline';
-import brandFontDataUrl from '$lib/fonts/Baloo2-SemiBold.ttf?inline';
+import brandFontDataUrl from '$lib/fonts/Baloo2-Medium.ttf?inline';
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;

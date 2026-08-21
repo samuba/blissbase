@@ -90,7 +90,7 @@
 		<div class="flex flex-col gap-4 w-full items-center justify-center px-4">
 			<div class="flex justify-center items-center gap-3">
 				<img src="/logo-90x90.png" alt="" class="size-12 md:size-16 lg:size-18 drop-shadow-xl" data-testid="hero-logo" />
-				<h1 class="md:text-5xl text-4xl font-semibold text-base-100 font-brand" >
+				<h1 class="md:text-5xl text-4xl text-base-100 font-brand" >
 					Blissbase
 				</h1>
 			</div>
