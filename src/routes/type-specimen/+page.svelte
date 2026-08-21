@@ -250,11 +250,11 @@
 </svelte:head>
 
 <div class="sticky top-0 z-50 bg-base-200 px-4 py-2">
-	<div class="flex flex-wrap justify-center gap-2">
+	<div class="flex flex-wrap gap-1">
 		{#each fonts as font (font.id)}
 			<a
 				href={`#${font.id}`}
-				class="btn btn-sm"
+				class="btn btn-xs"
 				onclick={() => specimen.shareFont(font.id)}
 			>
 				{font.name}
