@@ -102,7 +102,7 @@
 	}
 </script>
 
-<div class="flex w-full max-w-full min-w-0 items-center">
+<div class="flex w-full max-w-full min-w-0 items-center" data-nosnippet>
 	<div class="relative flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden pb-1">
 		<TextSearchInput
 			bind:this={textSearchInput}
