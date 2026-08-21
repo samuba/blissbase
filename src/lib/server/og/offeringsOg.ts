@@ -1,27 +1,19 @@
-import { createHash } from 'node:crypto';
-import { waitUntil } from '@vercel/functions';
-import { eq } from 'drizzle-orm';
-import {
-	deleteObjects,
-	exists,
-	listObjectKeysByPrefix,
-	loadCreds,
-	publicUrl,
-	uploadImageAtObjectKey,
-} from '$lib/assets';
-import { sanitizeLocationParams } from '$lib/locationFilter';
+import { createHash } from "node:crypto";
+import { waitUntil } from "@vercel/functions";
+import { eq } from "drizzle-orm";
+import { deleteObjects, exists, listObjectKeysByPrefix, loadCreds, publicUrl, uploadImageAtObjectKey } from "$lib/assets";
+import { sanitizeLocationParams } from "$lib/locationFilter";
 import {
 	filterOfferingsByIncludeOnline,
 	filterOfferingsBySearchTerm,
 	shouldIncludeOfferingInLocationFilter,
 	type OfferingsFilter,
-} from '$lib/offeringsFilter';
-import { absoluteUrl } from '$lib/routes';
-import { db, s } from '$lib/server/db';
-import { resolveOfferingsFilterCoordinates } from '$lib/server/offeringsFilter';
-import { createOfferingsOgImage } from '$lib/server/offeringsOgImage';
-import { hasSocialLink, isPublicProfile } from '$lib/server/profile';
-import { CLOUDFLARE_ACCOUNT_ID, S3_ACCESS_KEY_ID, S3_BUCKET_NAME, S3_SECRET_ACCESS_KEY } from '$env/static/private';
+} from "$lib/offeringsFilter";
+import { absoluteUrl } from "$lib/routes";
+import { db, s } from "$lib/server/db";
+import { resolveOfferingsFilterCoordinates } from "$lib/server/offeringsFilter";
+import { hasSocialLink, isPublicProfile } from "$lib/server/profile";
+import { CLOUDFLARE_ACCOUNT_ID, S3_ACCESS_KEY_ID, S3_BUCKET_NAME, S3_SECRET_ACCESS_KEY } from "$env/static/private";
 
 const creds = loadCreds({
 	S3_ACCESS_KEY_ID,
@@ -30,7 +22,7 @@ const creds = loadCreds({
 	CLOUDFLARE_ACCOUNT_ID,
 });
 
-export const FALLBACK_OFFERINGS_OG_IMAGE = absoluteUrl(`/og-poster-offerings.jpg`);
+export const FALLBACK_OFFERINGS_OG_IMAGE = absoluteUrl(`/og-poster-offerings.png`);
 export const OFFERINGS_OG_PREFIX = `og/offerings/`;
 
 const warmingKeys = new Set<string>();
@@ -105,63 +97,34 @@ export async function loadVisibleListedOfferings(filterInput: OfferingsFilter) {
 }
 
 /**
- * Resolves a cached R2 OG URL for the filter, or schedules background generation
- * and returns the static fallback so crawlers never wait on collage work.
+ * Resolves a cached R2 OG URL for a location-specific poster, or returns the
+ * static fallback so crawlers never wait on generation.
  */
 export async function resolveOfferingsOgImageUrl(filterInput: OfferingsFilter) {
-	const { filter, offerings } = await loadVisibleListedOfferings(filterInput);
-	const coverImageUrls = offerings
-		.map((offering) => offering.imageUrls?.[0]?.trim())
-		.filter((imageUrl): imageUrl is string => Boolean(imageUrl));
+	const locationLabel = offeringsOgLocationLabel(filterInput);
+	if (!locationLabel) return FALLBACK_OFFERINGS_OG_IMAGE;
 
-	const cacheKey = offeringsOgCacheKey({ filter, coverImageUrls });
-	const objectKey = offeringsOgObjectKey(cacheKey);
+	const objectKey = offeringsOgObjectKey(offeringsOgCacheKey(locationLabel));
 	const cachedUrl = publicUrl(objectKey);
 
 	if (await exists(objectKey, creds)) {
 		return cachedUrl;
 	}
 
-	const locationLabel =
-		(filter.lat != null && filter.lng != null ? filter.location : null)?.trim() ||
-		filter.location?.trim() ||
-		null;
-
-	scheduleOfferingsOgWarm({
-		objectKey,
-		imageUrls: coverImageUrls,
-		locationLabel,
-	});
-
+	scheduleOfferingsOgWarm({ objectKey, locationLabel });
 	return FALLBACK_OFFERINGS_OG_IMAGE;
 }
 
 /** Fire-and-forget warm for a filter (e.g. after admin cache bust). */
 export function scheduleOfferingsOgWarmForFilter(filterInput: OfferingsFilter) {
+	const locationLabel = offeringsOgLocationLabel(filterInput);
+	if (!locationLabel) return;
+
+	const objectKey = offeringsOgObjectKey(offeringsOgCacheKey(locationLabel));
 	waitUntil(
-		(async () => {
-			try {
-				const { filter, offerings } = await loadVisibleListedOfferings(filterInput);
-				const coverImageUrls = offerings
-					.map((offering) => offering.imageUrls?.[0]?.trim())
-					.filter((imageUrl): imageUrl is string => Boolean(imageUrl));
-
-				const cacheKey = offeringsOgCacheKey({ filter, coverImageUrls });
-				const objectKey = offeringsOgObjectKey(cacheKey);
-				const locationLabel =
-					(filter.lat != null && filter.lng != null ? filter.location : null)?.trim() ||
-					filter.location?.trim() ||
-					null;
-
-				await warmOfferingsOgImage({
-					objectKey,
-					imageUrls: coverImageUrls,
-					locationLabel,
-				});
-			} catch (error) {
-				console.error(`Failed warming offerings OG image for filter:`, error);
-			}
-		})(),
+		warmOfferingsOgImage({ objectKey, locationLabel }).catch((error) => {
+			console.error(`Failed warming offerings OG image for filter:`, error);
+		}),
 	);
 }
 
@@ -173,11 +136,7 @@ export async function bustOfferingsOgImageCache() {
 	return { deletedCount: keys.length };
 }
 
-function scheduleOfferingsOgWarm(args: {
-	objectKey: string;
-	imageUrls: string[];
-	locationLabel: string | null;
-}) {
+function scheduleOfferingsOgWarm(args: { objectKey: string; locationLabel: string }) {
 	waitUntil(
 		warmOfferingsOgImage(args).catch((error) => {
 			console.error(`Failed warming offerings OG image:`, error);
@@ -185,51 +144,35 @@ function scheduleOfferingsOgWarm(args: {
 	);
 }
 
-async function warmOfferingsOgImage({
-	objectKey,
-	imageUrls,
-	locationLabel,
-}: {
-	objectKey: string;
-	imageUrls: string[];
-	locationLabel: string | null;
-}) {
+async function warmOfferingsOgImage({ objectKey, locationLabel }: { objectKey: string; locationLabel: string }) {
 	if (warmingKeys.has(objectKey)) return;
 	warmingKeys.add(objectKey);
 
 	try {
 		if (await exists(objectKey, creds)) return;
 
-		const buffer = await createOfferingsOgImage({
-			imageUrls,
-			locationLabel,
-		});
-		await uploadImageAtObjectKey(buffer, objectKey, creds, `image/jpeg`);
+		const { createOfferingsOgImage } = await import(`./offeringsOgImage`);
+		const buffer = await createOfferingsOgImage({ locationLabel });
+		await uploadImageAtObjectKey(buffer, objectKey, creds, `image/png`);
 	} finally {
 		warmingKeys.delete(objectKey);
 	}
 }
 
-function offeringsOgCacheKey({
-	filter,
-	coverImageUrls,
-}: {
-	filter: OfferingsFilter;
-	coverImageUrls: string[];
-}) {
-	const payload = JSON.stringify({
-		location: filter.location,
-		distance: filter.distance,
-		lat: filter.lat,
-		lng: filter.lng,
-		searchTerm: filter.searchTerm,
-		includeOnline: filter.includeOnline,
-		// Sort so tile shuffle order does not create duplicate cache entries.
-		coverImageUrls: [...coverImageUrls].sort(),
+function offeringsOgLocationLabel(filterInput: OfferingsFilter) {
+	const sanitized = sanitizeLocationParams({
+		location: filterInput.location,
+		distance: filterInput.distance,
+		lat: filterInput.lat,
+		lng: filterInput.lng,
 	});
-	return createHash(`sha256`).update(payload).digest(`hex`).slice(0, 24);
+	return (sanitized.lat != null && sanitized.lng != null ? sanitized.location : null)?.trim() || sanitized.location?.trim() || null;
+}
+
+function offeringsOgCacheKey(locationLabel: string) {
+	return createHash(`sha256`).update(locationLabel).digest(`hex`).slice(0, 24);
 }
 
 function offeringsOgObjectKey(cacheKey: string) {
-	return `${OFFERINGS_OG_PREFIX}${cacheKey}.jpg`;
+	return `${OFFERINGS_OG_PREFIX}${cacheKey}.png`;
 }

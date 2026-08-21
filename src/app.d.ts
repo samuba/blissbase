@@ -83,6 +83,11 @@ declare module '*.png?inline' {
 	export default src;
 }
 
+declare module '*.jpg?inline' {
+	const src: string;
+	export default src;
+}
+
 declare module '*.ttf?inline' {
 	const src: string;
 	export default src;

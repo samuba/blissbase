@@ -30,7 +30,7 @@ export const load = (async ({ url, cookies }) => {
 	if (ogImage) {
 		ogImage.width = 1200;
 		ogImage.height = 630;
-		ogImage.type = `image/jpeg`;
+		ogImage.type = `image/png`;
 	}
 
 	return {
