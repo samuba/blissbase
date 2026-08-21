@@ -17,7 +17,6 @@ const fontFile = readFileSync(fontPath)
 const brandFont = opentype.parse(
 	fontFile.buffer.slice(fontFile.byteOffset, fontFile.byteOffset + fontFile.byteLength),
 )
-const fontDataUrl = `data:font/truetype;base64,${fontFile.toString(`base64`)}`
 
 const title = `Blissbase`
 const subtitle = `Find conscious events near you`
@@ -34,36 +33,34 @@ async function writeOgPoster() {
 		.png()
 		.toBuffer()
 
-	const logoSize = px(276)
+	const logoSize = px(252)
 	const logo = await prepareLogo(logoSize)
 
-	const titleSize = 84 * SCALE
-	const subtitleSize = 34 * SCALE
-	const titleWidth = brandFont.getAdvanceWidth(title, titleSize)
-	const subtitleWidth = brandFont.getAdvanceWidth(subtitle, subtitleSize)
-	const textBlockWidth = Math.max(titleWidth, subtitleWidth)
-	const textBlockHeight = titleSize + px(54) + subtitleSize
+	const titleSize = 86 * SCALE
+	const subtitleSize = 38 * SCALE
+	const titleGlyphs = await renderBrandText({ text: title, fontSize: titleSize, fill: TEXT })
+	const subtitleGlyphs = await renderBrandText({
+		text: subtitle,
+		fontSize: subtitleSize,
+		fill: TEXT_SOFT,
+	})
+	const textBlockWidth = Math.max(titleGlyphs.advance, subtitleGlyphs.advance)
+	const textBlockHeight = titleSize + px(80) + subtitleSize
 
-	const gap = px(56)
+	const gap = px(50)
 	const groupWidth = logoSize + gap + textBlockWidth
 	const groupX = Math.round((width - groupWidth) / 2)
 	const logoX = groupX
 	const logoY = Math.round((height - logoSize) / 2)
 	const textX = logoX + logoSize + gap
-	const textTop = logoY + Math.round((logoSize - textBlockHeight) / 2) + px(10)
+	const textTop = logoY + Math.round((logoSize - textBlockHeight) / 2) + px(8)
 	const titleBaseline = textTop + titleSize
-	const ruleY = titleBaseline + px(16)
-	const subtitleBaseline = ruleY + px(38)
+	const ruleY = titleBaseline + px(26)
+	const subtitleBaseline = ruleY + px(48)
 
 	const overlay = Buffer.from(`
 		<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
 			<defs>
-				<style>
-					@font-face {
-						font-family: "Baloo2";
-						src: url("${fontDataUrl}") format("truetype");
-					}
-				</style>
 				<linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
 					<stop offset="0%" stop-color="#faf7f5" stop-opacity="0.45"/>
 					<stop offset="50%" stop-color="#faf7f5" stop-opacity="0.38"/>
@@ -71,9 +68,7 @@ async function writeOgPoster() {
 				</linearGradient>
 			</defs>
 			<rect width="100%" height="100%" fill="url(#wash)"/>
-			<rect x="${textX}" y="${ruleY}" width="${px(96)}" height="${px(3)}" rx="${1.5 * SCALE}" fill="${PRIMARY}"/>
-			<text x="${textX}" y="${titleBaseline}" font-family="Baloo2" font-size="${titleSize}" fill="${TEXT}">${title}</text>
-			<text x="${textX}" y="${subtitleBaseline}" font-family="Baloo2" font-size="${subtitleSize}" fill="${TEXT_SOFT}">${subtitle}</text>
+			<rect x="${textX}" y="${ruleY}" width="${px(100)}" height="${px(3)}" rx="${1.5 * SCALE}" fill="${PRIMARY}"/>
 		</svg>
 	`)
 
@@ -81,6 +76,16 @@ async function writeOgPoster() {
 		.composite([
 			{ input: overlay, blend: `over` },
 			{ input: logo, left: logoX, top: logoY },
+			{
+				input: titleGlyphs.png,
+				left: textX - titleGlyphs.padding,
+				top: Math.round(titleBaseline - titleGlyphs.baseline),
+			},
+			{
+				input: subtitleGlyphs.png,
+				left: textX - subtitleGlyphs.padding,
+				top: Math.round(subtitleBaseline - subtitleGlyphs.baseline),
+			},
 		])
 		.png()
 		.toBuffer()
@@ -130,4 +135,31 @@ async function prepareLogo(size: number) {
 		.composite([{ input: mask, blend: `dest-in` }])
 		.png()
 		.toBuffer()
+}
+
+async function renderBrandText({
+	text,
+	fontSize,
+	fill,
+}: {
+	text: string
+	fontSize: number
+	fill: string
+}) {
+	const padding = Math.ceil(fontSize * 0.08)
+	const unpositioned = brandFont.getPath(text, padding, 0, fontSize)
+	const rawBox = unpositioned.getBoundingBox()
+	const baseline = padding - rawBox.y1
+	const path = brandFont.getPath(text, padding, baseline, fontSize)
+	const box = path.getBoundingBox()
+	const width = Math.ceil(box.x2) + padding
+	const height = Math.ceil(box.y2) + padding
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${path.toSVG(3).replace(`<path`, `<path fill="${fill}"`)}</svg>`
+
+	return {
+		png: await sharp(Buffer.from(svg)).png().toBuffer(),
+		padding,
+		baseline,
+		advance: brandFont.getAdvanceWidth(text, fontSize),
+	}
 }
