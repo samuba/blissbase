@@ -1,10 +1,9 @@
 import opentype from "opentype.js";
-import { env } from "$env/dynamic/private";
+import sharp from "sharp";
 import backgroundDataUrl from "./og-poster-bg.jpg?inline";
-import goldLogoDataUrl from "../../../static/logo-gold.png?inline";
+import goldLogoDataUrl from "../../../../static/logo-gold.png?inline";
 import brandFontDataUrl from "$lib/fonts/Baloo2-Medium.ttf?inline";
 import { composeOgPoster } from "./ogPoster";
-import { compressPngWithTinyPng } from "./tinyPng";
 
 const brandFont = opentype.parse(dataUrlToArrayBuffer(brandFontDataUrl));
 const background = dataUrlToBuffer(backgroundDataUrl);
@@ -22,7 +21,7 @@ export async function createOfferingsOgImage({ locationLabel }: { locationLabel?
 		goldLogo,
 		brandFont,
 	});
-	return compressPngWithTinyPng({ png, apiKey: env.TINIFY_API_KEY });
+	return sharp(png).jpeg({ quality: 92, mozjpeg: true }).toBuffer();
 }
 
 function dataUrlToBuffer(dataUrl: string) {

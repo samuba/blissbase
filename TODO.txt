@@ -5,7 +5,7 @@ make location input look good with text in it on tiny mobiles. Maybe have a popo
 
 have tags also in the filter dialog
 
-
+google login auth 
 introduce bookingUrl. cuz sourceUrl is good to have to know where its coming from but its not always where we wanna guide people to. Can use it for the source link
 -> already have contact.
 

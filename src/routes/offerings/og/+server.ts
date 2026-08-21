@@ -2,7 +2,7 @@ import { parseOfferingsFilterFromUrl } from '$lib/offeringsFilter';
 import {
 	FALLBACK_OFFERINGS_OG_IMAGE,
 	resolveOfferingsOgImageUrl,
-} from '$lib/server/offeringsOg';
+} from '$lib/server/og/offeringsOg';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {

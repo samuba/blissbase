@@ -1,5 +1,10 @@
 import { loadFiltersFromCookie } from "$lib/cookie-utils";
-import { hasOfferingsFilterParams, hasOfferingsFilterUrlParams, offeringsFilterFromCookie, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
+import {
+	hasOfferingsFilterParams,
+	hasOfferingsFilterUrlParams,
+	offeringsFilterFromCookie,
+	parseOfferingsFilterFromUrl,
+} from "$lib/offeringsFilter";
 import { absoluteUrl, OFFERING_SLUG_QUERY, routes, withOfferingSlug } from "$lib/routes";
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
@@ -20,17 +25,18 @@ export const load = (async ({ url, cookies }) => {
 	const location = filter.location?.trim();
 	const name = location ? `${location}'s Conscious Offerings` : "Conscious Offerings";
 	const description = location ? `Discover conscious offerings in ${location}.` : "Find conscious offerings near you.";
+	const imageUrl = location ? absoluteUrl(routes.offeringsOg(filter)) : absoluteUrl(`/og-poster-offerings.png`);
 	const pageMetaTags = getPageMetaTags({
 		name,
 		description,
-		imageUrl: absoluteUrl(routes.offeringsOg(filter)),
+		imageUrl,
 		url,
 	});
 	const ogImage = pageMetaTags.openGraph.images?.[0];
 	if (ogImage) {
 		ogImage.width = 1200;
 		ogImage.height = 630;
-		ogImage.type = `image/png`;
+		ogImage.type = new URL(imageUrl).pathname.toLowerCase().endsWith(`.png`) ? `image/png` : `image/jpeg`;
 	}
 
 	return {

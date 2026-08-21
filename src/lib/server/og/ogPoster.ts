@@ -6,6 +6,8 @@ const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 const PRIMARY = `#eab308`;
 const TEXT = `#713f12`;
+/** oklch(42.1% 0.095 57.708) — hex for sharp/SVG */
+const TEXT_SOFT = `#733e0a`;
 const MAX_SUBTITLE_WIDTH = 640;
 
 /**
@@ -57,7 +59,7 @@ export async function composeOgPoster({
 				text: line,
 				font: brandFont,
 				fontSize: subtitleSize,
-				fill: TEXT,
+				fill: TEXT_SOFT,
 			}),
 		),
 	);

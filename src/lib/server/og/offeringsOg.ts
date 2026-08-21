@@ -153,7 +153,7 @@ async function warmOfferingsOgImage({ objectKey, locationLabel }: { objectKey: s
 
 		const { createOfferingsOgImage } = await import(`./offeringsOgImage`);
 		const buffer = await createOfferingsOgImage({ locationLabel });
-		await uploadImageAtObjectKey(buffer, objectKey, creds, `image/png`);
+		await uploadImageAtObjectKey(buffer, objectKey, creds, `image/jpeg`);
 	} finally {
 		warmingKeys.delete(objectKey);
 	}
@@ -174,5 +174,5 @@ function offeringsOgCacheKey(locationLabel: string) {
 }
 
 function offeringsOgObjectKey(cacheKey: string) {
-	return `${OFFERINGS_OG_PREFIX}${cacheKey}.png`;
+	return `${OFFERINGS_OG_PREFIX}${cacheKey}.jpg`;
 }

@@ -11,7 +11,7 @@ import {
 	bustOfferingsOgImageCache,
 	loadVisibleListedOfferings,
 	scheduleOfferingsOgWarmForFilter,
-} from '$lib/server/offeringsOg';
+} from '$lib/server/og/offeringsOg';
 
 export const getEventSources = query(async () => {
 	assertAdmin();
