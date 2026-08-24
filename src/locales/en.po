@@ -92,6 +92,7 @@ msgstr "Sold out"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
+#: src/lib/eventCategories.ts
 #: src/routes/EventDetails.svelte
 msgid "Online"
 msgstr "Online"
@@ -2768,22 +2769,18 @@ msgstr "Kundalini"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
-#: src/lib/eventCategories.ts
 msgid "Lichtsprache"
 msgstr "Light Language"
 
-#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Sound Healing"
 msgstr "Sound Healing"
 
 #: src/lib/eventCategories.ts
-#: src/lib/eventCategories.ts
 msgid "Klangbad"
 msgstr "Sound Bath"
 
-#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Klangreise"
 msgstr "Sound Journey"
@@ -2792,7 +2789,6 @@ msgstr "Sound Journey"
 msgid "Gong"
 msgstr "Gong"
 
-#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Klangschalen"
 msgstr "Singing Bowls"
@@ -3004,9 +3000,8 @@ msgstr "Open Relationships"
 msgid "Gewaltfreie Kommunikation"
 msgstr "Nonviolent Communication"
 
-#: src/lib/eventCategories.ts
-msgid "Grenzen"
-msgstr "Boundaries"
+#~ msgid "Grenzen"
+#~ msgstr "Boundaries"
 
 #: src/lib/eventCategories.ts
 msgid "Verbindung"
@@ -3142,9 +3137,8 @@ msgstr "Yoga"
 msgid "Kundalini Yoga"
 msgstr "Kundalini Yoga"
 
-#: src/lib/eventCategories.ts
-msgid "Kinderyoga"
-msgstr "Children's Yoga"
+#~ msgid "Kinderyoga"
+#~ msgstr "Children's Yoga"
 
 #: src/lib/eventCategories.ts
 msgid "SUP-Yoga"
@@ -3207,7 +3201,6 @@ msgid "Wissen"
 msgstr "Knowledge"
 
 #: src/lib/eventCategories.ts
-#: src/lib/eventCategories.ts
 msgid "Kurs"
 msgstr "Course"
 
@@ -3243,13 +3236,11 @@ msgstr "Creativity"
 msgid "Verspieltheit"
 msgstr "Playfulness"
 
-#: src/lib/eventCategories.ts
-msgid "Hochbegabt"
-msgstr "Gifted"
+#~ msgid "Hochbegabt"
+#~ msgstr "Gifted"
 
-#: src/lib/eventCategories.ts
-msgid "Hochsensibel"
-msgstr "Highly Sensitive"
+#~ msgid "Hochsensibel"
+#~ msgstr "Highly Sensitive"
 
 #: src/lib/eventCategories.ts
 msgid "Sucht"
@@ -3818,7 +3809,6 @@ msgid "Natur"
 msgstr "Nature"
 
 #: src/lib/eventCategories.ts
-#: src/lib/eventCategories.ts
 msgid "Retreat"
 msgstr "Retreat"
 
@@ -3831,7 +3821,6 @@ msgid "Messe"
 msgstr "Trade Fair"
 
 #: src/lib/eventCategories.ts
-#: src/lib/eventCategories.ts
 msgid "Festival"
 msgstr "Festival"
 
@@ -3839,9 +3828,8 @@ msgstr "Festival"
 msgid "Kongress"
 msgstr "Congress"
 
-#: src/lib/eventCategories.ts
-msgid "Webinar"
-msgstr "Webinar"
+#~ msgid "Webinar"
+#~ msgstr "Webinar"
 
 #: src/lib/eventCategories.ts
 msgid "Film"
@@ -3877,7 +3865,6 @@ msgid "Über"
 msgstr "About"
 
 #: src/lib/eventCategories.ts
-#: src/lib/eventCategories.ts
 msgid "Workshop"
 msgstr "Workshop"
 
@@ -3905,9 +3892,8 @@ msgstr "Singing"
 msgid "Aerial Yoga"
 msgstr "Aerial Yoga"
 
-#: src/lib/eventCategories.ts
-msgid "Selbst herstellen"
-msgstr "Making It Yourself"
+#~ msgid "Selbst herstellen"
+#~ msgstr "Making It Yourself"
 
 #: src/lib/eventCategories.ts
 msgid "Fitness"
@@ -3958,3 +3944,25 @@ msgstr "current"
 #: src/lib/components/HeaderControls.svelte
 msgid "Kategorien"
 msgstr "Categories"
+
+#~ msgid "Einvernehmlichkeit"
+#~ msgstr "Mutual consent"
+
+#: src/lib/eventCategories.ts
+msgid "Grenzen & Konsens"
+msgstr "Limits & Consent"
+
+#~ msgid "Handwerk"
+#~ msgstr "Crafts"
+
+#: src/lib/eventCategories.ts
+msgid "Handwerk & DIY"
+msgstr "Crafts & DIY"
+
+#: src/lib/eventCategories.ts
+msgid "Hochsensibelität"
+msgstr "High sensitivity"
+
+#: src/lib/eventCategories.ts
+msgid "Hochbegabung"
+msgstr "Giftedness"

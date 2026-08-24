@@ -182,7 +182,6 @@ async function mergeAndDeleteDuplicateEvents(args: {
         }
     }
     // merge array properties
-    eventToSurvive.tags = mergeArrayDeduplicated(eventToSurvive.tags, eventToDelete.tags)
     eventToSurvive.tagSlugs = mergeArrayDeduplicated(eventToSurvive.tagSlugs, eventToDelete.tagSlugs)
     eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsTelegram, eventToDelete.sourceChatIdsTelegram)
     eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsWhatsapp, eventToDelete.sourceChatIdsWhatsapp)
@@ -410,16 +409,15 @@ export function mergeArrayDeduplicated(arrayA: string[] | null, arrayB: string[]
 
 /**
  * Builds the update payload for the preferred-source fast path while keeping
- * legacy `events.tags` and chat provenance in sync with the deleted event.
+ * catalog tags and chat provenance in sync with the deleted event.
  *
  * @example
  * preparePreferredSourceEventUpdate({
- *   eventToSurvive: { tags: [`music`], tagSlugs: [`yoga`], sourceChatIdsTelegram: null, sourceChatIdsWhatsapp: null },
- *   eventToDelete: { tags: [`workshop`], tagSlugs: [`meditation`], sourceChatIdsTelegram: [`room1`], sourceChatIdsWhatsapp: null },
+ *   eventToSurvive: { tagSlugs: [`yoga`], sourceChatIdsTelegram: null, sourceChatIdsWhatsapp: null },
+ *   eventToDelete: { tagSlugs: [`meditation`], sourceChatIdsTelegram: [`room1`], sourceChatIdsWhatsapp: null },
  * });
  */
 export function preparePreferredSourceEventUpdate<TEvent extends {
-    tags: string[] | null
     tagSlugs: string[] | null
     sourceChatIdsTelegram: string[] | null
     sourceChatIdsWhatsapp: string[] | null
@@ -427,7 +425,6 @@ export function preparePreferredSourceEventUpdate<TEvent extends {
     eventToSurvive: TEvent,
     eventToDelete: TEvent,
 }) {
-    args.eventToSurvive.tags = mergeArrayDeduplicated(args.eventToSurvive.tags, args.eventToDelete.tags);
     args.eventToSurvive.tagSlugs = mergeArrayDeduplicated(args.eventToSurvive.tagSlugs, args.eventToDelete.tagSlugs);
     args.eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(
         args.eventToSurvive.sourceChatIdsTelegram,
@@ -439,7 +436,6 @@ export function preparePreferredSourceEventUpdate<TEvent extends {
     );
 
     return {
-        tags: args.eventToSurvive.tags,
         tagSlugs: args.eventToSurvive.tagSlugs,
         sourceChatIdsTelegram: args.eventToSurvive.sourceChatIdsTelegram,
         sourceChatIdsWhatsapp: args.eventToSurvive.sourceChatIdsWhatsapp,

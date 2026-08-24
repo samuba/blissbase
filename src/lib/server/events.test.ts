@@ -30,7 +30,6 @@ const createTestEvent = (overrides = {}) => ({
     contact: ['Test Contact'],
     latitude: 52.5,
     longitude: 13.4,
-    tags: ['Test Tag'],
     sourceUrl: 'https://example.com',
     listed: true,
     soldOut: false,
@@ -125,7 +124,6 @@ describe('Events Module - Happy Flow Tests', () => {
                 hostLink: null,
                 latitude: null,
                 longitude: null,
-                tags: null,
                 endAt: null,
                 contact: []
             });
@@ -273,64 +271,6 @@ describe('Events Module - Happy Flow Tests', () => {
             expect(result[0].name).toBe('Duplicate Event');
             expect(result[1].name).toBe('Duplicate Event');
             expect(result[1].description).toBe('Updated description');
-        });
-
-        it('should preserve existing tags when a conflicting upsert has no tags', async () => {
-            const startAt = new Date('2024-12-20T19:00:00Z');
-
-            await upsertEvents([
-                createTestEvent({
-                    name: 'Conflict Tags Event',
-                    startAt,
-                    endAt: new Date('2024-12-20T22:00:00Z'),
-                    slug: '',
-                    tags: ['music']
-                })
-            ]);
-
-            const result = await upsertEvents([
-                createTestEvent({
-                    name: 'Conflict Tags Event',
-                    startAt,
-                    endAt: new Date('2024-12-20T22:00:00Z'),
-                    slug: '',
-                    tags: [],
-                    description: 'Updated by scrape'
-                })
-            ]);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].tags).toEqual(['music']);
-            expect(result[0].description).toBe('Updated by scrape');
-        });
-
-        it('should merge existing and incoming tags on conflicting upserts', async () => {
-            const startAt = new Date('2024-12-21T19:00:00Z');
-
-            await upsertEvents([
-                createTestEvent({
-                    name: 'Merged Tags Event',
-                    startAt,
-                    endAt: new Date('2024-12-21T22:00:00Z'),
-                    slug: '',
-                    tags: ['music']
-                })
-            ]);
-
-            const result = await upsertEvents([
-                createTestEvent({
-                    name: 'Merged Tags Event',
-                    startAt,
-                    endAt: new Date('2024-12-21T22:00:00Z'),
-                    slug: '',
-                    tags: ['workshop'],
-                    description: 'Updated by scrape'
-                })
-            ]);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].tags).toEqual(expect.arrayContaining(['music', 'workshop']));
-            expect(result[0].tags).toHaveLength(2);
         });
 
         it('should fill empty tagSlugs on conflicting upserts and keep existing ones', async () => {
@@ -646,7 +586,6 @@ describe('Events Module - Happy Flow Tests', () => {
                 {
                     id: 1,
                     name: 'Test Event',
-                    tags: ['music', 'concert'],
                     hostSecret: 'secret123',
                     sourceChatIdsTelegram: ['room1', 'room2'],
                     sourceChatIdsWhatsapp: null,
@@ -687,108 +626,12 @@ describe('Events Module - Happy Flow Tests', () => {
             expect(result[0]).toMatchObject({
                 id: 1,
                 name: 'Test Event',
-                tags: expect.arrayContaining(['music', 'concert']),
                 hostSecret: undefined // Should be removed for security
             });
             expect(result[0].hostSecret).toBeUndefined();
         });
 
-        it('should handle events without tags', () => {
-            const mockEvents = [
-                {
-                    id: 1,
-                    name: 'No Tags Event',
-                    tags: null,
-                    hostSecret: 'secret123',
-                    startAt: new Date(),
-                    address: ['Test Street'],
-                    imageUrls: ['https://example.com/image.jpg'],
-                    source: 'test',
-                    listed: true,
-                    contact: [],
-                    sourceChatIdsTelegram: null,
-                    sourceChatIdsWhatsapp: null,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    slug: 'no-tags-event',
-                    soldOut: false,
-                    price: null,
-                    priceIsHtml: false,
-                    description: null,
-                    descriptionOriginal: null,
-                    host: null,
-                    hostLink: null,
-                    sourceUrl: 'https://example.com',
-                    latitude: null,
-                    longitude: null,
-                    messageSenderId: null,
-                    endAt: null,
-                    timezone: null,
-                    attendanceMode: 'offline' as const,
-                    authorId: null,
-                    spotlight: null,
-                    addressNote: null,
-                    tagSlugs: [],
-                    author: null
-                }
-            ];
-
-            const result = prepareEventsForUi(mockEvents);
-
-            expect(result.length).toBe(1);
-            const firstEvent = result[0] as any;
-            expect(firstEvent.tags).toBeUndefined();
-            expect(firstEvent.hostSecret).toBeUndefined();
-        });
-
-        it('should handle events with translated tags', () => {
-            const mockEvents = [
-                {
-                    id: 1,
-                    name: 'Tagged Event',
-                    tags: ['music', 'workshop', 'unknown-tag'],
-                    hostSecret: 'secret123',
-                    startAt: new Date(),
-                    address: ['Test Street'],
-                    imageUrls: ['https://example.com/image.jpg'],
-                    source: 'test',
-                    listed: true,
-                    contact: [],
-                    sourceChatIdsTelegram: null,
-                    sourceChatIdsWhatsapp: null,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    slug: 'tagged-event',
-                    soldOut: false,
-                    price: null,
-                    priceIsHtml: false,
-                    description: null,
-                    descriptionOriginal: null,
-                    host: null,
-                    hostLink: null,
-                    sourceUrl: 'https://example.com',
-                    latitude: null,
-                    longitude: null,
-                    messageSenderId: null,
-                    endAt: null,
-                    timezone: null,
-                    attendanceMode: 'offline' as const,
-                    authorId: null,
-                    spotlight: null,
-                    addressNote: null,
-                    tagSlugs: [],
-                    author: null
-                }
-            ];
-
-            const result = prepareEventsForUi(mockEvents);
-
-            expect(result[0].tags).toEqual(expect.arrayContaining(['music', 'workshop', 'unknown-tag']));
-            // Tags should be processed (either translated or kept as-is)
-            expect(Array.isArray(result[0].tags)).toBe(true);
-        });
-
-        it('should handle empty events array', () => {
+        it('should handle empty events array', async () => {
             const result = prepareEventsForUi([]);
             expect(result).toEqual([]);
         });
@@ -798,7 +641,6 @@ describe('Events Module - Happy Flow Tests', () => {
                 {
                     id: 1,
                     name: 'Event 1',
-                    tags: null,
                     hostSecret: 'secret1',
                     startAt: new Date(),
                     address: ['Street 1'],
@@ -834,7 +676,6 @@ describe('Events Module - Happy Flow Tests', () => {
                 {
                     id: 2,
                     name: 'Event 2',
-                    tags: null,
                     hostSecret: 'secret2',
                     startAt: new Date(),
                     address: ['Street 2'],
@@ -1382,21 +1223,18 @@ describe('Events Module - Happy Flow Tests', () => {
                 const events = [
                     createTestEvent({
                         name: 'Event 1',
-                        tags: [],
                         tagSlugs: ['yoga', 'meditation'],
                         slug: 'event-1',
                         startAt: futureDate
                     }),
                     createTestEvent({
                         name: 'Event 2',
-                        tags: [],
                         tagSlugs: ['ecstatic-dance'],
                         slug: 'event-2',
                         startAt: futureDate
                     }),
                     createTestEvent({
                         name: 'Event 3',
-                        tags: [],
                         tagSlugs: ['yoga'],
                         slug: 'event-3',
                         startAt: futureDate
@@ -1419,7 +1257,6 @@ describe('Events Module - Happy Flow Tests', () => {
                 await upsertEvents([
                     createTestEvent({
                         name: 'Event 1',
-                        tags: [],
                         tagSlugs: ['breathwork'],
                         slug: 'synonym-breathwork',
                         sourceUrl: 'https://example.com/synonym-breathwork',
@@ -1427,7 +1264,6 @@ describe('Events Module - Happy Flow Tests', () => {
                     }),
                     createTestEvent({
                         name: 'Event 2',
-                        tags: [],
                         tagSlugs: ['yoga'],
                         slug: 'synonym-yoga',
                         sourceUrl: 'https://example.com/synonym-yoga',
@@ -1816,7 +1652,6 @@ describe('Events Module - Happy Flow Tests', () => {
                         description: null,
                         price: null,
                         host: null,
-                        tags: null,
                         latitude: null,
                         longitude: null,
                         slug: 'minimal-event',
@@ -1881,26 +1716,6 @@ describe('Events Module - Happy Flow Tests', () => {
 
                 expect(result.events).toHaveLength(1);
                 expect(result.events[0].hostSecret).toBeUndefined();
-            });
-
-            it('should process tags through translation', async () => {
-                const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
-                const events = [
-                    createTestEvent({
-                        name: 'Tagged Event',
-                        tags: ['music', 'workshop'],
-                        slug: 'tagged-event',
-                        startAt: futureDate
-                    })
-                ];
-
-                await upsertEvents(events);
-
-                const result = prepareEventsResultForUi(await fetchEvents({}));
-
-                expect(result.events).toHaveLength(1);
-                expect(result.events[0].tags).toBeDefined();
-                expect(Array.isArray(result.events[0].tags)).toBe(true);
             });
         });
     });

@@ -42,7 +42,6 @@ export const events = pgTable("events", {
 	contact: text().array().default([]).notNull(),
 	latitude: real(),
 	longitude: real(),
-	tags: text().array(),
 	tagSlugs: text().array().notNull().default([]),
 	source: text().notNull(),
 	createdAt: timestamp().notNull().defaultNow(),

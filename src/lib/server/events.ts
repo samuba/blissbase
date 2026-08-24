@@ -21,7 +21,6 @@ import { sanitizeLocationParams } from '$lib/locationFilter';
 import type { InsertEvent } from '$lib/types';
 import { escapeRegex, type Modify } from '$lib/common';
 import * as v from 'valibot';
-import { allTagsMap, type TagTranslation } from '$lib/server/tags';
 import { eventCategorySlugs, OTHERS_CATEGORY_SLUG, getTagSlugsForCategories, getAssignedTagSlugs, getTagSlugsMatchingSearch } from '$lib/eventCategories';
 import { attendanceModeEnum, type AttendanceMode } from './schema';
 import { upsertEvents as upsertEventsShared } from './events.shared';
@@ -344,7 +343,6 @@ type FetchEventsResult = Modify<
 >;
 type FetchEvent = FetchEventsResult['events'][number];
 
-type StringOrTagTranslation = string & TagTranslation;
 // const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
 export function prepareEventsForUi(events: FetchEvent[]) {
 	return (
@@ -364,7 +362,6 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 				}
 				return {
 					...event,
-					tags: event.tags?.map((x) => allTagsMap.get(x) ?? x) as StringOrTagTranslation[],
 					hostSecret: undefined, // never leak this to the ui
 					author: event.author ? {
 						...event.author,

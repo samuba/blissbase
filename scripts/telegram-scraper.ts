@@ -589,7 +589,6 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
             // Merge imageUrls
             const imageUrls = mergeUniqueStrings(existing.imageUrls, event.imageUrls);
 
-            const tags = mergeUniqueStrings(existing.tags, event.tags);
             const tagSlugs = mergeUniqueStrings(existing.tagSlugs, event.tagSlugs);
             const sourceChatIdsTelegram = mergeUniqueStrings(existing.sourceChatIdsTelegram, event.sourceChatIdsTelegram);
             const coords = mergeCoords({
@@ -604,7 +603,6 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 ...existing,
                 description,
                 imageUrls,
-                tags,
                 tagSlugs,
                 sourceChatIdsTelegram,
                 latitude: coords.latitude,
@@ -634,7 +632,6 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
     }
     merged.slug = existingEvent.slug;
     merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls);
-    merged.tags = mergeUniqueStrings(existingEvent.tags, merged.tags);
     merged.tagSlugs = mergeUniqueStrings(existingEvent.tagSlugs, merged.tagSlugs);
     merged.sourceChatIdsTelegram = mergeUniqueStrings(existingEvent.sourceChatIdsTelegram, merged.sourceChatIdsTelegram);
     const coords = mergeCoords({

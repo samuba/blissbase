@@ -14,7 +14,7 @@ describe(`processDuplicates`, () => {
                     deletedCount: deletedCount + 1,
                     survivingEvent: {
                         ...eventB,
-                        tags: [...(eventB.tags ?? []), ...(eventA.tags ?? [])],
+                        tagSlugs: [...(eventB.tagSlugs ?? []), ...(eventA.tagSlugs ?? [])],
                     },
                     deletedEventId: eventA.id,
                 };
@@ -22,13 +22,13 @@ describe(`processDuplicates`, () => {
 
             expect(eventA.id).toBe(2);
             expect(eventB.id).toBe(3);
-            expect(eventA.tags).toEqual([`music`, `dance`]);
+            expect(eventA.tagSlugs).toEqual([`music`, `dance`]);
 
             return {
                 deletedCount: deletedCount + 1,
                 survivingEvent: {
                     ...eventA,
-                    tags: [...(eventA.tags ?? []), ...(eventB.tags ?? [])],
+                    tagSlugs: [...(eventA.tagSlugs ?? []), ...(eventB.tagSlugs ?? [])],
                 },
                 deletedEventId: eventB.id,
             };
@@ -41,9 +41,9 @@ describe(`processDuplicates`, () => {
                 { eventAId: 2, eventBId: 3 },
             ],
             eventsWithSameStart: [
-                { id: 1, tags: [`dance`] },
-                { id: 2, tags: [`music`] },
-                { id: 3, tags: [`breathwork`] },
+                { id: 1, tagSlugs: [`dance`] },
+                { id: 2, tagSlugs: [`music`] },
+                { id: 3, tagSlugs: [`breathwork`] },
             ],
             mergeDuplicateEvents,
         });
@@ -61,17 +61,15 @@ describe(`processDuplicates`, () => {
 });
 
 describe(`preparePreferredSourceEventUpdate`, () => {
-    it(`preserves legacy tags and chat provenance on the surviving preferred-source event`, () => {
+    it(`preserves catalog tags and chat provenance on the surviving preferred-source event`, () => {
         const eventToSurvive = {
             id: 2,
-            tags: [`music`],
             tagSlugs: [`yoga`],
             sourceChatIdsTelegram: [`room1`],
             sourceChatIdsWhatsapp: null as string[] | null,
         };
         const eventToDelete = {
             id: 1,
-            tags: [`workshop`, `music`],
             tagSlugs: [`meditation`, `yoga`],
             sourceChatIdsTelegram: [`room2`],
             sourceChatIdsWhatsapp: [`120363@g.us`],
@@ -83,12 +81,10 @@ describe(`preparePreferredSourceEventUpdate`, () => {
         });
 
         expect(update).toEqual({
-            tags: [`music`, `workshop`],
             tagSlugs: [`yoga`, `meditation`],
             sourceChatIdsTelegram: [`room1`, `room2`],
             sourceChatIdsWhatsapp: [`120363@g.us`],
         });
-        expect(eventToSurvive.tags).toEqual([`music`, `workshop`]);
         expect(eventToSurvive.tagSlugs).toEqual([`yoga`, `meditation`]);
         expect(eventToSurvive.sourceChatIdsTelegram).toEqual([`room1`, `room2`]);
         expect(eventToSurvive.sourceChatIdsWhatsapp).toEqual([`120363@g.us`]);
@@ -150,5 +146,5 @@ describe(`getMergedSourceUrl`, () => {
 
 type TestEvent = {
     id: number,
-    tags: string[] | null,
+    tagSlugs: string[] | null,
 };

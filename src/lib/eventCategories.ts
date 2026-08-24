@@ -608,9 +608,9 @@ export const eventCategories: EventCategory[] = [
 				synonyms: [`Biofield Healing`]
 			},
 			{
-				slug: `hands-on-energy-healing`,
+				slug: `hands-on-healing`,
 				get label() { /* @wc-include */ return `Handauflegen`; },
-				synonyms: [`Energy Healing`, `Hands-on Healing`, `handson-energy-healing`]
+				synonyms: [`Energy Healing`, `Hands-on Healing`, `Hands-on Energy Healing`]
 			},
 			{
 				slug: `light-language`,
@@ -699,7 +699,8 @@ export const eventCategories: EventCategory[] = [
 			},
 			{
 				slug: `cuddle`,
-				get label() { /* @wc-include */ return `Kuscheln`; }
+				get label() { /* @wc-include */ return `Kuscheln`; },
+				synonyms: [`Cuddle`, `Cuddling`, `Kuschelparty`, `Cuddle Party`, `Cuddle Workshop`, `Cuddle Workshops`, `Kuschelabend`]
 			},
 			{
 				slug: `trauma-release`,
@@ -871,6 +872,11 @@ export const eventCategories: EventCategory[] = [
 		get label() { return /* @wc-include */ `Musik`; },
 		tags: [
 			{
+				slug: `music`,
+				get label() { /* @wc-include */ return `Musik`; },
+				synonyms: [`Music`]
+			},
+			{
 				slug: `mantra-singing`,
 				get label() { /* @wc-include */ return `Mantrasingen`; },
 				synonyms: [`Mantra Singing`, `Mantra`, `Mantra singen`]
@@ -896,19 +902,6 @@ export const eventCategories: EventCategory[] = [
 				synonyms: [`Voice Liberation`, `Stimm-Befreiung`, `Stimmarbeit`]
 			},
 			{
-				slug: `singing-bowls`,
-				get label() { /* @wc-include */ return `Klangschalen`; }
-			},
-			{
-				slug: `sound-bath`,
-				get label() { /* @wc-include */ return `Klangbad`; }
-			},
-			{
-				slug: `music`,
-				get label() { /* @wc-include */ return `Musik`; },
-				synonyms: [`Music`]
-			},
-			{
 				slug: `live-music`,
 				get label() { /* @wc-include */ return `Livemusik`; },
 				synonyms: [`Live Music`, `Live-Musik`, `Live Band`, `Music Evening`]
@@ -927,10 +920,6 @@ export const eventCategories: EventCategory[] = [
 				slug: `music-lesson`,
 				get label() { /* @wc-include */ return `Musikunterricht`; },
 				synonyms: [`Music Lesson`, `Music Class`, `Music Workshop`]
-			},
-			{
-				slug: `sound-journey`,
-				get label() { /* @wc-include */ return `Klangreise`; }
 			},
 			{
 				slug: `lying-concert`,
@@ -1006,10 +995,6 @@ export const eventCategories: EventCategory[] = [
 				get label() { /* @wc-include */ return `Trommelbau`; },
 				synonyms: [`Drum Making`]
 			},
-			{
-				slug: `sound-healing`,
-				get label() { /* @wc-include */ return `Sound Healing`; }
-			},
 		],
 	},
 	{
@@ -1043,8 +1028,8 @@ export const eventCategories: EventCategory[] = [
 			},
 			{
 				slug: `boundaries`,
-				get label() { /* @wc-include */ return `Grenzen`; },
-				synonyms: [`Boundaries`, `Consent`, `Einvernehmlichkeit`, `Grenzarbeit`]
+				get label() { /* @wc-include */ return `Grenzen & Konsens`; },
+				synonyms: [`Boundaries`, `Consent`, `Einvernehmlichkeit`, `Grenzarbeit`, `Konsensarbeit`]
 			},
 			{
 				slug: `connection`,
@@ -1192,7 +1177,8 @@ export const eventCategories: EventCategory[] = [
 			},
 			{
 				slug: `cuddle`,
-				get label() { /* @wc-include */ return `Kuscheln`; }
+				get label() { /* @wc-include */ return `Kuscheln`; },
+				synonyms: [`Cuddle`, `Cuddling`, `Kuschelparty`, `Cuddle Party`, `Cuddle Workshop`, `Cuddle Workshops`, `Kuschelabend`]
 			},
 			{
 				slug: `conscious-dating`,
@@ -1243,11 +1229,6 @@ export const eventCategories: EventCategory[] = [
 				slug: `kundalini-yoga`,
 				get label() { /* @wc-include */ return `Kundalini Yoga`; },
 				synonyms: [`Kundaliniyoga`]
-			},
-			{
-				slug: `childrens-yoga`,
-				get label() { /* @wc-include */ return `Kinderyoga`; },
-				synonyms: [`Children's Yoga`, `Yoga für Kinder`]
 			},
 			{
 				slug: `childrens-workshop`,
@@ -1335,21 +1316,6 @@ export const eventCategories: EventCategory[] = [
 				synonyms: [`Knowledge`]
 			},
 			{
-				slug: `course`,
-				get label() { /* @wc-include */ return `Kurs`; },
-				synonyms: [`Course`, `Ausbildungskurs`, `Class`]
-			},
-			{
-				slug: `year-program`,
-				get label() { /* @wc-include */ return `Jahrestraining`; },
-				synonyms: [`Year Program`, `Jahresausbildung`]
-			},
-			{
-				slug: `program`,
-				get label() { /* @wc-include */ return `Programm`; },
-				synonyms: [`Program`]
-			},
-			{
 				slug: `work-and-career`,
 				get label() { /* @wc-include */ return `Arbeit und Karriere`; },
 				synonyms: [`Work and Career`]
@@ -1385,12 +1351,12 @@ export const eventCategories: EventCategory[] = [
 			},
 			{
 				slug: `gifted`,
-				get label() { /* @wc-include */ return `Hochbegabt`; },
-				synonyms: [`Gifted`, `Hochbegabung`]
+				get label() { /* @wc-include */ return `Hochbegabung`; },
+				synonyms: [`Gifted`, `Hochbegabt`]
 			},
 			{
 				slug: `highly-sensitive`,
-				get label() { /* @wc-include */ return `Hochsensibel`; },
+				get label() { /* @wc-include */ return `Hochsensibelität`; },
 				synonyms: [`Highly Sensitive`, `HSP (Hochsensible Person)`, `HSP`, `Hochsensible Person`, `hsp-highly-sensitive-person`]
 			},
 			{
@@ -1409,9 +1375,9 @@ export const eventCategories: EventCategory[] = [
 				synonyms: [`Grief and Loss`, `Trauerbegleitung`, `Trauer`]
 			},
 			{
-				slug: `menopause-transition`,
+				slug: `menopause`,
 				get label() { /* @wc-include */ return `Menopause / Wechseljahre`; },
-				synonyms: [`Menopause`, `Wechseljahre`, `Menopause / Transition`]
+				synonyms: [`Menopause`, `Wechseljahre`]
 			},
 			{
 				slug: `vanishing-twin`,
@@ -1540,11 +1506,6 @@ export const eventCategories: EventCategory[] = [
 				slug: `poetry`,
 				get label() { /* @wc-include */ return `Poesie`; },
 				synonyms: [`Poetry`, `Lyrik`, `Poetry Slam`]
-			},
-			{
-				slug: `lecture`,
-				get label() { /* @wc-include */ return `Vortrag`; },
-				synonyms: [`Lecture`, `Talk`, `Presentation`, `Präsentation`, `Book Presentation`, `Buchpräsentation`, `Experiential Lecture`, `Experiential Lectures`, `Erlebnisvorträge`]
 			},
 		],
 	},
@@ -1849,16 +1810,6 @@ export const eventCategories: EventCategory[] = [
 				synonyms: [`Initiation`, `Initiations`]
 			},
 			{
-				slug: `new-years-eve`,
-				get label() { /* @wc-include */ return `Silvester`; },
-				synonyms: [`New Year's Eve`, `Sylvester`]
-			},
-			{
-				slug: `christmas`,
-				get label() { /* @wc-include */ return `Weihnachten`; },
-				synonyms: [`Christmas`]
-			},
-			{
 				slug: `plant-medicine`,
 				get label() { /* @wc-include */ return `Pflanzenmedizin`; },
 				synonyms: [`Plant Medicine`, `Microdosing`, `Psychedelic Experience`, `Ayahuasca`]
@@ -1915,7 +1866,7 @@ export const eventCategories: EventCategory[] = [
 			{
 				slug: `hape`,
 				get label() { /* @wc-include */ return `Rapé`; },
-				synonyms: [`Hapé`, `Rapeh`, `Hapeh`, `rape`]
+				synonyms: [`Hapé`, `Rapeh`, `Hapeh`]
 			},
 			{
 				slug: `inner-journey`,
@@ -1931,10 +1882,6 @@ export const eventCategories: EventCategory[] = [
 				slug: `rite-of-the-womb`,
 				get label() { /* @wc-include */ return `Rite of the Womb`; },
 				synonyms: [`Munay Ki`]
-			},
-			{
-				slug: `light-language`,
-				get label() { /* @wc-include */ return `Lichtsprache`; }
 			},
 			{
 				slug: `medicine-walk`,
@@ -2037,21 +1984,6 @@ export const eventCategories: EventCategory[] = [
 				synonyms: [`Animals`, `Horses`, `Pferde`]
 			},
 			{
-				slug: `festival`,
-				get label() { /* @wc-include */ return `Festival`; },
-				synonyms: [`Festivals`, `Dance Festival`, `Wellness Festival`]
-			},
-			{
-				slug: `retreat`,
-				get label() { /* @wc-include */ return `Retreat`; },
-				synonyms: [`Multi-day Retreat`, `Multi-day Retreats`, `Mehrtägige Retreat`, `1-Day Retreat`, `1-Tages-Retreat`, `3-Day Retreat`, `Silent Retreat`, `Schweigeretreat`, `1-on-1 Retreat`, `1-zu-1-Retreat`, `Mini Retreat in Nature`, `Mini-Retreat in der Natur`, `Wildnis-Retreat`, `DanceRetreat`, `Urlaubsseminar`]
-			},
-			{
-				slug: `workshop`,
-				get label() { /* @wc-include */ return `Workshop`; },
-				synonyms: [`Workshops`, `Creative Workshop`, `Immersive Workshop`, `Seminar`, `Mehrtägiges Seminar`, `Tagesseminar`]
-			},
-			{
 				slug: `fair`,
 				get label() { /* @wc-include */ return `Messe`; },
 				synonyms: [`Fair`, `Market`, `Markt`, `Art Market`]
@@ -2073,29 +2005,34 @@ export const eventCategories: EventCategory[] = [
 			},
 			{
 				slug: `crafts`,
-				get label() { /* @wc-include */ return `Selbst herstellen`; },
+				get label() { /* @wc-include */ return `Handwerk & DIY`; },
 				synonyms: [`Make Something Yourself`, `Handwerk`, `Basteln`, `Jewelry Making`, `Schmuck herstellen`, `Pottery & Clay`, `Töpfern`, `Handcraft`, `Candle Making`]
-			},
-			{
-				slug: `webinar`,
-				get label() { /* @wc-include */ return `Webinar`; },
-				synonyms: [`Online-Vortrag`]
-			},
-			{
-				slug: `conference`,
-				get label() { /* @wc-include */ return `Kongress`; },
-				synonyms: [`Conference`, `Congress`, `Tagung`, `Fachtag`]
 			},
 			{
 				slug: `creative-expression`,
 				get label() { /* @wc-include */ return `Kreativer Ausdruck`; },
 				synonyms: [`Creative Expression`]
 			},
+			{
+				slug: `new-years-eve`,
+				get label() { /* @wc-include */ return `Silvester`; },
+				synonyms: [`New Year's Eve`, `Sylvester`]
+			},
+			{
+				slug: `christmas`,
+				get label() { /* @wc-include */ return `Weihnachten`; },
+				synonyms: [`Christmas`]
+			},
 		],
 	},
 ];
 
-export const eventTaxonomies: EventTag[] = [
+/* possible future categories:
+  Kreativität & Ausdruck: art, writing, theatre, storytelling, poetry, intuitive-painting, crafts, creative-expression, cabaret, film.
+  Natur & Gesundheit: nature, hiking, forest-bathing, foraging, herbalism, fasting, ayurveda, chinese-medicine, sauna, ice-bath.
+*/
+
+export const eventFormats: EventTag[] = [
 	{
 		slug: `festival`,
 		get label() { /* @wc-include */ return `Festival`; },
@@ -2104,19 +2041,46 @@ export const eventTaxonomies: EventTag[] = [
 	{
 		slug: `retreat`,
 		get label() { /* @wc-include */ return `Retreat`; },
-		synonyms: [`Multi-day Retreat`, `1-Day Retreat`, `Silent Retreat`],
-	},
-	{
-		slug: `workshop`,
-		get label() { /* @wc-include */ return `Workshop`; },
-		synonyms: [`Workshops`, `Seminar`, `Mehrtägiges Seminar`, `Tagesseminar`],
+		synonyms: [`Multi-day Retreat`, `Multi-day Retreats`, `Mehrtägiges Retreat`, `1-Day Retreat`, `1-Tages-Retreat`, `3-Day Retreat`, `Silent Retreat`, `Schweigeretreat`, `1-on-1 Retreat`, `1-zu-1-Retreat`, `Mini Retreat in Nature`, `Mini-Retreat in der Natur`, `Wildnis-Retreat`, `DanceRetreat`, `Urlaubsseminar`]
 	},
 	{
 		slug: `course`,
 		get label() { /* @wc-include */ return `Kurs`; },
-		synonyms: [`Ausbildungskurs`, `Class`],
-	}
+		synonyms: [`Course`, `Ausbildungskurs`, `Class`]
+	},
+	{
+		slug: `lecture`,
+		get label() { /* @wc-include */ return `Vortrag`; },
+		synonyms: [`Lecture`, `Talk`, `Presentation`, `Präsentation`, `Book Presentation`, `Buchpräsentation`, `Experiential Lecture`, `Experiential Lectures`, `Erlebnisvorträge`]
+	},
+	{
+		slug: `year-program`,
+		get label() { /* @wc-include */ return `Jahrestraining`; },
+		synonyms: [`Year Program`, `Jahresausbildung`, `Jahrestraining`]
+	},
+	{
+		slug: `program`,
+		get label() { /* @wc-include */ return `Programm`; },
+		synonyms: [`Program`]
+	},
+	{
+		slug: `workshop`,
+		get label() { /* @wc-include */ return `Workshop`; },
+		synonyms: [`Workshops`, `Creative Workshop`, `Immersive Workshop`, `Seminar`, `Mehrtägiges Seminar`, `Tagesseminar`]
+	},
+	{
+		slug: `conference`,
+		get label() { /* @wc-include */ return `Kongress`; },
+		synonyms: [`Conference`, `Congress`, `Tagung`, `Fachtag`]
+	},
+	{
+		slug: `online`,
+		get label() { /* @wc-include */ return `Online`; },
+		synonyms: [`Zoom`, `Webinar`, `Online-Vortrag`]
+	},
 ];
+
+
 
 export const eventCategorySlugs = new Set(eventCategories.map((category) => category.slug));
 
@@ -2147,21 +2111,10 @@ type EventCategory = {
 	tags: EventTag[];
 };
 
-export const allTags = new Set(uniqueTagsBySlug(eventCategories.flatMap((category) => category.tags)));
+export const allTags = new Set(uniqueTagsBySlug([...eventCategories.flatMap((category) => category.tags), ...eventFormats]));
 export const allTagsBySlug = new Map([...allTags].map((tag) => [tag.slug, tag]));
 export const allTagSlugs = new Set(allTagsBySlug.keys());
-const synonymLookup = buildSynonymLookup();
-
-export function getTagSlugsForCategories(categorySlugs: string[]) {
-	const slugs = new Set<string>();
-	for (const categorySlug of categorySlugs) {
-		if (categorySlug === OTHERS_CATEGORY_SLUG) continue;
-		const category = eventCategories.find((item) => item.slug === categorySlug);
-		if (!category?.tags?.length) continue;
-		for (const tag of category.tags) slugs.add(tag.slug);
-	}
-	return [...slugs];
-}
+const synonymLookup = buildSynonymLookup();	
 
 /**
  * Catalog slugs whose slug, label, or synonym matches the search word as a whole word, prefix, or suffix.

@@ -42,15 +42,7 @@
 		return getWebsiteDomainLabel(url) ?? `Website`;
 	}
 
-	const tags = $derived.by(() => {
-		const tags = new Set<string>();
-		event.tags?.forEach((x) => {
-			if (x[localeStore.locale]) tags.add(x[localeStore.locale]);
-			else tags.add(x);
-		});
-		labelsForTagSlugs(event.tagSlugs).forEach((label) => tags.add(label));
-		return Array.from(tags);
-	});
+	const tags = $derived(labelsForTagSlugs(event.tagSlugs));
 
 	const mapsUrl = $derived(googleMapsSearchUrl({
 		latitude: event.latitude,

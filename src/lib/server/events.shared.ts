@@ -96,17 +96,6 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 						else coalesce(excluded.tag_slugs, ARRAY[]::text[])
 					end
 				`,
-				// Preserve existing legacy tags when a scrape has no tags, otherwise merge both sides.
-				tags: sql`
-					case
-						when excluded.tags is null or coalesce(array_length(excluded.tags, 1), 0) = 0 then ${s.events.tags}
-						when ${s.events.tags} is null or coalesce(array_length(${s.events.tags}, 1), 0) = 0 then excluded.tags
-						else array(
-							select distinct tag
-							from unnest(${s.events.tags} || excluded.tags) as merged_tags(tag)
-						)
-					end
-				`,
 				// Preserve existing Telegram chat IDs when a scrape has none, otherwise merge both sides.
 				sourceChatIdsTelegram: sql`
 					case
