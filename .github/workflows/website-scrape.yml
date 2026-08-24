@@ -18,8 +18,6 @@ jobs:
     if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.params == '' || !startsWith(github.event.inputs.params, 'yogabarn') }}
     runs-on: ubuntu-latest
     environment: production
-    outputs:
-      sources: ${{ steps.list-sources.outputs.sources }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -49,48 +47,10 @@ jobs:
           TODOTODAY_PASSWORD: ${{ secrets.TODOTODAY_PASSWORD }}
         run: bun run scripts/scrape-websites.ts ${{ github.event.inputs.params }} --exclude yogabarn
 
-      # Discover sources from written status files — no YAML list to maintain.
-      - name: List scraped sources
-        id: list-sources
+      # Same runner FS as scrape — no artifacts. Collapsible ::group:: per source; step goes red if any failed.
+      - name: Per-source scrape logs
         if: always()
-        run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json, pathlib
-          log_dir = pathlib.Path("scrape-logs")
-          sources = sorted(p.stem for p in log_dir.glob("*.status")) if log_dir.is_dir() else []
-          print(f"sources={json.dumps(sources)}")
-          PY
-
-      - name: Upload scrape logs
-        if: always() && hashFiles('scrape-logs/**') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: scrape-logs
-          path: scrape-logs/
-          retention-days: 7
-
-  # One job per scraped source (dynamic matrix). Red when that source's .status is fail.
-  print-source-logs:
-    name: log ${{ matrix.source }}
-    needs: scrape-websites
-    if: ${{ always() && needs.scrape-websites.result != 'skipped' && needs.scrape-websites.outputs.sources != '[]' }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        source: ${{ fromJson(needs.scrape-websites.outputs.sources) }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Download scrape logs
-        uses: actions/download-artifact@v4
-        with:
-          name: scrape-logs
-          path: scrape-logs
-
-      - name: Print ${{ matrix.source }} log
-        run: bash scripts/print-scrape-log.sh "${{ matrix.source }}"
+        run: bash scripts/print-scrape-log.sh --all
 
   # Each attempt is a new job → new GitHub-hosted runner → new public IP.
   # Bot protection flags some Azure IPs; retrying on the same IP makes it worse.
