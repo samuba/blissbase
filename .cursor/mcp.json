@@ -2,6 +2,9 @@
 	"mcpServers": {
 		"svelte": {
 			"url": "https://mcp.svelte.dev/mcp"
+		},
+		"vercel": {
+			"url": "https://mcp.vercel.com"
 		}
 	}
 }
