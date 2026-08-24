@@ -5,7 +5,7 @@ import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ss
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import type { LayoutLoad } from './$types';
 import { user } from '$lib/user.svelte';
-import { syncPosthogIdentity } from '$lib/posthog';
+import { filterPosthogBrowserNoise, syncPosthogIdentity } from '$lib/posthog';
 
 import { locales } from '../locales/data.js'
 import { loadLocale } from 'wuchale/load-utils'
@@ -48,6 +48,7 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
                 api_host: 'https://igel.blissbase.app',
                 defaults: '2025-05-24',
                 person_profiles: 'always',
+                before_send: filterPosthogBrowserNoise,
             });
             posthogClientInitialized = true;
         }
