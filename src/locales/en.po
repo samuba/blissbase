@@ -508,9 +508,8 @@ msgstr "Distance"
 msgid "<0/> Alle Filter zurücksetzen"
 msgstr "<0/> Reset all filters"
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Zurücksetzen"
-msgstr "Reset"
+#~ msgid "Zurücksetzen"
+#~ msgstr "Reset"
 
 #: src/lib/components/DateRangePicker.svelte
 msgid "Datum"
@@ -3955,3 +3954,7 @@ msgstr "Thickness {0}"
 #: src/routes/type-specimen/+page.svelte
 msgid "current"
 msgstr "current"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Kategorien"
+msgstr "Categories"

@@ -161,9 +161,22 @@
 			onOpenAutoFocus={(event) => event.preventDefault()}
 			onInteractOutside={handleFilterInteractOutside}
 		>
-			<Dialog.Title class="mt-4 w-full text-center text-xl font-semibold">Filter</Dialog.Title>
+			<div class="flex shrink-0 items-center gap-3 px-6 py-4">
+				<Dialog.Title class="text-xl leading-none font-semibold">Filter</Dialog.Title>
+				<div class="grow"></div>
+				<button type="button" class="btn btn-sm shrink-0" onclick={() => eventsStore.resetFilters()}>
+					<i class="icon-[ph--arrow-u-up-left] size-4"></i>
+					Alle Filter zurücksetzen
+				</button>
+				<Dialog.Close
+					class="btn btn-ghost btn-circle btn-sm shrink-0"
+					aria-label="Schließen"
+				>
+					<i class="icon-[ph--x] size-5"></i>
+				</Dialog.Close>
+			</div>
 
-			<div class="flex flex-col gap-5 overflow-y-auto p-6">
+			<div class="flex flex-col gap-5 overflow-y-auto px-6 pb-6">
 				<div class="flex flex-col items-start gap-3">
 					<h3>Zeitraum</h3>
 					<DateRangePicker onChange={eventsStore.onDateChange} value={{ start: startDate, end: endDate }} showLongText />
@@ -245,12 +258,9 @@
 					</div>
 				</div>
 
-				<div class="flex flex-col items-start gap-3">
-					<h3>Zurücksetzen</h3>
-					<button type="button" class="btn" onclick={() => eventsStore.resetFilters()}>
-						<i class="icon-[ph--arrow-u-up-left] size-5"></i>
-						Alle Filter zurücksetzen
-					</button>
+				<div class="flex w-full flex-col items-start gap-3">
+					<h3>Kategorien</h3>
+					<CategorySelection layout="wrap" />
 				</div>
 
 				{#if user.isAdmin && eventSources && eventSourceFilter}
@@ -262,12 +272,6 @@
 			<div class="flex w-full items-center justify-end px-6 pt-3 pb-6">
 				<Dialog.Close class="btn btn-primary w-full md:w-auto" data-testid="filter-apply">Ergebnisse anzeigen</Dialog.Close>
 			</div>
-			<Dialog.Close
-				class="hover:bg-base-100 absolute top-4 right-4 flex size-8 items-center justify-center rounded-full transition-colors"
-				aria-label="Schließen"
-			>
-				<i class="icon-[ph--x] size-6"></i>
-			</Dialog.Close>
 		</Dialog.ContentAnimated>
 	</Dialog.Portal>
 </Dialog.Root>

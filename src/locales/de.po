@@ -508,9 +508,8 @@ msgstr "Entfernung"
 msgid "<0/> Alle Filter zurücksetzen"
 msgstr "<0/> Alle Filter zurücksetzen"
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Zurücksetzen"
-msgstr "Zurücksetzen"
+#~ msgid "Zurücksetzen"
+#~ msgstr "Zurücksetzen"
 
 #: src/lib/components/DateRangePicker.svelte
 msgid "Datum"
@@ -3955,3 +3954,7 @@ msgstr "Thickness {0}"
 #: src/routes/type-specimen/+page.svelte
 msgid "current"
 msgstr "current"
+
+#: src/lib/components/HeaderControls.svelte
+msgid "Kategorien"
+msgstr "Kategorien"

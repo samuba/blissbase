@@ -5,6 +5,8 @@
 	import { flip } from 'svelte/animate';
 	import TextSearchInput from '$lib/components/TextSearchInput.svelte';
 
+	let { layout = `rail` }: { layout?: `rail` | `wrap` } = $props();
+
 	let textSearchInput = $state<TextSearchInput | null>(null);
 
 	const initialSearchTerm = eventsStore.searchFilter || ``;
@@ -49,6 +51,14 @@
 
 	function removeCategory(slug: string) {
 		eventsStore.handleCategoryChange(selectedSlugs.filter((selectedSlug) => selectedSlug !== slug));
+	}
+
+	function toggleCategory(slug: string) {
+		if (selectedSlugs.includes(slug)) {
+			removeCategory(slug);
+			return;
+		}
+		selectCategory(slug);
 	}
 
 	/** Maps vertical wheel movement to horizontal category scrolling. */
@@ -102,97 +112,115 @@
 	}
 </script>
 
-<div class="flex w-full max-w-full min-w-0 items-center" data-nosnippet>
-	<div class="relative flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden pb-1">
-		<TextSearchInput
-			bind:this={textSearchInput}
-			bind:query={filterQuery}
-			bind:searched={keywordSearched}
-			variant="compact"
-			onSearch={handleTextSearch}
-			onClose={handleSearchClose}
-		/>
-
-		<div class={[`flex-no-wrap category-trigger flex gap-2`, selectedCategories.length === 0 && `hidden`]}>
-			{#each selectedCategories as category (category.slug)}
-				<button
-					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
-					data-testid={`category-chip-${category.slug}`}
-					onclick={() => removeCategory(category.slug)}
-					in:fade={{ duration: 280 }}
-					animate:flip={{ duration: 280 }}
-				>
-					{category.label}
-					<i class="icon-[ph--x] size-5"></i>
-				</button>
-			{/each}
-		</div>
-
-		<div class="relative w-full overflow-hidden">
-			<div
-				class="category-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center overflow-x-auto"
-				{@attach trackCategoryRail}
-				onscroll={(event) => updateCategoryRailShadows(event.currentTarget)}
-				onwheel={(event) => handleCategoryRailWheel({ event, element: event.currentTarget })}
+{#if layout === `wrap`}
+	<div class="flex w-full flex-wrap items-center gap-2" data-testid="category-selection-wrap">
+		{#each eventCategories as category (category.slug)}
+			<button
+				type="button"
+				class={[
+					`btn min-w-fit shrink-0 whitespace-nowrap tracking-tight sm:tracking-normal`,
+					selectedSlugs.includes(category.slug) ? `active` : `bg-base-100 font-normal`,
+				]}
+				data-testid={`category-chip-${category.slug}`}
+				onclick={() => toggleCategory(category.slug)}
 			>
-				<div class="flex w-max flex-nowrap items-center gap-2">
-					{#each railCategories as category (category.slug)}
-						<button
-							class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap tracking-tight sm:tracking-normal"
-							data-testid={`category-chip-${category.slug}`}
-							onclick={() => selectCategory(category.slug)}
-						>
-							{category.label}
-						</button>
-					{/each}
+				{category.label}
+			</button>
+		{/each}
+	</div>
+{:else}
+	<div class="flex w-full max-w-full min-w-0 items-center" data-nosnippet>
+		<div class="relative flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden pb-1">
+			<TextSearchInput
+				bind:this={textSearchInput}
+				bind:query={filterQuery}
+				bind:searched={keywordSearched}
+				variant="compact"
+				onSearch={handleTextSearch}
+				onClose={handleSearchClose}
+			/>
+
+			<div class={[`flex-no-wrap category-trigger flex gap-2`, selectedCategories.length === 0 && `hidden`]}>
+				{#each selectedCategories as category (category.slug)}
+					<button
+						class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+						data-testid={`category-chip-${category.slug}`}
+						onclick={() => removeCategory(category.slug)}
+						in:fade={{ duration: 280 }}
+						animate:flip={{ duration: 280 }}
+					>
+						{category.label}
+						<i class="icon-[ph--x] size-5"></i>
+					</button>
+				{/each}
+			</div>
+
+			<div class="relative w-full overflow-hidden">
+				<div
+					class="category-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center overflow-x-auto"
+					{@attach trackCategoryRail}
+					onscroll={(event) => updateCategoryRailShadows(event.currentTarget)}
+					onwheel={(event) => handleCategoryRailWheel({ event, element: event.currentTarget })}
+				>
+					<div class="flex w-max flex-nowrap items-center gap-2">
+						{#each railCategories as category (category.slug)}
+							<button
+								class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap tracking-tight sm:tracking-normal"
+								data-testid={`category-chip-${category.slug}`}
+								onclick={() => selectCategory(category.slug)}
+							>
+								{category.label}
+							</button>
+						{/each}
+					</div>
 				</div>
-			</div>
 
-			<!-- fade + chevron left -->
-			<div
-				class={[
-					`category-rail-fade h-full from-base-200 via-base-200/85 pointer-events-none absolute top-0 left-0 z-10 flex w-14 items-center justify-start bg-linear-to-r to-transparent transition-opacity duration-300 ease-out`,
-					showLeftShadow ? `opacity-100` : `opacity-0`,
-				]}
-			>
-				<button
-					type="button"
+				<!-- fade + chevron left -->
+				<div
 					class={[
-						`category-rail-chevron btn btn-circle btn-ghost btn-sm pointer-fine:mb-3`,
-						showLeftShadow ? `pointer-events-auto` : `pointer-events-none`,
+						`category-rail-fade h-full from-base-200 via-base-200/85 pointer-events-none absolute top-0 left-0 z-10 flex w-14 items-center justify-start bg-linear-to-r to-transparent transition-opacity duration-300 ease-out`,
+						showLeftShadow ? `opacity-100` : `opacity-0`,
 					]}
-					aria-label="Kategorien nach links scrollen"
-					tabindex={showLeftShadow ? 0 : -1}
-					onclick={() => scrollCategoryRail(`left`)}
 				>
-					<i class="icon-[ph--caret-left] size-5"></i>
-				</button>
-			</div>
+					<button
+						type="button"
+						class={[
+							`category-rail-chevron btn btn-circle btn-ghost btn-sm pointer-fine:mb-3`,
+							showLeftShadow ? `pointer-events-auto` : `pointer-events-none`,
+						]}
+						aria-label="Kategorien nach links scrollen"
+						tabindex={showLeftShadow ? 0 : -1}
+						onclick={() => scrollCategoryRail(`left`)}
+					>
+						<i class="icon-[ph--caret-left] size-5"></i>
+					</button>
+				</div>
 
-			<!-- fade + chevron right -->
-			<div
-				class={[
-					`category-rail-fade h-full from-base-200 via-base-200/85 pointer-events-none absolute top-0 right-0 z-10 flex items-center justify-end bg-linear-to-l to-transparent transition-all duration-300 ease-out`,
-					showRightShadow ? `opacity-100` : `opacity-0`,
-					showLeftShadow ? `w-14` : `w-18`,
-				]}
-			>
-				<button
-					type="button"
+				<!-- fade + chevron right -->
+				<div
 					class={[
-						`category-rail-chevron btn btn-circle btn-ghost btn-sm pointer-fine:mb-3`,
-						showRightShadow ? `pointer-events-auto` : `pointer-events-none`,
+						`category-rail-fade h-full from-base-200 via-base-200/85 pointer-events-none absolute top-0 right-0 z-10 flex items-center justify-end bg-linear-to-l to-transparent transition-all duration-300 ease-out`,
+						showRightShadow ? `opacity-100` : `opacity-0`,
+						showLeftShadow ? `w-14` : `w-18`,
 					]}
-					aria-label="Kategorien nach rechts scrollen"
-					tabindex={showRightShadow ? 0 : -1}
-					onclick={() => scrollCategoryRail(`right`)}
 				>
-					<i class="icon-[ph--caret-right] size-5"></i>
-				</button>
+					<button
+						type="button"
+						class={[
+							`category-rail-chevron btn btn-circle btn-ghost btn-sm pointer-fine:mb-3`,
+							showRightShadow ? `pointer-events-auto` : `pointer-events-none`,
+						]}
+						aria-label="Kategorien nach rechts scrollen"
+						tabindex={showRightShadow ? 0 : -1}
+						onclick={() => scrollCategoryRail(`right`)}
+					>
+						<i class="icon-[ph--caret-right] size-5"></i>
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
-</div>
+{/if}
 
 <style>
 	.category-rail-scrollbar {
