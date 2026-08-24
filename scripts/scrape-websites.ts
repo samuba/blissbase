@@ -4,7 +4,7 @@
  *
  * Requires Bun, for network requests and file system operations.
  * Usage: 
- * bun run scripts/scrape-websites.ts [source] [--clean] [--exclude source,...]
+ * bun run scripts/scrape-websites.ts [source] [--clean] [--exclude source,...] [--log-dir dir]
  * 
  * Examples:
  * bun run scripts/scrape-websites.ts                    # Scrape all sources
@@ -15,6 +15,7 @@
  * 
  * The '--clean' flag deletes existing events from sources that scraped successfully this run.
  * The '--exclude' flag skips one or more sources (comma-separated, repeatable).
+ * Per-source console output is teed to scrape-logs/<source>.log (override with --log-dir).
  */
 
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
@@ -22,7 +23,10 @@ import { db, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
 import { fillMissingEventTagSlugs } from './tagScrapedEvents.ts';
 import { and, inArray, notInArray } from 'drizzle-orm';
-import { parseArgs } from 'util';
+import { format, parseArgs } from 'util';
+import { AsyncLocalStorage } from 'async_hooks';
+import { createWriteStream, mkdirSync, writeFileSync, type WriteStream } from 'fs';
+import { join } from 'path';
 import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
 import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts.ts';
@@ -30,40 +34,86 @@ import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
 
+const DEFAULT_LOG_DIR = `scrape-logs`;
+const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
+let consolePatchedForScrapeLogs = false;
+
+/** Tees console output to the active per-source log file while keeping stdout/stderr as-is. */
+function patchConsoleForScrapeLogs() {
+    if (consolePatchedForScrapeLogs) return;
+    consolePatchedForScrapeLogs = true;
+
+    for (const method of [`log`, `info`, `warn`, `error`, `debug`] as const) {
+        const original = console[method].bind(console);
+        console[method] = (...args: unknown[]) => {
+            original(...args);
+            const stream = scrapeLogContext.getStore();
+            if (!stream) return;
+            stream.write(`${format(...args)}\n`);
+        };
+    }
+}
+
+async function endWriteStream(stream: WriteStream) {
+    await new Promise<void>((resolve, reject) => {
+        stream.end((error) => error ? reject(error) : resolve());
+    });
+}
+
 /**
- * Dynamically scrapes a single source using its corresponding scraper
- * @param source - The source name to scrape
- * @returns Promise resolving to scraped events
+ * Dynamically scrapes a single source using its corresponding scraper.
+ * Console output is teed into `{logDir}/{source}.log` for CI step dumps.
  */
-async function scrapeSource(source: string): Promise<ScrapedEvent[]> {
-    console.log(`Scraping ${source}...`);
+function writeSourceStatus({ logDir, source, ok }: { logDir: string; source: string; ok: boolean }) {
+    writeFileSync(join(logDir, `${source}.status`), ok ? `ok\n` : `fail\n`);
+}
+
+async function scrapeSource({ source, logDir }: { source: string; logDir: string }): Promise<ScrapedEvent[]> {
+    mkdirSync(logDir, { recursive: true });
+    const logPath = join(logDir, `${source}.log`);
+    const stream = createWriteStream(logPath, { flags: `w` });
+    stream.write(`=== ${source} @ ${new Date().toISOString()} ===\n`);
 
     try {
-        const config = WEBSITE_SCRAPER_CONFIG[source as keyof typeof WEBSITE_SCRAPER_CONFIG];
-        if (!config) {
-            throw new Error(`Unknown source: ${source}`);
-        }
+        const events = await scrapeLogContext.run(stream, async () => {
+            console.log(`Scraping ${source}...`);
 
-        const ScraperClass = (await import(config.module)).WebsiteScraper;
-        if (!ScraperClass) {
-            throw new Error(`WebsiteScraper class not found in ${config.module}`);
-        }
-        const events = await new ScraperClass().scrapeWebsite();
-        console.log(` -> Found ${events.length} events in ${source}`);
+            try {
+                const config = WEBSITE_SCRAPER_CONFIG[source as keyof typeof WEBSITE_SCRAPER_CONFIG];
+                if (!config) {
+                    throw new Error(`Unknown source: ${source}`);
+                }
 
-        if (events.length === 0 && source !== 'vortexapp') {
-            throw new Error(`No ${source} events found`);
-        }
+                const ScraperClass = (await import(config.module)).WebsiteScraper;
+                if (!ScraperClass) {
+                    throw new Error(`WebsiteScraper class not found in ${config.module}`);
+                }
+                const scraped = await new ScraperClass().scrapeWebsite();
+                console.log(` -> Found ${scraped.length} events in ${source}`);
 
+                if (scraped.length === 0 && source !== `vortexapp`) {
+                    throw new Error(`No ${source} events found`);
+                }
+
+                return scraped;
+            } catch (error) {
+                console.error(`Error scraping ${source}:`, error);
+                throw error;
+            }
+        });
+        writeSourceStatus({ logDir, source, ok: true });
         return events;
     } catch (error) {
-        console.error(`Error scraping ${source}:`, error);
+        writeSourceStatus({ logDir, source, ok: false });
         throw error;
+    } finally {
+        await endWriteStream(stream);
     }
 }
 
 async function main() {
     console.log('--- Starting Website Event Scraper ---');
+    patchConsoleForScrapeLogs();
 
     // --- Process Arguments ---
     const { values, positionals } = parseArgs({
@@ -77,11 +127,16 @@ async function main() {
                 type: 'string',
                 multiple: true,
             },
+            'log-dir': {
+                type: 'string',
+                default: DEFAULT_LOG_DIR,
+            },
         },
         allowPositionals: true,
     });
 
     const shouldClean = values.clean;
+    const logDir = values[`log-dir`] || DEFAULT_LOG_DIR;
     const excludedSources = new Set(
         (values.exclude ?? [])
             .flatMap((value) => value.split(`,`))
@@ -118,6 +173,8 @@ async function main() {
         console.log('Clean flag detected - will delete existing events from target sources before insertion.');
     }
 
+    console.log(`Per-source logs: ${logDir}/<source>.log`);
+
     // --- Determine sources to scrape ---
     const sourcesToScrape = (targetSourceArg ? [targetSourceArg] : WEBSITE_SCRAPE_SOURCES)
         .filter((source) => !excludedSources.has(source));
@@ -128,7 +185,7 @@ async function main() {
     }
 
     // --- Run Scrapers in Parallel ---
-    const scrapePromises = sourcesToScrape.map(source => scrapeSource(source));
+    const scrapePromises = sourcesToScrape.map(source => scrapeSource({ source, logDir }));
 
     // Wait for all scrapers to complete (using allSettled to not fail on first error)
     const results = await Promise.allSettled(scrapePromises);
