@@ -2093,6 +2093,17 @@ export function getAssignedTagSlugs() {
 	return slugs;
 }
 
+export function getTagSlugsForCategories(categorySlugs: string[]) {
+	const slugs = new Set<string>();
+	for (const categorySlug of categorySlugs) {
+		if (categorySlug === OTHERS_CATEGORY_SLUG) continue;
+		const category = eventCategories.find((item) => item.slug === categorySlug);
+		if (!category?.tags?.length) continue;
+		for (const tag of category.tags) slugs.add(tag.slug);
+	}
+	return [...slugs];
+}
+
 export function eventMatchesOthersCategory(tags?: string[] | null) {
 	if (!tags?.length) return true;
 	const assigned = getAssignedTagSlugs();
