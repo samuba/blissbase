@@ -14,6 +14,7 @@ import type { Entity } from "teleproto/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml, telegramEntityLookupCandidates } from "../src/lib/telegramCommon";
 import { knownTagSlugs } from "../src/lib/eventCategories";
+import { matchesBlackListWords } from "../src/whitelistWords.ts";
 import { extractVideoFrame } from "./extractVideoFrame";
 import { resolveEventImageUrls } from "./ogImageFallback";
 
@@ -785,6 +786,10 @@ async function validateAndBuildEventBase(args: {
     let latitude = coords?.lat
     let longitude = coords?.lng
     let listed = true
+    if (matchesBlackListWords(name)) {
+        listed = false
+        console.log(`Title matched blacklist - marking event as unlisted: ${name}`);
+    }
 
     if (addressArr?.length && (latitude == null || longitude == null)) {
         if (!contact?.length) {

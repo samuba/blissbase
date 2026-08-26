@@ -16,6 +16,7 @@ import * as assets from "../src/lib/assets"
 import { extractVideoFrame } from "./extractVideoFrame"
 import { resolveEventImageUrls } from "./ogImageFallback"
 import { knownTagSlugs } from "../src/lib/eventCategories"
+import { matchesBlackListWords } from "../src/whitelistWords.ts"
 
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!
 const sqliteObjectKey = `whatsapp.sqlite`
@@ -960,6 +961,10 @@ async function validateAndBuildEventBase(args: {
     let latitude = coords?.lat
     let longitude = coords?.lng
     let listed = aiAnswer.isConscious ?? true
+    if (matchesBlackListWords(name)) {
+        listed = false
+        console.log(`[whatsapp] Title matched blacklist — marking event as unlisted: ${name}`)
+    }
 
     if (addressArr?.length && (latitude == null || longitude == null)) {
         if (!contact?.length) {
