@@ -77,6 +77,18 @@ export function absoluteUrl(path: string) {
     return new URL(path, BASE_URL).toString();
 }
 
+/** Absolute pathname for a `resolve()` result. During SSR, `resolve()` is relative (`./`). */
+export function routePathname(path: string, origin: string = BASE_URL) {
+    return new URL(path, origin).pathname;
+}
+
+export function isEventOrOfferingListPath(args: { pathname: string; origin: string }) {
+    return (
+        args.pathname === routePathname(routes.root(), args.origin) ||
+        args.pathname === routePathname(routes.offeringsList(), args.origin)
+    );
+}
+
 const RESERVED_OFFERING_DETAIL_SLUGS = new Set([`new`]);
 
 /** Returns the offering slug when the URL is `/offerings/{slug}` (not list, new, or nested edit). */

@@ -2,7 +2,7 @@
 	import { afterNavigate } from "$app/navigation";
 	import { page } from "$app/state";
 	import { onMount } from "svelte";
-	import { routes } from "$lib/routes";
+	import { isEventOrOfferingListPath, routes } from "$lib/routes";
 	import { peekFooter } from "$lib/peekFooter.svelte";
 	import { user } from "$lib/user.svelte";
 
@@ -15,7 +15,7 @@
 	let textEntryFocused = $state(false);
 	let lastScrollY = 0;
 
-	const canAutoHide = $derived(isFeedPath({ pathname: page.url.pathname, origin: page.url.origin }));
+	const canAutoHide = $derived(isEventOrOfferingListPath({ pathname: page.url.pathname, origin: page.url.origin }));
 	const keyboardOpen = $derived(textEntryFocused && keyboardInset > 150);
 	// Auto-hide on mobile events/offerings feeds; other routes keep the footer parked.
 	const hidden = $derived(canAutoHide && (!visible || keyboardOpen));
@@ -27,7 +27,7 @@
 	afterNavigate(({ to }) => {
 		lastScrollY = window.scrollY;
 		if (!to) return;
-		if (isFeedPath({ pathname: to.url.pathname, origin: to.url.origin })) return;
+		if (isEventOrOfferingListPath({ pathname: to.url.pathname, origin: to.url.origin })) return;
 		visible = true;
 	});
 
@@ -90,12 +90,6 @@
 			visualViewport.removeEventListener(`scroll`, syncKeyboardInset);
 		};
 	});
-
-	function isFeedPath(args: { pathname: string; origin: string }) {
-		const eventsPath = new URL(routes.root(), args.origin).pathname;
-		const offeringsPath = new URL(routes.offeringsList(), args.origin).pathname;
-		return args.pathname === eventsPath || args.pathname === offeringsPath;
-	}
 </script>
 
 <svelte:window onscroll={handleScroll} />

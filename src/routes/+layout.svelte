@@ -21,7 +21,7 @@
 	import PeekFooter from '$lib/components/PeekFooter.svelte';
 	import LogoLoader from '$lib/components/LogoLoader.svelte';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
-	import { routes } from '$lib/routes';
+	import { isEventOrOfferingListPath } from '$lib/routes';
 
 	let { data, children } = $props();
 	let { jwtClaims, supabase, userId } = $derived(data);
@@ -68,8 +68,7 @@
 	const showDesktopNav = $derived(
 		page.state.selectedOfferingSlug == null &&
 			page.state.selectedEventId == null &&
-			page.url.pathname !== routes.root() &&
-			page.url.pathname !== new URL(routes.offeringsList(), page.url.origin).pathname
+			!isEventOrOfferingListPath({ pathname: page.url.pathname, origin: page.url.origin })
 	);
 </script>
 

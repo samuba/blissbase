@@ -3966,3 +3966,7 @@ msgstr "Hochsensibelität"
 #: src/lib/eventCategories.ts
 msgid "Hochbegabung"
 msgstr "Hochbegabung"
+
+#: src/lib/components/DuplicateEventToastLink.svelte
+msgid "Event ansehen"
+msgstr "Event ansehen"
