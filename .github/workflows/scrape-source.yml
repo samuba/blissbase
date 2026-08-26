@@ -24,6 +24,7 @@ on:
 
 jobs:
   scrape:
+    name: ${{ inputs.source }}
     runs-on: ubuntu-latest
     environment: production
     outputs:
@@ -37,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: scrape
+      - name: scrape ${{ inputs.source }}
         id: scrape
         continue-on-error: ${{ inputs.continue_on_error }}
         env:

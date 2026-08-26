@@ -12,13 +12,13 @@ export const WEBSITE_SCRAPER_CONFIG = {
     whatsupdanang: { module: './scrape-whatsupdanang.ts', label: 'WhatsUpDaNang', url: 'https://whatsupdanang.com' },
     soulwise: { module: './scrape-soulwise.ts', label: 'Soulwise', url: 'https://soulwise.io' },
     balievents: { module: './scrape-balievents.ts', label: 'BaliEvents.co', url: 'https://www.balievents.co' },
-    yogabarn: { module: './scrape-yogabarn.ts', label: 'The Yoga Barn', url: 'https://theyogabarn.com' },
+    yogabarn: { module: './scrape-yogabarn.ts', label: 'The Yoga Barn', url: 'https://theyogabarn.com', retryOnNewIp: true },
     tantrakalender: { module: './scrape-tantrakalender.ts', label: 'Tantrakalender', url: 'https://tantrakalender.de' },
     tantrazentrumleipzig: { module: './scrape-tantrazentrumleipzig.ts', label: 'Tantrazentrum Leipzig', url: 'https://www.tantrazentrum-leipzig.de' },
     consciousevents: { module: './scrape-consciousevents.ts', label: 'conscious events', url: 'https://conscious-events.com' },
     dieliebelle: { module: './scrape-dieliebelle.ts', label: 'DIE LIEBE.LLE', url: 'https://www.die-liebelle.de' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
-} as const satisfies Record<string, { module: string, label: string, url: string }>;
+} as const satisfies Record<string, { module: string, label: string, url: string, retryOnNewIp?: boolean }>;
 
 export const WEBSITE_SCRAPE_SOURCES = Object.keys(WEBSITE_SCRAPER_CONFIG) as (keyof typeof WEBSITE_SCRAPER_CONFIG)[];
 

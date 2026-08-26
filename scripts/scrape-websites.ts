@@ -23,18 +23,18 @@ import { db, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
 import { fillMissingEventTagSlugs } from './tagScrapedEvents.ts';
 import { and, inArray, notInArray } from 'drizzle-orm';
-import { format, parseArgs } from 'util';
+import { format } from 'util';
 import { AsyncLocalStorage } from 'async_hooks';
 import { createWriteStream, mkdirSync, writeFileSync, type WriteStream } from 'fs';
 import { join } from 'path';
 import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
-import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts.ts';
+import { WEBSITE_SCRAPER_CONFIG, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts.ts';
+import { resolveWebsiteScrapePlan } from './website-scrape-plan.ts';
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
 
-const DEFAULT_LOG_DIR = `scrape-logs`;
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
 let consolePatchedForScrapeLogs = false;
 
@@ -115,57 +115,15 @@ async function main() {
     console.log('--- Starting Website Event Scraper ---');
     patchConsoleForScrapeLogs();
 
-    // --- Process Arguments ---
-    const { values, positionals } = parseArgs({
-        args: process.argv.slice(2),
-        options: {
-            clean: {
-                type: 'boolean',
-                default: false,
-            },
-            exclude: {
-                type: 'string',
-                multiple: true,
-            },
-            'log-dir': {
-                type: 'string',
-                default: DEFAULT_LOG_DIR,
-            },
-        },
-        allowPositionals: true,
-    });
+    const { sources: sourcesToScrape, shouldClean, logDir, targetSource, excludedSources } = resolveWebsiteScrapePlan(process.argv.slice(2));
 
-    const shouldClean = values.clean;
-    const logDir = values[`log-dir`] || DEFAULT_LOG_DIR;
-    const excludedSources = new Set(
-        (values.exclude ?? [])
-            .flatMap((value) => value.split(`,`))
-            .map((value) => value.trim().toLowerCase())
-            .filter((excluded) => {
-                if (!excluded) return false;
-                if (WEBSITE_SCRAPE_SOURCES.includes(excluded as WebsiteScrapeSourceName)) return true;
-                console.warn(`Ignoring unknown --exclude source: ${excluded}`);
-                return false;
-            }),
-    );
-    if (excludedSources.size > 0) {
-        console.log(`Excluding sources: ${[...excludedSources].join(`, `)}`);
+    if (excludedSources.length > 0) {
+        console.log(`Excluding sources: ${excludedSources.join(`, `)}`);
     }
 
-    let targetSourceArg: string | null = null;
-
-    // Check if a source is specified as positional argument
-    if (positionals.length > 0) {
-        const sourceArgLower = positionals[0].toLowerCase() as keyof typeof WEBSITE_SCRAPER_CONFIG;
-        if (WEBSITE_SCRAPE_SOURCES.includes(sourceArgLower)) {
-            targetSourceArg = sourceArgLower;
-            console.log(`Targeting single source for scraping: ${targetSourceArg}`);
-        } else {
-            console.warn(`Invalid source argument: ${positionals[0]}. Valid sources are: ${WEBSITE_SCRAPE_SOURCES.join(', ')}. Scraping all sources.`);
-        }
-    }
-
-    if (!targetSourceArg) {
+    if (targetSource) {
+        console.log(`Targeting single source for scraping: ${targetSource}`);
+    } else {
         console.log('No specific source specified, scraping all sources.');
     }
 
@@ -174,10 +132,6 @@ async function main() {
     }
 
     console.log(`Per-source logs: ${logDir}/<source>.log`);
-
-    // --- Determine sources to scrape ---
-    const sourcesToScrape = (targetSourceArg ? [targetSourceArg] : WEBSITE_SCRAPE_SOURCES)
-        .filter((source) => !excludedSources.has(source));
 
     if (!sourcesToScrape.length) {
         console.error(`No sources left to scrape after applying --exclude.`);
