@@ -13,6 +13,7 @@ import { randomString } from '$lib/common';
 import { loadCreds, uploadEventImage } from '$lib/assets';
 import { detectLanguage, t, type BotLanguage } from '$lib/telegramBotI18n';
 import { knownTagSlugs } from '$lib/eventCategories';
+import { matchesBlackListWords } from '../../../whitelistWords';
 
 const assetsCreds = loadCreds({ S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID })
 
@@ -82,6 +83,8 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
         const endAt = aiAnswer.endDate ? new Date(aiAnswer.endDate) : null
         const name = aiAnswer.name.trim()
         const slug = generateSlug({ name: aiAnswer.name, startAt, endAt: endAt ?? undefined })
+        const listed = !matchesBlackListWords(name)
+        if (!listed) console.log(`Title matched blacklist - marking event as unlisted: ${name}`)
 
         let imageUrl: string | undefined;
         if (image) {
@@ -118,6 +121,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             attendanceMode: aiAnswer.attendanceMode,
             messageSenderId: getTelegramSenderId(ctx.message),
             contact,
+            listed,
             source: "telegram",
             slug,
         } satisfies InsertEvent
