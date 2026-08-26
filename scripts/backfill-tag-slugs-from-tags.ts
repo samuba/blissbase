@@ -1,14 +1,77 @@
-import { db, s, sql, and, eq } from '../src/lib/server/db.script.ts';
-import { legacyTagsToSlugs, unmatchedLegacyTags } from '../src/lib/legacyTagsToSlugs.ts';
+import { allTagSlugs, slugsForTagInput } from "../src/lib/eventCategories";
+import { slugify } from "../src/lib/common";
 
 const applyFlag = `--apply`;
 const batchSize = 200;
-
-const emptyTagSlugs = sql`COALESCE(cardinality(${s.events.tagSlugs}), 0) = 0`;
-const hasLegacyTags = sql`${s.events.tags} IS NOT NULL AND COALESCE(cardinality(${s.events.tags}), 0) > 0`;
+const removedTagAliases = new Map([
+	[`sound-journey-sound-bath`, [`sound-journey`, `sound-bath`]],
+	[`childrens-yoga`, [`yoga`, `childrens-workshop`]],
+	[`menopause-transition`, [`menopause`]],
+	[`hands-on-energy-healing`, [`hands-on-healing`]],
+]);
 
 /**
- * Fills empty `tag_slugs` from legacy `events.tags` labels. Dry-run unless `--apply`.
+ * Normalizes every stored tag slug to the current catalog and merges any
+ * additional catalog concepts that can still be recovered from legacy tags.
+ * Unknown values are intentionally dropped.
+ *
+ * @example
+ * normalizeEventTagSlugs({
+ *   tagSlugs: [`relationships`, `sound-journey-sound-bath`],
+ *   legacyTags: [`Children's Workshop`],
+ * })
+ */
+export function normalizeEventTagSlugs(args: { tagSlugs?: string[] | null; legacyTags?: string[] | null }) {
+	const normalized: string[] = [];
+	const seen = new Set<string>();
+
+	for (const input of [...(args.tagSlugs ?? []), ...(args.legacyTags ?? [])]) {
+		for (const slug of resolveCatalogSlugs(input)) {
+			if (seen.has(slug)) continue;
+			seen.add(slug);
+			normalized.push(slug);
+		}
+	}
+
+	return normalized;
+}
+
+/**
+ * Resolves a canonical slug, stale slug, translated label, synonym, or
+ * compound legacy label to current catalog slugs.
+ */
+export function resolveCatalogSlugs(input: string) {
+	const trimmed = input.trim();
+	if (!trimmed) return [];
+
+	const resolved: string[] = [];
+	const seen = new Set<string>();
+	const add = (slugs: string[]) => {
+		for (const slug of slugs) {
+			if (!allTagSlugs.has(slug) || seen.has(slug)) continue;
+			seen.add(slug);
+			resolved.push(slug);
+		}
+	};
+
+	if (allTagSlugs.has(trimmed)) add([trimmed]);
+	add(removedTagAliases.get(trimmed) ?? []);
+	add(removedTagAliases.get(slugify(trimmed)) ?? []);
+	add(slugsForTagInput(trimmed));
+
+	const parts = trimmed
+		.split(/\s*(?:,|\/|\bund\b)\s*/i)
+		.map((part) => part.trim())
+		.filter(Boolean);
+	if (parts.length > 1) {
+		for (const part of parts) add(slugsForTagInput(part));
+	}
+
+	return resolved;
+}
+
+/**
+ * Normalizes all event tag slugs. Dry-run unless `--apply`.
  *
  * @example
  * bun run scripts/backfill-tag-slugs-from-tags.ts
@@ -16,56 +79,60 @@ const hasLegacyTags = sql`${s.events.tags} IS NOT NULL AND COALESCE(cardinality(
  * bun run scripts/backfill-tag-slugs-from-tags.ts --limit=50
  */
 async function backfillTagSlugsFromTags(args: { apply: boolean; limit: number | null }) {
+	const { db, sql } = await import("../src/lib/server/db.script");
 	const mode = args.apply ? `apply` : `dry run`;
-	console.log(`Backfilling empty tag_slugs from events.tags (${mode})`);
+	console.log(`Normalizing tag_slugs and merging legacy events.tags (${mode})`);
 
-	const eventsQuery = db
-		.select({
-			id: s.events.id,
-			name: s.events.name,
-			tags: s.events.tags,
-		})
-		.from(s.events)
-		.where(and(emptyTagSlugs, hasLegacyTags));
-	const events = args.limit === null ? await eventsQuery : await eventsQuery.limit(args.limit);
-
-	console.log(`Found ${events.length} events with empty tag_slugs and legacy tags`);
-	if (!events.length) return;
-
-	const unmatchedCounts = new Map<string, number>();
-	const toUpdate: { id: number; name: string; tags: string[]; tagSlugs: string[] }[] = [];
-	let skippedNoMatch = 0;
+	const queriedEvents = await db.execute<LegacyEventRow>(sql`
+		SELECT
+			id,
+			name,
+			tags,
+			tag_slugs AS "tagSlugs"
+		FROM events
+		ORDER BY id
+	`);
+	const events = args.limit === null ? queriedEvents : queriedEvents.slice(0, args.limit);
+	const unknownStoredCounts = new Map<string, number>();
+	const unknownLegacyCounts = new Map<string, number>();
+	const toUpdate: NormalizationUpdate[] = [];
 	let failed = 0;
 
 	for (const event of events) {
 		try {
-			const tags = event.tags ?? [];
-			const tagSlugs = legacyTagsToSlugs(tags);
-			for (const tag of unmatchedLegacyTags(tags)) {
-				unmatchedCounts.set(tag, (unmatchedCounts.get(tag) ?? 0) + 1);
-			}
-			if (!tagSlugs.length) {
-				skippedNoMatch += 1;
-				continue;
-			}
+			const tagSlugs = normalizeEventTagSlugs({
+				tagSlugs: event.tagSlugs,
+				legacyTags: event.tags,
+			});
+			countUnknownInputs({
+				inputs: event.tagSlugs,
+				counts: unknownStoredCounts,
+			});
+			countUnknownInputs({
+				inputs: event.tags,
+				counts: unknownLegacyCounts,
+			});
+			if (arraysEqual(event.tagSlugs, tagSlugs)) continue;
+
 			toUpdate.push({
 				id: event.id,
 				name: event.name,
-				tags,
+				originalTagSlugs: event.tagSlugs,
 				tagSlugs,
 			});
 		} catch (error) {
 			failed += 1;
-			console.error(`Failed mapping event ${event.id}:`, error);
+			console.error(`Failed normalizing event ${event.id}:`, error);
 		}
 	}
 
-	printUnmatchedHistogram(unmatchedCounts);
+	printUnknownHistogram(`Unknown stored tag slugs to drop`, unknownStoredCounts);
+	printUnknownHistogram(`Unmapped legacy tags to ignore`, unknownLegacyCounts);
 	printSample(toUpdate);
 
-	console.log(`Mapped ${toUpdate.length} events to catalog slugs`);
-	console.log(`Skipped ${skippedNoMatch} events (no catalog slug matched)`);
-	if (failed) console.log(`Failed to map ${failed} events`);
+	console.log(`Scanned ${events.length} events`);
+	console.log(`${toUpdate.length} events need normalized tag slugs`);
+	if (failed) console.log(`Failed to normalize ${failed} events`);
 
 	if (!args.apply) {
 		console.log(`Dry run only. Re-run with ${applyFlag} to write tag_slugs.`);
@@ -89,62 +156,82 @@ async function backfillTagSlugsFromTags(args: { apply: boolean; limit: number | 
 		}
 	}
 
-	const [{ count: stillEmpty }] = await db
-		.select({ count: sql<number>`count(*)::int` })
-		.from(s.events)
-		.where(emptyTagSlugs);
-
 	console.log(`Updated ${updated} events`);
-	console.log(`${stillEmpty} events still have empty tag_slugs`);
+	if (updated !== toUpdate.length) {
+		console.log(`${toUpdate.length - updated} events were not updated, likely because tag_slugs changed concurrently`);
+	}
+	console.log(`Re-run without ${applyFlag} and confirm that 0 events need normalization.`);
+
+	async function applyBatch(rows: NormalizationUpdate[]) {
+		if (!rows.length) return 0;
+
+		const values = rows.map(
+			(row) => sql`(
+			${row.id}::int,
+			${toTextArraySql(row.originalTagSlugs)},
+			${toTextArraySql(row.tagSlugs)}
+		)`,
+		);
+		const result = await db.execute<{ id: number }>(sql`
+			UPDATE events AS e
+			SET tag_slugs = v.tag_slugs
+			FROM (VALUES ${sql.join(values, sql`, `)}) AS v(id, original_tag_slugs, tag_slugs)
+			WHERE e.id = v.id
+				AND e.tag_slugs = v.original_tag_slugs
+			RETURNING e.id
+		`);
+		return result.length;
+	}
+
+	async function applyRow(row: NormalizationUpdate) {
+		const result = await db.execute<{ id: number }>(sql`
+			UPDATE events
+			SET tag_slugs = ${toTextArraySql(row.tagSlugs)}
+			WHERE id = ${row.id}
+				AND tag_slugs = ${toTextArraySql(row.originalTagSlugs)}
+			RETURNING id
+		`);
+		return result.length;
+	}
+
+	function toTextArraySql(values: string[]) {
+		if (!values.length) return sql`ARRAY[]::text[]`;
+		return sql`ARRAY[${sql.join(
+			values.map((value) => sql`${value}`),
+			sql`, `,
+		)}]::text[]`;
+	}
 }
 
-async function applyBatch(rows: { id: number; tagSlugs: string[] }[]) {
-	if (!rows.length) return 0;
-
-	const values = rows.map((row) => {
-		const slugsSql = sql`ARRAY[${sql.join(row.tagSlugs.map((slug) => sql`${slug}`), sql`, `)}]::text[]`;
-		return sql`(${row.id}::int, ${slugsSql})`;
-	});
-
-	const updated = await db.execute<{ id: number }>(sql`
-		UPDATE ${s.events} AS e
-		SET tag_slugs = v.slugs
-		FROM (VALUES ${sql.join(values, sql`, `)}) AS v(id, slugs)
-		WHERE e.id = v.id
-			AND COALESCE(cardinality(e.tag_slugs), 0) = 0
-		RETURNING e.id
-	`);
-
-	return updated.length;
+function countUnknownInputs(args: { inputs?: string[] | null; counts: Map<string, number> }) {
+	for (const input of args.inputs ?? []) {
+		if (resolveCatalogSlugs(input).length) continue;
+		args.counts.set(input, (args.counts.get(input) ?? 0) + 1);
+	}
 }
 
-async function applyRow(row: { id: number; tagSlugs: string[] }) {
-	const updated = await db
-		.update(s.events)
-		.set({ tagSlugs: row.tagSlugs })
-		.where(and(eq(s.events.id, row.id), emptyTagSlugs))
-		.returning({ id: s.events.id });
-	return updated.length;
+function arraysEqual(a: string[], b: string[]) {
+	return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-function printUnmatchedHistogram(counts: Map<string, number>) {
+function printUnknownHistogram(label: string, counts: Map<string, number>) {
 	if (!counts.size) {
-		console.log(`No unmatched legacy tags`);
+		console.log(`${label}: none`);
 		return;
 	}
 
 	const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-	console.log(`Unmatched legacy tags (${ranked.length} distinct):`);
+	console.log(`${label} (${ranked.length} distinct):`);
 	for (const [tag, count] of ranked) {
 		console.log(`  ${count}× ${tag}`);
 	}
 }
 
-function printSample(rows: { id: number; name: string; tags: string[]; tagSlugs: string[] }[]) {
+function printSample(rows: NormalizationUpdate[]) {
 	if (!rows.length) return;
-	console.log(`Sample mappings:`);
+	console.log(`Sample normalizations:`);
 	for (const row of rows.slice(0, 10)) {
-		console.log(`  ${row.id} ${row.name}: ${row.tags.join(`, `)} → ${row.tagSlugs.join(`, `)}`);
+		console.log(`  ${row.id} ${row.name}: ${row.originalTagSlugs.join(`, `)} → ${row.tagSlugs.join(`, `)}`);
 	}
 	if (rows.length > 10) console.log(`  ...`);
 }
@@ -180,7 +267,21 @@ if (import.meta.main) {
 		});
 		process.exit(0);
 	} catch (error) {
-		console.error(`Failed to backfill tag_slugs from tags:`, error);
+		console.error(`Failed normalizing event tag slugs:`, error);
 		process.exit(1);
 	}
 }
+
+type LegacyEventRow = {
+	id: number;
+	name: string;
+	tags: string[] | null;
+	tagSlugs: string[];
+};
+
+type NormalizationUpdate = {
+	id: number;
+	name: string;
+	originalTagSlugs: string[];
+	tagSlugs: string[];
+};
