@@ -21,7 +21,7 @@ export function extractIcalStartAndEndTimes(html: string): { startAt: string | u
 /**
  * Common timeout for fetch requests in milliseconds
  */
-export const FETCH_TIMEOUT_MS = 10000;
+export const FETCH_TIMEOUT_MS = 30000;
 
 /**
  * Common delay between requests in milliseconds to be polite to servers
