@@ -1,17 +1,11 @@
 /**
- * Scrapes events from die-liebelle.de.
- *
- * Jimdo has no public events API. The calendar at /kalender/ is a poster
- * grid linking to offering pages; those pages hold descriptions, prices,
- * hosts, images and the actual date lists. Calendar alt texts supply extra
- * dates the offering page might omit.
- *
- * Recurring daily "Kloster online" sessions are skipped. Only occurrences
- * that have not yet ended are returned.
+ * Scrapes die-liebelle.de. The /kalender/ poster grid links to offering
+ * pages (descriptions, dates, prices). Recurring "Kloster online" sessions
+ * are skipped; only future occurrences are returned.
  *
  * Usage:
  *   bun run scripts/scrape-dieliebelle.ts
- *   bun run scripts/scrape-dieliebelle.ts <path_to_html_file> ...
+ *   bun run scripts/scrape-dieliebelle.ts <html_file> ...
  */
 import * as cheerio from 'cheerio';
 import type { AnyNode } from 'domhandler';

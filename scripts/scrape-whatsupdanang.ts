@@ -1,3 +1,10 @@
+/**
+ * Scrapes whatsupdanang.com/events (list view): extracts permalinks from the
+ * page HTML, then fetches each event detail page.
+ *
+ * Usage:
+ *   bun run scripts/scrape-whatsupdanang.ts
+ */
 import { ScrapedEvent } from '../src/lib/types.ts';
 import {
 	customFetch,

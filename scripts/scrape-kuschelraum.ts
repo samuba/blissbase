@@ -1,25 +1,10 @@
 /**
- * Fetches event pages from kuschelraum.de (starting from https://kuschelraum.de/events)
- * or processes a local HTML file if a path is provided as a command-line argument.
- *
- * When scraping from kuschelraum.de:
- * - Iterates through all pagination pages.
- * - Fetches each event's detail page.
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- * - Prioritizes data from LD+JSON script tags if available.
- * - Handles recurring events by creating unique URLs for each occurrence.
- * - Uses proper German timezone (Europe/Berlin) for datetime handling.
- *
- * When a local HTML file path is provided:
- * - Parses only that single HTML file.
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- * - Prints the single event JSON to standard output.
- *
- * Requires Bun (https://bun.sh/).
+ * Scrapes kuschelraum.de via the Modern Events Calendar AJAX endpoint, then
+ * each event detail page (LD+JSON).
  *
  * Usage:
- *   To scrape from the web: bun run scripts/scrape-kuschelraum.ts > events.json
- *   To parse a local files:  bun run scripts/scrape-kuschelraum.ts <path_to_html_file> <path_to_html_file> > event.json
+ *   bun run scripts/scrape-kuschelraum.ts
+ *   bun run scripts/scrape-kuschelraum.ts <html_file> ...
  */
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';

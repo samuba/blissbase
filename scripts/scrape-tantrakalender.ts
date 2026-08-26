@@ -1,9 +1,7 @@
 /**
- * Scrapes events from tantrakalender.de via the public Supabase REST API.
- *
- * No browser needed — the React frontend reads `seminare`, `tagesseminare`
- * and `urlaubsseminare` that we query here with the anon key from their bundle.
- * Event images are pulled from each seminar's `anbieterUrl` (og:image + page imgs).
+ * Scrapes tantrakalender.de via the public Supabase REST API (`seminare`,
+ * `tagesseminare`, `urlaubsseminare`). Images are pulled from each seminar's
+ * anbieterUrl.
  *
  * Usage:
  *   bun run scripts/scrape-tantrakalender.ts

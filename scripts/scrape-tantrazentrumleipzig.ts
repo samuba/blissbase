@@ -1,14 +1,11 @@
 /**
- * Scrapes events from tantrazentrum-leipzig.de/tantrakalender.
- *
- * Discovery + structured fields come from The Events Calendar REST API
- * (same calendar as the offered iCal/Google/Outlook feeds — those ICS
- * exports only return a partial set). Detail pages are fetched for full
- * HTML descriptions and content images (featured image alone is often a logo).
+ * Scrapes tantrazentrum-leipzig.de/tantrakalender via The Events Calendar
+ * REST API, then fetches each detail page for full HTML descriptions and
+ * content images.
  *
  * Usage:
  *   bun run scripts/scrape-tantrazentrumleipzig.ts
- *   bun run scripts/scrape-tantrazentrumleipzig.ts <path_to_html_file> ...
+ *   bun run scripts/scrape-tantrazentrumleipzig.ts <html_file> ...
  */
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from "cheerio";

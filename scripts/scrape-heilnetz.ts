@@ -1,24 +1,11 @@
 /**
- * Fetches event pages from heilnetz.de (starting from https://heilnetz.de/aktuelle-termine.html)
- * or processes a local HTML file if a path is provided as a command-line argument.
- *
- * When scraping from heilnetz.de:
- * - Iterates through all pagination pages.
- * - Fetches each event's detail page.
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- * - Prioritizes data from LD+JSON script tags if available.
- * - Handles recurring events by extracting each occurrence with its specific date.
- *
- * When a local HTML file path is provided:
- * - Parses only that single HTML file.
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- * - Prints the single event JSON to standard output.
- *
- * Requires Bun (https://bun.sh/).
+ * Scrapes heilnetz.de/aktuelle-termine.html: paginated listings, then each
+ * detail page. Recurring events become one occurrence per date. Prefers
+ * LD+JSON when present.
  *
  * Usage:
- *   To scrape from the web: bun run scripts/scrape-heilnetz.ts > events.json
- *   To parse a local files:  bun run scripts/scrape-heilnetz.ts <path_to_html_file> <path_to_html_file> > event.json
+ *   bun run scripts/scrape-heilnetz.ts
+ *   bun run scripts/scrape-heilnetz.ts <html_file> ...
  */
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';

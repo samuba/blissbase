@@ -1,8 +1,6 @@
 /**
- * Scrapes events from tribehaus.app via the public Supabase REST API.
- *
- * No browser needed — the site's Next.js frontend reads the same `events`
- * table (joined with `creator_profiles`) that we query here.
+ * Scrapes tribehaus.app via the public Supabase REST API (`events` joined
+ * with `creator_profiles`). No browser needed.
  *
  * Usage:
  *   bun run scripts/scrape-tribehaus.ts

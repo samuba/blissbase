@@ -1,23 +1,10 @@
 /**
- * Fetches event pages from sei.jetzt (starting from https://sei.jetzt/)
- * or processes a local HTML file if a path is provided as a command-line argument.
- *
- * When scraping from sei.jetzt:
- * - Iterates through pagination pages (currently configured for first page, but adaptable).
- * - Fetches each event's detail page after parsing from list pages.
- * - Expands recurring series pages into individual occurrence URLs before extracting.
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- *
- * When a local HTML file path is provided:
- * - Parses only that single HTML file (expected to be an event detail page).
- * - Extracts event data as JSON according to the ScrapedEvent interface.
- * - Prints the single event JSON to standard output.
- *
- * Requires Bun (https://bun.sh/) for running, primarily for 'Bun.file' in local mode.
+ * Scrapes sei.jetzt/events: paginated listings, then detail pages.
+ * Recurring series expand to `/event/{slug}/{YYYY-MM-DD}` occurrence URLs.
  *
  * Usage:
- *   To scrape from the web: bun run scripts/scrape-seijetzt.ts > seijetzt-events.json
- *   To parse a local file:  bun run scripts/scrape-seijetzt.ts <path_to_html_file> > seijetzt-event.json
+ *   bun run scripts/scrape-seijetzt.ts
+ *   bun run scripts/scrape-seijetzt.ts <html_file> ...
  */
 import { ScrapedEvent } from "../src/lib/types.ts";
 import * as cheerio from 'cheerio';

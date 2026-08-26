@@ -1,17 +1,6 @@
 /**
- * Scrapes ticketed / special events from The Yoga Barn upcoming event calendar.
- *
- * Calendar listing (same source as the website month picker):
- *   GET theyogabarn.com/wp-admin/admin-ajax.php?action=event_onmonth&eventDate=D/M/YYYY
- *
- * Enrichment:
- *   GET theyogabarn.com/wp-json/wp/v2/event — fallback descriptions / posters
- *   GET megatix.co.id/api/v2/events/{slug}  — cover, description, dates, tickets
- *     (white-label booking links are rewritten to /events/{slug})
- *
- * sourceUrl prefers a booking link from the description (Buy Ticket / Book Now / etc).
- * Megatix white-label links are rewritten to /events/{slug}.
- * image/description/dates/price prefer Megatix payload when available.
+ * Scrapes The Yoga Barn upcoming calendar (WP `event_onmonth` AJAX), then
+ * enriches from WP REST and Megatix when a booking link exists.
  *
  * Usage:
  *   bun run scripts/scrape-yogabarn.ts

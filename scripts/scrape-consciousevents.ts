@@ -1,14 +1,10 @@
 /**
- * Scrapes events from conscious-events.com.
- *
- * Discovery: public sitemap.xml lists every `/de/event/{slug}` page.
- * Detail data: each event (and each `/YYMMDD` occurrence) ships rich
- * schema.org Event JSON-LD plus a prose description in the HTML.
- * There is no public list API — `/api/*` is auth/upload/registration only.
+ * Scrapes conscious-events.com from sitemap.xml (`/de/event/{slug}`), then
+ * each occurrence page. Structured data comes from schema.org Event JSON-LD.
  *
  * Usage:
  *   bun run scripts/scrape-consciousevents.ts
- *   bun run scripts/scrape-consciousevents.ts <path_to_html_file> ...
+ *   bun run scripts/scrape-consciousevents.ts <html_file> ...
  */
 import * as cheerio from 'cheerio';
 import { ScrapedEvent } from '../src/lib/types.ts';

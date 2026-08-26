@@ -1,9 +1,7 @@
 /**
- * Scrapes events from soulwise.io via the Sharetribe Marketplace API.
- *
- * Auth: anonymous `client_credentials` token (public-read) — no browser needed.
- * Listings: query published bookable listing types, then expand each into
- * upcoming timeslot occurrences.
+ * Scrapes soulwise.io via the Sharetribe Marketplace API (anonymous
+ * public-read token). Bookable listings are expanded into timeslots
+ * for the next 90 days.
  *
  * Usage:
  *   bun run scripts/scrape-soulwise.ts

@@ -1,11 +1,6 @@
 /**
- * Scrapes events from todo.today via public HTTP APIs — no browser/Cloudflare bypass needed.
- *
- * Data sources:
- * 1. GET  /api/todo-today/v1/events — curated today/tomorrow listings per channel
- * 2. POST /wp-admin/admin-ajax.php (tt_get_single_event) — description, images, venue, tags
- * 3. POST /api/app/event — direct ticket/registration/external links (avoids broken /go/ redirects)
- * 4. GET  /api/app/events-venue — venue name / maps lookup by venue_id
+ * Scrapes todo.today via public HTTP APIs (listings, venue map, admin-ajax
+ * details, ticket links). Defaults to ubud, canggu, koh-phangan, pai.
  *
  * Usage:
  *   bun run scripts/scrape-todotoday.ts

@@ -1,9 +1,7 @@
 /**
- * Scrapes events from balievents.co via their public Supabase REST API.
- *
- * No browser needed — the React frontend reads `active_validated_events`
- * (and `venues` for coordinates) that we query here with the anon key
- * embedded in their client bundle.
+ * Scrapes balievents.co via their public Supabase REST API
+ * (`active_validated_events` + venues). Recurring events expand up to 90
+ * days. Names are filtered with the whitelist/blacklist.
  *
  * Usage:
  *   bun run scripts/scrape-balievents.ts
