@@ -990,6 +990,49 @@ describe('Events Module - Happy Flow Tests', () => {
                 expect(names).toEqual([`Future Event`, `Just Started`, `No End Still Early`]);
             });
 
+            it('should hide long-running events once more than 32 hours have elapsed', async () => {
+                const relevanceAt = new Date(`2026-07-29T12:00:00Z`);
+                const now = relevanceAt.getTime();
+                const hour = 60 * 60 * 1000;
+                const events = [
+                    createTestEvent({
+                        name: 'Course Still Early',
+                        startAt: new Date(now - 20 * hour),
+                        endAt: new Date(now + 60 * 24 * hour),
+                        slug: 'course-still-early'
+                    }),
+                    createTestEvent({
+                        name: 'Course Past Cap',
+                        startAt: new Date(now - 40 * hour),
+                        endAt: new Date(now + 60 * 24 * hour),
+                        slug: 'course-past-cap'
+                    }),
+                    createTestEvent({
+                        name: 'Festival Still Early',
+                        startAt: new Date(now - 30 * hour),
+                        endAt: new Date(now + 7 * 24 * hour),
+                        slug: 'festival-still-early'
+                    }),
+                    createTestEvent({
+                        name: 'Festival Past Cap',
+                        startAt: new Date(now - 33 * hour),
+                        endAt: new Date(now + 7 * 24 * hour),
+                        slug: 'festival-past-cap'
+                    })
+                ];
+
+                await upsertEvents(events);
+
+                const result = prepareEventsResultForUi(await fetchEvents({
+                    startDate: `2026-07-20`,
+                    endDate: `2026-10-01`,
+                    relevanceAt: relevanceAt.toISOString()
+                }));
+                const names = result.events.map((event) => event.name).sort();
+
+                expect(names).toEqual([`Course Still Early`, `Festival Still Early`]);
+            });
+
             it('should handle same-day events when start and end dates are the same', async () => {
                 // Create an event that starts and ends on the same day
                 const sameDayEvent = createTestEvent({

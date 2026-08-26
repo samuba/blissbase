@@ -49,7 +49,7 @@ export const eventWith = {
  *
  * 1. **Date Range**: Events that fall within the specified date range
  *    - Events that start within, end within, or span the range
- *    - Current and future ranges include ongoing events until 30% of their duration has elapsed
+ *    - Current and future ranges include ongoing events until 30% of their duration has elapsed, capped at 32 hours
  *    - Events without an end time use a default duration of four hours
  *    - Historical ranges return all matching events without elapsed-time restrictions
  *
@@ -66,7 +66,7 @@ export const eventWith = {
  * 5. **Sorting**: By time (startAt) or distance from specified location
  *
  * The relevance timestamp is kept stable across paginated requests so offset pagination cannot skip events
- * as ongoing events age past the 30% threshold.
+ * as ongoing events age past the 30%/32h threshold.
  *
  * @example
  * // Get events in Berlin within 10km, starting next week
@@ -106,11 +106,12 @@ export async function fetchEvents(params: LoadEventsParams) {
 	const isHistoricalRange = endDate <= relevanceAt;
 
 	const effectiveEndAt = sql`COALESCE(${s.events.endAt}, ${s.events.startAt} + interval '4 hours')`;
+	const maxElapsed = sql`LEAST(0.3 * (${effectiveEndAt} - ${s.events.startAt}), interval '32 hours')`;
 	const stillRelevantCondition = or(
 		gte(s.events.startAt, relevanceAt), // Future events (haven't started yet)
 		and(
 			sql`${effectiveEndAt} >= ${relevanceAtIso}`, // Events that haven't ended yet (default end = start + 4h)
-			sql`${relevanceAtIso} <= ${s.events.startAt} + 0.3 * (${effectiveEndAt} - ${s.events.startAt})`, // At most 30% of duration elapsed
+			sql`${relevanceAtIso} <= ${s.events.startAt} + ${maxElapsed}`, // At most 30% of duration elapsed, capped at 32h
 		),
 	);
 
