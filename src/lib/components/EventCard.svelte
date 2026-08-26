@@ -61,13 +61,13 @@
 	}
 </script>
 
-<a href={resolve("/[slug]", { slug: event.slug })} class=" w-full" data-sveltekit-preload-data="false" onclick={handleClick}>
+<a href={resolve("/[slug]", { slug: event.slug })} class="w-full cursor-pointer" data-sveltekit-preload-data="false" onclick={handleClick}>
 	<article
 		class={[
-			`card bg-base-100 fade-out-0 flex flex-col rounded-lg transition-all`,
+			`card bg-base-100 fade-out-0 flex flex-col rounded-lg transition-all hover:-translate-y-1`,
 			event.spotlight
 				? [`ring-primary/60 ring-1`, `shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`]
-				: `shadow-sm`,
+				: `shadow-sm hover:shadow-md`,
 			className,
 		]}
 		data-event-id={event.id}
