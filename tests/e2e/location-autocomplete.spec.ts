@@ -184,6 +184,27 @@ test.describe('Location autocomplete', () => {
 		await expect(page.locator(`[data-testid="plzCityInput-header-distance"][type="hidden"]`)).toHaveCount(0);
 	});
 
+	test('trigger reopens the editor after changing distance and clearing', async ({ page }) => {
+		await mockGooglePlacesAutocomplete(page);
+		await gotoHomeAndWait(page);
+		const headerInput = page.getByTestId(`plzCityInput-header`);
+		await typeForSuggestions(page, { input: headerInput, value: `Ber` });
+		const suggestions = await expectSuggestionsOpen(page, `plzCityInput-header`);
+		await suggestions.getByTestId(`location-option`).first().click();
+		await expectLocationValue(page, `plzCityInput-header`, `Berlin`);
+
+		await openLocationEditor(page, `plzCityInput-header`);
+		await page.getByTestId(`plzCityInput-header-distance`).selectOption(`100`);
+
+		const headerLocation = page.getByTestId(`location-distance-input`).first();
+		await headerLocation.getByTestId(`clear-location-button`).click();
+		await expectLocationValue(page, `plzCityInput-header`, ``);
+
+		const summary = page.getByTestId(`plzCityInput-header-summary`);
+		await summary.click();
+		await expect(visibleLocationInput(page, `plzCityInput-header`)).toBeVisible();
+	});
+
 	test('manual Enter search works when Google is unavailable', async ({ page }) => {
 		await page.route(/maps\.(googleapis|gstatic)\.com/, (route) => route.abort());
 		await page.addInitScript(() => {
