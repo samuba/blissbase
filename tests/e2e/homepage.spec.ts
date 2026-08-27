@@ -88,11 +88,12 @@ test.describe('Homepage', () => {
 	});
 
 	test('search by city filters events', async ({ page }) => {
-		const searchInput = page.getByTestId('plzCityInput-header');
+		await page.getByTestId(`plzCityInput-header-summary`).click();
+		const searchInput = page.getByTestId(`plzCityInput-header`);
 		await expect(searchInput).toBeVisible();
 
-		await searchInput.fill('Berlin');
-		await searchInput.press('Enter');
+		await searchInput.fill(`Berlin`);
+		await searchInput.press(`Enter`);
 		await page.waitForTimeout(1000);
 
 		const eventCount = await page.getByTestId('event-card').count();

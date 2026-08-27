@@ -75,16 +75,41 @@ test.describe('Location autocomplete', () => {
 		await waitForClientHydration(page);
 	}
 
-	async function typeForSuggestions(page: import('@playwright/test').Page, args: { input: import('@playwright/test').Locator; value: string }) {
-		const inputId = await args.input.getAttribute(`data-testid`);
-		const locationInput = page.getByTestId(`location-distance-input`).filter({
-			has: page.getByTestId(inputId ?? ``),
+	function visibleLocationInput(page: import('@playwright/test').Page, inputId: string) {
+		return page.locator(`[data-testid="${inputId}"]:not([type="hidden"])`);
+	}
+
+	function locationRoot(page: import('@playwright/test').Page, inputId: string) {
+		return page.getByTestId(`location-distance-input`).filter({
+			has: page.getByTestId(`${inputId}-summary`)
 		});
-		await args.input.click();
+	}
+
+	async function openLocationEditor(page: import('@playwright/test').Page, inputId: string) {
+		const input = visibleLocationInput(page, inputId);
+		if (await input.isVisible()) return;
+		const summary = page.getByTestId(`${inputId}-summary`);
+		if (await summary.isVisible()) {
+			await summary.click();
+		}
+		await expect(input).toBeVisible();
+	}
+
+	async function typeForSuggestions(page: import('@playwright/test').Page, args: { input: import('@playwright/test').Locator; value: string }) {
+		const inputId = (await args.input.getAttribute(`data-testid`)) ?? ``;
+		await openLocationEditor(page, inputId);
+		const input = visibleLocationInput(page, inputId);
+		await input.click();
 		await page.waitForFunction(() => typeof window.google?.maps?.importLibrary === `function`);
-		await expect(locationInput).toHaveAttribute(`data-autocomplete-status`, `ready`, { timeout: 10000 });
-		await args.input.fill(args.value);
-		await expect(args.input).toHaveValue(args.value);
+		await expect(locationRoot(page, inputId)).toHaveAttribute(`data-autocomplete-status`, `ready`, {
+			timeout: 10000
+		});
+		await input.fill(args.value);
+		await expect(input).toHaveValue(args.value);
+	}
+
+	async function expectLocationValue(page: import('@playwright/test').Page, inputId: string, value: string) {
+		await expect(page.locator(`[data-testid="${inputId}"][type="hidden"]`)).toHaveValue(value);
 	}
 
 	async function expectSuggestionsOpen(_page: import('@playwright/test').Page, _inputId: string) {
@@ -109,10 +134,12 @@ test.describe('Location autocomplete', () => {
 		const suggestions = await expectSuggestionsOpen(page, `plzCityInput-header`);
 		const berlinOption = suggestions.getByTestId(`location-option`).first();
 		await expect(berlinOption).toHaveAttribute(`aria-selected`, `true`);
-		await headerInput.press(`Enter`);
+		const headerField = visibleLocationInput(page, `plzCityInput-header`);
+		await headerField.focus();
+		await page.keyboard.press(`Enter`);
 
-		await expect(headerInput).toHaveValue(`Berlin`);
-		await expect(page.getByTestId(`plzCityInput-header-distance`)).toHaveValue(`50`);
+		await expectLocationValue(page, `plzCityInput-header`, `Berlin`);
+		await expectLocationValue(page, `plzCityInput-header-distance`, `50`);
 	});
 
 	test('mouse selection works', async ({ page }) => {
@@ -123,8 +150,8 @@ test.describe('Location autocomplete', () => {
 		const suggestions = await expectSuggestionsOpen(page, `plzCityInput-header`);
 		await suggestions.getByTestId(`location-option`).nth(1).click();
 
-		await expect(headerInput).toHaveValue(`Bern`);
-		await expect(page.getByTestId(`plzCityInput-header-distance`)).toHaveValue(`50`);
+		await expectLocationValue(page, `plzCityInput-header`, `Bern`);
+		await expectLocationValue(page, `plzCityInput-header-distance`, `50`);
 	});
 
 	test('escape closes the dropdown', async ({ page }) => {
@@ -144,15 +171,17 @@ test.describe('Location autocomplete', () => {
 		await typeForSuggestions(page, { input: headerInput, value: `Ber` });
 		const suggestions = await expectSuggestionsOpen(page, `plzCityInput-header`);
 		await expect(suggestions.getByTestId(`location-option`).first()).toHaveAttribute(`aria-selected`, `true`);
-		await headerInput.press(`Enter`);
-		await expect(page.getByTestId(`plzCityInput-header-distance`)).toHaveValue(`50`);
+		const selectedInput = visibleLocationInput(page, `plzCityInput-header`);
+		await selectedInput.focus();
+		await page.keyboard.press(`Enter`);
+		await expectLocationValue(page, `plzCityInput-header-distance`, `50`);
 		await page.waitForLoadState(`networkidle`);
 
 		const headerLocationInput = page.getByTestId(`location-distance-input`).first();
 		await headerLocationInput.getByTestId(`clear-location-button`).click();
 
-		await expect(headerInput).toHaveValue(``, { timeout: 10000 });
-		await expect(page.getByTestId(`plzCityInput-header-distance`)).toHaveCount(0);
+		await expectLocationValue(page, `plzCityInput-header`, ``);
+		await expect(page.locator(`[data-testid="plzCityInput-header-distance"][type="hidden"]`)).toHaveCount(0);
 	});
 
 	test('manual Enter search works when Google is unavailable', async ({ page }) => {
@@ -162,16 +191,21 @@ test.describe('Location autocomplete', () => {
 		});
 		await gotoHomeAndWait(page);
 
-		const headerInput = page.getByTestId(`plzCityInput-header`);
-		const locationInput = page.getByTestId(`location-distance-input`).filter({ has: headerInput });
+		await openLocationEditor(page, `plzCityInput-header`);
+		const headerInput = visibleLocationInput(page, `plzCityInput-header`);
 		await headerInput.click();
-		await expect(locationInput).toHaveAttribute(`data-autocomplete-status`, `failed`, { timeout: 10000 });
+		await expect(locationRoot(page, `plzCityInput-header`)).toHaveAttribute(
+			`data-autocomplete-status`,
+			`failed`,
+			{ timeout: 10000 }
+		);
 		await headerInput.fill(`Berlin`);
 		await expect(headerInput).toHaveValue(`Berlin`);
-		await headerInput.press(`Enter`);
+		await headerInput.focus();
+		await page.keyboard.press(`Enter`);
 
-		await expect(page.getByTestId(`plzCityInput-header-distance`)).toHaveValue(`50`);
-		await expect(headerInput).toHaveValue(`Berlin`);
+		await expectLocationValue(page, `plzCityInput-header-distance`, `50`);
+		await expectLocationValue(page, `plzCityInput-header`, `Berlin`);
 	});
 
 	test('filter dialog input works with unique id', async ({ page }) => {
@@ -179,7 +213,8 @@ test.describe('Location autocomplete', () => {
 		await gotoHomeAndWait(page);
 
 		const filterDialog = await openFilterDialog(page);
-		const dialogInput = filterDialog.getByTestId(`plzCityInput-dialog`);
+		await filterDialog.getByTestId(`plzCityInput-dialog-summary`).click();
+		const dialogInput = visibleLocationInput(page, `plzCityInput-dialog`);
 		await expect(dialogInput).toBeVisible();
 		await typeForSuggestions(page, { input: dialogInput, value: `Ber` });
 		await expectSuggestionsOpen(page, `plzCityInput-dialog`);

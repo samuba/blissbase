@@ -1,11 +1,9 @@
 <script lang="ts">
-	import { isTouchDevice } from '$lib/common';
-	import { portalToBody } from '$lib/attachments/portal';
-	import { resetGoogleMapsPlacesLoader } from '$lib/googleMapsLoader';
-	import { fade } from 'svelte/transition';
-	import { onMount } from 'svelte';
-	import type { PlacesAutocompleteController } from './PlacesAutocompleteController.svelte';
-	import { ALLOWED_DISTANCE_VALUES } from '$lib/locationFilter';
+	import { resetGoogleMapsPlacesLoader } from "$lib/googleMapsLoader";
+	import { Popover } from "bits-ui";
+	import { onMount, tick } from "svelte";
+	import type { PlacesAutocompleteController } from "./PlacesAutocompleteController.svelte";
+	import { ALLOWED_DISTANCE_VALUES } from "$lib/locationFilter";
 
 	export interface LocationChangeEvent {
 		location: string | null;
@@ -23,6 +21,7 @@
 		locationBiasLng?: number | null;
 		onChange?: (event: LocationChangeEvent) => void;
 		disabled?: boolean;
+		fullWidthWhenOpen?: boolean;
 	}
 
 	let {
@@ -33,7 +32,8 @@
 		locationBiasLat,
 		locationBiasLng,
 		onChange,
-		disabled
+		disabled,
+		fullWidthWhenOpen = false,
 	}: LocationDistanceInputProps = $props();
 
 	let autocomplete = $state<PlacesAutocompleteController | null>(null);
@@ -74,27 +74,26 @@
 	let selectedDistance = $state(``);
 	let usingCurrentLocation = $state(false);
 	let plzCityInput = $state<HTMLInputElement | null>(null);
-	let joinContainer = $state<HTMLDivElement | null>(null);
+	let chipEl = $state<HTMLElement | null>(null);
+	let popoverEl = $state<HTMLElement | null>(null);
+	let distanceSelectEl = $state<HTMLSelectElement | null>(null);
 	let coordsForFilter = $state<string | null>(null);
 	let resolvedLat = $state<number | null>(null);
 	let resolvedLng = $state<number | null>(null);
 	let isLoadingLocation = $state(false);
 	let displayLocationText = $state(``);
-	let inputWidth = $state(0);
-	let blurCloseTimer: ReturnType<typeof setTimeout> | null = null;
+	let editorOpen = $state(false);
+	let closingEditor = false;
 
 	let inputLocationText = $derived(usingCurrentLocation ? displayLocationText : typedPlzCity);
-	let showDistanceInput = $derived(
-		initialLocation || typedPlzCity.trim() || usingCurrentLocation || isLoadingLocation
-	);
-	let smallLocateMeButton = $derived(inputWidth < 220);
-	let useGoogleAutocomplete = $derived(
-		(autocomplete?.isAvailable ?? false) && !usingCurrentLocation
-	);
+	let showDistanceInput = $derived(Boolean(initialLocation || typedPlzCity.trim() || usingCurrentLocation || isLoadingLocation));
+	let useGoogleAutocomplete = $derived((autocomplete?.isAvailable ?? false) && !usingCurrentLocation);
+	let hasLocation = $derived(Boolean(inputLocationText.trim()) || usingCurrentLocation);
+	let distanceLabel = $derived(selectedDistance ? `${selectedDistance} km Radius` : `Überall`);
 
 	const distanceOptions = ALLOWED_DISTANCE_VALUES.map((value) => ({
 		value,
-		label: `< ${value} km`
+		label: `${value} km radius`,
 	}));
 
 	let lastPropDistance = $state<string | null | undefined>(undefined);
@@ -120,7 +119,7 @@
 					usingCurrentLocation = true;
 					coordsForFilter = `${lat},${lng}`;
 					typedPlzCity = resolvedCityName ?? ``;
-					displayLocationText = resolvedCityName ?? `Dein Standort`;
+					if (resolvedCityName) displayLocationText = resolvedCityName;
 					return;
 				}
 			}
@@ -152,45 +151,6 @@
 		}
 	});
 
-	let dropdownPosition = $state({ top: 0, left: 0, width: 0 });
-
-	function updateDropdownPosition() {
-		const anchor = joinContainer ?? plzCityInput;
-		if (!anchor) return;
-		const rect = anchor.getBoundingClientRect();
-		const isMobile = window.matchMedia(`(max-width: 639px)`).matches;
-
-		if (isMobile) {
-			const dropdownInset = 16;
-			dropdownPosition = {
-				top: rect.bottom + 4,
-				left: dropdownInset,
-				width: window.innerWidth - dropdownInset * 2
-			};
-			return;
-		}
-
-		dropdownPosition = {
-			top: rect.bottom + 4,
-			left: rect.left,
-			width: rect.width
-		};
-	}
-
-	$effect(() => {
-		if (!autocomplete?.isOpen) return;
-
-		updateDropdownPosition();
-		const onReposition = () => updateDropdownPosition();
-		window.addEventListener(`scroll`, onReposition, true);
-		window.addEventListener(`resize`, onReposition);
-
-		return () => {
-			window.removeEventListener(`scroll`, onReposition, true);
-			window.removeEventListener(`resize`, onReposition);
-		};
-	});
-
 	function notifyChange() {
 		if (!onChange) return;
 
@@ -205,25 +165,21 @@
 				location: null,
 				distance: selectedDistance || null,
 				latitude: !isNaN(latitude) ? latitude : null,
-				longitude: !isNaN(longitude) ? longitude : null
+				longitude: !isNaN(longitude) ? longitude : null,
 			};
 		} else {
 			eventData = {
 				location: typedPlzCity || null,
 				distance: selectedDistance || null,
 				latitude: resolvedLat,
-				longitude: resolvedLng
+				longitude: resolvedLng,
 			};
 		}
 
 		onChange(eventData);
 	}
 
-	function applySelectedPlace(args: {
-		displayName: string;
-		latitude: number;
-		longitude: number;
-	}) {
+	function applySelectedPlace(args: { displayName: string; latitude: number; longitude: number }) {
 		usingCurrentLocation = false;
 		coordsForFilter = null;
 		resolvedLat = args.latitude;
@@ -235,24 +191,21 @@
 			location: args.displayName,
 			distance: selectedDistance,
 			latitude: args.latitude,
-			longitude: args.longitude
+			longitude: args.longitude,
 		});
 
 		autocomplete?.close();
-		if (isTouchDevice()) plzCityInput?.blur();
+		dismissEditor();
 	}
 
 	function handleFilterInputChange() {
-		if (autocomplete?.isOpen) return;
-
 		autocomplete?.close();
 
 		if (typedPlzCity && selectedDistance === ``) {
 			selectedDistance = `50`;
 		}
 		notifyChange();
-
-		if (isTouchDevice()) plzCityInput?.blur();
+		dismissEditor();
 	}
 
 	async function handleSuggestionSelect(suggestionIndex: number) {
@@ -266,7 +219,7 @@
 		applySelectedPlace({
 			displayName: place.displayName || place.formattedAddress,
 			latitude: place.latitude,
-			longitude: place.longitude
+			longitude: place.longitude,
 		});
 	}
 
@@ -287,19 +240,17 @@
 
 			const newCoords = `${position.coords.latitude},${position.coords.longitude}`;
 			coordsForFilter = newCoords;
-			displayLocationText = `Dein Standort`;
 			selectedDistance = `50`;
 
 			notifyChange();
+			dismissEditor();
 		} catch (error) {
 			console.error(`Error getting location:`, error);
 			usingCurrentLocation = false;
 			coordsForFilter = null;
 			displayLocationText = ``;
 
-			alert(
-				`Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein.`
-			);
+			alert(`Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein.`);
 		} finally {
 			isLoadingLocation = false;
 		}
@@ -315,7 +266,11 @@
 		displayLocationText = ``;
 		selectedDistance = ``;
 		notifyChange();
-		plzCityInput?.focus();
+		if (editorOpen) plzCityInput?.focus();
+	}
+
+	function handleDistanceChange() {
+		notifyChange();
 	}
 
 	function handleInputChange(value: string) {
@@ -333,31 +288,131 @@
 			controller.scheduleFetch({
 				input: value,
 				biasLat: locationBiasLat,
-				biasLng: locationBiasLng
+				biasLng: locationBiasLng,
 			});
 		});
 	}
 
 	function handleInputFocus() {
-		cancelBlurClose();
 		prepareAutocomplete();
 	}
 
-	function cancelBlurClose() {
-		if (blurCloseTimer) {
-			clearTimeout(blurCloseTimer);
-			blurCloseTimer = null;
-		}
-	}
-
-	function scheduleBlurClose() {
-		cancelBlurClose();
-		blurCloseTimer = setTimeout(() => {
-			autocomplete?.close();
+	function dismissEditor() {
+		closingEditor = true;
+		plzCityInput?.blur();
+		editorOpen = false;
+		setTimeout(() => {
+			closingEditor = false;
 		}, 200);
 	}
 
+	function closeEditor() {
+		if (typedPlzCity && selectedDistance === ``) selectedDistance = `50`;
+		if (typedPlzCity.trim() || usingCurrentLocation) notifyChange();
+		autocomplete?.close();
+		dismissEditor();
+	}
+
+	function handleEditorOpenChange(open: boolean) {
+		if (open && closingEditor) {
+			editorOpen = false;
+			return;
+		}
+
+		if (open === editorOpen) return;
+
+		if (open && disabled) {
+			editorOpen = false;
+			return;
+		}
+
+		if (open) {
+			editorOpen = true;
+			prepareAutocomplete();
+			void tick().then(() => plzCityInput?.focus());
+			return;
+		}
+
+		closeEditor();
+	}
+
+	function handleWindowPointerDown(event: PointerEvent) {
+		if (!editorOpen) return;
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+		if (target.closest(`[data-testid="location-editor-popover"]`)) return;
+		if (target.closest(`[data-testid="location-suggestions"]`)) return;
+		if (chipEl?.contains(target)) return;
+		closeEditor();
+	}
+
+	function getOpenEditorTabStops() {
+		const stops: HTMLElement[] = [];
+		if (plzCityInput) stops.push(plzCityInput);
+
+		const select = distanceSelectEl ?? popoverEl?.querySelector<HTMLSelectElement>(`[data-testid="${inputId}-distance"]`);
+		if (select && !select.disabled) stops.push(select);
+
+		const gps = popoverEl?.querySelector<HTMLButtonElement>(`[data-testid="use-current-location-button"]`);
+		if (gps && !gps.disabled) stops.push(gps);
+
+		return stops;
+	}
+
+	function handleEditorTab(event: KeyboardEvent) {
+		if (!editorOpen || event.key !== `Tab`) return;
+
+		const stops = getOpenEditorTabStops();
+		if (stops.length < 2) return;
+
+		const active = document.activeElement;
+		const index = stops.findIndex((el) => el === active);
+		if (index === -1) return;
+
+		if (event.shiftKey) {
+			if (index === 0) return;
+			event.preventDefault();
+			event.stopPropagation();
+			stops[index - 1].focus();
+			return;
+		}
+
+		if (index === stops.length - 1) return;
+		event.preventDefault();
+		event.stopPropagation();
+		stops[index + 1].focus();
+	}
+
+	function handleWindowKeydown(event: KeyboardEvent) {
+		if (!editorOpen || event.key !== `Tab`) return;
+		autocomplete?.close();
+		handleEditorTab(event);
+	}
+
+	async function confirmEditorFromInput() {
+		const controller = autocomplete;
+		if (controller?.isOpen && useGoogleAutocomplete) {
+			const highlighted = controller.getHighlightedSuggestion();
+			if (highlighted) {
+				await handleSuggestionSelect(controller.highlightedIndex);
+				return;
+			}
+		}
+
+		const value = (plzCityInput?.value ?? typedPlzCity).trim();
+		if (!value) return;
+		if (!usingCurrentLocation) typedPlzCity = value;
+		handleFilterInputChange();
+	}
+
 	async function handleInputKeydown(event: KeyboardEvent) {
+		if (event.key === `Enter` && event.currentTarget instanceof HTMLInputElement) {
+			event.preventDefault();
+			event.stopPropagation();
+			void confirmEditorFromInput();
+			return;
+		}
+
 		const controller = autocomplete ?? (await ensureAutocomplete().catch(() => null));
 		if (controller?.isOpen && useGoogleAutocomplete) {
 			if (event.key === `ArrowDown`) {
@@ -374,43 +429,57 @@
 
 			if (event.key === `Escape`) {
 				event.preventDefault();
+				event.stopPropagation();
 				controller.close();
 				return;
-			}
-
-			if (event.key === `Enter`) {
-				event.preventDefault();
-				const highlighted = controller.getHighlightedSuggestion();
-				if (highlighted) {
-					await handleSuggestionSelect(controller.highlightedIndex);
-					return;
-				}
 			}
 
 			if (event.key === `Tab`) {
 				controller.close();
-				return;
 			}
 		}
 
-		if (event.key === `Enter` && event.currentTarget instanceof HTMLInputElement) {
-			const value = event.currentTarget.value.trim();
-			if (!value) return;
-			handleFilterInputChange();
+		if (event.key === `Escape`) {
+			event.preventDefault();
+			event.stopPropagation();
+			closeEditor();
 		}
 	}
 </script>
 
+<svelte:window onpointerdown={handleWindowPointerDown} onkeydown={handleWindowKeydown} />
+
 {#snippet googleAutocompleteError(retry: () => void)}
 	<div class="flex min-w-0 items-center gap-2" data-testid="google-autocomplete-error">
-		<span class="text-error truncate text-xs">
-			Google Maps Autocomplete konnte nicht geladen werden.
-		</span>
+		<span class="text-error truncate text-xs"> Google Maps Autocomplete konnte nicht geladen werden. </span>
 		<button type="button" onclick={retry} class="btn btn-xs text-error shrink-0">
 			<i class="icon-[ph--arrow-clockwise] size-4 shrink-0"></i>
 			Erneut laden
 		</button>
 	</div>
+{/snippet}
+
+{#snippet locateMeButton(classs: string, text: string)}
+	<button
+		type="button"
+		data-testid="use-current-location-button"
+		class={[classs, usingCurrentLocation && `btn-active`]}
+		title="Aktuellen Standort verwenden"
+		onmousedown={(event) => event.preventDefault()}
+		onclick={usingCurrentLocation && !isLoadingLocation ? handleResetLocationClick : handleUseCurrentLocationClick}
+		disabled={isLoadingLocation || disabled}
+	>
+		{#if isLoadingLocation}
+			<i class="icon-[ph--spinner-gap] size-5 shrink-0 animate-spin"></i>
+		{:else if usingCurrentLocation}
+			<i class="icon-[ph--x] size-4.5 shrink-0"></i>
+		{:else}
+			<i class="icon-[ph--gps-fix] size-5 shrink-0"></i>
+		{/if}
+		{#if text}
+			<span>{text}</span>
+		{/if}
+	</button>
 {/snippet}
 
 <svelte:boundary
@@ -426,24 +495,28 @@
 		{#if autocomplete?.loadFailed}
 			{@render googleAutocompleteError(retryGoogleAutocomplete)}
 		{/if}
-		<div class="relative flex min-w-0 items-center gap-2.5">
+
+		{#if !editorOpen}
+			<input type="hidden" data-testid={inputId} value={inputLocationText} />
+			{#if showDistanceInput}
+				<input type="hidden" data-testid="{inputId}-distance" value={selectedDistance} />
+			{/if}
+		{/if}
+
+		<Popover.Root open={editorOpen} onOpenChange={handleEditorOpenChange}>
 			<div
-				bind:this={joinContainer}
-				class="form-control join flex min-w-0 grow items-center p-0"
-				in:fade={{ duration: 280 }}
+				bind:this={chipEl}
+				class={[
+					`w-full min-w-0 items-center gap-1`,
+					editorOpen
+						? `bg-base-200 border-base-500 rounded-t-box relative z-70 flex h-auto min-h-10 rounded-b-none border-2 border-b-0 shadow-xl [clip-path:inset(-3rem_-3rem_0_-3rem)]`
+						: `input h-auto`,
+					editorOpen && fullWidthWhenOpen && `max-sm:w-[calc(100vw-2rem)]`,
+				]}
 			>
-				<div class="relative min-w-0 flex-1" bind:clientWidth={inputWidth}>
-					<label
-						class={[
-							`input join-item peer group w-full`,
-							usingCurrentLocation && !isLoadingLocation && `active`
-						]}
-					>
-						<div
-							class="flex items-center justify-center group-focus-within:hidden md:group-focus-within:flex"
-						>
-							<i class="icon-[ph--map-pin] text-base-content/50 -mr-0.5 size-5"></i>
-						</div>
+				{#if editorOpen}
+					<div class="input rounded-t-box -mx-0.5 -mt-0.5 w-[calc(100%+4px)] min-w-0 rounded-b-none">
+						<i class="icon-[ph--map-pin] text-base-content/50 -ml-1 size-5 shrink-0"></i>
 						<input
 							bind:this={plzCityInput}
 							type="text"
@@ -457,119 +530,160 @@
 								? `${inputId}-option-${autocomplete.highlightedIndex}`
 								: undefined}
 							placeholder="Stadt / PLZ"
-							class={[`w-full`]}
+							class="w-full min-w-0"
 							value={inputLocationText}
 							disabled={isLoadingLocation || disabled}
 							oninput={(event) => handleInputChange(event.currentTarget.value)}
-							onchange={handleFilterInputChange}
 							onkeydown={handleInputKeydown}
 							onfocus={handleInputFocus}
-							onblur={scheduleBlurClose}
-							in:fade={{ duration: 280 }}
 						/>
-					</label>
-
-			{#if autocomplete?.isOpen && useGoogleAutocomplete}
-				<ul
-					{@attach portalToBody}
-					id="{inputId}-listbox"
-					role="listbox"
-					data-testid="location-suggestions"
-					class="bg-base-100 border-base-300 fixed z-200 max-h-64 overflow-y-auto rounded-box border shadow-lg"
-					style:top="{dropdownPosition.top}px"
-					style:left="{dropdownPosition.left}px"
-					style:width="{dropdownPosition.width || joinContainer?.clientWidth || 280}px"
-					onmousedown={cancelBlurClose}
-				>
-					{#each autocomplete.suggestions as suggestion, index (suggestion.text)}
-						<li
-							id="{inputId}-option-{index}"
-							role="option"
-							data-testid="location-option"
-							aria-selected={autocomplete.highlightedIndex === index}
-							class={[
-								`cursor-pointer px-3 py-2 text-sm border-base-300`,
-								autocomplete.highlightedIndex === index && `bg-primary/20`
-							]}
-							onmouseenter={() => {
-								autocomplete.highlightedIndex = index;
-							}}
-							onmousedown={(event) => {
-								event.preventDefault();
-								void handleSuggestionSelect(index);
-							}}
-						>
-							{suggestion.text}
-						</li>
-					{/each}
-					<li class="border-base-300 text-base-content/60 border-t px-3 py-1.5 text-xs">
-						<span class="flex items-center gap-1">
-							<i class="icon-[ph--map-trifold] size-3.5"></i>
-							Google Maps
-						</span>
-					</li>
-				</ul>
-			{/if}
-
-			<div class="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1">
-				{#if typedPlzCity.trim() && !usingCurrentLocation}
-					<button
-						type="button"
-						data-testid="clear-location-button"
-						title="Eingabe löschen"
-						class="btn-ghost bg-base-100 text-base-600 flex h-full items-center justify-center px-1"
-						onmousedown={(event) => event.preventDefault()}
-						onclick={handleResetLocationClick}
-					>
-						<i class="icon-[ph--x] size-5"></i>
-					</button>
-				{/if}
-				<button
-					type="button"
-					class={[
-						`btn btn-xs mr-0.5 flex h-full items-center justify-center rounded-full py-0.5 peer-focus:hidden`,
-						usingCurrentLocation && `bg-base-100`
-					]}
-					title="Aktuellen Standort verwenden"
-					onmousedown={(event) => {
-						if (usingCurrentLocation && !isLoadingLocation) event.preventDefault();
-					}}
-					onclick={usingCurrentLocation && !isLoadingLocation
-						? handleResetLocationClick
-						: handleUseCurrentLocationClick}
-					disabled={isLoadingLocation || disabled}
-				>
-					{#if isLoadingLocation}
-						<i class="icon-[ph--spinner-gap] size-5 animate-spin"></i>
-					{:else if usingCurrentLocation}
-						<i class="icon-[ph--x] size-4.5"></i>
-					{:else}
-						<i class="icon-[ph--gps-fix] size-5"></i>
-						{#if !typedPlzCity.trim() && !smallLocateMeButton}
-							<span class="text-xs"> Standort</span>
+						{#if hasLocation && !isLoadingLocation}
+							<button
+								type="button"
+								data-testid="clear-location-button"
+								title="Eingabe löschen"
+								class="btn btn-ghost btn-sm btn-circle -mr-2.5 shrink-0"
+								tabindex={-1}
+								onmousedown={(event) => event.preventDefault()}
+								onclick={handleResetLocationClick}
+							>
+								<i class="icon-[ph--x] size-4.5"></i>
+							</button>
 						{/if}
-					{/if}
-				</button>
-			</div>
-		</div>
+					</div>
+				{/if}
 
-		{#if showDistanceInput}
-			<select
-				id="{inputId}-distance"
-				data-testid="{inputId}-distance"
-				class={[`select join-item w-auto appearance-none`, usingCurrentLocation && `active`]}
-				bind:value={selectedDistance}
-				onchange={handleFilterInputChange}
-				disabled={isLoadingLocation || disabled || (typedPlzCity === `` && !usingCurrentLocation)}
-			>
-				<option value="">Überall</option>
-				{#each distanceOptions as option (option.value)}
-					<option value={option.value}>{option.label}</option>
-				{/each}
-			</select>
-		{/if}
+				<Popover.Trigger>
+					{#snippet child({ props })}
+						<button
+							{...props}
+							type="button"
+							data-testid="{inputId}-summary"
+							class={[props.class, ` flex h-9 min-w-0 flex-1 flex-row flex-nowrap items-center gap-2 text-left`, editorOpen && `hidden`]}
+							tabindex={editorOpen ? -1 : undefined}
+							aria-haspopup="dialog"
+							{disabled}
+						>
+							<i class="icon-[ph--map-pin] text-base-content/50 -ml-1 size-5 shrink-0"></i>
+							<span class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+								{#if hasLocation}
+									<span class="max-w-full min-w-0 shrink-0 truncate text-sm leading-none font-medium" title={inputLocationText}>
+										{inputLocationText}
+									</span>
+									{#if selectedDistance}
+										<span class="text-base-content/55 shrink-0 text-xs leading-none whitespace-nowrap">{distanceLabel}</span>
+									{/if}
+								{:else}
+									<span class="text-base-content/50 text-sm">Stadt / PLZ</span>
+								{/if}
+							</span>
+						</button>
+					{/snippet}
+				</Popover.Trigger>
+				{#if !editorOpen}
+					{#if hasLocation && !isLoadingLocation}
+						<button
+							type="button"
+							data-testid="clear-location-button"
+							title="Eingabe löschen"
+							class="btn btn-ghost btn-sm btn-circle -mr-2.5 shrink-0"
+							onclick={handleResetLocationClick}
+							{disabled}
+						>
+							<i class="icon-[ph--x] size-4.5"></i>
+						</button>
+					{:else}
+						{@render locateMeButton(`btn btn-sm h-7 px-2 w-auto max-h-none -mr-2`, `Standort`)}
+					{/if}
+				{/if}
 			</div>
-		</div>
+
+			<Popover.Content
+				customAnchor={chipEl}
+				side="bottom"
+				align="start"
+				sideOffset={0}
+				avoidCollisions={false}
+				trapFocus={false}
+				onOpenAutoFocus={(event) => {
+					event.preventDefault();
+					plzCityInput?.focus();
+				}}
+				onCloseAutoFocus={(event) => {
+					event.preventDefault();
+				}}
+				class={[
+					`bg-base-200 border-base-500 rounded-b-box z-60 flex flex-col rounded-t-none border-2 border-t-0 shadow-xl outline-hidden`,
+					fullWidthWhenOpen ? `max-sm:w-[calc(100vw-2rem)] sm:w-(--bits-popover-anchor-width)` : `w-(--bits-popover-anchor-width)`,
+				]}
+			>
+				<div bind:this={popoverEl} data-testid="location-editor-popover" class="flex min-w-0 flex-col">
+					<div class="flex min-w-0 items-center gap-2 p-2">
+						<select
+							bind:this={distanceSelectEl}
+							id="{inputId}-distance"
+							data-testid="{inputId}-distance"
+							class="select cursor-default field-sizing-content appearance-auto max-sm:min-w-0 max-sm:flex-1 sm:w-fit! sm:flex-none"
+							bind:value={selectedDistance}
+							onchange={handleDistanceChange}
+							disabled={isLoadingLocation || disabled || !hasLocation}
+						>
+							<option value="">Überall</option>
+							{#each distanceOptions as option (option.value)}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+
+						{@render locateMeButton(`btn w-fit shrink-0 gap-2`, `Standort verwenden`)}
+					</div>
+
+					{#if autocomplete?.isOpen && useGoogleAutocomplete}
+						<ul
+							id="{inputId}-listbox"
+							role="listbox"
+							data-testid="location-suggestions"
+							class="border-base-300 bg-base-100 rounded-b-box max-h-64 overflow-y-auto border-t"
+						>
+							{#each autocomplete.suggestions as suggestion, index (suggestion.text)}
+								<li
+									id="{inputId}-option-{index}"
+									role="option"
+									data-testid="location-option"
+									aria-selected={autocomplete.highlightedIndex === index}
+									class={[`cursor-pointer px-3 py-2 text-sm`, autocomplete.highlightedIndex === index && `bg-primary/20`]}
+									onmouseenter={() => {
+										autocomplete.highlightedIndex = index;
+									}}
+									onpointerdown={(event) => {
+										event.preventDefault();
+										event.stopPropagation();
+									}}
+									onmousedown={(event) => {
+										event.preventDefault();
+									}}
+									onkeydown={(event) => {
+										if (event.key !== `Enter` && event.key !== ` `) return;
+										event.preventDefault();
+										void handleSuggestionSelect(index);
+									}}
+									onclick={() => {
+										void handleSuggestionSelect(index);
+									}}
+								>
+									{suggestion.text}
+								</li>
+							{/each}
+							<li class="border-base-300 text-base-content/60 border-t px-3 py-1.5 text-xs">
+								<span class="flex items-center gap-1">
+									<i class="icon-[ph--map-trifold] size-3.5"></i>
+									Google Maps
+								</span>
+							</li>
+						</ul>
+					{/if}
+				</div>
+			</Popover.Content>
+		</Popover.Root>
 	</div>
 
 	{#snippet failed(_error, reset)}

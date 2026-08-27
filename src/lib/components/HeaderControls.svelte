@@ -66,7 +66,16 @@
 
 	function handleFilterInteractOutside(event: Event) {
 		const target = event.target;
-		if (target instanceof Element && target.closest(`[data-testid="open-filter-dialog"]`)) {
+		if (!(target instanceof Element)) return;
+		if (target.closest(`[data-testid="open-filter-dialog"]`)) {
+			event.preventDefault();
+			return;
+		}
+		if (target.closest(`[data-testid="location-editor-popover"]`)) {
+			event.preventDefault();
+			return;
+		}
+		if (target.closest(`[data-testid="location-suggestions"]`)) {
 			event.preventDefault();
 		}
 	}
@@ -100,13 +109,14 @@
 					locationBiasLat={eventsStore.pagination.lat}
 					locationBiasLng={eventsStore.pagination.lng}
 					onChange={onLocationDistanceChange}
+					fullWidthWhenOpen
 				/>
 			</div>
 
 			<button
 				type="button"
 				data-testid="open-filter-dialog"
-				class={[`btn btn-circle relative sm:w-fit sm:px-4`, eventsStore.hasFilterBehindButton && `active`]}
+				class={[`btn btn-circle relative shrink-0 sm:w-fit sm:px-4`, eventsStore.hasFilterBehindButton && `active`]}
 				onclick={openFilterDialog}
 			>
 				<i class="icon-[ph--sliders] size-5"></i>

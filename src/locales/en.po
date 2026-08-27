@@ -283,6 +283,7 @@ msgstr "Determining location..."
 
 #: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 msgid "Eingabe löschen"
 msgstr "Clear input"
 
@@ -292,9 +293,6 @@ msgid "Aktuellen Standort verwenden"
 msgstr "Use current location"
 
 #: src/lib/components/LocationDistanceInput.svelte
-msgid "Standort"
-msgstr "Location"
-
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Überall"
 msgstr "Everywhere"
@@ -454,6 +452,7 @@ msgid "Link kopieren"
 msgstr "Copy link"
 
 #: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
 msgstr "City / postal code"
 
@@ -474,10 +473,8 @@ msgstr "An error occurred"
 msgid "AbortError"
 msgstr "AbortError"
 
-#: src/lib/components/LocationDistanceInput.svelte
-#: src/lib/components/LocationDistanceInput.svelte
-msgid "Dein Standort"
-msgstr "Your location"
+#~ msgid "Dein Standort"
+#~ msgstr "Your location"
 
 #: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
@@ -851,6 +848,7 @@ msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Don't see your question? <0>Write to me.</0>"
 
 #: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Escape"
 msgstr "Escape"
@@ -1456,6 +1454,8 @@ msgid "Social Links *"
 msgstr "Social Links *"
 
 #: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Tab"
 msgstr "Tab"
@@ -4037,3 +4037,36 @@ msgstr "In Safari, tap the share icon and then „Add to Home Screen“."
 
 #~ msgid "Handwerk"
 #~ msgstr "Crafts"
+
+#~ msgid "<0/> Anmelde-Code senden<<<<<<< HEAD"
+#~ msgstr ""
+
+#~ msgid "Nutzungsbedingungen / AGB>>>>>>> 367b815 (fill legal pages)"
+#~ msgstr ""
+
+#~ msgid "Handwerk======="
+#~ msgstr ""
+
+#~ msgid "Dein Standort verwenden"
+#~ msgstr "Use your location"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Standort verwenden"
+msgstr "Use location"
+
+#~ msgid "{0} km"
+#~ msgstr "{0} km"
+
+#~ msgid "{0} km radius"
+#~ msgstr "{0} km radius"
+
+#. 0: selectedDistance
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "{0} km Radius"
+msgstr "{0} km radius"
+
+#~ msgid "Standort verwe"
+#~ msgstr "Location verwe"
+
+#~ msgid "Standort verwed"
+#~ msgstr "Location verwed"

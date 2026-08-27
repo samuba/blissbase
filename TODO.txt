@@ -1,11 +1,6 @@
-tags column löschen (tagSlugs hat abgelöst)
 
-make location input look good with text in it on tiny mobiles. Maybe have a popover and not the raw input + select element
+google login auth works with new offering/event
 
-
-have tags also in the filter dialog
-
-google login auth 
 introduce bookingUrl. cuz sourceUrl is good to have to know where its coming from but its not always where we wanna guide people to. Can use it for the source link
 -> already have contact.
 

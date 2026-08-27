@@ -283,6 +283,7 @@ msgstr "Standort wird ermittelt..."
 
 #: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 msgid "Eingabe löschen"
 msgstr "Eingabe löschen"
 
@@ -291,6 +292,7 @@ msgstr "Eingabe löschen"
 msgid "Aktuellen Standort verwenden"
 msgstr "Aktuellen Standort verwenden"
 
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Überall"
 msgstr "Überall"
@@ -450,6 +452,7 @@ msgid "Link kopieren"
 msgstr "Link kopieren"
 
 #: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
 msgstr "Stadt / PLZ"
 
@@ -470,10 +473,8 @@ msgstr "Ein Fehler ist aufgetreten"
 msgid "AbortError"
 msgstr "AbortError"
 
-#: src/lib/components/LocationDistanceInput.svelte
-#: src/lib/components/LocationDistanceInput.svelte
-msgid "Dein Standort"
-msgstr "Dein Standort"
+#~ msgid "Dein Standort"
+#~ msgstr "Dein Standort"
 
 #: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
@@ -847,6 +848,7 @@ msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 
 #: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Escape"
 msgstr "Escape"
@@ -1452,6 +1454,8 @@ msgid "Social Links *"
 msgstr "Social Links *"
 
 #: src/lib/components/LocationAutocompleteInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
+#: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Tab"
 msgstr "Tab"
@@ -3961,15 +3965,17 @@ msgstr "Datenschutz"
 msgid "AGB"
 msgstr "AGB"
 
-#~ msgid "Nutzungsbedingungen / Terms of Service | Blissbase"
-#~ msgstr "Nutzungsbedingungen / Terms of Service | Blissbase"
+#: src/routes/legal/terms-of-service/+page.svelte
+msgid "Nutzungsbedingungen / Terms of Service | Blissbase"
+msgstr "Nutzungsbedingungen / Terms of Service | Blissbase"
 
 #: src/routes/legal/privacy-policy/+page.svelte
 msgid "Datenschutzerklärung"
 msgstr "Datenschutzerklärung"
 
-#~ msgid "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
-#~ msgstr "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
+#: src/routes/legal/terms-of-service/+page.svelte
+msgid "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
+msgstr "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
 
 #: src/routes/legal/privacy-policy/+page.svelte
 msgid "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
@@ -3979,8 +3985,9 @@ msgstr "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google
 msgid "Privacy Policy / Datenschutzerklärung | Blissbase"
 msgstr "Privacy Policy / Datenschutzerklärung | Blissbase"
 
-#~ msgid "Nutzungsbedingungen / AGB"
-#~ msgstr "Nutzungsbedingungen / AGB"
+#: src/routes/legal/terms-of-service/+page.svelte
+msgid "Nutzungsbedingungen / AGB"
+msgstr "Nutzungsbedingungen / AGB"
 
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort"
@@ -4030,10 +4037,36 @@ msgstr "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschir
 
 #~ msgid "Handwerk"
 #~ msgstr "Handwerk"
- msgstr "Selbst herstellen"
 
-#~ msgid "Einvernehmlichkeit"
-#~ msgstr "Einvernehmlichkeit"
+#~ msgid "<0/> Anmelde-Code senden<<<<<<< HEAD"
+#~ msgstr "<0/> Anmelde-Code senden<<<<<<< HEAD"
 
-#~ msgid "Handwerk"
-#~ msgstr "Handwerk"
+#~ msgid "Nutzungsbedingungen / AGB>>>>>>> 367b815 (fill legal pages)"
+#~ msgstr "Nutzungsbedingungen / AGB>>>>>>> 367b815 (fill legal pages)"
+
+#~ msgid "Handwerk======="
+#~ msgstr "Handwerk======="
+
+#~ msgid "Dein Standort verwenden"
+#~ msgstr "Dein Standort verwenden"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Standort verwenden"
+msgstr "Standort verwenden"
+
+#~ msgid "{0} km"
+#~ msgstr "{0} km"
+
+#~ msgid "{0} km radius"
+#~ msgstr "{0} km radius"
+
+#. 0: selectedDistance
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "{0} km Radius"
+msgstr "{0} km Radius"
+
+#~ msgid "Standort verwe"
+#~ msgstr "Standort verwe"
+
+#~ msgid "Standort verwed"
+#~ msgstr "Standort verwed"

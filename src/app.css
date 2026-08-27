@@ -81,6 +81,15 @@ select {
 	@apply disabled:border-base-300! disabled:border-2!; 
 }
 
+/* bigger daisyUI select chevron, more inset from the right.
+   appearance: none keeps the CSS chevron from doubling with the native base-select arrow. */
+.select {
+	appearance: none;
+	background-size: 6px 6px, 6px 6px;
+	background-position: calc(100% - 23.9px) calc(1px + 50%), calc(100% - 18px) calc(1px + 50%);
+	padding-inline-end: 2rem;
+}
+
 /* get rid of ring around inputs */
 .input, .textarea, .select, select {
 	@apply focus:outline-0! focus-within:outline-0!;

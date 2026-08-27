@@ -74,9 +74,10 @@ test.describe('Filter Combinations', () => {
 	});
 
 	test('search filters events', async ({ page }) => {
-		const searchInput = page.getByTestId('plzCityInput-header');
-		await searchInput.fill('Berlin');
-		await searchInput.press('Enter');
+		await page.getByTestId(`plzCityInput-header-summary`).click();
+		const searchInput = page.getByTestId(`plzCityInput-header`);
+		await searchInput.fill(`Berlin`);
+		await searchInput.press(`Enter`);
 		await page.waitForTimeout(1000);
 
 		const eventCount = await page.getByTestId('event-card').count();
