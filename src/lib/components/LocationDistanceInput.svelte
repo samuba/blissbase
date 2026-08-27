@@ -257,6 +257,7 @@
 	}
 
 	function handleResetLocationClick() {
+		closingEditor = false;
 		autocomplete?.close();
 		usingCurrentLocation = false;
 		coordsForFilter = null;
@@ -303,12 +304,13 @@
 		closingEditor = true;
 		plzCityInput?.blur();
 		editorOpen = false;
-		setTimeout(() => {
+		queueMicrotask(() => {
 			closingEditor = false;
-		}, 200);
+		});
 	}
 
 	function closeEditor() {
+		if (closingEditor) return;
 		if (typedPlzCity && selectedDistance === ``) selectedDistance = `50`;
 		if (typedPlzCity.trim() || usingCurrentLocation) notifyChange();
 		autocomplete?.close();
@@ -316,12 +318,10 @@
 	}
 
 	function handleEditorOpenChange(open: boolean) {
-		if (open && closingEditor) {
+		if (closingEditor) {
 			editorOpen = false;
 			return;
 		}
-
-		if (open === editorOpen) return;
 
 		if (open && disabled) {
 			editorOpen = false;
@@ -329,7 +329,6 @@
 		}
 
 		if (open) {
-			editorOpen = true;
 			prepareAutocomplete();
 			void tick().then(() => plzCityInput?.focus());
 			return;
@@ -505,7 +504,7 @@
 			{/if}
 		{/if}
 
-		<Popover.Root open={editorOpen} onOpenChange={handleEditorOpenChange}>
+		<Popover.Root bind:open={editorOpen} onOpenChange={handleEditorOpenChange}>
 			<div
 				bind:this={chipEl}
 				class={[
