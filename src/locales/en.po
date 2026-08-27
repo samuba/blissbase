@@ -3957,29 +3957,37 @@ msgstr "or"
 msgid "<0/> Anmelde-Code senden"
 msgstr "<0/> Send login code"
 
-#~ msgid "Datenschutz"
-#~ msgstr "Privacy Policy"
+#: src/lib/components/PeekFooter.svelte
+msgid "Datenschutz"
+msgstr "Privacy Policy"
 
-#~ msgid "AGB"
-#~ msgstr "Terms & Conditions"
+#: src/lib/components/PeekFooter.svelte
+msgid "AGB"
+msgstr "Terms & Conditions"
 
-#~ msgid "Nutzungsbedingungen / Terms of Service | Blissbase"
-#~ msgstr "Terms of Service | Blissbase"
+#: src/routes/legal/terms-of-service/+page.svelte
+msgid "Nutzungsbedingungen / Terms of Service | Blissbase"
+msgstr "Terms of Service | Blissbase"
 
-#~ msgid "Datenschutzerklärung"
-#~ msgstr "Privacy Policy"
+#: src/routes/legal/privacy-policy/+page.svelte
+msgid "Datenschutzerklärung"
+msgstr "Privacy Policy"
 
-#~ msgid "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
-#~ msgstr "Terms of Use for Blissbase, including accounts, Google Sign-In, and user content."
+#: src/routes/legal/terms-of-service/+page.svelte
+msgid "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
+msgstr "Terms of Use for Blissbase, including accounts, Google Sign-In, and user content."
 
-#~ msgid "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
-#~ msgstr "How Blissbase processes personal data, including Google Sign-In (access, use, storage, and sharing)."
+#: src/routes/legal/privacy-policy/+page.svelte
+msgid "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
+msgstr "How Blissbase processes personal data, including Google Sign-In (access, use, storage, and sharing)."
 
-#~ msgid "Privacy Policy / Datenschutzerklärung | Blissbase"
-#~ msgstr "Privacy Policy / Data Protection Statement | Blissbase"
+#: src/routes/legal/privacy-policy/+page.svelte
+msgid "Privacy Policy / Datenschutzerklärung | Blissbase"
+msgstr "Privacy Policy / Data Protection Statement | Blissbase"
 
-#~ msgid "Nutzungsbedingungen / AGB"
-#~ msgstr "General Terms and Conditions"
+#: src/routes/legal/terms-of-service/+page.svelte
+msgid "Nutzungsbedingungen / AGB"
+msgstr "General Terms and Conditions"
 
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort"
@@ -4022,14 +4030,6 @@ msgstr "In Safari, tap the share icon and then „Add to Home Screen“."
 #~ msgstr "Webinar"
 
 #~ msgid "Selbst herstellen"
-#~ msgstr "Making It Yourself"
-
-#~ msgid "Einvernehmlichkeit"
-#~ msgstr "Mutual consent"
-
-#~ msgid "Handwerk"
-#~ msgstr "Crafts"
-n"
 #~ msgstr "Making It Yourself"
 
 #~ msgid "Einvernehmlichkeit"

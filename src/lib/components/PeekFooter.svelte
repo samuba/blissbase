@@ -33,9 +33,11 @@
 
 	function createLinks() {
 		return [
-			{ label: /* @wc-include */ `Über`, href: routes.about() },
-			{ label: /* @wc-include */ `FAQ`, href: routes.faq() },
-			{ label: /* @wc-include */ `Admin`, href: routes.admin() },
+			{ label: /* @wc-include */ `Über`, href: routes.about(), testId: `footer-about` },
+			{ label: /* @wc-include */ `FAQ`, href: routes.faq(), testId: `footer-faq` },
+			{ label: /* @wc-include */ `Datenschutz`, href: routes.privacyPolicy(), testId: `footer-privacy-policy` },
+			{ label: /* @wc-include */ `AGB`, href: routes.termsOfService(), testId: `footer-terms-of-service` },
+			{ label: /* @wc-include */ `Admin`, href: routes.admin(), testId: `footer-admin` },
 		];
 	}
 
@@ -104,14 +106,16 @@
 		hidden && `pointer-events-none translate-y-full md:pointer-events-auto md:translate-y-0`,
 	]}
 >
-	<nav class="mx-auto flex h-7 max-w-5xl items-center justify-center gap-2 px-3">
+	<nav class="mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1">
 		{#each links as link, index (link.href)}
-			{#if index > 0}
-				<span class="text-base-content/30" aria-hidden="true">·</span>
+			{#if link.href !== routes.privacyPolicy() && link.href !== routes.termsOfService()}
+				{#if index > 0}
+					<span class="text-base-content/30" aria-hidden="true">·</span>
+				{/if}
+				<a href={link.href} data-testid={link.testId} class="link link-hover text-base-content/50 text-xs leading-none">
+					{link.label}
+				</a>
 			{/if}
-			<a href={link.href} class="link link-hover text-base-content/50 text-xs leading-none">
-				{link.label}
-			</a>
 		{/each}
 	</nav>
 </footer>

@@ -31,6 +31,13 @@ describe(`isEventOrOfferingListPath`, () => {
 	});
 });
 
+describe(`legal routes`, () => {
+	it(`builds privacy policy and terms of service paths`, () => {
+		expect(routes.privacyPolicy()).toBe(`/legal/privacy-policy`);
+		expect(routes.termsOfService()).toBe(`/legal/terms-of-service`);
+	});
+});
+
 describe(`auth routes`, () => {
 	it(`builds login and callback paths`, () => {
 		expect(routes.login()).toBe(`/auth/login`);

@@ -13,6 +13,8 @@ export const routes = {
     sources: () => resolve(`/sources`) ,
     about: () => resolve(`/about`) ,
     faq: () => resolve(`/faq`) ,
+    privacyPolicy: () => resolve(`/legal/privacy-policy`) ,
+    termsOfService: () => resolve(`/legal/terms-of-service`) ,
     typeSpecimen: () => resolve(`/type-specimen`) ,
     newEvent: () => resolve(`/events/new`) ,
     offeringsList: (args: Partial<OfferingsFilter> = {}) => {

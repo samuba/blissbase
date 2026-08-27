@@ -292,10 +292,6 @@ msgid "Aktuellen Standort verwenden"
 msgstr "Aktuellen Standort verwenden"
 
 #: src/lib/components/LocationDistanceInput.svelte
-msgid "Standort"
-msgstr "Standort"
-
-#: src/lib/components/LocationDistanceInput.svelte
 msgid "Überall"
 msgstr "Überall"
 
@@ -3957,26 +3953,31 @@ msgstr "oder"
 msgid "<0/> Anmelde-Code senden"
 msgstr "<0/> Anmelde-Code senden"
 
-#~ msgid "Datenschutz"
-#~ msgstr "Datenschutz"
+#: src/lib/components/PeekFooter.svelte
+msgid "Datenschutz"
+msgstr "Datenschutz"
 
-#~ msgid "AGB"
-#~ msgstr "AGB"
+#: src/lib/components/PeekFooter.svelte
+msgid "AGB"
+msgstr "AGB"
 
 #~ msgid "Nutzungsbedingungen / Terms of Service | Blissbase"
 #~ msgstr "Nutzungsbedingungen / Terms of Service | Blissbase"
 
-#~ msgid "Datenschutzerklärung"
-#~ msgstr "Datenschutzerklärung"
+#: src/routes/legal/privacy-policy/+page.svelte
+msgid "Datenschutzerklärung"
+msgstr "Datenschutzerklärung"
 
 #~ msgid "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
 #~ msgstr "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
 
-#~ msgid "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
-#~ msgstr "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
+#: src/routes/legal/privacy-policy/+page.svelte
+msgid "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
+msgstr "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
 
-#~ msgid "Privacy Policy / Datenschutzerklärung | Blissbase"
-#~ msgstr "Privacy Policy / Datenschutzerklärung | Blissbase"
+#: src/routes/legal/privacy-policy/+page.svelte
+msgid "Privacy Policy / Datenschutzerklärung | Blissbase"
+msgstr "Privacy Policy / Datenschutzerklärung | Blissbase"
 
 #~ msgid "Nutzungsbedingungen / AGB"
 #~ msgstr "Nutzungsbedingungen / AGB"

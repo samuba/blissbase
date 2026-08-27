@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db, s } from '$lib/server/db';
+import { db, s, sql } from '$lib/server/db';
 import { resolveSupportedLocale } from '$lib/common';
-import { AUTH_NEXT_QUERY, safeAuthNextPath } from '$lib/routes';
+import { AUTH_NEXT_QUERY, routePathname, routes, safeAuthNextPath } from '$lib/routes';
 
 /**
  * Builds a same-origin redirect path with auth feedback query params for the client toast.
@@ -11,12 +11,13 @@ import { AUTH_NEXT_QUERY, safeAuthNextPath } from '$lib/routes';
 function redirectWithAuthFeedback(args: {
 	origin: string;
 	nextPath: string;
+	fallback: string;
 	authSuccess?: boolean;
 	authError?: string;
 	errorCode?: string | null;
 }) {
-	const { origin, nextPath, authSuccess, authError, errorCode } = args;
-	const safe = safeAuthNextPath({ next: nextPath, fallback: `/`, origin });
+	const { origin, nextPath, fallback, authSuccess, authError, errorCode } = args;
+	const safe = safeAuthNextPath({ next: nextPath, fallback, origin });
 	const u = new URL(safe, origin);
 	if (authSuccess) u.searchParams.set(`auth_success`, `1`);
 	if (authError) u.searchParams.set(`auth_error`, authError);
@@ -41,9 +42,10 @@ function googleDisplayName(userMetadata: Record<string, unknown> | undefined) {
  */
 export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }) => {
 	const origin = url.origin;
+	const fallback = routePathname(routes.profile(), origin);
 	const nextPath = safeAuthNextPath({
 		next: url.searchParams.get(AUTH_NEXT_QUERY),
-		fallback: `/`,
+		fallback,
 		origin,
 	});
 
@@ -57,6 +59,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 			redirectWithAuthFeedback({
 				origin,
 				nextPath,
+				fallback,
 				authError: msg,
 				errorCode: oauthErrorCode
 			})
@@ -70,6 +73,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 			redirectWithAuthFeedback({
 				origin,
 				nextPath,
+				fallback,
 				authError: `Anmeldung fehlgeschlagen: Kein gültiger Link. Bitte fordere einen neuen Login-Link an.`
 			})
 		);
@@ -85,6 +89,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 			redirectWithAuthFeedback({
 				origin,
 				nextPath,
+				fallback,
 				authError: msg,
 				errorCode: error?.code ?? null
 			})
@@ -101,7 +106,15 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 		id: data.user.id,
 		locale,
 		...(displayName ? { displayName } : {}),
-	}).onConflictDoNothing();
+	}).onConflictDoUpdate({
+		target: s.profiles.id,
+		set: {
+			locale,
+			...(displayName
+				? { displayName: sql`coalesce(${s.profiles.displayName}, ${displayName})` }
+				: {}),
+		},
+	});
 
-	redirect(303, redirectWithAuthFeedback({ origin, nextPath, authSuccess: true }));
+	redirect(303, redirectWithAuthFeedback({ origin, nextPath, fallback, authSuccess: true }));
 };
