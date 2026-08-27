@@ -464,6 +464,7 @@ msgstr "Error while loading events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
+#: src/lib/components/Login.svelte
 #: src/lib/createFlowAuth.svelte.ts
 #: src/lib/createFlowAuth.svelte.ts
 msgid "Ein Fehler ist aufgetreten"
@@ -508,9 +509,6 @@ msgstr "Distance"
 #: src/lib/components/HeaderControls.svelte
 msgid "<0/> Alle Filter zurücksetzen"
 msgstr "<0/> Reset all filters"
-
-#~ msgid "Zurücksetzen"
-#~ msgstr "Reset"
 
 #: src/lib/components/DateRangePicker.svelte
 msgid "Datum"
@@ -559,18 +557,6 @@ msgstr "How to install the app on your iPhone"
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "Installationsanleitung"
 msgstr "Installation instructions"
-
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Öffne diese Seite in Safari, um die App zu installieren."
-msgstr "Open this page in Safari to install the app."
-
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Andere Browser auf dem iPhone können keine Apps installieren."
-msgstr "Other browsers on the iPhone cannot install apps."
-
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
-msgstr "In Safari, tap the share icon and then „Add to Home Screen“."
 
 #: src/routes/EventDetails.svelte
 msgid "Anmeldung per <0/>."
@@ -1076,10 +1062,6 @@ msgid "Bitte gib den 6-stelligen Code ein."
 msgstr "Please enter the 6-digit code."
 
 #: src/lib/components/Login.svelte
-msgid "<0/> Code senden"
-msgstr "<0/> Send code"
-
-#: src/lib/components/Login.svelte
 #: src/lib/components/OtpStep.svelte
 msgid "Einmalcode"
 msgstr "One-time code"
@@ -1108,10 +1090,6 @@ msgstr "We sent you a code to <0/>. Enter the code here to sign in."
 #: src/lib/components/Login.svelte
 msgid "Bitte gib den Code ein."
 msgstr "Please enter the code."
-
-#: src/lib/components/Login.svelte
-msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
-msgstr "Enter your email address. You will receive a code to sign in here."
 
 #. 0: resendCooldown.secondsLeft
 #: src/lib/components/Login.svelte
@@ -3012,9 +2990,6 @@ msgstr "Open Relationships"
 msgid "Gewaltfreie Kommunikation"
 msgstr "Nonviolent Communication"
 
-#~ msgid "Grenzen"
-#~ msgstr "Boundaries"
-
 #: src/lib/eventCategories.ts
 msgid "Verbindung"
 msgstr "Connection"
@@ -3149,9 +3124,6 @@ msgstr "Yoga"
 msgid "Kundalini Yoga"
 msgstr "Kundalini Yoga"
 
-#~ msgid "Kinderyoga"
-#~ msgstr "Children's Yoga"
-
 #: src/lib/eventCategories.ts
 msgid "SUP-Yoga"
 msgstr "SUP Yoga"
@@ -3247,12 +3219,6 @@ msgstr "Creativity"
 #: src/lib/eventCategories.ts
 msgid "Verspieltheit"
 msgstr "Playfulness"
-
-#~ msgid "Hochbegabt"
-#~ msgstr "Gifted"
-
-#~ msgid "Hochsensibel"
-#~ msgstr "Highly Sensitive"
 
 #: src/lib/eventCategories.ts
 msgid "Sucht"
@@ -3840,9 +3806,6 @@ msgstr "Festival"
 msgid "Kongress"
 msgstr "Congress"
 
-#~ msgid "Webinar"
-#~ msgstr "Webinar"
-
 #: src/lib/eventCategories.ts
 msgid "Film"
 msgstr "Film"
@@ -3904,9 +3867,6 @@ msgstr "Singing"
 msgid "Aerial Yoga"
 msgstr "Aerial Yoga"
 
-#~ msgid "Selbst herstellen"
-#~ msgstr "Making It Yourself"
-
 #: src/lib/eventCategories.ts
 msgid "Fitness"
 msgstr "Fitness"
@@ -3957,15 +3917,9 @@ msgstr "current"
 msgid "Kategorien"
 msgstr "Categories"
 
-#~ msgid "Einvernehmlichkeit"
-#~ msgstr "Mutual consent"
-
 #: src/lib/eventCategories.ts
 msgid "Grenzen & Konsens"
 msgstr "Limits & Consent"
-
-#~ msgid "Handwerk"
-#~ msgstr "Crafts"
 
 #: src/lib/eventCategories.ts
 msgid "Handwerk & DIY"
@@ -3982,3 +3936,104 @@ msgstr "Giftedness"
 #: src/lib/components/DuplicateEventToastLink.svelte
 msgid "Event ansehen"
 msgstr "View event"
+
+#: src/lib/components/Login.svelte
+msgid "Google-Anmeldung ist gerade nicht verfügbar."
+msgstr "Google sign-in is currently unavailable."
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Weiterleitung..."
+msgstr "<0/> Redirecting..."
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Mit Google anmelden"
+msgstr "<0/> Sign in with Google"
+
+#: src/lib/components/Login.svelte
+msgid "oder"
+msgstr "or"
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Anmelde-Code senden"
+msgstr "<0/> Send login code"
+
+#~ msgid "Datenschutz"
+#~ msgstr "Privacy Policy"
+
+#~ msgid "AGB"
+#~ msgstr "Terms & Conditions"
+
+#~ msgid "Nutzungsbedingungen / Terms of Service | Blissbase"
+#~ msgstr "Terms of Service | Blissbase"
+
+#~ msgid "Datenschutzerklärung"
+#~ msgstr "Privacy Policy"
+
+#~ msgid "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
+#~ msgstr "Terms of Use for Blissbase, including accounts, Google Sign-In, and user content."
+
+#~ msgid "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
+#~ msgstr "How Blissbase processes personal data, including Google Sign-In (access, use, storage, and sharing)."
+
+#~ msgid "Privacy Policy / Datenschutzerklärung | Blissbase"
+#~ msgstr "Privacy Policy / Data Protection Statement | Blissbase"
+
+#~ msgid "Nutzungsbedingungen / AGB"
+#~ msgstr "General Terms and Conditions"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Standort"
+msgstr "Location"
+
+#~ msgid "Zurücksetzen"
+#~ msgstr "Reset"
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Öffne diese Seite in Safari, um die App zu installieren."
+msgstr "Open this page in Safari to install the app."
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Andere Browser auf dem iPhone können keine Apps installieren."
+msgstr "Other browsers on the iPhone cannot install apps."
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
+msgstr "In Safari, tap the share icon and then „Add to Home Screen“."
+
+#~ msgid "<0/> Code senden"
+#~ msgstr "<0/> Send code"
+
+#~ msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
+#~ msgstr "Enter your email address. You will receive a code to sign in here."
+
+#~ msgid "Grenzen"
+#~ msgstr "Boundaries"
+
+#~ msgid "Kinderyoga"
+#~ msgstr "Children's Yoga"
+
+#~ msgid "Hochbegabt"
+#~ msgstr "Gifted"
+
+#~ msgid "Hochsensibel"
+#~ msgstr "Highly Sensitive"
+
+#~ msgid "Webinar"
+#~ msgstr "Webinar"
+
+#~ msgid "Selbst herstellen"
+#~ msgstr "Making It Yourself"
+
+#~ msgid "Einvernehmlichkeit"
+#~ msgstr "Mutual consent"
+
+#~ msgid "Handwerk"
+#~ msgstr "Crafts"
+n"
+#~ msgstr "Making It Yourself"
+
+#~ msgid "Einvernehmlichkeit"
+#~ msgstr "Mutual consent"
+
+#~ msgid "Handwerk"
+#~ msgstr "Crafts"

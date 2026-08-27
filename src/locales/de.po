@@ -464,6 +464,7 @@ msgstr "Fehler beim Laden der Events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
+#: src/lib/components/Login.svelte
 #: src/lib/createFlowAuth.svelte.ts
 #: src/lib/createFlowAuth.svelte.ts
 msgid "Ein Fehler ist aufgetreten"
@@ -508,9 +509,6 @@ msgstr "Entfernung"
 #: src/lib/components/HeaderControls.svelte
 msgid "<0/> Alle Filter zurücksetzen"
 msgstr "<0/> Alle Filter zurücksetzen"
-
-#~ msgid "Zurücksetzen"
-#~ msgstr "Zurücksetzen"
 
 #: src/lib/components/DateRangePicker.svelte
 msgid "Datum"
@@ -559,18 +557,6 @@ msgstr "So installierst du die App auf deinem iPhone"
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "Installationsanleitung"
 msgstr "Installationsanleitung"
-
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Öffne diese Seite in Safari, um die App zu installieren."
-msgstr "Öffne diese Seite in Safari, um die App zu installieren."
-
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Andere Browser auf dem iPhone können keine Apps installieren."
-msgstr "Andere Browser auf dem iPhone können keine Apps installieren."
-
-#: src/lib/components/install-button/InstallButton.svelte
-msgid "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
-msgstr "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
 
 #: src/routes/EventDetails.svelte
 msgid "Anmeldung per <0/>."
@@ -1076,10 +1062,6 @@ msgid "Bitte gib den 6-stelligen Code ein."
 msgstr "Bitte gib den 6-stelligen Code ein."
 
 #: src/lib/components/Login.svelte
-msgid "<0/> Code senden"
-msgstr "<0/> Code senden"
-
-#: src/lib/components/Login.svelte
 #: src/lib/components/OtpStep.svelte
 msgid "Einmalcode"
 msgstr "Einmalcode"
@@ -1108,10 +1090,6 @@ msgstr "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein um dic
 #: src/lib/components/Login.svelte
 msgid "Bitte gib den Code ein."
 msgstr "Bitte gib den Code ein."
-
-#: src/lib/components/Login.svelte
-msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
-msgstr "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
 
 #. 0: resendCooldown.secondsLeft
 #: src/lib/components/Login.svelte
@@ -3012,9 +2990,6 @@ msgstr "Offene Beziehungen"
 msgid "Gewaltfreie Kommunikation"
 msgstr "Gewaltfreie Kommunikation"
 
-#~ msgid "Grenzen"
-#~ msgstr "Grenzen"
-
 #: src/lib/eventCategories.ts
 msgid "Verbindung"
 msgstr "Verbindung"
@@ -3149,9 +3124,6 @@ msgstr "Yoga"
 msgid "Kundalini Yoga"
 msgstr "Kundalini Yoga"
 
-#~ msgid "Kinderyoga"
-#~ msgstr "Kinderyoga"
-
 #: src/lib/eventCategories.ts
 msgid "SUP-Yoga"
 msgstr "SUP-Yoga"
@@ -3247,12 +3219,6 @@ msgstr "Kreativität"
 #: src/lib/eventCategories.ts
 msgid "Verspieltheit"
 msgstr "Verspieltheit"
-
-#~ msgid "Hochbegabt"
-#~ msgstr "Hochbegabt"
-
-#~ msgid "Hochsensibel"
-#~ msgstr "Hochsensibel"
 
 #: src/lib/eventCategories.ts
 msgid "Sucht"
@@ -3840,9 +3806,6 @@ msgstr "Festival"
 msgid "Kongress"
 msgstr "Kongress"
 
-#~ msgid "Webinar"
-#~ msgstr "Webinar"
-
 #: src/lib/eventCategories.ts
 msgid "Film"
 msgstr "Film"
@@ -3904,9 +3867,6 @@ msgstr "Singen"
 msgid "Aerial Yoga"
 msgstr "Aerial Yoga"
 
-#~ msgid "Selbst herstellen"
-#~ msgstr "Selbst herstellen"
-
 #: src/lib/eventCategories.ts
 msgid "Fitness"
 msgstr "Fitness"
@@ -3957,15 +3917,9 @@ msgstr "current"
 msgid "Kategorien"
 msgstr "Kategorien"
 
-#~ msgid "Einvernehmlichkeit"
-#~ msgstr "Einvernehmlichkeit"
-
 #: src/lib/eventCategories.ts
 msgid "Grenzen & Konsens"
 msgstr "Grenzen & Konsens"
-
-#~ msgid "Handwerk"
-#~ msgstr "Handwerk"
 
 #: src/lib/eventCategories.ts
 msgid "Handwerk & DIY"
@@ -3982,3 +3936,103 @@ msgstr "Hochbegabung"
 #: src/lib/components/DuplicateEventToastLink.svelte
 msgid "Event ansehen"
 msgstr "Event ansehen"
+
+#: src/lib/components/Login.svelte
+msgid "Google-Anmeldung ist gerade nicht verfügbar."
+msgstr "Google-Anmeldung ist gerade nicht verfügbar."
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Weiterleitung..."
+msgstr "<0/> Weiterleitung..."
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Mit Google anmelden"
+msgstr "<0/> Mit Google anmelden"
+
+#: src/lib/components/Login.svelte
+msgid "oder"
+msgstr "oder"
+
+#: src/lib/components/Login.svelte
+msgid "<0/> Anmelde-Code senden"
+msgstr "<0/> Anmelde-Code senden"
+
+#~ msgid "Datenschutz"
+#~ msgstr "Datenschutz"
+
+#~ msgid "AGB"
+#~ msgstr "AGB"
+
+#~ msgid "Nutzungsbedingungen / Terms of Service | Blissbase"
+#~ msgstr "Nutzungsbedingungen / Terms of Service | Blissbase"
+
+#~ msgid "Datenschutzerklärung"
+#~ msgstr "Datenschutzerklärung"
+
+#~ msgid "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
+#~ msgstr "Nutzungsbedingungen für Blissbase, einschließlich Konten, Google Sign-In und Nutzerinhalten."
+
+#~ msgid "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
+#~ msgstr "Wie Blissbase personenbezogene Daten verarbeitet, einschließlich Google Sign-In (Zugriff, Nutzung, Speicherung und Weitergabe)."
+
+#~ msgid "Privacy Policy / Datenschutzerklärung | Blissbase"
+#~ msgstr "Privacy Policy / Datenschutzerklärung | Blissbase"
+
+#~ msgid "Nutzungsbedingungen / AGB"
+#~ msgstr "Nutzungsbedingungen / AGB"
+
+#: src/lib/components/LocationDistanceInput.svelte
+msgid "Standort"
+msgstr "Standort"
+
+#~ msgid "Zurücksetzen"
+#~ msgstr "Zurücksetzen"
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Öffne diese Seite in Safari, um die App zu installieren."
+msgstr "Öffne diese Seite in Safari, um die App zu installieren."
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Andere Browser auf dem iPhone können keine Apps installieren."
+msgstr "Andere Browser auf dem iPhone können keine Apps installieren."
+
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
+msgstr "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
+
+#~ msgid "<0/> Code senden"
+#~ msgstr "<0/> Code senden"
+
+#~ msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
+#~ msgstr "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
+
+#~ msgid "Grenzen"
+#~ msgstr "Grenzen"
+
+#~ msgid "Kinderyoga"
+#~ msgstr "Kinderyoga"
+
+#~ msgid "Hochbegabt"
+#~ msgstr "Hochbegabt"
+
+#~ msgid "Hochsensibel"
+#~ msgstr "Hochsensibel"
+
+#~ msgid "Webinar"
+#~ msgstr "Webinar"
+
+#~ msgid "Selbst herstellen"
+#~ msgstr "Selbst herstellen"
+
+#~ msgid "Einvernehmlichkeit"
+#~ msgstr "Einvernehmlichkeit"
+
+#~ msgid "Handwerk"
+#~ msgstr "Handwerk"
+ msgstr "Selbst herstellen"
+
+#~ msgid "Einvernehmlichkeit"
+#~ msgstr "Einvernehmlichkeit"
+
+#~ msgid "Handwerk"
+#~ msgstr "Handwerk"
