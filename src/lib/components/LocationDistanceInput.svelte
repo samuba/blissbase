@@ -271,6 +271,8 @@
 
 	function handleDistanceChange() {
 		notifyChange();
+		autocomplete?.close();
+		dismissEditor();
 	}
 
 	function handleInputChange(value: string) {
