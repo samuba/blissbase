@@ -281,7 +281,7 @@
 				</div>
 			</div>
 
-			<label class="label cursor-pointer justify-start gap-2 px-4 sm:-mt-2">
+			<label class="label cursor-pointer justify-start gap-2 pl-2.5 sm:-mt-2">
 				<input
 					type="checkbox"
 					class="checkbox checkbox-sm bg-base-100"
