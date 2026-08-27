@@ -1,6 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db, eq, s } from '$lib/server/db';
+import { db, s } from '$lib/server/db';
+import { resolveSupportedLocale } from '$lib/common';
+import { AUTH_NEXT_QUERY, safeAuthNextPath } from '$lib/routes';
 
 /**
  * Builds a same-origin redirect path with auth feedback query params for the client toast.
@@ -14,7 +16,7 @@ function redirectWithAuthFeedback(args: {
 	errorCode?: string | null;
 }) {
 	const { origin, nextPath, authSuccess, authError, errorCode } = args;
-	const safe = safeNextPath(nextPath);
+	const safe = safeAuthNextPath({ next: nextPath, fallback: `/`, origin });
 	const u = new URL(safe, origin);
 	if (authSuccess) u.searchParams.set(`auth_success`, `1`);
 	if (authError) u.searchParams.set(`auth_error`, authError);
@@ -22,27 +24,28 @@ function redirectWithAuthFeedback(args: {
 	return `${u.pathname}${u.search}${u.hash}`;
 }
 
-/**
- * Restricts open redirects to same-site paths.
- *
- * @example
- * safeNextPath(`/events`) // `/events`
- * safeNextPath(`//evil.com`) // `/`
- */
-function safeNextPath(next: string | null) {
-	const p = next ?? `/`;
-	if (!p.startsWith(`/`) || p.startsWith(`//`)) return `/`;
-	return p;
+function googleDisplayName(userMetadata: Record<string, unknown> | undefined) {
+	const candidates = [userMetadata?.full_name, userMetadata?.name, userMetadata?.display_name];
+	for (const candidate of candidates) {
+		if (typeof candidate !== `string`) continue;
+		const trimmed = candidate.trim();
+		if (trimmed) return trimmed;
+	}
+	return undefined;
 }
 
 /**
  * GET /auth/callback
- * Handles the OAuth callback from Supabase Auth.
+ * Handles the OAuth / magic-link callback from Supabase Auth.
  * Exchanges the code for a session and redirects back to the origin page.
  */
-export const GET: RequestHandler = async ({ url, locals: { supabase } }) => {
+export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }) => {
 	const origin = url.origin;
-	const nextPath = safeNextPath(url.searchParams.get(`next`));
+	const nextPath = safeAuthNextPath({
+		next: url.searchParams.get(AUTH_NEXT_QUERY),
+		fallback: `/`,
+		origin,
+	});
 
 	const oauthError = url.searchParams.get(`error`);
 	const oauthErrorDescription = url.searchParams.get(`error_description`);
@@ -88,9 +91,17 @@ export const GET: RequestHandler = async ({ url, locals: { supabase } }) => {
 		);
 	}
 
-	const dbUser = await db.query.profiles.findFirst({ where: eq(s.profiles.id, data.user.id) });
-	if (!dbUser) await db.insert(s.profiles).values({ id: data.user.id }).onConflictDoNothing();
+	const locale = resolveSupportedLocale(
+		(typeof data.user.user_metadata?.locale === `string` ? data.user.user_metadata.locale : null) ??
+			cookies.get(`locale`),
+	);
+	const displayName = googleDisplayName(data.user.user_metadata);
+
+	await db.insert(s.profiles).values({
+		id: data.user.id,
+		locale,
+		...(displayName ? { displayName } : {}),
+	}).onConflictDoNothing();
 
 	redirect(303, redirectWithAuthFeedback({ origin, nextPath, authSuccess: true }));
 };
-

@@ -49,6 +49,8 @@ export const routes = {
     newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/new`) , args.returnTo),
     offeringDetails: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]`, { slug }) , args.returnTo),
     editOffering: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]/edit`, { slug }) , args.returnTo),
+    login: (args: { next?: string | null } = {}) => withNext(resolve(`/auth/login`), args.next),
+    authCallback: (args: { next?: string | null } = {}) => withNext(resolve(`/auth/callback`), args.next),
     profile: () => resolve(`/profile`) ,
     myOfferings: () => resolve(`/profile/offerings`) ,
     myEvents: () => resolve(`/profile/events`) ,
@@ -70,8 +72,21 @@ export const routes = {
 }
 
 export const BASE_URL = "https://blissbase.app" as const
+export const AUTH_NEXT_QUERY = `next` as const
 export const OFFERING_SLUG_QUERY = `offeringSlug` as const
 export const EVENT_SLUG_QUERY = `eventSlug` as const
+
+/** Absolute callback URL for Supabase `redirectTo` / `emailRedirectTo`. */
+export function authCallbackUrl(args: { origin: string; next?: string | null }) {
+    return new URL(routes.authCallback({ next: args.next }), args.origin).href;
+}
+
+export function isAuthFlowPath(pathname: string, origin: string = BASE_URL) {
+    return (
+        pathname === routePathname(routes.login(), origin) ||
+        pathname === routePathname(routes.authCallback(), origin)
+    );
+}
 
 export function absoluteUrl(path: string) {
     return new URL(path, BASE_URL).toString();
@@ -144,6 +159,14 @@ export function safeReturnToPath(args: { returnTo?: string | null; fallback: str
     return returnTo ?? args.fallback;
 }
 
+/** Same-origin `next` path after login; auth routes fall back so we never loop. */
+export function safeAuthNextPath(args: { next?: string | null; fallback: string; origin?: string }) {
+    const origin = args.origin ?? BASE_URL;
+    const path = safeReturnToPath({ returnTo: args.next, fallback: args.fallback, origin });
+    if (isAuthFlowPath(new URL(path, origin).pathname, origin)) return args.fallback;
+    return path;
+}
+
 /** Offerings list path from `returnTo`, keeping filter params and dropping dialog/detail targets. */
 export function offeringsListFromReturnTo(args: { returnTo?: string | null; origin?: string }) {
     const origin = args.origin ?? BASE_URL;
@@ -170,6 +193,15 @@ function withReturnTo(path: ResolvedPathname, returnTo?: string | null) {
     const url = new URL(path, BASE_URL);
     url.searchParams.set(`returnTo`, returnToPath);
     return relativeUrl(url) ;
+}
+
+function withNext(path: ResolvedPathname, next?: string | null) {
+    const nextPath = normalizeReturnToPath(next, BASE_URL);
+    if (!nextPath || isAuthFlowPath(new URL(nextPath, BASE_URL).pathname)) return path;
+
+    const url = new URL(path, BASE_URL);
+    url.searchParams.set(AUTH_NEXT_QUERY, nextPath);
+    return relativeUrl(url);
 }
 
 function normalizeReturnToPath(value: string | null | undefined, origin: string) {

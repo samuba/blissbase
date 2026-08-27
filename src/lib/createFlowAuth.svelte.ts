@@ -5,6 +5,7 @@ import { verifyEmailOtp } from "$lib/rpc/auth.remote";
 import { checkEmailProfileComplete } from "$lib/rpc/profile.remote";
 import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 import { getSupabaseBrowserClient } from "$lib/supabase";
+import { authCallbackUrl, routes } from "$lib/routes";
 
 const EMAIL_CHECK_DEBOUNCE_MS = 500;
 
@@ -117,7 +118,10 @@ export class CreateFlowAuth {
 		this.authError = ``;
 		try {
 			const supabase = getSupabaseBrowserClient();
-			const emailRedirectTo = `${window.location.origin}/auth/callback`;
+			const emailRedirectTo = authCallbackUrl({
+				origin: window.location.origin,
+				next: routes.currentPath(new URL(window.location.href)),
+			});
 			const { error } = await supabase.auth.signInWithOtp({
 				email: trimmed,
 				options: {

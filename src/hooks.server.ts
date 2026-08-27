@@ -13,7 +13,7 @@ import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
 import { locales } from './locales/data.js'
 import { localeStore } from './locales/localeStore.svelte.js';
 import { E2E_TEST } from '$env/static/private';
-import { resolve as resolveRoute } from '$app/paths';
+import { routes } from '$lib/routes';
 
 // load at server startup
 loadLocales(main.key, main.loadCount, main.loadCatalog, locales)
@@ -119,10 +119,10 @@ const guardRoutesWithLogin: Handle = async ({ event, resolve }) => {
     if (pathname.startsWith("/_app/remote/")) return resolve(event); // never guard remote functions
     if (userId) return resolve(event);
     if (pathname.startsWith("/profile")) {
-        redirect(302, resolveRoute('/auth/login'));
+        redirect(302, routes.login({ next: routes.currentPath(event.url) }));
     }
     if (pathname.startsWith("/events") && pathname !== "/events/new") {
-        redirect(302, resolveRoute('/auth/login'));
+        redirect(302, routes.login({ next: routes.currentPath(event.url) }));
     }
     return resolve(event);
 }

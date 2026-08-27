@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import { PinInput, REGEXP_ONLY_DIGITS } from 'bits-ui';
 	import { getSupabaseBrowserClient } from '$lib/supabase';
 	import { verifyEmailOtp } from '$lib/rpc/auth.remote';
@@ -7,37 +8,47 @@
 	import { ReactiveCountdown } from '$lib/reactiveCountdown.svelte';
 	import { toast } from 'svelte-sonner';
 	import { sleep } from '$lib/common';
+	import { authCallbackUrl, isAuthFlowPath, routes } from '$lib/routes';
 
 	interface Props {
 		class?: string;
 		onAuthenticated?: () => void;
+		next?: string;
 	}
 
-	let { class: className, onAuthenticated }: Props = $props();
+	let { class: className, onAuthenticated, next }: Props = $props();
 
 	let step = $state<`email` | `code`>(`email`);
 	let email = $state(``);
 	let pendingEmail = $state(``);
 	let code = $state(``);
-	let isLoading = $state(false);
+	let otpLoading = $state(false);
+	let googleLoading = $state(false);
 	let error = $state(``);
 	let resendCooldown = new ReactiveCountdown(60);
+	const isLoading = $derived(otpLoading || googleLoading);
+
+	const nextAfterAuth = $derived(
+		next ?? (isAuthFlowPath(page.url.pathname) ? routes.profile() : routes.currentPath(page.url)),
+	);
+
+	function callbackRedirectTo() {
+		return authCallbackUrl({ origin: window.location.origin, next: nextAfterAuth });
+	}
 
 	async function sendOtp() {
 		const supabase = getSupabaseBrowserClient();
 		const trimmed = email.trim();
 		if (!trimmed) return;
 
-		isLoading = true;
+		otpLoading = true;
 		error = ``;
 
 		try {
-			const emailRedirectTo = `${window.location.origin}/auth/callback`;
-
 			const { error: signInError } = await supabase.auth.signInWithOtp({
 				email: trimmed,
 				options: {
-					emailRedirectTo,
+					emailRedirectTo: callbackRedirectTo(),
 					data: {
 						locale: localeStore.locale
 					}
@@ -56,7 +67,7 @@
 			error = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
 			console.error(`Auth error:`, err);
 		} finally {
-			isLoading = false;
+			otpLoading = false;
 		}
 	}
 
@@ -64,16 +75,14 @@
 		if (resendCooldown.isActive || isLoading) return;
 		const supabase = getSupabaseBrowserClient();
 
-		isLoading = true;
+		otpLoading = true;
 		error = ``;
 
 		try {
-			const emailRedirectTo = `${window.location.origin}/auth/callback`;
-
 			const { error: signInError } = await supabase.auth.signInWithOtp({
 				email: pendingEmail,
 				options: {
-					emailRedirectTo,
+					emailRedirectTo: callbackRedirectTo(),
 					data: {
 						locale: localeStore.locale
 					}
@@ -87,7 +96,7 @@
 			error = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
 			console.error(`Auth error:`, err);
 		} finally {
-			isLoading = false;
+			otpLoading = false;
 		}
 	}
 
@@ -98,7 +107,7 @@
 			return;
 		}
 
-		isLoading = true;
+		otpLoading = true;
 		error = ``;
 
 		try {
@@ -114,7 +123,29 @@
 			error = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
 			console.error(`Auth error:`, err);
 		} finally {
-			isLoading = false;
+			otpLoading = false;
+		}
+	}
+
+	async function signInWithGoogle() {
+		if (isLoading) return;
+
+		googleLoading = true;
+		error = ``;
+
+		try {
+			const supabase = getSupabaseBrowserClient();
+			const { error: oauthError } = await supabase.auth.signInWithOAuth({
+				provider: `google`,
+				options: {
+					redirectTo: callbackRedirectTo(),
+				},
+			});
+			if (oauthError) throw oauthError;
+		} catch (err: unknown) {
+			error = mapOAuthError(err);
+			console.error(`Auth error:`, err);
+			googleLoading = false;
 		}
 	}
 
@@ -124,6 +155,15 @@
 		code = ``;
 		error = ``;
 	}
+
+	function mapOAuthError(err: unknown) {
+		if (!(err instanceof Error)) return `Ein Fehler ist aufgetreten`;
+		const message = err.message.toLowerCase();
+		if (message.includes(`provider is not enabled`) || message.includes(`unsupported provider`)) {
+			return `Google-Anmeldung ist gerade nicht verfügbar.`;
+		}
+		return err.message;
+	}
 </script>
 
 <div class={[className]}>
@@ -131,6 +171,48 @@
 		<p class="text-base-content mb-6 text-sm">
 			Melde dich an um Favoriten zu speichern und eigene Events zu erstellen.
 		</p>
+
+		<button
+			type="button"
+			class="btn w-full"
+			disabled={isLoading}
+			data-testid="google-login-button"
+			onclick={signInWithGoogle}
+		>
+			{#if googleLoading}
+				<span class="loading loading-spinner"></span>
+				Weiterleitung...
+			{:else}
+				<span class="inline-flex items-center justify-center gap-2">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 48 48"
+						class="size-5 shrink-0"
+						aria-hidden="true"
+					>
+						<path
+							fill="#EA4335"
+							d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+						/>
+						<path
+							fill="#4285F4"
+							d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+						/>
+						<path
+							fill="#FBBC05"
+							d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+						/>
+						<path
+							fill="#34A853"
+							d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+						/>
+					</svg>
+					Mit Google anmelden
+				</span>
+			{/if}
+		</button>
+
+		<div class="divider">oder</div>
 
 		<form onsubmit={(e) => { e.preventDefault(); sendOtp(); }} class="space-y-4 relative">
 			<input
@@ -144,19 +226,15 @@
 				disabled={isLoading}
 			/>
 
-			<p class="text-base-content mb-6 text-sm">
-				Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden.
-			</p>
-
 			{@render errorMsg()}
 
-			<button type="submit" class="btn btn-primary w-full" disabled={isLoading}>
-				{#if isLoading}
+			<button type="submit" class="btn w-full" disabled={isLoading}>
+				{#if otpLoading}
 					<span class="loading loading-spinner"></span>
 					Wird gesendet...
 				{:else}
 					<i class="icon-[ph--envelope] size-5"></i>
-					Code senden
+					Anmelde-Code senden
 				{/if}
 			</button>
 		</form>
@@ -207,7 +285,7 @@
 			{@render errorMsg()}
 
 			<button type="submit" class="btn btn-primary w-full" disabled={isLoading}>
-				{#if isLoading}
+				{#if otpLoading}
 					<span class="loading loading-spinner"></span>
 					Wird geprüft...
 				{:else}

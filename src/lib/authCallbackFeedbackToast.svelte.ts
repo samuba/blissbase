@@ -4,7 +4,7 @@ import { page } from '$app/state';
 import { toast } from 'svelte-sonner';
 
 /**
- * Registers auth callback URL feedback (toasts + stripping query string and hash afterward).
+ * Registers auth callback URL feedback (toasts + stripping auth feedback params and hash afterward).
  * Call once from the root layout `<script>` during component initialization — not from a side-effect-only import.
  *
  * @example
@@ -59,12 +59,14 @@ export function registerAuthCallbackFeedbackToast() {
 
 		queueMicrotask(() => {
 			try {
-				// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-off clone to drop query + hash from current URL
+				// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-off clone to drop auth feedback params
 				const nextUrl = new URL(page.url.href);
-				nextUrl.search = ``;
+				nextUrl.searchParams.delete(`auth_success`);
+				nextUrl.searchParams.delete(`auth_error`);
+				nextUrl.searchParams.delete(`error_code`);
 				nextUrl.hash = ``;
 				// eslint-disable-next-line svelte/no-navigation-without-resolve -- same-origin path derived from page.url (already app-routed)
-				replaceState(`${nextUrl.pathname}${nextUrl.search}`, page.state);
+				replaceState(`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`, page.state);
 			} finally {
 				strippingUrl = false;
 			}
