@@ -473,9 +473,6 @@ msgstr "An error occurred"
 msgid "AbortError"
 msgstr "AbortError"
 
-#~ msgid "Dein Standort"
-#~ msgstr "Your location"
-
 #: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein."
@@ -1104,11 +1101,6 @@ msgstr "<0/> <1/> <2/> <3/> <4/> Add social link"
 
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
-msgid "E-Mail bestätigen"
-msgstr "Confirm email"
-
-#: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
 msgid "<0/> Wird geprüft…"
 msgstr "<0/> Checking…"
 
@@ -1426,24 +1418,6 @@ msgstr "Next"
 #: src/lib/components/OtpStep.svelte
 msgid "Code erneut senden"
 msgstr "Resend code"
-
-#: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
-msgid "E-Mail für Login *"
-msgstr "Email for login *"
-
-#: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
-msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
-msgstr "Not public. We’ll send you a code to verify your email address."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
-msgstr "We sent a 6-digit code to <0/>. Enter it here to confirm your email. Your offer will not go live until the confirmation is complete."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "E-Mail bestätigen und Angebot veröffentlichen"
-msgstr "Confirm email and publish offer"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte füge mindestens einen Social-Link hinzu."
@@ -2194,14 +2168,6 @@ msgstr "Create event | Blissbase"
 msgid "Ein vollständiges Profil hilft, dass dir Menschen mehr vertrauen. Dein Profil wird bei deinen Events angezeigt."
 msgstr "A complete profile helps people trust you more. Your profile will be displayed with your events."
 
-#: src/routes/events/new/+page.svelte
-msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Event geht erst live, wenn die Bestätigung abgeschlossen ist."
-msgstr "We sent a 6-digit code to <0/>. Enter it here to verify your email address. Your event will only go live once verification is complete."
-
-#: src/routes/events/new/+page.svelte
-msgid "E-Mail bestätigen und Event veröffentlichen"
-msgstr "Verify email address and publish event"
-
 #: src/lib/components/CreateFlowProfileFields.svelte
 msgid "Social Links"
 msgstr "Social Links"
@@ -2332,11 +2298,6 @@ msgstr "Remove {0}"
 #: src/routes/offerings/new/+page.svelte
 msgid "Profil"
 msgstr "Profile"
-
-#: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
-msgid "Bestätigung"
-msgstr "Confirmation"
 
 #: src/lib/components/CategorySelection.svelte
 msgid "Kategorien nach links scrollen"
@@ -3938,10 +3899,6 @@ msgid "Event ansehen"
 msgstr "View event"
 
 #: src/lib/components/Login.svelte
-msgid "Google-Anmeldung ist gerade nicht verfügbar."
-msgstr "Google sign-in is currently unavailable."
-
-#: src/lib/components/Login.svelte
 msgid "<0/> Weiterleitung..."
 msgstr "<0/> Redirecting..."
 
@@ -3993,9 +3950,6 @@ msgstr "General Terms and Conditions"
 msgid "Standort"
 msgstr "Location"
 
-#~ msgid "Zurücksetzen"
-#~ msgstr "Reset"
-
 #: src/lib/components/install-button/InstallButton.svelte
 msgid "Öffne diese Seite in Safari, um die App zu installieren."
 msgstr "Open this page in Safari to install the app."
@@ -4008,65 +3962,51 @@ msgstr "Other browsers on the iPhone cannot install apps."
 msgid "Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“."
 msgstr "In Safari, tap the share icon and then „Add to Home Screen“."
 
-#~ msgid "<0/> Code senden"
-#~ msgstr "<0/> Send code"
-
-#~ msgid "Gib deine E-Mail-Adresse ein. Du erhältst einen Code um dich hier anzumelden."
-#~ msgstr "Enter your email address. You will receive a code to sign in here."
-
-#~ msgid "Grenzen"
-#~ msgstr "Boundaries"
-
-#~ msgid "Kinderyoga"
-#~ msgstr "Children's Yoga"
-
-#~ msgid "Hochbegabt"
-#~ msgstr "Gifted"
-
-#~ msgid "Hochsensibel"
-#~ msgstr "Highly Sensitive"
-
-#~ msgid "Webinar"
-#~ msgstr "Webinar"
-
-#~ msgid "Selbst herstellen"
-#~ msgstr "Making It Yourself"
-
-#~ msgid "Einvernehmlichkeit"
-#~ msgstr "Mutual consent"
-
-#~ msgid "Handwerk"
-#~ msgstr "Crafts"
-
-#~ msgid "<0/> Anmelde-Code senden<<<<<<< HEAD"
-#~ msgstr ""
-
-#~ msgid "Nutzungsbedingungen / AGB>>>>>>> 367b815 (fill legal pages)"
-#~ msgstr ""
-
-#~ msgid "Handwerk======="
-#~ msgstr ""
-
-#~ msgid "Dein Standort verwenden"
-#~ msgstr "Use your location"
-
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort verwenden"
 msgstr "Use location"
-
-#~ msgid "{0} km"
-#~ msgstr "{0} km"
-
-#~ msgid "{0} km radius"
-#~ msgstr "{0} km radius"
 
 #. 0: selectedDistance
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "{0} km Radius"
 msgstr "{0} km radius"
 
-#~ msgid "Standort verwe"
-#~ msgstr "Location verwe"
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail bestätigen"
+msgstr "Confirm email"
 
-#~ msgid "Standort verwed"
-#~ msgstr "Location verwed"
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail für Login *"
+msgstr "Email for login *"
+
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
+msgstr "Not public. We’ll send you a code to verify your email address."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
+msgstr "We sent a 6-digit code to <0/>. Enter it here to confirm your email. Your offer will not go live until the confirmation is complete."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "E-Mail bestätigen und Angebot veröffentlichen"
+msgstr "Confirm email and publish offer"
+
+#: src/routes/events/new/+page.svelte
+msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Event geht erst live, wenn die Bestätigung abgeschlossen ist."
+msgstr "We sent a 6-digit code to <0/>. Enter it here to verify your email address. Your event will only go live once verification is complete."
+
+#: src/routes/events/new/+page.svelte
+msgid "E-Mail bestätigen und Event veröffentlichen"
+msgstr "Verify email address and publish event"
+
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Bestätigung"
+msgstr "Confirmation"
+
+#: src/lib/components/Login.svelte
+msgid "Google-Anmeldung ist gerade nicht verfügbar."
+msgstr "Google sign-in is currently unavailable."
