@@ -49,7 +49,7 @@
 
 				<h3>1. Anbieter</h3>
 				<p>
-					Blissbase wird betrieben von Samuel Bach, Deutschland. Kontakt:
+					Blissbase wird betrieben von Samuel, Deutschland. Kontakt:
 					<a href="mailto:hi@blissbase.app" class="link">hi@blissbase.app</a>. Website:
 					<a href={BASE_URL} class="link">blissbase.app</a>. Eine Postanschrift teilen wir auf Anfrage mit.
 				</p>
@@ -190,7 +190,7 @@
 
 				<h3>1. Provider</h3>
 				<p>
-					Blissbase is operated by Samuel Bach, Germany. Contact:
+					Blissbase is operated by Samuel, Germany. Contact:
 					<a href="mailto:hi@blissbase.app" class="link">hi@blissbase.app</a>. Website:
 					<a href={BASE_URL} class="link">blissbase.app</a>. A postal address is available on request.
 				</p>

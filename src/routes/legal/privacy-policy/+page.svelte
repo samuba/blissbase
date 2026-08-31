@@ -102,7 +102,7 @@
 					(„Blissbase“, „wir“) im Sinne der DSGVO ist:
 				</p>
 				<p>
-					Samuel Bach<br />
+					Samuel<br />
 					Deutschland<br />
 					E-Mail: <a href="mailto:hi@blissbase.app" class="link">hi@blissbase.app</a>
 				</p>
@@ -328,7 +328,7 @@
 				<p>
 					The controller for personal data on
 					<a href={BASE_URL} class="link">blissbase.app</a>
-					(“Blissbase”, “we”) under the GDPR is Samuel Bach, Germany,
+					(“Blissbase”, “we”) under the GDPR is Samuel, Germany,
 					<a href="mailto:hi@blissbase.app" class="link">hi@blissbase.app</a>. A postal address is available on
 					request at that email. No data protection officer is appointed because none is legally required.
 				</p>
