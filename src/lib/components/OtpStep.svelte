@@ -96,29 +96,33 @@
 			</button>
 		</div>
 	{:else}
-		<GoogleSignInButton busy={authBusy} disabled={authBusy} onclick={() => void onGoogleSignIn()} />
-
-		<div class="divider">oder</div>
-
-		<fieldset class="fieldset">
-			<input
-				class="input peer w-full"
-				data-testid={emailTestId}
-				type="email"
-				bind:value={email}
-				autocomplete="email"
-				required
-				placeholder="deine@email.de"
-				disabled={authBusy}
-				oninput={onEmailInput}
-				onblur={() => void onEmailBlur()}
-			/>
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">E-Mail</legend>
-			<p class="label">Nicht öffentlich. Wir senden dir einen Code, um dich anzumelden.</p>
-			{#if emailCheckError}
-				<p class="text-error text-xs">{emailCheckError}</p>
-			{/if}
-		</fieldset>
+		<div class="flex justify-center items-center flex-col">
+			<div class="w-full sm:max-w-sm">
+				<GoogleSignInButton busy={authBusy} disabled={authBusy} onclick={() => void onGoogleSignIn()}  />
+			</div>
+	
+			<div class="divider mt-7">oder</div>
+	
+			<fieldset class="fieldset  w-full sm:max-w-sm">
+				<input
+					class="input peer w-full"
+					data-testid={emailTestId}
+					type="email"
+					bind:value={email}
+					autocomplete="email"
+					required
+					placeholder="deine@email.de"
+					disabled={authBusy}
+					oninput={onEmailInput}
+					onblur={() => void onEmailBlur()}
+				/>
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">E-Mail</legend>
+				<p class="label">Nicht öffentlich. Wir senden dir einen Code, um dich anzumelden.</p>
+				{#if emailCheckError}
+					<p class="text-error text-xs">{emailCheckError}</p>
+				{/if}
+			</fieldset>
+		</div>
 
 		{#if authError}
 			<div class="alert alert-error bg-error/60">
