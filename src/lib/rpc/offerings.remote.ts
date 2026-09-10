@@ -1,21 +1,20 @@
 import { command, form, getRequestEvent, query, requested } from "$app/server";
-import { dev } from "$app/environment";
 import * as assets from "$lib/assets";
 import { randomString, slugify } from "$lib/common";
-import { OFFERING_IMAGE_MAX_COUNT, offeringFormSchema, offeringNeedsLocation, sortOfferingsForDailyList, updateOfferingFormSchema } from "$lib/rpc/offerings.common";
+import { offeringFormSchema, offeringNeedsLocation, sortOfferingsForDailyList, updateOfferingFormSchema } from "$lib/rpc/offerings.common";
+import { getNextGalleryImageUrls, uniqueGalleryImageClaimTokens } from "$lib/galleryImages";
+import { finalizeGalleryImageClaims, isGalleryImageE2eMode, verifyGalleryImageClaims } from "$lib/server/galleryImageClaims";
 import { profileLocationFormSchema } from "$lib/rpc/profile.common";
 import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
 import { getMyPublicProfile } from "$lib/rpc/profile.remote";
 import { BASE_URL, routes, safeReturnToPath, withOfferingSlug } from "$lib/routes";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
-import { E2E_TEST } from "$env/static/private";
 import { ensureUserId } from "$lib/server/common";
 import { and, db, eq, or, s, sql } from "$lib/server/db";
 import { verifySubmitAuthToken } from "$lib/server/submitAuth";
 import { hasSocialLink, isPublicProfile } from "$lib/server/profile";
 import { mergeProfileFromForm, savePublicProfile } from "$lib/server/savePublicProfile";
 import { error, invalid, redirect } from "@sveltejs/kit";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import * as v from "valibot";
 import { setFlash } from "$lib/server/flash";
 import type { OfferingsFilter } from "$lib/offeringsFilter";
@@ -32,16 +31,9 @@ const offeringsFilterSchema = v.object({
 	includeOnline: v.boolean(),
 });
 
-const offeringImageUploadSchema = v.object({
-	contentType: v.picklist([`image/webp`, `image/jpeg`]),
-});
-
 const offeringMutationSchema = v.object({
 	offeringId: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
-
-const OFFERING_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
-const isE2eTestMode = E2E_TEST === `true` && dev;
 
 export const getOfferings = query(offeringsFilterSchema, async (args) => {
 	const sanitized = sanitizeLocationParams({
@@ -265,31 +257,6 @@ export const updateProfileLocation = command(profileLocationFormSchema, async (d
 	getMyOfferings().refresh();
 });
 
-export const createOfferingImageUploadUrl = command(offeringImageUploadSchema, async ({ contentType }) => {
-	const objectKey = assets.offeringTempImageObjectKey({
-		suffix: `${Date.now().toString(36)}-${randomString(8).toLowerCase()}`,
-		contentType,
-	});
-	const claimToken = signOfferingImageClaim({ objectKey, contentType });
-	if (isE2eTestMode) {
-		return {
-			uploadUrl: `/api/test/offering-image-upload`,
-			publicUrl: assets.publicUrl(objectKey),
-			objectKey,
-			claimToken,
-		};
-	}
-
-	const uploadUrl = await assets.getPresignedPutUrl({ objectKey, creds: eventAssetsCreds });
-
-	return {
-		uploadUrl,
-		publicUrl: assets.publicUrl(objectKey),
-		objectKey,
-		claimToken,
-	};
-});
-
 export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	const sessionUserId = getRequestEvent().locals.userId;
 	const userId = sessionUserId ? sessionUserId : verifySubmitAuthToken(data.authToken);
@@ -315,7 +282,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 		return invalid(issue.profile.locationLabel(`Bitte wähle einen Ort für dein Angebot aus.`));
 	}
 
-	const imageClaims = verifyOfferingImageClaims(data.imageClaims);
+	const imageClaims = verifyGalleryImageClaims({ claimTokens: data.imageClaims, kind: `offering` });
 	if (imageClaims instanceof Error) {
 		return invalid(issue.imageClaims(imageClaims.message));
 	}
@@ -323,6 +290,11 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 	await savePublicProfile(nextProfile);
 
 	const slug = `${randomString(6).toLowerCase()}-${slugify(data.title)}`;
+	const imageUrls = await finalizeGalleryImageClaims({
+		kind: `offering`,
+		claims: imageClaims,
+		ownerId: userId,
+	});
 
 	const [offering] = await db
 		.insert(s.offerings)
@@ -332,26 +304,11 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 			title: data.title,
 			descriptionHtml: data.descriptionHtml || null,
 			format: data.format,
-			imageUrls: [],
+			imageUrls,
 			listed: true,
 		})
 		.returning({ id: s.offerings.id });
 	if (!offering) throw error(500, `Failed to create offering`);
-
-	const imageUrls = await finalizeOfferingImageClaims({
-		claims: imageClaims,
-		userId,
-		offeringId: offering.id,
-	});
-	if (imageUrls.length) {
-		await db
-			.update(s.offerings)
-			.set({
-				imageUrls,
-				updatedAt: sql`now()`,
-			})
-			.where(eq(s.offerings.id, offering.id));
-	}
 
 	getMyPublicProfile().refresh();
 	refreshOfferingLists({ returnTo: data.returnTo });
@@ -381,7 +338,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 		return invalid(issue.profile.locationLabel(`Bitte wähle einen Ort für dein Angebot aus.`));
 	}
 
-	const imageClaims = verifyOfferingImageClaims(data.imageClaims);
+	const imageClaims = verifyGalleryImageClaims({ claimTokens: data.imageClaims, kind: `offering` });
 	if (imageClaims instanceof Error) {
 		return invalid(issue.imageClaims(imageClaims.message));
 	}
@@ -390,16 +347,15 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 		await savePublicProfile(nextProfile);
 	}
 
-	const uploadedImageUrls = await finalizeOfferingImageClaims({
+	const uploadedImageUrls = await finalizeGalleryImageClaims({
+		kind: `offering`,
 		claims: imageClaims,
-		userId: ownerId,
-		offeringId: offering.id,
+		ownerId: ownerId,
 	});
-	const submittedClaimTokens = getUniqueOfferingImageClaimTokens(data.imageClaims);
-	const nextImageUrls = getNextOfferingImageUrls({
+	const nextImageUrls = getNextGalleryImageUrls({
 		currentImageUrls: offering.imageUrls ?? [],
 		submittedImageUrls: data.existingImageUrls,
-		submittedClaimTokens,
+		submittedClaimTokens: uniqueGalleryImageClaimTokens(data.imageClaims),
 		uploadedImageUrls,
 		imageOrder: data.imageOrder,
 	});
@@ -416,7 +372,7 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 		})
 		.where(eq(s.offerings.id, offering.id));
 
-	if (deletedImageUrls?.length && !isE2eTestMode) {
+	if (deletedImageUrls?.length && !isGalleryImageE2eMode) {
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
 	}
 
@@ -476,7 +432,7 @@ export const deleteOffering = command(offeringMutationSchema, async ({ offeringI
 		.returning({ id: s.offerings.id, imageUrls: s.offerings.imageUrls });
 
 	if (!offering) throw error(404, `Offering not found`);
-	if (offering.imageUrls?.length && !isE2eTestMode) {
+	if (offering.imageUrls?.length && !isGalleryImageE2eMode) {
 		await assets.deleteObjects(offering.imageUrls, eventAssetsCreds);
 	}
 
@@ -498,178 +454,6 @@ function assertCanManageOffering(offering: { profileId: string }) {
 	const userId = ensureUserId();
 	if (userId === offering.profileId || getRequestEvent().locals.isAdminSession) return;
 	throw error(403, `You are not allowed to manage this offering`);
-}
-
-/**
- * Verifies and moves temporary offering image uploads into the final offering prefix.
- *
- * @example
- * await finalizeOfferingImageClaims({ claims: [], userId: `u1`, offeringId: 1 });
- */
-async function finalizeOfferingImageClaims(args: FinalizeOfferingImageClaimsArgs) {
-	if (!args.claims?.length) return [];
-	if (isE2eTestMode) {
-		return args.claims.map((claim, index) => {
-			const suffix = getOfferingImageSuffixFromObjectKey(claim.objectKey) ?? `image-${index}`;
-			return `https://assets.blissbase.app/e2e/offerings/${args.userId}/${args.offeringId}/${index}-${suffix}.webp`;
-		});
-	}
-
-	const imageUrls: string[] = [];
-	for (const claim of args.claims) {
-		const suffix = getOfferingImageSuffixFromObjectKey(claim.objectKey);
-		if (!suffix) throw error(400, `Bild-Upload ist ungültig`);
-
-		const finalObjectKey = assets.offeringImageObjectKey({
-			userId: args.userId,
-			offeringId: args.offeringId,
-			suffix,
-			contentType: claim.contentType,
-		});
-		const imageUrl = await assets.finalizeOfferingImage({
-			tempObjectKey: claim.objectKey,
-			finalObjectKey,
-			creds: eventAssetsCreds,
-		});
-		imageUrls.push(imageUrl);
-	}
-
-	return imageUrls;
-}
-
-function verifyOfferingImageClaims(claimTokens: string[]) {
-	if (!claimTokens?.length) return [];
-	const uniqueClaimTokens = getUniqueOfferingImageClaimTokens(claimTokens);
-	const verifiedClaims: OfferingImageClaim[] = [];
-
-	for (const claimToken of uniqueClaimTokens) {
-		const claim = verifyOfferingImageClaim(claimToken);
-		if (claim instanceof Error) return claim;
-		verifiedClaims.push(claim);
-	}
-
-	return verifiedClaims;
-}
-
-function getUniqueOfferingImageClaimTokens(claimTokens: string[]) {
-	return [...new Set(claimTokens ?? [])].slice(0, OFFERING_IMAGE_MAX_COUNT);
-}
-
-/**
- * Creates a tamper-evident claim for one temporary offering image upload.
- *
- * @example
- * signOfferingImageClaim({ objectKey: `offerings/temp/b.webp`, contentType: `image/webp` });
- */
-function signOfferingImageClaim(args: { objectKey: string; contentType: OfferingImageContentType }) {
-	const payload = encodeClaimPayload({
-		objectKey: args.objectKey,
-		contentType: args.contentType,
-		expiresAt: Date.now() + OFFERING_IMAGE_CLAIM_TTL_MS,
-	});
-	const signature = signClaimPayload(payload);
-	return `${payload}.${signature}`;
-}
-
-function verifyOfferingImageClaim(token: string): OfferingImageClaim | Error {
-	const [payload, signature, ...rest] = token.split(`.`);
-	if (!payload || !signature || rest.length) return new Error(`Bild-Upload ist ungültig`);
-	if (!isValidClaimSignature({ payload, signature })) return new Error(`Bild-Upload ist ungültig`);
-
-	try {
-		const claim = JSON.parse(Buffer.from(payload, `base64url`).toString(`utf8`)) as OfferingImageClaim;
-		if (claim.expiresAt < Date.now()) return new Error(`Bild-Upload ist abgelaufen`);
-		if (![`image/webp`, `image/jpeg`].includes(claim.contentType)) return new Error(`Bild-Upload ist ungültig`);
-		if (!assets.isTempOfferingImageObjectKey(claim.objectKey)) return new Error(`Bild-Upload ist ungültig`);
-		return claim;
-	} catch {
-		return new Error(`Bild-Upload ist ungültig`);
-	}
-}
-
-function encodeClaimPayload(claim: OfferingImageClaim) {
-	return Buffer.from(JSON.stringify(claim)).toString(`base64url`);
-}
-
-function signClaimPayload(payload: string) {
-	return createHmac(`sha256`, eventAssetsCreds.secretKey).update(payload).digest(`base64url`);
-}
-
-function isValidClaimSignature(args: { payload: string; signature: string }) {
-	const expectedSignature = signClaimPayload(args.payload);
-	const expected = Buffer.from(expectedSignature, `base64url`);
-	const submitted = Buffer.from(args.signature, `base64url`);
-	if (expected.length !== submitted.length) return false;
-	return timingSafeEqual(expected, submitted);
-}
-
-function getOfferingImageSuffixFromObjectKey(objectKey: string) {
-	const fileName = objectKey.split(`/`).at(-1);
-	return fileName?.replace(/\.(webp|jpg)$/, ``);
-}
-
-function keepSubmittedOfferingImages(args: { currentImageUrls: string[]; submittedImageUrls: string[] }) {
-	if (!args.currentImageUrls?.length || !args.submittedImageUrls?.length) return [];
-
-	const currentUrls = new Set(args.currentImageUrls);
-	const keptUrls = new Set<string>();
-	return args.submittedImageUrls.filter((url) => {
-		if (!currentUrls.has(url)) return false;
-		if (keptUrls.has(url)) return false;
-		keptUrls.add(url);
-		return true;
-	});
-}
-
-function getNextOfferingImageUrls(args: {
-	currentImageUrls: string[];
-	submittedImageUrls: string[];
-	submittedClaimTokens: string[];
-	uploadedImageUrls: string[];
-	imageOrder: string[];
-}) {
-	const existingImageUrls = keepSubmittedOfferingImages({
-		currentImageUrls: args.currentImageUrls,
-		submittedImageUrls: args.submittedImageUrls,
-	});
-	const existingUrls = new Set(existingImageUrls);
-	const uploadedUrlByClaimToken = new Map(
-		args.submittedClaimTokens.flatMap((token, index) => {
-			const url = args.uploadedImageUrls[index];
-			if (!url) return [];
-			return [[token, url] as const];
-		}),
-	);
-	const nextImageUrls: string[] = [];
-
-	for (const token of args.imageOrder) {
-		if (existingUrls.has(token)) {
-			addUniqueImageUrl({ imageUrls: nextImageUrls, url: token });
-			continue;
-		}
-
-		const uploadedUrl = uploadedUrlByClaimToken.get(token);
-		if (uploadedUrl) {
-			addUniqueImageUrl({ imageUrls: nextImageUrls, url: uploadedUrl });
-		}
-	}
-
-	for (const url of existingImageUrls) {
-		addUniqueImageUrl({ imageUrls: nextImageUrls, url });
-	}
-	for (const token of args.submittedClaimTokens) {
-		const uploadedUrl = uploadedUrlByClaimToken.get(token);
-		if (uploadedUrl) {
-			addUniqueImageUrl({ imageUrls: nextImageUrls, url: uploadedUrl });
-		}
-	}
-
-	return nextImageUrls.slice(0, OFFERING_IMAGE_MAX_COUNT);
-}
-
-function addUniqueImageUrl(args: { imageUrls: string[]; url: string }) {
-	if (args.imageUrls.includes(args.url)) return;
-	args.imageUrls.push(args.url);
 }
 
 function refreshOfferingLists(args: { returnTo?: string | null } = {}) {
@@ -695,17 +479,3 @@ function refreshOfferingLists(args: { returnTo?: string | null } = {}) {
 		userHasOfferings().refresh();
 	}
 }
-
-type FinalizeOfferingImageClaimsArgs = {
-	claims: OfferingImageClaim[];
-	userId: string;
-	offeringId: number;
-};
-
-type OfferingImageContentType = `image/webp` | `image/jpeg`;
-
-type OfferingImageClaim = {
-	objectKey: string;
-	contentType: OfferingImageContentType;
-	expiresAt: number;
-};

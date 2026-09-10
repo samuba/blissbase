@@ -103,6 +103,12 @@ msgstr "Source <0/>"
 
 #: src/lib/components/LoginDialog.svelte
 #: src/routes/auth/login/+page.svelte
+#: src/routes/events/new/+page.svelte
+#: src/routes/events/new/+page.svelte
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
 msgid "Anmelden"
 msgstr "Sign In"
 
@@ -463,7 +469,6 @@ msgstr "Error while loading events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
-#: src/lib/components/Login.svelte
 #: src/lib/createFlowAuth.svelte.ts
 #: src/lib/createFlowAuth.svelte.ts
 msgid "Ein Fehler ist aufgetreten"
@@ -595,11 +600,9 @@ msgid "Anmelde Methode auswählen"
 msgstr "Select registration method"
 
 #. 0: image.file.name
-#. 0: preview.name
-#. 0: preview.name
+#. 0: itemName
 #: src/lib/components/EventAutofill.svelte
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Bild {0} entfernen"
 msgstr "Remove image {0}"
 
@@ -616,68 +619,52 @@ msgstr "Start time *"
 msgid "Endzeit"
 msgstr "End time"
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Bilder auswählen <0>oder ablegen</0>"
 msgstr "Select images <0>or drop</0>"
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Cover Bild"
 msgstr "Cover image"
 
-#. 0: index + 1
 #. 0: i + 1
-#. 0: index + 1
 #. 0: i + 1
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Bild #{0}"
 msgstr "Image #{0}"
 
-#. 0: preview.name
-#. 0: preview.name
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#. 0: itemName
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Vollbildansicht von {0} öffnen"
 msgstr "Open full-screen view of {0}"
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Vollbildansicht schließen"
 msgstr "Close full-screen view"
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Vollbildansicht"
 msgstr "Full-screen view"
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Ausgewählte Bilder sortieren"
 msgstr "Sort selected images"
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
 msgstr "Drag the image using this button to a different position to change the order."
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Nach links"
 msgstr "To the left"
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Nach rechts"
 msgstr "To the right"
 
-#. 0: preview.name
-#. 0: preview.name
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#. 0: itemName
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Vorschau für {0}"
 msgstr "Preview for {0}"
 
@@ -686,33 +673,15 @@ msgstr "Preview for {0}"
 msgid "<0/> Speichere..."
 msgstr "<0/> Saving..."
 
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Bilder auswählen oder ablegen"
 msgstr "Select or drop images"
-
-#: src/lib/components/ImageInput.svelte
-msgid "Bild konnte nicht verarbeitet werden"
-msgstr "Image could not be processed"
 
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bild konnte nicht geladen werden"
 msgstr "Image could not be loaded"
 
-#: src/lib/components/ImageInput.svelte
-msgid "\\nBilder werden vor dem Upload lokal verarbeitet."
-msgstr "\\nImages are processed locally before upload."
-
-#: src/lib/components/ImageInput.svelte
-msgid "Lade Bilder hoch die deinen Event illustrieren. <0/>"
-msgstr "Upload images that illustrate your event. <0/>"
-
-#: src/lib/components/ImageInput.svelte
-msgid "Verarbeitung fehlgeschlagen"
-msgstr "Processing failed"
-
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Wird verarbeitet"
 msgstr "Processing"
 
@@ -844,6 +813,7 @@ msgstr "Answers to the most common questions about Blissbase."
 msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 msgstr "Don't see your question? <0>Write to me.</0>"
 
+#: src/lib/components/ImageGalleryInput.svelte
 #: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
@@ -1222,35 +1192,30 @@ msgstr "No more search results for \"{0}\""
 msgid "Find conscious events near you."
 msgstr "Find conscious events near you."
 
+#: src/routes/edit/[id]/+page.svelte
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "<0/> Bilder werden hochgeladen…"
 msgstr "<0/> Images are being uploaded…"
 
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Bild konnte nicht hochgeladen werden"
 msgstr "Image could not be uploaded"
 
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Bilder"
 msgstr "Images"
 
-#: src/lib/components/OfferingImageUploadInput.svelte
-msgid "Lade Bilder hoch, die dein Angebot zeigen. Das erste Bild wird als Cover verwendet. <0/>"
-msgstr "Upload images that illustrate your offer. The first image is used as the cover. <0/>"
-
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Upload fehlgeschlagen"
 msgstr "Upload failed"
 
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Wird hochgeladen"
 msgstr "Uploading"
 
 #: src/routes/events/new/+page.svelte
-#: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Bitte warte, bis alle Bilder hochgeladen sind."
 msgstr "Please wait until all images have been uploaded."
@@ -1279,7 +1244,7 @@ msgstr "We have plenty!"
 msgid "Events anzeigen <0/>"
 msgstr "Show events <0/>"
 
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "<0/>Bilder werden lokal verarbeitet und hochgeladen."
 msgstr "<0/>Images are processed locally and uploaded."
 
@@ -1410,7 +1375,6 @@ msgid "<0/> E-Mail wird geprüft…"
 msgstr "<0/> Email is being checked…"
 
 #: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Weiter"
 msgstr "Next"
@@ -2264,28 +2228,22 @@ msgstr "Place \""
 msgid "E-Mail konnte nicht geprüft werden."
 msgstr "Email could not be verified."
 
-#. 0: preview.name
-#. 0: preview.name
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#. 0: itemName
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "{0} verschieben"
 msgstr "Move {0}"
 
-#. 0: preview.name
-#. 0: preview.name
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#. 0: itemName
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "{0} nach links verschieben"
 msgstr "Move {0} to the left"
 
-#. 0: preview.name
-#. 0: preview.name
-#: src/lib/components/ImageInput.svelte
-#: src/lib/components/OfferingImageUploadInput.svelte
+#. 0: itemName
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "{0} nach rechts verschieben"
 msgstr "Move {0} to the right"
 
-#: src/lib/components/OfferingImageUploadInput.svelte
+#: src/lib/components/ImageGalleryInput.svelte
 msgid "Bereits hochgeladen"
 msgstr "Already uploaded"
 
@@ -3898,15 +3856,16 @@ msgstr "Giftedness"
 msgid "Event ansehen"
 msgstr "View event"
 
-#: src/lib/components/Login.svelte
+#: src/lib/components/GoogleSignInButton.svelte
 msgid "<0/> Weiterleitung..."
 msgstr "<0/> Redirecting..."
 
-#: src/lib/components/Login.svelte
+#: src/lib/components/GoogleSignInButton.svelte
 msgid "<0/> Mit Google anmelden"
 msgstr "<0/> Sign in with Google"
 
 #: src/lib/components/Login.svelte
+#: src/lib/components/OtpStep.svelte
 msgid "oder"
 msgstr "or"
 
@@ -3971,42 +3930,70 @@ msgstr "Use location"
 msgid "{0} km Radius"
 msgstr "{0} km radius"
 
-#: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
-msgid "E-Mail bestätigen"
-msgstr "Confirm email"
+#: src/lib/components/OtpStep.svelte
+msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein, um dich anzumelden."
+msgstr "We sent a code to <0/>. Enter the code here to log in."
+
+#: src/lib/components/OtpStep.svelte
+msgid "E-Mail"
+msgstr "Email"
+
+#: src/lib/components/OtpStep.svelte
+msgid "Nicht öffentlich. Wir senden dir einen Code, um dich anzumelden."
+msgstr "Not public. We’ll send you a code to log in."
 
 #: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
-msgid "E-Mail für Login *"
-msgstr "Email for login *"
+#: src/routes/events/new/+page.svelte
+msgid "Event konnte nicht automatisch veröffentlicht werden. Bitte klicke auf „Event erstellen“."
+msgstr "The event could not be published automatically. Please click “Create event”."
 
 #: src/routes/events/new/+page.svelte
-#: src/routes/offerings/new/+page.svelte
-msgid "Nicht öffentlich. Wir senden dir einen Code, um deine E-Mail-Adresse zu verifizieren."
-msgstr "Not public. We’ll send you a code to verify your email address."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Angebot geht erst live, wenn die Bestätigung abgeschlossen ist."
-msgstr "We sent a 6-digit code to <0/>. Enter it here to confirm your email. Your offer will not go live until the confirmation is complete."
-
-#: src/routes/offerings/new/+page.svelte
-msgid "E-Mail bestätigen und Angebot veröffentlichen"
-msgstr "Confirm email and publish offer"
+msgid "Dein Event geht erst live, wenn die Anmeldung abgeschlossen ist."
+msgstr "Your event will only go live once registration is complete."
 
 #: src/routes/events/new/+page.svelte
-msgid "Wir haben einen 6-stelligen Code an <0/> gesendet. Gib ihn hier ein, um deine E-Mail zu bestätigen. Dein Event geht erst live, wenn die Bestätigung abgeschlossen ist."
-msgstr "We sent a 6-digit code to <0/>. Enter it here to verify your email address. Your event will only go live once verification is complete."
-
-#: src/routes/events/new/+page.svelte
-msgid "E-Mail bestätigen und Event veröffentlichen"
-msgstr "Verify email address and publish event"
+msgid "Melde dich mit Google an oder lass dir einen Code per E-Mail schicken. Dein Event geht erst live, wenn die Anmeldung abgeschlossen ist."
+msgstr "Sign in with Google or have a code sent to you by email. Your event will only go live once registration is complete."
 
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
-msgid "Bestätigung"
-msgstr "Confirmation"
+msgid "Code senden"
+msgstr "Send code"
 
-#: src/lib/components/Login.svelte
-msgid "Google-Anmeldung ist gerade nicht verfügbar."
-msgstr "Google sign-in is currently unavailable."
+#: src/routes/offerings/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Angebot konnte nicht automatisch veröffentlicht werden. Bitte klicke auf „Angebot erstellen“."
+msgstr "The offer could not be published automatically. Please click “Create offer”."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Dein Angebot geht erst live, wenn die Anmeldung abgeschlossen ist."
+msgstr "Your offer will only go live once registration is complete."
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Melde dich mit Google an oder lass dir einen Code per E-Mail schicken. Dein Angebot geht erst live, wenn die Anmeldung abgeschlossen ist."
+msgstr "Sign in with Google or have a code sent to you by email. Your offer will only go live once registration is complete."
+
+#: src/lib/components/ImageGalleryInput.svelte
+msgid "Nochmal versuchen"
+msgstr "Try again"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "Lade Bilder hoch, die dein Angebot zeigen. Das erste Bild wird als Cover verwendet."
+msgstr "Upload images that showcase your offering. The first image will be used as the cover."
+
+#: src/routes/events/new/+page.svelte
+#: src/routes/offerings/new/+page.svelte
+msgid "Bitte behebe fehlgeschlagene Uploads oder entferne die Bilder."
+msgstr "Please fix failed uploads or remove the images."
+
+#: src/lib/components/EventForm.svelte
+msgid "Lade Bilder hoch, die deinen Event illustrieren. Das erste Bild wird als Cover verwendet."
+msgstr "Upload images that illustrate your event. The first image will be used as the cover."
+
+#: src/routes/events/new/+page.svelte
+msgid "Event wird erstellt…"
+msgstr "Event is being created…"
+
+#: src/routes/offerings/new/+page.svelte
+msgid "Angebot wird erstellt…"
+msgstr "Creating offer…"

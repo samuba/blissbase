@@ -22,10 +22,11 @@
 
 	let format = $state<OfferingFormat>(`offline`);
 	let imageBusy = $state(false);
+	let imageFailed = $state(false);
 	let isDeletingOffering = $state(false);
 	let isChangingListing = $state(false);
 	let isSubmitting = $derived(updateOffering.pending > 0);
-	let actionsDisabled = $derived(isSubmitting || isDeletingOffering || isChangingListing || imageBusy);
+	let actionsDisabled = $derived(isSubmitting || isDeletingOffering || isChangingListing || imageBusy || imageFailed);
 	const fallbackReturnHref = $derived(
 		offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList(),
 	);
@@ -135,6 +136,7 @@
 					bind:format
 					onDirty={unsaved.markDirty}
 					onImageBusyChange={(busy) => (imageBusy = busy)}
+					onImageFailedChange={(failed) => (imageFailed = failed)}
 					onSuccess={handleSaveSuccess}
 				/>
 			{/if}

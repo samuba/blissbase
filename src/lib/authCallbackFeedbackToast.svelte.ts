@@ -1,7 +1,14 @@
-import { browser } from '$app/environment';
 import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
+import {
+	EVENT_CREATE_DRAFT_KEY,
+	hasPendingCreateFlowDraft,
+	OFFERING_CREATE_DRAFT_KEY,
+} from '$lib/createFlowDraft';
+import { afterClientHydration } from '$lib/shallowDialog.svelte';
 import { toast } from 'svelte-sonner';
+
+const AUTH_FEEDBACK_TOAST_ID = `auth-callback-feedback`;
 
 /**
  * Registers auth callback URL feedback (toasts + stripping auth feedback params and hash afterward).
@@ -14,25 +21,19 @@ import { toast } from 'svelte-sonner';
  * ```
  */
 export function registerAuthCallbackFeedbackToast() {
-	let strippingUrl = false;
+	let shown = false;
 
 	$effect(() => {
-		if (!browser) return;
-
 		const authError = page.url.searchParams.get(`auth_error`);
 		const authSuccess = page.url.searchParams.get(`auth_success`);
-
-		if (authError === null && authSuccess === null) {
-			strippingUrl = false;
-			return;
-		}
-
-		if (strippingUrl) return;
-		strippingUrl = true;
+		if (authError === null && authSuccess === null) return;
+		if (shown) return;
+		shown = true;
 
 		if (authError) {
 			const errorCode = page.url.searchParams.get(`error_code`);
 			const errorPros = {
+				id: AUTH_FEEDBACK_TOAST_ID,
 				duration: 60_000,
 				closeButton: true,
 				classes: { description: `whitespace-pre-line`}
@@ -53,23 +54,36 @@ export function registerAuthCallbackFeedbackToast() {
 					...errorPros
 				});
 			}
-		} else {
-			toast.success(`Du bist jetzt angemeldet. Viel Spaß!`);
+		} else if (!shouldSkipAuthSuccessToast()) {
+			toast.success(`Du bist jetzt angemeldet. Viel Spaß!`, { id: AUTH_FEEDBACK_TOAST_ID });
 		}
 
-		queueMicrotask(() => {
-			try {
-				// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-off clone to drop auth feedback params
-				const nextUrl = new URL(page.url.href);
-				nextUrl.searchParams.delete(`auth_success`);
-				nextUrl.searchParams.delete(`auth_error`);
-				nextUrl.searchParams.delete(`error_code`);
-				nextUrl.hash = ``;
-				// eslint-disable-next-line svelte/no-navigation-without-resolve -- same-origin path derived from page.url (already app-routed)
-				replaceState(`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`, page.state);
-			} finally {
-				strippingUrl = false;
-			}
-		});
+		void stripAuthFeedbackFromUrl();
 	});
+}
+
+function shouldSkipAuthSuccessToast() {
+	const path = page.url.pathname;
+	if (path === `/events/new` || path === `/offerings/new`) return true;
+	return (
+		hasPendingCreateFlowDraft({ key: EVENT_CREATE_DRAFT_KEY }) ||
+		hasPendingCreateFlowDraft({ key: OFFERING_CREATE_DRAFT_KEY })
+	);
+}
+
+async function stripAuthFeedbackFromUrl() {
+	await afterClientHydration();
+	if (
+		page.url.searchParams.get(`auth_error`) === null &&
+		page.url.searchParams.get(`auth_success`) === null
+	) {
+		return;
+	}
+
+	const nextUrl = new URL(page.url.href);
+	nextUrl.searchParams.delete(`auth_success`);
+	nextUrl.searchParams.delete(`auth_error`);
+	nextUrl.searchParams.delete(`error_code`);
+	nextUrl.hash = ``;
+	replaceState(`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`, page.state);
 }

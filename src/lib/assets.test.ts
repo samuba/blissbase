@@ -8,6 +8,13 @@ vi.mock("@bradenmacdonald/s3-lite-client", () => ({
 			deleteObject: vi.fn(),
 			exists: vi.fn(),
 			listObjects: vi.fn(),
+			getPartialObject: vi.fn(
+				async () =>
+					new Response(new Uint8Array([0x52, 0x49, 0x46, 0x46]), {
+						status: 206,
+						headers: { "Content-Range": `bytes 0-3/458752` },
+					}),
+			),
 		};
 	}),
 }));
@@ -15,8 +22,11 @@ vi.mock("@bradenmacdonald/s3-lite-client", () => ({
 import { S3Client } from "@bradenmacdonald/s3-lite-client";
 import {
 	eventImageObjectKey,
+	eventTempImageObjectKey,
 	finalizeOfferingImage,
 	finalizeProfileImage,
+	getObjectPrefix,
+	isTempEventImageObjectKey,
 	isTempOfferingImageObjectKey,
 	isTempProfileImageObjectKey,
 	loadCreds,
@@ -38,6 +48,7 @@ function getS3ClientMock() {
 					copyObject: ReturnType<typeof vi.fn>;
 					putObject: ReturnType<typeof vi.fn>;
 					deleteObject: ReturnType<typeof vi.fn>;
+					getPartialObject: ReturnType<typeof vi.fn>;
 				};
 			}>;
 		};
@@ -76,11 +87,10 @@ describe(`offering image object keys`, () => {
 		expect(
 			offeringImageObjectKey({
 				userId: `user-123`,
-				offeringId: 42,
 				suffix: `abc123`,
 				contentType: `image/webp`,
 			}),
-		).toBe(`offerings/user-123/42/abc123.webp`);
+		).toBe(`offerings/user-123/abc123.webp`);
 	});
 
 	it(`rejects unsafe temporary key parts`, () => {
@@ -90,7 +100,13 @@ describe(`offering image object keys`, () => {
 				contentType: `image/webp`,
 			}),
 		).toThrow(`Offering image suffix contains invalid characters`);
-		expect(isTempOfferingImageObjectKey(`offerings/user-123/42/abc123.webp`)).toBe(false);
+		expect(isTempOfferingImageObjectKey(`offerings/user-123/abc123.webp`)).toBe(false);
+	});
+
+	it(`builds temporary event image keys`, () => {
+		expect(eventTempImageObjectKey({ suffix: `abc123`, contentType: `image/jpeg` })).toBe(`events/temp/abc123.jpg`);
+		expect(isTempEventImageObjectKey(`events/temp/abc123.jpg`)).toBe(true);
+		expect(isTempEventImageObjectKey(`events/demo/abc123.jpg`)).toBe(false);
 	});
 });
 
@@ -120,7 +136,7 @@ describe(`temporary image finalization`, () => {
 	it(`copies temporary offering images server-side before deleting the source`, async () => {
 		const url = await finalizeOfferingImage({
 			tempObjectKey: `offerings/temp/abc123.webp`,
-			finalObjectKey: `offerings/user-123/42/abc123.webp`,
+			finalObjectKey: `offerings/user-123/abc123.webp`,
 			creds: loadCreds({
 				S3_ACCESS_KEY_ID: `test-access`,
 				S3_SECRET_ACCESS_KEY: `test-secret`,
@@ -130,10 +146,10 @@ describe(`temporary image finalization`, () => {
 		});
 
 		const instance = getS3InstanceMock();
-		expect(instance.copyObject).toHaveBeenCalledWith({ sourceKey: `offerings/temp/abc123.webp` }, `offerings/user-123/42/abc123.webp`);
+		expect(instance.copyObject).toHaveBeenCalledWith({ sourceKey: `offerings/temp/abc123.webp` }, `offerings/user-123/abc123.webp`);
 		expect(instance.deleteObject).toHaveBeenCalledWith(`offerings/temp/abc123.webp`);
 		expect(instance.copyObject.mock.invocationCallOrder[0]).toBeLessThan(instance.deleteObject.mock.invocationCallOrder[0]);
-		expect(url).toBe(`https://assets.blissbase.app/offerings/user-123/42/abc123.webp`);
+		expect(url).toBe(`https://assets.blissbase.app/offerings/user-123/abc123.webp`);
 	});
 
 	it(`copies temporary profile images server-side before deleting the source`, async () => {
@@ -153,6 +169,36 @@ describe(`temporary image finalization`, () => {
 		expect(instance.deleteObject).toHaveBeenCalledWith(`profiles/temp/profile-abc123.jpg`);
 		expect(instance.copyObject.mock.invocationCallOrder[0]).toBeLessThan(instance.deleteObject.mock.invocationCallOrder[0]);
 		expect(url).toBe(`https://assets.blissbase.app/profiles/user-123/profile-abc123.jpg`);
+	});
+});
+
+describe(`getObjectPrefix`, () => {
+	beforeEach(() => {
+		getS3ClientMock().mockClear();
+	});
+
+	it(`reads only the requested prefix and reports the full object size`, async () => {
+		const creds = loadCreds({
+			S3_ACCESS_KEY_ID: `test-access`,
+			S3_SECRET_ACCESS_KEY: `test-secret`,
+			S3_BUCKET_NAME: `test-bucket`,
+			CLOUDFLARE_ACCOUNT_ID: `test-account`,
+		});
+		const result = await getObjectPrefix({
+			objectKey: `events/temp/abc123.webp`,
+			byteLength: 12,
+			creds,
+		});
+		const getPartialObject = getS3InstanceMock().getPartialObject;
+
+		expect(result).toEqual({
+			bytes: new Uint8Array([0x52, 0x49, 0x46, 0x46]),
+			size: 458752,
+		});
+		expect(getPartialObject).toHaveBeenCalledWith(`events/temp/abc123.webp`, {
+			offset: 0,
+			length: 12,
+		});
 	});
 });
 

@@ -1,8 +1,8 @@
 import { publicProfilePatchSchema } from '$lib/rpc/profile.common';
+import { galleryImageClaimsSchema, galleryImageOrderSchema } from '$lib/galleryImages';
 import * as v from 'valibot';
 
 export const OFFERING_FORMATS = ['offline', 'online', 'offline+online'] as const;
-export const OFFERING_IMAGE_MAX_COUNT = 12;
 
 export const offeringProfileFormSchema = publicProfilePatchSchema;
 
@@ -16,13 +16,7 @@ const offeringFormEntries = {
 	descriptionHtml: v.pipe(v.string(), v.trim(), v.maxLength(50_000, `Description is too long`)),
 	format: v.picklist(OFFERING_FORMATS, `Offering format is invalid`),
 	profile: v.optional(offeringProfileFormSchema),
-	imageClaims: v.optional(
-		v.pipe(
-			v.array(v.pipe(v.string(), v.trim(), v.nonEmpty())),
-			v.maxLength(OFFERING_IMAGE_MAX_COUNT, `You can upload a maximum of ${OFFERING_IMAGE_MAX_COUNT} images`)
-		),
-		[]
-	),
+	imageClaims: galleryImageClaimsSchema,
 	email: v.optional(v.pipe(v.string(), v.trim(), v.email(`Email is invalid`))),
 	authToken: v.optional(v.pipe(v.string(), v.trim()), ``),
 	returnTo: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(2_000)), ``)
@@ -34,7 +28,7 @@ export const updateOfferingFormSchema = v.object({
 	...offeringFormEntries,
 	offeringId: v.pipe(v.number(), v.integer(), v.minValue(1)),
 	existingImageUrls: v.optional(v.array(v.pipe(v.string(), v.trim(), v.url(`Image URL is invalid`))), []),
-	imageOrder: v.optional(v.array(v.pipe(v.string(), v.trim(), v.nonEmpty())), [])
+	imageOrder: galleryImageOrderSchema
 });
 
 export type OfferingForm = v.InferOutput<typeof offeringFormSchema>;

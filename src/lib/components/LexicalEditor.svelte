@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import type { RemoteFormField } from "@sveltejs/kit";
-	import { debounce } from "$lib/common";
 	import { localeStore } from "$lib/../locales/localeStore.svelte";
 	import {
 		$createParagraphNode as createParagraphNode,
@@ -53,14 +52,23 @@
 		onDirty?: () => void;
 	} = $props();
 
+	function normalizeExportedHtml(html: string) {
+		const trimmed = html.trim();
+		if (!trimmed) return ``;
+		if (trimmed === `<p><br></p>` || trimmed === `<p></p>`) return ``;
+		return trimmed;
+	}
+
+	// svelte-ignore state_referenced_locally
+	const initialHtml = field.value() || value || ``;
 	let editor: LexicalEditor | undefined = $state(undefined);
 	let editorEl: HTMLElement | undefined = $state(undefined);
 	let toolbarEl: HTMLElement | undefined = $state(undefined);
 	let isToolbarStuck = $state(false);
-	let editorValue = $state(``);
-	let isEmpty = $state(true);
+	let editorValue = $state(initialHtml);
+	let isEmpty = $state(!normalizeExportedHtml(initialHtml));
 	let isEditorReady = $state(false);
-	let lastRenderedExternalValue = ``;
+	let lastRenderedExternalValue = initialHtml;
 	let applyingExternalHtml = false;
 	let cachedToolbarStickyTop: number | undefined;
 	let appliedToolbarOffset = 0;
@@ -104,13 +112,6 @@
 				},
 	);
 
-	function normalizeExportedHtml(html: string) {
-		const trimmed = html.trim();
-		if (!trimmed) return ``;
-		if (trimmed === `<p><br></p>` || trimmed === `<p></p>`) return ``;
-		return trimmed;
-	}
-
 	function syncEmptyFromEditor(nextEditor: LexicalEditor) {
 		nextEditor.getEditorState().read(() => {
 			isEmpty = !normalizeExportedHtml(generateHtmlFromNodes(nextEditor, null));
@@ -124,6 +125,7 @@
 			editorValue = html;
 			lastRenderedExternalValue = html;
 			isEmpty = !html;
+			field.set(html);
 			if (changed) onDirty?.();
 		});
 	}
@@ -153,8 +155,9 @@
 			{
 				onUpdate: () => {
 					applyingExternalHtml = false;
-					lastRenderedExternalValue = html;
+					lastRenderedExternalValue = normalizeExportedHtml(html);
 					syncEmptyFromEditor(nextEditor);
+					isEditorReady = true;
 				},
 			},
 		);
@@ -303,9 +306,8 @@
 	}
 
 	$effect(() => {
-		const nextValue = field.value() || value || ``;
-		if (!isEditorReady) return;
-		if (!editor) return;
+		const nextValue = normalizeExportedHtml(field.value() || value || ``);
+		if (!isEditorReady || !editor || applyingExternalHtml) return;
 		if (nextValue === lastRenderedExternalValue) return;
 		editorValue = nextValue;
 		renderHtml({ nextEditor: editor, html: nextValue });
@@ -369,11 +371,6 @@
 
 		nextEditor.setRootElement(editorEl);
 
-		const syncHtml = debounce(() => {
-			if (applyingExternalHtml) return;
-			setHtmlFromEditor(nextEditor);
-		}, 300);
-
 		const unregister = mergeRegister(
 			registerRichText(nextEditor),
 			registerHistory(nextEditor, createEmptyHistoryState(), 300),
@@ -388,7 +385,8 @@
 			nextEditor.registerUpdateListener(() => {
 				updateToolbar(nextEditor);
 				syncEmptyFromEditor(nextEditor);
-				syncHtml();
+				if (applyingExternalHtml || !isEditorReady) return;
+				setHtmlFromEditor(nextEditor);
 			}),
 			nextEditor.registerCommand(
 				SELECTION_CHANGE_COMMAND,
@@ -417,10 +415,10 @@
 		);
 
 		editor = nextEditor;
-		const initialHtml = field.value() || value || ``;
-		editorValue = initialHtml;
-		renderHtml({ nextEditor, html: initialHtml });
-		isEditorReady = true;
+		const html = normalizeExportedHtml(field.value() || value || ``);
+		editorValue = html;
+		lastRenderedExternalValue = html;
+		renderHtml({ nextEditor, html });
 
 		return () => {
 			cleanupToolbarPosition();
@@ -432,7 +430,7 @@
 	});
 </script>
 
-<div class="lexical-editor-root w-full">
+<div class="lexical-editor-root w-full" data-lexical-editor data-lexical-ready={isEditorReady ? `true` : undefined}>
 	<div
 		bind:this={toolbarEl}
 		class={[

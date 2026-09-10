@@ -38,8 +38,7 @@ test.describe('Edit event images', () => {
 		});
 		await expect(page.getByTestId(`image-preview-item`)).toHaveCount(3);
 		await expect(page.getByTestId(`image-preview-item`).nth(2)).toContainText(`added-image.png`);
-		// Submitting before client-side processing finishes leaves `data.images` empty on the server
-		await expect(page.getByTestId(`image-preview-item`).nth(2).getByTestId(`image-preview-move-left`)).toBeEnabled({
+		await expect(page.getByTestId(`image-preview-item`).nth(2)).toHaveAttribute(`data-upload-state`, `ready`, {
 			timeout: 30000
 		});
 
@@ -49,13 +48,20 @@ test.describe('Edit event images', () => {
 		await expect
 			.poll(async () => {
 				const result = await getEventById(page, event.id);
-				return result.event?.imageUrls ?? [];
+				const imageUrls = result.event?.imageUrls ?? [];
+				return {
+					length: imageUrls.length,
+					first: imageUrls[0],
+					second: imageUrls[1],
+					thirdIsE2e: imageUrls[2]?.includes(`/e2e/events/`) ?? false,
+				};
 			})
-			.toEqual([
-				existingImageUrls[0],
-				existingImageUrls[2],
-				`https://assets.blissbase.app/e2e/${event.slug}/0-added-image.webp`
-			]);
+			.toEqual({
+				length: 3,
+				first: existingImageUrls[0],
+				second: existingImageUrls[2],
+				thirdIsE2e: true,
+			});
 	});
 });
 

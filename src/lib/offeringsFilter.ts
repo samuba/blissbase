@@ -91,6 +91,20 @@ export function buildOfferingsFilterSearchParams(filter: OfferingsFilter) {
 	return params;
 }
 
+/** Remote `.current` and page `data` can both be missing while a location change navigates. */
+export function resolveOfferingsListQuery<T>(args: {
+	queryCurrent?: { filter: OfferingsFilter; offerings: T[] } | null;
+	loadResult?: { filter: OfferingsFilter; offerings: T[] } | null;
+	filterFromUrl: OfferingsFilter;
+}) {
+	const result = args.queryCurrent ?? args.loadResult;
+	return {
+		filter: result?.filter ?? args.filterFromUrl,
+		offerings: result?.offerings ?? [],
+		isLoading: result == null,
+	};
+}
+
 export function filterOfferingsBySearchTerm<T extends {
 	title: string;
 	descriptionHtml?: string | null;

@@ -9,6 +9,7 @@ import {
 	isOfferingAvailableOnline,
 	offeringsFilterFromCookie,
 	parseOfferingsFilterFromUrl,
+	resolveOfferingsListQuery,
 	shouldIncludeOfferingInLocationFilter,
 } from '$lib/offeringsFilter';
 import { getDistanceInKm, isWithinDistanceKm } from '$lib/locationFilter';
@@ -145,6 +146,46 @@ describe('buildOfferingsFilterSearchParams', () => {
 		});
 
 		expect(params.toString()).toBe(`includeOnline=0`);
+	});
+});
+
+describe(`resolveOfferingsListQuery`, () => {
+	const filterFromUrl = {
+		location: `Berlin`,
+		distance: `50`,
+		lat: 52.5,
+		lng: 13.4,
+		searchTerm: null,
+		includeOnline: true,
+	};
+
+	it(`falls back to the URL filter when query and load data are missing`, () => {
+		const view = resolveOfferingsListQuery({
+			queryCurrent: undefined,
+			loadResult: undefined,
+			filterFromUrl,
+		});
+
+		expect(view.filter).toEqual(filterFromUrl);
+		expect(view.offerings).toEqual([]);
+		expect(view.isLoading).toBe(true);
+	});
+
+	it(`prefers the remote query result over page load data`, () => {
+		const queryCurrent = {
+			filter: { ...filterFromUrl, location: `Hamburg` },
+			offerings: [{ id: 1 }],
+		};
+
+		const view = resolveOfferingsListQuery({
+			queryCurrent,
+			loadResult: { filter: filterFromUrl, offerings: [{ id: 2 }] },
+			filterFromUrl,
+		});
+
+		expect(view.filter.location).toBe(`Hamburg`);
+		expect(view.offerings).toEqual([{ id: 1 }]);
+		expect(view.isLoading).toBe(false);
 	});
 });
 

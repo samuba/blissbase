@@ -10,7 +10,7 @@
 	// svelte-ignore state_referenced_locally
 	let profile = $state(data.profile);
 	const offeringsQuery = getMyOfferings();
-	const offerings = $derived(offeringsQuery.current ?? data.offerings);
+	const offerings = $derived(offeringsQuery.current ?? data.offerings ?? []);
 	const activeOfferings = $derived(offerings.filter((offering) => offering.listed));
 	const inactiveOfferings = $derived(offerings.filter((offering) => !offering.listed));
 

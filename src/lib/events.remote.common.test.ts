@@ -188,7 +188,7 @@ function createEventPayload(overrides: Partial<CreateEventPayload> = {}): Create
 		isNotListed: false,
 		contact: `test@example.com`,
 		contactMethod: `email`,
-		images: [],
+		imageClaims: [],
 		...overrides
 	};
 }
@@ -209,7 +209,7 @@ type CreateEventPayload = {
 	isNotListed: boolean;
 	contact?: string;
 	contactMethod?: string;
-	images: File[];
+	imageClaims: string[];
 	email?: string;
 	authToken?: string;
 	profile?: {

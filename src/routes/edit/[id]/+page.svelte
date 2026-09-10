@@ -10,10 +10,13 @@
 	let { data }: PageProps = $props();
 	let event = $derived(data.event);
 	let editFormValues = $derived(data.editFormValues);
-	let initializedFormEventId: number | null = null;
+	let initializedFormEventId = $state<number | null>(null);
 
 	let isDeletingEvent = $state(false);
 	let isSubmitting = $derived(!!updateEvent.pending);
+	let imageBusy = $state(false);
+	let imageFailed = $state(false);
+	let actionsDisabled = $derived(isSubmitting || isDeletingEvent || imageBusy || imageFailed);
 
 	$effect(() => {
 		if (initializedFormEventId === event.id) return;
@@ -57,21 +60,25 @@
 		<div class="card-body gap-6">
 			<h1 class="card-title text-2xl" data-testid="event-edit-heading">Event bearbeiten</h1>
 
-			<EventForm
-				mode="update"
-				remoteForm={updateEvent}
-				initialExistingImageUrls={editFormValues.existingImageUrls}
-				initialLocationLabel={editFormValues.address}
-				initialLocationLat={editFormValues.latitude}
-				initialLocationLng={editFormValues.longitude}
-			/>
+			{#if initializedFormEventId === event.id}
+				<EventForm
+					mode="update"
+					remoteForm={updateEvent}
+					initialExistingImageUrls={editFormValues.existingImageUrls}
+					initialLocationLabel={editFormValues.address}
+					initialLocationLat={editFormValues.latitude}
+					initialLocationLng={editFormValues.longitude}
+					onImageBusyChange={(busy) => (imageBusy = busy)}
+					onImageFailedChange={(failed) => (imageFailed = failed)}
+				/>
+			{/if}
 
 			<div class="flex flex-col-reverse sm:flex-row gap-6">
 
 				<div class="flex flex-row sm:flex-row gap-6 w-full">
 					<button
 						onclick={handleDeleteEvent}
-						disabled={isDeletingEvent || isSubmitting}
+						disabled={actionsDisabled}
 						type="button"
 						class="btn"
 					>
@@ -90,7 +97,7 @@
 						type="button"
 						onclick={handleCancel}
 						class="btn disabled:bg-base-300 disabled:text-base-content"
-						disabled={isSubmitting || isDeletingEvent}
+						disabled={actionsDisabled}
 					>
 						Abbrechen
 					</button>
@@ -101,9 +108,12 @@
 					class="btn btn-primary disabled:bg-primary disabled:text-primary-content"
 					form="event-form"
 					data-testid="event-save"
-					disabled={isSubmitting || isDeletingEvent}
+					disabled={actionsDisabled}
 				>
-					{#if !isSubmitting}
+					{#if imageBusy}
+						<span class="loading loading-spinner loading-sm"></span>
+						Bilder werden hochgeladen…
+					{:else if !isSubmitting}
 						Speichern
 					{:else}
 						<span class="loading loading-spinner loading-sm"></span>

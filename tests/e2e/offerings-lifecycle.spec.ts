@@ -53,7 +53,7 @@ test.describe("Offering lifecycle and access control", () => {
 
 		await page.getByTestId(`offering-image-input`).setInputFiles(`static/pwa-192-maskable.png`);
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(4);
-		await expect(page.getByTestId(`offering-image-preview-remove`).last()).toBeEnabled({
+		await expect(page.getByTestId(`offering-image-preview-item`).last()).toHaveAttribute(`data-upload-state`, `ready`, {
 			timeout: 30000,
 		});
 		await page.getByTestId(`offering-image-preview-remove`).nth(1).click();

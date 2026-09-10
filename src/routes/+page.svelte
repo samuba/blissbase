@@ -24,7 +24,7 @@
 	}
 
 	const visibleEvents = $derived(
-		eventsStore.events.filter(
+		(eventsStore.events ?? []).filter(
 			(event) => !isEventMostlyElapsed({ startAt: event.startAt, endAt: event.endAt }),
 		),
 	);
@@ -35,16 +35,16 @@
 
 	// Always initialize from server data during SSR to prevent state pollution
 	// On client, only initialize if store is empty (preserves navigation state)
-	if (!browser || eventsStore.events.length === 0) {
+	if (!browser || !eventsStore.events?.length) {
 		console.log('Initializing events store from server data');
 		// svelte-ignore state_referenced_locally
 		const d = data
 		eventsStore.initialize({
-			events: d.events,
+			events: d.events ?? [],
 			pagination: {
 				...d.pagination,
-				startDate: d.pagination.startDate ?? null,
-				endDate: d.pagination.endDate ?? null
+				startDate: d.pagination?.startDate ?? null,
+				endDate: d.pagination?.endDate ?? null
 			}
 		});
 	}

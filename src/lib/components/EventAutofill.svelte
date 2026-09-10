@@ -60,8 +60,8 @@
 			contactMethod:
 				(remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ||
 				defaults.contactMethod,
-			images: (remoteForm.fields.images.value() ?? defaults.images).filter(
-				(file): file is File => !!file
+			imageClaims: (remoteForm.fields.imageClaims.value() ?? defaults.imageClaims).filter(
+				(token): token is string => !!token
 			)
 		};
 	}

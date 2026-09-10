@@ -4,6 +4,7 @@ import {
 	clearTestOfferings,
 	clearTestProfiles,
 	createCompleteProfile,
+	createIncompleteProfile,
 	createProfile,
 	E2E_DEFAULT_USER_ID,
 	E2E_OTP_CODE,
@@ -16,7 +17,9 @@ import {
 	addSocialLink,
 	clickWizardPrimary,
 	enterOtp,
+	expectCreateFlowPublishing,
 	fillProfileBio,
+	sendCreateFlowOtp,
 	uploadRequiredProfileImages,
 } from "./helpers/create-flow";
 
@@ -66,7 +69,9 @@ test.describe("Offering creation", () => {
 		await fillOfferingBasics(page, { title: `E2E Online Mentoring`, format: `online` });
 		await page.getByTestId(`offering-image-input`).setInputFiles(`static/pwa-192-maskable.png`);
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(1);
-		await expect(page.getByTestId(`offering-image-preview-remove`)).toBeEnabled({ timeout: 30000 });
+		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveAttribute(`data-upload-state`, `ready`, {
+			timeout: 30000,
+		});
 
 		await clickWizardPrimary(page);
 		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
@@ -253,9 +258,16 @@ test.describe("Offering creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
 		await fillOfferingBasics(page, { title: `E2E Anonymous Offering`, format: `online` });
-		await page.getByTestId(`offering-email-input`).fill(anonymousNewEmail);
 		await clickWizardPrimary(page);
 
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`, {
+			timeout: 10000,
+		});
+		await sendCreateFlowOtp(page, { email: anonymousNewEmail, emailTestId: `offering-email-input` });
+		await enterOtp(page, `000000`);
+		await expect(page.getByText(`Der Code ist falsch oder abgelaufen.`)).toBeVisible();
+
+		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
 		});
@@ -265,22 +277,22 @@ test.describe("Offering creation", () => {
 		await addSocialLink(page);
 		await clickWizardPrimary(page);
 
-		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`);
-		await enterOtp(page, `000000`);
-		await expect(page.getByText(`Der Code ist falsch oder abgelaufen.`)).toBeVisible();
-
-		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const slug = getCreatedSlugFromUrl(page);
 		expect((await getOfferingBySlug(page, slug)).title).toBe(`E2E Anonymous Offering`);
 	});
 
-	test("anonymous profile step shows social link errors on Weiter before OTP", async ({ page }) => {
+	test("anonymous profile step shows social link errors on Weiter after OTP", async ({ page }) => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
 		await fillOfferingBasics(page, { title: `E2E Social Preflight`, format: `online` });
-		await page.getByTestId(`offering-email-input`).fill(anonymousNewEmail);
 		await clickWizardPrimary(page);
+
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`, {
+			timeout: 10000,
+		});
+		await sendCreateFlowOtp(page, { email: anonymousNewEmail, emailTestId: `offering-email-input` });
+		await enterOtp(page, E2E_OTP_CODE);
 
 		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
@@ -293,14 +305,14 @@ test.describe("Offering creation", () => {
 		await clickWizardPrimary(page);
 		const websiteError = page.getByText(`Website is not a valid URL`);
 		await expect(websiteError.first()).toBeVisible();
-		await expect(page.getByTestId(`offering-wizard-heading`)).not.toHaveAttribute(`data-step`, `otp`);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`);
 
 		await page.getByTestId(`remove-social-link`).click();
 		await expect(websiteError).toHaveCount(0);
 		await addSocialLink(page, `https://example.com/preflight`);
 		await clickWizardPrimary(page);
 
-		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`);
+		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		await expect(websiteError).toHaveCount(0);
 	});
 
@@ -316,14 +328,16 @@ test.describe("Offering creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
 		await fillOfferingBasics(page, { title: `E2E Existing Email Offering`, format: `online` });
-		await page.getByTestId(`offering-email-input`).fill(anonymousCompleteEmail);
 		await clickWizardPrimary(page);
 
 		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`, {
 			timeout: 10000,
 		});
-		await expect(page.getByTestId(`offering-wizard-heading`)).not.toHaveAttribute(`data-step`, `profile`);
+		await expect(page.getByTestId(`google-login-button`)).toBeVisible();
+		await sendCreateFlowOtp(page, { email: anonymousCompleteEmail, emailTestId: `offering-email-input` });
 		await enterOtp(page, E2E_OTP_CODE);
+		await expectCreateFlowPublishing(page);
+		await expect(page.getByTestId(`offering-wizard-heading`)).not.toBeVisible();
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const slug = getCreatedSlugFromUrl(page);
 		expect((await getOfferingBySlug(page, slug)).title).toBe(`E2E Existing Email Offering`);
@@ -343,20 +357,153 @@ test.describe("Offering creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/offerings/new`);
 		await fillOfferingBasics(page, { title: `E2E Named No Social Offering`, format: `online` });
-		await page.getByTestId(`offering-email-input`).fill(anonymousCompleteEmail);
 		await clickWizardPrimary(page);
 
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`, {
+			timeout: 10000,
+		});
+		await sendCreateFlowOtp(page, { email: anonymousCompleteEmail, emailTestId: `offering-email-input` });
+		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
 		});
 		await addSocialLink(page);
 		await clickWizardPrimary(page);
-		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `otp`);
-		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		expect(await getProfileById(page, getE2EUserIdForEmail(anonymousCompleteEmail))).toMatchObject({
 			socialLinks: [{ type: `website`, value: `https://example.com/e2e-user` }],
 		});
+	});
+
+	test("restores an offering draft after Google sign-in and creates it", async ({ page }) => {
+		await createProfile(page, createCompleteProfile());
+		await signInAsE2EUser(page);
+		await page.goto(`/`);
+		await page.evaluate(() => {
+			const draft = {
+				v: 1,
+				kind: `offering`,
+				savedAt: Date.now(),
+				requestedStep: `otp`,
+				format: `online`,
+				email: `google-host@example.com`,
+				socialLinks: [{ type: `website`, value: `https://example.com/e2e-user` }],
+				fields: {
+					title: `E2E Google Offering`,
+					descriptionHtml: ``,
+					format: `online`,
+					imageClaims: [],
+					email: `google-host@example.com`,
+					returnTo: `/offerings`,
+					profile: {
+						displayName: ``,
+						bio: ``,
+						profileImageUrl: ``,
+						bannerImageUrl: ``,
+						locationLabel: ``,
+						latitude: ``,
+						longitude: ``,
+					},
+				},
+			};
+			sessionStorage.setItem(`blissbase:create-draft:offering`, JSON.stringify(draft));
+			sessionStorage.setItem(`blissbase:create-draft:offering:pending`, `1`);
+		});
+		await page.goto(`/offerings/new?auth_success=1`);
+		await expect(page.getByText(`Du bist jetzt angemeldet. Viel Spaß!`)).toHaveCount(0);
+		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
+		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
+		const dialog = page.getByTestId(`details-dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`E2E Google Offering`);
+		expect((await getOfferingBySlug(page, getCreatedSlugFromUrl(page))).title).toBe(`E2E Google Offering`);
+		await page.goto(`/offerings/new`);
+		await expect(page.getByTestId(`offering-title-input`)).toHaveValue(``);
+	});
+
+	test("Google resume with a missing social link prefills the profile step", async ({ page }) => {
+		await createProfile(page, createIncompleteProfile({ displayName: `Google Host` }));
+		await signInAsE2EUser(page);
+		await page.goto(`/`);
+		await page.evaluate(() => {
+			const draft = {
+				v: 1,
+				kind: `offering`,
+				savedAt: Date.now(),
+				requestedStep: `otp`,
+				format: `online`,
+				email: `google-host@example.com`,
+				socialLinks: [],
+				fields: {
+					title: `E2E Google Incomplete Offering`,
+					descriptionHtml: ``,
+					format: `online`,
+					imageClaims: [],
+					email: `google-host@example.com`,
+					returnTo: `/offerings`,
+					profile: {
+						displayName: ``,
+						bio: ``,
+						profileImageUrl: ``,
+						bannerImageUrl: ``,
+						locationLabel: ``,
+						latitude: ``,
+						longitude: ``,
+					},
+				},
+			};
+			sessionStorage.setItem(`blissbase:create-draft:offering`, JSON.stringify(draft));
+			sessionStorage.setItem(`blissbase:create-draft:offering:pending`, `1`);
+		});
+		await page.goto(`/offerings/new?auth_success=1`);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `profile`, { timeout: 10000 });
+		await expect(page.getByTestId(`offering-title-input`)).toBeHidden();
+		await expect(page.getByTestId(`profile-name-input`)).toBeHidden();
+		await addSocialLink(page);
+		await clickWizardPrimary(page);
+		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
+		expect((await getOfferingBySlug(page, getCreatedSlugFromUrl(page))).title).toBe(`E2E Google Incomplete Offering`);
+	});
+
+	test("returning to the create form restores a leftover draft on the offering step", async ({ page }) => {
+		await page.goto(`/`);
+		await page.evaluate(() => {
+			const draft = {
+				v: 1,
+				kind: `offering`,
+				savedAt: Date.now(),
+				requestedStep: `otp`,
+				format: `online`,
+				email: `google-host@example.com`,
+				socialLinks: [{ type: `website`, value: `https://example.com/e2e-user` }],
+				fields: {
+					title: `E2E Returning Draft Offering`,
+					descriptionHtml: ``,
+					format: `online`,
+					imageClaims: [],
+					email: `google-host@example.com`,
+					returnTo: `/offerings`,
+					profile: {
+						displayName: ``,
+						bio: ``,
+						profileImageUrl: ``,
+						bannerImageUrl: ``,
+						locationLabel: ``,
+						latitude: ``,
+						longitude: ``,
+					},
+				},
+			};
+			sessionStorage.setItem(`blissbase:create-draft:offering`, JSON.stringify(draft));
+			sessionStorage.setItem(`blissbase:create-draft:offering:pending`, `1`);
+		});
+		await page.goto(`/offerings/new`);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `offering`, { timeout: 10000 });
+		await expect(page.getByTestId(`offering-title-input`)).toHaveValue(`E2E Returning Draft Offering`);
+		await page.goto(`/`);
+		await page.goto(`/offerings/new`);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `offering`, { timeout: 10000 });
+		await expect(page.getByTestId(`offering-title-input`)).toHaveValue(`E2E Returning Draft Offering`);
 	});
 });
 

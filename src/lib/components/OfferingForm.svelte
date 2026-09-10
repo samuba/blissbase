@@ -5,7 +5,7 @@
 	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
 	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
 	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
-	import OfferingImageUploadInput from "$lib/components/OfferingImageUploadInput.svelte";
+	import ImageGalleryInput from "$lib/components/ImageGalleryInput.svelte";
 	import {
 		OFFERING_FORMATS,
 		offeringFormSchema,
@@ -26,6 +26,7 @@
 		remoteForm,
 		initialExistingImageUrls = [],
 		onImageBusyChange,
+		onImageFailedChange,
 		onDirty,
 		formId = `offering-form`,
 		returnTo = ``,
@@ -44,6 +45,7 @@
 		remoteForm: OfferingRemoteForm;
 		initialExistingImageUrls?: string[];
 		onImageBusyChange?: (busy: boolean) => void;
+		onImageFailedChange?: (failed: boolean) => void;
 		onDirty?: () => void;
 		formId?: string;
 		returnTo?: string;
@@ -122,12 +124,16 @@
 	{onsubmit}
 >
 	<section class={[`grid gap-4`, fieldsHidden && `hidden`]} data-wizard-step="offering">
-		<OfferingImageUploadInput
+		<ImageGalleryInput
+			kind="offering"
 			field={remoteForm.fields.imageClaims}
 			existingImageUrlsField={updateFields.existingImageUrls}
 			imageOrderField={updateFields.imageOrder}
 			{initialExistingImageUrls}
+			hint="Lade Bilder hoch, die dein Angebot zeigen. Das erste Bild wird als Cover verwendet."
+			testIdPrefix="offering-image"
 			onBusyChange={onImageBusyChange}
+			onFailedChange={onImageFailedChange}
 			{onDirty}
 		/>
 

@@ -7,8 +7,7 @@
 	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
 	import TabsNavDesktop from "$lib/components/TabsNavDesktop.svelte";
 	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
-	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
-	import type { OfferingsFilter } from "$lib/offeringsFilter";
+	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl, resolveOfferingsListQuery, type OfferingsFilter } from "$lib/offeringsFilter";
 	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
 	import { bustOfferingsOgCache, generateOfferingAnnouncement } from "$lib/rpc/admin.remote";
 	import { getOfferings } from "$lib/rpc/offerings.remote";
@@ -23,10 +22,15 @@
 	let { data } = $props();
 	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
 	const offeringsQuery = $derived(getOfferings(filterFromUrl));
-	const offeringsResult = $derived(offeringsQuery.current ?? data.offeringsResult);
+	const offeringsList = $derived(resolveOfferingsListQuery({
+		queryCurrent: offeringsQuery.current,
+		loadResult: data.offeringsResult,
+		filterFromUrl,
+	}));
 	let loading = $state(false);
-	const filter = $derived(offeringsResult.filter);
-	const offerings = $derived(offeringsResult.offerings);
+	const filter = $derived(offeringsList.filter);
+	const offerings = $derived(offeringsList.offerings);
+	const showOfferingsLoading = $derived(loading || offeringsList.isLoading);
 	const filteredOfferings = $derived(
 		filterOfferingsBySearchTerm({
 			offerings,
@@ -295,7 +299,7 @@
 
 	<div class="mx-auto mb-2 w-full max-w-5xl pt-4 sm:mb-4">
 		<div class="px-4">
-			{#if loading}
+			{#if showOfferingsLoading}
 				<div class="flex justify-center py-12">
 					<span class="loading loading-spinner loading-lg"></span>
 				</div>

@@ -4,8 +4,10 @@ import {
 	addSocialLink,
 	clickWizardPrimary,
 	enterOtp,
+	expectCreateFlowPublishing,
 	fillEventDescription,
 	fillProfileBio,
+	sendCreateFlowOtp,
 	uploadRequiredProfileImages,
 } from "./helpers/create-flow";
 import { chooseLocation, mockGooglePlacesAutocomplete, mockSupabaseOtpRequest, setGermanLocale } from "./helpers/offering-test-utils";
@@ -13,6 +15,7 @@ import {
 	clearTestEvents,
 	clearTestProfiles,
 	createCompleteProfile,
+	createIncompleteProfile,
 	createProfile,
 	E2E_DEFAULT_USER_ID,
 	E2E_OTP_CODE,
@@ -48,7 +51,8 @@ test.describe("Event creation", () => {
 		await page.locator(`[data-testid="create-offering"]:not([inert])`).click();
 		await expect(page).toHaveURL(/\/events\/new/);
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `event`);
-		await expect(page.getByTestId(`event-email-input`)).toBeVisible();
+		await expect(page.getByTestId(`event-email-input`)).toHaveCount(0);
+		await expect(page.getByTestId(`google-login-button`)).toHaveCount(0);
 	});
 
 	test("signed-in user with a complete profile creates an online event", async ({ page }) => {
@@ -160,20 +164,22 @@ test.describe("Event creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/events/new`);
 		await fillEventBasics(page, { name: `E2E Anonymous Event` });
-		await page.getByTestId(`event-email-input`).fill(anonymousNewEmail);
 		await clickWizardPrimary(page);
 
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`, {
+			timeout: 10000,
+		});
+		await sendCreateFlowOtp(page, { email: anonymousNewEmail, emailTestId: `event-email-input` });
+		await enterOtp(page, `000000`);
+		await expect(page.getByText(`Der Code ist falsch oder abgelaufen.`)).toBeVisible();
+
+		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
 		});
 		await page.getByTestId(`profile-name-input`).fill(`Anonymous Host`);
 		await clickWizardPrimary(page);
 
-		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`);
-		await enterOtp(page, `000000`);
-		await expect(page.getByText(`Der Code ist falsch oder abgelaufen.`)).toBeVisible();
-
-		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
 		const slug = await getCreatedEventSlugFromUrl(page);
 		const event = await getEventBySlug(page, slug);
@@ -181,12 +187,17 @@ test.describe("Event creation", () => {
 		expect(event.authorId).toBe(getE2EUserIdForEmail(anonymousNewEmail));
 	});
 
-	test("anonymous profile step shows social link errors on Weiter before OTP", async ({ page }) => {
+	test("anonymous profile step shows social link errors on Weiter after OTP", async ({ page }) => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/events/new`);
 		await fillEventBasics(page, { name: `E2E Social Preflight Event` });
-		await page.getByTestId(`event-email-input`).fill(anonymousNewEmail);
 		await clickWizardPrimary(page);
+
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`, {
+			timeout: 10000,
+		});
+		await sendCreateFlowOtp(page, { email: anonymousNewEmail, emailTestId: `event-email-input` });
+		await enterOtp(page, E2E_OTP_CODE);
 
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
@@ -199,14 +210,14 @@ test.describe("Event creation", () => {
 		await clickWizardPrimary(page);
 		const websiteError = page.getByText(`Website is not a valid URL`);
 		await expect(websiteError.first()).toBeVisible();
-		await expect(page.getByTestId(`create-event-heading`)).not.toHaveAttribute(`data-step`, `otp`);
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `profile`);
 
 		await page.getByTestId(`remove-social-link`).click();
 		await expect(websiteError).toHaveCount(0);
 		await addSocialLink(page, `https://example.com/preflight`);
 		await clickWizardPrimary(page);
 
-		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`);
+		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
 		await expect(websiteError).toHaveCount(0);
 	});
 
@@ -222,14 +233,16 @@ test.describe("Event creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/events/new`);
 		await fillEventBasics(page, { name: `E2E Existing Email Event` });
-		await page.getByTestId(`event-email-input`).fill(anonymousCompleteEmail);
 		await clickWizardPrimary(page);
 
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`, {
 			timeout: 10000,
 		});
-		await expect(page.getByTestId(`create-event-heading`)).not.toHaveAttribute(`data-step`, `profile`);
+		await expect(page.getByTestId(`google-login-button`)).toBeVisible();
+		await sendCreateFlowOtp(page, { email: anonymousCompleteEmail, emailTestId: `event-email-input` });
 		await enterOtp(page, E2E_OTP_CODE);
+		await expectCreateFlowPublishing(page);
+		await expect(page.getByTestId(`create-event-heading`)).not.toBeVisible();
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
 		const slug = await getCreatedEventSlugFromUrl(page);
 		const event = await getEventBySlug(page, slug);
@@ -251,16 +264,260 @@ test.describe("Event creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/events/new`);
 		await fillEventBasics(page, { name: `E2E Named No Social Event` });
-		await page.getByTestId(`event-email-input`).fill(anonymousCompleteEmail);
 		await clickWizardPrimary(page);
 
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`, {
 			timeout: 10000,
 		});
-		await expect(page.getByTestId(`create-event-heading`)).not.toHaveAttribute(`data-step`, `profile`);
+		await sendCreateFlowOtp(page, { email: anonymousCompleteEmail, emailTestId: `event-email-input` });
 		await enterOtp(page, E2E_OTP_CODE);
+		await expectCreateFlowPublishing(page);
+		await expect(page.getByTestId(`create-event-heading`)).not.toBeVisible();
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
 		expect((await getEventBySlug(page, await getCreatedEventSlugFromUrl(page))).name).toBe(`E2E Named No Social Event`);
+	});
+
+	test("restores an event draft after Google sign-in and creates it", async ({ page }) => {
+		await createProfile(page, createCompleteProfile());
+		await signInAsE2EUser(page);
+		const startAt = futureLocalDateTime();
+		await page.goto(`/`);
+		await page.evaluate((start) => {
+			const draft = {
+				v: 1,
+				kind: `event`,
+				savedAt: Date.now(),
+				requestedStep: `otp`,
+				email: `google-host@example.com`,
+				socialLinks: [],
+				fields: {
+					name: `E2E Google Event`,
+					description: `<p>E2E event description</p>`,
+					tagSlugs: [],
+					price: ``,
+					address: ``,
+					addressNote: ``,
+					latitude: ``,
+					longitude: ``,
+					startAt: start,
+					endAt: ``,
+					timeZone: `Europe/Berlin`,
+					isOnline: true,
+					isNotListed: false,
+					contact: ``,
+					contactMethod: `none`,
+					email: `google-host@example.com`,
+					profile: {
+						displayName: ``,
+						bio: ``,
+						profileImageUrl: ``,
+						bannerImageUrl: ``,
+						locationLabel: ``,
+						latitude: ``,
+						longitude: ``,
+					},
+				},
+			};
+			sessionStorage.setItem(`blissbase:create-draft:event`, JSON.stringify(draft));
+			sessionStorage.setItem(`blissbase:create-draft:event:pending`, `1`);
+		}, startAt);
+		await page.goto(`/events/new?auth_success=1`);
+		await expect(page.getByText(`Du bist jetzt angemeldet. Viel Spaß!`)).toHaveCount(0);
+		await expect(page.getByText(`Event erstellt!`)).toBeVisible({ timeout: 15000 });
+		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
+		const dialog = page.getByTestId(`details-dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByTestId(`event-title`)).toHaveText(`E2E Google Event`);
+		expect((await getEventBySlug(page, await getCreatedEventSlugFromUrl(page))).name).toBe(`E2E Google Event`);
+		await page.goto(`/events/new`);
+		await expect(page.getByTestId(`event-name-input`)).toHaveValue(``);
+	});
+
+	test("Google sign-in persists the typed event description", async ({ page }) => {
+		await page.route(`**/auth/v1/**`, async (route) => {
+			if (route.request().url().includes(`/authorize`)) {
+				await route.abort();
+				return;
+			}
+			await route.continue();
+		});
+		await page.goto(`/events/new`);
+		await fillEventBasics(page, { name: `E2E Google Draft Event` });
+		await clickWizardPrimary(page);
+		await expect(page.getByTestId(`google-login-button`)).toBeVisible({ timeout: 10000 });
+		await page.getByTestId(`google-login-button`).click();
+		await expect
+			.poll(async () => {
+				return page.evaluate(() => {
+					const raw = sessionStorage.getItem(`blissbase:create-draft:event`);
+					if (!raw) return ``;
+					try {
+						return String(JSON.parse(raw).fields?.description ?? ``);
+					} catch {
+						return ``;
+					}
+				});
+			})
+			.toContain(`E2E event description`);
+	});
+
+	test("Google resume with an incomplete profile shows the profile step", async ({ page }) => {
+		await createProfile(page, createIncompleteProfile());
+		await signInAsE2EUser(page);
+		const startAt = futureLocalDateTime();
+		await page.goto(`/`);
+		await page.evaluate((start) => {
+			const draft = {
+				v: 1,
+				kind: `event`,
+				savedAt: Date.now(),
+				requestedStep: `otp`,
+				email: `google-host@example.com`,
+				socialLinks: [],
+				fields: {
+					name: `E2E Google Incomplete Event`,
+					description: `<p>E2E event description</p>`,
+					tagSlugs: [],
+					price: ``,
+					address: ``,
+					addressNote: ``,
+					latitude: ``,
+					longitude: ``,
+					startAt: start,
+					endAt: ``,
+					timeZone: `Europe/Berlin`,
+					isOnline: true,
+					isNotListed: false,
+					contact: ``,
+					contactMethod: `none`,
+					email: `google-host@example.com`,
+					profile: {
+						displayName: ``,
+						bio: ``,
+						profileImageUrl: ``,
+						bannerImageUrl: ``,
+						locationLabel: ``,
+						latitude: ``,
+						longitude: ``,
+					},
+				},
+			};
+			sessionStorage.setItem(`blissbase:create-draft:event`, JSON.stringify(draft));
+			sessionStorage.setItem(`blissbase:create-draft:event:pending`, `1`);
+		}, startAt);
+		await page.goto(`/events/new?auth_success=1`);
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `profile`, { timeout: 10000 });
+		await expect(page.getByTestId(`event-name-input`)).toBeHidden();
+		await page.getByTestId(`profile-name-input`).fill(`Google Host`);
+		await clickWizardPrimary(page);
+		await expect(page.getByText(`Event erstellt!`)).toBeVisible({ timeout: 15000 });
+		expect((await getEventBySlug(page, await getCreatedEventSlugFromUrl(page))).name).toBe(`E2E Google Incomplete Event`);
+	});
+
+	test("OAuth error restores the event draft on the auth step", async ({ page }) => {
+		await page.goto(`/`);
+		await page.evaluate(() => {
+			const date = new Date();
+			date.setDate(date.getDate() + 2);
+			date.setHours(12, 0, 0, 0);
+			const start = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, `0`)}-${String(date.getDate()).padStart(2, `0`)}T12:00`;
+			const draft = {
+				v: 1,
+				kind: `event`,
+				savedAt: Date.now(),
+				requestedStep: `otp`,
+				email: `google-host@example.com`,
+				socialLinks: [],
+				fields: {
+					name: `E2E Google Cancelled Event`,
+					description: `<p>E2E event description</p>`,
+					tagSlugs: [],
+					price: ``,
+					address: ``,
+					addressNote: ``,
+					latitude: ``,
+					longitude: ``,
+					startAt: start,
+					endAt: ``,
+					timeZone: `Europe/Berlin`,
+					isOnline: true,
+					isNotListed: false,
+					contact: ``,
+					contactMethod: `none`,
+					email: `google-host@example.com`,
+					profile: {
+						displayName: ``,
+						bio: ``,
+						profileImageUrl: ``,
+						bannerImageUrl: ``,
+						locationLabel: ``,
+						latitude: ``,
+						longitude: ``,
+					},
+				},
+			};
+			sessionStorage.setItem(`blissbase:create-draft:event`, JSON.stringify(draft));
+			sessionStorage.setItem(`blissbase:create-draft:event:pending`, `1`);
+		});
+		await page.goto(`/events/new?auth_error=access_denied`);
+		await expect(page.getByText(`Anmeldung fehlgeschlagen`)).toBeVisible();
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`, { timeout: 10000 });
+		await page.getByRole(`button`, { name: `Zurück` }).click();
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `event`);
+		await expect(page.getByTestId(`event-name-input`)).toHaveValue(`E2E Google Cancelled Event`);
+		await expect(page.getByTestId(`event-description-editor`).locator(`textarea`)).toHaveValue(/E2E event description/);
+	});
+
+	test("returning to the create form restores a leftover draft on the event step", async ({ page }) => {
+		const startAt = futureLocalDateTime();
+		await page.goto(`/`);
+		await page.evaluate((start) => {
+			const draft = {
+				v: 1,
+				kind: `event`,
+				savedAt: Date.now(),
+				requestedStep: `otp`,
+				email: `google-host@example.com`,
+				socialLinks: [],
+				fields: {
+					name: `E2E Returning Draft Event`,
+					description: `<p>E2E event description</p>`,
+					tagSlugs: [],
+					price: ``,
+					address: ``,
+					addressNote: ``,
+					latitude: ``,
+					longitude: ``,
+					startAt: start,
+					endAt: ``,
+					timeZone: `Europe/Berlin`,
+					isOnline: true,
+					isNotListed: false,
+					contact: ``,
+					contactMethod: `none`,
+					email: `google-host@example.com`,
+					profile: {
+						displayName: ``,
+						bio: ``,
+						profileImageUrl: ``,
+						bannerImageUrl: ``,
+						locationLabel: ``,
+						latitude: ``,
+						longitude: ``,
+					},
+				},
+			};
+			sessionStorage.setItem(`blissbase:create-draft:event`, JSON.stringify(draft));
+			sessionStorage.setItem(`blissbase:create-draft:event:pending`, `1`);
+		}, startAt);
+		await page.goto(`/events/new`);
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `event`, { timeout: 10000 });
+		await expect(page.getByTestId(`event-name-input`)).toHaveValue(`E2E Returning Draft Event`);
+		await expect(page.getByTestId(`event-description-editor`).locator(`textarea`)).toHaveValue(/E2E event description/);
+		await page.goto(`/`);
+		await page.goto(`/events/new`);
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `event`, { timeout: 10000 });
+		await expect(page.getByTestId(`event-name-input`)).toHaveValue(`E2E Returning Draft Event`);
 	});
 
 	test("anonymous incomplete existing email adds to the profile then creates after OTP", async ({ page }) => {
@@ -277,17 +534,19 @@ test.describe("Event creation", () => {
 		await mockSupabaseOtpRequest(page);
 		await page.goto(`/events/new`);
 		await fillEventBasics(page, { name: `E2E Incomplete Email Event` });
-		await page.getByTestId(`event-email-input`).fill(anonymousIncompleteEmail);
 		await clickWizardPrimary(page);
+
+		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`, {
+			timeout: 10000,
+		});
+		await sendCreateFlowOtp(page, { email: anonymousIncompleteEmail, emailTestId: `event-email-input` });
+		await enterOtp(page, E2E_OTP_CODE);
 
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `profile`, {
 			timeout: 10000,
 		});
 		await page.getByTestId(`profile-name-input`).fill(`Returning Host`);
 		await clickWizardPrimary(page);
-
-		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`);
-		await enterOtp(page, E2E_OTP_CODE);
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
 
 		const userId = getE2EUserIdForEmail(anonymousIncompleteEmail);
@@ -308,6 +567,18 @@ async function fillEventBasics(page: Page, args: { name: string }) {
 	await page.getByTestId(`event-name-input`).fill(args.name);
 	await page.getByTestId(`event-online-checkbox`).check();
 	await fillEventDescription(page, `E2E event description`);
+}
+
+function futureLocalDateTime() {
+	const date = new Date();
+	date.setDate(date.getDate() + 2);
+	date.setHours(12, 0, 0, 0);
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, `0`);
+	const day = String(date.getDate()).padStart(2, `0`);
+	const hours = String(date.getHours()).padStart(2, `0`);
+	const minutes = String(date.getMinutes()).padStart(2, `0`);
+	return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 async function getCreatedEventSlugFromUrl(page: Page) {

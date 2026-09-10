@@ -1,4 +1,5 @@
 import { invalidateAll } from "$app/navigation";
+import { tick } from "svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { localeStore } from "../locales/localeStore.svelte";
 import { verifyEmailOtp } from "$lib/rpc/auth.remote";
@@ -6,6 +7,7 @@ import { checkEmailProfileComplete } from "$lib/rpc/profile.remote";
 import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 import { getSupabaseBrowserClient } from "$lib/supabase";
 import { authCallbackUrl, routes } from "$lib/routes";
+import { mapOAuthError, startGoogleOAuth } from "$lib/oauthSignIn";
 
 const EMAIL_CHECK_DEBOUNCE_MS = 500;
 
@@ -109,7 +111,8 @@ export class CreateFlowAuth {
 
 	async sendOtpCode(args: { emailAddress?: string; resetCode?: boolean } = {}) {
 		const trimmed = (args.emailAddress ?? this.email).trim();
-		if (!trimmed || this.authBusy) {
+		if (this.authBusy) return false;
+		if (!trimmed) {
 			this.authError = `Bitte gib deine E-Mail-Adresse ein.`;
 			return false;
 		}
@@ -144,14 +147,10 @@ export class CreateFlowAuth {
 		}
 	}
 
-	async enterOtpStep() {
-		const trimmed = this.email.trim();
-		return await this.sendOtpCode({ emailAddress: trimmed });
-	}
-
 	async verifyCode() {
+		if (this.authBusy) return false;
 		const token = this.otpCode.replace(/\D/g, ``).slice(0, 6);
-		if (token.length !== 6 || this.authBusy) {
+		if (token.length !== 6) {
 			this.authError = `Bitte gib den 6-stelligen Code ein.`;
 			return false;
 		}
@@ -193,9 +192,29 @@ export class CreateFlowAuth {
 		await this.sendOtpCode({ emailAddress: this.pendingEmail || this.email });
 	}
 
+	async signInWithGoogle(args: { next: string }) {
+		if (this.authBusy) return false;
+
+		this.authBusy = true;
+		this.authError = ``;
+		try {
+			await startGoogleOAuth({ next: args.next });
+			return true;
+		} catch (err: unknown) {
+			this.authError = mapOAuthError(err);
+			console.error(`Auth error:`, err);
+			this.authBusy = false;
+			return false;
+		}
+	}
+
 	async initializeClient() {
-		await getSupabaseBrowserClient().auth.getSession();
 		this.clientReady = true;
+		try {
+			await getSupabaseBrowserClient().auth.getSession();
+		} catch (err) {
+			console.error(`Auth client init failed:`, err);
+		}
 	}
 
 	destroy() {
@@ -247,6 +266,73 @@ export class CreateFlowAuth {
 		this.#emailProfileCheckPromises.set(trimmed, promise);
 		return promise;
 	}
+}
+
+export async function submitCreateFlowForm(args: {
+	formId: string;
+	beforeSubmit?: (form: HTMLFormElement) => boolean;
+}) {
+	const deadline = Date.now() + (args.beforeSubmit ? 4000 : 2000);
+	while (Date.now() < deadline) {
+		const form = document.getElementById(args.formId);
+		if (form instanceof HTMLFormElement && (args.beforeSubmit?.(form) ?? true)) {
+			const previousNoValidate = form.noValidate;
+			form.noValidate = true;
+			form.requestSubmit();
+			form.noValidate = previousNoValidate;
+			return true;
+		}
+		await tick();
+	}
+	return false;
+}
+
+export function assignCreateFlowImageClaims(args: { tokens: string[]; form: HTMLFormElement; testId: string }) {
+	const existing = [...args.form.querySelectorAll(`[data-testid="${args.testId}"]`)].filter(
+		(el): el is HTMLInputElement => el instanceof HTMLInputElement,
+	);
+	const name = existing[0]?.name || `imageClaims`;
+	const wanted = new Set(args.tokens);
+	for (const input of existing) {
+		if (wanted.has(input.value)) continue;
+		input.remove();
+	}
+	const remaining = [...args.form.querySelectorAll(`[data-testid="${args.testId}"]`)].filter(
+		(el): el is HTMLInputElement => el instanceof HTMLInputElement,
+	);
+	for (const token of args.tokens) {
+		const match = remaining.find((el) => el.value === token);
+		if (match) {
+			match.checked = true;
+			continue;
+		}
+		const input = document.createElement(`input`);
+		input.type = `hidden`;
+		input.name = name;
+		input.value = token;
+		input.checked = true;
+		input.setAttribute(`data-testid`, args.testId);
+		args.form.append(input);
+	}
+	const present = [...args.form.querySelectorAll(`[data-testid="${args.testId}"]`)].filter(
+		(el): el is HTMLInputElement => el instanceof HTMLInputElement,
+	);
+	return args.tokens.every((token) => present.some((el) => el.value === token && (el.type === `hidden` || el.checked)));
+}
+
+export async function waitForCreateFlowSubmit(args: {
+	isPending: () => boolean;
+	startTimeoutMs?: number;
+}): Promise<`started` | `idle`> {
+	const startDeadline = Date.now() + (args.startTimeoutMs ?? 4000);
+	while (!args.isPending() && Date.now() < startDeadline) {
+		await tick();
+	}
+	if (!args.isPending()) return `idle`;
+	while (args.isPending()) {
+		await tick();
+	}
+	return `started`;
 }
 
 export function fieldHasIssues(field: FormFieldWithIssues) {

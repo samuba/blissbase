@@ -44,3 +44,15 @@ export async function enterOtp(page: Page, code: string) {
 	await page.keyboard.press(`ControlOrMeta+A`);
 	await page.keyboard.type(code);
 }
+
+export async function expectCreateFlowPublishing(page: Page) {
+	await expect(page.getByTestId(`create-flow-publishing`)).toBeVisible({ timeout: 10000 });
+}
+
+export async function sendCreateFlowOtp(page: Page, args: { email: string; emailTestId: string }) {
+	await expect(page.getByTestId(`google-login-button`)).toBeVisible();
+	await page.getByTestId(args.emailTestId).fill(args.email);
+	await clickWizardPrimary(page);
+	await expect(page.getByTestId(`otp-input`)).toBeVisible({ timeout: 10000 });
+	await expect(page.getByTestId(`google-login-button`)).toHaveCount(0);
+}

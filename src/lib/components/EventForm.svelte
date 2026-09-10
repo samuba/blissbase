@@ -3,7 +3,7 @@
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import * as v from 'valibot';
-	import ImageInput from './ImageInput.svelte';
+	import ImageGalleryInput from './ImageGalleryInput.svelte';
 	import EventAutofill from './EventAutofill.svelte';
 	import {
 		createEventSchema,
@@ -25,7 +25,7 @@
 	type UpdateEventForm = typeof import('$lib/rpc/eventMutations.remote').updateEvent;
 	type EventFormRemoteForm = CreateEventForm | UpdateEventForm;
 	type UpdateOnlyFields = Pick<RemoteFormFields<v.InferInput<UpdateEventSchema>>,
-		'existingImageUrls' | 'eventId' | 'hostSecret'
+		'existingImageUrls' | 'imageOrder' | 'eventId' | 'hostSecret'
 	>;
 
 	let {
@@ -40,6 +40,8 @@
 		onDirty,
 		onSuccess,
 		onsubmit,
+		onImageBusyChange,
+		onImageFailedChange,
 		children,
 	}: {
 		mode: `create` | `update`;
@@ -53,6 +55,8 @@
 		onDirty?: () => void;
 		onSuccess?: () => void | Promise<void>;
 		onsubmit?: (event: SubmitEvent) => void;
+		onImageBusyChange?: (busy: boolean) => void;
+		onImageFailedChange?: (failed: boolean) => void;
 		children?: Snippet;
 	} = $props();
 
@@ -112,8 +116,7 @@
 
 <form
 	{...formProps}
-	{...onsubmit ? { onsubmit } : {}}
-	enctype="multipart/form-data"
+	{onsubmit}
 	class="flex flex-col gap-5"
 	id="event-form"
 	oninput={() => onDirty?.()}
@@ -124,10 +127,17 @@
 		<EventAutofill remoteForm={remoteForm as CreateEventForm} onPrefill={applyLocationPrefill} />
 	{/if}
 
-	<ImageInput
-		field={remoteForm.fields.images}
+	<ImageGalleryInput
+		kind="event"
+		field={remoteForm.fields.imageClaims}
 		existingImageUrlsField={updateFields.existingImageUrls}
+		imageOrderField={updateFields.imageOrder}
 		initialExistingImageUrls={initialExistingImageUrls}
+		hint="Lade Bilder hoch, die deinen Event illustrieren. Das erste Bild wird als Cover verwendet."
+		testIdPrefix="image"
+		onBusyChange={onImageBusyChange}
+		onFailedChange={onImageFailedChange}
+		{onDirty}
 	/>
 
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">

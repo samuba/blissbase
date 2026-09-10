@@ -73,17 +73,42 @@ export function offeringTempImageObjectKey(args: { suffix: string; contentType?:
 }
 
 /**
+ * Builds the temporary R2 key for an event image upload.
+ *
+ * @example
+ * eventTempImageObjectKey({ suffix: `cover`, contentType: `image/webp` });
+ */
+export function eventTempImageObjectKey(args: { suffix: string; contentType?: string }) {
+	assertSafeObjectKeyPart(args.suffix, `Event image suffix`);
+	const ext = getImageObjectExtensionFromMimeType(args.contentType ?? `image/webp`);
+	return `events/temp/${args.suffix}.${ext}`;
+}
+
+/**
  * Builds the final R2 key for an offering image owned by a saved offering.
  *
  * @example
- * offeringImageObjectKey({ userId: `user-123`, offeringId: 42, suffix: `cover`, contentType: `image/webp` });
+ * offeringImageObjectKey({ userId: `user-123`, suffix: `cover`, contentType: `image/webp` });
  */
-export function offeringImageObjectKey(args: { userId: string; offeringId: number; suffix: string; contentType?: string }) {
+export function offeringImageObjectKey(args: { userId: string; suffix: string; contentType?: string }) {
 	if (!args.userId?.trim()) throw new Error(`User id cannot be empty`);
-	if (!Number.isInteger(args.offeringId) || args.offeringId <= 0) throw new Error(`Offering id is invalid`);
 	assertSafeObjectKeyPart(args.suffix, `Offering image suffix`);
 	const ext = getImageObjectExtensionFromMimeType(args.contentType ?? `image/webp`);
-	return `offerings/${args.userId}/${args.offeringId}/${args.suffix}.${ext}`;
+	return `offerings/${args.userId}/${args.suffix}.${ext}`;
+}
+
+export function galleryTempImageObjectKey(args: { kind: `event` | `offering`; suffix: string; contentType?: string }) {
+	if (args.kind === `event`) return eventTempImageObjectKey(args);
+	return offeringTempImageObjectKey(args);
+}
+
+export function galleryFinalImageObjectKey(args: { kind: `event` | `offering`; ownerId: string; suffix: string; contentType?: string }) {
+	if (args.kind === `event`) return eventImageObjectKey(args.ownerId, args.suffix, args.contentType);
+	return offeringImageObjectKey({
+		userId: args.ownerId,
+		suffix: args.suffix,
+		contentType: args.contentType,
+	});
 }
 
 const PUBLIC_URL_ORIGIN = `https://assets.blissbase.app`;
@@ -166,25 +191,51 @@ export async function uploadImageAtObjectKey(buffer: Buffer, objectKey: string, 
 	}
 }
 
-/**
- * Moves a temporary offering upload into the final offering namespace.
- *
- * @example
- * await finalizeOfferingImage({ tempObjectKey, finalObjectKey, creds });
- */
-export async function finalizeOfferingImage(args: { tempObjectKey: string; finalObjectKey: string; creds: S3Creds }) {
-	if (!isTempOfferingImageObjectKey(args.tempObjectKey)) {
-		throw new Error(`Temporary offering image key is invalid`);
+export async function getObjectPrefix(args: { objectKey: string; byteLength: number; creds: S3Creds }) {
+	if (!args.objectKey?.trim()) throw new Error(`Object key cannot be empty`);
+	if (!Number.isInteger(args.byteLength) || args.byteLength <= 0) throw new Error(`Byte length must be a positive integer`);
+
+	const response = await new S3Client(args.creds).getPartialObject(args.objectKey, {
+		offset: 0,
+		length: args.byteLength,
+	});
+	if (!response.ok) throw new Error(`Failed to read uploaded image`);
+
+	const size = getObjectSizeFromContentRange(response.headers.get(`Content-Range`));
+	return {
+		bytes: new Uint8Array(await response.arrayBuffer()),
+		size,
+	};
+}
+
+export async function finalizeGalleryTempImage(args: {
+	kind: `event` | `offering`;
+	tempObjectKey: string;
+	finalObjectKey: string;
+	creds: S3Creds;
+}) {
+	if (!isTempGalleryImageObjectKey({ kind: args.kind, objectKey: args.tempObjectKey })) {
+		throw new Error(`Temporary ${args.kind} image key is invalid`);
 	}
-	if (!args.finalObjectKey?.startsWith(`offerings/`) || args.finalObjectKey.includes(`/temp/`)) {
-		throw new Error(`Final offering image key is invalid`);
+	const expectedPrefix = args.kind === `event` ? `events/` : `offerings/`;
+	if (!args.finalObjectKey?.startsWith(expectedPrefix) || args.finalObjectKey.includes(`/temp/`)) {
+		throw new Error(`Final ${args.kind} image key is invalid`);
 	}
 
 	return await moveTemporaryImage({
 		tempObjectKey: args.tempObjectKey,
 		finalObjectKey: args.finalObjectKey,
 		creds: args.creds,
-		label: `offering`,
+		label: args.kind,
+	});
+}
+
+export async function finalizeOfferingImage(args: { tempObjectKey: string; finalObjectKey: string; creds: S3Creds }) {
+	return finalizeGalleryTempImage({
+		kind: `offering`,
+		tempObjectKey: args.tempObjectKey,
+		finalObjectKey: args.finalObjectKey,
+		creds: args.creds,
 	});
 }
 
@@ -327,6 +378,15 @@ export function isTempOfferingImageObjectKey(objectKey: string) {
 	return /^offerings\/temp\/[a-zA-Z0-9_-]+\.(webp|jpg)$/.test(objectKey);
 }
 
+export function isTempEventImageObjectKey(objectKey: string) {
+	return /^events\/temp\/[a-zA-Z0-9_-]+\.(webp|jpg)$/.test(objectKey);
+}
+
+export function isTempGalleryImageObjectKey(args: { kind: `event` | `offering`; objectKey: string }) {
+	if (args.kind === `event`) return isTempEventImageObjectKey(args.objectKey);
+	return isTempOfferingImageObjectKey(args.objectKey);
+}
+
 export function isTempProfileImageObjectKey(objectKey: string) {
 	return /^profiles\/temp\/(profile|banner)-[a-zA-Z0-9_-]+\.(webp|jpg)$/.test(objectKey);
 }
@@ -357,6 +417,14 @@ function getImageObjectExtensionFromMimeType(contentType: string) {
 	if (contentType === `image/jpeg`) return `jpg`;
 	if (contentType === `image/webp`) return `webp`;
 	throw new Error(`Unsupported image content type: ${contentType || `unknown`}`);
+}
+
+function getObjectSizeFromContentRange(contentRange: string | null) {
+	const size = Number(contentRange?.match(/^bytes \d+-\d+\/(\d+)$/)?.[1]);
+	if (!Number.isSafeInteger(size) || size < 0) {
+		throw new Error(`Failed to determine uploaded image size`);
+	}
+	return size;
 }
 
 function assertSafeObjectKeyPart(value: string, label: string) {

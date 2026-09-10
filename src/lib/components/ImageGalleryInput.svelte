@@ -6,24 +6,37 @@
 	import { dragHandle, dragHandleZone } from "svelte-dnd-action";
 	import { fade } from "svelte/transition";
 	import { processImageUploadFile } from "$lib/imageUpload";
-	import { OFFERING_IMAGE_MAX_COUNT } from "$lib/rpc/offerings.common";
-	import { createOfferingImageUploadUrl } from "$lib/rpc/offerings.remote";
+	import {
+		GALLERY_IMAGE_MAX_COUNT,
+		getOrderedGalleryPreviewEntries,
+		publicUrlFromImageClaim,
+		type GalleryImageKind,
+	} from "$lib/galleryImages";
+	import { createGalleryImageUploadUrl, discardGalleryImage } from "$lib/rpc/galleryImages.remote";
 	import PopOver from "./PopOver.svelte";
 
 	let {
+		kind,
 		field,
 		existingImageUrlsField,
 		imageOrderField,
 		initialExistingImageUrls = [],
+		hint,
+		testIdPrefix,
 		onBusyChange,
+		onFailedChange,
 		onDirty,
 		class: className,
 	}: {
+		kind: GalleryImageKind;
 		field: RemoteFormField<string[]>;
 		existingImageUrlsField?: RemoteFormField<string[]>;
 		imageOrderField?: RemoteFormField<string[]>;
 		initialExistingImageUrls?: string[];
+		hint: string;
+		testIdPrefix: string;
 		onBusyChange?: (busy: boolean) => void;
+		onFailedChange?: (failed: boolean) => void;
 		onDirty?: () => void;
 		class?: string;
 	} = $props();
@@ -33,24 +46,28 @@
 	let isDesktop = $state(false);
 	let isDragging = $derived(dragDepth > 0);
 	let fullscreenImageUrl = $state<string | null>(null);
-	let hasInitializedPreviews = $state(false);
-	let previewItems = $state<OfferingImagePreviewItem[]>([]);
+	let previewItems = $state<GalleryImagePreviewItem[]>(createPreviewItemsFromFields());
 	let objectUrlsByPreviewId = new SvelteMap<string, string>();
 	let newImageOccurrenceByFingerprint = new SvelteMap<string, number>();
+	let cancelledPreviewIds = new Set<string>();
 	let lastReportedBusy = false;
+	let lastReportedFailed = false;
 	const previewFlipDurationMs = 220;
-	const busy = $derived(previewItems.some((x) => x.uploadState === `processing` || x.uploadState === `uploading`));
+	const readyOrBusyCount = $derived((previewItems ?? []).filter((x) => x.uploadState !== `error`).length);
+	const atMaxCount = $derived(readyOrBusyCount >= GALLERY_IMAGE_MAX_COUNT);
+	const busy = $derived((previewItems ?? []).some((x) => x.uploadState === `processing` || x.uploadState === `uploading`));
+	const hasFailedUploads = $derived((previewItems ?? []).some((x) => x.uploadState === `error`));
 	const submittedExistingImageUrls = $derived(
-		previewItems.filter((preview) => preview.source === `existing`).map((preview) => preview.url),
+		(previewItems ?? []).filter((preview) => preview.source === `existing`).map((preview) => preview.url),
 	);
 	const submittedClaimTokens = $derived(
-		previewItems
+		(previewItems ?? [])
 			.filter((preview) => preview.source === `new` && preview.uploadState === `ready` && preview.claimToken)
 			.map((preview) => preview.claimToken)
 			.filter((token): token is string => Boolean(token)),
 	);
 	const submittedImageOrder = $derived.by(() => {
-		return previewItems
+		return (previewItems ?? [])
 			.map((preview) => {
 				if (preview.source === `existing`) return preview.url;
 				if (preview.uploadState === `ready` && preview.claimToken) return preview.claimToken;
@@ -67,14 +84,19 @@
 
 		updateIsDesktop();
 		mediaQuery.addEventListener(`change`, updateIsDesktop);
-		initializeExistingPreviews();
+		previewItems = createPreviewItemsFromFields();
 
 		return () => {
 			mediaQuery.removeEventListener(`change`, updateIsDesktop);
 			revokeObjectUrls();
 			reportBusy(false);
+			reportFailed(false);
 		};
 	});
+
+	function testId(suffix: string) {
+		return `${testIdPrefix}-${suffix}`;
+	}
 
 	function reportBusy(nextBusy: boolean) {
 		if (lastReportedBusy === nextBusy) return;
@@ -82,48 +104,48 @@
 		onBusyChange?.(nextBusy);
 	}
 
-	/**
-	 * Initializes edit previews from existing image URLs once the form is mounted.
-	 * @example
-	 * initializeExistingPreviews();
-	 */
-	function initializeExistingPreviews() {
-		const fieldUrls = (existingImageUrlsField?.value() ?? []).filter((url): url is string => Boolean(url));
-		const existingUrls = (fieldUrls.length ? fieldUrls : initialExistingImageUrls).filter((url): url is string => Boolean(url));
-		if (!existingUrls.length) {
-			hasInitializedPreviews = true;
-			return;
-		}
-
-		const existingPreviews = existingUrls.map((url, index) => {
-			return {
-				id: `existing:${url}`,
-				name: `Bild #${index + 1}`,
-				sizeLabel: `Bereits hochgeladen`,
-				url,
-				source: `existing`,
-				uploadState: `ready`,
-				progress: 100,
-			} satisfies OfferingImagePreviewItem;
-		});
-		previewItems = [...existingPreviews, ...previewItems];
-		hasInitializedPreviews = true;
+	function reportFailed(nextFailed: boolean) {
+		if (lastReportedFailed === nextFailed) return;
+		lastReportedFailed = nextFailed;
+		onFailedChange?.(nextFailed);
 	}
 
-	/**
-	 * Builds a stable fingerprint for one selected file.
-	 * @example
-	 * const fingerprint = getFileFingerprint(file);
-	 */
+	function createPreviewItemsFromFields() {
+		const fieldUrls = (existingImageUrlsField?.value() ?? []).filter((url): url is string => Boolean(url));
+		const existingUrls = (fieldUrls.length ? fieldUrls : initialExistingImageUrls).filter((url): url is string => Boolean(url));
+		const claimTokens = (field.value() ?? []).filter((token): token is string => Boolean(token));
+		const imageOrder = (imageOrderField?.value() ?? []).filter((token): token is string => Boolean(token));
+
+		return getOrderedGalleryPreviewEntries({ existingUrls, claimTokens, imageOrder }).map((entry, index) => {
+			if (entry.source === `existing`) {
+				return {
+					id: `existing:${entry.url}`,
+					name: ``,
+					sizeLabel: ``,
+					url: entry.url,
+					source: `existing`,
+					uploadState: `ready`,
+					progress: 100,
+				} satisfies GalleryImagePreviewItem;
+			}
+
+			return {
+				id: `claim:${index}:${entry.claimToken}`,
+				name: ``,
+				sizeLabel: ``,
+				url: publicUrlFromImageClaim(entry.claimToken),
+				source: `new`,
+				claimToken: entry.claimToken,
+				uploadState: `ready`,
+				progress: 100,
+			} satisfies GalleryImagePreviewItem;
+		});
+	}
+
 	function getFileFingerprint(file: File) {
 		return `${file.name}-${file.lastModified}-${file.size}`;
 	}
 
-	/**
-	 * Revokes all local object URLs owned by this component.
-	 * @example
-	 * revokeObjectUrls();
-	 */
 	function revokeObjectUrls() {
 		for (const url of objectUrlsByPreviewId.values()) {
 			URL.revokeObjectURL(url);
@@ -131,11 +153,6 @@
 		objectUrlsByPreviewId.clear();
 	}
 
-	/**
-	 * Replaces one local preview URL and revokes the previous one.
-	 * @example
-	 * const previewUrl = setObjectUrlForPreview({ previewId: `new:1`, file });
-	 */
 	function setObjectUrlForPreview(args: { previewId: string; file: File | Blob }) {
 		const previousUrl = objectUrlsByPreviewId.get(args.previewId);
 		if (previousUrl) URL.revokeObjectURL(previousUrl);
@@ -145,11 +162,6 @@
 		return nextUrl;
 	}
 
-	/**
-	 * Releases the local object URL for one preview after a public URL is available.
-	 * @example
-	 * clearObjectUrlForPreview(`new:1`);
-	 */
 	function clearObjectUrlForPreview(previewId: string) {
 		const objectUrl = objectUrlsByPreviewId.get(previewId);
 		if (!objectUrl) return;
@@ -157,11 +169,6 @@
 		objectUrlsByPreviewId.delete(previewId);
 	}
 
-	/**
-	 * Creates a unique preview token for a newly selected image.
-	 * @example
-	 * const token = createNewImageToken(file);
-	 */
 	function createNewImageToken(file: File) {
 		const fingerprint = getFileFingerprint(file);
 		const nextOccurrence = (newImageOccurrenceByFingerprint.get(fingerprint) ?? 0) + 1;
@@ -169,11 +176,6 @@
 		return `new:${fingerprint}-${nextOccurrence}`;
 	}
 
-	/**
-	 * Creates a local preview entry while processing and upload are pending.
-	 * @example
-	 * const preview = createPendingImagePreview({ file });
-	 */
 	function createPendingImagePreview(args: { file: File }) {
 		const token = createNewImageToken(args.file);
 		const previewUrl = setObjectUrlForPreview({ previewId: token, file: args.file });
@@ -185,23 +187,23 @@
 			url: previewUrl,
 			source: `new`,
 			fingerprint: getFileFingerprint(args.file),
+			sourceFile: args.file,
 			uploadState: `processing`,
 			progress: 0,
-		} satisfies OfferingImagePreviewItem;
+		} satisfies GalleryImagePreviewItem;
 	}
 
-	/**
-	 * Merges selected image files and starts processing/uploading them.
-	 * @example
-	 * await addSelectedImages({ files: input.files ?? undefined });
-	 */
+	function isCancelled(previewId: string) {
+		return cancelledPreviewIds.has(previewId) || !previewItems.some((item) => item.id === previewId);
+	}
+
 	async function addSelectedImages(args: { files: FileList | undefined }) {
-		if (!args.files?.length || busy) return;
+		if (!args.files?.length) return;
 
 		const imageFiles = Array.from(args.files).filter((file) => file.type.startsWith(`image/`));
 		if (!imageFiles.length) return;
 
-		const remainingSlots = Math.max(0, OFFERING_IMAGE_MAX_COUNT - previewItems.length);
+		const remainingSlots = Math.max(0, GALLERY_IMAGE_MAX_COUNT - readyOrBusyCount);
 		if (!remainingSlots) return;
 
 		const existingCountByFingerprint = new SvelteMap<string, number>();
@@ -230,31 +232,34 @@
 		onDirty?.();
 		reportBusy(true);
 
-		for (const pendingPreview of pendingPreviews) {
-			await processAndUploadSelectedImage({
-				previewId: pendingPreview.preview.id,
-				file: pendingPreview.file,
-			});
-		}
+		await Promise.allSettled(
+			pendingPreviews.map((pendingPreview) =>
+				processAndUploadSelectedImage({
+					previewId: pendingPreview.preview.id,
+					file: pendingPreview.file,
+				}),
+			),
+		);
+		reportBusy(busy);
+		reportFailed(hasFailedUploads);
 	}
 
-	/**
-	 * Processes one image locally, uploads it directly, and stores its claim token.
-	 * @example
-	 * await processAndUploadSelectedImage({ previewId: `new:1`, file });
-	 */
 	async function processAndUploadSelectedImage(args: { previewId: string; file: File }) {
+		if (isCancelled(args.previewId)) return;
+
 		updatePreviewState({
 			previewId: args.previewId,
 			uploadState: `processing`,
 			progress: 5,
 			error: undefined,
+			sourceFile: args.file,
 		});
 
 		try {
 			const processedFile = await processImageUploadFile({
 				file: args.file,
 				onProgress: (progress) => {
+					if (isCancelled(args.previewId)) return;
 					updatePreviewState({
 						previewId: args.previewId,
 						uploadState: `processing`,
@@ -263,6 +268,7 @@
 					});
 				},
 			});
+			if (isCancelled(args.previewId)) return;
 
 			const previewUrl = setObjectUrlForPreview({
 				previewId: args.previewId,
@@ -278,9 +284,14 @@
 				error: undefined,
 			});
 
-			const { uploadUrl, publicUrl, claimToken } = await createOfferingImageUploadUrl({
-				contentType: getUploadContentType(processedFile),
+			const { uploadUrl, publicUrl, claimToken } = await createGalleryImageUploadUrl({
+				kind,
+				contentType: processedFile.type === `image/jpeg` ? `image/jpeg` : `image/webp`,
 			});
+			if (isCancelled(args.previewId)) {
+				void discardGalleryImage({ claimToken });
+				return;
+			}
 
 			const response = await fetch(uploadUrl, {
 				method: `PUT`,
@@ -289,6 +300,10 @@
 			});
 			if (!response.ok) {
 				throw new Error(`Upload fehlgeschlagen (HTTP ${response.status})`);
+			}
+			if (isCancelled(args.previewId)) {
+				void discardGalleryImage({ claimToken });
+				return;
 			}
 
 			clearObjectUrlForPreview(args.previewId);
@@ -301,6 +316,7 @@
 				error: undefined,
 			});
 		} catch (error) {
+			if (isCancelled(args.previewId)) return;
 			updatePreviewState({
 				previewId: args.previewId,
 				uploadState: `error`,
@@ -310,11 +326,16 @@
 		}
 	}
 
-	/**
-	 * Updates one preview item without disturbing the current order.
-	 * @example
-	 * updatePreviewState({ previewId: `new:1`, uploadState: `ready`, progress: 100 });
-	 */
+	function retrySelectedImage(args: { previewId: string }) {
+		const preview = previewItems.find((item) => item.id === args.previewId);
+		if (!preview?.sourceFile) return;
+		cancelledPreviewIds.delete(args.previewId);
+		void processAndUploadSelectedImage({
+			previewId: args.previewId,
+			file: preview.sourceFile,
+		});
+	}
+
 	function updatePreviewState(args: UpdatePreviewStateArgs) {
 		previewItems = previewItems.map((item) => {
 			if (item.id !== args.previewId) return item;
@@ -324,31 +345,17 @@
 				sizeLabel: args.sizeLabel ?? item.sizeLabel,
 				url: args.url ?? item.url,
 				claimToken: args.claimToken ?? item.claimToken,
+				sourceFile: args.sourceFile ?? item.sourceFile,
 				uploadState: args.uploadState,
 				progress: args.progress,
 				error: args.error,
 			};
 		});
 		reportBusy(busy);
+		reportFailed(hasFailedUploads);
 	}
 
-	/**
-	 * Narrows a processed image type to one supported by the upload command.
-	 * @example
-	 * const contentType = getUploadContentType(file);
-	 */
-	function getUploadContentType(file: File): OfferingImageContentType {
-		if (file.type === `image/webp`) return `image/webp`;
-		return `image/jpeg`;
-	}
-
-	/**
-	 * Moves a preview one position left or right and syncs via derived claim order.
-	 * @example
-	 * movePreview({ previewId: `new:1`, direction: 1 });
-	 */
 	function movePreview(args: { previewId: string; direction: -1 | 1 }) {
-		if (busy) return;
 		const currentIndex = previewItems.findIndex((x) => x.id === args.previewId);
 		if (currentIndex < 0) return;
 
@@ -364,95 +371,53 @@
 		onDirty?.();
 	}
 
-	/**
-	 * Removes one selected image from previews and submitted claims.
-	 * @example
-	 * removeSelectedImage({ previewId: `new:1` });
-	 */
 	function removeSelectedImage(args: { previewId: string }) {
-		if (busy) return;
+		const preview = previewItems.find((item) => item.id === args.previewId);
+		cancelledPreviewIds.add(args.previewId);
 		clearObjectUrlForPreview(args.previewId);
 		previewItems = previewItems.filter((x) => x.id !== args.previewId);
+		if (preview?.url && fullscreenImageUrl === preview.url) fullscreenImageUrl = null;
+		if (preview?.claimToken) void discardGalleryImage({ claimToken: preview.claimToken });
 		onDirty?.();
+		reportBusy(busy);
+		reportFailed(hasFailedUploads);
 	}
 
-	/**
-	 * Opens the native image picker.
-	 * @example
-	 * openImagePicker();
-	 */
 	function openImagePicker() {
-		if (busy) return;
+		if (atMaxCount) return;
 		imageInputElement?.click();
 	}
 
-	/**
-	 * Highlights the dropzone while files are being dragged over it.
-	 * @example
-	 * handleDragEnter();
-	 */
 	function handleDragEnter() {
-		if (!isDesktop || busy) return;
+		if (!isDesktop || atMaxCount) return;
 		dragDepth += 1;
 	}
 
-	/**
-	 * Resets the dropzone highlight after dragging leaves.
-	 * @example
-	 * handleDragLeave();
-	 */
 	function handleDragLeave() {
 		if (!isDesktop || !dragDepth) return;
 		dragDepth -= 1;
 	}
 
-	/**
-	 * Handles dropped files and appends image files only.
-	 * @example
-	 * await handleDrop({ files: event.dataTransfer?.files });
-	 */
 	async function handleDrop(args: { files: FileList | undefined }) {
 		dragDepth = 0;
-		if (!isDesktop || busy) return;
+		if (!isDesktop || atMaxCount) return;
 		await addSelectedImages({ files: args.files });
 	}
 
-	/**
-	 * Opens the full-screen preview modal.
-	 * @example
-	 * openFullscreenPreview(`https://example.com/image.webp`);
-	 */
-	function openFullscreenPreview(url: string) {
-		fullscreenImageUrl = url;
-	}
-
-	/**
-	 * Closes the full-screen preview modal.
-	 * @example
-	 * closeFullscreenPreview();
-	 */
-	function closeFullscreenPreview() {
-		fullscreenImageUrl = null;
-	}
-
-	/**
-	 * Formats a byte size for preview metadata.
-	 * @example
-	 * formatFileSize(1536);
-	 */
 	function formatFileSize(size: number) {
 		if (size < 1024) return `${size} B`;
 		if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
 		return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 	}
 
-	type OfferingImagePreviewItem = {
+	type GalleryImagePreviewItem = {
 		id: string;
 		name: string;
 		sizeLabel: string;
 		url: string;
 		source: `existing` | `new`;
 		fingerprint?: string;
+		sourceFile?: File;
 		uploadState: UploadState;
 		progress: number;
 		claimToken?: string;
@@ -467,22 +432,29 @@
 		sizeLabel?: string;
 		url?: string;
 		claimToken?: string;
+		sourceFile?: File;
 		error?: string;
 	};
 
 	type UploadState = `ready` | `processing` | `uploading` | `error`;
-	type OfferingImageContentType = `image/webp` | `image/jpeg`;
 </script>
 
+<svelte:window
+	onkeydown={(event) => {
+		if (event.key !== `Escape` || !fullscreenImageUrl) return;
+		fullscreenImageUrl = null;
+	}}
+/>
+
 <fieldset class={[`fieldset w-full min-w-0 gap-3`, className]}>
-	<legend class="fieldset-legend peer-aria-invalid:text-red-600">Bilder</legend>
+	<legend class="fieldset-legend peer-aria-invalid:text-error">Bilder</legend>
 
 	<div
 		role="group"
 		aria-label="Bilder auswählen oder ablegen"
 		ondragenter={handleDragEnter}
 		ondragover={(event) => {
-			if (!isDesktop || busy) return;
+			if (!isDesktop || atMaxCount) return;
 			event.preventDefault();
 		}}
 		ondragleave={handleDragLeave}
@@ -493,12 +465,12 @@
 	>
 		<input
 			bind:this={imageInputElement}
-			data-testid="offering-image-input"
+			data-testid={testId(`input`)}
 			class="sr-only"
 			type="file"
 			accept="image/*"
 			multiple
-			disabled={busy}
+			disabled={atMaxCount}
 			onchange={async (event) => {
 				const input = event.currentTarget;
 				await addSelectedImages({ files: input.files ?? undefined });
@@ -510,7 +482,7 @@
 			<button
 				onclick={openImagePicker}
 				type="button"
-				disabled={busy || previewItems.length >= OFFERING_IMAGE_MAX_COUNT}
+				disabled={atMaxCount}
 				class={[
 					"btn sm:border-primary flex shrink-0 items-center justify-center sm:rounded-xl sm:border-2 sm:border-dashed sm:px-6 sm:py-8",
 					field.issues()?.length ? "bg-error/10 text-error" : isDragging ? "bg-primary" : "sm:bg-primary/10",
@@ -528,14 +500,14 @@
 	</div>
 
 	<p class="label pt-0 whitespace-pre-line">
-		Lade Bilder hoch, die dein Angebot zeigen. Das erste Bild wird als Cover verwendet.
+		{hint}
 		{#if busy}
 			<br />Bilder werden lokal verarbeitet und hochgeladen.
 		{/if}
 	</p>
 
 	<div
-		data-testid="offering-image-preview-grid"
+		data-testid={testId(`preview-grid`)}
 		class:hidden={previewItems.length === 0}
 		class="grid grid-cols-2 gap-3 sm:grid-cols-3"
 		role="list"
@@ -544,26 +516,28 @@
 			items: previewItems,
 			flipDurationMs: previewFlipDurationMs,
 			delayTouchStart: true,
-			dragDisabled: busy,
 			dropTargetStyle: { outline: `none` },
 		}}
 		onconsider={(event) => {
-			if (busy) return;
+			if (!event.detail.items) return;
 			previewItems = event.detail.items;
 		}}
 		onfinalize={(event) => {
-			if (busy) return;
+			if (!event.detail.items) return;
 			previewItems = event.detail.items;
 			onDirty?.();
 		}}
 	>
 		{#each previewItems as preview, i (preview.id)}
+			{@const itemName = preview.sourceFile ? preview.name : `Bild #${i + 1}`}
+			{@const itemSizeLabel = preview.sourceFile ? preview.sizeLabel : `Bereits hochgeladen`}
 			<div
-				data-testid="offering-image-preview-item"
+				data-testid={testId(`preview-item`)}
+				data-upload-state={preview.uploadState}
 				animate:flip={{ duration: previewFlipDurationMs }}
 				class="bg-base-200 group card border-base-300/60 overflow-hidden border"
 				role="listitem"
-				aria-label={preview.name}
+				aria-label={itemName}
 			>
 				<div class="bg-base-300 relative aspect-square overflow-hidden">
 					<div class="badge badge-sm absolute top-2 left-2 z-10">
@@ -576,17 +550,16 @@
 							arrowProps={{ width: 12, height: 10, class: "text-primary" }}
 						>
 							{#snippet trigger({ props })}
-								<div use:dragHandle {...props} class={[`p-2`, props.class]}>
-									<button
-										data-testid="offering-image-preview-handle"
-										type="button"
-										class="btn btn-sm rounded-lg p-1 hover:cursor-grab active:cursor-grabbing"
-										aria-label={`${preview.name} verschieben`}
-										disabled={busy}
-									>
-										<i class="icon-[ph--dots-nine] size-5 drop-shadow-md"></i>
-									</button>
-								</div>
+								<button
+									use:dragHandle
+									{...props}
+									data-testid={testId(`preview-handle`)}
+									type="button"
+									class={[`btn btn-sm rounded-lg p-1 hover:cursor-grab active:cursor-grabbing`, props.class]}
+									aria-label={`${itemName} verschieben`}
+								>
+									<i class="icon-[ph--dots-nine] size-5 drop-shadow-md"></i>
+								</button>
 							{/snippet}
 							{#snippet content()}
 								<p class="text-center text-xs">Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern.</p>
@@ -596,10 +569,10 @@
 					<button
 						type="button"
 						class="h-full w-full cursor-pointer"
-						onclick={() => openFullscreenPreview(preview.url)}
-						aria-label={`Vollbildansicht von ${preview.name} öffnen`}
+						onclick={() => (fullscreenImageUrl = preview.url)}
+						aria-label={`Vollbildansicht von ${itemName} öffnen`}
 					>
-						<img src={preview.url} alt={`Vorschau für ${preview.name}`} class="h-full w-full object-cover" draggable="false" />
+						<img src={preview.url} alt={`Vorschau für ${itemName}`} class="h-full w-full object-cover" draggable="false" />
 					</button>
 					{#if preview.uploadState !== `ready`}
 						<div
@@ -610,6 +583,19 @@
 									<i class="icon-[ph--warning-circle] text-error size-8"></i>
 									<p class="text-xs font-medium">Upload fehlgeschlagen</p>
 									<p class="text-[11px] opacity-80">{preview.error}</p>
+									{#if preview.sourceFile}
+										<button
+											type="button"
+											class="btn btn-xs mt-2"
+											data-testid={testId(`preview-retry`)}
+											onclick={(e) => {
+												e.stopPropagation();
+												retrySelectedImage({ previewId: preview.id });
+											}}
+										>
+											Nochmal versuchen
+										</button>
+									{/if}
 								</div>
 							{:else}
 								<div>
@@ -632,17 +618,17 @@
 
 				<div class="flex items-start justify-between gap-2 p-3">
 					<div class="min-w-0">
-						<p class="truncate text-xs font-medium">{preview.name}</p>
-						<p class="text-base-content/60 text-xs">{preview.sizeLabel}</p>
+						<p class="truncate text-xs font-medium">{itemName}</p>
+						<p class="text-base-content/60 text-xs">{itemSizeLabel}</p>
 					</div>
 
 					<div class="relative flex items-center gap-1">
 						<button
-							data-testid="offering-image-preview-move-left"
+							data-testid={testId(`preview-move-left`)}
 							type="button"
 							class="sr-only top-0 left-0 z-20"
-							aria-label={`${preview.name} nach links verschieben`}
-							disabled={i === 0 || busy}
+							aria-label={`${itemName} nach links verschieben`}
+							disabled={i === 0}
 							onmousedown={(e) => e.stopPropagation()}
 							onclick={(e) => {
 								e.stopPropagation();
@@ -652,11 +638,11 @@
 							Nach links
 						</button>
 						<button
-							data-testid="offering-image-preview-move-right"
+							data-testid={testId(`preview-move-right`)}
 							type="button"
 							class="sr-only top-0 left-1 z-20"
-							aria-label={`${preview.name} nach rechts verschieben`}
-							disabled={i === previewItems.length - 1 || busy}
+							aria-label={`${itemName} nach rechts verschieben`}
+							disabled={i === previewItems.length - 1}
 							onmousedown={(e) => e.stopPropagation()}
 							onclick={(e) => {
 								e.stopPropagation();
@@ -666,11 +652,10 @@
 							Nach rechts
 						</button>
 						<button
-							data-testid="offering-image-preview-remove"
+							data-testid={testId(`preview-remove`)}
 							type="button"
 							class="btn btn-ghost btn-sm btn-circle shrink-0"
-							aria-label={`Bild ${preview.name} entfernen`}
-							disabled={busy}
+							aria-label={`Bild ${itemName} entfernen`}
 							onmousedown={(e) => e.stopPropagation()}
 							onclick={(e) => {
 								e.stopPropagation();
@@ -697,14 +682,14 @@
 			{/each}
 		{/if}
 		{#each submittedClaimTokens as token, i (`${token}-${i}`)}
-			<input {...field.as(`checkbox`, token)} checked />
+			<input {...field.as(`checkbox`, token)} checked data-testid={testId(`claim`)} />
 		{/each}
 	</div>
 
 	{#if field.issues()?.length}
 		<div class="mt-2 flex flex-col gap-1">
 			{#each field.issues() as issue, i (`${issue.message}-${i}`)}
-				<div class="text-xs text-red-600">{issue.message}</div>
+				<div class="text-error text-xs">{issue.message}</div>
 			{/each}
 		</div>
 	{/if}
@@ -712,7 +697,7 @@
 	{#if existingImageUrlsField?.issues()?.length}
 		<div class="mt-2 flex flex-col gap-1">
 			{#each existingImageUrlsField.issues() as issue, i (`${issue.message}-${i}`)}
-				<div class="text-xs text-red-600">{issue.message}</div>
+				<div class="text-error text-xs">{issue.message}</div>
 			{/each}
 		</div>
 	{/if}
@@ -723,7 +708,7 @@
 			class="fixed inset-0 z-70 flex items-center justify-center bg-black/85 p-4"
 			in:fade={{ duration: 180 }}
 			out:fade={{ duration: 80 }}
-			onclick={closeFullscreenPreview}
+			onclick={() => (fullscreenImageUrl = null)}
 			aria-label="Vollbildansicht schließen"
 		>
 			<img src={fullscreenImageUrl} alt="Vollbildansicht" class="max-h-full max-w-full object-contain" />

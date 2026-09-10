@@ -54,7 +54,7 @@ export class EventsStore {
     selectedSortValue = $derived(this.getSortValue(this.pagination.sortBy, this.pagination.sortOrder));
     isLoading = $derived(this.loadingState === 'loading');
     isLoadingMore = $derived(this.loadingState === 'loading-more');
-    hasEvents = $derived(this.events.length > 0);
+    hasEvents = $derived((this.events ?? []).length > 0);
     canLoadMore = $derived(
         this.loadingState === 'not-loading' &&
         this.pagination.totalPages != null &&
@@ -84,7 +84,7 @@ export class EventsStore {
 
     // Initialize with server data
     initialize(args: { events: UiEvent[]; pagination: PaginationState }) {
-        this.events = args.events;
+        this.events = args.events ?? [];
         this.pagination = args.pagination;
     }
 
@@ -129,11 +129,11 @@ export class EventsStore {
 
             if (append) {
                 // Filter out duplicate events that may result from pagination
-                const existingEventIds = new SvelteSet(this.events.map((event) => event.id));
-                const newEvents = data.events.filter((event) => !existingEventIds.has(event.id));
+                const existingEventIds = new SvelteSet((this.events ?? []).map((event) => event.id));
+                const newEvents = (data.events ?? []).filter((event) => !existingEventIds.has(event.id));
                 this.events.push(...newEvents);
             } else {
-                this.events = data.events;
+                this.events = data.events ?? [];
             }
 
             applyPagination(data.pagination);

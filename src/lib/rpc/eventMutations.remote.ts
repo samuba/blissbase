@@ -2,16 +2,12 @@ import { form, getRequestEvent, query } from '$app/server';
 import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
 import * as assets from '$lib/assets';
 import { deduplicateItems, generateSlug, randomString, toAddressLines } from '$lib/common';
-import {
-    IMAGE_UPLOAD_ACCEPTED_MIME_TYPES,
-    IMAGE_UPLOAD_HASH_LENGTH,
-    getProcessedImageHashFromFileName,
-    getStableContentHash
-} from '$lib/imageUpload.shared';
+import { getNextGalleryImageUrls, uniqueGalleryImageClaimTokens } from '$lib/galleryImages';
 import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from '$lib/events.remote.common';
 import { coordinatesMatch, hasValidCoordinates } from '$lib/locationFilter';
 import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
 import { routes, withEventSlug } from '$lib/routes';
+import { finalizeGalleryImageClaims, isGalleryImageE2eMode, verifyGalleryImageClaims } from '$lib/server/galleryImageClaims';
 import { db, eq, s, sql } from '$lib/server/db';
 import { sendEventCreatedEmail } from '$lib/server/email';
 import { geocodeAddressCached, getTimezoneForCoordinatesCached } from '$lib/server/google';
@@ -20,7 +16,6 @@ import { hasPublicProfileChanges, mergeProfileFromForm, savePublicProfile } from
 import { verifySubmitAuthToken } from '$lib/server/submitAuth';
 import { getMyPublicProfile } from '$lib/rpc/profile.remote';
 import { setFlash } from '$lib/server/flash';
-import type { SelectEvent } from '$lib/server/schema';
 import type { InsertEvent } from '$lib/types';
 import { error, invalid, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
@@ -28,6 +23,11 @@ import * as v from 'valibot';
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	console.time('updateEvent');
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
+	const imageClaims = verifyGalleryImageClaims({ claimTokens: data.imageClaims, kind: `event` });
+	if (imageClaims instanceof Error) {
+		return invalid(issue.imageClaims(imageClaims.message));
+	}
+
 	const address = toAddressLines(data.address);
 	const [coords, uploadedImageUrls] = await Promise.all([
 		resolveEventCoordinates({
@@ -35,7 +35,11 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 			latitude: data.latitude,
 			longitude: data.longitude,
 		}),
-		uploadImages({ files: data.images, slug: eventFromDb.slug })
+		finalizeGalleryImageClaims({
+			kind: `event`,
+			claims: imageClaims,
+			ownerId: eventFromDb.slug,
+		}),
 	]);
 
 	if (address.length && !coords) {
@@ -53,11 +57,14 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 		address
 	});
 
-	const { imageUrls, deletedImageUrls } = getImagesForEventUpdate({
-		existingImageUrls: eventFromDb.imageUrls ?? [],
-		imageTokens: data.existingImageUrls,
-		uploadedImageUrls
+	const imageUrls = getNextGalleryImageUrls({
+		currentImageUrls: eventFromDb.imageUrls ?? [],
+		submittedImageUrls: data.existingImageUrls,
+		submittedClaimTokens: uniqueGalleryImageClaimTokens(data.imageClaims),
+		uploadedImageUrls,
+		imageOrder: data.imageOrder,
 	});
+	const deletedImageUrls = (eventFromDb.imageUrls ?? []).filter((url) => !imageUrls.includes(url));
 
 	await db.update(s.events).set({
 		...formData,
@@ -67,7 +74,7 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 		updatedAt: sql`now()`,
 	}).where(eq(s.events.id, eventFromDb.id));
 
-	if (deletedImageUrls?.length && E2E_TEST !== `true`) {
+	if (deletedImageUrls?.length && !isGalleryImageE2eMode) {
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
 	}
 
@@ -103,6 +110,11 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		if (sessionUserId) getMyPublicProfile().refresh();
 	}
 
+	const imageClaims = verifyGalleryImageClaims({ claimTokens: data.imageClaims, kind: `event` });
+	if (imageClaims instanceof Error) {
+		return invalid(issue.imageClaims(imageClaims.message));
+	}
+
 	const address = toAddressLines(data.address);
 	const coords = await resolveEventCoordinates({
 		address: data.address,
@@ -121,16 +133,19 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		endAt: data.endAt,
 		timezone
 	});
-	const imageUrls = await uploadImages({ files: data.images, slug });
 
-	let createdEvent: SelectEvent | undefined = undefined;
-	
 	const existingEvent = await db.query.events.findFirst({ where: eq(s.events.slug, slug), columns: { slug: true } });
 	if (existingEvent) {
 		return invalid(issue.name(`An event with this name and start date already exists.`));
 	}
 
-	const createdRows = await db.insert(s.events).values({
+	const imageUrls = await finalizeGalleryImageClaims({
+		kind: `event`,
+		claims: imageClaims,
+		ownerId: slug,
+	});
+
+	const [createdEvent] = await db.insert(s.events).values({
 		...event,
 		source: `website-form`,
 		slug,
@@ -140,24 +155,22 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		authorId: userId,
 		hostSecret: randomString(16),
 	} satisfies InsertEvent).returning();
-
-	createdEvent = createdRows[0];
 	if (!createdEvent) throw error(500, `Failed to create event`);
 
 	if (E2E_TEST !== `true`) {
 		await sendEventCreatedEmail({
 			to: userEmail,
-			eventName: createdEvent!.name,
-			eventSlug: createdEvent!.slug,
-			startAt: createdEvent!.startAt,
-			endAt: createdEvent!.endAt,
-			isOnline: createdEvent!.attendanceMode === `online`,
+			eventName: createdEvent.name,
+			eventSlug: createdEvent.slug,
+			startAt: createdEvent.startAt,
+			endAt: createdEvent.endAt,
+			isOnline: createdEvent.attendanceMode === `online`,
 		});
 	}
 
 	console.timeEnd('createEvent');
 	setFlash(`eventCreated`);
-	redirect(303, withEventSlug({ eventSlug: createdEvent!.slug }));
+	redirect(303, withEventSlug({ eventSlug: createdEvent.slug }));
 });
 
 export const getExistingEventForDraft = query(v.object({
@@ -228,7 +241,9 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 		email: _email,
 		authToken: _authToken,
 		profile: _profile,
-		images: _images,
+		imageClaims: _imageClaims,
+		imageOrder: _imageOrder,
+		existingImageUrls: _existingImageUrls,
 		isOnline: _isOnline,
 		isNotListed: _isNotListed,
 		contact: _contact,
@@ -244,6 +259,7 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 		eventId?: number;
 		hostSecret?: string;
 		existingImageUrls?: string[];
+		imageOrder?: string[];
 	};
 
 	return {
@@ -324,107 +340,6 @@ async function resolveEventCoordinates(args: {
 }
 
 /**
- * Uploads already processed event images directly to storage.
- *
- * @example
- * await uploadImages({ files: [], slug: `demo-event` })
- */
-async function uploadImages(args: UploadImagesArgs) {
-	if (!args.files?.length) return [];
-	const validFiles = args.files.filter((file) => !!file && file.size > 0);
-	if (!validFiles.length) return [];
-
-	if (E2E_TEST === `true`) {
-		return getE2EImageUrls({ files: validFiles, slug: args.slug });
-	}
-
-	const uploadedImages = new Map<string, Promise<string>>();
-	const imageUrls: string[] = [];
-
-	for (const file of validFiles) {
-		let imageHash: string | undefined = undefined;
-
-		try {
-			if (!IMAGE_UPLOAD_ACCEPTED_MIME_TYPES.includes(file.type as (typeof IMAGE_UPLOAD_ACCEPTED_MIME_TYPES)[number])) {
-				throw new Error(`Expected processed image upload (WebP or JPEG), received ${file.type || `unknown`}`);
-			}
-
-			const bytes = new Uint8Array(await file.arrayBuffer());
-			imageHash = getProcessedImageHashFromFileName({ fileName: file.name }) ?? await getStableContentHash({ bytes });
-			if (!imageHash || imageHash.length !== IMAGE_UPLOAD_HASH_LENGTH) {
-				throw new Error(`Missing processed image hash`);
-			}
-
-			let imageUrlPromise = uploadedImages.get(imageHash);
-			if (!imageUrlPromise) {
-				imageUrlPromise = assets.uploadEventImage(Buffer.from(bytes), args.slug, imageHash, eventAssetsCreds, file.type);
-				uploadedImages.set(imageHash, imageUrlPromise);
-			}
-
-			imageUrls.push(await imageUrlPromise);
-		} catch (err) {
-			if (imageHash) uploadedImages.delete(imageHash);
-			const message = err instanceof Error ? err.message : String(err);
-			console.error(`Error uploading processed event image "${file.name}". Skipping it:`, message);
-		}
-	}
-
-	return imageUrls;
-}
-
-/**
- * Builds deterministic mock image URLs for E2E without touching external storage.
- *
- * @example
- * getE2EImageUrls({ files: [], slug: `demo-event` });
- */
-function getE2EImageUrls(args: UploadImagesArgs) {
-	if (!args.files?.length) return [];
-
-	return args.files.map((file, index) => {
-		const safeFileName = file.name
-			.replace(new RegExp(`^[A-Za-z0-9_-]{${IMAGE_UPLOAD_HASH_LENGTH}}-`), ``)
-			.replace(/[^a-zA-Z0-9.\-_]/g, `-`);
-		return `https://assets.blissbase.app/e2e/${args.slug}/${index}-${safeFileName}`;
-	});
-}
-
-/**
- * Resolves the final image order for an event update and which old images should be deleted.
- *
- * @example
- * getImagesForEventUpdate({ existingImageUrls: [], imageTokens: [], uploadedImageUrls: [] })
- */
-function getImagesForEventUpdate(args: GetImagesForEventUpdateArgs) {
-	const remainingNewImageUrls = [...args.uploadedImageUrls];
-	const imageUrls: string[] = [];
-
-	for (const token of args.imageTokens) {
-		if (token.startsWith(`new:`)) {
-			const nextNewImageUrl = remainingNewImageUrls.shift();
-			if (!nextNewImageUrl) continue;
-
-			imageUrls.push(nextNewImageUrl);
-			continue;
-		}
-
-		if (!args.existingImageUrls.includes(token)) continue;
-		if (imageUrls.includes(token)) continue;
-		imageUrls.push(token);
-	}
-
-	if (remainingNewImageUrls.length) {
-		imageUrls.push(...remainingNewImageUrls);
-	}
-
-	const normalizedImageUrls = deduplicateItems(imageUrls);
-	return {
-		imageUrls: normalizedImageUrls,
-		deletedImageUrls: args.existingImageUrls.filter((x) => !normalizedImageUrls.includes(x))
-	};
-}
-
-/**
  * Interprets a naive local datetime in the given timezone and returns UTC.
  *
  * @example
@@ -467,19 +382,8 @@ function applyTimezone(naiveDatetime: string, timeZone: string): string {
 	return new Date(naive.getTime() + offsetMs).toISOString();
 }
 
-type UploadImagesArgs = {
-	files: File[];
-	slug: string;
-};
-
 type FormDataToDbDataArgs = {
 	data: Omit<CreateEventData, `email` | `authToken` | `profile`>;
 	timezone: string;
 	address: string[];
-};
-
-type GetImagesForEventUpdateArgs = {
-	existingImageUrls: string[];
-	imageTokens: string[];
-	uploadedImageUrls: string[];
 };

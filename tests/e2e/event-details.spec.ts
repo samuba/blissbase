@@ -162,7 +162,7 @@ test.describe('Navigation Menu', () => {
 		}
 		await expect(page.locator('body')).toBeVisible();
 		await expect(page.getByTestId('create-event-heading')).toHaveAttribute('data-step', 'event');
-		await expect(page.getByTestId('event-email-input')).toBeVisible();
+		await expect(page.getByTestId('event-email-input')).toHaveCount(0);
 	});
 
 	test('event sources page is accessible', async ({ page }) => {

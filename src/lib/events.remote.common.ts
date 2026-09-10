@@ -1,5 +1,6 @@
 import * as v from 'valibot';
 import { knownTagSlugs } from '$lib/eventCategories';
+import { galleryImageClaimsSchema, galleryImageOrderSchema } from '$lib/galleryImages';
 import { profileLocationFields, publicProfilePatchSchema } from '$lib/rpc/profile.common';
 
 export type ContactMethod = `none` | `email` | `phone` | `website` | `telegram` | `whatsapp`;
@@ -96,7 +97,7 @@ const eventSchemaEntries = {
 	isNotListed: v.optional(v.boolean(), false),
 	contact: v.optional(v.string()),
 	contactMethod: v.optional(v.string()),
-	images: v.optional(v.array(v.pipe(v.file(), v.maxSize(30 * 1024 * 1024, `Images may be at most 30MB`))), [])
+	imageClaims: galleryImageClaimsSchema
 } satisfies v.ObjectEntries;
 
 function isStartAtInTheFuture(input: { startAt: string }) {
@@ -154,6 +155,7 @@ export const updateEventSchema = v.pipe(
 		eventId: v.number(),
 		hostSecret: v.optional(v.string(), ``),
 		existingImageUrls: v.optional(v.array(v.string()), []),
+		imageOrder: galleryImageOrderSchema,
 	}),
 	v.forward(
 		v.partialCheck([[`startAt`], [`endAt`]], (input) => isEndAtAfterStartAt(input), `End date must be after the start date`),
@@ -199,7 +201,8 @@ export function getEditEventInitialValues(event: EditEventSource) {
 		contact,
 		contactMethod,
 		existingImageUrls: event.imageUrls ?? [],
-		images: []
+		imageOrder: event.imageUrls ?? [],
+		imageClaims: []
 	};
 }
 
