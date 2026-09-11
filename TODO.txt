@@ -1,3 +1,5 @@
+barbara antworten
+
 
 google login auth works with new offering/event
 
@@ -29,7 +31,6 @@ MAYBE: go for CI community. They dont have anything, espectially for retreats/bi
 
 Check whatsapp events qualityincrease the gap between the circles.
 
-BUG: sometime tags show als erstes: 1 tages retreat, 1zu1 retreat (sollte eh raus)
 add more whatsapp groups
 
 test all "Anmelden über" funktionen mit gerendertem event. scraped events haben manchmal daten die man nicht mehr speichern kann nachdem sie im editor geladenwurden

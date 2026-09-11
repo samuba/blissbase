@@ -570,7 +570,6 @@ msgstr "Hallo, ich habe deinen Event '{0}' am {1} auf Blissbase.app gefunden und
 msgid "<0/> Zur Startseite"
 msgstr "<0/> Zur Startseite"
 
-#: src/lib/components/EventForm.svelte
 #: src/routes/profile/public/+page.svelte
 msgid "Name *"
 msgstr "Name *"
@@ -3997,3 +3996,7 @@ msgstr "Event wird erstellt…"
 #: src/routes/offerings/new/+page.svelte
 msgid "Angebot wird erstellt…"
 msgstr "Angebot wird erstellt…"
+
+#: src/lib/components/EventForm.svelte
+msgid "Event Name *"
+msgstr "Event Name *"

@@ -143,7 +143,7 @@
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 		<fieldset class="fieldset md:col-span-2">
 			<input class="input w-full peer user-invalid:validator" data-testid="event-name-input" {...remoteForm.fields.name.as('text')} required />
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Name *</legend>
+			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Event Name *</legend>
 			<FormFieldIssues field={remoteForm.fields.name} />
 		</fieldset>
 
