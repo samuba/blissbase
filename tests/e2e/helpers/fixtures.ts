@@ -9,7 +9,7 @@ export { expect };
 export const test = base.extend<{ resetWorkerDb: void }, { e2eServer: { baseURL: string; port: number } }>({
 	e2eServer: [
 		async ({}, use, workerInfo) => {
-			const server = await startWorkerServer(workerInfo.workerIndex);
+			const server = await startWorkerServer(workerInfo.parallelIndex);
 			process.env.PLAYWRIGHT_DEV_PORT = String(server.port);
 			process.env.PLAYWRIGHT_BASE_URL = server.baseURL;
 			await use({ baseURL: server.baseURL, port: server.port });
@@ -23,7 +23,8 @@ export const test = base.extend<{ resetWorkerDb: void }, { e2eServer: { baseURL:
 	},
 
 	resetWorkerDb: [
-		async ({ request }, use) => {
+		async ({ e2eServer, request }, use) => {
+			void e2eServer;
 			await resetDatabase(request);
 			await use();
 			await resetDatabase(request);

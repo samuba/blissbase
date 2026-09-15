@@ -11,7 +11,8 @@ const startTimeoutMs = 120_000;
  * Starts a Vite+PGlite server isolated to one Playwright worker (port, cache, SvelteKit outDir).
  */
 export async function startWorkerServer(workerIndex: number): Promise<E2eServer> {
-	const preferredPort = Number(process.env.PLAYWRIGHT_DEV_PORT) || defaultBasePort + workerIndex;
+	const basePort = Number(process.env.PLAYWRIGHT_DEV_PORT) || defaultBasePort;
+	const preferredPort = basePort + workerIndex * 10;
 	const port = await findFreePort(preferredPort);
 	const baseURL = `http://127.0.0.1:${port}`;
 	const outDir = `.svelte-kit/e2e-w${workerIndex}`;
@@ -19,7 +20,7 @@ export async function startWorkerServer(workerIndex: number): Promise<E2eServer>
 
 	const child = spawn(
 		bunBin(),
-		[`run`, `dev`, `--`, `--host`, `127.0.0.1`, `--port`, String(port), `--strictPort`, `--cacheDir`, cacheDir],
+		[`run`, `dev`, `--`, `--host`, `127.0.0.1`, `--port`, String(port), `--strictPort`],
 		{
 			cwd: process.cwd(),
 			detached: true,
@@ -99,11 +100,17 @@ function isPortFree(port: number) {
 async function waitForServer(args: { baseURL: string; child: ChildProcess; timeoutMs: number }) {
 	const { baseURL, child, timeoutMs } = args;
 	const startedAt = Date.now();
+	const seedUrl = `${baseURL}/api/test/seed`;
 	while (Date.now() - startedAt < timeoutMs) {
 		if (child.exitCode !== null) throw new Error(`server exited with code ${child.exitCode}`);
 		try {
-			const response = await fetch(baseURL, { signal: AbortSignal.timeout(2000) });
-			if (response.ok || response.status === 404) return;
+			const response = await fetch(seedUrl, {
+				method: `POST`,
+				headers: { "content-type": `application/json` },
+				body: JSON.stringify({ action: `resetDatabase` }),
+				signal: AbortSignal.timeout(5000),
+			});
+			if (response.ok) return;
 		} catch {
 			// Server not ready yet.
 		}
