@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from './helpers/fixtures';
 import { signInAsE2EUser } from './helpers/auth';
 import { createEvent, clearTestEvents, createMeditationEvent, createYogaEvent, createTelegramEvent } from './helpers/seed';
 import { waitForClientHydration } from './helpers/offering-test-utils';
@@ -100,8 +100,7 @@ test.describe('Source-Dependent Rendering', () => {
 		await clearTestEvents(page);
 	});
 
-	// Navigate directly to the event URL to avoid race conditions with parallel workers
-	// sharing the same PGlite database.
+	// Isolated per-worker PGlite: open the seeded event by slug instead of scanning the homepage.
 
 	test('regular source shows registration link and source label', async ({ page }) => {
 		await clearTestEvents(page);

@@ -1,12 +1,12 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { e2eOrigin } from "./origin";
 
 export async function setGermanLocale(page: Page) {
 	await page.context().addCookies([
 		{
 			name: `locale`,
 			value: `de`,
-			domain: `localhost`,
-			path: `/`,
+			url: e2eOrigin(),
 		},
 	]);
 }
@@ -15,12 +15,12 @@ export async function setEventLocationFilterCookie(
 	page: Page,
 	args: { plzCity: string; distance: string; lat: number; lng: number },
 ) {
+	const origin = e2eOrigin();
 	await page.context().addCookies([
 		{
 			name: `blissbase_filters_last_delete`,
 			value: String(Math.floor(Date.now() / 1000)),
-			domain: `localhost`,
-			path: `/`,
+			url: origin,
 		},
 		{
 			name: `blissbase_filters`,
@@ -32,8 +32,7 @@ export async function setEventLocationFilterCookie(
 					lng: args.lng,
 				}),
 			),
-			domain: `localhost`,
-			path: `/`,
+			url: origin,
 		},
 	]);
 }
