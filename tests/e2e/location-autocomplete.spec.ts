@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from './helpers/fixtures';
 import { createEvents, clearTestEvents, createMeditationEvent, createYogaEvent } from './helpers/seed';
 import {
 	expectLocationValue,

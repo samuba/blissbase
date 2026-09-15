@@ -70,7 +70,7 @@ export async function createEvents(page: Page, events: TestEvent[]) {
 }
 
 /**
- * Clears test events for the current worker by slug prefix.
+ * Clears all events on this worker's isolated database.
  *
  * @example await clearTestEvents(page)
  */
@@ -78,9 +78,6 @@ export async function clearTestEvents(page: Page) {
 	const response = await page.request.post("/api/test/seed", {
 		data: {
 			action: "clearEvents",
-			data: {
-				slugPrefix: getWorkerSlugPrefix(),
-			},
 		},
 	});
 
@@ -226,9 +223,7 @@ export async function createOffering(page: Page, data: TestOffering = {}) {
 }
 
 export async function clearTestOfferings(page: Page) {
-	await callSeed(page, `clearOfferings`, {
-		slugPrefix: `${getWorkerSlugPrefix()}-offering`,
-	});
+	await callSeed(page, `clearOfferings`);
 }
 
 export async function clearTestProfiles(page: Page, profileIds: string[]) {
