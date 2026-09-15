@@ -117,6 +117,18 @@ export function detailsDialog(page: Page) {
 	return page.getByTestId(`details-dialog`);
 }
 
+export async function openOfferingDetailsFromCard(page: Page, offering: { id: number; slug: string }) {
+	await offeringCardById(page, offering.id).click();
+	const dialog = detailsDialog(page);
+	await expect(dialog).toBeVisible();
+	await expect(page).toHaveURL(new RegExp(`/offerings/${offering.slug}$`));
+	return dialog;
+}
+
+export function acceptNextBrowserConfirm(page: Page) {
+	page.once(`dialog`, (confirmDialog) => void confirmDialog.accept());
+}
+
 export async function chooseLocation(page: Page, args: { inputId: string; query?: string; optionIndex?: number }) {
 	const input = page.getByTestId(args.inputId);
 	await input.fill(args.query ?? `Ber`);

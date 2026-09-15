@@ -48,18 +48,14 @@
 				await deleteOffering({ offeringId: offering.id });
 			}
 
-			if (action === `delete`) {
-				if (onManaged) {
-					await invalidateAll();
-					await onManaged(action);
-				} else {
-					await goto(routes.offeringsList());
-				}
+			if (onManaged) {
+				await onManaged(action);
+			} else if (action === `delete`) {
+				await goto(routes.offeringsList());
 				return;
 			}
 
 			await invalidateAll();
-			await onManaged?.(action);
 		} catch {
 			toast.error(managementErrorMessage(action));
 		} finally {

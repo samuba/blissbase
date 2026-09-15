@@ -14,7 +14,7 @@ import {
 	getOfferingById,
 	getProfileById,
 } from "./helpers/seed";
-import { chooseLocation, mockGooglePlacesAutocomplete, offeringCardById, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
+import { acceptNextBrowserConfirm, chooseLocation, mockGooglePlacesAutocomplete, offeringCardById, openOfferingDetailsFromCard, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const profileIds = [E2E_DEFAULT_USER_ID, E2E_OTHER_USER_ID];
 
@@ -154,6 +154,131 @@ test.describe("Offering lifecycle and access control", () => {
 		await page.goto(listUrl);
 		await expect(offeringCardById(page, offering.id)).toBeVisible();
 		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toHaveCount(0);
+	});
+
+	test("activating and deactivating from the details dialog restores the host URL", async ({ page }) => {
+		const offering = await createOffering(
+			page,
+			createOfflineOffering({ title: `Dialog Listing Offering`, slug: `dialog-listing` }),
+		);
+		await signInAsE2EUser(page);
+		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
+		await page.goto(listUrl);
+		await waitForClientHydration(page);
+
+		const dialog = await openOfferingDetailsFromCard(page, offering);
+		await dialog.getByTestId(`offering-toggle-listing`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(listUrl);
+		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(false);
+		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toBeVisible();
+
+		await openOfferingDetailsFromCard(page, offering);
+		await dialog.getByTestId(`offering-toggle-listing`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(listUrl);
+		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(true);
+		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toHaveCount(0);
+	});
+
+	test("deleting from the details dialog restores the host URL", async ({ page }) => {
+		const offering = await createOffering(
+			page,
+			createOfflineOffering({ title: `Dialog Delete Offering`, slug: `dialog-delete` }),
+		);
+		await signInAsE2EUser(page);
+		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
+		await page.goto(listUrl);
+		await waitForClientHydration(page);
+
+		const dialog = await openOfferingDetailsFromCard(page, offering);
+		acceptNextBrowserConfirm(page);
+		await dialog.getByTestId(`offering-delete`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(listUrl);
+		await expect.poll(async () => await getOfferingById(page, offering.id)).toBeUndefined();
+		await expect(offeringCardById(page, offering.id)).toHaveCount(0);
+	});
+
+	test("activating and deactivating from the profile offerings dialog restores the host URL", async ({ page }) => {
+		const offering = await createOffering(
+			page,
+			createOfflineOffering({ title: `Profile Dialog Listing Offering`, slug: `profile-dialog-listing` }),
+		);
+		await signInAsE2EUser(page);
+		await page.goto(`/profile/offerings`);
+		await waitForClientHydration(page);
+
+		const dialog = await openOfferingDetailsFromCard(page, offering);
+		await dialog.getByTestId(`offering-toggle-listing`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(`/profile/offerings`);
+		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(false);
+		await expect(page.getByTestId(`inactive-offerings-heading`)).toBeVisible();
+		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toBeVisible();
+
+		await openOfferingDetailsFromCard(page, offering);
+		await dialog.getByTestId(`offering-toggle-listing`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(`/profile/offerings`);
+		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(true);
+		await expect(page.getByTestId(`inactive-offerings-heading`)).toHaveCount(0);
+		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toHaveCount(0);
+	});
+
+	test("deleting from the profile offerings dialog restores the host URL", async ({ page }) => {
+		const offering = await createOffering(
+			page,
+			createOfflineOffering({ title: `Profile Dialog Delete Offering`, slug: `profile-dialog-delete` }),
+		);
+		await signInAsE2EUser(page);
+		await page.goto(`/profile/offerings`);
+		await waitForClientHydration(page);
+
+		const dialog = await openOfferingDetailsFromCard(page, offering);
+		acceptNextBrowserConfirm(page);
+		await dialog.getByTestId(`offering-delete`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(`/profile/offerings`);
+		await expect.poll(async () => await getOfferingById(page, offering.id)).toBeUndefined();
+		await expect(offeringCardById(page, offering.id)).toHaveCount(0);
+	});
+
+	test("deactivating from the public profile dialog restores the host URL", async ({ page }) => {
+		const offering = await createOffering(
+			page,
+			createOfflineOffering({ title: `Public Profile Dialog Offering`, slug: `public-profile-dialog` }),
+		);
+		await signInAsE2EUser(page);
+		await page.goto(`/@/e2e-user`);
+		await waitForClientHydration(page);
+		await page.getByTestId(`public-profile-offerings-tab`).click();
+
+		const dialog = await openOfferingDetailsFromCard(page, offering);
+		await dialog.getByTestId(`offering-toggle-listing`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(`/@/e2e-user`);
+		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(false);
+		await expect(offeringCardById(page, offering.id)).toHaveCount(0);
+	});
+
+	test("deleting from the public profile dialog restores the host URL", async ({ page }) => {
+		const offering = await createOffering(
+			page,
+			createOfflineOffering({ title: `Public Profile Dialog Delete Offering`, slug: `public-profile-dialog-delete` }),
+		);
+		await signInAsE2EUser(page);
+		await page.goto(`/@/e2e-user`);
+		await waitForClientHydration(page);
+		await page.getByTestId(`public-profile-offerings-tab`).click();
+
+		const dialog = await openOfferingDetailsFromCard(page, offering);
+		acceptNextBrowserConfirm(page);
+		await dialog.getByTestId(`offering-delete`).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page).toHaveURL(`/@/e2e-user`);
+		await expect.poll(async () => await getOfferingById(page, offering.id)).toBeUndefined();
+		await expect(offeringCardById(page, offering.id)).toHaveCount(0);
 	});
 
 	test("profile offerings lists inactive offerings below active ones", async ({ page }) => {

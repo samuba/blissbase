@@ -126,6 +126,7 @@
 			<button
 				role="tab"
 				class={[`tab grow`, selectedTab === `events` ? `tab-active` : 'text-base-content/60 hover:text-base-content']}
+				data-testid="public-profile-events-tab"
 				onclick={() => selectTab(`events`)}
 			>
 				<i class="icon-[ph--calendar] size-5 mr-2"></i>
@@ -135,6 +136,7 @@
 			<button
 				role="tab"
 				class={[`tab grow `, selectedTab === `offerings` ? `tab-active` : 'text-base-content/60 hover:text-base-content']}
+				data-testid="public-profile-offerings-tab"
 				onclick={() => selectTab(`offerings`)}
 			>
 				<i class="icon-[ph--hand-heart] size-5 mr-2"></i>
