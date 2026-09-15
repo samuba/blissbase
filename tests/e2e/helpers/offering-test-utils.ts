@@ -1,12 +1,13 @@
-import { expect, type Locator, type Page } from "@playwright/test";
-import { e2eOrigin } from "./origin";
+import { expect, type Browser, type Locator, type Page } from "@playwright/test";
+import { e2eCookieDomain, e2eOrigin } from "./origin";
 
 export async function setGermanLocale(page: Page) {
 	await page.context().addCookies([
 		{
 			name: `locale`,
 			value: `de`,
-			url: e2eOrigin(),
+			domain: e2eCookieDomain(),
+			path: `/`,
 		},
 	]);
 }
@@ -15,12 +16,13 @@ export async function setEventLocationFilterCookie(
 	page: Page,
 	args: { plzCity: string; distance: string; lat: number; lng: number },
 ) {
-	const origin = e2eOrigin();
+	const domain = e2eCookieDomain();
 	await page.context().addCookies([
 		{
 			name: `blissbase_filters_last_delete`,
 			value: String(Math.floor(Date.now() / 1000)),
-			url: origin,
+			domain,
+			path: `/`,
 		},
 		{
 			name: `blissbase_filters`,
@@ -32,9 +34,19 @@ export async function setEventLocationFilterCookie(
 					lng: args.lng,
 				}),
 			),
-			url: origin,
+			domain,
+			path: `/`,
 		},
 	]);
+}
+
+export async function newAnonymousContext(browser: Browser) {
+	return browser.newContext({
+		baseURL: e2eOrigin(),
+		extraHTTPHeaders: { "Accept-Language": `de` },
+		locale: `de-DE`,
+		storageState: { cookies: [], origins: [] },
+	});
 }
 
 export async function waitForClientHydration(page: Page) {

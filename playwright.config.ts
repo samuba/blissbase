@@ -43,6 +43,12 @@ export default defineConfig({
 
 		/* Fresh cookies/localStorage per test (Playwright default); never share storageState. */
 		storageState: { cookies: [], origins: [] },
+
+		/* Create-flow specs assert German copy; hooks.server.ts also honors Accept-Language=de. */
+		locale: 'de-DE',
+		extraHTTPHeaders: {
+			'Accept-Language': 'de',
+		},
 	},
 
 	/* Configure projects for major browsers */

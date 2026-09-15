@@ -14,7 +14,7 @@ import {
 	getOfferingById,
 	getProfileById,
 } from "./helpers/seed";
-import { acceptNextBrowserConfirm, chooseLocation, mockGooglePlacesAutocomplete, offeringCardById, openOfferingDetailsFromCard, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
+import { acceptNextBrowserConfirm, chooseLocation, mockGooglePlacesAutocomplete, newAnonymousContext, offeringCardById, openOfferingDetailsFromCard, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const profileIds = [E2E_DEFAULT_USER_ID, E2E_OTHER_USER_ID];
 
@@ -125,7 +125,7 @@ test.describe("Offering lifecycle and access control", () => {
 		expect(response?.status()).toBe(403);
 	});
 
-	test("owner deactivates and reactivates an offering across public discovery", async ({ page }) => {
+	test("owner deactivates and reactivates an offering across public discovery", async ({ page, browser }) => {
 		const offering = await createOffering(page, createOfflineOffering({ title: `Lifecycle Offering`, slug: `lifecycle` }));
 		await signInAsE2EUser(page);
 		await page.goto(`/offerings/${offering.slug}/edit`);
@@ -139,14 +139,17 @@ test.describe("Offering lifecycle and access control", () => {
 		await expect(offeringCardById(page, offering.id)).toBeVisible();
 		await expect(offeringCardById(page, offering.id).getByTestId(`offering-unlisted-badge`)).toBeVisible();
 
-		await page.context().clearCookies();
-		await setGermanLocale(page);
-		await page.goto(listUrl);
-		await expect(offeringCardById(page, offering.id)).toHaveCount(0);
+		const anonymous = await newAnonymousContext(browser);
+		try {
+			const anonymousPage = await anonymous.newPage();
+			await anonymousPage.goto(listUrl);
+			await expect(offeringCardById(anonymousPage, offering.id)).toHaveCount(0);
+		} finally {
+			await anonymous.close();
+		}
 
-		await signInAsE2EUser(page);
-		await setGermanLocale(page);
 		await page.goto(`/offerings/${offering.slug}`);
+		await waitForClientHydration(page);
 		await expect(page.getByTestId(`offering-title`)).toHaveText(`Lifecycle Offering`);
 		await page.getByTestId(`offering-toggle-listing`).click();
 		await expect.poll(async () => (await getOfferingById(page, offering.id)).listed).toBe(true);
