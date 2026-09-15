@@ -412,7 +412,7 @@
 			<div class="flex min-h-0 w-full flex-1 flex-col px-6 pt-4">
 				<div
 					{@attach tableScrollAttach}
-					class="targets-table-scroll min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto"
+					class="targets-table-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto"
 					onscroll={syncStickyFromTable}
 				>
 					<table class="table table-pin-rows table-sm w-full">
