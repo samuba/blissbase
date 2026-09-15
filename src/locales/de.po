@@ -650,9 +650,8 @@ msgstr "Vollbildansicht"
 msgid "Ausgewählte Bilder sortieren"
 msgstr "Ausgewählte Bilder sortieren"
 
-#: src/lib/components/ImageGalleryInput.svelte
-msgid "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
-msgstr "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
+#~ msgid "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
+#~ msgstr "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
 
 #: src/lib/components/ImageGalleryInput.svelte
 msgid "Nach links"
@@ -2227,10 +2226,8 @@ msgstr "Place \""
 msgid "E-Mail konnte nicht geprüft werden."
 msgstr "E-Mail konnte nicht geprüft werden."
 
-#. 0: itemName
-#: src/lib/components/ImageGalleryInput.svelte
-msgid "{0} verschieben"
-msgstr "{0} verschieben"
+#~ msgid "{0} verschieben"
+#~ msgstr "{0} verschieben"
 
 #. 0: itemName
 #: src/lib/components/ImageGalleryInput.svelte

@@ -535,6 +535,7 @@
 				data-testid={testId(`preview-item`)}
 				data-upload-state={preview.uploadState}
 				animate:flip={{ duration: previewFlipDurationMs }}
+				
 				class="bg-base-200 group card border-base-300/60 overflow-hidden border"
 				role="listitem"
 				aria-label={itemName}
@@ -543,33 +544,11 @@
 					<div class="badge badge-sm absolute top-2 left-2 z-10">
 						{i === 0 ? `Cover Bild` : `Bild #${i + 1}`}
 					</div>
-					{#if previewItems.length > 1}
-						<PopOver
-							triggerClass="absolute right-0 bottom-0 z-10"
-							contentClass="max-w-xs py-1 bg-base-100 w-fit"
-							arrowProps={{ width: 12, height: 10, class: "text-primary" }}
-						>
-							{#snippet trigger({ props })}
-								<button
-									use:dragHandle
-									{...props}
-									data-testid={testId(`preview-handle`)}
-									type="button"
-									class={[`btn btn-sm rounded-lg p-1 hover:cursor-grab active:cursor-grabbing bottom-2 right-2`, props.class]}
-									aria-label={`${itemName} verschieben`}
-								>
-									<i class="icon-[ph--dots-nine] size-5 drop-shadow-md"></i>
-								</button>
-							{/snippet}
-							{#snippet content()}
-								<p class="text-center text-xs">Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern.</p>
-							{/snippet}
-						</PopOver>
-					{/if}
 					<button
 						type="button"
 						class="h-full w-full cursor-pointer"
 						onclick={() => (fullscreenImageUrl = preview.url)}
+						use:dragHandle
 						aria-label={`Vollbildansicht von ${itemName} öffnen`}
 					>
 						<img
