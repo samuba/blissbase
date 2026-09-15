@@ -13,7 +13,6 @@
 		type GalleryImageKind,
 	} from "$lib/galleryImages";
 	import { createGalleryImageUploadUrl, discardGalleryImage } from "$lib/rpc/galleryImages.remote";
-	import PopOver from "./PopOver.svelte";
 
 	let {
 		kind,
