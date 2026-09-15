@@ -11,6 +11,33 @@ export async function setGermanLocale(page: Page) {
 	]);
 }
 
+export async function setEventLocationFilterCookie(
+	page: Page,
+	args: { plzCity: string; distance: string; lat: number; lng: number },
+) {
+	await page.context().addCookies([
+		{
+			name: `blissbase_filters_last_delete`,
+			value: String(Math.floor(Date.now() / 1000)),
+			domain: `localhost`,
+			path: `/`,
+		},
+		{
+			name: `blissbase_filters`,
+			value: encodeURIComponent(
+				JSON.stringify({
+					plzCity: args.plzCity,
+					distance: args.distance,
+					lat: args.lat,
+					lng: args.lng,
+				}),
+			),
+			domain: `localhost`,
+			path: `/`,
+		},
+	]);
+}
+
 export async function waitForClientHydration(page: Page) {
 	await page.waitForLoadState(`networkidle`);
 	await page.evaluate(

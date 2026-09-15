@@ -334,6 +334,20 @@ test.describe("Event creation", () => {
 	});
 
 	test("Google sign-in persists the typed event description", async ({ page }) => {
+		const drafts: string[] = [];
+		await page.exposeBinding(`e2eCaptureEventDraft`, (_source, value) => {
+			drafts.push(String(value));
+		});
+		await page.addInitScript(() => {
+			const originalSetItem = Storage.prototype.setItem;
+			Storage.prototype.setItem = function setItem(key, value) {
+				originalSetItem.call(this, key, value);
+				if (key === `blissbase:create-draft:event`) {
+					const capture = window[`e2eCaptureEventDraft`];
+					if (typeof capture === `function`) capture(value);
+				}
+			};
+		});
 		await page.route(`**/auth/v1/**`, async (route) => {
 			if (route.request().url().includes(`/authorize`)) {
 				await route.abort();
@@ -347,16 +361,14 @@ test.describe("Event creation", () => {
 		await expect(page.getByTestId(`google-login-button`)).toBeVisible({ timeout: 10000 });
 		await page.getByTestId(`google-login-button`).click();
 		await expect
-			.poll(async () => {
-				return page.evaluate(() => {
-					const raw = sessionStorage.getItem(`blissbase:create-draft:event`);
-					if (!raw) return ``;
-					try {
-						return String(JSON.parse(raw).fields?.description ?? ``);
-					} catch {
-						return ``;
-					}
-				});
+			.poll(() => {
+				const raw = drafts.at(-1) ?? ``;
+				if (!raw) return ``;
+				try {
+					return String(JSON.parse(raw).fields?.description ?? ``);
+				} catch {
+					return ``;
+				}
 			})
 			.toContain(`E2E event description`);
 	});

@@ -59,7 +59,10 @@ test.describe("Offering lifecycle and access control", () => {
 		await page.getByTestId(`offering-image-preview-remove`).nth(1).click();
 		await page.getByTestId(`offering-image-preview-item`).first().getByTestId(`offering-image-preview-move-right`).press(`Enter`);
 		await expect(page.getByTestId(`offering-image-preview-item`)).toHaveCount(3);
-		await expect(page.getByTestId(`offering-image-preview-item`).first()).toContainText(`Bild #3`);
+		await expect(page.getByTestId(`offering-image-preview-item`).first().getByTestId(`offering-image-preview-image`)).toHaveAttribute(
+			`src`,
+			existingImages[2],
+		);
 		await page.getByTestId(`offering-title-input`).fill(`Edited Offering`);
 		await page.getByTestId(`offering-save`).click();
 

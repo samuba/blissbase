@@ -1,7 +1,9 @@
+Frank antworten 
+Chris telefonieren
 barbara antworten
 
+after offer deactivate cant do anything
 
-google login auth works with new offering/event
 
 introduce bookingUrl. cuz sourceUrl is good to have to know where its coming from but its not always where we wanna guide people to. Can use it for the source link
 -> already have contact.

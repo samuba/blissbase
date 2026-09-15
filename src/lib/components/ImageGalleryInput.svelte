@@ -529,8 +529,8 @@
 		}}
 	>
 		{#each previewItems as preview, i (preview.id)}
-			{@const itemName = preview.sourceFile ? preview.name : `Bild #${i + 1}`}
-			{@const itemSizeLabel = preview.sourceFile ? preview.sizeLabel : `Bereits hochgeladen`}
+			{@const itemName = `Bild #${i + 1}`}
+			{@const itemSizeLabel = preview.sizeLabel || `Bereits hochgeladen`}
 			<div
 				data-testid={testId(`preview-item`)}
 				data-upload-state={preview.uploadState}
@@ -555,7 +555,7 @@
 									{...props}
 									data-testid={testId(`preview-handle`)}
 									type="button"
-									class={[`btn btn-sm rounded-lg p-1 hover:cursor-grab active:cursor-grabbing`, props.class]}
+									class={[`btn btn-sm rounded-lg p-1 hover:cursor-grab active:cursor-grabbing bottom-2 right-2`, props.class]}
 									aria-label={`${itemName} verschieben`}
 								>
 									<i class="icon-[ph--dots-nine] size-5 drop-shadow-md"></i>
@@ -572,7 +572,13 @@
 						onclick={() => (fullscreenImageUrl = preview.url)}
 						aria-label={`Vollbildansicht von ${itemName} öffnen`}
 					>
-						<img src={preview.url} alt={`Vorschau für ${itemName}`} class="h-full w-full object-cover" draggable="false" />
+						<img
+							data-testid={testId(`preview-image`)}
+							src={preview.url}
+							alt={`Vorschau für ${itemName}`}
+							class="h-full w-full object-cover"
+							draggable="false"
+						/>
 					</button>
 					{#if preview.uploadState !== `ready`}
 						<div
@@ -616,13 +622,10 @@
 					{/if}
 				</div>
 
-				<div class="flex items-start justify-between gap-2 p-3">
-					<div class="min-w-0">
-						<p class="truncate text-xs font-medium">{itemName}</p>
-						<p class="text-base-content/60 text-xs">{itemSizeLabel}</p>
-					</div>
+				<div class="flex items-center justify-between gap-1 px-2 py-1">
+					<p class="text-base-content/60 min-w-0 truncate text-xs leading-none">{itemSizeLabel}</p>
 
-					<div class="relative flex items-center gap-1">
+					<div class="relative flex items-center">
 						<button
 							data-testid={testId(`preview-move-left`)}
 							type="button"
@@ -662,7 +665,7 @@
 								removeSelectedImage({ previewId: preview.id });
 							}}
 						>
-							<i class="icon-[ph--trash] size-5"></i>
+							<i class="icon-[ph--trash] size-4.5"></i>
 						</button>
 					</div>
 				</div>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resetGoogleMapsPlacesLoader } from "$lib/googleMapsLoader";
 	import { Popover } from "bits-ui";
-	import { onMount, tick } from "svelte";
+	import { onMount, tick, untrack } from "svelte";
 	import type { PlacesAutocompleteController } from "./PlacesAutocompleteController.svelte";
 	import { ALLOWED_DISTANCE_VALUES } from "$lib/locationFilter";
 
@@ -39,6 +39,53 @@
 	let autocomplete = $state<PlacesAutocompleteController | null>(null);
 	let autocompletePromise: Promise<PlacesAutocompleteController> | null = null;
 
+	function emptyLocationFields() {
+		return {
+			usingCurrentLocation: false,
+			coordsForFilter: null,
+			typedPlzCity: ``,
+			displayLocationText: ``,
+			resolvedLat: null,
+			resolvedLng: null,
+		};
+	}
+
+	function locationFieldsFromProps(args: {
+		initialLocation?: string | null;
+		resolvedCityName?: string | null;
+		locationBiasLat?: number | null;
+		locationBiasLng?: number | null;
+	}) {
+		if (!args.initialLocation) return emptyLocationFields();
+
+		if (args.initialLocation.startsWith(`coords:`)) {
+			const parts = args.initialLocation.substring(`coords:`.length).split(`,`);
+			if (parts.length !== 2) return emptyLocationFields();
+
+			const lat = parseFloat(parts[0]);
+			const lng = parseFloat(parts[1]);
+			if (isNaN(lat) || isNaN(lng)) return emptyLocationFields();
+
+			return {
+				usingCurrentLocation: true,
+				coordsForFilter: `${lat},${lng}`,
+				typedPlzCity: args.resolvedCityName ?? ``,
+				displayLocationText: args.resolvedCityName ?? ``,
+				resolvedLat: null,
+				resolvedLng: null,
+			};
+		}
+
+		return {
+			usingCurrentLocation: false,
+			coordsForFilter: null,
+			typedPlzCity: args.initialLocation,
+			displayLocationText: ``,
+			resolvedLat: args.locationBiasLat ?? null,
+			resolvedLng: args.locationBiasLng ?? null,
+		};
+	}
+
 	async function ensureAutocomplete() {
 		if (autocomplete) return autocomplete;
 
@@ -70,18 +117,30 @@
 		return () => clearTimeout(timer);
 	});
 
-	let typedPlzCity = $state(``);
-	let selectedDistance = $state(``);
-	let usingCurrentLocation = $state(false);
+	const initial = untrack(() => ({
+		...locationFieldsFromProps({
+			initialLocation,
+			resolvedCityName,
+			locationBiasLat,
+			locationBiasLng,
+		}),
+		selectedDistance: initialDistance || ``,
+		lastPropDistance: initialDistance,
+		lastPropLocation: initialLocation,
+	}));
+
+	let typedPlzCity = $state(initial.typedPlzCity);
+	let selectedDistance = $state(initial.selectedDistance);
+	let usingCurrentLocation = $state(initial.usingCurrentLocation);
 	let plzCityInput = $state<HTMLInputElement | null>(null);
 	let chipEl = $state<HTMLElement | null>(null);
 	let popoverEl = $state<HTMLElement | null>(null);
 	let distanceSelectEl = $state<HTMLSelectElement | null>(null);
-	let coordsForFilter = $state<string | null>(null);
-	let resolvedLat = $state<number | null>(null);
-	let resolvedLng = $state<number | null>(null);
+	let coordsForFilter = $state(initial.coordsForFilter);
+	let resolvedLat = $state(initial.resolvedLat);
+	let resolvedLng = $state(initial.resolvedLng);
 	let isLoadingLocation = $state(false);
-	let displayLocationText = $state(``);
+	let displayLocationText = $state(initial.displayLocationText);
 	let editorOpen = $state(false);
 	let closingEditor = false;
 
@@ -96,7 +155,8 @@
 		label: `${value} km radius`,
 	}));
 
-	let lastPropDistance = $state<string | null | undefined>(undefined);
+	let lastPropDistance = $state(initial.lastPropDistance);
+	let lastPropLocation = $state(initial.lastPropLocation);
 
 	$effect(() => {
 		if (initialDistance === lastPropDistance) return;
@@ -104,45 +164,23 @@
 		selectedDistance = initialDistance || ``;
 	});
 
-	let lastPropLocation = $state<string | null | undefined>(undefined);
-
 	$effect(() => {
 		if (initialLocation === lastPropLocation) return;
 		lastPropLocation = initialLocation;
 
-		if (initialLocation?.startsWith(`coords:`)) {
-			const parts = initialLocation.substring(`coords:`.length).split(`,`);
-			if (parts.length === 2) {
-				const lat = parseFloat(parts[0]);
-				const lng = parseFloat(parts[1]);
-				if (!isNaN(lat) && !isNaN(lng)) {
-					usingCurrentLocation = true;
-					coordsForFilter = `${lat},${lng}`;
-					typedPlzCity = resolvedCityName ?? ``;
-					if (resolvedCityName) displayLocationText = resolvedCityName;
-					return;
-				}
-			}
+		const next = locationFieldsFromProps({
+			initialLocation,
+			resolvedCityName,
+			locationBiasLat,
+			locationBiasLng,
+		});
 
-			return;
-		}
-
-		if (initialLocation) {
-			usingCurrentLocation = false;
-			coordsForFilter = null;
-			typedPlzCity = initialLocation;
-			displayLocationText = ``;
-			resolvedLat = locationBiasLat ?? null;
-			resolvedLng = locationBiasLng ?? null;
-			return;
-		}
-
-		usingCurrentLocation = false;
-		coordsForFilter = null;
-		resolvedLat = null;
-		resolvedLng = null;
-		typedPlzCity = ``;
-		displayLocationText = ``;
+		usingCurrentLocation = next.usingCurrentLocation;
+		coordsForFilter = next.coordsForFilter;
+		typedPlzCity = next.typedPlzCity;
+		displayLocationText = next.displayLocationText;
+		resolvedLat = next.resolvedLat;
+		resolvedLng = next.resolvedLng;
 	});
 
 	$effect(() => {
@@ -619,7 +657,7 @@
 						bind:this={distanceSelectEl}
 						id="{inputId}-distance"
 						data-testid="{inputId}-distance"
-						class="select cursor-default field-sizing-content appearance-auto max-sm:min-w-0 max-sm:flex-1 sm:w-fit! sm:flex-none"
+						class="select field-sizing-content cursor-default appearance-auto max-sm:min-w-0 max-sm:flex-1 sm:w-fit! sm:flex-none"
 						bind:value={selectedDistance}
 						onchange={handleDistanceChange}
 						disabled={isLoadingLocation || disabled || !hasLocation}

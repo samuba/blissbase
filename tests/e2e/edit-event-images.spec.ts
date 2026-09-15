@@ -37,10 +37,10 @@ test.describe('Edit event images', () => {
 			buffer: createTinyPngBuffer()
 		});
 		await expect(page.getByTestId(`image-preview-item`)).toHaveCount(3);
-		await expect(page.getByTestId(`image-preview-item`).nth(2)).toContainText(`added-image.png`);
 		await expect(page.getByTestId(`image-preview-item`).nth(2)).toHaveAttribute(`data-upload-state`, `ready`, {
 			timeout: 30000
 		});
+		await expect(page.getByTestId(`image-preview-item`).nth(2)).not.toContainText(`added-image.png`);
 
 		await page.getByTestId(`event-save`).click();
 		await page.waitForURL(`**/${event.slug}`);

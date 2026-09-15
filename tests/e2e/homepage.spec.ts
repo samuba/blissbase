@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createEvent, createEvents, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent } from './helpers/seed';
-import { waitForClientHydration } from './helpers/offering-test-utils';
+import { setEventLocationFilterCookie, waitForClientHydration } from './helpers/offering-test-utils';
 
 test.describe('Homepage', () => {
 	test.beforeEach(async ({ page }) => {
@@ -107,6 +107,26 @@ test.describe('Homepage', () => {
 		await firstCard.click();
 		await expect(page.getByTestId('details-dialog')).toBeVisible({ timeout: 15000 });
 		await expect(page.getByTestId('event-title')).toBeVisible();
+	});
+});
+
+test.describe(`Homepage - location prefill`, () => {
+	test(`renders the saved location in the search box in the server HTML`, async ({ page }) => {
+		const locationLabel = `Prefillstadt`;
+		await setEventLocationFilterCookie(page, {
+			plzCity: locationLabel,
+			distance: `50`,
+			lat: 52.52,
+			lng: 13.405,
+		});
+
+		const response = await page.goto(`/`);
+		const html = await response!.text();
+
+		expect(html).toMatch(/data-testid="plzCityInput-header" value="Prefillstadt"/);
+		expect(html).toMatch(/data-testid="plzCityInput-header-distance" value="50"/);
+		expect(html).toMatch(/data-testid="plzCityInput-header-summary"[\s\S]*?Prefillstadt/);
+		await expect(page.getByTestId(`plzCityInput-header-summary`)).toContainText(locationLabel);
 	});
 });
 

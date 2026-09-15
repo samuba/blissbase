@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { createEvents, clearTestEvents, createMeditationEvent, createYogaEvent } from './helpers/seed';
-import { openFilterDialog, waitForClientHydration } from './helpers/offering-test-utils';
+import {
+	expectLocationValue,
+	expectSuggestionsOpen,
+	gotoHomeAndWait,
+	locationRoot,
+	openLocationEditor,
+	typeForSuggestions,
+	visibleLocationInput,
+} from './helpers/location-input';
+import { openFilterDialog } from './helpers/offering-test-utils';
 
 async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Page) {
 	await page.route(/maps\.(googleapis|gstatic)\.com/, (route) => route.abort());
@@ -69,55 +78,6 @@ test.describe('Location autocomplete', () => {
 		await clearTestEvents(page);
 	});
 
-	async function gotoHomeAndWait(page: import('@playwright/test').Page) {
-		await page.goto(`/`);
-		await page.getByTestId(`event-card`).first().waitFor({ timeout: 15000 });
-		await waitForClientHydration(page);
-	}
-
-	function visibleLocationInput(page: import('@playwright/test').Page, inputId: string) {
-		return page.locator(`[data-testid="${inputId}"]:not([type="hidden"])`);
-	}
-
-	function locationRoot(page: import('@playwright/test').Page, inputId: string) {
-		return page.getByTestId(`location-distance-input`).filter({
-			has: page.getByTestId(`${inputId}-summary`)
-		});
-	}
-
-	async function openLocationEditor(page: import('@playwright/test').Page, inputId: string) {
-		const input = visibleLocationInput(page, inputId);
-		if (await input.isVisible()) return;
-		const summary = page.getByTestId(`${inputId}-summary`);
-		if (await summary.isVisible()) {
-			await summary.click();
-		}
-		await expect(input).toBeVisible();
-	}
-
-	async function typeForSuggestions(page: import('@playwright/test').Page, args: { input: import('@playwright/test').Locator; value: string }) {
-		const inputId = (await args.input.getAttribute(`data-testid`)) ?? ``;
-		await openLocationEditor(page, inputId);
-		const input = visibleLocationInput(page, inputId);
-		await input.click();
-		await page.waitForFunction(() => typeof window.google?.maps?.importLibrary === `function`);
-		await expect(locationRoot(page, inputId)).toHaveAttribute(`data-autocomplete-status`, `ready`, {
-			timeout: 10000
-		});
-		await input.fill(args.value);
-		await expect(input).toHaveValue(args.value);
-	}
-
-	async function expectLocationValue(page: import('@playwright/test').Page, inputId: string, value: string) {
-		await expect(page.locator(`[data-testid="${inputId}"][type="hidden"]`)).toHaveValue(value);
-	}
-
-	async function expectSuggestionsOpen(_page: import('@playwright/test').Page, _inputId: string) {
-		const suggestions = _page.getByTestId(`location-suggestions`);
-		await expect(suggestions).toBeVisible({ timeout: 10000 });
-		return suggestions;
-	}
-
 	test('typing opens suggestions when Google is available', async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
@@ -181,7 +141,7 @@ test.describe('Location autocomplete', () => {
 		await headerLocationInput.getByTestId(`clear-location-button`).click();
 
 		await expectLocationValue(page, `plzCityInput-header`, ``);
-		await expect(page.locator(`[data-testid="plzCityInput-header-distance"][type="hidden"]`)).toHaveCount(0);
+		await expect(page.getByTestId(`plzCityInput-header-distance`)).toHaveCount(0);
 	});
 
 	test('trigger reopens the editor after changing distance and clearing', async ({ page }) => {

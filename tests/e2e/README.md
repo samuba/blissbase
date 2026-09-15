@@ -70,6 +70,7 @@ bun run test:e2e:debug
 - `event-details.spec.ts` - Tests for event detail modal and navigation
 - `edit-event-images.spec.ts` - Tests event image editing
 - `location-autocomplete.spec.ts` - Tests the Google Places autocomplete UI
+- `location-filtering.spec.ts` - Tests location chip filtering, cookie prefill, GPS, and unknown places
 - `offerings-create.spec.ts` - Tests signed-in and anonymous offering creation, validation, OTP, profile completion, and images
 - `offerings-discovery.spec.ts` - Tests offering eligibility, search, location/online filters, dialogs, and return navigation
 - `offerings-lifecycle.spec.ts` - Tests edit permissions, image editing, activation, deactivation, owner visibility, and deletion
