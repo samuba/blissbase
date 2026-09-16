@@ -1,7 +1,7 @@
 import { expect, test } from './helpers/fixtures';
 import { signInAsE2EUser } from './helpers/auth';
 import { createEvent, clearTestEvents, createMeditationEvent, createYogaEvent, createTelegramEvent } from './helpers/seed';
-import { waitForClientHydration } from './helpers/offering-test-utils';
+import { newAnonymousContext, waitForClientHydration } from './helpers/offering-test-utils';
 
 test.describe('Event Details Modal', () => {
 	test.beforeEach(async ({ page }) => {
@@ -148,20 +148,25 @@ test.describe('Navigation Menu', () => {
 		await clearTestEvents(page);
 	});
 
-	test('create event page is accessible while logged out', async ({ page }) => {
-		await page.context().clearCookies();
-		for (let attempt = 0; attempt < 3; attempt++) {
-			try {
-				await page.goto('/events/new', { waitUntil: 'domcontentloaded' });
-				break;
-			} catch {
-				if (attempt === 2) throw new Error(`Failed to open /events/new after 3 attempts`);
-				await page.waitForTimeout(400);
+	test('create event page is accessible while logged out', async ({ browser }) => {
+		const anonymous = await newAnonymousContext(browser);
+		try {
+			const page = await anonymous.newPage();
+			for (let attempt = 0; attempt < 3; attempt++) {
+				try {
+					await page.goto('/events/new', { waitUntil: 'domcontentloaded' });
+					break;
+				} catch {
+					if (attempt === 2) throw new Error(`Failed to open /events/new after 3 attempts`);
+					await page.waitForTimeout(400);
+				}
 			}
+			await expect(page.locator('body')).toBeVisible();
+			await expect(page.getByTestId('create-event-heading')).toHaveAttribute('data-step', 'event');
+			await expect(page.getByTestId('event-email-input')).toHaveCount(0);
+		} finally {
+			await anonymous.close();
 		}
-		await expect(page.locator('body')).toBeVisible();
-		await expect(page.getByTestId('create-event-heading')).toHaveAttribute('data-step', 'event');
-		await expect(page.getByTestId('event-email-input')).toHaveCount(0);
 	});
 
 	test('event sources page is accessible', async ({ page }) => {

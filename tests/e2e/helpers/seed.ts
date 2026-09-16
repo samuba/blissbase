@@ -29,7 +29,7 @@ export const E2E_OTHER_USER_EMAIL = `e2e-other@example.com`;
 export { E2E_OTP_CODE, getE2EUserIdForEmail };
 
 function getWorkerSlugPrefix() {
-	const workerIndex = process.env.TEST_WORKER_INDEX ?? process.env.TEST_PARALLEL_INDEX ?? "0";
+	const workerIndex = process.env.E2E_WORKER_INDEX ?? process.env.TEST_WORKER_INDEX ?? process.env.TEST_PARALLEL_INDEX ?? `0`;
 	return `e2e-w${workerIndex}`;
 }
 

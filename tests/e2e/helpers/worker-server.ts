@@ -5,15 +5,16 @@ import { homedir } from "node:os";
 import { setTimeout as sleep } from "node:timers/promises";
 
 const defaultBasePort = 5174;
+const portStride = 10;
 const startTimeoutMs = 120_000;
 
 /**
  * Starts a Vite+PGlite server isolated to one Playwright worker (port, cache, SvelteKit outDir).
  */
 export async function startWorkerServer(workerIndex: number): Promise<E2eServer> {
-	const basePort = Number(process.env.PLAYWRIGHT_DEV_PORT) || defaultBasePort;
-	const preferredPort = basePort + workerIndex * 10;
-	const port = await findFreePort(preferredPort);
+	const basePort = Number(process.env.PLAYWRIGHT_BASE_PORT) || defaultBasePort;
+	const preferredPort = basePort + workerIndex * portStride;
+	const port = await findFreePort(preferredPort, portStride);
 	const baseURL = `http://127.0.0.1:${port}`;
 	const outDir = `.svelte-kit/e2e-w${workerIndex}`;
 	const cacheDir = `node_modules/.vite-e2e-w${workerIndex}`;
@@ -66,10 +67,14 @@ export async function startWorkerServer(workerIndex: number): Promise<E2eServer>
 		);
 	}
 
+	const removeCleanup = installProcessCleanup(child);
 	return {
 		baseURL,
 		port,
-		stop: () => stopProcessTree(child),
+		stop: async () => {
+			removeCleanup();
+			await stopProcessTree(child);
+		},
 	};
 }
 
@@ -80,11 +85,11 @@ function bunBin() {
 	return `bun`;
 }
 
-async function findFreePort(preferred: number) {
-	for (let port = preferred; port < preferred + 50; port++) {
+async function findFreePort(preferred: number, stride: number) {
+	for (let port = preferred; port < preferred + stride; port++) {
 		if (await isPortFree(port)) return port;
 	}
-	throw new Error(`No free port found starting at ${preferred}`);
+	throw new Error(`No free port found in ${preferred}-${preferred + stride - 1}`);
 }
 
 function isPortFree(port: number) {
@@ -119,6 +124,28 @@ async function waitForServer(args: { baseURL: string; child: ChildProcess; timeo
 	throw new Error(`timed out after ${timeoutMs}ms`);
 }
 
+function installProcessCleanup(child: ChildProcess) {
+	const kill = () => killProcessTreeSync(child);
+	const signals = [`exit`, `SIGINT`, `SIGTERM`] as const;
+	for (const signal of signals) process.once(signal, kill);
+	return () => {
+		for (const signal of signals) process.removeListener(signal, kill);
+	};
+}
+
+function killProcessTreeSync(child: ChildProcess) {
+	if (!child.pid || child.exitCode !== null) return;
+	try {
+		process.kill(-child.pid, `SIGKILL`);
+	} catch {
+		try {
+			child.kill(`SIGKILL`);
+		} catch {
+			// Already gone.
+		}
+	}
+}
+
 async function stopProcessTree(child: ChildProcess) {
 	if (child.pid && child.exitCode === null) {
 		try {
@@ -138,14 +165,10 @@ async function stopProcessTree(child: ChildProcess) {
 	}
 
 	if (child.pid && child.exitCode === null) {
-		try {
-			process.kill(-child.pid, `SIGKILL`);
-		} catch {
-			try {
-				child.kill(`SIGKILL`);
-			} catch {
-				// Already gone.
-			}
+		killProcessTreeSync(child);
+		const forceQuitAt = Date.now() + 2000;
+		while (child.exitCode === null && Date.now() < forceQuitAt) {
+			await sleep(50);
 		}
 	}
 }
