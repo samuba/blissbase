@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from './helpers/fixtures';
 import { createEvents, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent } from './helpers/seed';
 import { openFilterDialog, waitForClientHydration } from './helpers/offering-test-utils';
 

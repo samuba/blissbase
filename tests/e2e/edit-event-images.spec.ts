@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './helpers/fixtures';
 import { clearTestEvents, createEvent, getEventById } from './helpers/seed';
 
 test.describe('Edit event images', () => {

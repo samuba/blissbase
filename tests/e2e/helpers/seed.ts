@@ -29,7 +29,7 @@ export const E2E_OTHER_USER_EMAIL = `e2e-other@example.com`;
 export { E2E_OTP_CODE, getE2EUserIdForEmail };
 
 function getWorkerSlugPrefix() {
-	const workerIndex = process.env.TEST_WORKER_INDEX ?? process.env.TEST_PARALLEL_INDEX ?? "0";
+	const workerIndex = process.env.E2E_WORKER_INDEX ?? process.env.TEST_WORKER_INDEX ?? process.env.TEST_PARALLEL_INDEX ?? `0`;
 	return `e2e-w${workerIndex}`;
 }
 
@@ -70,7 +70,7 @@ export async function createEvents(page: Page, events: TestEvent[]) {
 }
 
 /**
- * Clears test events for the current worker by slug prefix.
+ * Clears all events on this worker's isolated database.
  *
  * @example await clearTestEvents(page)
  */
@@ -78,9 +78,6 @@ export async function clearTestEvents(page: Page) {
 	const response = await page.request.post("/api/test/seed", {
 		data: {
 			action: "clearEvents",
-			data: {
-				slugPrefix: getWorkerSlugPrefix(),
-			},
 		},
 	});
 
@@ -226,9 +223,7 @@ export async function createOffering(page: Page, data: TestOffering = {}) {
 }
 
 export async function clearTestOfferings(page: Page) {
-	await callSeed(page, `clearOfferings`, {
-		slugPrefix: `${getWorkerSlugPrefix()}-offering`,
-	});
+	await callSeed(page, `clearOfferings`);
 }
 
 export async function clearTestProfiles(page: Page, profileIds: string[]) {

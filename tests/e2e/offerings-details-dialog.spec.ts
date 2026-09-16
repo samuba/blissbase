@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./helpers/fixtures";
 import { signInAsE2EUser } from "./helpers/auth";
 import {
 	clearTestOfferings,
@@ -9,7 +9,7 @@ import {
 	createProfile,
 	E2E_DEFAULT_USER_ID,
 } from "./helpers/seed";
-import { offeringCardById, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
+import { offeringCardById, setEventLocationFilterCookie, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 const profileIds = [E2E_DEFAULT_USER_ID];
@@ -107,21 +107,12 @@ test.describe(`Offering details dialog`, () => {
 
 	test(`creating an offering opens it in a dialog and dismissing does not reopen it`, async ({ page }) => {
 		await signInAsE2EUser(page);
-		await page.context().addCookies([
-			{
-				name: `blissbase_filters`,
-				value: encodeURIComponent(
-					JSON.stringify({
-						plzCity: `Berlin`,
-						distance: `50`,
-						lat: 52.52,
-						lng: 13.405,
-					}),
-				),
-				domain: `localhost`,
-				path: `/`,
-			},
-		]);
+		await setEventLocationFilterCookie(page, {
+			plzCity: `Berlin`,
+			distance: `50`,
+			lat: 52.52,
+			lng: 13.405,
+		});
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
 		await page.getByTestId(`create-offering`).click();

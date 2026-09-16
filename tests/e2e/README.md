@@ -4,9 +4,13 @@ This directory contains end-to-end tests for the Blissbase application using Pla
 
 ## Architecture
 
-- **Database**: E2E tests use PGlite (in-memory PostgreSQL) instead of a real database
-- **Auth**: Signed-in tests use E2E cookies. Anonymous offering tests use a dev/E2E-only fixed OTP (`123456`) while still exercising the server verification and submit-token flow.
+- **Database**: Each Playwright worker starts its own Vite server with an in-memory PGlite database
+- **Ports**: Workers bind distinct ports (`5174 + workerIndex`, skipping taken ports)
+- **Auth / cookies / storage**: Each test gets a fresh browser context. Cookies are scoped to that worker's origin. Do not share `storageState` files.
+- **Auth flow**: Signed-in tests use E2E cookies. Anonymous offering tests use a dev/E2E-only fixed OTP (`123456`) while still exercising the server verification and submit-token flow.
 - **External Services**: Google Maps API, S3, and other services use test/mock values
+
+Import `test` and `expect` from `./helpers/fixtures` (not `@playwright/test`) so the worker server and DB reset run.
 
 ## Setup
 
@@ -33,10 +37,24 @@ PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-key
 
 ## Running Tests
 
-### Run all E2E tests:
+### Run all E2E tests (parallel workers, isolated servers):
 
 ```bash
 bun run test:e2e
+```
+
+Local default is 3 workers. CI uses 2 workers per shard.
+
+### Force a worker count:
+
+```bash
+PLAYWRIGHT_WORKERS=2 bun run test:e2e
+```
+
+### Run one shard (as CI does):
+
+```bash
+bun run test:e2e -- --shard=1/2
 ```
 
 ### Run tests with UI mode (for debugging):
@@ -57,10 +75,16 @@ bun run test:e2e -- homepage.spec.ts
 bun run test:e2e -- --grep "filter modal"
 ```
 
-### Debug mode:
+### Debug mode (single worker):
 
 ```bash
 bun run test:e2e:debug
+```
+
+### Serial run (same isolation, no parallelism):
+
+```bash
+PLAYWRIGHT_WORKERS=1 bun run test:e2e
 ```
 
 ## Test Files
@@ -74,6 +98,7 @@ bun run test:e2e:debug
 - `offerings-create.spec.ts` - Tests signed-in and anonymous offering creation, validation, OTP, profile completion, and images
 - `offerings-discovery.spec.ts` - Tests offering eligibility, search, location/online filters, dialogs, and return navigation
 - `offerings-lifecycle.spec.ts` - Tests edit permissions, image editing, activation, deactivation, owner visibility, and deletion
+- `helpers/fixtures.ts` - Per-worker Vite/PGlite server and DB reset
 - `helpers/seed.ts` - Test data seeding utilities
 
 ## Test Data
@@ -101,32 +126,34 @@ Offering tests seed matching profile IDs before using `signInAsE2EUser`. All pro
 
 ## How It Works
 
-1. **PGlite Mode**: When `E2E_TEST=true`, the app uses PGlite (in-memory database)
-2. **Test Seeding**: Each test creates its own data via the seed API
-3. **Isolation**: Tests clean up after themselves in `afterEach`
-4. **No Docker**: No external dependencies needed for local test runs
+1. **Per-worker Vite**: `helpers/fixtures.ts` starts `bun run dev` with `E2E_TEST=true`, a unique port, Vite cache dir, and SvelteKit outDir. HMR and PWA are off so workers do not fight over the same `.svelte-kit` / dep cache.
+2. **PGlite**: Each of those servers has its own in-memory database.
+3. **DB reset**: Every test wipes favorites, offerings, events, and profiles before and after via `resetDatabase`.
+4. **Test seeding**: Each test creates its own data via the seed API.
+5. **No Docker**: No external dependencies needed for local test runs
 
 ## CI/CD
 
 Tests run automatically on GitHub Actions for pull requests. The workflow:
 
 1. Runs unit tests first
-2. Then runs E2E tests with PGlite
-3. Uploads test results and artifacts on failure
+2. Then runs E2E as two shards, each with 2 isolated workers
+3. Uploads per-shard Playwright reports
 
 See `.github/workflows/e2e-tests.yml` for details.
 
 ## Writing New Tests
 
-1. Use `test.describe()` to group related tests
-2. Use `test.beforeEach()` for common setup with seed data
-3. Locate interactive elements via `data-testid` and `getByTestId()`. Do not find buttons, links, dialogs, inputs, or cards by visible text.
-4. Handle CI slowness with appropriate timeouts
+1. Import `test` / `expect` from `./helpers/fixtures`
+2. Use `test.describe()` to group related tests
+3. Use `test.beforeEach()` for common setup with seed data
+4. Locate interactive elements via `data-testid` and `getByTestId()`. Do not find buttons, links, dialogs, inputs, or cards by visible text.
+5. Handle CI slowness with appropriate timeouts
 
 Example:
 
 ```typescript
-import { test, expect } from "@playwright/test";
+import { expect, test } from "./helpers/fixtures";
 import { createEvent, clearTestEvents, createMeditationEvent } from "./helpers/seed";
 
 test.describe("Feature Name", () => {

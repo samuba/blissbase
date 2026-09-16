@@ -6,6 +6,8 @@ import { wuchale } from "wuchale/vite";
 import { enhancedImages } from "@sveltejs/enhanced-img";
 import posthog from "@posthog/rollup-plugin";
 
+const isE2e = process.env.E2E_TEST === "true";
+
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
@@ -31,7 +33,7 @@ export default defineConfig({
 				includeVersionFile: true,
 			},
 			devOptions: {
-				enabled: true,
+				enabled: !isE2e,
 			},
 			manifest: {
 				name: "Blissbase",
@@ -71,8 +73,15 @@ export default defineConfig({
 			},
 		}),
 	],
+	...(process.env.VITE_CACHE_DIR ? { cacheDir: process.env.VITE_CACHE_DIR } : {}),
 	server: {
 		allowedHosts: ["localdev.soulspots.app", "localhost", "127.0.0.1", "blissbase.app", "blissbase.vercel.app"],
+		...(isE2e
+			? {
+					hmr: false,
+					watch: null,
+				}
+			: {}),
 	},
 	optimizeDeps: {
 		// jSquash WASM fails under Vite's dependency optimizer (Invalid URL / wasm fetch).
