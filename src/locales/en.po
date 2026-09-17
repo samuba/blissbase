@@ -180,6 +180,7 @@ msgid "Dieses Wochenende"
 msgstr "This weekend"
 
 #: src/lib/components/DateRangePicker.svelte
+#: src/routes/+page.svelte
 msgid "Nächste Woche"
 msgstr "Next week"
 
@@ -3778,3 +3779,155 @@ msgstr "The easiest way is by email at hi@blissbase.app. I’m happy to receive 
 #, ai
 msgid "{0} km radius"
 msgstr "{0} km radius"
+
+#: src/routes/+page.svelte
+#, ai
+msgid "Morgen"
+msgstr "Tomorrow"
+
+#: src/routes/+page.svelte
+#, ai
+msgid "Übermorgen"
+msgstr "Day after tomorrow"
+
+#, ai
+#~ msgid "Event Name"
+#~ msgstr "Event Name"
+
+#, ai
+#~ msgid "Der N"
+#~ msgstr "The N"
+
+#, ai
+#~ msgid "Der Name deines Events"
+#~ msgstr "The name of your event"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Achtsames Tortenwerfen"
+msgstr "Mindful Pie Throwing"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Zen Meditation auf der Kirmes"
+msgstr "Zen meditation at the fair"
+
+#, ai
+#~ msgid "Schamanisches IKEA-Aufbauen"
+#~ msgstr "Shamanic IKEA Assembly"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Tantra für die Steuererklärung"
+msgstr "Tantra for Filing Your Taxes"
+
+#, ai
+#~ msgid "Vollmond-Karaoke im Baumarkt"
+#~ msgstr "Full Moon Karaoke at the Hardware Store"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Klangheilung mit Staubsaugern"
+msgstr "Sound Healing with Vacuum Cleaners"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Chakren-Ausgleich im Stau"
+msgstr "Chakra Balancing in Traffic"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Pranayama im Drive-in"
+msgstr "Pranayama at the Drive-Through"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Manifestieren von Parkplätzen"
+msgstr "Manifesting Parking Spaces"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Aura-Reinigung mit dem Dyson"
+msgstr "Aura Cleansing with a Dyson"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Reiki für den Toaster"
+msgstr "Reiki for the Toaster"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Atemarbeit im Fahrstuhl"
+msgstr "Breathwork in the Elevator"
+
+#, ai
+#~ msgid "Ekstatischer Tanz im Wartezimmer"
+#~ msgstr "Ecstatic Dance in the Waiting Room"
+
+#, ai
+#~ msgid "Vipassana im IKEA-Restaurant"
+#~ msgstr "Vipassana in the IKEA Restaurant"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Kakaozeremonie mit Nesquik"
+msgstr "Cacao Ceremony with Nesquik"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Gongbad in der Waschstraße"
+msgstr "Gong Bath at the Car Wash"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Familienaufstellung mit Playmobil"
+msgstr "Family Constellations with Playmobil"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Feuerlauf über die Fußbodenheizung"
+msgstr "Firewalking over Underfloor Heating"
+
+#, ai
+#~ msgid "Stilles Retreat im Callcenter"
+#~ msgstr "Silent Retreat in the Call Center"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Kristallheilung mit Swarovski"
+msgstr "Crystal Healing with Swarovski"
+
+#, ai
+#~ msgid "Schamanische Reise mit Google Maps"
+#~ msgstr "Shamanic Journey with Google Maps"
+
+#, ai
+#~ msgid "Holotropes Atmen im Bällebad"
+#~ msgstr "Holotropic Breathwork in the Ball Pit"
+
+#: src/routes/+page.svelte
+#, ai
+msgid "Später diese Woche"
+msgstr "Later this week"
+
+#: src/routes/+page.svelte
+#, ai
+msgid "Später"
+msgstr "Later"
+
+#, ai
+#~ msgid "Schamanisches IKEA-Reg"
+#~ msgstr "Shamanic IKEA Shelf"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Schamanisches IKEA-Regale aufbauen"
+msgstr "Shamanic IKEA shelf assembly"
+
+#, ai
+#~ msgid "Schamanisches Regale aufbauen"
+#~ msgstr "Build shamanic shelves"
+
+#, ai
+#~ msgid "Schamanisches IKEARegale aufbauen"
+#~ msgstr "Shamanic IKEA shelf assembly"

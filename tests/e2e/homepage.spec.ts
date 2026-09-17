@@ -110,6 +110,73 @@ test.describe('Homepage', () => {
 	});
 });
 
+test.describe(`Homepage - listing dividers`, () => {
+	test.beforeEach(async ({ page }) => {
+		await clearTestEvents(page);
+	});
+
+	test.afterEach(async ({ page }) => {
+		await clearTestEvents(page);
+	});
+
+	test(`shows Morgen, Übermorgen, Später diese Woche, Nächste Woche, and Später between chronological events`, async ({ page }) => {
+		const laterThisWeekDays = daysUntilLaterThisWeek();
+		await createEvents(page, [
+			createMeditationEvent({
+				name: `Today Morning Circle`,
+				startAt: futureTodayIso(10),
+			}),
+			createMeditationEvent({
+				name: `Today Evening Circle`,
+				startAt: futureTodayIso(30),
+			}),
+			createYogaEvent({
+				name: `Tomorrow Yoga`,
+				startAt: localDayAtHour({ daysFromToday: 1, hour: 18 }),
+			}),
+			createYogaEvent({
+				name: `Day After Yoga`,
+				startAt: localDayAtHour({ daysFromToday: 2, hour: 18 }),
+			}),
+			...(laterThisWeekDays == null
+				? []
+				: [
+						createYogaEvent({
+							name: `Later This Week Jam`,
+							startAt: localDayAtHour({ daysFromToday: laterThisWeekDays, hour: 18 }),
+						}),
+					]),
+			createOnlineEvent({
+				name: `Next Week Breathwork`,
+				startAt: localDayAtHour({ daysFromToday: daysUntilNextWeekThursday(), hour: 18 }),
+			}),
+			createMeditationEvent({
+				name: `Later Retreat`,
+				startAt: localDayAtHour({ daysFromToday: daysUntilWeekAfterNext(), hour: 18 }),
+			}),
+		]);
+
+		await page.goto(`/`);
+		await page.getByTestId(`event-card`).first().waitFor({ timeout: 15000 });
+		await waitForClientHydration(page);
+
+		const listing = page.locator(`[data-testid="event-card-title"], [data-testid="event-list-divider"]`);
+		await expect.poll(async () => (await listing.allTextContents()).map((text) => text.trim())).toEqual([
+			`Today Morning Circle`,
+			`Today Evening Circle`,
+			`Morgen`,
+			`Tomorrow Yoga`,
+			`Übermorgen`,
+			`Day After Yoga`,
+			...(laterThisWeekDays == null ? [] : [`Später diese Woche`, `Later This Week Jam`]),
+			`Nächste Woche`,
+			`Next Week Breathwork`,
+			`Später`,
+			`Later Retreat`,
+		]);
+	});
+});
+
 test.describe(`Homepage - location prefill`, () => {
 	test(`renders the saved location in the search box in the server HTML`, async ({ page }) => {
 		const locationLabel = `Prefillstadt`;
@@ -145,3 +212,39 @@ test.describe('Homepage - Loading States', () => {
 		expect(eventCount).toBeGreaterThan(0);
 	});
 });
+
+function futureTodayIso(minutesFromNow: number) {
+	const date = new Date(Date.now() + minutesFromNow * 60 * 1000);
+	const endOfToday = new Date();
+	endOfToday.setHours(23, 59, 0, 0);
+	return (date > endOfToday ? endOfToday : date).toISOString();
+}
+
+function localDayAtHour(args: { daysFromToday: number; hour: number }) {
+	const date = new Date();
+	date.setDate(date.getDate() + args.daysFromToday);
+	date.setHours(args.hour, 0, 0, 0);
+	return date.toISOString();
+}
+
+function daysUntilNextWeekThursday() {
+	const today = new Date();
+	const day = today.getDay();
+	const daysUntilNextMonday = day === 0 ? 1 : 8 - day;
+	return daysUntilNextMonday + 3;
+}
+
+function daysUntilLaterThisWeek() {
+	const today = new Date();
+	const day = today.getDay();
+	const daysUntilSunday = day === 0 ? 0 : 7 - day;
+	if (daysUntilSunday <= 2) return null;
+	return 3;
+}
+
+function daysUntilWeekAfterNext() {
+	const today = new Date();
+	const day = today.getDay();
+	const daysUntilNextMonday = day === 0 ? 1 : 8 - day;
+	return daysUntilNextMonday + 7;
+}

@@ -12,6 +12,7 @@
 	import { addHours } from '$lib/common';
 	import { now } from '$lib/now.svelte';
 	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';
+	import { buildEventListingItems, type EventListingDividerSection } from '$lib/eventListingSections';
 
 	const { data } = $props();
 	const { autoDetectedCity } = $derived(data);
@@ -28,6 +29,26 @@
 			(event) => !isEventMostlyElapsed({ startAt: event.startAt, endAt: event.endAt }),
 		),
 	);
+	const showListingDividers = $derived(
+		browser &&
+			eventsStore.pagination.sortBy === `time` &&
+			eventsStore.pagination.sortOrder === `asc`,
+	);
+	const listingItems = $derived(
+		buildEventListingItems({
+			events: visibleEvents,
+			now: now.value,
+			showDividers: showListingDividers,
+		}),
+	);
+
+	function listingDividerLabel(section: EventListingDividerSection) {
+		if (section === `tomorrow`) return `Morgen`;
+		if (section === `dayAfterTomorrow`) return `Übermorgen`;
+		if (section === `restOfWeek`) return `Später diese Woche`;
+		if (section === `nextWeek`) return `Nächste Woche`;
+		return `Später`;
+	}
 
 	let contentBeforeMenu = $state<HTMLElement | null>(null);
 	let dismissedAutoLocationHint = $state(false);
@@ -159,10 +180,21 @@
 				<div class="fade-in flex w-full flex-col gap-4">
 					<div class="grid gap-4 min-[920px]:grid-cols-2">
 						{@render createEventCta()}
-						{#each visibleEvents as event (event.id)}
-							<div class="h-full min-w-0">
-								<EventCard {event} />
-							</div>
+						{#each listingItems as item (item.kind === `event` ? item.event.id : item.section)}
+							{#if item.kind === `divider`}
+								<h2
+									class="divider col-span-full my-3 text-md font-normal! text-base-content/40"
+									role="separator"
+									data-testid="event-list-divider"
+									data-section={item.section}
+								>
+									{listingDividerLabel(item.section)}
+								</h2>
+							{:else}
+								<div class="h-full min-w-0">
+									<EventCard event={item.event} />
+								</div>
+							{/if}
 						{/each}
 					</div>
 

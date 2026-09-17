@@ -112,6 +112,29 @@
 			createStartAtMin = formatDateForLocalInput(new Date());
 		}
 	});
+
+	function getRandomNamePlaceholder() {
+		const namePlaceholders = [
+			`Achtsames Tortenwerfen`,
+			`Zen Meditation auf der Kirmes`,
+			`Schamanisches IKEA-Regale aufbauen`,
+			`Tantra für die Steuererklärung`,
+			`Klangheilung mit Staubsaugern`,
+			`Chakren-Ausgleich im Stau`,
+			`Pranayama im Drive-in`,
+			`Manifestieren von Parkplätzen`,
+			`Aura-Reinigung mit dem Dyson`,
+			`Reiki für den Toaster`,
+			`Atemarbeit im Fahrstuhl`,
+			`Kakaozeremonie mit Nesquik`,
+			`Gongbad in der Waschstraße`,
+			`Familienaufstellung mit Playmobil`,
+			`Feuerlauf über die Fußbodenheizung`,
+			`Kristallheilung mit Swarovski`,
+		]
+		return namePlaceholders[Math.floor(Math.random() * namePlaceholders.length)];
+	}
+	
 </script>
 
 <form
@@ -142,7 +165,7 @@
 
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 		<fieldset class="fieldset md:col-span-2">
-			<input class="input w-full peer user-invalid:validator" data-testid="event-name-input" {...remoteForm.fields.name.as('text')} required />
+			<input class="input w-full peer user-invalid:validator" placeholder="z.B. {getRandomNamePlaceholder()}" data-testid="event-name-input" {...remoteForm.fields.name.as('text')} required />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Event Name *</legend>
 			<FormFieldIssues field={remoteForm.fields.name} />
 		</fieldset>
