@@ -32,29 +32,13 @@ export function markAppHydrated() {
 
 /**
  * SvelteKit sets `started` and attaches history listeners after hydrate.
- * Layout marks `data-app-hydrated` on the following macrotask; wait for that.
+ * If the layout already marked the document, resolve immediately; otherwise wait one macrotask.
  */
 export function afterClientHydration() {
-	return new Promise<void>((resolve) => {
-		if (document.documentElement.getAttribute(APP_HYDRATED_ATTR) === `true`) {
-			resolve();
-			return;
-		}
-
-		const observer = new MutationObserver(() => {
-			if (document.documentElement.getAttribute(APP_HYDRATED_ATTR) !== `true`) return;
-			observer.disconnect();
-			resolve();
-		});
-		observer.observe(document.documentElement, {
-			attributes: true,
-			attributeFilter: [APP_HYDRATED_ATTR],
-		});
-		if (document.documentElement.getAttribute(APP_HYDRATED_ATTR) === `true`) {
-			observer.disconnect();
-			resolve();
-		}
-	});
+	if (document.documentElement.getAttribute(APP_HYDRATED_ATTR) === `true`) {
+		return Promise.resolve();
+	}
+	return new Promise<void>((resolve) => setTimeout(resolve, 0));
 }
 
 function hasDialogState(state: App.PageState) {
