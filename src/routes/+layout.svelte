@@ -22,6 +22,7 @@
 	import LogoLoader from '$lib/components/LogoLoader.svelte';
 	import EventDetailsDialog from './EventDetailsDialog.svelte';
 	import { isEventOrOfferingListPath } from '$lib/routes';
+	import { markAppHydrated } from '$lib/shallowDialog.svelte';
 
 	let { data, children } = $props();
 	let { jwtClaims, supabase, userId } = $derived(data);
@@ -41,6 +42,7 @@
 
 	onMount(() => {
 		const cleanup = setupAutoRefresh();
+		window.setTimeout(markAppHydrated, 0);
 
 		// Listen to Auth events to handle session refreshes and signouts
 		const { data: authData } = supabase.auth.onAuthStateChange((event, newSession) => {

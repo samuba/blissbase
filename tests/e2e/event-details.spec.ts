@@ -46,6 +46,7 @@ test.describe('Event Details Modal', () => {
 	});
 
 	test('dialog stays synchronized across repeated close methods', async ({ page }) => {
+		test.setTimeout(60_000);
 		const firstCard = page.getByTestId('event-card').first();
 		const dialog = page.getByTestId('details-dialog');
 

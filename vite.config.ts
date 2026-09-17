@@ -80,6 +80,22 @@ export default defineConfig({
 			? {
 					hmr: false,
 					watch: null,
+					warmup: {
+						clientFiles: [
+							"./src/routes/+layout.svelte",
+							"./src/routes/+page.svelte",
+							"./src/routes/offerings/+page.svelte",
+							"./src/routes/EventDetailsDialog.svelte",
+						],
+						ssrFiles: [
+							"./src/routes/+layout.svelte",
+							"./src/routes/+layout.ts",
+							"./src/routes/+page.svelte",
+							"./src/routes/offerings/+page.svelte",
+							"./src/routes/offerings/+page.ts",
+							"./src/routes/offerings/+page.server.ts",
+						],
+					},
 				}
 			: {}),
 	},

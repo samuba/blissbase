@@ -135,7 +135,7 @@ test.describe('Location autocomplete', () => {
 		await selectedInput.focus();
 		await page.keyboard.press(`Enter`);
 		await expectLocationValue(page, `plzCityInput-header-distance`, `50`);
-		await page.waitForLoadState(`networkidle`);
+		await expect(page.getByTestId(`clear-location-button`).first()).toBeVisible();
 
 		const headerLocationInput = page.getByTestId(`location-distance-input`).first();
 		await headerLocationInput.getByTestId(`clear-location-button`).click();

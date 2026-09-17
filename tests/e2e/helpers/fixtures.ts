@@ -1,4 +1,5 @@
 import { expect, test as base, type APIRequestContext } from "@playwright/test";
+import { installGotoRetries } from "./goto";
 import { startWorkerServer } from "./worker-server";
 
 export { expect };
@@ -16,11 +17,16 @@ export const test = base.extend<{ resetWorkerDb: void }, { e2eServer: { baseURL:
 			await use({ baseURL: server.baseURL, port: server.port });
 			await server.stop();
 		},
-		{ auto: true, scope: `worker`, timeout: 180000 },
+		{ auto: true, scope: `worker`, timeout: 240000 },
 	],
 
 	baseURL: async ({ e2eServer }, use) => {
 		await use(e2eServer.baseURL);
+	},
+
+	page: async ({ page }, use) => {
+		installGotoRetries(page);
+		await use(page);
 	},
 
 	resetWorkerDb: [

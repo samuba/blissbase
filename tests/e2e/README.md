@@ -126,11 +126,12 @@ Offering tests seed matching profile IDs before using `signInAsE2EUser`. All pro
 
 ## How It Works
 
-1. **Per-worker Vite**: `helpers/fixtures.ts` starts `bun run dev` with `E2E_TEST=true`, a unique port, Vite cache dir, and SvelteKit outDir. HMR and PWA are off so workers do not fight over the same `.svelte-kit` / dep cache.
+1. **Per-worker Vite**: `helpers/fixtures.ts` starts `bun run dev` with `E2E_TEST=true`, a unique port, Vite cache dir, and SvelteKit outDir. HMR and PWA are off so workers do not fight over the same `.svelte-kit` / dep cache. After the seed API is up, the worker warms `/`, `/offerings`, and the create-flow routes so the first test does not hit a Vite compile 500.
 2. **PGlite**: Each of those servers has its own in-memory database.
 3. **DB reset**: Every test wipes favorites, offerings, events, and profiles before and after via `resetDatabase`.
 4. **Test seeding**: Each test creates its own data via the seed API.
-5. **No Docker**: No external dependencies needed for local test runs
+5. **Hydration**: Tests wait for `data-app-hydrated` (set after SvelteKit's client router is ready). Do not use `networkidle`.
+6. **No Docker**: No external dependencies needed for local test runs
 
 ## CI/CD
 

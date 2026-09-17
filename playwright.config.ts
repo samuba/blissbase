@@ -17,7 +17,7 @@ export default defineConfig({
 	/* Fail the build on CI if you accidentally left test.only in the source code */
 	forbidOnly: !!process.env.CI,
 
-	/* CI: flakes from infra; local: first test can hit Vite cold start / dep optimize before SSR is stable */
+	/* Infra blips in CI; local first-load 500s are retried in goto + worker warmup. */
 	retries: process.env.CI ? 4 : 2,
 
 	/* Isolated Vite+PGlite per worker. Override with PLAYWRIGHT_WORKERS. */
