@@ -51,11 +51,13 @@ test.describe(`Offering details dialog`, () => {
 	});
 
 	test(`dialog stays synchronized across repeated close methods`, async ({ page }) => {
+		test.setTimeout(60_000);
 		const offering = await createOffering(page, createOfflineOffering({ title: `Back Close Offering`, slug: `back-close` }));
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
 
 		const offeringCard = offeringCardById(page, offering.id);
+		await expect(offeringCard).toBeVisible();
 		const dialog = page.getByTestId(`details-dialog`);
 
 		await offeringCard.click();

@@ -23,11 +23,21 @@ export class ShallowDialog {
 	}
 }
 
+export const APP_HYDRATED_ATTR = `data-app-hydrated`;
+
+/** Marks the document after SvelteKit `started` and history listeners are attached. */
+export function markAppHydrated() {
+	document.documentElement.setAttribute(APP_HYDRATED_ATTR, `true`);
+}
+
 /**
- * SvelteKit attaches history listeners after the first client macrotask.
- * replaceState before that can be overwritten by hydration.
+ * SvelteKit sets `started` and attaches history listeners after hydrate.
+ * If the layout already marked the document, resolve immediately; otherwise wait one macrotask.
  */
 export function afterClientHydration() {
+	if (document.documentElement.getAttribute(APP_HYDRATED_ATTR) === `true`) {
+		return Promise.resolve();
+	}
 	return new Promise<void>((resolve) => setTimeout(resolve, 0));
 }
 

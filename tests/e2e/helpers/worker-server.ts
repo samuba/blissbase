@@ -59,7 +59,13 @@ export async function startWorkerServer(workerIndex: number): Promise<E2eServer>
 	child.stderr?.on(`data`, append);
 
 	try {
+		const readyDeadline = Date.now() + startTimeoutMs;
 		await waitForServer({ baseURL, child, timeoutMs: startTimeoutMs });
+		await warmupApp({
+			baseURL,
+			child,
+			timeoutMs: Math.max(readyDeadline - Date.now(), 30_000),
+		});
 	} catch (error) {
 		await stopProcessTree(child);
 		throw new Error(
@@ -122,6 +128,26 @@ async function waitForServer(args: { baseURL: string; child: ChildProcess; timeo
 		await sleep(250);
 	}
 	throw new Error(`timed out after ${timeoutMs}ms`);
+}
+
+const warmupPaths = [`/`, `/offerings`, `/events/new`, `/offerings/new`];
+
+async function warmupApp(args: { baseURL: string; child: ChildProcess; timeoutMs: number }) {
+	const { baseURL, child, timeoutMs } = args;
+	const deadline = Date.now() + timeoutMs;
+	for (const path of warmupPaths) {
+		while (true) {
+			if (child.exitCode !== null) throw new Error(`server exited with code ${child.exitCode}`);
+			if (Date.now() >= deadline) throw new Error(`warmup ${path} timed out after ${timeoutMs}ms`);
+			try {
+				const response = await fetch(`${baseURL}${path}`, { signal: AbortSignal.timeout(10000) });
+				if (response.status < 500) break;
+			} catch {
+				// First SSR can fail while Vite compiles the route.
+			}
+			await sleep(250);
+		}
+	}
 }
 
 function installProcessCleanup(child: ChildProcess) {

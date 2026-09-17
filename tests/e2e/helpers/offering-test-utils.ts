@@ -1,4 +1,5 @@
 import { expect, type Browser, type Locator, type Page } from "@playwright/test";
+import { installGotoRetries } from "./goto";
 import { e2eCookieDomain, e2eOrigin } from "./origin";
 
 export async function setGermanLocale(page: Page) {
@@ -41,21 +42,26 @@ export async function setEventLocationFilterCookie(
 }
 
 export async function newAnonymousContext(browser: Browser) {
-	return browser.newContext({
+	const context = await browser.newContext({
 		baseURL: e2eOrigin(),
 		extraHTTPHeaders: { "Accept-Language": `de` },
 		locale: `de-DE`,
 		storageState: { cookies: [], origins: [] },
 	});
+	const originalNewPage = context.newPage.bind(context);
+	context.newPage = async () => {
+		const page = await originalNewPage();
+		installGotoRetries(page);
+		return page;
+	};
+	return context;
 }
 
 export async function waitForClientHydration(page: Page) {
-	await page.waitForLoadState(`networkidle`);
-	await page.evaluate(
-		() =>
-			new Promise<void>((resolve) => {
-				requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-			}),
+	await page.waitForFunction(
+		() => document.documentElement.getAttribute(`data-app-hydrated`) === `true`,
+		undefined,
+		{ timeout: 15000 },
 	);
 }
 
@@ -129,7 +135,9 @@ export function detailsDialog(page: Page) {
 }
 
 export async function openOfferingDetailsFromCard(page: Page, offering: { id: number; slug: string }) {
-	await offeringCardById(page, offering.id).click();
+	const card = offeringCardById(page, offering.id);
+	await expect(card).toBeVisible();
+	await card.click();
 	const dialog = detailsDialog(page);
 	await expect(dialog).toBeVisible();
 	await expect(page).toHaveURL(new RegExp(`/offerings/${offering.slug}$`));
