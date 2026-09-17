@@ -1,12 +1,14 @@
 msgid ""
 msgstr ""
-"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;\n"
 "Source-Language: de\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2\n"
+"X-Plurals-Order: one, other\n"
 
+#: src/lib/components/PageHeader.svelte
 #: src/lib/components/PageHeader.svelte
 #: src/lib/components/TabsNavDesktop.svelte
 #: src/lib/components/TabsNavDesktop.svelte
@@ -16,7 +18,6 @@ msgstr ""
 #: src/routes/+layout.ts
 #: src/routes/+page.svelte
 #: src/routes/@/[slug]/+page.server.ts
-#: src/routes/type-specimen/+page.svelte
 msgid "Blissbase"
 msgstr "Blissbase"
 
@@ -167,10 +168,6 @@ msgstr "<0/> Email"
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/dialog/DetailsDialog.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
 msgid "Schließen"
 msgstr "Close"
 
@@ -416,10 +413,6 @@ msgstr "Delete event"
 msgid "Abbrechen"
 msgstr "Cancel"
 
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
 #: src/routes/edit/[id]/+page.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 #: src/routes/profile/public/+page.svelte
@@ -457,6 +450,7 @@ msgstr "Share"
 msgid "Link kopieren"
 msgstr "Copy link"
 
+#: src/lib/components/LocationAutocompleteInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Stadt / PLZ"
@@ -649,9 +643,6 @@ msgstr "Full-screen view"
 #: src/lib/components/ImageGalleryInput.svelte
 msgid "Ausgewählte Bilder sortieren"
 msgstr "Sort selected images"
-
-#~ msgid "Ziehe das Bild an diesem Button in eine andere Position, um die Reihenfolge zu ändern."
-#~ msgstr "Drag the image using this button to a different position to change the order."
 
 #: src/lib/components/ImageGalleryInput.svelte
 msgid "Nach links"
@@ -1262,7 +1253,6 @@ msgstr "The listing could not be deleted."
 msgid "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 msgstr "Permanently delete this listing? This action cannot be undone."
 
-#: src/routes/admin/telegram/+page.svelte
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "<0/> Löschen"
@@ -1676,7 +1666,6 @@ msgid "<0/> Erneut laden"
 msgstr "<0/> Load again"
 
 #: src/lib/components/PeekFooter.svelte
-#: src/routes/admin/+page.svelte
 msgid "Admin"
 msgstr "Admin"
 
@@ -1719,200 +1708,13 @@ msgstr "Image {0} of {1}"
 msgid "Close image"
 msgstr "Close image"
 
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "<0/> Zurück zu Admin"
-msgstr "<0/> Back to Admin"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-msgid "roomId *"
-msgstr "roomId *"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "hasOnlyConsciousEvents <0>Wenn aktiv, wird der Consciousness-Check übersprungen.</0>"
-msgstr "hasOnlyConsciousEvents <0>If enabled, the consciousness check is skipped.</0>"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Target hinzufügen"
-msgstr "Add Target"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Vorhandene Targets <0/>"
-msgstr "Existing Targets <0/>"
-
-#: src/routes/admin/telegram/+page.svelte
-msgid "Noch keine Telegram Scraping Targets."
-msgstr "No Telegram scraping targets yet."
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Name"
-msgstr "Name"
-
 #: src/lib/components/tabsNav.ts
 msgid "Events"
 msgstr "Events"
 
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "ja"
-msgstr "yes"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "nein"
-msgstr "no"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "defaultAddress"
-msgstr "Default address"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-msgstr "Optional. One or more lines, e.g. Studio name, street, city"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse."
-msgstr "Comma- or line-separated. Empty = no fallback address."
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-msgid "topicIds"
-msgstr "topicIds"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-msgid "Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics."
-msgstr "Comma-separated numbers. Empty = no topics, -1 = all topics."
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Target bearbeiten"
-msgstr "Edit target"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "<0/> Wird gespeichert..."
-msgstr "<0/> Saving..."
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-msgid "In Telegram öffnen"
-msgstr "Open in Telegram"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "chatJid *"
-msgstr "chatJid *"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Anzeigename der Gruppe / des Chats"
-msgstr "Group / chat display name"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Noch keine WhatsApp Scraping Targets."
-msgstr "No WhatsApp scraping targets yet."
-
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "In WhatsApp öffnen"
-msgstr "Open in WhatsApp"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten."
-msgstr "Add a target or select a line to edit."
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "<0/> Hinzufügen"
-msgstr "<0/> Add"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Wähle einen Chat aus, der noch kein Scraping-Target ist."
-msgstr "Select a chat that is not yet a scraping target."
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Chat suchen…"
-msgstr "Search chats…"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Keine verfügbaren Chats. Alle bekannten Chats sind bereits Targets."
-msgstr "No available chats. All known chats are already targets."
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Ändern"
-msgstr "Edit"
-
-#. 0: formatDate(chat.lastMessageTime)
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Letzte Nachricht: {0}"
-msgstr "Last message: {0}"
-
-#: src/routes/admin/telegram/+page.svelte
-msgid "<0/> Telegram Scraping Targets"
-msgstr "<0/> Telegram Scraping Targets"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "<0/> WhatsApp Scraping Targets"
-msgstr "<0/> WhatsApp Scraping Targets"
-
-#: src/routes/admin/+page.svelte
-msgid "Event-Quellenfilter findest du im Filter-Dialog auf der Startseite."
-msgstr "You can find the event source filter in the filter dialog on the home page."
-
 #: src/lib/components/AdminEventSourceFilter.svelte
 msgid "<0/> Admin Zeug"
 msgstr "<0/> Admin stuff"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Chat-Quelle filtern"
-msgstr "Filter chat source"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Keine Chats für diese Filterung."
-msgstr "No chats for this filter."
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Chat konnte nicht ausgeblendet werden"
-msgstr "Chat could not be hidden"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Chat konnte nicht eingeblendet werden"
-msgstr "Chat could not be displayed"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Ausgeblendete anzeigen <0/>"
-msgstr "Show hidden <0/>"
-
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "ausgeblendet"
-msgstr "hidden"
-
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Wieder einblenden"
-msgstr "Show again"
-
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Ausblenden"
-msgstr "Hide"
 
 #: src/routes/+page.svelte
 msgid "Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen die danach suchen."
@@ -2032,24 +1834,6 @@ msgstr "Open search"
 msgid "<0/> Dein Event gehört hierher."
 msgstr "<0/> Your event belongs here."
 
-#. 0: label
-#: src/routes/admin/telegram/+page.svelte
-msgid "Target „{0}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
-msgstr "Really delete target “{0}”? This action cannot be undone."
-
-#. 0: label
-#: src/routes/admin/telegram/+page.svelte
-msgid "Target „{0}“ gelöscht"
-msgstr "Target “{0}” deleted"
-
-#: src/routes/admin/telegram/+page.svelte
-msgid "Target konnte nicht gelöscht werden"
-msgstr "Target could not be deleted"
-
-#: src/routes/admin/telegram/+page.svelte
-msgid "<0/> Wird gelöscht..."
-msgstr "<0/> Deleting..."
-
 #: src/routes/offerings/+page.svelte
 msgid "Generating announcement…"
 msgstr "Generating announcement…"
@@ -2096,25 +1880,7 @@ msgstr "OG cache busted ({0} deleted); warming new image…"
 msgid "OG cache was empty; warming new image…"
 msgstr "OG cache was empty; warming new image…"
 
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Zeitzone zur Adresse nicht gefunden"
-msgstr "Time zone for the address not found"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "Zeitzone konnte nicht ermittelt werden"
-msgstr "Could not determine time zone"
-
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/telegram/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-#: src/routes/admin/whatsapp/+page.svelte
-msgid "defaultTimezone * <0/>"
-msgstr "Default time zone * <0/>"
-
 #: src/routes/+page.svelte
-#: src/routes/type-specimen/+page.svelte
 msgid "<0/> Achtsame Events in deiner Nähe <1/>"
 msgstr "<0/> Conscious events near you <1/>"
 
@@ -2168,14 +1934,6 @@ msgstr "Manage your events. They are visible to other users on the <0>Events pag
 msgid "<0/> Event erstellen"
 msgstr "<0/> Create event"
 
-#: src/routes/admin/+page.svelte
-msgid "Telegram Scraping"
-msgstr "Telegram Scraping"
-
-#: src/routes/admin/+page.svelte
-msgid "WhatsApp Scraping"
-msgstr "WhatsApp Scraping"
-
 #: src/lib/components/EventForm.svelte
 msgid "Hinweis (optional) z.B. Eingang 2, Stock 3"
 msgstr "Note (optional), e.g. Entrance 2, Floor 3"
@@ -2225,9 +1983,6 @@ msgstr "Place \""
 #: src/lib/createFlowAuth.svelte.ts
 msgid "E-Mail konnte nicht geprüft werden."
 msgstr "Email could not be verified."
-
-#~ msgid "{0} verschieben"
-#~ msgstr "Move {0}"
 
 #. 0: itemName
 #: src/lib/components/ImageGalleryInput.svelte
@@ -3818,16 +3573,6 @@ msgstr "Sacred Sexuality"
 msgid "Type specimen | Blissbase"
 msgstr "Type specimen | Blissbase"
 
-#. 0: font.name
-#: src/routes/type-specimen/+page.svelte
-msgid "Thickness {0}"
-msgstr "Thickness {0}"
-
-#: src/routes/type-specimen/+page.svelte
-#: src/routes/type-specimen/+page.svelte
-msgid "current"
-msgstr "current"
-
 #: src/lib/components/HeaderControls.svelte
 msgid "Kategorien"
 msgstr "Categories"
@@ -3997,3 +3742,39 @@ msgstr "Creating offer…"
 #: src/lib/components/EventForm.svelte
 msgid "Event Name *"
 msgstr "Event Name *"
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Was ist Blissbase?"
+msgstr "What is Blissbase?"
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Blissbase ist die App, in der du alle achtsamen Events an einem Ort findest – Ecstatic Dance, Workshops, Festivals, Community-Treffen und mehr."
+msgstr "Blissbase is the app where you can find all mindful events in one place – ecstatic dance, workshops, festivals, community gatherings, and more."
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Kostet die Nutzung etwas?"
+msgstr "Does it cost anything to use?"
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Nein. Blissbase zu nutzen ist kostenlos."
+msgstr "No. Blissbase is free to use."
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Wie kann ich Feedback schicken oder Hallo sagen?"
+msgstr "How can I send feedback or say hello?"
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
+msgstr "The easiest way is by email at hi@blissbase.app. I’m happy to receive any feedback, ideas, corrections, and collaboration proposals."
+
+#. 0: value
+#: src/lib/components/LocationDistanceInput.svelte
+#, ai
+msgid "{0} km radius"
+msgstr "{0} km radius"

@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* @wc-ignore-file */
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import { Dialog } from '$lib/components/dialog';
 	import { routes } from '$lib/routes';

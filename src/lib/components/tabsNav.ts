@@ -38,8 +38,6 @@ export function getAppNavItems(): AppNavItem[] {
 	];
 }
 
-export const appNavItems = getAppNavItems();
-
 export function isActiveAppTab(pathname: string, href: string) {
 	if (href.startsWith('./')) {
 		// happens at SSR

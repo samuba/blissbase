@@ -2125,7 +2125,6 @@ type EventCategory = {
 export const allTags = new Set(uniqueTagsBySlug([...eventCategories.flatMap((category) => category.tags), ...eventFormats]));
 export const allTagsBySlug = new Map([...allTags].map((tag) => [tag.slug, tag]));
 export const allTagSlugs = new Set(allTagsBySlug.keys());
-const synonymLookup = buildSynonymLookup();	
 
 /**
  * Catalog slugs whose slug, label, or synonym matches the search word as a whole word, prefix, or suffix.
@@ -2186,10 +2185,17 @@ export function slugsForTagInput(value: string) {
 		if (allTagSlugs.has(key)) return [key];
 	}
 	for (const key of lookupKeys(trimmed)) {
-		const aliased = synonymLookup.get(key);
+		const aliased = getSynonymLookup().get(key);
 		if (aliased?.length) return aliased;
 	}
 	return [];
+}
+
+let synonymLookup: Map<string, string[]> | undefined;
+
+function getSynonymLookup() {
+	synonymLookup ??= buildSynonymLookup();
+	return synonymLookup;
 }
 
 function uniqueTagsBySlug(tags: EventTag[]) {

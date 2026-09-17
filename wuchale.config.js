@@ -1,5 +1,5 @@
 // @ts-check
-import { adapter as svelte, svelteDefaultHeuristicDerivedReq } from "@wuchale/svelte"
+import { adapter as svelte } from "@wuchale/svelte"
 import { adapter as js } from 'wuchale/adapter-vanilla'
 import { defineConfig } from "wuchale"
 import { generateText } from 'ai';
@@ -14,7 +14,7 @@ export default defineConfig({
     // first locale is the source locale
     locales: ['de', 'en'],
     adapters: {
-        main: svelte({ loader: 'sveltekit', heuristic: svelteDefaultHeuristicDerivedReq }),
+        main: svelte({ loader: 'sveltekit' }),
         js: js({
             loader: 'vite',
             files: [

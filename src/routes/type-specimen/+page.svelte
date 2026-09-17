@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* @wc-ignore-file */
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';

@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* @wc-ignore-file */
 	import { routes } from '$lib/routes';
 </script>
 

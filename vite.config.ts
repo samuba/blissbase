@@ -1,19 +1,58 @@
-import tailwindcss from "@tailwindcss/vite";
-import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vite";
-import { SvelteKitPWA } from "@vite-pwa/sveltekit";
-import { wuchale } from "wuchale/vite";
+import adapter from "@sveltejs/adapter-vercel";
 import { enhancedImages } from "@sveltejs/enhanced-img";
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { SvelteKitPWA } from "@vite-pwa/sveltekit";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import posthog from "@posthog/rollup-plugin";
+import { defineConfig } from "vite";
+import { wuchale } from "wuchale/vite";
 
 const isE2e = process.env.E2E_TEST === "true";
 
-export default defineConfig({
+export const svelteKitConfig = {
+	preprocess: vitePreprocess(),
+	compilerOptions: {
+		experimental: {
+			async: true,
+		},
+		warningFilter: (warning) => {
+			if (
+				warning.code === `a11y_no_noninteractive_element_interactions` ||
+				warning.code === `a11y_click_events_have_key_events` ||
+				warning.code === `a11y_no_static_element_interactions` ||
+				warning.code === `element_invalid_self_closing_tag` ||
+				warning.code === `no_navigation_without_resolve` // cuz clashes with routes.profile() pattern
+			) {
+				return false;
+			}
+			return true;
+		},
+	},
+	outDir: process.env.SVELTEKIT_OUTDIR || `.svelte-kit`,
+	serviceWorker: {
+		register: false,
+	},
+	adapter: adapter({
+		runtime: `nodejs24.x`,
+		regions: [`fra1`],
+	}),
+	version: {
+		pollInterval: 60_000 * 1,
+	},
+	experimental: {
+		remoteFunctions: true,
+		forkPreloads: false,
+	},
+	inspector: true,
+} satisfies NonNullable<Parameters<typeof sveltekit>[0]>;
+
+export default defineConfig(() => ({
 	plugins: [
 		tailwindcss(),
 		wuchale(),
 		enhancedImages(),
-		sveltekit(),
+		sveltekit(svelteKitConfig),
 		process.env.VERCEL
 			? posthog({
 					personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY!, // Personal API Key
@@ -103,4 +142,4 @@ export default defineConfig({
 		// jSquash WASM fails under Vite's dependency optimizer (Invalid URL / wasm fetch).
 		exclude: ["@jsquash/webp"],
 	},
-});
+}));

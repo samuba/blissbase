@@ -13,6 +13,7 @@
 		children?: Snippet<[TriggerSnippetProps]>;
 	} = $props();
 
+	/* @wc-ignore */
 	const calendarProviders = [
 		{
 			name: 'Google',
@@ -114,6 +115,7 @@
 								class="size-6"
 							/>
 						{:else}
+							<!-- @wc-ignore -->
 							<i class="{provider.icon} size-6"></i>
 						{/if}
 						<span>{provider.name}</span>
