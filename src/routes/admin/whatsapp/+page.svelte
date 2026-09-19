@@ -10,6 +10,7 @@
 		saveWhatsappScrapingTarget,
 		setWhatsappChatHidden,
 	} from '$lib/rpc/adminWhatsapp.remote';
+	import { TableStickyScroll } from '$lib/tableStickyScroll.svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
@@ -96,10 +97,7 @@
 
 	let sortKey = $state<SortKey>(`name`);
 	let sortDir = $state<`asc` | `desc`>(`asc`);
-	let tableScrollEl = $state<HTMLDivElement | null>(null);
-	let stickyScrollEl = $state<HTMLDivElement | null>(null);
-	let tableScrollWidth = $state(0);
-	let syncingScroll = false;
+	const tableScroll = new TableStickyScroll();
 
 	const sortedTargets = $derived.by(() => {
 		const dir = sortDir === `asc` ? 1 : -1;
@@ -305,46 +303,6 @@
 		return target.lastError?.trim() || null;
 	}
 
-	function updateTableScrollWidth() {
-		const table = tableScrollEl?.querySelector(`table`);
-		tableScrollWidth = table?.scrollWidth ?? 0;
-	}
-
-	function syncStickyFromTable() {
-		if (!tableScrollEl || !stickyScrollEl || syncingScroll) return;
-		syncingScroll = true;
-		stickyScrollEl.scrollLeft = tableScrollEl.scrollLeft;
-		syncingScroll = false;
-	}
-
-	function syncTableFromSticky() {
-		if (!tableScrollEl || !stickyScrollEl || syncingScroll) return;
-		syncingScroll = true;
-		tableScrollEl.scrollLeft = stickyScrollEl.scrollLeft;
-		syncingScroll = false;
-	}
-
-	function tableScrollAttach(node: HTMLDivElement) {
-		tableScrollEl = node;
-		const table = node.querySelector(`table`);
-		const observer = new ResizeObserver(() => updateTableScrollWidth());
-		observer.observe(node);
-		if (table) observer.observe(table);
-		updateTableScrollWidth();
-
-		return () => {
-			observer.disconnect();
-			if (tableScrollEl === node) tableScrollEl = null;
-		};
-	}
-
-	function stickyScrollAttach(node: HTMLDivElement) {
-		stickyScrollEl = node;
-		return () => {
-			if (stickyScrollEl === node) stickyScrollEl = null;
-		};
-	}
-
 	type Target = (typeof targets)[number];
 	type AvailableChat = (typeof availableChats)[number];
 	type ChatSourceFilter =
@@ -366,7 +324,7 @@
 		| `lastError`;
 </script>
 
-<svelte:window onresize={updateTableScrollWidth} />
+<svelte:window onresize={tableScroll.updateTableScrollWidth} />
 
 <div
 	class={[
@@ -412,9 +370,9 @@
 		{:else}
 			<div class="flex min-h-0 w-full flex-1 flex-col px-6 pt-4">
 				<div
-					{@attach tableScrollAttach}
+					{@attach tableScroll.tableScrollAttach}
 					class="targets-table-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto"
-					onscroll={syncStickyFromTable}
+					onscroll={tableScroll.syncStickyFromTable}
 				>
 					<table class="table table-pin-rows table-sm w-full">
 						<thead>
@@ -505,12 +463,12 @@
 				</div>
 
 				<div
-					{@attach stickyScrollAttach}
+					{@attach tableScroll.stickyScrollAttach}
 					class="bg-base-100 sticky bottom-0 z-10 shrink-0 overflow-x-auto border-t border-base-300"
-					onscroll={syncTableFromSticky}
+					onscroll={tableScroll.syncTableFromSticky}
 					aria-hidden="true"
 				>
-					<div style:width={`${Math.max(tableScrollWidth, 1)}px`} class="h-3"></div>
+					<div style:width={`${Math.max(tableScroll.tableScrollWidth, 1)}px`} class="h-3"></div>
 				</div>
 			</div>
 		{/if}
