@@ -68,7 +68,38 @@ export const POST: RequestHandler = async ({ request }) => {
 				await db.delete(s.offerings);
 				await db.delete(s.events);
 				await db.delete(s.profiles);
+				await db.delete(s.telegramScrapingTargets);
+				await db.delete(s.whatsappScrapingTargets);
+				await db.delete(s.whatsappChats);
 				return json({ success: true });
+
+			case "createTelegramScrapingTarget": {
+				const [target] = await db
+					.insert(s.telegramScrapingTargets)
+					.values({
+						roomId: data.roomId,
+						name: data.name ?? `E2E Telegram Target`,
+						defaultTimezone: data.defaultTimezone ?? `Europe/Berlin`,
+						hasOnlyConsciousEvents: data.hasOnlyConsciousEvents ?? false,
+						defaultAddress: data.defaultAddress ?? [`Berlin`],
+					})
+					.returning();
+				return json({ success: true, target });
+			}
+
+			case "createWhatsappScrapingTarget": {
+				const [target] = await db
+					.insert(s.whatsappScrapingTargets)
+					.values({
+						chatJid: data.chatJid,
+						name: data.name ?? `E2E WhatsApp Target`,
+						defaultTimezone: data.defaultTimezone ?? `Europe/Berlin`,
+						hasOnlyConsciousEvents: data.hasOnlyConsciousEvents ?? false,
+						defaultAddress: data.defaultAddress ?? [`Berlin`],
+					})
+					.returning();
+				return json({ success: true, target });
+			}
 
 			case "getEventById": {
 				const event = await db.query.events.findFirst({

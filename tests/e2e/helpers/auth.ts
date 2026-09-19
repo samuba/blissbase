@@ -7,6 +7,12 @@ import { e2eCookieDomain } from './origin';
  * @example
  * await signInAsE2EUser(page);
  */
+export const E2E_ADMIN_EMAIL = `test@admin.de`;
+
+export async function signInAsE2EAdmin(page: Page) {
+	await signInAsE2EUser(page, { email: E2E_ADMIN_EMAIL });
+}
+
 export async function signInAsE2EUser(page: Page, args: SignInAsE2EUserArgs = {}) {
 	const domain = e2eCookieDomain();
 

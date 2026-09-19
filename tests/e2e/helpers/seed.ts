@@ -309,6 +309,20 @@ export function createOnlineOffering(overrides: TestOffering = {}): TestOffering
 	};
 }
 
+export async function createTelegramScrapingTarget(
+	page: Page,
+	data: { roomId: string; name?: string } = { roomId: `@e2e-telegram` },
+) {
+	return callSeed(page, `createTelegramScrapingTarget`, data);
+}
+
+export async function createWhatsappScrapingTarget(
+	page: Page,
+	data: { chatJid: string; name?: string } = { chatJid: `120363e2e@g.us` },
+) {
+	return callSeed(page, `createWhatsappScrapingTarget`, data);
+}
+
 async function callSeed(page: Page, action: string, data?: unknown) {
 	const response = await page.request.post(`/api/test/seed`, {
 		data: { action, data },
