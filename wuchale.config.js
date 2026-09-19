@@ -5,6 +5,7 @@ import { defineConfig } from "wuchale"
 import { generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import 'dotenv/config';
+import { svelteTsModuleRuntime } from './wuchale.svelte-runtime.js';
 
 const openai = createOpenAI({
     apiKey: process.env.OPENAI_API_KEY_FOR_LOCALIZATION,
@@ -14,7 +15,12 @@ export default defineConfig({
     // first locale is the source locale
     locales: ['de', 'en'],
     adapters: {
-        main: svelte({ loader: 'sveltekit' }),
+        main: svelte({
+            loader: 'sveltekit',
+            // @wuchale/svelte only special-cases `.svelte.js`. `.svelte.ts` modules
+            // then use `_w_runtime_` without declaring it (empty toasts / 500s).
+            runtime: svelteTsModuleRuntime,
+        }),
         js: js({
             loader: 'vite',
             files: [
