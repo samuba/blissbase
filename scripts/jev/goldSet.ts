@@ -7,9 +7,11 @@ export function sampleGoldSet({ events, limit }: { events: GoldEvent[]; limit: n
 	}
 
 	const picked: GoldEvent[] = [];
-	const de = Math.min(Math.round((limit * GOLD_SET_LANGUAGE_TARGETS.de) / GOLD_SET_SIZE), buckets.de.length);
-	const en = Math.min(Math.round((limit * GOLD_SET_LANGUAGE_TARGETS.en) / GOLD_SET_SIZE), buckets.en.length);
-	const id = Math.min(Math.max(0, limit - de - en), buckets.id.length);
+	const enShare = Math.round((limit * GOLD_SET_LANGUAGE_TARGETS.en) / GOLD_SET_SIZE);
+	const idShare = Math.round((limit * GOLD_SET_LANGUAGE_TARGETS.id) / GOLD_SET_SIZE);
+	const en = Math.min(buckets.en.length, Math.max(enShare, buckets.en.length && limit >= 3 ? 1 : 0));
+	const id = Math.min(buckets.id.length, Math.max(idShare, buckets.id.length && limit >= 5 ? 1 : 0), Math.max(0, limit - en));
+	const de = Math.min(buckets.de.length, Math.max(0, limit - en - id));
 	const targets = { de, en, id };
 
 	for (const language of [`de`, `en`, `id`] as const) {
