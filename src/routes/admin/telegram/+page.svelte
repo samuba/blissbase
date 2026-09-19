@@ -253,7 +253,6 @@
 <svelte:window onresize={tableScroll.updateTableScrollWidth} />
 
 <div
-	data-testid="admin-telegram-page"
 	class={[
 		`fixed inset-x-0 z-0 flex flex-col gap-4 overflow-hidden px-4 pt-4 pb-4`,
 		`top-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))]`,
@@ -293,15 +292,12 @@
 		</div>
 
 		{#if !targets.length}
-			<p class="text-base-content/70 px-6 py-4 text-sm" data-testid="admin-telegram-empty">
-				Noch keine Telegram Scraping Targets.
-			</p>
+			<p class="text-base-content/70 px-6 py-4 text-sm">Noch keine Telegram Scraping Targets.</p>
 		{:else}
 			<div class="flex min-h-0 w-full flex-1 flex-col px-6 pt-4">
 				<div
 					{@attach tableScroll.tableScrollAttach}
 					class="targets-table-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto"
-					data-testid="admin-telegram-targets-table"
 					onscroll={tableScroll.syncStickyFromTable}
 				>
 					<table class="table table-pin-rows table-sm w-full">
