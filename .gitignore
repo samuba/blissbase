@@ -28,6 +28,8 @@ vite.config.ts.timestamp-*
 
 events.json
 scrape-logs/
+scripts/jev/gold-set.json
+scripts/jev/bakeoff-results.json
 
 dev-dist
 
