@@ -1,3 +1,5 @@
 [install]
 # Only install package versions published at least 2 days ago
 minimumReleaseAge = 172800
+# evaluate() / Gateway Jev landed in ai 7.0.105 on 2026-09-18; unblock the bake-off.
+minimumReleaseAgeExcludes = ["ai", "@ai-sdk/gateway", "@ai-sdk/provider", "@ai-sdk/provider-utils"]

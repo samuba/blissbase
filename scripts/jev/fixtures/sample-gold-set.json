@@ -1,0 +1,34 @@
+[
+	{
+		"id": 1,
+		"name": "Ekstatischer Tanz Berlin",
+		"description": "Barfuß tanzen zu einer DJ-Reise. Keine Schritte, nur Körper und Atem.",
+		"tagSlugs": ["ecstatic-dance", "dance"],
+		"source": "heilnetz",
+		"language": "de"
+	},
+	{
+		"id": 2,
+		"name": "Wochenend-Retreat Atemarbeit",
+		"description": "Ein Retreat mit Conscious Connected Breathwork und Stille.",
+		"tagSlugs": ["breathwork", "retreat"],
+		"source": "tribehaus",
+		"language": "de"
+	},
+	{
+		"id": 3,
+		"name": "Kirtan Evening",
+		"description": "Mantra singing and live music in the temple.",
+		"tagSlugs": ["kirtan", "mantra-singing"],
+		"source": "yogabarn",
+		"language": "en"
+	},
+	{
+		"id": 4,
+		"name": "Tantra Workshop Ubud",
+		"description": "Acara tantra dan breathwork selama satu hari di Bali.",
+		"tagSlugs": ["tantra", "workshop"],
+		"source": "megatix_indonesia",
+		"language": "id"
+	}
+]
