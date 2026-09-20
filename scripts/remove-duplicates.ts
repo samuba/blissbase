@@ -144,7 +144,7 @@ function safeHammingDistance(args: {
         return calculateHammingDistance(args.hashA, args.hashB);
     } catch (error) {
         console.warn(
-            `Skipping invalid image hash pair for events ${args.eventAId} and ${args.eventBId}: ${args.hashA} vs ${args.hashB}`,
+            `Skipping invalid image hash pair for event ${args.eventAId} image ${args.urlA} vs event ${args.eventBId} image ${args.urlB}: ${args.hashA} vs ${args.hashB}`,
             {
                 urlA: args.urlA,
                 urlB: args.urlB,
