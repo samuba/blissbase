@@ -1,5 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { findImageHashDuplicatePairs, getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
+
+vi.mock("../src/lib/imageProcessing", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("../src/lib/imageProcessing")>();
+    return {
+        ...actual,
+        calculateHammingDistance: vi.fn((hash1: string, hash2: string) => {
+            if (hash1 === `cover-image` || hash2 === `cover-image`) {
+                throw new Error(`Failed to decode base64 string: Invalid character (cover-image)`);
+            }
+            return actual.calculateHammingDistance(hash1, hash2);
+        }),
+    };
+});
+
+import { findImageHashDuplicatePairs, getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates, runDeduplicateSafely } from './remove-duplicates.ts';
 
 describe(`processDuplicates`, () => {
     it(`skips stale duplicate pairs and keeps the latest survivor state`, async () => {
@@ -57,6 +71,45 @@ describe(`processDuplicates`, () => {
         expect(warnSpy).toHaveBeenCalledWith(`Event not found for id: 1 or 3`);
 
         warnSpy.mockRestore();
+    });
+
+    it(`logs a pair failure and keeps processing later pairs`, async () => {
+        const errorSpy = vi.spyOn(console, `error`).mockImplementation(() => {});
+        const mergeDuplicateEvents = vi.fn(async ({ eventA, eventB, deletedCount }: {
+            eventA: TestEvent,
+            eventB: TestEvent,
+            deletedCount: number,
+        }) => {
+            if (eventA.id === 1) throw new Error(`merge blew up`);
+            return {
+                deletedCount: deletedCount + 1,
+                survivingEvent: eventA,
+                deletedEventId: eventB.id,
+            };
+        });
+
+        const deletedCount = await processDuplicates({
+            duplicates: [
+                { eventAId: 1, eventBId: 2 },
+                { eventAId: 3, eventBId: 4 },
+            ],
+            eventsWithSameStart: [
+                { id: 1, slug: `event-a` },
+                { id: 2, slug: `event-b` },
+                { id: 3, slug: `event-c` },
+                { id: 4, slug: `event-d` },
+            ],
+            mergeDuplicateEvents,
+        });
+
+        expect(deletedCount).toBe(1);
+        expect(mergeDuplicateEvents).toHaveBeenCalledTimes(2);
+        expect(errorSpy).toHaveBeenCalledWith(
+            `Failed to process duplicate pair for event 1 (event-a) https://blissbase.app/event-a vs event 2 (event-b) https://blissbase.app/event-b`,
+            expect.any(Error),
+        );
+
+        errorSpy.mockRestore();
     });
 });
 
@@ -146,14 +199,16 @@ describe(`getMergedSourceUrl`, () => {
 
 describe(`findImageHashDuplicatePairs`, () => {
     it(`skips invalid hashes and still finds a valid duplicate pair`, () => {
-        const warnSpy = vi.spyOn(console, `warn`).mockImplementation(() => {});
+        const errorSpy = vi.spyOn(console, `error`).mockImplementation(() => {});
         const validHashUrl = `https://assets.blissbase.app/events/a/LOZTvW10y7U.webp`;
+        const invalidUrl = `https://assets.blissbase.app/events/c/m5k8x2q-abcdefgh.webp`;
+        const originalUrl = `https://cdn.example.com/image.jpg`;
         const duplicates = findImageHashDuplicatePairs({
             events: [
-                { id: 1, imageUrls: [validHashUrl] },
-                { id: 2, imageUrls: [`https://assets.blissbase.app/events/b/LOZTvW10y7U.webp`] },
-                { id: 3, imageUrls: [`https://assets.blissbase.app/events/c/m5k8x2q-abcdefgh.webp`] },
-                { id: 4, imageUrls: [`https://cdn.example.com/image.jpg`] },
+                { id: 1, slug: `event-a`, imageUrls: [validHashUrl] },
+                { id: 2, slug: `event-b`, imageUrls: [`https://assets.blissbase.app/events/b/LOZTvW10y7U.webp`] },
+                { id: 3, slug: `event-c`, imageUrls: [invalidUrl] },
+                { id: 4, imageUrls: [originalUrl] },
             ],
             hammingDistanceThreshold: 5,
         });
@@ -173,14 +228,60 @@ describe(`findImageHashDuplicatePairs`, () => {
         ]));
         expect(duplicates.some((duplicate) => duplicate.eventAId === 3 || duplicate.eventBId === 3)).toBe(false);
         expect(duplicates.some((duplicate) => duplicate.eventAId === 4 || duplicate.eventBId === 4)).toBe(false);
-        expect(warnSpy).toHaveBeenCalledWith(`Skipping invalid image hash for event 3: https://assets.blissbase.app/events/c/m5k8x2q-abcdefgh.webp`);
-        expect(warnSpy).toHaveBeenCalledWith(`Skipping invalid image hash for event 4: https://cdn.example.com/image.jpg`);
+        expect(errorSpy).toHaveBeenCalledWith(`Invalid image hash for event 3 (event-c) https://blissbase.app/event-c image ${invalidUrl}`);
+        expect(errorSpy).toHaveBeenCalledWith(`Invalid image hash for event 4 image ${originalUrl}`);
 
-        warnSpy.mockRestore();
+        errorSpy.mockRestore();
+    });
+
+    it(`logs the decode error with event and image URL and keeps other pairs`, () => {
+        const errorSpy = vi.spyOn(console, `error`).mockImplementation(() => {});
+        const validHashUrl = `https://assets.blissbase.app/events/a/LOZTvW10y7U.webp`;
+        const failedImageUrl = `https://assets.blissbase.app/events/c/cover-image.webp`;
+        const duplicates = findImageHashDuplicatePairs({
+            events: [
+                { id: 1, slug: `event-a`, imageUrls: [validHashUrl] },
+                { id: 2, slug: `event-b`, imageUrls: [`https://assets.blissbase.app/events/b/LOZTvW10y7U.webp`] },
+                { id: 3, slug: `event-c`, imageUrls: [failedImageUrl] },
+            ],
+            hammingDistanceThreshold: 5,
+        });
+
+        expect(duplicates).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                eventAId: 1,
+                eventBId: 2,
+            }),
+        ]));
+        expect(duplicates.some((duplicate) => duplicate.eventAId === 3 || duplicate.eventBId === 3)).toBe(false);
+        expect(errorSpy).toHaveBeenCalledWith(
+            `Failed to decode base64 string: Invalid character (cover-image) for event 1 (event-a) https://blissbase.app/event-a image ${validHashUrl} vs event 3 (event-c) https://blissbase.app/event-c image ${failedImageUrl}`,
+            {
+                failedImageUrl,
+                error: expect.any(Error),
+            },
+        );
+
+        errorSpy.mockRestore();
+    });
+});
+
+describe(`runDeduplicateSafely`, () => {
+    it(`logs a leftover failure and does not throw`, async () => {
+        const errorSpy = vi.spyOn(console, `error`).mockImplementation(() => {});
+        const failure = new Error(`Failed to decode base64 string: Invalid character (cover-image)`);
+
+        await expect(runDeduplicateSafely(async () => {
+            throw failure;
+        })).resolves.toBeUndefined();
+        expect(errorSpy).toHaveBeenCalledWith(`Deduplication failed:`, failure);
+
+        errorSpy.mockRestore();
     });
 });
 
 type TestEvent = {
     id: number,
-    tagSlugs: string[] | null,
+    slug?: string | null,
+    tagSlugs?: string[] | null,
 };

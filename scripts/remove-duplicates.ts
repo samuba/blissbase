@@ -11,28 +11,44 @@ import type { SelectEvent } from '../src/lib/server/schema';
 import { FORM_CREATED_EVENT_SOURCE, normalizeSourceUrl } from '../src/lib/server/events.shared';
 
 export async function main() {
-    const { duplicates, eventsWithSameStart } = await getDuplicateEventsByImageHash(5);
-    let deletedCount = await processDuplicates({
-        duplicates,
-        eventsWithSameStart,
-        mergeDuplicateEvents: mergeEvents,
-    });
+    await runDeduplicateSafely(async () => {
+        const { duplicates, eventsWithSameStart } = await getDuplicateEventsByImageHash(5);
+        let deletedCount = await processDuplicates({
+            duplicates,
+            eventsWithSameStart,
+            mergeDuplicateEvents: mergeEvents,
+        });
 
-    const textDuplicates = await getDuplicateEventsByTextSimilarity(0.5);
-    deletedCount += await processDuplicates({
-        duplicates: textDuplicates,
-        eventsWithSameStart,
-        mergeDuplicateEvents: mergeEvents,
-    });
+        const textDuplicates = await getDuplicateEventsByTextSimilarity(0.5);
+        deletedCount += await processDuplicates({
+            duplicates: textDuplicates,
+            eventsWithSameStart,
+            mergeDuplicateEvents: mergeEvents,
+        });
 
-    console.log(`Found ${duplicates.length + textDuplicates.length} duplicates.`);
-    console.log(`Based on image hash: ${duplicates.length}, based on text similarity: ${textDuplicates.length}`)
-    console.log("Deleted", deletedCount, "duplicates. Ignored", (duplicates.length + textDuplicates.length) - deletedCount, "duplicates.");
-    process.exit(0);
+        console.log(`Found ${duplicates.length + textDuplicates.length} duplicates.`);
+        console.log(`Based on image hash: ${duplicates.length}, based on text similarity: ${textDuplicates.length}`)
+        console.log("Deleted", deletedCount, "duplicates. Ignored", (duplicates.length + textDuplicates.length) - deletedCount, "duplicates.");
+    });
 }
 
 if (import.meta.main) {
     await main();
+    process.exit(0);
+}
+
+/**
+ * Runs dedupe work and logs leftover failures without failing the process.
+ *
+ * @example
+ * await runDeduplicateSafely(async () => { throw new Error(`Failed to decode base64 string`); });
+ */
+export async function runDeduplicateSafely(run: () => Promise<void>) {
+    try {
+        await run();
+    } catch (error) {
+        console.error(`Deduplication failed:`, error);
+    }
 }
 
 async function getDuplicateEventsByImageHash(hammingDistanceThreshold: number) {
@@ -65,7 +81,7 @@ async function getDuplicateEventsByImageHash(hammingDistanceThreshold: number) {
  * });
  */
 export function findImageHashDuplicatePairs(args: {
-    events: { id: number, imageUrls: string[] | null }[],
+    events: { id: number, slug?: string | null, imageUrls: string[] | null }[],
     hammingDistanceThreshold: number,
 }) {
     const duplicates: {
@@ -89,16 +105,16 @@ export function findImageHashDuplicatePairs(args: {
                 for (const urlB of eventB.imageUrls) {
                     const hashA = getHashFromImageUrl(urlA);
                     const hashB = getHashFromImageUrl(urlB);
-                    if (!hashA) warnInvalidImageHash({ url: urlA, eventId: eventA.id, warnedInvalidImageUrls });
-                    if (!hashB) warnInvalidImageHash({ url: urlB, eventId: eventB.id, warnedInvalidImageUrls });
+                    if (!hashA) logInvalidImageHash({ url: urlA, event: eventA, warnedInvalidImageUrls });
+                    if (!hashB) logInvalidImageHash({ url: urlB, event: eventB, warnedInvalidImageUrls });
                     if (!hashA || !hashB) continue;
                     const dist = safeHammingDistance({
                         hashA,
                         hashB,
                         urlA,
                         urlB,
-                        eventAId: eventA.id,
-                        eventBId: eventB.id,
+                        eventA,
+                        eventB,
                     });
                     if (dist === undefined) continue;
                     if (dist > hammingDistanceThreshold) continue;
@@ -122,14 +138,14 @@ function getHashFromImageUrl(url: string) {
     return getProcessedImageHashFromUrl({ url });
 }
 
-function warnInvalidImageHash(args: {
+function logInvalidImageHash(args: {
     url: string,
-    eventId: number,
+    event: { id: number, slug?: string | null },
     warnedInvalidImageUrls: Set<string>,
 }) {
     if (args.warnedInvalidImageUrls.has(args.url)) return;
     args.warnedInvalidImageUrls.add(args.url);
-    console.warn(`Skipping invalid image hash for event ${args.eventId}: ${args.url}`);
+    console.error(`Invalid image hash for ${formatEventRef(args.event)} image ${args.url}`);
 }
 
 function safeHammingDistance(args: {
@@ -137,23 +153,48 @@ function safeHammingDistance(args: {
     hashB: string,
     urlA: string,
     urlB: string,
-    eventAId: number,
-    eventBId: number,
+    eventA: { id: number, slug?: string | null },
+    eventB: { id: number, slug?: string | null },
 }) {
     try {
         return calculateHammingDistance(args.hashA, args.hashB);
     } catch (error) {
-        console.warn(
-            `Skipping invalid image hash pair for events ${args.eventAId} and ${args.eventBId}: ${args.hashA} vs ${args.hashB}`,
-            {
-                urlA: args.urlA,
-                urlB: args.urlB,
-                error,
-            },
+        const message = error instanceof Error ? error.message : String(error);
+        const failedImageUrl = imageUrlFromDecodeError({
+            error,
+            hashA: args.hashA,
+            hashB: args.hashB,
+            urlA: args.urlA,
+            urlB: args.urlB,
+        });
+        console.error(
+            `${message} for ${formatEventRef(args.eventA)} image ${args.urlA} vs ${formatEventRef(args.eventB)} image ${args.urlB}`,
+            failedImageUrl ? { failedImageUrl, error } : error,
         );
         return undefined;
     }
 }
+
+function imageUrlFromDecodeError(args: {
+    error: unknown,
+    hashA: string,
+    hashB: string,
+    urlA: string,
+    urlB: string,
+}) {
+    const message = args.error instanceof Error ? args.error.message : String(args.error);
+    const hashAFailed = message.includes(args.hashA);
+    const hashBFailed = message.includes(args.hashB);
+    if (hashAFailed && !hashBFailed) return args.urlA;
+    if (hashBFailed && !hashAFailed) return args.urlB;
+}
+
+function formatEventRef(event: { id: number, slug?: string | null }) {
+    if (!event.slug?.trim()) return `event ${event.id}`;
+    return `event ${event.id} (${event.slug}) ${EVENT_PUBLIC_ORIGIN}/${event.slug}`;
+}
+
+const EVENT_PUBLIC_ORIGIN = `https://blissbase.app`;
 
 
 /**
@@ -270,8 +311,8 @@ async function mergeAndDeleteDuplicateEvents(args: {
                         hashB: toDelHash,
                         urlA: x,
                         urlB: toDelUrl,
-                        eventAId: eventToSurvive.id,
-                        eventBId: eventToDelete.id,
+                        eventA: eventToSurvive,
+                        eventB: eventToDelete,
                     });
                     return dist !== undefined && dist <= 5;
                 })
@@ -455,7 +496,7 @@ async function getDuplicateEventsByTextSimilarity(descriptionSimilarityThreshold
  *   }),
  * });
  */
-export async function processDuplicates<TEvent extends { id: number }>(args: {
+export async function processDuplicates<TEvent extends { id: number, slug?: string | null }>(args: {
     duplicates: DuplicatePair[],
     eventsWithSameStart: TEvent[],
     mergeDuplicateEvents: MergeDuplicateEvents<TEvent>,
@@ -464,23 +505,32 @@ export async function processDuplicates<TEvent extends { id: number }>(args: {
     let deletedCount = 0;
 
     for (const dupe of args.duplicates) {
-        const eventA = activeEventsById.get(dupe.eventAId);
-        const eventB = activeEventsById.get(dupe.eventBId);
+        try {
+            const eventA = activeEventsById.get(dupe.eventAId);
+            const eventB = activeEventsById.get(dupe.eventBId);
 
-        if (!eventA || !eventB) {
-            console.warn(`Event not found for id: ${dupe.eventAId} or ${dupe.eventBId}`);
-            continue;
-        }
+            if (!eventA || !eventB) {
+                console.warn(`Event not found for id: ${dupe.eventAId} or ${dupe.eventBId}`);
+                continue;
+            }
 
-        const mergeResult = await args.mergeDuplicateEvents({ eventA, eventB, deletedCount });
-        deletedCount = mergeResult.deletedCount;
+            const mergeResult = await args.mergeDuplicateEvents({ eventA, eventB, deletedCount });
+            deletedCount = mergeResult.deletedCount;
 
-        if (mergeResult.deletedEventId) {
-            activeEventsById.delete(mergeResult.deletedEventId);
-        }
+            if (mergeResult.deletedEventId) {
+                activeEventsById.delete(mergeResult.deletedEventId);
+            }
 
-        if (mergeResult.survivingEvent) {
-            activeEventsById.set(mergeResult.survivingEvent.id, mergeResult.survivingEvent);
+            if (mergeResult.survivingEvent) {
+                activeEventsById.set(mergeResult.survivingEvent.id, mergeResult.survivingEvent);
+            }
+        } catch (error) {
+            const eventA = activeEventsById.get(dupe.eventAId);
+            const eventB = activeEventsById.get(dupe.eventBId);
+            console.error(
+                `Failed to process duplicate pair for ${formatEventRef(eventA ?? { id: dupe.eventAId })} vs ${formatEventRef(eventB ?? { id: dupe.eventBId })}`,
+                error,
+            );
         }
     }
 
@@ -531,17 +581,17 @@ type DuplicatePair = {
     eventBId: number,
 };
 
-type MergeDuplicateEvents<TEvent extends { id: number }> = (
+type MergeDuplicateEvents<TEvent extends { id: number, slug?: string | null }> = (
     args: MergeDuplicateEventsArgs<TEvent>,
 ) => Promise<MergeDuplicateEventsResult<TEvent>>;
 
-type MergeDuplicateEventsArgs<TEvent extends { id: number }> = {
+type MergeDuplicateEventsArgs<TEvent extends { id: number, slug?: string | null }> = {
     eventA: TEvent,
     eventB: TEvent,
     deletedCount: number,
 };
 
-type MergeDuplicateEventsResult<TEvent extends { id: number }> = {
+type MergeDuplicateEventsResult<TEvent extends { id: number, slug?: string | null }> = {
     deletedCount: number,
     survivingEvent?: TEvent,
     deletedEventId?: number,
