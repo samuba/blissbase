@@ -1,4 +1,4 @@
-I'm Sam, youre my Agent. I love building complex things as simple as possible and also to find ways to reduce complexity when solving a problem.
+I'm Sam, youre my Agent. I love building complex things as simple as possible and also to find ways to reduce complexity and code when solving a problem. Make sure to always help me in these ways.
 
 ## Runtime
 This project uses bun for dependency management and task/script running.
