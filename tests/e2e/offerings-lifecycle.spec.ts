@@ -72,7 +72,7 @@ test.describe("Offering lifecycle and access control", () => {
 		expect(persisted.title).toBe(`Edited Offering`);
 		expect(persisted.imageUrls.slice(0, 2)).toEqual([existingImages[2], existingImages[0]]);
 		expect(persisted.imageUrls).toHaveLength(3);
-		expect(persisted.imageUrls[2]).toContain(`/e2e/offerings/`);
+		expect(persisted.imageUrls[2]).toContain(`/e2e/offerings/${E2E_DEFAULT_USER_ID}/${offering.slug}/`);
 	});
 
 	test("owner changes the shared location while editing an offline offering", async ({ page }) => {

@@ -234,6 +234,46 @@ describe(`finalizeGalleryImageClaims`, () => {
 			creds: eventAssetsCreds,
 		});
 	});
+
+	it(`copies offering images into a per-offering key`, async () => {
+		const token = signGalleryImageClaim({
+			objectKey: `offerings/temp/cover.webp`,
+			contentType: `image/webp`,
+			kind: `offering`,
+			hash: `abc123def45`,
+		});
+		const claims = verifyGalleryImageClaims({ claimTokens: [token], kind: `offering` });
+		if (claims instanceof Error) throw claims;
+
+		await expect(
+			finalizeGalleryImageClaims({
+				kind: `offering`,
+				claims,
+				ownerId: `user-123`,
+				offeringSlug: `ab12cd-cover`,
+			}),
+		).resolves.toEqual([`https://assets.blissbase.app/offerings/user-123/ab12cd-cover/abc123def45.webp`]);
+	});
+
+	it(`rejects offering finalize without a slug`, async () => {
+		const token = signGalleryImageClaim({
+			objectKey: `offerings/temp/cover.webp`,
+			contentType: `image/webp`,
+			kind: `offering`,
+			hash: `abc123def45`,
+		});
+		const claims = verifyGalleryImageClaims({ claimTokens: [token], kind: `offering` });
+		if (claims instanceof Error) throw claims;
+
+		await expect(
+			finalizeGalleryImageClaims({
+				kind: `offering`,
+				claims,
+				ownerId: `user-123`,
+			}),
+		).rejects.toThrow(`Offering slug cannot be empty`);
+		expect(getObjectPrefix).not.toHaveBeenCalled();
+	});
 });
 
 describe(`discardGalleryImageUpload`, () => {

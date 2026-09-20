@@ -89,13 +89,15 @@ export function eventTempImageObjectKey(args: { suffix: string; contentType?: st
  * Builds the final R2 key for an offering image owned by a saved offering.
  *
  * @example
- * offeringImageObjectKey({ userId: `user-123`, suffix: `cover`, contentType: `image/webp` });
+ * offeringImageObjectKey({ userId: `user-123`, offeringSlug: `ab12cd-cover`, suffix: `abc123def45`, contentType: `image/webp` });
  */
-export function offeringImageObjectKey(args: { userId: string; suffix: string; contentType?: string }) {
+export function offeringImageObjectKey(args: { userId: string; offeringSlug: string; suffix: string; contentType?: string }) {
 	if (!args.userId?.trim()) throw new Error(`User id cannot be empty`);
+	if (!args.offeringSlug?.trim()) throw new Error(`Offering slug cannot be empty`);
+	assertSafeObjectKeyPart(args.offeringSlug, `Offering slug`);
 	assertSafeObjectKeyPart(args.suffix, `Offering image suffix`);
 	const ext = getImageObjectExtensionFromMimeType(args.contentType ?? `image/webp`);
-	return `offerings/${args.userId}/${args.suffix}.${ext}`;
+	return `offerings/${args.userId}/${args.offeringSlug}/${args.suffix}.${ext}`;
 }
 
 export function galleryTempImageObjectKey(args: { kind: `event` | `offering`; suffix: string; contentType?: string }) {
@@ -103,10 +105,18 @@ export function galleryTempImageObjectKey(args: { kind: `event` | `offering`; su
 	return offeringTempImageObjectKey(args);
 }
 
-export function galleryFinalImageObjectKey(args: { kind: `event` | `offering`; ownerId: string; suffix: string; contentType?: string }) {
+export function galleryFinalImageObjectKey(args: {
+	kind: `event` | `offering`;
+	ownerId: string;
+	suffix: string;
+	contentType?: string;
+	offeringSlug?: string;
+}) {
 	if (args.kind === `event`) return eventImageObjectKey(args.ownerId, args.suffix, args.contentType);
+	if (!args.offeringSlug?.trim()) throw new Error(`Offering slug cannot be empty`);
 	return offeringImageObjectKey({
 		userId: args.ownerId,
+		offeringSlug: args.offeringSlug,
 		suffix: args.suffix,
 		contentType: args.contentType,
 	});

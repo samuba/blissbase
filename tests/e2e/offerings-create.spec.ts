@@ -89,7 +89,7 @@ test.describe("Offering creation", () => {
 			listed: true,
 		});
 		expect(offering.imageUrls).toHaveLength(1);
-		expect(offering.imageUrls[0]).toContain(`/e2e/offerings/`);
+		expect(offering.imageUrls[0]).toContain(`/e2e/offerings/${E2E_DEFAULT_USER_ID}/${slug}/`);
 
 		const offeringsHostUrl = new URL(`/offerings`, page.url()).href;
 		await page.getByTestId(`dialog-close`).click();

@@ -71,11 +71,16 @@ export async function finalizeGalleryImageClaims(args: {
 	kind: GalleryImageKind;
 	claims: GalleryImageClaim[];
 	ownerId: string;
+	offeringSlug?: string;
 }) {
+	if (args.kind === `offering` && !args.offeringSlug?.trim()) throw new Error(`Offering slug cannot be empty`);
 	if (!args.claims?.length) return [];
 	if (isGalleryImageE2eMode) {
 		return args.claims.map((claim) => {
-			return `https://assets.blissbase.app/e2e/${args.kind}s/${args.ownerId}/${claim.hash}.webp`;
+			if (args.kind === `offering`) {
+				return `https://assets.blissbase.app/e2e/offerings/${args.ownerId}/${args.offeringSlug}/${claim.hash}.webp`;
+			}
+			return `https://assets.blissbase.app/e2e/events/${args.ownerId}/${claim.hash}.webp`;
 		});
 	}
 
@@ -101,6 +106,7 @@ export async function finalizeGalleryImageClaims(args: {
 					ownerId: args.ownerId,
 					suffix: claim.hash,
 					contentType: claim.contentType,
+					offeringSlug: args.offeringSlug,
 				}),
 				creds: eventAssetsCreds,
 			}),
