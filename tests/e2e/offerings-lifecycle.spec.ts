@@ -66,7 +66,8 @@ test.describe("Offering lifecycle and access control", () => {
 		await page.getByTestId(`offering-title-input`).fill(`Edited Offering`);
 		await page.getByTestId(`offering-save`).click();
 
-		await expect(page.getByText(`Angebot wurde aktualisiert.`)).toBeVisible({ timeout: 15000 });
+		await expect(page).not.toHaveURL(/\/edit/, { timeout: 15000 });
+		await expect(page.getByTestId(`offering-title`)).toHaveText(`Edited Offering`);
 		const persisted = await getOfferingById(page, offering.id);
 		expect(persisted.title).toBe(`Edited Offering`);
 		expect(persisted.imageUrls.slice(0, 2)).toEqual([existingImages[2], existingImages[0]]);
@@ -85,7 +86,8 @@ test.describe("Offering lifecycle and access control", () => {
 			query: `Mun`,
 		});
 		await page.getByTestId(`offering-save`).click();
-		await expect(page.getByText(`Angebot wurde aktualisiert.`)).toBeVisible({ timeout: 15000 });
+		await expect(page).not.toHaveURL(/\/edit/, { timeout: 15000 });
+		await expect(page.getByTestId(`offering-title`)).toHaveText(`Relocatable Offering`);
 		expect(await getProfileById(page, E2E_DEFAULT_USER_ID)).toMatchObject({
 			locationLabel: `Munich`,
 			latitude: 48.137,

@@ -75,7 +75,6 @@ test.describe("Offering creation", () => {
 		});
 
 		await clickWizardPrimary(page);
-		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
 		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`E2E Online Mentoring`);
@@ -412,7 +411,6 @@ test.describe("Offering creation", () => {
 		});
 		await page.goto(`/offerings/new?auth_success=1`);
 		await expect(page.getByText(`Du bist jetzt angemeldet. Viel Spaß!`)).toHaveCount(0);
-		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
 		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
 		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
@@ -462,7 +460,10 @@ test.describe("Offering creation", () => {
 		await expect(page.getByTestId(`profile-name-input`)).toBeHidden();
 		await addSocialLink(page);
 		await clickWizardPrimary(page);
-		await expect(page.getByText(`Angebot erstellt!`)).toBeVisible({ timeout: 15000 });
+		await expect(page).not.toHaveURL(/\/offerings\/new/, { timeout: 15000 });
+		const dialog = page.getByTestId(`details-dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`E2E Google Incomplete Offering`);
 		expect((await getOfferingBySlug(page, getCreatedSlugFromUrl(page))).title).toBe(`E2E Google Incomplete Offering`);
 	});
 

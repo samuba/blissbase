@@ -6,6 +6,7 @@ import { routes } from '$lib/routes';
 import { toast } from 'svelte-sonner';
 
 const DUPLICATE_SLUG_TOAST_ID = `event-draft-duplicate-slug`;
+const duplicateEventWarning = /* @wc-include */ `Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits.`;
 
 /**
  * For create-event drafts: debounced duplicate check and sonner toast when a matching event exists.
@@ -30,7 +31,7 @@ export function useDuplicateEventDraftToast(getRemoteForm: () => CreateEventForm
 			});
 			if (args.generation !== duplicateCheckGeneration) return;
 			if (result.slug) {
-				toast.warning(`Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits.`, {
+				toast.warning(duplicateEventWarning, {
 					id: DUPLICATE_SLUG_TOAST_ID,
 					duration: Number.POSITIVE_INFINITY,
 					description: DuplicateEventToastLink,

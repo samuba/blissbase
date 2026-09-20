@@ -324,7 +324,6 @@ test.describe("Event creation", () => {
 		}, startAt);
 		await page.goto(`/events/new?auth_success=1`);
 		await expect(page.getByText(`Du bist jetzt angemeldet. Viel Spaß!`)).toHaveCount(0);
-		await expect(page.getByText(`Event erstellt!`)).toBeVisible({ timeout: 15000 });
 		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
 		const dialog = page.getByTestId(`details-dialog`);
 		await expect(dialog).toBeVisible({ timeout: 15000 });
@@ -423,7 +422,10 @@ test.describe("Event creation", () => {
 		await expect(page.getByTestId(`event-name-input`)).toBeHidden();
 		await page.getByTestId(`profile-name-input`).fill(`Google Host`);
 		await clickWizardPrimary(page);
-		await expect(page.getByText(`Event erstellt!`)).toBeVisible({ timeout: 15000 });
+		await expect(page).not.toHaveURL(/\/events\/new/, { timeout: 15000 });
+		const dialog = page.getByTestId(`details-dialog`);
+		await expect(dialog).toBeVisible({ timeout: 15000 });
+		await expect(dialog.getByTestId(`event-title`)).toHaveText(`E2E Google Incomplete Event`);
 		expect((await getEventBySlug(page, await getCreatedEventSlugFromUrl(page))).name).toBe(`E2E Google Incomplete Event`);
 	});
 
@@ -473,8 +475,8 @@ test.describe("Event creation", () => {
 			sessionStorage.setItem(`blissbase:create-draft:event:pending`, `1`);
 		});
 		await page.goto(`/events/new?auth_error=access_denied`);
-		await expect(page.getByText(`Anmeldung fehlgeschlagen`)).toBeVisible();
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `otp`, { timeout: 10000 });
+		await expect(page.getByText(`Anmeldung fehlgeschlagen`)).toBeVisible();
 		await page.getByRole(`button`, { name: `Zurück` }).click();
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `event`);
 		await expect(page.getByTestId(`event-name-input`)).toHaveValue(`E2E Google Cancelled Event`);

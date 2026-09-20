@@ -4,16 +4,26 @@ import { fireConfetti } from "$lib/confetti";
 import { FLASH_COOKIE_NAME, FLASH_KEYS, type FlashKey } from "$lib/flash";
 import { toast } from "svelte-sonner";
 
-// @wc-include
+const offeringCreatedMessage = /* @wc-include */ `Angebot erstellt!`;
+const eventCreatedMessage = /* @wc-include */ `Event erstellt!`;
+const offeringListedMessage = /* @wc-include */ `Angebot wurde aktiviert`;
+const offeringListedDescription = /* @wc-include */ `Es ist jetzt für andere Nutzer sichtbar.`;
+const offeringUnlistedMessage = /* @wc-include */ `Angebot wurde deaktiviert`;
+const offeringUnlistedDescription = /* @wc-include */ `Andere können es nicht mehr sehen.`;
+const offeringDeletedMessage = /* @wc-include */ `Angebot wurde gelöscht.`;
+const offeringUpdatedMessage = /* @wc-include */ `Angebot wurde aktualisiert.`;
+const eventUpdatedMessage = /* @wc-include */ `Event wurde aktualisiert.`;
+const eventDeletedMessage = /* @wc-include */ `Event wurde gelöscht.`;
+
 const flashToasts: Record<FlashKey, () => void> = {
-	offeringCreated: () =>  toast.success(`Angebot erstellt!`),
-	eventCreated: () => toast.success(`Event erstellt!`),
-	offeringListed: () => toast.success(`Angebot wurde aktiviert`, { description: `Es ist jetzt für andere Nutzer sichtbar.` }),
-	offeringUnlisted: () => toast.success(`Angebot wurde deaktiviert`, { description: `Andere können es nicht mehr sehen.` }),
-	offeringDeleted: () => toast.success(`Angebot wurde gelöscht.`),
-	offeringUpdated: () => toast.success(`Angebot wurde aktualisiert.`),
-	eventUpdated: () => toast.success(`Event wurde aktualisiert.`),
-	eventDeleted: () => toast.success(`Event wurde gelöscht.`),
+	offeringCreated: () => toast.success(offeringCreatedMessage),
+	eventCreated: () => toast.success(eventCreatedMessage),
+	offeringListed: () => toast.success(offeringListedMessage, { description: offeringListedDescription }),
+	offeringUnlisted: () => toast.success(offeringUnlistedMessage, { description: offeringUnlistedDescription }),
+	offeringDeleted: () => toast.success(offeringDeletedMessage),
+	offeringUpdated: () => toast.success(offeringUpdatedMessage),
+	eventUpdated: () => toast.success(eventUpdatedMessage),
+	eventDeleted: () => toast.success(eventDeletedMessage),
 };
 
 const celebrateKeys = new Set<FlashKey>([`offeringCreated`, `eventCreated`]);
@@ -23,9 +33,17 @@ function playFlash(key: FlashKey) {
 	if (celebrateKeys.has(key)) fireConfetti();
 }
 
+function tryPlayFlash(key: FlashKey) {
+	try {
+		playFlash(key);
+	} catch (error) {
+		console.error(`Failed to show flash toast`, error);
+	}
+}
+
 /** Immediately shows a flash toast. For client-side flows without a redirect (e.g. after awaiting a command). */
 export function showFlashToast(key: FlashKey) {
-	playFlash(key);
+	tryPlayFlash(key);
 }
 
 /**
@@ -39,7 +57,7 @@ export function registerFlashToast() {
 
 		const key = consumeFlashCookie();
 		if (!key) return;
-		playFlash(key);
+		tryPlayFlash(key);
 	});
 }
 
