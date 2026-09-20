@@ -8,17 +8,22 @@ import {
 	GALLERY_IMAGE_CLAIM_TTL_MS,
 	GALLERY_IMAGE_CONTENT_TYPES,
 	GALLERY_IMAGE_HEADER_BYTES,
-	getImageSuffixFromObjectKey,
 	uniqueGalleryImageClaimTokens,
 	type GalleryImageContentType,
 	type GalleryImageKind,
 } from "$lib/galleryImages";
-import { error } from "@sveltejs/kit";
+import { isProcessedImageHash } from "$lib/imageUpload.shared";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const isGalleryImageE2eMode = E2E_TEST === `true` && dev;
 
-export async function createGalleryImageUpload(args: { kind: GalleryImageKind; contentType: GalleryImageContentType }) {
+export async function createGalleryImageUpload(args: {
+	kind: GalleryImageKind;
+	contentType: GalleryImageContentType;
+	hash: string;
+}) {
+	if (!isProcessedImageHash(args.hash)) throw new Error(`Bild-Upload ist ungültig`);
+
 	const objectKey = assets.galleryTempImageObjectKey({
 		kind: args.kind,
 		suffix: `${Date.now().toString(36)}-${randomString(8).toLowerCase()}`,
@@ -28,6 +33,7 @@ export async function createGalleryImageUpload(args: { kind: GalleryImageKind; c
 		objectKey,
 		contentType: args.contentType,
 		kind: args.kind,
+		hash: args.hash,
 	});
 	if (isGalleryImageE2eMode) {
 		return {
@@ -68,17 +74,13 @@ export async function finalizeGalleryImageClaims(args: {
 }) {
 	if (!args.claims?.length) return [];
 	if (isGalleryImageE2eMode) {
-		return args.claims.map((claim, index) => {
-			const suffix = getImageSuffixFromObjectKey(claim.objectKey) ?? `image-${index}`;
-			return `https://assets.blissbase.app/e2e/${args.kind}s/${args.ownerId}/${index}-${suffix}.webp`;
+		return args.claims.map((claim) => {
+			return `https://assets.blissbase.app/e2e/${args.kind}s/${args.ownerId}/${claim.hash}.webp`;
 		});
 	}
 
 	const imageUrls: string[] = [];
 	for (const claim of args.claims) {
-		const suffix = getImageSuffixFromObjectKey(claim.objectKey);
-		if (!suffix) throw error(400, `Bild-Upload ist ungültig`);
-
 		const object = await assets.getObjectPrefix({
 			objectKey: claim.objectKey,
 			byteLength: GALLERY_IMAGE_HEADER_BYTES,
@@ -97,7 +99,7 @@ export async function finalizeGalleryImageClaims(args: {
 				finalObjectKey: assets.galleryFinalImageObjectKey({
 					kind: args.kind,
 					ownerId: args.ownerId,
-					suffix,
+					suffix: claim.hash,
 					contentType: claim.contentType,
 				}),
 				creds: eventAssetsCreds,
@@ -124,12 +126,16 @@ export function signGalleryImageClaim(args: {
 	objectKey: string;
 	contentType: GalleryImageContentType;
 	kind: GalleryImageKind;
+	hash: string;
 }) {
+	if (!isProcessedImageHash(args.hash)) throw new Error(`Bild-Upload ist ungültig`);
+
 	const payload = Buffer.from(
 		JSON.stringify({
 			objectKey: args.objectKey,
 			contentType: args.contentType,
 			kind: args.kind,
+			hash: args.hash,
 			expiresAt: Date.now() + GALLERY_IMAGE_CLAIM_TTL_MS,
 		} satisfies GalleryImageClaim),
 	).toString(`base64url`);
@@ -146,6 +152,7 @@ function verifyGalleryImageClaim(token: string, args: { allowExpired?: boolean }
 		if (!args.allowExpired && claim.expiresAt < Date.now()) return new Error(`Bild-Upload ist abgelaufen`);
 		if (!GALLERY_IMAGE_CONTENT_TYPES.includes(claim.contentType)) return new Error(`Bild-Upload ist ungültig`);
 		if (claim.kind !== `event` && claim.kind !== `offering`) return new Error(`Bild-Upload ist ungültig`);
+		if (typeof claim.hash !== `string` || !isProcessedImageHash(claim.hash)) return new Error(`Bild-Upload ist ungültig`);
 		if (!assets.isTempGalleryImageObjectKey({ kind: claim.kind, objectKey: claim.objectKey })) {
 			return new Error(`Bild-Upload ist ungültig`);
 		}
@@ -170,5 +177,6 @@ export type GalleryImageClaim = {
 	objectKey: string;
 	contentType: GalleryImageContentType;
 	kind: GalleryImageKind;
+	hash: string;
 	expiresAt: number;
 };

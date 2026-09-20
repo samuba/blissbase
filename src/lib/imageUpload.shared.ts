@@ -61,6 +61,28 @@ export function getProcessedImageHashFromFileName(args: { fileName: string }) {
 }
 
 /**
+ * Returns whether a value is a compact URL-safe image hash.
+ *
+ * @example
+ * isProcessedImageHash(`abc123def45`);
+ */
+export function isProcessedImageHash(value: string) {
+	return new RegExp(`^[A-Za-z0-9_-]{${IMAGE_UPLOAD_HASH_LENGTH}}$`).test(value);
+}
+
+/**
+ * Extracts the processed image hash from a public or stored image URL.
+ *
+ * @example
+ * getProcessedImageHashFromUrl({ url: `https://assets.blissbase.app/events/demo/abc123def45.webp` });
+ */
+export function getProcessedImageHashFromUrl(args: { url: string }) {
+	const fileName = args.url.split(`/`).pop()?.split(`?`)[0];
+	if (!fileName) return;
+	return getProcessedImageHashFromFileName({ fileName });
+}
+
+/**
  * Removes the file extension from a file name.
  *
  * @example

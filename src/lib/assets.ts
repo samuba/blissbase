@@ -1,4 +1,5 @@
 import { S3Client } from "@bradenmacdonald/s3-lite-client";
+import { IMAGE_UPLOAD_HASH_LENGTH, isProcessedImageHash } from "./imageUpload.shared";
 
 export type S3Creds = ReturnType<typeof loadCreds>;
 
@@ -273,7 +274,9 @@ export async function finalizeProfileImage(args: { tempObjectKey: string; finalO
 export async function uploadEventImage(buffer: Buffer, eventSlug: string, phash: string, creds: S3Creds, contentType = `image/webp`) {
 	if (!buffer || buffer.length === 0) throw new Error(`Cannot upload empty buffer`);
 	if (!eventSlug || !eventSlug.trim()) throw new Error(`Event slug cannot be empty`);
-	if (!phash || !phash.trim()) throw new Error(`Phash cannot be empty`);
+	if (!isProcessedImageHash(phash)) {
+		throw new Error(`Phash must be a ${IMAGE_UPLOAD_HASH_LENGTH}-character URL-safe hash`);
+	}
 
 	const key = eventImageObjectKey(eventSlug, phash, contentType);
 	return await uploadImageAtObjectKey(buffer, key, creds, contentType);

@@ -246,6 +246,23 @@ describe(`uploadImage`, () => {
 		expect(getS3ClientMock()).not.toHaveBeenCalled();
 	});
 
+	it(`rejects event image keys that are not compact URL-safe hashes`, async () => {
+		await expect(
+			uploadEventImage(
+				Buffer.from([1, 2, 3]),
+				`demo-event`,
+				`m5k8x2q-abcdefgh`,
+				loadCreds({
+					S3_ACCESS_KEY_ID: `test-access`,
+					S3_SECRET_ACCESS_KEY: `test-secret`,
+					S3_BUCKET_NAME: `test-bucket`,
+					CLOUDFLARE_ACCOUNT_ID: `test-account`,
+				}),
+			),
+		).rejects.toThrow(`Phash must be a 11-character URL-safe hash`);
+		expect(getS3ClientMock()).not.toHaveBeenCalled();
+	});
+
 	it(`uploads profile images to the profile object key`, async () => {
 		const url = await uploadProfileImage({
 			buffer: Buffer.from([1, 2, 3]),
