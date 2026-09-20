@@ -6,6 +6,7 @@
 	import { dragHandle, dragHandleZone } from "svelte-dnd-action";
 	import { fade } from "svelte/transition";
 	import { processImageUploadFile } from "$lib/imageUpload";
+	import { getProcessedImageHashFromFileName } from "$lib/imageUpload.shared";
 	import {
 		GALLERY_IMAGE_MAX_COUNT,
 		getOrderedGalleryPreviewEntries,
@@ -283,9 +284,13 @@
 				error: undefined,
 			});
 
+			const hash = getProcessedImageHashFromFileName({ fileName: processedFile.name });
+			if (!hash) throw new Error(`Bild-Upload ist ungültig`);
+
 			const { uploadUrl, publicUrl, claimToken } = await createGalleryImageUploadUrl({
 				kind,
 				contentType: processedFile.type === `image/jpeg` ? `image/jpeg` : `image/webp`,
+				hash,
 			});
 			if (isCancelled(args.previewId)) {
 				void discardGalleryImage({ claimToken });

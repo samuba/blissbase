@@ -6,6 +6,7 @@ import {
 import { deduplicateItems } from '../src/lib/common';
 import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts';
 import { calculateHammingDistance } from '../src/lib/imageProcessing';
+import { getProcessedImageHashFromUrl } from '../src/lib/imageUpload.shared';
 import type { SelectEvent } from '../src/lib/server/schema';
 import { FORM_CREATED_EVENT_SOURCE, normalizeSourceUrl } from '../src/lib/server/events.shared';
 
@@ -45,42 +46,113 @@ async function getDuplicateEventsByImageHash(hammingDistanceThreshold: number) {
 
     const groupedEvents = await getEventsGroupedByStartAtWithDuplicates();
     for (const group of groupedEvents) {
-        const { events } = group;
-
-        for (let i = 0; i < events.length; i++) {
-            const eventA = events[i];
-            if (!eventA.imageUrls || !Array.isArray(eventA.imageUrls)) continue;
-            for (let j = 0; j < events.length; j++) {
-                if (i === j) continue;
-                const eventB = events[j];
-                if (!eventB.imageUrls || !Array.isArray(eventB.imageUrls)) continue;
-                for (const urlA of eventA.imageUrls) {
-                    for (const urlB of eventB.imageUrls) {
-                        const hashA = getHashFromImageUrl(urlA);
-                        const hashB = getHashFromImageUrl(urlB);
-                        if (!hashA || !hashB) continue;
-                        const dist = calculateHammingDistance(hashA, hashB);
-                        if (dist <= hammingDistanceThreshold) {
-                            if (duplicates.some(d => d.urlA === urlA && d.urlB === urlB)) continue;
-                            duplicates.push({
-                                dist,
-                                urlA,
-                                urlB,
-                                eventAId: eventA.id,
-                                eventBId: eventB.id
-                            });
-                        }
-                    }
-                }
-            }
-        }
+        duplicates.push(...findImageHashDuplicatePairs({
+            events: group.events,
+            hammingDistanceThreshold,
+        }));
     }
 
     return { duplicates, eventsWithSameStart: groupedEvents.flatMap(g => g.events) };
 }
 
+/**
+ * Compares image hashes within one startAt group. Invalid hashes are logged and skipped.
+ *
+ * @example
+ * findImageHashDuplicatePairs({
+ *   events: [{ id: 1, imageUrls: [`https://assets.blissbase.app/events/a/abc123def45.webp`] }],
+ *   hammingDistanceThreshold: 5,
+ * });
+ */
+export function findImageHashDuplicatePairs(args: {
+    events: { id: number, imageUrls: string[] | null }[],
+    hammingDistanceThreshold: number,
+}) {
+    const duplicates: {
+        dist: number,
+        urlA: string,
+        urlB: string
+        eventAId: number,
+        eventBId: number,
+    }[] = [];
+    const warnedInvalidImageUrls = new Set<string>();
+    const { events, hammingDistanceThreshold } = args;
+
+    for (let i = 0; i < events.length; i++) {
+        const eventA = events[i];
+        if (!eventA.imageUrls?.length) continue;
+        for (let j = 0; j < events.length; j++) {
+            if (i === j) continue;
+            const eventB = events[j];
+            if (!eventB.imageUrls?.length) continue;
+            for (const urlA of eventA.imageUrls) {
+                for (const urlB of eventB.imageUrls) {
+                    const hashA = getHashFromImageUrl(urlA);
+                    const hashB = getHashFromImageUrl(urlB);
+                    if (!hashA) warnInvalidImageHash({ url: urlA, eventId: eventA.id, warnedInvalidImageUrls });
+                    if (!hashB) warnInvalidImageHash({ url: urlB, eventId: eventB.id, warnedInvalidImageUrls });
+                    if (!hashA || !hashB) continue;
+                    const dist = safeHammingDistance({
+                        hashA,
+                        hashB,
+                        urlA,
+                        urlB,
+                        eventAId: eventA.id,
+                        eventBId: eventB.id,
+                    });
+                    if (dist === undefined) continue;
+                    if (dist > hammingDistanceThreshold) continue;
+                    if (duplicates.some(d => d.urlA === urlA && d.urlB === urlB)) continue;
+                    duplicates.push({
+                        dist,
+                        urlA,
+                        urlB,
+                        eventAId: eventA.id,
+                        eventBId: eventB.id,
+                    });
+                }
+            }
+        }
+    }
+
+    return duplicates;
+}
+
 function getHashFromImageUrl(url: string) {
-    return url.split("/").pop()!.split(".")[0];
+    return getProcessedImageHashFromUrl({ url });
+}
+
+function warnInvalidImageHash(args: {
+    url: string,
+    eventId: number,
+    warnedInvalidImageUrls: Set<string>,
+}) {
+    if (args.warnedInvalidImageUrls.has(args.url)) return;
+    args.warnedInvalidImageUrls.add(args.url);
+    console.warn(`Skipping invalid image hash for event ${args.eventId}: ${args.url}`);
+}
+
+function safeHammingDistance(args: {
+    hashA: string,
+    hashB: string,
+    urlA: string,
+    urlB: string,
+    eventAId: number,
+    eventBId: number,
+}) {
+    try {
+        return calculateHammingDistance(args.hashA, args.hashB);
+    } catch (error) {
+        console.warn(
+            `Skipping invalid image hash pair for events ${args.eventAId} and ${args.eventBId}: ${args.hashA} vs ${args.hashB}`,
+            {
+                urlA: args.urlA,
+                urlB: args.urlB,
+                error,
+            },
+        );
+        return undefined;
+    }
 }
 
 
@@ -186,11 +258,23 @@ async function mergeAndDeleteDuplicateEvents(args: {
     eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsTelegram, eventToDelete.sourceChatIdsTelegram)
     eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsWhatsapp, eventToDelete.sourceChatIdsWhatsapp)
     if (eventToDelete.imageUrls?.length) {
-        // Only add entries to imageUrls that have a hammingDistance of less than 5 to any of the already existing images in the array
+        // Keep extra images unless they already look like one on the survivor
         for (const toDelUrl of eventToDelete.imageUrls) {
             const toDelHash = getHashFromImageUrl(toDelUrl);
             if (
-                !(eventToSurvive.imageUrls ?? []).some(x => calculateHammingDistance(getHashFromImageUrl(x), toDelHash) <= 5)
+                !(eventToSurvive.imageUrls ?? []).some((x) => {
+                    const survivingHash = getHashFromImageUrl(x);
+                    if (!survivingHash || !toDelHash) return false;
+                    const dist = safeHammingDistance({
+                        hashA: survivingHash,
+                        hashB: toDelHash,
+                        urlA: x,
+                        urlB: toDelUrl,
+                        eventAId: eventToSurvive.id,
+                        eventBId: eventToDelete.id,
+                    });
+                    return dist !== undefined && dist <= 5;
+                })
             ) {
                 if (!eventToSurvive.imageUrls) eventToSurvive.imageUrls = [];
                 eventToSurvive.imageUrls.push(toDelUrl);

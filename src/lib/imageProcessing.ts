@@ -99,7 +99,7 @@ export function alphabetToBinary(alphabetString: string): string {
 
         return result;
     } catch (error) {
-        throw new Error(`Failed to decode base64 string: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error(`Failed to decode base64 string: ${error instanceof Error ? error.message : `Unknown error`} (${alphabetString})`);
     }
 }
 

@@ -294,6 +294,7 @@ export const createOffering = form(offeringFormSchema, async (data, issue) => {
 		kind: `offering`,
 		claims: imageClaims,
 		ownerId: userId,
+		offeringSlug: slug,
 	});
 
 	const [offering] = await db
@@ -347,10 +348,13 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 		await savePublicProfile(nextProfile);
 	}
 
+	if (!offering.slug) throw error(500, `Offering is missing a slug`);
+
 	const uploadedImageUrls = await finalizeGalleryImageClaims({
 		kind: `offering`,
 		claims: imageClaims,
 		ownerId: ownerId,
+		offeringSlug: offering.slug,
 	});
 	const nextImageUrls = getNextGalleryImageUrls({
 		currentImageUrls: offering.imageUrls ?? [],
@@ -375,8 +379,6 @@ export const updateOffering = form(updateOfferingFormSchema, async (data, issue)
 	if (deletedImageUrls?.length && !isGalleryImageE2eMode) {
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
 	}
-
-	if (!offering.slug) throw error(500, `Offering is missing a slug`);
 
 	getMyPublicProfile().refresh();
 	refreshOfferingLists({ returnTo: data.returnTo });

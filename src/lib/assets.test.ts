@@ -87,10 +87,33 @@ describe(`offering image object keys`, () => {
 		expect(
 			offeringImageObjectKey({
 				userId: `user-123`,
-				suffix: `abc123`,
+				offeringSlug: `ab12cd-cover`,
+				suffix: `abc123def45`,
 				contentType: `image/webp`,
 			}),
-		).toBe(`offerings/user-123/abc123.webp`);
+		).toBe(`offerings/user-123/ab12cd-cover/abc123def45.webp`);
+	});
+
+	it(`rejects a missing offering slug on final keys`, () => {
+		expect(() =>
+			offeringImageObjectKey({
+				userId: `user-123`,
+				offeringSlug: ` `,
+				suffix: `abc123def45`,
+				contentType: `image/webp`,
+			}),
+		).toThrow(`Offering slug cannot be empty`);
+	});
+
+	it(`rejects unsafe offering slugs on final keys`, () => {
+		expect(() =>
+			offeringImageObjectKey({
+				userId: `user-123`,
+				offeringSlug: `../cover`,
+				suffix: `abc123def45`,
+				contentType: `image/webp`,
+			}),
+		).toThrow(`Offering slug contains invalid characters`);
 	});
 
 	it(`rejects unsafe temporary key parts`, () => {
@@ -136,7 +159,7 @@ describe(`temporary image finalization`, () => {
 	it(`copies temporary offering images server-side before deleting the source`, async () => {
 		const url = await finalizeOfferingImage({
 			tempObjectKey: `offerings/temp/abc123.webp`,
-			finalObjectKey: `offerings/user-123/abc123.webp`,
+			finalObjectKey: `offerings/user-123/ab12cd-cover/abc123def45.webp`,
 			creds: loadCreds({
 				S3_ACCESS_KEY_ID: `test-access`,
 				S3_SECRET_ACCESS_KEY: `test-secret`,
@@ -146,10 +169,13 @@ describe(`temporary image finalization`, () => {
 		});
 
 		const instance = getS3InstanceMock();
-		expect(instance.copyObject).toHaveBeenCalledWith({ sourceKey: `offerings/temp/abc123.webp` }, `offerings/user-123/abc123.webp`);
+		expect(instance.copyObject).toHaveBeenCalledWith(
+			{ sourceKey: `offerings/temp/abc123.webp` },
+			`offerings/user-123/ab12cd-cover/abc123def45.webp`,
+		);
 		expect(instance.deleteObject).toHaveBeenCalledWith(`offerings/temp/abc123.webp`);
 		expect(instance.copyObject.mock.invocationCallOrder[0]).toBeLessThan(instance.deleteObject.mock.invocationCallOrder[0]);
-		expect(url).toBe(`https://assets.blissbase.app/offerings/user-123/abc123.webp`);
+		expect(url).toBe(`https://assets.blissbase.app/offerings/user-123/ab12cd-cover/abc123def45.webp`);
 	});
 
 	it(`copies temporary profile images server-side before deleting the source`, async () => {
@@ -243,6 +269,23 @@ describe(`uploadImage`, () => {
 				`image/png`,
 			),
 		).rejects.toThrow(`Unsupported image content type: image/png`);
+		expect(getS3ClientMock()).not.toHaveBeenCalled();
+	});
+
+	it(`rejects event image keys that are not compact URL-safe hashes`, async () => {
+		await expect(
+			uploadEventImage(
+				Buffer.from([1, 2, 3]),
+				`demo-event`,
+				`m5k8x2q-abcdefgh`,
+				loadCreds({
+					S3_ACCESS_KEY_ID: `test-access`,
+					S3_SECRET_ACCESS_KEY: `test-secret`,
+					S3_BUCKET_NAME: `test-bucket`,
+					CLOUDFLARE_ACCOUNT_ID: `test-account`,
+				}),
+			),
+		).rejects.toThrow(`Phash must be a 11-character URL-safe hash`);
 		expect(getS3ClientMock()).not.toHaveBeenCalled();
 	});
 

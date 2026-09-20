@@ -47,6 +47,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 		});
 
 		expect(verifyGalleryImageClaims({ claimTokens: [token], kind: `event` })).toEqual([
@@ -63,6 +64,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `offerings/temp/cover.jpg`,
 			contentType: `image/jpeg`,
 			kind: `offering`,
+			hash: `abc123def45`,
 		});
 
 		expect(verifyGalleryImageClaims({ claimTokens: [token], kind: `offering` })).toEqual([
@@ -79,6 +81,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 		});
 
 		const claims = verifyGalleryImageClaims({ claimTokens: [token, token], kind: `event` });
@@ -90,6 +93,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 		});
 		const [payload] = token.split(`.`);
 
@@ -101,6 +105,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 		});
 
 		expectInvalid(verifyGalleryImageClaims({ claimTokens: [`${token}.extra`], kind: `event` }));
@@ -111,6 +116,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 			expiresAt: Date.now() - 1000,
 		});
 
@@ -122,6 +128,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 		});
 
 		expectInvalid(verifyGalleryImageClaims({ claimTokens: [token], kind: `offering` }));
@@ -132,6 +139,18 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/demo-event/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
+		});
+
+		expectInvalid(verifyGalleryImageClaims({ claimTokens: [token], kind: `event` }));
+	});
+
+	it(`rejects a claim that is missing a compact image hash`, () => {
+		const token = signedClaim({
+			objectKey: `events/temp/abc123.webp`,
+			contentType: `image/webp`,
+			kind: `event`,
+			expiresAt: Date.now() + 60_000,
 		});
 
 		expectInvalid(verifyGalleryImageClaims({ claimTokens: [token], kind: `event` }));
@@ -142,6 +161,7 @@ describe(`verifyGalleryImageClaims`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/png`,
 			kind: `event`,
+			hash: `abc123def45`,
 			expiresAt: Date.now() + 60_000,
 		});
 
@@ -151,7 +171,11 @@ describe(`verifyGalleryImageClaims`, () => {
 
 describe(`createGalleryImageUpload`, () => {
 	it(`returns a presigned upload and a claim the server will accept`, async () => {
-		const result = await createGalleryImageUpload({ kind: `event`, contentType: `image/webp` });
+		const result = await createGalleryImageUpload({
+			kind: `event`,
+			contentType: `image/webp`,
+			hash: `abc123def45`,
+		});
 
 		expect(result.uploadUrl).toBe(`https://upload.example/put`);
 		expect(result.objectKey).toMatch(/^events\/temp\/[a-z0-9-]+\.webp$/);
@@ -160,8 +184,19 @@ describe(`createGalleryImageUpload`, () => {
 				objectKey: result.objectKey,
 				contentType: `image/webp`,
 				kind: `event`,
+				hash: `abc123def45`,
 			}),
 		]);
+	});
+
+	it(`rejects a hash that is not a compact URL-safe image hash`, async () => {
+		await expect(
+			createGalleryImageUpload({
+				kind: `event`,
+				contentType: `image/webp`,
+				hash: `m5k8x2q-abcdefgh`,
+			}),
+		).rejects.toThrow(`Bild-Upload ist ungültig`);
 	});
 });
 
@@ -181,6 +216,7 @@ describe(`finalizeGalleryImageClaims`, () => {
 			objectKey: `events/temp/cover.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 		});
 		const claims = verifyGalleryImageClaims({ claimTokens: [token], kind: `event` });
 		if (claims instanceof Error) throw claims;
@@ -191,12 +227,52 @@ describe(`finalizeGalleryImageClaims`, () => {
 				claims,
 				ownerId: `my-slug`,
 			}),
-		).resolves.toEqual([`https://assets.blissbase.app/events/my-slug/cover.webp`]);
+		).resolves.toEqual([`https://assets.blissbase.app/events/my-slug/abc123def45.webp`]);
 		expect(getObjectPrefix).toHaveBeenCalledWith({
 			objectKey: `events/temp/cover.webp`,
 			byteLength: 12,
 			creds: eventAssetsCreds,
 		});
+	});
+
+	it(`copies offering images into a per-offering key`, async () => {
+		const token = signGalleryImageClaim({
+			objectKey: `offerings/temp/cover.webp`,
+			contentType: `image/webp`,
+			kind: `offering`,
+			hash: `abc123def45`,
+		});
+		const claims = verifyGalleryImageClaims({ claimTokens: [token], kind: `offering` });
+		if (claims instanceof Error) throw claims;
+
+		await expect(
+			finalizeGalleryImageClaims({
+				kind: `offering`,
+				claims,
+				ownerId: `user-123`,
+				offeringSlug: `ab12cd-cover`,
+			}),
+		).resolves.toEqual([`https://assets.blissbase.app/offerings/user-123/ab12cd-cover/abc123def45.webp`]);
+	});
+
+	it(`rejects offering finalize without a slug`, async () => {
+		const token = signGalleryImageClaim({
+			objectKey: `offerings/temp/cover.webp`,
+			contentType: `image/webp`,
+			kind: `offering`,
+			hash: `abc123def45`,
+		});
+		const claims = verifyGalleryImageClaims({ claimTokens: [token], kind: `offering` });
+		if (claims instanceof Error) throw claims;
+
+		await expect(
+			finalizeGalleryImageClaims({
+				kind: `offering`,
+				claims,
+				ownerId: `user-123`,
+			}),
+		).rejects.toThrow(`Offering slug cannot be empty`);
+		expect(getObjectPrefix).not.toHaveBeenCalled();
 	});
 });
 
@@ -215,6 +291,7 @@ describe(`discardGalleryImageUpload`, () => {
 			objectKey: `events/temp/abc123.webp`,
 			contentType: `image/webp`,
 			kind: `event`,
+			hash: `abc123def45`,
 			expiresAt: Date.now() - 1000,
 		});
 
@@ -223,7 +300,13 @@ describe(`discardGalleryImageUpload`, () => {
 	});
 });
 
-function signedClaim(claim: { objectKey: string; contentType: string; kind: string; expiresAt: number }) {
+function signedClaim(claim: {
+	objectKey: string;
+	contentType: string;
+	kind: string;
+	hash?: string;
+	expiresAt: number;
+}) {
 	const payload = Buffer.from(JSON.stringify(claim)).toString(`base64url`);
 	const signature = createHmac(`sha256`, eventAssetsCreds.secretKey).update(payload).digest(`base64url`);
 	return `${payload}.${signature}`;

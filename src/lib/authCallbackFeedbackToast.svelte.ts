@@ -9,6 +9,12 @@ import { afterClientHydration } from '$lib/shallowDialog.svelte';
 import { toast } from 'svelte-sonner';
 
 const AUTH_FEEDBACK_TOAST_ID = `auth-callback-feedback`;
+const otpExpiredTitle = /* @wc-include */ `Der Login-Link ist abgelaufen.`;
+const otpExpiredDescription = /* @wc-include */ `Lass dir einen neuen Login-Link schicken.`;
+const pkceMismatchTitle = /* @wc-include */ `Login-Link stammt aus anderem Browser`;
+const pkceMismatchDescription = /* @wc-include */ `Fordere einen neuen Login-Link an und öffne den Link im selben Browser in dem du ihn angefordert hast.`;
+const authFailedTitle = /* @wc-include */ `Anmeldung fehlgeschlagen`;
+const authSuccessTitle = /* @wc-include */ `Du bist jetzt angemeldet. Viel Spaß!`;
 
 /**
  * Registers auth callback URL feedback (toasts + stripping auth feedback params and hash afterward).
@@ -39,23 +45,23 @@ export function registerAuthCallbackFeedbackToast() {
 				classes: { description: `whitespace-pre-line`}
 			};
 			if (errorCode === `otp_expired`) {
-				toast.error(`Der Login-Link ist abgelaufen.`, {
-					description: `Lass dir einen neuen Login-Link schicken.`,
+				toast.error(otpExpiredTitle, {
+					description: otpExpiredDescription,
 					...errorPros
 				});
 			} else if (errorCode === `pkce_code_verifier_not_found`) {
-				toast.error(`Login-Link stammt aus anderem Browser`, {
-					description: `Fordere einen neuen Login-Link an und öffne den Link im selben Browser in dem du ihn angefordert hast.`,
+				toast.error(pkceMismatchTitle, {
+					description: pkceMismatchDescription,
 					...errorPros
 				});
 			} else {
-				toast.error(`Anmeldung fehlgeschlagen`, {
+				toast.error(authFailedTitle, {
 					description: authError,
 					...errorPros
 				});
 			}
 		} else if (!shouldSkipAuthSuccessToast()) {
-			toast.success(`Du bist jetzt angemeldet. Viel Spaß!`, { id: AUTH_FEEDBACK_TOAST_ID });
+			toast.success(authSuccessTitle, { id: AUTH_FEEDBACK_TOAST_ID });
 		}
 
 		void stripAuthFeedbackFromUrl();

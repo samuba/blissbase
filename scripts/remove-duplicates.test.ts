@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
+import { findImageHashDuplicatePairs, getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
 
 describe(`processDuplicates`, () => {
     it(`skips stale duplicate pairs and keeps the latest survivor state`, async () => {
@@ -141,6 +141,42 @@ describe(`getMergedSourceUrl`, () => {
         });
 
         expect(sourceUrl).toBe(`https://survivor.test/event`);
+    });
+});
+
+describe(`findImageHashDuplicatePairs`, () => {
+    it(`skips invalid hashes and still finds a valid duplicate pair`, () => {
+        const warnSpy = vi.spyOn(console, `warn`).mockImplementation(() => {});
+        const validHashUrl = `https://assets.blissbase.app/events/a/LOZTvW10y7U.webp`;
+        const duplicates = findImageHashDuplicatePairs({
+            events: [
+                { id: 1, imageUrls: [validHashUrl] },
+                { id: 2, imageUrls: [`https://assets.blissbase.app/events/b/LOZTvW10y7U.webp`] },
+                { id: 3, imageUrls: [`https://assets.blissbase.app/events/c/m5k8x2q-abcdefgh.webp`] },
+                { id: 4, imageUrls: [`https://cdn.example.com/image.jpg`] },
+            ],
+            hammingDistanceThreshold: 5,
+        });
+
+        expect(duplicates).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                dist: 0,
+                eventAId: 1,
+                eventBId: 2,
+                urlA: validHashUrl,
+            }),
+            expect.objectContaining({
+                dist: 0,
+                eventAId: 2,
+                eventBId: 1,
+            }),
+        ]));
+        expect(duplicates.some((duplicate) => duplicate.eventAId === 3 || duplicate.eventBId === 3)).toBe(false);
+        expect(duplicates.some((duplicate) => duplicate.eventAId === 4 || duplicate.eventBId === 4)).toBe(false);
+        expect(warnSpy).toHaveBeenCalledWith(`Skipping invalid image hash for event 3: https://assets.blissbase.app/events/c/m5k8x2q-abcdefgh.webp`);
+        expect(warnSpy).toHaveBeenCalledWith(`Skipping invalid image hash for event 4: https://cdn.example.com/image.jpg`);
+
+        warnSpy.mockRestore();
     });
 });
 
