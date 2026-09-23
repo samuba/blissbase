@@ -16,6 +16,7 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 	await page.addInitScript(() => {
 		const predictions = [
 			{
+				placeId: `berlin`,
 				text: { toString: () => `Berlin, Germany` },
 				toPlace: () => ({
 					fetchFields: async () => {},
@@ -28,6 +29,7 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 				})
 			},
 			{
+				placeId: `bern`,
 				text: { toString: () => `Bern, Switzerland` },
 				toPlace: () => ({
 					fetchFields: async () => {},
@@ -36,6 +38,32 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 					location: {
 						lat: () => 46.948,
 						lng: () => 7.447
+					}
+				})
+			},
+			{
+				placeId: `berlin`,
+				text: { toString: () => `Berlin, Germany` },
+				toPlace: () => ({
+					fetchFields: async () => {},
+					displayName: `Berlin`,
+					formattedAddress: `Berlin, Germany`,
+					location: {
+						lat: () => 52.52,
+						lng: () => 13.405
+					}
+				})
+			},
+			{
+				placeId: `berlin-locality`,
+				text: { toString: () => `Berlin, Germany` },
+				toPlace: () => ({
+					fetchFields: async () => {},
+					displayName: `Berlin`,
+					formattedAddress: `Berlin, Germany`,
+					location: {
+						lat: () => 52.52,
+						lng: () => 13.405
 					}
 				})
 			}
@@ -83,7 +111,11 @@ test.describe('Location autocomplete', () => {
 		await gotoHomeAndWait(page);
 		const headerInput = page.getByTestId(`plzCityInput-header`);
 		await typeForSuggestions(page, { input: headerInput, value: `Ber` });
-		await expectSuggestionsOpen(page, `plzCityInput-header`);
+		const suggestions = await expectSuggestionsOpen(page, `plzCityInput-header`);
+		const options = suggestions.getByTestId(`location-option`);
+		await expect(options).toHaveCount(3);
+		await expect(options.nth(0)).toHaveText(`Berlin, Germany`);
+		await expect(options.nth(2)).toHaveText(`Berlin, Germany`);
 	});
 
 	test('keyboard selection applies coordinates and distance', async ({ page }) => {

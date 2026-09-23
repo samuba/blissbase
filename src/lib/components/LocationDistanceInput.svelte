@@ -678,7 +678,7 @@
 						data-testid="location-suggestions"
 						class="border-base-300 bg-base-100 rounded-b-box max-h-64 overflow-y-auto border-t"
 					>
-						{#each autocomplete.suggestions as suggestion, index (suggestion.text)}
+						{#each autocomplete.suggestions as suggestion, index (suggestion.prediction.placeId)}
 							<li
 								id="{inputId}-option-{index}"
 								role="option"

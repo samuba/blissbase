@@ -150,13 +150,17 @@ export class PlacesAutocompleteController {
 
 			if (currentRequestId !== this.requestId) return;
 
-			this.suggestions = suggestions
-				.map((suggestion) => suggestion.placePrediction)
-				.filter((prediction): prediction is google.maps.places.PlacePrediction => prediction != null)
-				.map((prediction) => ({
+			const nextSuggestions: PlaceSuggestion[] = [];
+			for (const suggestion of suggestions) {
+				const prediction = suggestion.placePrediction;
+				if (!prediction?.placeId) continue;
+				if (nextSuggestions.some((item) => item.prediction.placeId === prediction.placeId)) continue;
+				nextSuggestions.push({
 					text: prediction.text.toString(),
 					prediction
-				}));
+				});
+			}
+			this.suggestions = nextSuggestions;
 
 			this.highlightedIndex = this.suggestions.length > 0 ? 0 : -1;
 			this.hasSearched = true;

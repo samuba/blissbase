@@ -84,10 +84,11 @@ export async function mockGooglePlacesAutocomplete(page: Page) {
 	await page.route(/maps\.(googleapis|gstatic)\.com/, (route) => route.abort());
 	await page.addInitScript(() => {
 		const places = [
-			{ name: `Berlin`, address: `Berlin, Germany`, lat: 52.52, lng: 13.405 },
-			{ name: `Munich`, address: `Munich, Germany`, lat: 48.137, lng: 11.575 },
+			{ placeId: `berlin`, name: `Berlin`, address: `Berlin, Germany`, lat: 52.52, lng: 13.405 },
+			{ placeId: `munich`, name: `Munich`, address: `Munich, Germany`, lat: 48.137, lng: 11.575 },
 		];
 		const predictions = places.map((place) => ({
+			placeId: place.placeId,
 			text: { toString: () => place.address },
 			toPlace: () => ({
 				fetchFields: async () => {},

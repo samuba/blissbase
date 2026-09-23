@@ -590,7 +590,7 @@
 						{:else if showNoResultsHint}
 							<li class="text-base-content/60 px-3 py-2 text-sm">Ort mit diesem Namen nicht gefunden</li>
 						{:else}
-							{#each autocomplete?.suggestions ?? [] as suggestion, index (suggestion.text)}
+							{#each autocomplete?.suggestions ?? [] as suggestion, index (suggestion.prediction.placeId)}
 								{@const controller = autocomplete}
 								{#if controller}
 									<li
