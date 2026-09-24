@@ -32,6 +32,7 @@
 		"deleteOldUnlistedEvents": "bun run scripts/delete-old-unlisted-events.ts --confirm-delete",
 		"analyze:vercel-functions": "node scripts/analyze-vercel-functions.mjs",
 		"deploy:cf": "npx wrangler deploy --cwd blissbase-telegram-entry",
+		"deploy:whatsapp2sqlite": "bash whatsapp2sqlite/deployWhatsapp2Sqlite.sh",
 		"wuchale:clean": "wuchale --clean"
 	},
 	"devDependencies": {
