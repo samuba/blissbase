@@ -40,6 +40,8 @@ cd ~/whatsapp2sqlite
 ./deployWhatsapp2Sqlite.sh
 ```
 
+Pass a branch to deploy it instead of the default branch: `./deployWhatsapp2Sqlite.sh my-branch`.
+
 Deploy clones blissbase via `gh`, builds the binary, and (re)starts the systemd **user** unit `whatsapp2sqlite`.
 
 ## Ops

@@ -14,6 +14,7 @@ cd "$SCRIPT_DIR/.."
 # Configuration
 REPO_NAME="blissbase"
 REPO_URL="blissbase"  # Uses gh CLI default (github.com)
+BRANCH="${1:-}"  # Optional branch to deploy, defaults to the repo default branch
 SOURCE_DIR="${REPO_NAME}/whatsapp2sqlite"
 TARGET_DIR="./whatsapp2sqlite"
 SERVICE_NAME="whatsapp2sqlite"
@@ -72,8 +73,12 @@ clone_repo() {
     fi
     
     # Clone using gh CLI
-    gh repo clone "$REPO_URL" "$REPO_NAME"
-    log_info "Repository cloned successfully"
+    if [ -n "$BRANCH" ]; then
+        gh repo clone "$REPO_URL" "$REPO_NAME" -- --branch "$BRANCH"
+    else
+        gh repo clone "$REPO_URL" "$REPO_NAME"
+    fi
+    log_info "Repository cloned successfully${BRANCH:+ (branch $BRANCH)}"
 }
 
 # Copy whatsapp2sqlite to target directory
