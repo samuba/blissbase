@@ -156,6 +156,7 @@ func (d *daemon) drainPostgresChatWork() {
 		cancel()
 		if err != nil {
 			log.Printf("postgres chat sync: background full sync failed: %v", err)
+			d.reportCritical(fmt.Errorf("postgres full chat sync failed: %w", err))
 		}
 	}
 
@@ -269,6 +270,7 @@ func (d *daemon) syncChatToPostgresSync(ctx context.Context, chatJID string) {
 			return
 		}
 		log.Printf("postgres chat sync: read %s failed: %v", chatJID, err)
+		d.reportCritical(fmt.Errorf("postgres chat sync read %s failed: %w", chatJID, err))
 		return
 	}
 
@@ -284,6 +286,7 @@ func (d *daemon) syncChatToPostgresSync(ctx context.Context, chatJID string) {
 	queueWhatsappChatUpsert(batch, chat)
 	if err := d.postgres.flushBatch(ctx, batch); err != nil {
 		log.Printf("postgres chat sync: upsert %s (%s) failed after %s: %v", chat.chatJID, chat.name, time.Since(startedAt).Round(time.Millisecond), err)
+		d.reportCritical(fmt.Errorf("postgres chat sync failed for %s: %w", chat.chatJID, err))
 		return
 	}
 

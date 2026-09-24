@@ -16,4 +16,7 @@
   "r2_secret_access_key": "your-r2-secret-access-key",
   "r2_database_object_key": "whatsapp.sqlite",
   "r2_media_prefix": "media"
+
+  // Alerts use SEND_NOTIFICATION_SECRET_KEY from the environment (notify.env).
+  // The secret is not stored in this file.
 }
