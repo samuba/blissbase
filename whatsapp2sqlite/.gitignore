@@ -2,3 +2,6 @@
 /media
 /whatsapp2sqlite
 config.jsonc
+notify.env
+.notify-incident.json
+.notify-incident-*.tmp

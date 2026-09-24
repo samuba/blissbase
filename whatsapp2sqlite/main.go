@@ -70,15 +70,23 @@ var errGroupIQCoolingDown = errors.New("group IQ cooling down after rate-overlim
 
 // Main parses config and runs the long-running WhatsApp sync daemon.
 func Main() error {
+	notifier := newCriticalNotifier(defaultNotifyStatePath())
 	config, err := parseConfig()
 	if err != nil {
+		if shouldReportProcessError(err) {
+			notifier.report(err, incidentExit, true)
+		}
 		return err
 	}
+
+	notifier.configure(config)
+	notifier.logConfig()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	if err := run(ctx, config); err != nil && !errors.Is(err, context.Canceled) {
+	if err := run(ctx, config, notifier); shouldReportProcessError(err) {
+		notifier.report(err, incidentExit, true)
 		return err
 	}
 
@@ -86,8 +94,8 @@ func Main() error {
 }
 
 // run opens SQLite, initializes WhatsApp, and blocks until shutdown.
-// Example: `if err := run(ctx, config); err != nil { log.Fatal(err) }`
-func run(ctx context.Context, config daemonConfig) error {
+// Example: `if err := run(ctx, config, notifier); err != nil { log.Fatal(err) }`
+func run(ctx context.Context, config daemonConfig, notifier *criticalNotifier) error {
 	if err := config.validate(); err != nil {
 		return err
 	}
@@ -134,6 +142,12 @@ func run(ctx context.Context, config daemonConfig) error {
 		SecretAccessKey:   config.R2SecretAccessKey,
 		MediaPrefix:       config.R2MediaPrefix,
 		SyncInterval:      config.databaseSyncInterval(),
+		OnCritical: func(err error) {
+			if notifier == nil {
+				return
+			}
+			notifier.report(fmt.Errorf("sqlite snapshot sync failed: %w", err), incidentDegraded, notifier.blocking)
+		},
 	})
 	if err != nil {
 		return err
@@ -150,6 +164,7 @@ func run(ctx context.Context, config daemonConfig) error {
 		r2:                   r2Manager,
 		postgres:             postgres,
 		fatalEvents:          make(chan error, 1),
+		notifier:             notifier,
 		eventPersistJobs:     make(chan eventPersistJob, eventPersistQueueSize),
 		postgresChatWake:     make(chan struct{}, postgresChatWakeQueueSize),
 		pendingPostgresChats: make(map[string]struct{}),
@@ -516,6 +531,7 @@ func (d *daemon) handleEvent(evt any) {
 	case *events.KeepAliveTimeout:
 		log.Printf("keepalive timed out (%d failures)", event.ErrorCount)
 		if event.ErrorCount >= 3 {
+			d.reportCritical(fmt.Errorf("WhatsApp keepalive failed %d times", event.ErrorCount))
 			d.client.ResetConnection()
 		}
 	case *events.LoggedOut:
@@ -548,6 +564,7 @@ func (d *daemon) enqueueEventPersist(name string, run func(ctx context.Context) 
 	case d.eventPersistJobs <- job:
 	default:
 		log.Printf("drop event persist job %s: queue is saturated (%d)", name, eventPersistQueueSize)
+		d.reportCritical(fmt.Errorf("event persist queue saturated, dropped %s", name))
 	}
 }
 
@@ -567,6 +584,7 @@ func (d *daemon) runEventPersistWorker() {
 
 		if err != nil {
 			log.Printf("event persist %s: failed after %s: %v", job.name, elapsed, err)
+			d.reportCritical(fmt.Errorf("event persist %s failed: %w", job.name, err))
 			continue
 		}
 		log.Printf("event persist %s: done in %s", job.name, elapsed)
@@ -584,6 +602,16 @@ func (d *daemon) stopEventPersistWorker() {
 		close(d.eventPersistJobs)
 		d.eventPersistWG.Wait()
 	})
+}
+
+// reportCritical alerts once per incident without blocking the WhatsApp event loop.
+// Example: `d.reportCritical(err)`
+func (d *daemon) reportCritical(err error) {
+	if d == nil || d.notifier == nil || err == nil {
+		return
+	}
+
+	d.notifier.report(err, incidentDegraded, d.notifier.blocking)
 }
 
 // notifyFatal reports a non-recoverable daemon error without blocking the event loop.
@@ -3246,6 +3274,7 @@ func newR2Manager(ctx context.Context, config r2ManagerConfig) (*r2Manager, erro
 		mediaUploads:      make(chan mediaUploadJob, mediaUploadQueueSize),
 		objectDeletes:     make(chan string, objectDeleteQueueSize),
 		snapshotDB:        snapshotDB,
+		onCritical:        config.OnCritical,
 		stopDatabaseSync:  make(chan struct{}),
 		syncInterval:      config.SyncInterval,
 	}
@@ -3411,6 +3440,9 @@ func (m *r2Manager) runDatabaseSyncLoop() {
 			if err := m.syncDatabaseSnapshot(context.Background()); err != nil {
 				m.databaseDirty.Store(true)
 				log.Printf("periodic SQLite snapshot sync failed: %v", err)
+				if m.onCritical != nil {
+					m.onCritical(err)
+				}
 			}
 		}
 	}
@@ -3644,6 +3676,7 @@ type daemon struct {
 	r2          *r2Manager
 	postgres    *postgresChatsSync
 	fatalEvents chan error
+	notifier    *criticalNotifier
 
 	groupMetadataSyncRunning      atomic.Bool
 	groupMetadataSyncPending      atomic.Bool
@@ -3706,6 +3739,7 @@ type r2ManagerConfig struct {
 	MediaPrefix       string
 	SecretAccessKey   string
 	SyncInterval      time.Duration
+	OnCritical        func(error)
 }
 
 type r2Manager struct {
@@ -3713,6 +3747,7 @@ type r2Manager struct {
 	client            *s3.Client
 	closing           atomic.Bool
 	databaseDirty     atomic.Bool
+	onCritical        func(error)
 	databaseObjectKey string
 	databaseSyncMu    sync.Mutex
 	mediaPrefix       string

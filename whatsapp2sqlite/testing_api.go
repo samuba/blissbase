@@ -200,3 +200,118 @@ func TestEnqueueMediaNilSafe() {
 	m.enqueueMediaUpload(mediaUploadJob{})
 	m.enqueueMediaDelete(`r2://bucket/media/x.jpg`)
 }
+
+const (
+	TestNotifyIncidentRecovery = notifyIncidentRecovery
+	TestNotifyIncidentCooldown = notifyIncidentCooldown
+	TestNotifySendRetryAfter   = notifySendRetryAfter
+	TestNotifyExitSubject      = notifyExitSubject
+	TestNotifyDegradedSubject  = notifyDegradedSubject
+)
+
+// TestIncidentState is one incident slot (exit crash loop, or in-process error loop).
+type TestIncidentState struct {
+	Open           bool
+	FailureCount   int
+	LastFailureAt  time.Time
+	LastNotifiedAt time.Time
+	NextAttemptAt  time.Time
+}
+
+func TestDecideNotification(prev TestIncidentState, now time.Time) (TestIncidentState, bool) {
+	next, send := decideNotification(incidentFromTest(prev), now)
+	return incidentToTest(next), send
+}
+
+func TestShouldReportProcessError(err error) bool {
+	return shouldReportProcessError(err)
+}
+
+func TestRedactNotificationSecrets(text string, secrets []string) string {
+	return redactSecrets(text, secrets)
+}
+
+func TestPostSendNotification(ctx context.Context, endpoint, secret, subject, text string) error {
+	return postSendNotification(ctx, endpoint, secret, subject, text)
+}
+
+// TestNotifier drives incident alerts without calling the real worker.
+type TestNotifier struct {
+	n *criticalNotifier
+}
+
+func NewTestNotifier(statePath string) *TestNotifier {
+	return &TestNotifier{n: newCriticalNotifier(statePath)}
+}
+
+func (t *TestNotifier) SetNow(now time.Time) {
+	t.n.mu.Lock()
+	defer t.n.mu.Unlock()
+	frozen := now
+	t.n.now = func() time.Time { return frozen }
+}
+
+func (t *TestNotifier) SetSecret(secret string) {
+	t.n.secretFn = func() string { return secret }
+}
+
+func (t *TestNotifier) SetSecrets(secrets []string) {
+	t.n.mu.Lock()
+	defer t.n.mu.Unlock()
+	t.n.secrets = append([]string{}, secrets...)
+}
+
+func (t *TestNotifier) SetPost(fn func(subject, text string) error) {
+	t.n.post = fn
+}
+
+func (t *TestNotifier) ReportExit(err error) {
+	t.n.report(err, incidentExit, true)
+}
+
+func (t *TestNotifier) ReportDegraded(err error) {
+	t.n.report(err, incidentDegraded, true)
+}
+
+func (t *TestNotifier) ExitState() TestIncidentState {
+	return t.state(incidentExit)
+}
+
+func (t *TestNotifier) DegradedState() TestIncidentState {
+	return t.state(incidentDegraded)
+}
+
+func (t *TestNotifier) state(kind string) TestIncidentState {
+	t.n.mu.Lock()
+	defer t.n.mu.Unlock()
+	return incidentToTest(t.n.loadLocked().get(kind))
+}
+
+func (t *TestDaemon) AttachNotifier(n *TestNotifier) {
+	if t == nil || t.d == nil || n == nil {
+		return
+	}
+
+	t.d.notifier = n.n
+	n.n.blocking = true
+}
+
+func incidentFromTest(state TestIncidentState) incidentState {
+	return incidentState{
+		Open:           state.Open,
+		FailureCount:   state.FailureCount,
+		LastFailureAt:  state.LastFailureAt,
+		LastNotifiedAt: state.LastNotifiedAt,
+		NextAttemptAt:  state.NextAttemptAt,
+	}
+}
+
+func incidentToTest(state incidentState) TestIncidentState {
+	return TestIncidentState{
+		Open:           state.Open,
+		FailureCount:   state.FailureCount,
+		LastFailureAt:  state.LastFailureAt,
+		LastNotifiedAt: state.LastNotifiedAt,
+		NextAttemptAt:  state.NextAttemptAt,
+	}
+}

@@ -175,6 +175,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=${BINARY_PATH}
+EnvironmentFile=-${BINARY_PATH}/notify.env
 ExecStart=${BINARY_PATH}/whatsapp2sqlite
 Restart=on-failure
 RestartSec=5
@@ -244,6 +245,7 @@ main() {
     log_info "  - Stop: systemctl --user stop $SERVICE_NAME"
     log_info ""
     log_info "The service is enabled to start automatically on server reboot."
+    log_info "Alerts: put SEND_NOTIFICATION_SECRET_KEY in ${TARGET_DIR}/notify.env (see notify.env.example)."
 }
 
 # Run main function
