@@ -56,12 +56,12 @@ Useful log prefixes: `backfill groups:`, `postgres chat sync:`, `drop event pers
 
 Critical failures POST to the [send-notification](https://github.com/samuba/send-notification) worker (`POST https://send-notification.szb.workers.dev` with `secretKey`, `subject`, and `text`). The worker chooses delivery. This daemon does not talk to Telegram itself.
 
-Set `SEND_NOTIFICATION_SECRET_KEY` in `notify.env` next to the binary (see `notify.env.example`). The systemd unit loads that file when it exists. The value must match the worker secret `SECRET_KEY`.
+Set `SEND_NOTIFICATION_SECRET_KEY` in `notify.env` next to the binary (see `notify.env.example`, `chmod 600` it). The systemd unit loads that file. The value must match the worker secret `SECRET_KEY`. The daemon refuses to start without it.
 
 What alerts:
 
 - Any error that makes the process exit (config, startup, connect, logout, stream replaced, QR pairing failure). systemd restarts those, so they are the crash loop.
-- In-process failures: event persist errors, a saturated persist queue, Postgres chat sync failures, SQLite snapshot sync failures, and WhatsApp keepalive loss (3 or more failures).
+- In-process failures: event persist errors, a saturated persist queue, Postgres chat sync failures, SQLite snapshot sync failures, WhatsApp keepalive loss (3 or more failures), and connection states whatsmeow does not recover from on its own (temporary ban, outdated client, connect failure without auto reconnect).
 
 Throttle: one alert per incident. Exit crashes and in-process failures are separate incidents, so one cannot hide the other. An incident stays open while failures keep coming. It ends after 30 minutes with no failure of that kind; the next failure alerts again. If the loop never stops, the same incident alerts again only after 6 hours. A failed delivery retries after 15 minutes, not on every restart.
 

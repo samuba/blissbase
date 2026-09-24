@@ -14,6 +14,8 @@ import (
 	"time"
 
 	w2s "blissbase/whatsapp2sqlite"
+
+	"go.mau.fi/whatsmeow/types/events"
 )
 
 func TestDecideNotificationStartsSuppressesAndRearms(t *testing.T) {
@@ -288,6 +290,38 @@ func TestSaturatedPersistQueueNotifiesOnce(t *testing.T) {
 
 	if sends.Load() != 1 {
 		t.Fatalf(`sends = %d, want 1`, sends.Load())
+	}
+}
+
+func TestRequireNotificationSecret(t *testing.T) {
+	t.Setenv(`SEND_NOTIFICATION_SECRET_KEY`, ` `)
+	if err := w2s.TestRequireNotificationSecret(); err == nil {
+		t.Fatal(`blank secret should refuse to start`)
+	}
+
+	t.Setenv(`SEND_NOTIFICATION_SECRET_KEY`, `worker-secret`)
+	if err := w2s.TestRequireNotificationSecret(); err != nil {
+		t.Fatalf(`secret set: %v`, err)
+	}
+}
+
+func TestStuckConnectionEventsNotify(t *testing.T) {
+	t.Parallel()
+
+	for _, evt := range []any{
+		&events.TemporaryBan{Code: events.TempBanSentToTooManyPeople, Expire: time.Hour},
+		&events.ClientOutdated{},
+		&events.ConnectFailure{Reason: events.ConnectFailureServiceUnavailable, Message: `down`},
+	} {
+		var sends atomic.Int32
+		notifier := newNotifier(t, filepath.Join(t.TempDir(), `incident.json`), time.Now(), &sends)
+		daemon := w2s.NewTestDaemonBare()
+		daemon.AttachNotifier(notifier)
+		daemon.HandleEvent(evt)
+
+		if sends.Load() != 1 {
+			t.Fatalf(`%T: sends = %d, want 1`, evt, sends.Load())
+		}
 	}
 }
 

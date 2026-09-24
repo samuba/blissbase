@@ -115,17 +115,13 @@ func (n *criticalNotifier) configure(config daemonConfig) {
 	n.secrets = secretsFromConfig(config)
 }
 
-func (n *criticalNotifier) logConfig() {
-	if n == nil {
-		return
+// requireNotificationSecret refuses to start a daemon that could never alert.
+func requireNotificationSecret() error {
+	if strings.TrimSpace(os.Getenv(sendNotificationSecretEnv)) != "" {
+		return nil
 	}
 
-	if strings.TrimSpace(n.secret()) == "" {
-		log.Printf("notification: %s is unset; critical errors will not send alerts", sendNotificationSecretEnv)
-		return
-	}
-
-	log.Printf("notification: alerting via %s", sendNotificationURL)
+	return fmt.Errorf("missing %s: set it in notify.env next to the binary", sendNotificationSecretEnv)
 }
 
 // report sends at most one alert per open incident of this kind.

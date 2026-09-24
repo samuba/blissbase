@@ -231,6 +231,10 @@ func TestRedactNotificationSecrets(text string, secrets []string) string {
 	return redactSecrets(text, secrets)
 }
 
+func TestRequireNotificationSecret() error { return requireNotificationSecret() }
+
+func (t *TestDaemon) HandleEvent(evt any) { t.d.handleEvent(evt) }
+
 func TestPostSendNotification(ctx context.Context, endpoint, secret, subject, text string) error {
 	return postSendNotification(ctx, endpoint, secret, subject, text)
 }

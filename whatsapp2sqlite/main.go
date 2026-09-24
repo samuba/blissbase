@@ -70,6 +70,10 @@ var errGroupIQCoolingDown = errors.New("group IQ cooling down after rate-overlim
 
 // Main parses config and runs the long-running WhatsApp sync daemon.
 func Main() error {
+	if err := requireNotificationSecret(); err != nil {
+		return err
+	}
+
 	notifier := newCriticalNotifier(defaultNotifyStatePath())
 	config, err := parseConfig()
 	if err != nil {
@@ -80,7 +84,7 @@ func Main() error {
 	}
 
 	notifier.configure(config)
-	notifier.logConfig()
+	log.Printf("notification: alerting via %s", sendNotificationURL)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -534,6 +538,16 @@ func (d *daemon) handleEvent(evt any) {
 			d.reportCritical(fmt.Errorf("WhatsApp keepalive failed %d times", event.ErrorCount))
 			d.client.ResetConnection()
 		}
+	// whatsmeow does not reconnect after these, so the daemon stays up but stops syncing.
+	case *events.TemporaryBan:
+		log.Printf("WhatsApp temporary ban: %s", event)
+		d.reportCritical(fmt.Errorf("WhatsApp temporary ban: %s", event))
+	case *events.ClientOutdated:
+		log.Printf("WhatsApp rejected the client as outdated")
+		d.reportCritical(errors.New("WhatsApp rejected the client as outdated, update whatsmeow and redeploy"))
+	case *events.ConnectFailure:
+		log.Printf("WhatsApp connect failure: %s %s", event.Reason, event.Message)
+		d.reportCritical(fmt.Errorf("WhatsApp connect failure without auto reconnect: %s %s", event.Reason, event.Message))
 	case *events.LoggedOut:
 		d.notifyFatal(fmt.Errorf("WhatsApp session logged out: %s", event.Reason))
 	case *events.StreamReplaced:
