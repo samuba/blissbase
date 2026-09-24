@@ -3,13 +3,25 @@
 # Deploy script for whatsapp2sqlite from blissbase repo
 # This script clones the repo, extracts the whatsapp2sqlite project, builds it,
 # and sets up a systemd user service to run it as a daemon.
+# Run this on macOS: it SSHs to the Linux host and deploys there.
 
 set -e  # Exit on any error
 
-# Always run from the parent of the script's directory so relative paths work
-# regardless of where the script is invoked from
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/.."
+# From a Mac, send this script to the Linux host and run it there.
+# That happens before any local cd, so a laptop run cannot clone into this repo.
+if [ "$(uname -s)" = "Darwin" ]; then
+    echo "Running deploy on remote server..."
+    exec ssh walter@waltersbox "cd \"\$HOME\" && WHATSAPP2SQLITE_ON_HOST=1 bash -s$(printf ' %q' "$@")" < "$0"
+fi
+
+# On the host, work from the parent of ~/whatsapp2sqlite.
+# A normal on-server run uses the script path. A Mac SSH run is bash -s, so there is no path.
+if [ -n "${WHATSAPP2SQLITE_ON_HOST:-}" ]; then
+    cd "$HOME"
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    cd "$SCRIPT_DIR/.."
+fi
 
 # Configuration
 REPO_NAME="blissbase"

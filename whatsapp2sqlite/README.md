@@ -34,15 +34,16 @@ Never risk WhatsApp rate limits / bans:
 
 ## Deploy (waltersbox)
 
+Run it from this Mac. The script SSHs to the Linux host and deploys there:
+
 ```bash
-ssh walter@waltersbox
-cd ~/whatsapp2sqlite
+cd whatsapp2sqlite
 ./deployWhatsapp2Sqlite.sh
 ```
 
 Pass a branch to deploy it instead of the default branch: `./deployWhatsapp2Sqlite.sh my-branch`.
 
-Deploy clones blissbase via `gh`, builds the binary, and (re)starts the systemd **user** unit `whatsapp2sqlite`.
+On the server it clones blissbase via `gh`, builds the binary, and (re)starts the systemd **user** unit `whatsapp2sqlite`.
 
 ## Ops
 
