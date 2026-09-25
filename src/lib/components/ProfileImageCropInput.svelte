@@ -233,7 +233,6 @@
 	}
 
 	function onPreviewError() {
-		if (failedPreviewUrl === displayedUrl) return;
 		failedPreviewUrl = displayedUrl;
 		reportFailure({
 			stage: `preview`,
