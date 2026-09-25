@@ -2,6 +2,7 @@ import * as assets from "$lib/assets";
 import { dev } from "$app/environment";
 import { E2E_TEST } from "$env/static/private";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
+import { posthogCaptureException } from "$lib/server/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const PROFILE_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;
@@ -25,7 +26,10 @@ export async function resolveProfileImageUrl(args: ResolveProfileImageUrlArgs) {
 		submittedUrl: submitted,
 		expectedType: args.expectedType,
 	});
-	if (claim instanceof Error) return claim;
+	if (claim instanceof Error) {
+		posthogCaptureException(claim);
+		return claim;
+	}
 
 	const suffix = getProfileImageSuffixFromObjectKey({
 		objectKey: claim.objectKey,
@@ -45,7 +49,7 @@ export async function resolveProfileImageUrl(args: ResolveProfileImageUrlArgs) {
 			creds: eventAssetsCreds,
 		});
 	} catch (err) {
-		console.error(`Error finalizing profile image:`, err);
+		posthogCaptureException(new Error(`Error finalizing ${args.expectedType} image`, { cause: err }));
 		return new Error(`Bild-Upload konnte nicht gespeichert werden`);
 	}
 }

@@ -51,6 +51,12 @@ export function buildPosthogPersonProperties(args: {
 	};
 }
 
+/** Reports a handled error. No-op where posthog is not initialized (dev, previews). */
+export function capturePosthogException(error: unknown, properties: Record<string, unknown>) {
+	if (!browser || !posthog.__loaded) return;
+	posthog.captureException(error, properties);
+}
+
 export function syncPosthogIdentity(args: {
 	userId: string | undefined;
 	email: string | undefined;

@@ -6,6 +6,8 @@
 	import { toast } from 'svelte-sonner';
 	import { Dialog } from '$lib/components/dialog';
 	import { createProfileImageUploadUrl } from '$lib/rpc/profile.remote';
+	import { capturePosthogException } from '$lib/posthog';
+	import { onDestroy } from 'svelte';
 
 	let {
 		kind,
@@ -27,9 +29,8 @@
 	const aspect = $derived(targetSize.width / targetSize.height);
 	const cropShape = $derived(kind === `profile` ? `round` : `rect`);
 
-	let previewUrl = $state(``);
 	let fileInputEl = $state<HTMLInputElement | undefined>();
-	let originalDataUrl = $state(``);
+	let originalImageUrl = $state(``);
 	let originalImage = $state<HTMLImageElement | undefined>();
 	let dialogOpen = $state(false);
 	let crop = $state({ x: 0, y: 0 });
@@ -38,14 +39,26 @@
 	let busy = $state(false);
 	let uploading = $state(false);
 	let windowInnerHeight = $state(0);
+	// Local blob of the latest crop. `publicUrl` is set once the upload succeeded.
+	let localPreview = $state<{ blobUrl: string; publicUrl?: string }>();
+	let failedPreviewUrl = $state(``);
 
 	const storedUrl = $derived((field.value() ?? initialUrl ?? ``).trim());
-	// During upload, prefer the local blob preview over the stored field URL so
-	// the user sees the new image immediately instead of the previous one.
-	const displayedUrl = $derived(uploading ? previewUrl : storedUrl);
+	// Prefer the local blob over the remote URL so the preview never depends on the temporary upload URL loading.
+	const displayedUrl = $derived.by(() => {
+		if (uploading) return localPreview?.blobUrl ?? ``;
+		if (storedUrl && localPreview?.publicUrl === storedUrl) return localPreview.blobUrl;
+		return storedUrl;
+	});
+	const previewFailed = $derived(Boolean(displayedUrl) && displayedUrl === failedPreviewUrl);
 
 	$effect(() => {
 		onBusyChange?.(busy);
+	});
+
+	onDestroy(() => {
+		revokeBlobUrl(originalImageUrl);
+		revokeBlobUrl(localPreview?.blobUrl);
 	});
 
 	/**
@@ -73,15 +86,16 @@
 
 		try {
 			busy = true;
-			const dataUrl = await readFileAsDataUrl(file);
-			const image = await loadImageFromUrl(dataUrl);
-			originalDataUrl = dataUrl;
+			const { url, image } = await loadImageFromFile(file);
+			revokeBlobUrl(originalImageUrl);
+			originalImageUrl = url;
 			originalImage = image;
 			crop = { x: 0, y: 0 };
 			zoom = 1;
 			croppedPixels = undefined;
 			dialogOpen = true;
 		} catch (err) {
+			reportFailure({ stage: `read`, error: err, file });
 			toast.error(err instanceof Error ? err.message : `Bild konnte nicht geladen werden.`);
 		} finally {
 			busy = false;
@@ -95,19 +109,21 @@
 	async function confirmCrop() {
 		if (!croppedPixels || !originalImage) return;
 		busy = true;
-		const previousPreviewUrl = previewUrl;
-		let localPreviewUrl = ``;
+		const previousPreview = localPreview;
+		let blobUrl = ``;
+		let stage = `crop`;
 		try {
 			const file = await renderCroppedBlob({
 				image: originalImage,
 				pixels: croppedPixels
 			});
 
-			localPreviewUrl = URL.createObjectURL(file);
-			previewUrl = localPreviewUrl;
+			blobUrl = URL.createObjectURL(file);
+			localPreview = { blobUrl };
 			uploading = true;
 			dialogOpen = false;
 
+			stage = `upload`;
 			const { uploadUrl, publicUrl } = await createProfileImageUploadUrl({
 				type: kind,
 				contentType: file.type === `image/webp` ? `image/webp` : `image/jpeg`
@@ -123,12 +139,14 @@
 			}
 
 			field.set(publicUrl);
-			previewUrl = publicUrl;
+			localPreview = { blobUrl, publicUrl };
+			revokeBlobUrl(previousPreview?.blobUrl);
 		} catch (err) {
-			previewUrl = previousPreviewUrl;
+			reportFailure({ stage, error: err });
+			revokeBlobUrl(blobUrl);
+			localPreview = previousPreview;
 			toast.error(err instanceof Error ? err.message : `Upload fehlgeschlagen.`);
 		} finally {
-			if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
 			uploading = false;
 			busy = false;
 		}
@@ -165,13 +183,37 @@
 	}
 
 	/**
+	 * Loads a picked file as an image. Tries an object URL first because it does not copy the
+	 * file into memory, then falls back to a FileReader data URL.
+	 * @example const { url, image } = await loadImageFromFile(file);
+	 */
+	async function loadImageFromFile(file: File) {
+		const objectUrl = URL.createObjectURL(file);
+		try {
+			return { url: objectUrl, image: await loadImageFromUrl(objectUrl) };
+		} catch (err) {
+			URL.revokeObjectURL(objectUrl);
+			reportFailure({ stage: `read-object-url`, error: err, file });
+		}
+
+		const dataUrl = await readFileAsDataUrl(file);
+		return { url: dataUrl, image: await loadImageFromUrl(dataUrl) };
+	}
+
+	/**
 	 * Reads a File into a data URL string.
 	 * @example const dataUrl = await readFileAsDataUrl(file);
 	 */
 	function readFileAsDataUrl(file: File) {
 		return new Promise<string>((resolve, reject) => {
 			const reader = new FileReader();
-			reader.onerror = () => reject(new Error(`Bilddatei konnte nicht gelesen werden`));
+			reader.onerror = () =>
+				reject(
+					new Error(
+						`Bilddatei konnte nicht gelesen werden. Speichere das Bild zuerst auf deinem Gerät und wähle es dann erneut aus.`,
+						{ cause: reader.error }
+					)
+				);
 			reader.onload = () => resolve(reader.result as string);
 			reader.readAsDataURL(file);
 		});
@@ -190,6 +232,30 @@
 		});
 	}
 
+	function onPreviewError() {
+		if (failedPreviewUrl === displayedUrl) return;
+		failedPreviewUrl = displayedUrl;
+		reportFailure({
+			stage: `preview`,
+			error: new Error(`Profile image preview failed to load`),
+			extra: { preview_source: displayedUrl.startsWith(`blob:`) ? `local` : `remote` }
+		});
+	}
+
+	function reportFailure(args: { stage: string; error: unknown; file?: File; extra?: Record<string, unknown> }) {
+		capturePosthogException(args.error, {
+			profile_image_kind: kind,
+			profile_image_stage: args.stage,
+			file_type: args.file?.type,
+			file_size: args.file?.size,
+			...args.extra
+		});
+	}
+
+	function revokeBlobUrl(url: string | undefined) {
+		if (url?.startsWith(`blob:`)) URL.revokeObjectURL(url);
+	}
+
 	/**
 	 * Clears the currently selected image.
 	 * @example removeImage();
@@ -197,7 +263,8 @@
 	function removeImage() {
 		if (busy) return;
 		field.set(``);
-		previewUrl = ``;
+		revokeBlobUrl(localPreview?.blobUrl);
+		localPreview = undefined;
 	}
 
 	function onDialogOpenChange(next: boolean) {
@@ -213,7 +280,7 @@
 
 	{#if kind === `profile`}
 		<div class="relative size-22 transition-opacity ring-2 ring-base-500 rounded-full">
-			{#if displayedUrl}
+			{#if displayedUrl && !previewFailed}
 				<button
 					type="button"
 					class={[`cursor-pointer hover:opacity-80`, uploading && `opacity-70`]}
@@ -225,6 +292,7 @@
 						src={displayedUrl}
 						alt=""
 						class="border-base-300 size-22 rounded-full border object-cover"
+						onerror={onPreviewError}
 					/>
 				</button>
 			{:else}
@@ -261,7 +329,7 @@
 		<div
 			class="bg-base-200 relative h-22 w-full overflow-hidden ring-2 ring-base-500 rounded-2xl"
 		>
-			{#if displayedUrl}
+			{#if displayedUrl && !previewFailed}
 				<button
 					type="button"
 					class={[`size-full cursor-pointer hover:opacity-80 transition-opacity`, uploading && `opacity-70`]}
@@ -273,6 +341,7 @@
 						src={displayedUrl}
 						alt=""
 						class="size-full object-cover"
+						onerror={onPreviewError}
 					/>
 				</button>
 			{:else}
@@ -324,6 +393,12 @@
 		disabled={busy}
 	/>
 
+	{#if previewFailed}
+		<div class="mt-2 text-red-600 text-xs" data-testid={`${kind}-image-preview-error`}>
+			Bild konnte nicht angezeigt werden. Bitte wähle es erneut aus.
+		</div>
+	{/if}
+
 	{#if field.issues()?.length}
 		<div class="mt-2 flex flex-col gap-1">
 			{#each field.issues() as issue, i (`${issue.message}-${i}`)}
@@ -346,13 +421,13 @@
 				Verschiebe und zoome das Bild, um den sichtbaren Ausschnitt festzulegen.
 			</Dialog.Description>
 
-			{#if originalDataUrl}
+			{#if originalImageUrl}
 				<div
 					class="bg-base-300 relative w-full overflow-hidden rounded-lg"
 					style:height={`${Math.min(Math.max(windowInnerHeight - 320, 260), 480)}px`}
 				>
 					<Cropper
-						image={originalDataUrl}
+						image={originalImageUrl}
 						bind:crop
 						bind:zoom
 						{aspect}
