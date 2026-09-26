@@ -274,7 +274,7 @@ export function resolveTelegramFormattingToHtml(text: string, entities: Api.Type
             case "hashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
             case "cashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
             case "bot_command": return '<code>';
-            case "url": return `<a href="${content}" target="_blank">`;
+            case "url": return `<a href="${content.startsWith("http") ? content : "https://" + content}" target="_blank">`;
             case "email": return `<a href="mailto:${content}" target="_blank">`;
             case "phone_number": return `<a href="tel:${content}" target="_blank">`;
             case "spoiler": return '<span class="tg-spoiler">';

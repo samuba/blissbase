@@ -50,6 +50,17 @@ Join us for a WhatsApp-only event.`,
 		);
 	});
 
+	it(`prefixes https:// on bare www. links so hrefs are not document-relative`, () => {
+		const result = normalizeDescription({
+			description: `Infos: www.lichtanker.at`,
+			name: null
+		});
+
+		expect(result).toBe(
+			`Infos: <a href="https://www.lichtanker.at">www.lichtanker.at</a>`
+		);
+	});
+
 	it(`converts plain-text line breaks to br tags`, () => {
 		const result = normalizeDescription({
 			description: `Line 1\nLine 2\n\n\nLine 3`,

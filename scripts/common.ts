@@ -324,11 +324,15 @@ export function linkify(html: string): string {
             return;
         }
 
-        // Regular expression to match URLs
-        const urlRegex = /(https?:\/\/[^\s<>"]+)/gi;
+        // Regular expression to match URLs, including scheme-less bare www. domains
+        const urlRegex = /(?:https?:\/\/|\bwww\.)[^\s<>"]+/gi;
 
         if (urlRegex.test(text)) {
-            const newHtml = text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+            const newHtml = text.replace(urlRegex, (match) => {
+                // Scheme-less hrefs resolve document-relative, so prefix https:// for bare www. links
+                const href = /^https?:\/\//i.test(match) ? match : `https://${match}`;
+                return `<a href="${href}" target="_blank">${match}</a>`;
+            });
             $(this).replaceWith(newHtml);
         }
     });
