@@ -26,14 +26,14 @@ export default defineConfig({
         })
     },
     ai: {
-        name: "gpt-5.6-luna",
+        name: "luna",
         group: {},
         batchSize: 50,
         parallel: 3,
         translate: async (messages, instruction) => {
             console.time('translation took');
             const { text } = await generateText({
-                model: openai('gpt-5.6-luna'),
+                model: openai('gpt-6-luna'),
                 system: instruction,
                 prompt: messages,
                 providerOptions: {

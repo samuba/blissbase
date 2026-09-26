@@ -29,7 +29,7 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	try {
 		const { output, usage } = await generateText({
-			model: openai(`gpt-5.6-luna`),
+			model: openai(`gpt-6-luna`),
 			reasoning: `medium`,
 			output: Output.object({
 				name: `eventExtraction`,
@@ -450,7 +450,7 @@ export async function aiSuggestTagSlugs({
 
 	try {
 		const { output } = await generateText({
-			model: openai(`gpt-5.6-luna`),
+			model: openai(`gpt-6-luna`),
 			output: Output.object({
 				name: `eventTagSlugs`,
 				schema: jsonSchema<{ tags: string[] }>({
@@ -505,7 +505,7 @@ export async function aiPickEmojisForTitles({
 		: ``;
 
 	const { output } = await generateText({
-		model: openai(`gpt-5.6-luna`),
+		model: openai(`gpt-6-luna`),
 		output: Output.object({
 			name: `titleEmojis`,
 			schema: jsonSchema<{ emojis: string[] }>({
