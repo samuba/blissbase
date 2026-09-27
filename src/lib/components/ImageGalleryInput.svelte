@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RemoteFormField } from "@sveltejs/kit";
+	import { isHttpError, type RemoteFormField } from "@sveltejs/kit";
 	import { flip } from "svelte/animate";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
@@ -14,6 +14,8 @@
 		type GalleryImageKind,
 	} from "$lib/galleryImages";
 	import { createGalleryImageUploadUrl, discardGalleryImage } from "$lib/rpc/galleryImages.remote";
+	import { retryWithBackoff, runWithConcurrency } from "$lib/common";
+	import { capturePosthogException } from "$lib/posthog";
 
 	let {
 		kind,
@@ -53,10 +55,16 @@
 	let lastReportedBusy = false;
 	let lastReportedFailed = false;
 	const previewFlipDurationMs = 220;
+	const maxParallelUploads = 3;
+	const uploadAttempts = 4;
+	const uploadRetryBaseDelayMs = 1000;
 	const readyOrBusyCount = $derived((previewItems ?? []).filter((x) => x.uploadState !== `error`).length);
 	const atMaxCount = $derived(readyOrBusyCount >= GALLERY_IMAGE_MAX_COUNT);
 	const busy = $derived((previewItems ?? []).some((x) => x.uploadState === `processing` || x.uploadState === `uploading`));
 	const hasFailedUploads = $derived((previewItems ?? []).some((x) => x.uploadState === `error`));
+	const retryableFailedUploads = $derived(
+		(previewItems ?? []).flatMap((x) => (x.uploadState === `error` && x.sourceFile ? [{ previewId: x.id, file: x.sourceFile }] : [])),
+	);
 	const submittedExistingImageUrls = $derived(
 		(previewItems ?? []).filter((preview) => preview.source === `existing`).map((preview) => preview.url),
 	);
@@ -230,16 +238,15 @@
 		}));
 		previewItems = [...previewItems, ...pendingPreviews.map((x) => x.preview)];
 		onDirty?.();
-		reportBusy(true);
+		await uploadImages(pendingPreviews.map((x) => ({ previewId: x.preview.id, file: x.file })));
+	}
 
-		await Promise.allSettled(
-			pendingPreviews.map((pendingPreview) =>
-				processAndUploadSelectedImage({
-					previewId: pendingPreview.preview.id,
-					file: pendingPreview.file,
-				}),
-			),
-		);
+	async function uploadImages(items: { previewId: string; file: File }[]) {
+		for (const item of items) {
+			cancelledPreviewIds.delete(item.previewId);
+			updatePreviewState({ previewId: item.previewId, uploadState: `processing`, progress: 0, error: undefined });
+		}
+		await runWithConcurrency({ items, limit: maxParallelUploads, run: processAndUploadSelectedImage });
 		reportBusy(busy);
 		reportFailed(hasFailedUploads);
 	}
@@ -255,6 +262,8 @@
 			sourceFile: args.file,
 		});
 
+		let stage: `process` | `sign` | `put` = `process`;
+		let attempts = 0;
 		try {
 			const processedFile = await processImageUploadFile({
 				file: args.file,
@@ -287,24 +296,31 @@
 			const hash = getProcessedImageHashFromFileName({ fileName: processedFile.name });
 			if (!hash) throw new Error(`Bild-Upload ist ungültig`);
 
-			const { uploadUrl, publicUrl, claimToken } = await createGalleryImageUploadUrl({
-				kind,
-				contentType: processedFile.type === `image/jpeg` ? `image/jpeg` : `image/webp`,
-				hash,
-			});
-			if (isCancelled(args.previewId)) {
-				void discardGalleryImage({ claimToken });
-				return;
-			}
+			// A fresh presigned URL on every attempt, so an expired or half-used URL never blocks a retry
+			const { publicUrl, claimToken } = await retryWithBackoff({
+				attempts: uploadAttempts,
+				baseDelayMs: uploadRetryBaseDelayMs,
+				shouldRetry: () => !isCancelled(args.previewId),
+				run: async (attempt) => {
+					attempts = attempt;
+					stage = `sign`;
+					const upload = await createGalleryImageUploadUrl({
+						kind,
+						contentType: processedFile.type === `image/jpeg` ? `image/jpeg` : `image/webp`,
+						hash,
+					});
+					if (isCancelled(args.previewId)) return upload;
 
-			const response = await fetch(uploadUrl, {
-				method: `PUT`,
-				body: processedFile,
-				headers: { "Content-Type": processedFile.type },
+					stage = `put`;
+					const response = await fetch(upload.uploadUrl, {
+						method: `PUT`,
+						body: processedFile,
+						headers: { "Content-Type": processedFile.type },
+					});
+					if (!response.ok) throw new Error(`Upload fehlgeschlagen (HTTP ${response.status})`);
+					return upload;
+				},
 			});
-			if (!response.ok) {
-				throw new Error(`Upload fehlgeschlagen (HTTP ${response.status})`);
-			}
 			if (isCancelled(args.previewId)) {
 				void discardGalleryImage({ claimToken });
 				return;
@@ -321,23 +337,38 @@
 			});
 		} catch (error) {
 			if (isCancelled(args.previewId)) return;
+			const message = getUploadErrorMessage(error);
+			capturePosthogException(error instanceof Error ? error : new Error(message), {
+				gallery_image_kind: kind,
+				gallery_image_stage: stage,
+				gallery_image_attempts: attempts,
+				http_status: isHttpError(error) ? error.status : undefined,
+				file_type: args.file.type,
+				file_size: args.file.size,
+			});
 			updatePreviewState({
 				previewId: args.previewId,
 				uploadState: `error`,
 				progress: 0,
-				error: error instanceof Error ? error.message : `Bild konnte nicht hochgeladen werden`,
+				error: message,
 			});
 		}
+	}
+
+	function getUploadErrorMessage(error: unknown) {
+		if (isHttpError(error)) return error.body.message;
+		if (error instanceof Error) return error.message;
+		return `Bild konnte nicht hochgeladen werden`;
 	}
 
 	function retrySelectedImage(args: { previewId: string }) {
 		const preview = previewItems.find((item) => item.id === args.previewId);
 		if (!preview?.sourceFile) return;
-		cancelledPreviewIds.delete(args.previewId);
-		void processAndUploadSelectedImage({
-			previewId: args.previewId,
-			file: preview.sourceFile,
-		});
+		void uploadImages([{ previewId: args.previewId, file: preview.sourceFile }]);
+	}
+
+	function retryFailedImages() {
+		void uploadImages(retryableFailedUploads);
 	}
 
 	function updatePreviewState(args: UpdatePreviewStateArgs) {
@@ -509,6 +540,13 @@
 			<br />Bilder werden lokal verarbeitet und hochgeladen.
 		{/if}
 	</p>
+
+	{#if retryableFailedUploads.length > 1}
+		<button type="button" class="btn btn-sm btn-warning self-start" data-testid={testId(`retry-failed`)} onclick={retryFailedImages}>
+			<i class="icon-[ph--arrow-clockwise] size-4"></i>
+			Alle fehlgeschlagenen Bilder erneut hochladen ({retryableFailedUploads.length})
+		</button>
+	{/if}
 
 	<div
 		data-testid={testId(`preview-grid`)}
