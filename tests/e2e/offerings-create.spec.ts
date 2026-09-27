@@ -13,7 +13,13 @@ import {
 	getOfferingBySlug,
 	getProfileById,
 } from "./helpers/seed";
-import { chooseLocation, mockGooglePlacesAutocomplete, mockSupabaseOtpRequest, setGermanLocale } from "./helpers/offering-test-utils";
+import {
+	chooseLocation,
+	mockGooglePlacesAutocomplete,
+	mockSupabaseOtpRequest,
+	setGermanLocale,
+	waitForClientHydration,
+} from "./helpers/offering-test-utils";
 import {
 	addSocialLink,
 	clickWizardPrimary,
@@ -465,6 +471,30 @@ test.describe("Offering creation", () => {
 		await expect(dialog).toBeVisible({ timeout: 15000 });
 		await expect(dialog.getByTestId(`offering-title`)).toHaveText(`E2E Google Incomplete Offering`);
 		expect((await getOfferingBySlug(page, getCreatedSlugFromUrl(page))).title).toBe(`E2E Google Incomplete Offering`);
+	});
+
+	test("back navigation saves the dirty draft without a confirm dialog and restores it", async ({ page }) => {
+		const dialogs: string[] = [];
+		page.on(`dialog`, (dialog) => {
+			dialogs.push(dialog.message());
+			void dialog.dismiss();
+		});
+		await page.goto(`/offerings`);
+		await waitForClientHydration(page);
+		await page.locator(`[data-testid="create-offering"]:not([inert])`).click();
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `offering`, { timeout: 10000 });
+		await page.waitForTimeout(600); // UnsavedChangesGuard arms after 500ms
+		await fillOfferingBasics(page, { title: `E2E Back Gesture Offering`, format: `online` });
+
+		await page.goBack();
+		await expect(page).toHaveURL(/\/offerings(\?.*)?$/);
+		expect(dialogs).toEqual([]);
+
+		await page.goForward();
+		await expect(page).toHaveURL(/\/offerings\/new/);
+		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `offering`, { timeout: 10000 });
+		await expect(page.getByTestId(`offering-title-input`)).toHaveValue(`E2E Back Gesture Offering`);
+		await expect(page.getByTestId(`offering-format-online`).locator(`input`)).toBeChecked();
 	});
 
 	test("returning to the create form restores a leftover draft on the offering step", async ({ page }) => {

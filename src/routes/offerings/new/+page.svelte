@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { onDestroy, onMount } from "svelte";
+	import posthog from "posthog-js";
 	import OfferingForm from "$lib/components/OfferingForm.svelte";
 	import CreateFlowProfileFields, { type CreateFlowProfileRemoteFields } from "$lib/components/CreateFlowProfileFields.svelte";
 	import OtpStep from "$lib/components/OtpStep.svelte";
@@ -108,7 +109,9 @@
 		}),
 	);
 
-	const unsaved = new UnsavedChangesGuard();
+	const unsaved = new UnsavedChangesGuard({
+		saveDraft: () => saveCreateFlowDraft({ key: OFFERING_CREATE_DRAFT_KEY, draft: snapshotOfferingDraft(), pending: false }),
+	});
 	const showCreateForm = $derived((isSignedIn || auth.clientReady) && hasInitializedCreateFields);
 
 	let hasMountedWizardStep = false;
@@ -465,6 +468,7 @@
 			const { draft, wasPending } = loadCreateFlowResume<OfferingCreateDraft>({ key: OFFERING_CREATE_DRAFT_KEY });
 			if (draft) {
 				applyOfferingDraft(draft);
+				posthog.capture(`create_flow_draft_restored`, { kind: `offering`, after_auth: wasPending });
 				requestedStep = createFlowResumeStep({
 					isSignedIn,
 					profileStepApplies,
