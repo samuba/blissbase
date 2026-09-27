@@ -367,10 +367,6 @@
 		void uploadImages([{ previewId: args.previewId, file: preview.sourceFile }]);
 	}
 
-	function retryFailedImages() {
-		void uploadImages(retryableFailedUploads);
-	}
-
 	function updatePreviewState(args: UpdatePreviewStateArgs) {
 		previewItems = previewItems.map((item) => {
 			if (item.id !== args.previewId) return item;
@@ -542,7 +538,7 @@
 	</p>
 
 	{#if retryableFailedUploads.length > 1}
-		<button type="button" class="btn btn-sm btn-warning self-start" data-testid={testId(`retry-failed`)} onclick={retryFailedImages}>
+		<button type="button" class="btn btn-sm btn-warning self-start" data-testid={testId(`retry-failed`)} onclick={() => uploadImages(retryableFailedUploads)}>
 			<i class="icon-[ph--arrow-clockwise] size-4"></i>
 			Alle fehlgeschlagenen Bilder erneut hochladen ({retryableFailedUploads.length})
 		</button>
