@@ -69,8 +69,8 @@ export function saveCreateFlowDraft(args: { key: string; draft: CreateFlowDraft;
 	const storage = args.storage ?? browserSessionStorage();
 	if (!storage) return;
 	storage.setItem(args.key, JSON.stringify(args.draft));
-	if (args.pending === false) storage.removeItem(pendingKey(args.key));
-	else storage.setItem(pendingKey(args.key), `1`);
+	if (args.pending ?? true) storage.setItem(pendingKey(args.key), `1`);
+	else storage.removeItem(pendingKey(args.key));
 	if (args.draft.draftId) storage.setItem(draftIdKey(args.key), args.draft.draftId);
 	else storage.removeItem(draftIdKey(args.key));
 }
