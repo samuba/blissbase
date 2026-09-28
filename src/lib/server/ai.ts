@@ -400,7 +400,7 @@ function buildMsgAnalysisSchema(timezone: string) {
 			},
 			address: {
 				type: [`string`, `null`],
-				description: `The full address where the event is happening. Include the street and the city when both are in the message, even though city is also its own field. Do not include the venue name or html tags.`
+				description: `The full address (including street, city, etc) where the event is happening. Do not include html tags.`
 			},
 			attendanceMode: {
 				type: [`string`, `null`],
