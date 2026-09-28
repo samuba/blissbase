@@ -23,7 +23,7 @@ jobs:
       clean: ${{ steps.plan.outputs.clean }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
 
@@ -87,7 +87,7 @@ jobs:
     environment: production
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
 
