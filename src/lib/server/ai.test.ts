@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
-import { aiExtractEventData, getExistingSource, normalizeDescription } from './ai';
+import { aiExtractEventData, ensureAddressIncludesCity, getExistingSource, normalizeDescription } from './ai';
 
 const hasAiKey = !!process.env.OPENAI_API_KEY;
 const itWithAiKey = hasAiKey ? it : it.skip;
@@ -88,6 +88,26 @@ Join us for a WhatsApp-only event.`,
 			name: `Embodied Consent Lab`
 		});
 		expect(periodResult).toBe(`Join us tonight.`);
+	});
+});
+
+describe(`ensureAddressIncludesCity`, () => {
+	it(`appends the city when the street line dropped it`, () => {
+		expect(
+			ensureAddressIncludesCity({
+				address: `Schönhauser Allee 10`,
+				city: `Berlin`
+			})
+		).toBe(`Schönhauser Allee 10, Berlin`);
+	});
+
+	it(`leaves an address that already contains the city`, () => {
+		expect(
+			ensureAddressIncludesCity({
+				address: `Schönhauser Allee 10, Berlin`,
+				city: `Berlin`
+			})
+		).toBe(`Schönhauser Allee 10, Berlin`);
 	});
 });
 
