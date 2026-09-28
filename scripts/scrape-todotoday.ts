@@ -1,10 +1,12 @@
 /**
  * Scrapes todo.today via public HTTP APIs (listings, venue map, admin-ajax
- * details, ticket links). Defaults to ubud, canggu, koh-phangan, pai.
+ * details, ticket links). Locations are the home-page location cards
+ * (`a.todo-home-card`). TODOTODAY_LOCATIONS overrides that discovery.
  *
  * Usage:
  *   bun run scripts/scrape-todotoday.ts
  *   TODOTODAY_LOCATIONS=ubud,canggu bun run scripts/scrape-todotoday.ts
+ *   bun run scripts/scrape-todotoday.ts --listings-only
  */
 import { ScrapedEvent } from '../src/lib/types.ts';
 import {
@@ -22,11 +24,6 @@ const LISTING_API = `${BASE_URL}/api/todo-today/v1/events`;
 const APP_EVENT_API = `${BASE_URL}/api/app/event`;
 const APP_VENUES_API = `${BASE_URL}/api/app/events-venue`;
 const ADMIN_AJAX = `${BASE_URL}/wp-admin/admin-ajax.php`;
-
-const DEFAULT_LOCATIONS = [`ubud`, `canggu`, `koh-phangan`, `pai`] as const;
-const LOCATIONS = process.env.TODOTODAY_LOCATIONS
-	? process.env.TODOTODAY_LOCATIONS.split(`,`).map((location) => location.trim()).filter(Boolean)
-	: [...DEFAULT_LOCATIONS];
 
 /** Channel → IANA zone for local wall-clock times. Prefer this over the API when both exist
  * (Todo.Today's CMS has wrong zones for some channels, e.g. Lombok as Asia/Jakarta). */
@@ -63,7 +60,9 @@ const DETAIL_CONCURRENCY = 3;
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
+		const locationResults: LocationFetchResult[] = [];
 		let locationsWithEvents = 0;
+		const listingsOnly = isListingsOnlyRun();
 		const session = new BrowserSession({
 			acceptLanguage: `en-US,en;q=0.9,id;q=0.8`,
 			minGapMs: 700,
@@ -71,29 +70,37 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		});
 
 		try {
-			// Land on a real page first: the APIs are then called with the cookies and
-			// referer a browser would already have.
-			await session
-				.visit({ url: `${BASE_URL}/${LOCATIONS[0]}/` })
-				.catch((error: unknown) => console.error(`Landing page visit failed (continuing):`, error));
+			// Home page visit also seeds cookies and referer for the later API calls.
+			const locations = await resolveLocations(session);
 
-			console.error(`Fetching Todo.Today venue map...`);
-			const venuesById = await fetchVenuesById(session);
-			console.error(`Loaded ${Object.keys(venuesById).length} venues`);
+			let venuesById: Record<string, TtVenue> = {};
+			if (!listingsOnly) {
+				console.error(`Fetching Todo.Today venue map...`);
+				venuesById = await fetchVenuesById(session);
+				console.error(`Loaded ${Object.keys(venuesById).length} venues`);
+			}
 
-			for (const location of LOCATIONS) {
-				console.error(`Scraping events for ${location}...`);
+			for (const location of locations) {
+				console.error(`Scraping events for ${location.href}...`);
+				let locationOk = true;
+				let listingCount = 0;
 
 				for (const day of [`today`, `tomorrow`] as const) {
 					try {
-						const listingEvents = await fetchListingEvents({ session, location, day });
+						const listingEvents = await fetchListingEvents({ session, location: location.slug, day });
+						listingCount += listingEvents.length;
 						if (!listingEvents.length) {
-							console.warn(`No ${day} events for ${location}`);
+							console.warn(`No ${day} events for ${location.slug}`);
 							continue;
 						}
 
 						locationsWithEvents += 1;
-						console.error(`[${location}/${day}] ${listingEvents.length} listing events — enriching...`);
+						if (listingsOnly) {
+							console.error(`[${location.slug}/${day}] ${listingEvents.length} listing events`);
+							continue;
+						}
+
+						console.error(`[${location.slug}/${day}] ${listingEvents.length} listing events — enriching...`);
 
 						const events = await mapWithConcurrency({
 							items: listingEvents,
@@ -103,11 +110,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 									return await this.extractEventFromListing({
 										session,
 										listingEvent,
-										location,
+										location: location.slug,
 										venuesById,
 									});
 								} catch (error) {
-									console.error(`[${location}/${day}] Failed ${listingEvent.slug ?? listingEvent.id}`, error);
+									console.error(`[${location.slug}/${day}] Failed ${listingEvent.slug ?? listingEvent.id}`, error);
 									return undefined;
 								}
 							},
@@ -115,19 +122,29 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 						const extracted = events.filter((event): event is ScrapedEvent => Boolean(event));
 						allEvents.push(...extracted);
-						console.error(`[${location}/${day}] Extracted ${extracted.length}/${listingEvents.length}`);
+						console.error(`[${location.slug}/${day}] Extracted ${extracted.length}/${listingEvents.length}`);
 					} catch (error) {
-						console.error(`Failed to scrape ${day} events for ${location}`, error);
+						locationOk = false;
+						console.error(`Failed to scrape ${day} events for ${location.slug}`, error);
 						continue;
 					}
 				}
+
+				locationResults.push({ href: location.href, ok: locationOk, listingCount });
+				console.error(`${locationOk ? `Fetched` : `Failed`} ${location.href} (${listingCount} listings)`);
 			}
+
+			logLocationResults(locationResults);
 
 			if (locationsWithEvents === 0) {
 				throw new Error(`No events found! Failed to fetch API data for all locations.`);
 			}
 
-			console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
+			if (listingsOnly) {
+				console.error(`--- Listings-only run finished. Event enrichment was skipped. ---`);
+			} else {
+				console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
+			}
 			return allEvents;
 		} finally {
 			await session.close();
@@ -288,14 +305,86 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 if (import.meta.main) {
 	try {
 		const scraper = new WebsiteScraper();
-		console.error(`Starting Todo.Today API scrape`);
+		console.error(`Starting Todo.Today API scrape${isListingsOnlyRun() ? ` (listings only)` : ``}`);
 		const events = await scraper.scrapeWebsite();
-		console.error({ events });
+		if (!isListingsOnlyRun()) console.error({ events });
 		console.error(`Main execution finished, exiting with code 0`);
 		process.exit(0);
 	} catch (error) {
 		console.error(`Unhandled error in main execution:`, error);
 		process.exit(1);
+	}
+}
+
+function isListingsOnlyRun(): boolean {
+	return process.argv.includes(`--listings-only`);
+}
+
+/** Location cards on the home page. Other anchors (join, digest, nav) are not channels. */
+export function getLocationHrefs(html: string): string[] {
+	const $ = cheerio.load(html);
+	const hrefs: string[] = [];
+	const seen = new Set<string>();
+	$(`a.todo-home-card`).each((_, element) => {
+		const href = $(element).attr(`href`)?.trim();
+		if (!href || seen.has(href)) return;
+		seen.add(href);
+		hrefs.push(href);
+	});
+	return hrefs;
+}
+
+export function locationSlugFromHref(href: string): string | undefined {
+	let url: URL;
+	try {
+		url = new URL(href, `${BASE_URL}/`);
+	} catch {
+		return undefined;
+	}
+	const host = url.hostname.replace(/^www\./, ``);
+	if (host !== `todo.today`) return undefined;
+	const parts = url.pathname.split(`/`).filter(Boolean);
+	if (parts.length !== 1) return undefined;
+	return decodeURIComponent(parts[0]);
+}
+
+async function resolveLocations(session: BrowserSession): Promise<DiscoveredLocation[]> {
+	console.error(`Discovering Todo.Today locations from ${BASE_URL}/`);
+	const html = await session.visit({ url: `${BASE_URL}/` });
+	const discovered = locationsFromHomeHtml(html);
+	const hrefs = discovered.map((location) => location.href);
+	console.error(`Discovered location hrefs: ${hrefs.join(`, `) || `(none)`}`);
+
+	const fromEnv = process.env.TODOTODAY_LOCATIONS?.split(`,`)
+		.map((location) => location.trim())
+		.filter(Boolean);
+	if (fromEnv?.length) {
+		console.error(`Using TODOTODAY_LOCATIONS override: ${fromEnv.join(`, `)}`);
+		return fromEnv.map((slug) => ({ href: `${BASE_URL}/${slug}/`, slug }));
+	}
+
+	if (!discovered.length) {
+		throw new Error(`No locations found on the Todo.Today home page`);
+	}
+	return discovered;
+}
+
+function locationsFromHomeHtml(html: string): DiscoveredLocation[] {
+	const locations: DiscoveredLocation[] = [];
+	const seen = new Set<string>();
+	for (const href of getLocationHrefs(html)) {
+		const slug = locationSlugFromHref(href);
+		if (!slug || seen.has(slug)) continue;
+		seen.add(slug);
+		locations.push({ href, slug });
+	}
+	return locations;
+}
+
+function logLocationResults(results: LocationFetchResult[]) {
+	console.error(`Location fetch results:`);
+	for (const result of results) {
+		console.error(`  ${result.ok ? `ok` : `failed`} ${result.href} (${result.listingCount} listings)`);
 	}
 }
 
@@ -581,6 +670,17 @@ async function mapWithConcurrency<T, R>(args: {
 	await Promise.all(workers);
 	return results;
 }
+
+type DiscoveredLocation = {
+	href: string;
+	slug: string;
+};
+
+type LocationFetchResult = {
+	href: string;
+	ok: boolean;
+	listingCount: number;
+};
 
 type ParsedEventUrl = {
 	location: string;
