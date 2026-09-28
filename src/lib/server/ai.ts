@@ -155,7 +155,12 @@ function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAn
 	if (answer.contactAuthorForMore !== null) result.contactAuthorForMore = answer.contactAuthorForMore;
 	if (answer.price !== null) result.price = answer.price;
 	if (answer.venue !== null) result.venue = answer.venue;
-	if (answer.address !== null) result.address = answer.address;
+	if (answer.address !== null) {
+		result.address = ensureAddressIncludesCity({
+			address: answer.address,
+			city: answer.city
+		});
+	}
 	if (answer.attendanceMode !== null) result.attendanceMode = answer.attendanceMode;
 	if (answer.city !== null) result.city = answer.city;
 	if (answer.emojis !== null) result.emojis = answer.emojis;
@@ -163,6 +168,17 @@ function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAn
 	if (answer.isConscious !== null) result.isConscious = answer.isConscious;
 
 	return result;
+}
+
+/**
+ * Models often keep the city only in `city` and drop it from the street line.
+ * The address contract is the full address, including the city when we know it.
+ */
+export function ensureAddressIncludesCity(args: { address: string; city: string | null }) {
+	const city = args.city?.trim();
+	if (!city) return args.address;
+	if (args.address.toLocaleLowerCase().includes(city.toLocaleLowerCase())) return args.address;
+	return `${args.address}, ${city}`;
 }
 
 const EXISTING_SOURCE_URLS = WEBSITE_SCRAPE_SOURCE_URLS.filter(
@@ -384,7 +400,7 @@ function buildMsgAnalysisSchema(timezone: string) {
 			},
 			address: {
 				type: [`string`, `null`],
-				description: `The full address where the event is happening. Do not include html tags.`
+				description: `The full address where the event is happening. Include the street and the city when both are in the message, even though city is also its own field. Do not include the venue name or html tags.`
 			},
 			attendanceMode: {
 				type: [`string`, `null`],
