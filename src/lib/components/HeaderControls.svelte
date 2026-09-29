@@ -174,10 +174,10 @@
 			<div class="flex shrink-0 items-center gap-3 px-6 py-4">
 				<Dialog.Title class="text-xl leading-none font-semibold">Filter</Dialog.Title>
 				<div class="grow"></div>
-				<button type="button" class="btn btn-sm shrink-0" onclick={() => eventsStore.resetFilters()}>
+				<Dialog.Close type="button" class="btn btn-sm shrink-0" onclick={() => eventsStore.resetFilters()}>
 					<i class="icon-[ph--arrow-u-up-left] size-4"></i>
 					Alle Filter zurücksetzen
-				</button>
+				</Dialog.Close>
 				<Dialog.Close
 					class="btn btn-ghost btn-circle btn-sm shrink-0"
 					aria-label="Schließen"
