@@ -5,9 +5,10 @@ import 'dotenv/config'
 import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";
-import { generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
+import { addressLinesFromAnalysis, generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
-import { aiExtractEventData, lineBreaksToBr } from "../src/lib/server/ai";
+import { lineBreaksToBr } from "../src/lib/server/ai";
+import { resolveMessengerAnalysis } from "../src/lib/server/jev/messengerCheck";
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai";
 import { resizeCoverImage } from '../src/lib/imageProcessing';
 import type { Entity } from "teleproto/define";
@@ -242,7 +243,7 @@ async function extractPhotoFromMessage(message: Api.Message, client: TelegramCli
     } catch (error) {
         console.error(`Error extracting photo from message`, message.id, `:`, error);
         if (error instanceof Error && error.message.includes(`FILE_REFERENCE_EXPIRED`)) {
-            throw new Error(`telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT`);
+            throw new Error(`telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT`, { cause: error });
         }
 
         // Provide more specific error information
@@ -271,7 +272,7 @@ async function getResizedImageBufferFromMessage(message: Api.Message, client: Te
     } catch (error) {
         console.error(`Error downloading media from message`, message.id, `:`, error);
         if (error instanceof Error && error.message.includes(`FILE_REFERENCE_EXPIRED`)) {
-            throw new Error(`telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT`);
+            throw new Error(`telegram file reference expired. This happens sometimes. We quit processing the group. FATAL->EXIT`, { cause: error });
         }
         throw error;
     }
@@ -487,14 +488,14 @@ async function extractEventDataFromImageMessage(
     const { textMessages: adjacentTextMessages, messageIds: adjacentTextMessageIds } = await extractAdjacentTextMessages(message, allMessages);
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join('\n\n') : '';
 
-    await sleep(1000)
-    const aiAnswer = await aiExtractEventData({
+    const aiAnswer = await resolveMessengerAnalysis({
         message: combinedText,
         messageDate: new Date(message.date * 1000),
         timezone: defaultTimezone,
         authorName: author?.username,
         imageInputs: [imageInput],
         eventIsDefinitelyConscious,
+        beforeLlmExtract: () => sleep(1000),
     });
 
     const base = await validateAndBuildEventBase({
@@ -541,14 +542,14 @@ async function extractEventDataFromMessage(
 
     const combinedText = [msgHtml, ...adjacentTextMessages].join('\n\n');
 
-    await sleep(1000)
-    const aiAnswer = await aiExtractEventData({
+    const aiAnswer = await resolveMessengerAnalysis({
         message: combinedText,
         messageDate: new Date(message.date * 1000),
         timezone: defaultTimezone,
         authorName: author?.username,
         imageInputs: adjacentImageInputs,
         eventIsDefinitelyConscious,
+        beforeLlmExtract: () => sleep(1000),
     });
 
     const base = await validateAndBuildEventBase({
@@ -718,10 +719,11 @@ async function normalizeAddress(args: { aiAnswer: MsgAnalysisAnswer; chatId: str
             return undefined;
         }
     }
-    let addressArr = aiAnswer.address ? aiAnswer.address.split(',') : [];
-    if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
-    if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
-    return addressArr;
+    return addressLinesFromAnalysis({
+        address: aiAnswer.address,
+        venue: aiAnswer.venue,
+        city: aiAnswer.city,
+    });
 }
 
 async function validateAndBuildEventBase(args: {
@@ -816,6 +818,8 @@ async function validateAndBuildEventBase(args: {
         startAt,
         endAt,
         attendanceMode: aiAnswer.attendanceMode,
+        structure: aiAnswer.structure,
+        language: aiAnswer.language,
         address: addressArr,
         tagSlugs: knownTagSlugs(aiAnswer.tags),
         latitude,

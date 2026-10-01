@@ -3,12 +3,7 @@ import { adapter as svelte } from "@wuchale/svelte"
 import { adapter as js } from 'wuchale/adapter-vanilla'
 import { defineConfig } from "wuchale"
 import { generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
 import 'dotenv/config';
-
-const openai = createOpenAI({
-    apiKey: process.env.OPENAI_API_KEY_FOR_LOCALIZATION,
-});
 
 export default defineConfig({
     // first locale is the source locale
@@ -33,14 +28,11 @@ export default defineConfig({
         translate: async (messages, instruction) => {
             console.time('translation took');
             const { text } = await generateText({
-                model: openai('gpt-6-luna'),
+                model: `openai/gpt-6-luna`,
+                providerOptions: { gateway: { inferenceRegion: { scope: "zone", geoRegion: "eu" } } },
+                reasoning: `low`,
                 system: instruction,
                 prompt: messages,
-                providerOptions: {
-                    openai: {
-                        reasoningEffort: 'low',
-                    },
-                },
             })
             console.timeEnd('translation took');
             return text

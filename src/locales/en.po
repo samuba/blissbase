@@ -93,7 +93,6 @@ msgstr "Sold out"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/lib/eventCategories.ts
 #: src/routes/EventDetails.svelte
 msgid "Online"
 msgstr "Online"
@@ -2859,13 +2858,11 @@ msgstr "Knowledge"
 msgid "Kurs"
 msgstr "Course"
 
-#: src/lib/eventCategories.ts
-msgid "Jahrestraining"
-msgstr "Year-Long Training"
+#~ msgid "Jahrestraining"
+#~ msgstr "Year-Long Training"
 
-#: src/lib/eventCategories.ts
-msgid "Programm"
-msgstr "Program"
+#~ msgid "Programm"
+#~ msgstr "Program"
 
 #: src/lib/eventCategories.ts
 msgid "Arbeit und Karriere"
@@ -3461,9 +3458,8 @@ msgstr "Nature"
 msgid "Retreat"
 msgstr "Retreat"
 
-#: src/lib/eventCategories.ts
-msgid "Vortrag"
-msgstr "Lecture"
+#~ msgid "Vortrag"
+#~ msgstr "Lecture"
 
 #: src/lib/eventCategories.ts
 msgid "Messe"
@@ -3510,9 +3506,8 @@ msgstr "Relationship"
 msgid "Über"
 msgstr "About"
 
-#: src/lib/eventCategories.ts
-msgid "Workshop"
-msgstr "Workshop"
+#~ msgid "Workshop"
+#~ msgstr "Workshop"
 
 #: src/lib/eventCategories.ts
 msgid "Contemporary Dance"
@@ -3931,3 +3926,33 @@ msgstr "Shamanic IKEA shelf assembly"
 #, ai
 #~ msgid "Schamanisches IKEARegale aufbauen"
 #~ msgstr "Shamanic IKEA shelf assembly"
+
+#: src/lib/eventCategories.ts
+#, ai
+msgid "Stimme"
+msgstr "Voice"
+
+#: src/lib/eventCategories.ts
+#, ai
+msgid "Kreis"
+msgstr "Circle"
+
+#: src/lib/eventCategories.ts
+#, ai
+msgid "Innere Arbeit"
+msgstr "Inner Work"
+
+#: src/lib/eventCategories.ts
+#, ai
+msgid "Männer"
+msgstr "Men"
+
+#: src/lib/eventCategories.ts
+#, ai
+msgid "Frauen"
+msgstr "Women"
+
+#: src/lib/eventCategories.ts
+#, ai
+msgid "Session"
+msgstr "Session"

@@ -1,8 +1,22 @@
-Frank antworten 
-Chris telefonieren
-barbara antworten
+use this more: restate in your own words what you think my goals are and what the problem i'm trying to solve is
 
-Whatsapp scraper nimmt keine Events mehr auf??
+neue errors in create.party auf sentry
+
+neue telegram gruppen adden
+
+auto suggest tags in form via jev
+
+create.party persönliche details fixen -> msg an josef
+
+pstack testen
+
+DateRangePicker
+-> einzelne tage erlauben?
+
+Frank bzgl cooperation antworten 
+
+muse/grok/chatgpt bot connectoren schreiben?
+-> webmcp?
 
 after offer deactivate cant do anything
 

@@ -1,7 +1,7 @@
 import { GOOGLE_MAPS_API_KEY, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID } from '$env/static/private';
 import type { Context } from 'telegraf';
 import { } from 'telegraf/filters';
-import { generateSlug, parseTelegramContacts } from '$lib/common';
+import { addressLinesFromAnalysis, generateSlug, parseTelegramContacts } from '$lib/common';
 import { geocodeAddressCached } from '$lib/server/google';
 import { upsertEvents } from '$lib/server/events';
 import type { InsertEvent } from '$lib/types';
@@ -60,9 +60,11 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             }
         }
 
-        let addressArr = aiAnswer.address ? aiAnswer.address.split(',') : [];
-        if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr];
-        if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city];
+        const addressArr = addressLinesFromAnalysis({
+            address: aiAnswer.address,
+            venue: aiAnswer.venue,
+            city: aiAnswer.city,
+        });
 
         const coords = await geocodeAddressCached({
             addressLines: addressArr,
@@ -119,6 +121,8 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
             hostLink: telegramAuthor?.link,
             sourceUrl: aiAnswer.url,
             attendanceMode: aiAnswer.attendanceMode,
+            structure: aiAnswer.structure,
+            language: aiAnswer.language,
             messageSenderId: getTelegramSenderId(ctx.message),
             contact,
             listed,

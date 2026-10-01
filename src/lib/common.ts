@@ -157,6 +157,43 @@ export function toAddressLines(address: string | undefined) {
 }
 
 /**
+ * Address parts for geocoding. Venue and city are added only when the address does not already contain them.
+ *
+ * @example
+ * addressLinesFromAnalysis({ address: `Am Katzenlauf 4, Weinheim`, venue: `Raum am Schlosspark`, city: `Weinheim` })
+ * // [`Raum am Schlosspark`, `Am Katzenlauf 4`, `Weinheim`]
+ */
+export function addressLinesFromAnalysis(args: {
+	address?: string | null;
+	venue?: string | null;
+	city?: string | null;
+}) {
+	const address = args.address ?? ``;
+	const parts = address.split(`,`).map((part) => part.trim()).filter((part) => part);
+	const venue = args.venue?.trim();
+	if (venue && !containsAddressPart({ address, part: venue })) parts.unshift(venue);
+	const city = args.city?.trim();
+	if (city && !containsAddressPart({ address, part: city })) parts.push(city);
+	return dedupeAddressParts(parts);
+}
+
+function containsAddressPart(args: { address: string; part: string }) {
+	return args.address.toLowerCase().includes(args.part.toLowerCase());
+}
+
+function dedupeAddressParts(parts: string[]) {
+	const seen = new Set<string>();
+	const unique: string[] = [];
+	for (const part of parts) {
+		const key = part.toLowerCase();
+		if (seen.has(key)) continue;
+		seen.add(key);
+		unique.push(part);
+	}
+	return unique;
+}
+
+/**
  * Google Maps search URL. Prefers a place name/address so Maps can open the
  * venue details page. Coordinates alone only drop a nameless pin, and mixing
  * them into `query` (e.g. `Name, lat, lng`) also hides place details.

@@ -119,12 +119,12 @@
 				{/if}
 			</div>
 
-			<div class="card-body flex flex-col gap-2 pt-4.5 md:pt-6">
-				<h3 class="card-title leading-snug tracking-tight" data-testid="event-card-title">
-					{event.name}
+			<div class="card-body flex min-w-0 flex-col gap-2 pt-4.5 md:pt-6">
+				<h3 class="card-title min-w-0 items-start leading-snug tracking-tight" data-testid="event-card-title">
+					<span class="line-clamp-3 min-w-0 wrap-break-word" title={event.name}>{event.name}</span>
 
 					{#if event.soldOut}
-						<span class="badge badge-sm badge-ghost ml-1">Ausgebucht</span>
+						<span class="badge badge-sm badge-ghost shrink-0">Ausgebucht</span>
 					{/if}
 				</h3>
 

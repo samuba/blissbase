@@ -1,60 +1,58 @@
-import { generateText, jsonSchema, NoObjectGeneratedError, NoOutputGeneratedError, Output } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { allTagSlugs, knownTagSlugs } from '../eventCategories';
-import { WEBSITE_SCRAPE_SOURCE_URLS } from '../commonWithScripts';
-import { stripHtml, trimAllWhitespaces } from '../common';
+import { generateText, jsonSchema, NoObjectGeneratedError, NoOutputGeneratedError, Output } from "ai";
+import { allTagSlugs, type EventStructure } from "../eventCategories";
+import { suggestTagsWithJev } from "./jev/tagQuestions";
+import { WEBSITE_SCRAPE_SOURCE_URLS } from "../commonWithScripts";
+import { stripHtml, trimAllWhitespaces } from "../common";
 
 const TAG_SLUGS_AI_DESCRIPTION = `Maximum 4 Tags (most relevant first) that describe the event. Only use these exact catalog tags: ${Array.from(allTagSlugs).join(`, `)}.`;
+
+const providerOptions = { gateway: { inferenceRegion: { scope: "zone", geoRegion: "eu" } } };
 
 /**
  * Extracts structured event fields from free text (same pipeline as the Telegram bot).
  */
 export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<MsgAnalysisAnswer> {
-	const {
-		message,
-		messageDate,
-		timezone,
-		authorName,
-		imageInputs = [],
-		eventIsDefinitelyConscious,
-	} = args;
+	const { message, messageDate, timezone, authorName, imageInputs = [], eventIsDefinitelyConscious } = args;
 	const existingSource = getExistingSource(message);
 	if (existingSource) {
 		return {
 			hasEventData: false,
-			existingSource
+			existingSource,
 		};
 	}
 
 	console.time(`🤖 AI extracting event data with ${imageInputs.length} images`);
 	try {
 		const { output, usage } = await generateText({
-			model: openai(`gpt-6-luna`),
+			model: `openai/gpt-5.6-luna`,
+			providerOptions,
 			reasoning: `medium`,
 			output: Output.object({
 				name: `eventExtraction`,
-				schema: buildMsgAnalysisSchema(timezone)
+				schema: buildMsgAnalysisSchema(timezone, args.omitFields),
 			}),
-			instructions: msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName),
+			instructions:
+				msgAnalysisSystemPrompt(messageDate, timezone, eventIsDefinitelyConscious, authorName) + extractionOmitNote(args.omitFields),
 			messages: [
 				{
 					role: `user`,
 					content: [
 						{
 							type: `text`,
-							text: message
+							text: message,
 						},
-						...imageInputs.filter((x) => !!x).map((imageInput) => buildAiImagePart(imageInput!))
-					]
-				}
-			]
+						...imageInputs.filter((x) => !!x).map((imageInput) => buildAiImagePart(imageInput!)),
+					],
+				},
+			],
 		});
-		console.debug("ai usage", usage)
+		console.debug("ai usage", usage);
 
 		const result = normalizeMsgAnalysisAnswer(output);
+		if (args.omitFields?.includes(`hasEventData`)) result.hasEventData = true;
 		if (result.hasEventData) {
 			if (!Array.isArray(result.contact)) result.contact = [];
-			if (!Array.isArray(result.tags)) result.tags = [];
+			if (!args.omitFields?.includes(`tags`) && !Array.isArray(result.tags)) result.tags = [];
 			if (args.eventIsDefinitelyConscious) result.isConscious = true;
 		}
 
@@ -70,6 +68,50 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 }
 
 /**
+ * Reads visible image text. Does not extract event fields.
+ * @example
+ * aiTranscribeImage({ imageInputs: [`https://example.com/image.jpg`] })
+ */
+export async function aiTranscribeImage({ imageInputs }: { imageInputs: AiImageInput[] }) {
+	const images = imageInputs?.filter((imageInput) => !!imageInput);
+	if (!images?.length) throw new Error(`No image to transcribe`);
+
+	console.time(`🤖 AI transcribing image with ${images.length} images`);
+	try {
+		const { output, usage } = await generateText({
+			model: `openai/gpt-6-luna`,
+			providerOptions,
+			reasoning: `medium`,
+			output: Output.object({
+				name: `imageTranscript`,
+				schema: jsonSchema<{ transcript: string }>({
+					type: `object`,
+					properties: {
+						transcript: {
+							type: `string`,
+							description: `All visible text on the images, in reading order. Preserve umlauts (ä, ö, ü), ß, accents, and the original spelling and capitalization. Do not transliterate, summarize, or interpret.`,
+						},
+					},
+					required: [`transcript`],
+					additionalProperties: false,
+				}),
+			}),
+			instructions: `Transcribe every visible word, number, and text on the attached images. Preserve line breaks, the original language, capitalization, umlauts (ä, ö, ü), ß, and accents. Do not transliterate ä/ö/ü/ß to ae/oe/ue/ss. Do not summarize or translate.`,
+			messages: [
+				{
+					role: `user`,
+					content: [{ type: `text`, text: `Transcribe the image.` }, ...images.map((imageInput) => buildAiImagePart(imageInput))],
+				},
+			],
+		});
+		console.debug(`ai image transcript usage`, usage);
+		return output.transcript.trim();
+	} finally {
+		console.timeEnd(`🤖 AI transcribing image with ${images.length} images`);
+	}
+}
+
+/**
  * Normalizes app image inputs into AI SDK file parts.
  * @example
  * buildAiImagePart({ image: Buffer.from(`abc`), mediaType: `image/webp` })
@@ -79,21 +121,21 @@ function buildAiImagePart(imageInput: AiImageInput) {
 		return {
 			type: `file` as const,
 			mediaType: `image` as const,
-			data: normalizeAiImageValue(imageInput)
+			data: normalizeAiImageValue(imageInput),
 		};
 	}
 	if (imageInput instanceof URL) {
 		return {
 			type: `file` as const,
 			mediaType: `image` as const,
-			data: imageInput
+			data: imageInput,
 		};
 	}
 
 	return {
 		type: `file` as const,
 		mediaType: imageInput.mediaType ?? `image`,
-		data: normalizeAiImageValue(imageInput.image)
+		data: normalizeAiImageValue(imageInput.image),
 	};
 }
 
@@ -131,41 +173,46 @@ ${authorName ? `Author's name of this message: ${authorName}` : ``}
 Fill each output field according to the JSON schema property descriptions.
 `;
 
+function extractionOmitNote(omitFields?: readonly JevClosedField[]) {
+	if (!omitFields?.length) return ``;
+	return `\nThese judgments are already decided and are not in the output schema: ${omitFields.join(`, `)}. Extract only the remaining fields.`;
+}
+
 /**
  * Removes schema-required nulls from AI output so callers keep the old optional-field API.
  * @example
  * normalizeMsgAnalysisAnswer({ hasEventData: false, name: null, contact: null, tags: null })
  */
-function normalizeMsgAnalysisAnswer(answer: RawMsgAnalysisAnswer): MsgAnalysisAnswer {
+function normalizeMsgAnalysisAnswer(answer: Partial<RawMsgAnalysisAnswer>): MsgAnalysisAnswer {
 	const result: MsgAnalysisAnswer = {
-		hasEventData: answer.hasEventData
+		hasEventData: answer.hasEventData === true,
 	};
 
-	if (answer.name !== null) result.name = answer.name;
-	if (answer.description !== null) {
+	if (answer.name != null) result.name = answer.name;
+	if (answer.description != null) {
 		result.description = normalizeDescription({
 			description: answer.description,
-			name: answer.name
+			name: answer.name ?? null,
 		});
 	}
-	if (answer.startDate !== null) result.startDate = answer.startDate;
-	if (answer.endDate !== null) result.endDate = answer.endDate;
-	if (answer.url !== null) result.url = answer.url;
-	if (answer.contact !== null) result.contact = answer.contact;
-	if (answer.contactAuthorForMore !== null) result.contactAuthorForMore = answer.contactAuthorForMore;
-	if (answer.price !== null) result.price = answer.price;
-	if (answer.venue !== null) result.venue = answer.venue;
-	if (answer.address !== null) {
+	if (answer.startDate != null) result.startDate = answer.startDate;
+	if (answer.endDate != null) result.endDate = answer.endDate;
+	if (answer.url != null) result.url = answer.url;
+	if (answer.contact != null) result.contact = answer.contact;
+	if (answer.contactAuthorForMore != null) result.contactAuthorForMore = answer.contactAuthorForMore;
+	if (answer.price != null) result.price = answer.price;
+	if (answer.venue != null) result.venue = answer.venue;
+	if (answer.address != null) {
 		result.address = ensureAddressIncludesCity({
 			address: answer.address,
-			city: answer.city
+			city: answer.city,
 		});
 	}
-	if (answer.attendanceMode !== null) result.attendanceMode = answer.attendanceMode;
-	if (answer.city !== null) result.city = answer.city;
-	if (answer.emojis !== null) result.emojis = answer.emojis;
-	if (answer.tags !== null) result.tags = answer.tags;
-	if (answer.isConscious !== null) result.isConscious = answer.isConscious;
+	if (answer.attendanceMode != null) result.attendanceMode = answer.attendanceMode;
+	if (answer.city != null) result.city = answer.city;
+	if (answer.emojis != null) result.emojis = answer.emojis;
+	if (answer.tags != null) result.tags = answer.tags;
+	if (answer.isConscious != null) result.isConscious = answer.isConscious;
 
 	return result;
 }
@@ -181,14 +228,12 @@ export function ensureAddressIncludesCity(args: { address: string; city: string 
 	return `${args.address}, ${city}`;
 }
 
-const EXISTING_SOURCE_URLS = WEBSITE_SCRAPE_SOURCE_URLS.filter(
-	(sourceUrl) => !sourceUrl.includes(`megatix.co.id`)
-);
+const EXISTING_SOURCE_URLS = WEBSITE_SCRAPE_SOURCE_URLS.filter((sourceUrl) => !sourceUrl.includes(`megatix.co.id`));
 const EXISTING_SOURCE_MATCHERS = EXISTING_SOURCE_URLS.map((sourceUrl) => {
 	const source = new URL(sourceUrl);
 	return {
 		hostname: normalizeSourceHostname(source.hostname),
-		pathname: source.pathname
+		pathname: source.pathname,
 	};
 });
 const MESSAGE_URL_REGEX = /https?:\/\/[^\s<>"'`]+/gi;
@@ -242,7 +287,7 @@ function normalizeSourceHostname(hostname: string) {
 export function normalizeDescription(args: { description: string; name: string | null }) {
 	const descriptionWithoutName = removeLeadingEventName({
 		description: args.description,
-		name: args.name
+		name: args.name,
 	});
 	return lineBreaksToBr(linkifyBareUrls(descriptionWithoutName));
 }
@@ -263,7 +308,7 @@ function removeLeadingEventName(args: { description: string; name: string | null
 	if (!args.name) return args.description;
 	const leadingNameEndIndex = findLeadingNameEndIndex({
 		description: args.description,
-		name: args.name
+		name: args.name,
 	});
 	if (leadingNameEndIndex === null) return args.description;
 
@@ -352,99 +397,109 @@ function isInsideAnchorTag(args: { text: string; offset: number }) {
 	return anchorStart > anchorEnd;
 }
 
+const EXTRACTION_FIELDS = [
+	`hasEventData`,
+	`name`,
+	`description`,
+	`startDate`,
+	`endDate`,
+	`url`,
+	`contact`,
+	`contactAuthorForMore`,
+	`price`,
+	`venue`,
+	`address`,
+	`attendanceMode`,
+	`city`,
+	`emojis`,
+	`tags`,
+	`isConscious`,
+] as const;
+
+export function keptExtractionFields(omitFields: readonly string[] = []) {
+	const omit = new Set(omitFields);
+	return EXTRACTION_FIELDS.filter((field) => !omit.has(field));
+}
+
 /** Builds extraction schema with timezone and tag-list wording in property descriptions. */
-function buildMsgAnalysisSchema(timezone: string) {
-	return jsonSchema<RawMsgAnalysisAnswer>({
+function buildMsgAnalysisSchema(timezone: string, omitFields: readonly JevClosedField[] = []) {
+	const schema = {
 		type: `object`,
 		properties: {
 			hasEventData: {
 				type: `boolean`,
-				description: `Whether or not the message contains information about an event.`
+				description: `Whether or not the message contains information about an event.`,
 			},
 			name: {
 				type: [`string`, `null`],
-				description: `The name of the event. Must be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C, convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as it is obvious that every event is an invitation. If the name contains a location like ".. in Berlin", remove that part. If there is no name in the text, create a short descriptive name with not much personality. Prefer descriptive names over names that are too short.`
+				description: `The name of the event. Must be an exact copy from the message. Do not include html tags. If it is written in fancy unicode characters like ℬ for b or 𝐂 for C, convert it to normal characters. If the name begins with "Einladung zum" or something similar, remove that part as it is obvious that every event is an invitation. If the name contains a location like ".. in Berlin", remove that part. If there is no name in the text, create a short descriptive name with not much personality. Prefer descriptive names over names that are too short.`,
 			},
 			description: {
 				type: [`string`, `null`],
-				description: `An exact copy from the message, including html tags; do not convert <br> tags to line breaks. Preserve line breaks using \\n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start. From extracted images only include information that is not already in the message. Do not include text from (company) logos. Do not include addresses or simple start/end dates/times`
+				description: `An exact copy from the message, including html tags; do not convert <br> tags to line breaks. Preserve line breaks using \\n. Preserve emojis and other special characters. Do not include the extracted name of the event at the start. From extracted images only include information that is not already in the message. Do not include text from (company) logos. Do not include addresses or simple start/end dates/times`,
 			},
 			startDate: {
 				type: [`string`, `null`],
-				description: `The date and time of the event start. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find a date and not a time, assume start of the day. If multiple start dates are mentioned, take the one that is in the future and closest to today.`
+				description: `The date and time of the event start. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. If you can only find a date and not a time, assume start of the day. If multiple start dates are mentioned, take the one that is in the future and closest to today.`,
 			},
 			endDate: {
 				type: [`string`, `null`],
-				description: `The date and time of the event end. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. Set null if not specified in the message.`
+				description: `The date and time of the event end. Assume ${timezone} time zone if no other country is mentioned. Return as ISO 8601 with timezone. Set null if not specified in the message.`,
 			},
 			url: {
 				type: [`string`, `null`],
-				description: `If the text contains a URL that likely represents the event and has more information about it, put it here. Never use Google Maps URLs. Never use URLs that start with "https://t.me".`
+				description: `If the text contains a URL that likely represents the event and has more information about it, put it here. Never use Google Maps URLs. Never use URLs that start with "https://t.me".`,
 			},
 			contact: {
 				type: [`array`, `null`],
 				items: { type: `string` },
-				description: `Contact or registration information. Each item must be a valid href value. Examples: https://exa.com, https://wa.me/+1234567890, mailto:ex@mpl.de, tel:+12345, tg://resolve?domain=username. List the main registration/contact method first.`
+				description: `Contact or registration information. Each item must be a valid href value. Examples: https://exa.com, https://wa.me/+1234567890, mailto:ex@mpl.de, tel:+12345, tg://resolve?domain=username. List the main registration/contact method first.`,
 			},
 			contactAuthorForMore: {
 				type: [`boolean`, `null`],
-				description: `Whether the message states to contact the author of the message via messenger or phone to register, attend, or get more information about the event. Only true if there is no other means of contact specified in the message. For example, if a contact email is specified, this must be false.`
+				description: `Whether the message states to contact the author of the message via messenger or phone to register, attend, or get more information about the event. Only true if there is no other means of contact specified in the message. For example, if a contact email is specified, this must be false.`,
 			},
 			price: {
 				type: [`string`, `null`],
-				description: `The price or cost of the event for the guest. Do not include html tags. If the price information includes new lines or is longer than 100 characters, do not extract the price (return null).`
+				description: `The price or cost of the event for the guest. As terse as possible, use currency symbols if currency is mentioned. If has multiple prices, use range. If confusing, return null. Do not include html tags.`,
 			},
 			venue: {
 				type: [`string`, `null`],
-				description: `Name of the location or venue where the event is taking place. Do not include html tags.`
+				description: `Name of the location or venue where the event is taking place. Do not include html tags.`,
 			},
 			address: {
 				type: [`string`, `null`],
-				description: `The full address (including street, city, etc) where the event is happening. Do not include html tags.`
+				description: `Address of the event. Including venue name, street, city etc. Extract in a way that it can be used as input for google maps and is still human readable. Do not include html tags.`,
 			},
 			attendanceMode: {
 				type: [`string`, `null`],
 				enum: [`online`, `offline`, `offline+online`, null],
-				description: `The method of attendance for the event. Use "online", "offline", or "offline+online" when both offline and online attendance are possible.`
+				description: `The method of attendance for the event. Use "online", "offline", or "offline+online" when both offline and online attendance are possible.`,
 			},
 			city: {
 				type: [`string`, `null`],
-				description: `Name of the city or town where the event is happening.`
+				description: `Name of the city or town where the event is happening.`,
 			},
 			emojis: {
 				type: [`string`, `null`],
-				description: `Up to 3 emojis that describe the event.`
+				description: `Up to 3 emojis that describe the event.`,
 			},
 			tags: {
 				type: [`array`, `null`],
 				items: { type: `string` },
-				description: TAG_SLUGS_AI_DESCRIPTION
+				description: TAG_SLUGS_AI_DESCRIPTION,
 			},
 			isConscious: {
 				type: [`boolean`, `null`],
-				description: `Whether the event is interesting to conscious people. Yes: Ecstatic dance, sexual, somatic, spiritual, community, self development, ritual, etc. No: club dance, pure sport, pure business, etc.`
-			}
+				description: `Whether the event is interesting to conscious people. Yes: Ecstatic dance, sexual, somatic, spiritual, community, self development, ritual, etc. No: club dance, pure sport, pure business, etc.`,
+			},
 		},
-		required: [
-			`hasEventData`,
-			`name`,
-			`description`,
-			`startDate`,
-			`endDate`,
-			`url`,
-			`contact`,
-			`contactAuthorForMore`,
-			`price`,
-			`venue`,
-			`address`,
-			`attendanceMode`,
-			`city`,
-			`emojis`,
-			`tags`,
-			`isConscious`
-		],
-		additionalProperties: false
-	});
+		required: keptExtractionFields(omitFields),
+		additionalProperties: false,
+	};
+	const omit = new Set<string>(omitFields);
+	for (const field of omit) delete schema.properties[field as keyof typeof schema.properties];
+	return jsonSchema<RawMsgAnalysisAnswer>(schema as Parameters<typeof jsonSchema<RawMsgAnalysisAnswer>>[0]);
 }
 
 /**
@@ -452,55 +507,12 @@ function buildMsgAnalysisSchema(timezone: string) {
  * @example
  * aiSuggestTagSlugs({ name: `Ecstatic Dance Berlin`, description: `<p>Barefoot dance</p>` })
  */
-export async function aiSuggestTagSlugs({
-	name,
-	description,
-}: {
-	name: string;
-	description?: string | null;
-}): Promise<string[]> {
+export async function aiSuggestTagSlugs({ name, description }: { name: string; description?: string | null }): Promise<string[]> {
 	const descriptionText = trimAllWhitespaces(stripHtml(description ?? ``)) ?? ``;
-	const userMessage = descriptionText
-		? `Title: ${name}\n\nDescription: ${descriptionText}`
-		: `Title: ${name}`;
-
-	try {
-		const { output } = await generateText({
-			model: openai(`gpt-6-luna`),
-			output: Output.object({
-				name: `eventTagSlugs`,
-				schema: jsonSchema<{ tags: string[] }>({
-					type: `object`,
-					properties: {
-						tags: {
-							type: `array`,
-							items: { type: `string` },
-							description: TAG_SLUGS_AI_DESCRIPTION,
-						},
-					},
-					required: [`tags`],
-					additionalProperties: false,
-				}),
-			}),
-			instructions: `You assign catalog tags to an event from its title and description.
-Do not explain anything.
-Never make up information that is not in the title or description.
-${TAG_SLUGS_AI_DESCRIPTION}`,
-			messages: [
-				{
-					role: `user`,
-					content: userMessage,
-				},
-			],
-		});
-
-		console.log(`[ai] Tag slugs generated for "${name}":`, output.tags);
-		return knownTagSlugs(output.tags);
-	} catch (error) {
-		if (!isNoGeneratedEventOutputError(error)) throw error;
-		console.warn(`[ai] No tag slugs generated for "${name}"`);
-		return [];
-	}
+	const text = descriptionText ? `Title: ${name}\n\nDescription: ${descriptionText}` : `Title: ${name}`;
+	const tags = await suggestTagsWithJev(text);
+	console.log(`[ai] Tag slugs generated for "${name}":`, tags);
+	return tags;
 }
 
 /**
@@ -521,7 +533,9 @@ export async function aiPickEmojisForTitles({
 		: ``;
 
 	const { output } = await generateText({
-		model: openai(`gpt-6-luna`),
+		model: `openai/gpt-6-luna`,
+		providerOptions,
+		reasoning: "low",
 		output: Output.object({
 			name: `titleEmojis`,
 			schema: jsonSchema<{ emojis: string[] }>({
@@ -576,18 +590,27 @@ export type MsgAnalysisAnswer = {
 	price: string;
 	venue: string;
 	address: string;
-	attendanceMode: 'online' | 'offline' | 'offline+online';
+	attendanceMode: "online" | "offline" | "offline+online";
+	structure: EventStructure;
+	language: EventLanguage;
 	city: string;
 	emojis: string;
 	isConscious: boolean;
 }>;
 
-export type AiImageInput = string | URL | {
-	image: AiImageValue;
-	mediaType?: string;
-};
+export type AiImageInput =
+	| string
+	| URL
+	| {
+			image: AiImageValue;
+			mediaType?: string;
+	  };
 
 type AiImageValue = ArrayBuffer | Buffer | Uint8Array | string | URL;
+
+export const JEV_CLOSED_EXTRACTION_FIELDS = [`hasEventData`, `isConscious`, `tags`, `attendanceMode`, `contactAuthorForMore`] as const;
+
+export type JevClosedField = (typeof JEV_CLOSED_EXTRACTION_FIELDS)[number];
 
 export type AiExtractEventDataArgs = {
 	message: string;
@@ -596,6 +619,7 @@ export type AiExtractEventDataArgs = {
 	authorName?: string;
 	imageInputs?: (AiImageInput | undefined)[];
 	eventIsDefinitelyConscious: boolean;
+	omitFields?: readonly JevClosedField[];
 };
 
 type RawMsgAnalysisAnswer = {
@@ -610,9 +634,24 @@ type RawMsgAnalysisAnswer = {
 	price: string | null;
 	venue: string | null;
 	address: string | null;
-	attendanceMode: 'online' | 'offline' | 'offline+online' | null;
+	attendanceMode: "online" | "offline" | "offline+online" | null;
 	city: string | null;
 	emojis: string | null;
 	tags: string[] | null;
 	isConscious: boolean | null;
 };
+
+export const eventLanguages = [
+	`english`,
+	`spanish`,
+	`portuguese`,
+	`french`,
+	`german`,
+	`dutch`,
+	`russian`,
+	`ukrainian`,
+	`other`,
+	`multiple`,
+] as const;
+
+export type EventLanguage = (typeof eventLanguages)[number];

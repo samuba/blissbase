@@ -1,5 +1,6 @@
 import { inferContactMethod } from '$lib/events.remote.common';
 import { knownTagSlugs } from '$lib/eventCategories';
+import { addressLinesFromAnalysis } from '$lib/common';
 import type { MsgAnalysisAnswer } from './ai';
 
 /**
@@ -13,16 +14,11 @@ export function mapAiAnswerToCreateEventPrefill(
 ): CreateEventPrefillFields {
 	const tagSlugs = knownTagSlugs(analysis.tags);
 
-	let addressLines: string[] = [];
-	if (analysis.address) {
-		addressLines = analysis.address.split(`,`).map((x) => x.trim()).filter(Boolean);
-	}
-	if (analysis.venue && !analysis.address?.includes(analysis.venue)) {
-		addressLines = [analysis.venue, ...addressLines];
-	}
-	if (analysis.city && !analysis.address?.includes(analysis.city)) {
-		addressLines = [...addressLines, analysis.city];
-	}
+	const addressLines = addressLinesFromAnalysis({
+		address: analysis.address,
+		venue: analysis.venue,
+		city: analysis.city,
+	});
 
 	const rawContact = pickPrimaryContact(analysis);
 	const contact = contactForWebsiteForm(rawContact);

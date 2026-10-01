@@ -93,7 +93,6 @@ msgstr "Ausgebucht"
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
-#: src/lib/eventCategories.ts
 #: src/routes/EventDetails.svelte
 msgid "Online"
 msgstr "Online"
@@ -2859,13 +2858,11 @@ msgstr "Wissen"
 msgid "Kurs"
 msgstr "Kurs"
 
-#: src/lib/eventCategories.ts
-msgid "Jahrestraining"
-msgstr "Jahrestraining"
+#~ msgid "Jahrestraining"
+#~ msgstr "Jahrestraining"
 
-#: src/lib/eventCategories.ts
-msgid "Programm"
-msgstr "Programm"
+#~ msgid "Programm"
+#~ msgstr "Programm"
 
 #: src/lib/eventCategories.ts
 msgid "Arbeit und Karriere"
@@ -3461,9 +3458,8 @@ msgstr "Natur"
 msgid "Retreat"
 msgstr "Retreat"
 
-#: src/lib/eventCategories.ts
-msgid "Vortrag"
-msgstr "Vortrag"
+#~ msgid "Vortrag"
+#~ msgstr "Vortrag"
 
 #: src/lib/eventCategories.ts
 msgid "Messe"
@@ -3510,9 +3506,8 @@ msgstr "Beziehung"
 msgid "Über"
 msgstr "Über"
 
-#: src/lib/eventCategories.ts
-msgid "Workshop"
-msgstr "Workshop"
+#~ msgid "Workshop"
+#~ msgstr "Workshop"
 
 #: src/lib/eventCategories.ts
 msgid "Contemporary Dance"
@@ -3891,3 +3886,27 @@ msgstr "Schamanisches IKEA-Regale aufbauen"
 
 #~ msgid "Schamanisches IKEARegale aufbauen"
 #~ msgstr "Schamanisches IKEARegale aufbauen"
+
+#: src/lib/eventCategories.ts
+msgid "Stimme"
+msgstr "Stimme"
+
+#: src/lib/eventCategories.ts
+msgid "Kreis"
+msgstr "Kreis"
+
+#: src/lib/eventCategories.ts
+msgid "Innere Arbeit"
+msgstr "Innere Arbeit"
+
+#: src/lib/eventCategories.ts
+msgid "Männer"
+msgstr "Männer"
+
+#: src/lib/eventCategories.ts
+msgid "Frauen"
+msgstr "Frauen"
+
+#: src/lib/eventCategories.ts
+msgid "Session"
+msgstr "Session"

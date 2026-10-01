@@ -35,6 +35,7 @@ jobs:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_CI }}
         run: bun run test:run
 
   e2e-tests:
@@ -91,6 +92,7 @@ jobs:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_CI }}
         run: bun run test:e2e -- --shard=${{ matrix.shardIndex }}/2
 
       - name: Upload test results

@@ -16,6 +16,7 @@
 		"test": "vitest",
 		"test:run": "vitest run",
 		"test:watch": "vitest --watch",
+		"test:live": "TEST_LIVE=1 vitest run",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:debug": "playwright test --debug",
@@ -36,7 +37,6 @@
 		"wuchale:clean": "wuchale --clean"
 	},
 	"devDependencies": {
-		"@ai-sdk/openai": "^4.0.71",
 		"@electric-sql/pglite": "^0.4.4",
 		"@eslint/compat": "^2.0.5",
 		"@eslint/js": "^10.0.1",

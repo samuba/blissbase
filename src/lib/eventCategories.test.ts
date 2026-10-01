@@ -130,6 +130,7 @@ describe(`eventCategories`, () => {
 		expect(slugsForTagInput(`Witchcraft`)).toEqual([`witchcraft`]);
 		expect(slugsForTagInput(`Creative Expression`)).toEqual([`creative-expression`]);
 		expect(slugsForTagInput(`dance-impro`)).toEqual([`dance-improvisation`]);
+		expect(slugsForTagInput(`workshop`)).toEqual([]);
 		expect(knownTagSlugs([`yoga`, `dance-impro`, `not-a-real-tag`])).toEqual([`yoga`, `dance-improvisation`]);
 	});
 });

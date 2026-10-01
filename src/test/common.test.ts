@@ -1,4 +1,4 @@
-import { calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel, googleMapsSearchUrl, matchesWholeWord, toAddressLines } from '../lib/common';
+import { addressLinesFromAnalysis, calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel, googleMapsSearchUrl, matchesWholeWord, toAddressLines } from '../lib/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /** Fixed "now": Wed 4 Jun 2025, 12:00 local — used by relative-date logic. */
@@ -82,6 +82,29 @@ describe(`calendarLocation`, () => {
 	it(`omits a missing note and blank parts`, () => {
 		expect(calendarLocation({ address: [`Berlin`] })).toBe(`Berlin`);
 		expect(calendarLocation({ address: [], addressNote: `  ` })).toBeUndefined();
+	});
+});
+
+describe(`addressLinesFromAnalysis`, () => {
+	it(`does not append a city that is already the last address part`, () => {
+		expect(addressLinesFromAnalysis({
+			address: `Am Katzenlauf 4, Weinheim`,
+			venue: `Raum am Schlosspark`,
+			city: `Weinheim`,
+		})).toEqual([`Raum am Schlosspark`, `Am Katzenlauf 4`, `Weinheim`]);
+	});
+
+	it(`drops a repeated venue or city inside the address`, () => {
+		expect(addressLinesFromAnalysis({
+			address: `Life Artists Creators Hub, Life Artists Creators Hub`,
+			venue: `Life Artists Creators Hub`,
+			city: `Life Artists Creators Hub`,
+		})).toEqual([`Life Artists Creators Hub`]);
+		expect(addressLinesFromAnalysis({
+			address: `Reichelsheim (Odenwald), Idyllischer Hof, Idyllischer Hof`,
+			venue: `Idyllischer Hof`,
+			city: `Reichelsheim (Odenwald)`,
+		})).toEqual([`Reichelsheim (Odenwald)`, `Idyllischer Hof`]);
 	});
 });
 

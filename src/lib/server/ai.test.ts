@@ -1,9 +1,5 @@
-import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
-import { aiExtractEventData, ensureAddressIncludesCity, getExistingSource, normalizeDescription } from './ai';
-
-const hasAiKey = !!process.env.OPENAI_API_KEY;
-const itWithAiKey = hasAiKey ? it : it.skip;
+import { aiExtractEventData, aiTranscribeImage, ensureAddressIncludesCity, getExistingSource, keptExtractionFields, normalizeDescription } from './ai';
 
 describe(`normalizeDescription`, () => {
 	it(`removes a normalized leading event name`, () => {
@@ -128,6 +124,21 @@ describe(`getExistingSource`, () => {
 	});
 });
 
+describe(`keptExtractionFields`, () => {
+	it(`drops closed judgments Jev already answered`, () => {
+		const kept = keptExtractionFields([`hasEventData`, `tags`, `isConscious`, `attendanceMode`, `contactAuthorForMore`]);
+		expect(kept).not.toContain(`hasEventData`);
+		expect(kept).not.toContain(`tags`);
+		expect(kept).not.toContain(`isConscious`);
+		expect(kept).not.toContain(`attendanceMode`);
+		expect(kept).not.toContain(`contactAuthorForMore`);
+		expect(kept).toContain(`name`);
+		expect(kept).toContain(`description`);
+		expect(kept).toContain(`startDate`);
+		expect(kept).toContain(`emojis`);
+	});
+});
+
 describe(`aiExtractEventData`, () => {
 	it(
 		`detects an existing source link and skips event extraction`,
@@ -150,66 +161,10 @@ Looks nice for anyone interested.`,
 			expect(existingSourceResult.description).toBeUndefined();
 		}
 	);
+});
 
-	itWithAiKey(
-		`extracts rich event fields and obeys URL/contact guardrails`,
-		{
-			timeout: 90_000,
-			retry: 2
-		},
-		async () => {
-			if (!hasAiKey) throw new Error(`AI API key is required for this test`);
-
-			const result = await aiExtractEventData({
-				message: `*Einladung zum 𝐄𝐦𝐛𝐨𝐝𝐢𝐞𝐝 Consent Lab in Berlin*
-
-Embodied Consent Lab
-
-Join us for a WhatsApp-only event called "Embodied Consent Lab" at The Practice Room.
-The facilitator says: "Bring a blanket, water, and curiosity." 🌿
-Keep this html break exactly: first line<br>second line
-
-Date: May 21, 2026
-Time: 19:00 - 21:00
-Location: The Practice Room, Schönhauser Allee 10, Berlin
-Attendance: offline+online (hybrid). Both in-person attendance and online attendance are possible.
-Price: This sliding scale is intentionally too long to extract cleanly because it includes many details, exceptions, donation notes, discounts, support options, and follow-up arrangements that exceed one hundred characters.
-Event page: https://example.com/embodied-consent
-Do not use this map as the event URL: https://maps.google.com/?q=The+Practice+Room
-Do not use this Telegram link as the event URL: https://t.me/example_channel
-Register: hello@example.com
-WhatsApp questions: +49123456789
-Message me only if both registration links fail.`,
-				messageDate: new Date(`2026-04-29T06:00:00.000Z`),
-				timezone: `Europe/Berlin`,
-				eventIsDefinitelyConscious: true
-			});
-
-			expect(result.hasEventData).toBe(true);
-			expect(result.name).toBe(`Embodied Consent Lab`);
-			expect(result.description).not.toMatch(/^Embodied Consent Lab/);
-			expect(result.description).toContain(`"Bring a blanket, water, and curiosity."`);
-			expect(result.description).toContain(`🌿`);
-			expect(result.description).toContain(`first line<br>second line`);
-			expect(result.startDate).toMatch(/(?:Z|[+-]\d{2}:\d{2})$/);
-			expect(result.endDate).toMatch(/(?:Z|[+-]\d{2}:\d{2})$/);
-			expect(new Date(result.startDate!).toISOString()).toBe(`2026-05-21T17:00:00.000Z`);
-			expect(new Date(result.endDate!).toISOString()).toBe(`2026-05-21T19:00:00.000Z`);
-			expect(result.url).toBe(`https://example.com/embodied-consent`);
-			expect(result.url).not.toContain(`maps.google.com`);
-			expect(result.url).not.toContain(`t.me`);
-			expect(result.contact).toEqual(expect.arrayContaining([`mailto:hello@example.com`]));
-			expect(result.contact?.every((contact) => /^[a-z][a-z0-9+.-]*:/i.test(contact))).toBe(true);
-			expect(result.contact?.some((contact) => contact.includes(`49123456789`))).toBe(true);
-			expect(result.contact?.[0]).toBe(`mailto:hello@example.com`);
-			expect(result.contactAuthorForMore).toBe(false);
-			expect(result.price).toBeUndefined();
-			expect(result.venue).toBe(`The Practice Room`);
-			expect(result.address).toBe(`Schönhauser Allee 10, Berlin`);
-			expect(result.attendanceMode).toBe(`offline+online`);
-			expect(result.city).toBe(`Berlin`);
-			expect(result.tags?.length).toBeGreaterThan(0);
-			expect(result.isConscious).toBe(true);
-		}
-	);
+describe(`aiTranscribeImage`, () => {
+	it(`throws when there is no image`, async () => {
+		await expect(aiTranscribeImage({ imageInputs: [] })).rejects.toThrow(`No image to transcribe`);
+	});
 });

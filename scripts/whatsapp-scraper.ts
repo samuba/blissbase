@@ -7,8 +7,8 @@ import "dotenv/config"
 import { and, db, eq, s, upsertEvents } from "../src/lib/server/db.script.ts"
 import type { InsertEvent } from "../src/lib/types"
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai"
-import { aiExtractEventData } from "../src/lib/server/ai"
-import { sleep, generateSlug } from "../src/lib/common"
+import { resolveMessengerAnalysis } from "../src/lib/server/jev/messengerCheck"
+import { addressLinesFromAnalysis, sleep, generateSlug } from "../src/lib/common"
 import { geocodeAddressCached } from "../src/lib/server/google.script.ts"
 import { resizeCoverImage } from "../src/lib/imageProcessing"
 import type { WhatsappScrapingTarget } from "../src/lib/server/schema" 
@@ -603,14 +603,14 @@ async function extractEventDataFromImageMessage(args: {
     })
     const combinedText = adjacentTextMessages.length > 0 ? adjacentTextMessages.join(`\n\n`) : ``
 
-    await sleep(1000)
-    const aiAnswer = await aiExtractEventData({
+    const aiAnswer = await resolveMessengerAnalysis({
         message: combinedText,
         messageDate: new Date(args.message.timestamp * 1000),
         timezone: args.defaultTimezone,
         authorName: getWhatsappAuthor(args.message).name,
         imageInputs: [imageInput],
         eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
+        beforeLlmExtract: () => sleep(1000),
     })
 
     const base = await validateAndBuildEventBase({
@@ -672,14 +672,14 @@ async function extractEventDataFromMessage(args: {
     })
     const combinedText = [msgText, ...adjacentTextMessages].join(`\n\n`)
 
-    await sleep(1000)
-    const aiAnswer = await aiExtractEventData({
+    const aiAnswer = await resolveMessengerAnalysis({
         message: combinedText,
         messageDate: new Date(args.message.timestamp * 1000),
         timezone: args.defaultTimezone,
         authorName: getWhatsappAuthor(args.message).name,
         imageInputs: adjacentImageInputs,
         eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
+        beforeLlmExtract: () => sleep(1000),
     })
 
     const base = await validateAndBuildEventBase({
@@ -865,10 +865,11 @@ async function normalizeAddress(args: { aiAnswer: MsgAnalysisAnswer; target: Wha
         aiAnswer.address = target.defaultAddress.join(`,`)
     }
 
-    let addressArr = aiAnswer.address ? aiAnswer.address.split(`,`) : []
-    if (aiAnswer.venue && !aiAnswer.address?.includes(aiAnswer.venue)) addressArr = [aiAnswer.venue, ...addressArr]
-    if (aiAnswer.city && !aiAnswer.address?.includes(aiAnswer.city)) addressArr = [...addressArr, aiAnswer.city]
-    return addressArr
+    return addressLinesFromAnalysis({
+        address: aiAnswer.address,
+        venue: aiAnswer.venue,
+        city: aiAnswer.city,
+    })
 }
 
 /**
@@ -993,6 +994,8 @@ async function validateAndBuildEventBase(args: {
         startAt,
         endAt,
         attendanceMode: aiAnswer.attendanceMode,
+        structure: aiAnswer.structure,
+        language: aiAnswer.language,
         address: addressArr,
         tagSlugs: knownTagSlugs(aiAnswer.tags),
         latitude,

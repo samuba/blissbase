@@ -15,6 +15,7 @@ import {
 	pgEnum,
 } from "drizzle-orm/pg-core";
 import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+import { eventStructureSlugs } from "$lib/eventCategories";
 import { OFFERING_FORMATS } from "$lib/rpc/offerings.common";
 
 export const eventAttendanceModeEnum = pgEnum("attendance_mode", ["online", "offline", "offline+online"]);
@@ -22,6 +23,8 @@ export type AttendanceMode = (typeof eventAttendanceModeEnum.enumValues)[number]
 export const attendanceModeEnum = eventAttendanceModeEnum.enumValues;
 export const offeringFormatEnum = pgEnum("offering_format", OFFERING_FORMATS);
 export type OfferingFormat = (typeof offeringFormatEnum.enumValues)[number];
+export const eventStructureEnum = pgEnum("event_structure", eventStructureSlugs);
+export type EventStructure = (typeof eventStructureEnum.enumValues)[number];
 
 export const events = pgTable("events", {
 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -54,6 +57,8 @@ export const events = pgTable("events", {
 	sourceChatIdsWhatsapp: text().array(),
 	hostSecret: text(),
 	attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
+	structure: eventStructureEnum(),
+	language: text(),
 	authorId: uuid().references(() => profiles.id, { onDelete: "cascade" }),
 	spotlight: text(),
 });
