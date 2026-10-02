@@ -64,11 +64,13 @@ export function hasPendingCreateFlowDraft(args: { key: string; storage?: DraftSt
 	return storage?.getItem(pendingKey(args.key)) === `1`;
 }
 
-export function saveCreateFlowDraft(args: { key: string; draft: CreateFlowDraft; storage?: DraftStorage }) {
+/** `pending: false` saves a plain draft that restores without auto-publish (e.g. user left via back gesture). */
+export function saveCreateFlowDraft(args: { key: string; draft: CreateFlowDraft; pending?: boolean; storage?: DraftStorage }) {
 	const storage = args.storage ?? browserSessionStorage();
 	if (!storage) return;
 	storage.setItem(args.key, JSON.stringify(args.draft));
-	storage.setItem(pendingKey(args.key), `1`);
+	if (args.pending ?? true) storage.setItem(pendingKey(args.key), `1`);
+	else storage.removeItem(pendingKey(args.key));
 	if (args.draft.draftId) storage.setItem(draftIdKey(args.key), args.draft.draftId);
 	else storage.removeItem(draftIdKey(args.key));
 }
