@@ -236,6 +236,8 @@ export class CreateFlowAuth {
 		const existingPromise = this.#emailProfileCheckPromises.get(trimmed);
 		if (existingPromise) return existingPromise;
 
+		// Keep texts out of nested callbacks: wuchale does not declare its runtime inside them in .svelte.ts files
+		const fallbackErrorMessage = `E-Mail konnte nicht geprüft werden.`;
 		const promise = checkEmailProfileComplete({ email: trimmed })
 			.then(
 				(result) =>
@@ -256,7 +258,7 @@ export class CreateFlowAuth {
 				(err: unknown) =>
 					({
 						ok: false,
-						message: err instanceof Error ? err.message : `E-Mail konnte nicht geprüft werden.`,
+						message: err instanceof Error ? err.message : fallbackErrorMessage,
 					}) satisfies EmailProfileCheckResult,
 			)
 			.finally(() => {
