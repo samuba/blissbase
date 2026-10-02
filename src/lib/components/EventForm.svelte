@@ -18,6 +18,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
 	import LocationAutocompleteInput from '$lib/components/LocationAutocompleteInput.svelte';
+	import { suggestEventTagSlugs } from '$lib/rpc/suggestEventTagSlugs.remote';
 	import type { RemoteFormFields } from '@sveltejs/kit';
 	import type { Snippet } from 'svelte';
 
@@ -113,6 +114,43 @@
 		}
 	});
 
+	let tagSuggestGeneration = 0;
+
+	function tagFieldIsEmpty() {
+		return !(remoteForm.fields.tagSlugs.value() ?? []).some(Boolean);
+	}
+
+	function descriptionHasText(html: string) {
+		const text = html.replace(/<[^>]*>/g, ``).replace(/&nbsp;/gi, ` `).trim();
+		return Boolean(text);
+	}
+
+	async function suggestTags({ replace }: { replace: boolean }) {
+		if (!replace && !tagFieldIsEmpty()) return;
+
+		const name = remoteForm.fields.name.value()?.trim() ?? ``;
+		const description = remoteForm.fields.description.value() ?? ``;
+		if (!name && !descriptionHasText(description)) return;
+
+		const requestId = ++tagSuggestGeneration;
+		try {
+			const slugs = await suggestEventTagSlugs({ name, description });
+			if (requestId !== tagSuggestGeneration) return;
+			if (!replace && !tagFieldIsEmpty()) return;
+			if (!slugs?.length) return;
+			remoteForm.fields.tagSlugs.set(slugs);
+			onDirty?.();
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
+	function onDescriptionFocusOut(event: FocusEvent & { currentTarget: HTMLElement }) {
+		const next = event.relatedTarget;
+		if (next instanceof Node && event.currentTarget.contains(next)) return;
+		void suggestTags({ replace: false });
+	}
+
 	function getRandomNamePlaceholder() {
 		const namePlaceholders = [
 			`Achtsames Tortenwerfen`,
@@ -193,7 +231,7 @@
 		</fieldset>
 	</div>
 
-	<fieldset class="fieldset md:col-span-2" data-testid="event-description-editor">
+	<fieldset class="fieldset md:col-span-2" data-testid="event-description-editor" onfocusout={onDescriptionFocusOut}>
 		<LexicalEditor
 			field={remoteForm.fields.description}
 			placeholder="Beschreibe deinen Event"
@@ -232,8 +270,27 @@
 			<FormFieldIssues field={remoteForm.fields.price} />
 		</fieldset>
 
-		<fieldset class="fieldset">
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Tags</legend>
+		<fieldset class="fieldset" aria-busy={suggestEventTagSlugs.pending > 0}>
+			<legend class="fieldset-legend peer-aria-invalid:text-red-600">
+				<span class="inline-flex items-center gap-1">
+					Tags
+					<button
+						type="button"
+						class="btn btn-ghost btn-xs btn-square"
+						data-testid="event-suggest-tags-button"
+						aria-label="Tags neu vorschlagen"
+						title="Tags neu vorschlagen"
+						disabled={!remoteForm.fields.name.value()?.trim() && !descriptionHasText(remoteForm.fields.description.value() ?? ``)}
+						onclick={() => void suggestTags({ replace: true })}
+					>
+						{#if suggestEventTagSlugs.pending > 0}
+							<span class="loading loading-spinner loading-xs" role="status" aria-label="Tags werden vorgeschlagen"></span>
+						{:else}
+							<i class="icon-[ph--sparkle] size-3.5"></i>
+						{/if}
+					</button>
+				</span>
+			</legend>
 			<TagsInput field={remoteForm.fields.tagSlugs} />
 			<FormFieldIssues field={remoteForm.fields.tagSlugs} />
 		</fieldset>

@@ -38,7 +38,7 @@ const tagYes = {
 	ceremony: `e.g. ritual, cacao ceremony, sweat lodge, plant medicine`,
 	"sound-healing": `e.g. sound bath, sound journey, gong bath, singing bowls`,
 	tantra: `e.g. classical tantra, neo-tantra, temple night, sexual energy`,
-	intimacy: `e.g. sensuality, sexuality, cuddling, shibari`,
+	intimacy: `e.g. sensuality, sexuality, cuddling, shibari, tantra, play party, temple night`,
 	"inner-work": `Therapy, constellations, shadow work, trauma work, or grief work`,
 	health: `Sauna, ayurveda, fasting, nervous-system regulation, or self-care`,
 	breathwork: `Breathwork like holotropic, rebirthing, pranayama, ice bath`,

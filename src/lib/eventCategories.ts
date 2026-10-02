@@ -364,11 +364,6 @@ export const eventCategories: EventCategory[] = [
 				synonyms: [`Cuddle`, `Cuddling`, `Kuschelparty`, `Cuddle Party`, `Cuddle Workshop`, `Cuddle Workshops`, `Kuschelabend`]
 			},
 			{
-				slug: `intimacy-practice`,
-				get label() { /* @wc-include */ return `Intimitätspraxis`; },
-				synonyms: [`Intimacy Practice`]
-			},
-			{
 				slug: `erotic-energy`,
 				get label() { /* @wc-include */ return `Erotische Energie`; },
 				synonyms: [`Erotic Energy`]

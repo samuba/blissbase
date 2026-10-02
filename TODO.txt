@@ -1,10 +1,9 @@
 use this more: restate in your own words what you think my goals are and what the problem i'm trying to solve is
 
-neue errors in create.party auf sentry
+wenn neue tags mit jev sich bewäht haben: knownTagSlugs kann entfernt werden
 
 neue telegram gruppen adden
-
-auto suggest tags in form via jev
+whatsapp om gruppe
 
 create.party persönliche details fixen -> msg an josef
 

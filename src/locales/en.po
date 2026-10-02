@@ -120,7 +120,6 @@ msgstr "Prices"
 msgid "Original Message"
 msgstr "Original message"
 
-#: src/lib/components/EventForm.svelte
 #: src/routes/EventDetails.svelte
 msgid "Tags"
 msgstr "Tags"
@@ -2296,9 +2295,8 @@ msgstr "Sexual Embodiment"
 msgid "Bewusste Berührung"
 msgstr "Conscious Touch"
 
-#: src/lib/eventCategories.ts
-msgid "Intimitätspraxis"
-msgstr "Intimacy Practice"
+#~ msgid "Intimitätspraxis"
+#~ msgstr "Intimacy Practice"
 
 #: src/lib/eventCategories.ts
 msgid "Erotische Energie"
@@ -3956,3 +3954,19 @@ msgstr "Women"
 #, ai
 msgid "Session"
 msgstr "Session"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Tags werden vorgeschlagen"
+msgstr "Tags are suggested"
+
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Tags <0/>"
+msgstr "Tags <0/>"
+
+#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventForm.svelte
+#, ai
+msgid "Tags neu vorschlagen"
+msgstr "Suggest new tags"
