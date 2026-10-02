@@ -76,7 +76,7 @@ async function judgeThenExtract(args: {
 	}
 
 	if (`skipReason` in judgment) {
-		console.log(`[jev] Skipping message — ${judgment.skipReason}`);
+		console.log(`[jev] Skipping message — ${judgment.skipReason}\nmessage: ${args.text}`);
 		return { hasEventData: false };
 	}
 

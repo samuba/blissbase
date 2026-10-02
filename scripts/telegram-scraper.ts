@@ -736,25 +736,25 @@ async function validateAndBuildEventBase(args: {
     const { aiAnswer, message, client, chatId, descriptionOriginal } = args;
 
     if (aiAnswer.existingSource) {
-        console.log(`Skipping event - existing source detected: ${aiAnswer.existingSource}`);
+        console.log(`Skipping event - existing source detected: ${aiAnswer.existingSource}\nmessage: ${descriptionOriginal}`);
         return undefined;
     }
     if (!aiAnswer.hasEventData) {
-        console.log(`Skipping event - no event data detected`);
+        console.log(`Skipping event - no event data detected\nmessage: ${descriptionOriginal}`);
         return undefined;
     }
     if (!aiAnswer.name) {
-        console.log(`Skipping event - no name provided`);
+        console.log(`Skipping event - no name provided\nmessage: ${descriptionOriginal}`);
         return undefined;
     }
     if (!aiAnswer.startDate) {
-        console.log(`Skipping event - no start date provided`);
+        console.log(`Skipping event - no start date provided\nmessage: ${descriptionOriginal}`);
         return undefined;
     }
 
     const startAt = new Date(aiAnswer.startDate);
     if (startAt.getTime() < Date.now()) {
-        console.log(`Skipping event - start date is in the past: ${startAt.toISOString()}`);
+        console.log(`Skipping event - start date is in the past: ${startAt.toISOString()}\nmessage: ${descriptionOriginal}`);
         return undefined;
     }
 
@@ -762,7 +762,7 @@ async function validateAndBuildEventBase(args: {
     const addressArr = await normalizeAddress({ aiAnswer, chatId });
     if (aiAnswer.attendanceMode === "offline") {
         if (!addressArr || addressArr.length === 0) {
-            console.log(`Skipping event - no address found`);
+            console.log(`Skipping event - no address found\nmessage: ${descriptionOriginal}`);
             return undefined;
         }
     }

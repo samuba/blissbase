@@ -901,25 +901,25 @@ async function validateAndBuildEventBase(args: {
     const { aiAnswer, message, target, descriptionOriginal } = args
 
     if (aiAnswer.existingSource) {
-        console.log(`[whatsapp] Skipping event — existing source: ${aiAnswer.existingSource}`)
+        console.log(`[whatsapp] Skipping event — existing source: ${aiAnswer.existingSource}\nmessage: ${descriptionOriginal}`)
         return undefined
     }
     if (!aiAnswer.hasEventData) {
-        console.log(`[whatsapp] Skipping event — no event data detected`)
+        console.log(`[whatsapp] Skipping event — no event data detected\nmessage: ${descriptionOriginal}`)
         return undefined
     }
     if (!aiAnswer.name) {
-        console.log(`[whatsapp] Skipping event — no name`)
+        console.log(`[whatsapp] Skipping event — no name\nmessage: ${descriptionOriginal}`)
         return undefined
     }
     if (!aiAnswer.startDate) {
-        console.log(`[whatsapp] Skipping event — no start date`)
+        console.log(`[whatsapp] Skipping event — no start date\nmessage: ${descriptionOriginal}`)
         return undefined
     }
 
     const startAt = new Date(aiAnswer.startDate)
     if (Number.isNaN(startAt.getTime())) {
-        console.log(`[whatsapp] Skipping event — invalid start date: ${aiAnswer.startDate}`)
+        console.log(`[whatsapp] Skipping event — invalid start date: ${aiAnswer.startDate}\nmessage: ${descriptionOriginal}`)
         return undefined
     }
 
@@ -928,9 +928,9 @@ async function validateAndBuildEventBase(args: {
 
     if (shouldSkipScrapedEventAsPast({ startAt, endAt })) {
         if (endAt) {
-            console.log(`[whatsapp] Skipping event — already ended: ${endAt.toISOString()}`)
+            console.log(`[whatsapp] Skipping event — already ended: ${endAt.toISOString()}\nmessage: ${descriptionOriginal}`)
         } else {
-            console.log(`[whatsapp] Skipping event — start in past: ${startAt.toISOString()}`)
+            console.log(`[whatsapp] Skipping event — start in past: ${startAt.toISOString()}\nmessage: ${descriptionOriginal}`)
         }
         return undefined
     }
