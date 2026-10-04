@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { routes } from "$lib/routes";
 import { db, s } from "$lib/server/db";
 import { upsertEvents } from "$lib/server/events";
+import { OPTIONS, POST } from "./+server";
 import {
 	breathworkEmbedCities,
 	resolveBreathworkEmbedCity,
@@ -99,6 +100,31 @@ describe(`breathwork embed search`, () => {
 		expect(toBreathworkEmbedEvent({ id: 1, name: `Ohne Datum`, slug: `ohne-datum`, startAt: null })).toBeNull();
 	});
 
+	it(`allows breathwork.global on the preflight and on both search responses`, async () => {
+		const origin = `https://breathwork.global`;
+		const preflight = await OPTIONS(requestEvent({ method: `OPTIONS`, origin }));
+		expect(preflight.status).toBe(204);
+		expect(preflight.headers.get(`access-control-allow-origin`)).toBe(origin);
+		expect(preflight.headers.get(`access-control-allow-methods`)).toBe(`POST, OPTIONS`);
+
+		const failed = await POST(requestEvent({ method: `POST`, origin, body: `{` }));
+		expect(failed.headers.get(`access-control-allow-origin`)).toBe(origin);
+		expect(await failed.json()).toEqual({ results: [], nextCursor: null });
+
+		const empty = await POST(
+			requestEvent({
+				method: `POST`,
+				origin: `https://www.breathwork.global`,
+				body: JSON.stringify({ locationId: 999, start: `2026-10-04`, end: `2026-11-13` }),
+			}),
+		);
+		expect(empty.headers.get(`access-control-allow-origin`)).toBe(`https://www.breathwork.global`);
+		expect(await empty.json()).toEqual({ results: [], nextCursor: null });
+
+		const other = await OPTIONS(requestEvent({ method: `OPTIONS`, origin: `https://example.com` }));
+		expect(other.headers.get(`access-control-allow-origin`)).toBeNull();
+	});
+
 	it(`keeps the snippet cities and endpoint aligned with the server`, () => {
 		const snippet = readFileSync(new URL(`../../../../../static/embed/event-search-snippet.js`, import.meta.url), `utf8`);
 		expect(snippet).toContain(routes.breathworkEventSearch());
@@ -109,6 +135,15 @@ describe(`breathwork embed search`, () => {
 		}
 	});
 });
+
+function requestEvent({ method, origin, body }: { method: string; origin: string; body?: string }) {
+	const request = new Request(`https://blissbase.app/api/embed/breathwork.global`, {
+		method,
+		headers: { origin, "content-type": `application/json` },
+		body,
+	});
+	return { request } as Parameters<typeof OPTIONS>[0];
+}
 
 function absoluteEventUrl(slug?: string) {
 	return `https://blissbase.app/${slug}`;

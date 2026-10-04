@@ -65,7 +65,7 @@ describe(`isAuthFlowPath`, () => {
 
 describe(`breathwork embed routes`, () => {
 	it(`points the snippet and the public search at blissbase`, () => {
-		expect(routes.breathworkEventSearch()).toBe(`/api/embed/breathwork-events`);
+		expect(routes.breathworkEventSearch()).toBe(`/api/embed/breathwork.global`);
 		expect(routes.breathworkEventSearchSnippet()).toBe(`/embed/event-search-snippet.js`);
 	});
 });

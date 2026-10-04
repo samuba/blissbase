@@ -10,7 +10,7 @@
  */
 (function () {
 	const script = document.currentScript;
-	const API_PATH = `/api/embed/breathwork-events`;
+	const API_PATH = `/api/embed/breathwork.global`;
 	const CITIES = [
 		{ id: `195`, name: `Berlin`, country: `Deutschland` },
 		{ id: `196`, name: `Hamburg`, country: `Deutschland` },

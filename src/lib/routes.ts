@@ -71,7 +71,7 @@ export const routes = {
     adminTelegram: () => resolve(`/admin/telegram`) ,
     adminTelegramResolve: () => resolve(`/admin/telegram/resolve`) ,
     adminWhatsapp: () => resolve(`/admin/whatsapp`) ,
-    breathworkEventSearch: () => resolve(`/api/embed/breathwork-events`) ,
+    breathworkEventSearch: () => resolve(`/api/embed/breathwork.global`) ,
     breathworkEventSearchSnippet: () => `/embed/event-search-snippet.js` ,
 }
 
