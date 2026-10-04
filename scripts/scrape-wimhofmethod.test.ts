@@ -79,6 +79,49 @@ describe(`mapWhmActivity`, () => {
 	});
 });
 
+describe(`broken JSON-LD`, () => {
+	it(`still reads the occurrence when the description string is invalid JSON`, () => {
+		const broken = `<!doctype html><html><head>
+<meta property="og:url" content="https://activities.wimhofmethod.com/activities/ice-oslo/80001"/>
+<script type="application/ld+json">
+{
+  "@type": "Event",
+  "name": "Ice bath",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": { "name": "Harbor 1, Oslo, Norway" },
+  "description": "Line one
+line two",
+  "startDate": "2026-12-01CET18:00 ",
+  "endDate": "2026-12-01CET20:00 ",
+  "offers": { "price": "40.50", "priceCurrency": "EUR" },
+  "performer": { "name": "Ada" }
+}
+</script>
+</head><body><div class="cms-editor"><p>Kalt duschen.</p></div></body></html>`;
+
+		const mapped = mapWhmActivity({
+			html: broken,
+			listing: {
+				title: `Ice bath`,
+				workshopSlug: `ice-oslo`,
+				workshopDateId: 80001,
+				location: { city: `Oslo`, country: `Norway` },
+				categories: [{ title: `Fundamentals Workshop` }],
+			},
+			url: `https://activities.wimhofmethod.com/activities/ice-oslo/80001`,
+		});
+
+		expect(mapped).toMatchObject({
+			name: `Ice bath`,
+			startAt: `2026-12-01T18:00:00+01:00`,
+			endAt: `2026-12-01T20:00:00+01:00`,
+			address: [`Harbor 1`, `Oslo`, `Norway`],
+			price: `40,50€`,
+			host: `Ada`,
+		});
+	});
+});
+
 describe(`assignUniqueNames`, () => {
 	it(`adds the city when two activities would share a stored slug`, () => {
 		const first = mapWhmActivity({

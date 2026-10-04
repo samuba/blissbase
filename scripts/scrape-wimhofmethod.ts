@@ -526,9 +526,19 @@ function activityUrl(listing: WhmActivity | undefined): string | undefined {
 	return `${SITE_BASE}/activities/${slug}/${listing.workshopDateId}`;
 }
 
+const eventCache = new Map<string, WhmJsonLdEvent | undefined>();
+
 function readEvent(html: string): WhmJsonLdEvent | undefined {
+	if (eventCache.has(html)) return eventCache.get(html);
+	const event = readEventUncached(html);
+	eventCache.set(html, event);
+	return event;
+}
+
+function readEventUncached(html: string): WhmJsonLdEvent | undefined {
 	const $ = cheerio.load(html);
 	let found: WhmJsonLdEvent | undefined;
+	let looseScript: string | undefined;
 	$(`script[type="application/ld+json"]`).each((_, el) => {
 		if (found) return;
 		const text = $(el).text();
@@ -541,21 +551,43 @@ function readEvent(html: string): WhmJsonLdEvent | undefined {
 				found = node;
 				return;
 			}
-		} catch (error) {
-			console.error(`Failed to parse activity JSON-LD:`, error);
+		} catch {
+			looseScript = text;
+			console.error(`Activity JSON-LD was not valid JSON; reading fields from the script text.`);
 		}
 	});
 	if (found) return found;
+	if (!looseScript) return undefined;
+	return looseEvent(looseScript);
+}
 
-	const startDate = html.match(/"startDate"\s*:\s*"([^"]+)"/)?.[1];
-	const name = html.match(/"@type"\s*:\s*"Event"[\s\S]*?"name"\s*:\s*"([^"]+)"/)?.[1];
-	if (!startDate && !name) return undefined;
+function looseEvent(script: string): WhmJsonLdEvent | undefined {
+	const name = jsonStringField(script, `name`);
+	const startDate = jsonStringField(script, `startDate`);
+	if (!name && !startDate) return undefined;
+
+	const locationName = script.match(/"location"\s*:\s*\{[\s\S]*?"name"\s*:\s*"([^"]*)"/)?.[1];
+	const performer = script.match(/"performer"\s*:\s*\{[\s\S]*?"name"\s*:\s*"([^"]*)"/)?.[1];
+	const image = jsonStringField(script, `image`);
+
 	return {
 		"@type": `Event`,
-		name,
+		name: name ? decodeHtml(name) : undefined,
 		startDate,
-		endDate: html.match(/"endDate"\s*:\s*"([^"]+)"/)?.[1],
+		endDate: jsonStringField(script, `endDate`),
+		eventAttendanceMode: jsonStringField(script, `eventAttendanceMode`),
+		image,
+		location: locationName ? { name: decodeHtml(locationName) } : undefined,
+		offers: {
+			price: jsonStringField(script, `price`),
+			priceCurrency: jsonStringField(script, `priceCurrency`),
+		},
+		performer: performer ? { name: decodeHtml(performer) } : undefined,
 	};
+}
+
+function jsonStringField(script: string, key: string): string | undefined {
+	return script.match(new RegExp(`"${key}"\\s*:\\s*"([^"]*)"`))?.[1];
 }
 
 function isOnline(event: WhmJsonLdEvent | undefined): boolean {
@@ -594,9 +626,17 @@ function currencyCode(raw: string | null | undefined): string | undefined {
 	return text;
 }
 
+function formatAmount(args: { amount: number; currency: string | undefined }): string {
+	const { amount, currency } = args;
+	if (Number.isInteger(amount)) return String(amount);
+	const fixed = amount.toFixed(2);
+	if (!currency || currency === `EUR`) return fixed.replace(`.`, `,`);
+	return fixed;
+}
+
 function formatMoney(args: { amount: number; currency: string | undefined }): string {
 	const { amount, currency } = args;
-	const formatted = Number.isInteger(amount) ? String(amount) : amount.toFixed(2).replace(`.`, `,`);
+	const formatted = formatAmount({ amount, currency });
 	if (currency === `GBP`) return `£${formatted}`;
 	if (currency === `USD`) return `$${formatted}`;
 	if (currency === `AUD`) return `A$${formatted}`;
