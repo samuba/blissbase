@@ -100,7 +100,7 @@ describe(`breathwork embed search`, () => {
 	});
 
 	it(`keeps the snippet cities and endpoint aligned with the server`, () => {
-		const snippet = readFileSync(new URL(`../../../../static/embed/event-search-snippet.js`, import.meta.url), `utf8`);
+		const snippet = readFileSync(new URL(`../../../../../static/embed/event-search-snippet.js`, import.meta.url), `utf8`);
 		expect(snippet).toContain(routes.breathworkEventSearch());
 		expect(snippet).toContain(routes.breathworkEventSearchSnippet().split(`/`).pop());
 		for (const city of breathworkEmbedCities) {

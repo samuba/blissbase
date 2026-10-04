@@ -1,1 +1,1 @@
-export { OPTIONS, POST } from "../../../../../roots/api/embed/breathwork-events/handler";
+export { OPTIONS, POST } from "./handler";
