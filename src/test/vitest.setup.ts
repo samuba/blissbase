@@ -16,6 +16,10 @@ if (!process.env.DATABASE_URL) {
     process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
 }
 
+if (!process.env.GOOGLE_MAPS_API_KEY) {
+    process.env.GOOGLE_MAPS_API_KEY = 'test-google-maps-api-key';
+}
+
 vi.mock("$lib/server/db", async (importOriginal) => {
     console.log('mocking db...')
     const { s: schema, db: _db, ...rest } = await importOriginal<typeof import("../lib/server/db")>()

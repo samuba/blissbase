@@ -71,6 +71,8 @@ export const routes = {
     adminTelegram: () => resolve(`/admin/telegram`) ,
     adminTelegramResolve: () => resolve(`/admin/telegram/resolve`) ,
     adminWhatsapp: () => resolve(`/admin/whatsapp`) ,
+    breathworkEventSearch: () => resolve(`/api/embed/breathwork-events`) ,
+    breathworkEventSearchSnippet: () => `/embed/event-search-snippet.js` ,
 }
 
 export const BASE_URL = "https://blissbase.app" as const

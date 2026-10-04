@@ -91,7 +91,8 @@ export async function fetchEvents(params: LoadEventsParams) {
 	const page = Math.max(params.page ?? 1, 1);
 	let sortBy = params.sortBy === 'distance' ? 'distance' : 'time';
 	const sortOrder = params.sortOrder === 'desc' ? 'desc' : 'asc';
-	const offset = (page - 1) * limit;
+	const offset =
+		params.offset != null && Number.isFinite(params.offset) ? Math.max(0, Math.floor(params.offset)) : (page - 1) * limit;
 	const source = params.source?.trim() || null;
 
 	const relevanceAt = parseRelevanceAt(params.relevanceAt);
@@ -390,6 +391,7 @@ export const loadEventsParamsSchema = v.partial(
 		endDate: v.nullable(v.string()), // 2022-01-01
 		page: v.nullable(v.number()),
 		limit: v.nullable(v.number()),
+		offset: v.nullable(v.number()),
 		plzCity: v.nullable(v.string()),
 		distance: v.nullable(v.string()),
 		lat: v.nullable(v.number()),
