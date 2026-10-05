@@ -34,7 +34,8 @@ function corsHeaders(request: Request) {
 function isBreathworkGlobalOrigin(origin: string) {
 	try {
 		const url = new URL(origin);
-		return url.protocol === `https:` && ALLOWED_HOSTS.has(url.hostname);
+		if (url.protocol === `https:` && ALLOWED_HOSTS.has(url.hostname)) return true;
+		return url.protocol === `http:` && (url.hostname === `localhost` || url.hostname === `127.0.0.1`);
 	} catch {
 		return false;
 	}
