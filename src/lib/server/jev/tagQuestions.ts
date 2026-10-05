@@ -41,7 +41,7 @@ const tagYes = {
 	intimacy: `e.g. sensuality, sexuality, cuddling, shibari, tantra, play party, temple night`,
 	"inner-work": `Therapy, constellations, shadow work, trauma work, or grief work`,
 	health: `Sauna, ayurveda, fasting, nervous-system regulation, or self-care`,
-	breathwork: `Breathwork like holotropic, rebirthing, pranayama, ice bath`,
+	breathwork: `Breathwork like holotropic, rebirthing, or ice bath, wim hof method, pranayama, others etc.`,
 	yoga: `e.g. vinyasa, acro yoga, hatha, ashtanga`,
 	nature: `e.g. hiking, forest, herbalism, foraging`,
 	bodywork: `Massage, shiatsu, craniosacral work, other hands-on bodywork`,
