@@ -1,7 +1,7 @@
 /**
  * Embeddable breathwork event search. Events come from Blissbase.
  *
- * <script src="https://blissbase.app/embed/event-search-snippet.js" location-id="196" initial-limit="2" async></script>
+ * <script src="https://www.blissbase.app/embed/event-search-snippet.js" location-id="196" initial-limit="2" async></script>
  * <div id="app"></div>
  *
  * Omit location-id to show the city select. initial-limit loads that many events on startup.
@@ -64,12 +64,15 @@
 
 	function mount(target) {
 		ensureFonts();
+		const host = document.createElement(`div`);
+		host.style.cssText = `display:block;width:100%`;
+		const shadow = host.attachShadow({ mode: `open` });
+		const style = document.createElement(`style`);
+		style.textContent = widgetCss();
 		const root = document.createElement(`div`);
 		root.className = `bw-embed`;
 		root.dataset.testid = `breathwork-embed`;
-		const style = document.createElement(`style`);
-		style.textContent = widgetCss();
-		root.append(style);
+		shadow.append(style, root);
 
 		const inner = el(`div`, `bw-inner`);
 		const form = document.createElement(`form`);
@@ -104,7 +107,7 @@
 
 		inner.append(el(`div`, `bw-form-block`, form, links), results);
 		root.append(inner);
-		target.replaceChildren(root);
+		target.replaceChildren(host);
 
 		const mobileQuery = window.matchMedia(`(max-width: 767px)`);
 		mobileQuery.addEventListener(`change`, paintResults);
@@ -241,7 +244,7 @@
 			}
 		});
 		document.addEventListener(`click`, (event) => {
-			if (!wrap.contains(event.target)) popover.hidden = true;
+			if (!event.composedPath().includes(wrap)) popover.hidden = true;
 		});
 		paintButton();
 		wrap.append(button, popover);
@@ -445,8 +448,12 @@
 	}
 
 	function apiUrl() {
-		if (script?.src) return new URL(API_PATH, script.src).href;
-		return new URL(API_PATH, window.location.href).href;
+		const configured = script?.getAttribute(`api-origin`);
+		if (configured) return new URL(API_PATH, configured).href;
+		const base = script?.src ? new URL(script.src, window.location.href) : new URL(window.location.href);
+		// blissbase.app redirects to www without CORS headers, so the browser drops the search.
+		if (base.hostname === `blissbase.app`) base.hostname = `www.blissbase.app`;
+		return new URL(API_PATH, base).href;
 	}
 
 	function ensureFonts() {
@@ -526,52 +533,63 @@
 
 	function widgetCss() {
 		return `
-.bw-embed{display:flex;justify-content:center;padding:0 1rem 1.5rem;color:#1f1f1f;font-family:"DM Sans",Arial,sans-serif}
-.bw-embed *{box-sizing:border-box}
+.bw-embed{display:flex;justify-content:center;padding:0 1rem 1.5rem;color:#1f1f1f;font-family:"DM Sans",Arial,sans-serif;font-size:16px;line-height:1.5;text-align:left}
+.bw-embed *,.bw-embed *::before,.bw-embed *::after{box-sizing:border-box}
+.bw-embed button,.bw-embed select{margin:0;font:inherit;letter-spacing:normal;text-transform:none}
+.bw-embed button{appearance:none;margin:0;border:0;background:transparent;padding:0;font:inherit;letter-spacing:normal;text-transform:none;cursor:pointer}
+.bw-embed a{text-decoration:none}
+.bw-embed h4,.bw-embed p{margin:0}
+.bw-embed img{display:block;max-width:100%;border:0}
 .bw-inner{display:flex;width:100%;max-width:56rem;flex-direction:column;gap:1.5rem}
-.bw-form{display:flex;flex-direction:column;justify-content:center;gap:1rem}
-.bw-city,.bw-date,.bw-submit{height:2.5rem;border-radius:0.375rem;font:500 1rem/1 "DM Sans",Arial,sans-serif}
-.bw-city,.bw-date{border:1px solid #e4e4e7;background:#fff;color:#18181b}
-.bw-city{width:100%;padding:0 0.75rem}
-.bw-date{display:flex;align-items:center;padding:0 0.75rem;cursor:pointer;white-space:nowrap}
-.bw-submit{border:0;background:#92b28d;color:#fff;padding:0 1rem;cursor:pointer}
+.bw-form{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:1rem}
+.bw-embed .bw-city,.bw-embed .bw-date,.bw-embed .bw-submit{height:2.5rem;border-radius:0.375rem;font:500 0.875rem/1 "DM Sans",Arial,sans-serif}
+.bw-embed .bw-city,.bw-embed .bw-date{width:100%;border:1px solid #e4e4e7;background:#fff;color:#18181b}
+.bw-city{padding:0 0.75rem}
+.bw-date{display:flex;align-items:center;justify-content:flex-start;padding:0 0.75rem;white-space:nowrap;text-align:left}
+.bw-embed .bw-submit{display:inline-flex;align-items:center;justify-content:center;border:0;background:#92b28d;color:#fff;padding:0 1rem}
 .bw-submit:disabled{cursor:default;opacity:0.6}
-.bw-date-wrap{position:relative}
-.bw-popover{position:absolute;z-index:20;top:calc(100% + 0.25rem);left:0;padding:0.75rem;border:1px solid #e4e4e7;border-radius:0.5rem;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.12)}
+.bw-date-wrap{position:relative;min-width:0}
+.bw-popover{position:absolute;z-index:50;top:calc(100% + 0.25rem);left:0;max-width:calc(100vw - 2rem);padding:0.75rem;border:1px solid #e4e4e7;border-radius:0.5rem;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.12)}
+.bw-popover[hidden]{display:none}
 .bw-cal-nav{display:flex;justify-content:space-between;margin-bottom:0.5rem}
-.bw-cal-nav-btn{border:0;background:transparent;font-size:1.25rem;cursor:pointer;color:#3f3f46}
+.bw-cal-nav-btn{width:2rem;height:2rem;border-radius:0.375rem;font-size:1.25rem;line-height:1;color:#3f3f46}
+.bw-cal-nav-btn:hover{background:#f4f4f5}
 .bw-months{display:flex;gap:1rem}
-.bw-month-title{margin-bottom:0.5rem;text-align:center;font-weight:500}
-.bw-grid{display:grid;grid-template-columns:repeat(7,1.9rem);gap:0.15rem}
-.bw-weekday{text-align:center;font-size:0.75rem;color:#71717a}
-.bw-day{height:1.9rem;border:0;border-radius:0.375rem;background:transparent;cursor:pointer}
-.bw-day-in{background:#d6e1d4}
-.bw-day-end{background:#92b28d;color:#fff}
-.bw-day-today{outline:1px solid #92b28d}
-.bw-day-empty{height:1.9rem}
-.bw-links{display:flex;justify-content:center;gap:1.5rem;margin-top:0.5rem;font-size:0.875rem}
-.bw-add{color:#92b28d;text-decoration:none}
-.bw-add:hover,.bw-powered:hover{text-decoration:underline}
-.bw-powered{color:#d4d4d8;text-decoration:none}
-.bw-columns{display:flex;gap:1.5rem}
+.bw-month-title{margin-bottom:0.5rem;text-align:center;font-weight:500;text-transform:capitalize}
+.bw-grid{display:grid;grid-template-columns:repeat(7,2.25rem);gap:0.15rem}
+.bw-weekday{display:flex;align-items:center;justify-content:center;height:2.25rem;font-size:0.75rem;color:#71717a}
+.bw-embed .bw-day{width:2.25rem;height:2.25rem;border-radius:0.375rem;background:transparent;color:#1f1f1f;font-size:0.875rem;font-weight:400}
+.bw-embed .bw-day:hover{background:#f4f4f5}
+.bw-embed .bw-day-in,.bw-embed .bw-day-in:hover{background:#d6e1d4}
+.bw-embed .bw-day-end,.bw-embed .bw-day-end:hover{background:#92b28d;color:#fff}
+.bw-day-today{box-shadow:inset 0 0 0 1px #92b28d}
+.bw-day-empty{height:2.25rem}
+.bw-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;margin-top:0.5rem;font-size:0.875rem}
+.bw-embed .bw-add{color:#92b28d}
+.bw-embed .bw-add:hover,.bw-embed .bw-powered:hover{text-decoration:underline}
+.bw-embed .bw-powered{color:#d4d4d8}
+.bw-columns{display:flex;gap:1.5rem;width:100%}
 .bw-column{display:flex;flex:1;min-width:0;flex-direction:column;gap:1.5rem}
-.bw-card-link{color:inherit;text-decoration:none}
-.bw-card{display:flex;min-width:0;flex-direction:column;overflow:hidden;border-radius:0.375rem;background:#d6e1d4;box-shadow:0 1px 3px rgba(0,0,0,0.12);cursor:pointer;transition:transform 0.15s ease,box-shadow 0.15s ease}
+.bw-embed .bw-card-link{display:block;min-width:0;color:#1f1f1f}
+.bw-card{display:flex;min-width:0;flex-direction:column;overflow:hidden;border-radius:0.375rem;background:#d6e1d4;box-shadow:0 1px 3px rgba(0,0,0,0.12);transition:transform 0.15s ease,box-shadow 0.15s ease}
 .bw-card:hover{transform:scale(1.03);box-shadow:0 10px 20px rgba(0,0,0,0.12)}
 .bw-media{min-height:7rem;background:#d6e1d4}
-.bw-image{display:block;width:100%;min-height:12rem;max-height:90dvw;object-fit:cover;object-position:center;border-radius:0.375rem 0.375rem 0 0}
+.bw-embed .bw-image{width:100%;height:12rem;max-height:90dvw;object-fit:cover;object-position:center;border-radius:0.375rem 0.375rem 0 0}
 .bw-card-body{display:flex;flex-direction:column;gap:0.5rem;padding:1.5rem}
-.bw-title{margin:0;font-family:"DM Serif Display",Georgia,serif;font-size:1.4rem;font-weight:400}
-.bw-time{font-size:1.125rem;color:rgb(79,79,79)}
+.bw-embed .bw-title{font-family:"DM Serif Display",Georgia,serif;font-size:1.4rem;font-weight:400;line-height:1.3}
+.bw-time{font-size:1.125rem;line-height:1.75rem;color:rgb(79,79,79)}
 .bw-venue{display:flex;gap:0.5rem;font-size:1.125rem;line-height:1.5rem;color:rgb(102,125,96)}
-.bw-pin{margin-top:0.2rem;flex:none}
+.bw-pin{margin-top:0.2rem;flex:none;color:rgb(102,125,96)}
+.bw-pin svg{display:block}
 .bw-empty{padding:1rem 0;text-align:center;font-size:1.125rem}
 .bw-loading,.bw-more{display:flex;justify-content:center;align-items:center;padding-top:1.5rem}
 .bw-spinner{width:2rem;height:2rem;margin-right:0.5rem;border:3px solid rgb(102,125,96);border-right-color:transparent;border-radius:999px;animation:bw-spin 0.8s linear infinite}
 @keyframes bw-spin{to{transform:rotate(360deg)}}
 @media(min-width:768px){
 .bw-form{flex-direction:row;align-items:center}
-.bw-city{max-width:12rem}
+.bw-embed .bw-city{width:12rem;flex:none}
+.bw-date-wrap{width:auto;flex:none}
+.bw-embed .bw-date,.bw-embed .bw-submit{width:auto;flex:none}
 }`;
 	}
 

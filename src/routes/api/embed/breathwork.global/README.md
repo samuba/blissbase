@@ -6,13 +6,15 @@ Pages on breathwork.global can embed this search and list Blissbase breathwork e
 
 ```html
 <script
-  src="https://blissbase.app/embed/event-search-snippet.js"
+  src="https://www.blissbase.app/embed/event-search-snippet.js"
   location-id="196"
   initial-limit="2"
   async
 ></script>
 <div id="app"></div>
 ```
+
+Use `www.blissbase.app`. `blissbase.app` redirects there without CORS headers, and the browser then drops the search.
 
 The script renders into `#app`. If that element is missing, it creates one next to the script tag.
 
@@ -35,11 +37,13 @@ The script renders into `#app`. If that element is missing, it creates one next 
 
 `initial-limit` loads that many events as soon as the widget is ready. “Mehr Events anzeigen” then loads the next page, and further pages load on scroll. Without `initial-limit`, nothing loads until the visitor searches. The date range starts as today through 40 days later, and each search asks for 8 events.
 
-Only `https://breathwork.global` and `https://www.breathwork.global` can use the search. Other sites can load the script file, but the browser blocks the request.
+`https://breathwork.global`, `https://www.breathwork.global`, and local `http://localhost` / `http://127.0.0.1` pages can use the search. Other sites can load the script file, but the browser blocks the request.
+
+To try it on your machine, run the app and open `http://localhost:5173/embed/breathwork.global.html`. That page loads this snippet inside a small host site and searches your local events.
 
 ## Endpoint
 
-The script `POST`s JSON to `https://blissbase.app/api/embed/breathwork.global`.
+The script `POST`s JSON to `https://www.blissbase.app/api/embed/breathwork.global`.
 
 ```json
 {

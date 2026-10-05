@@ -121,6 +121,9 @@ describe(`breathwork embed search`, () => {
 		expect(empty.headers.get(`access-control-allow-origin`)).toBe(`https://www.breathwork.global`);
 		expect(await empty.json()).toEqual({ results: [], nextCursor: null });
 
+		const local = await OPTIONS(requestEvent({ method: `OPTIONS`, origin: `http://localhost:5173` }));
+		expect(local.headers.get(`access-control-allow-origin`)).toBe(`http://localhost:5173`);
+
 		const other = await OPTIONS(requestEvent({ method: `OPTIONS`, origin: `https://example.com` }));
 		expect(other.headers.get(`access-control-allow-origin`)).toBeNull();
 	});

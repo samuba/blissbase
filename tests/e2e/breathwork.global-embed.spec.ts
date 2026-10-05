@@ -46,7 +46,7 @@ test(`date and city search returns blissbase breathwork events`, async ({ page }
 		await route.fulfill({
 			status: 200,
 			contentType: `text/html; charset=utf-8`,
-			body: `<!doctype html><html><body>
+			body: `<!doctype html><html><head><style>button,select,a,h4,img{all:unset}button{display:none !important;background:#c45c26}</style></head><body>
 				<script location-id="195" initial-limit="1" src="/embed/event-search-snippet.js"></script>
 				<div id="app"></div>
 			</body></html>`,
@@ -66,7 +66,7 @@ test(`date and city search returns blissbase breathwork events`, async ({ page }
 		await route.fulfill({
 			status: 200,
 			contentType: `text/html; charset=utf-8`,
-			body: `<!doctype html><html><body>
+			body: `<!doctype html><html><head><style>button,select,a,h4,img{all:unset}button{display:none !important;background:#c45c26}</style></head><body>
 				<div id="app"></div>
 				<script src="/embed/event-search-snippet.js"></script>
 			</body></html>`,
