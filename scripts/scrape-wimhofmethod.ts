@@ -172,20 +172,29 @@ export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: 
 }
 
 /**
- * Co-hosts and ticket tiers list the same activity several times (same title, city and start), so those collapse to one.
- * Stored slugs are name + UTC day, so remaining same-day namesakes get the city, then the start time, appended.
+ * Co-hosts and ticket tiers list the same activity several times. Same title and start plus the same venue address
+ * or the same trainer (one person can't run two sessions at once) collapse to one.
+ * A city-only address ("Budapest, Hungary") is not proof of the same venue.
+ * Stored slugs are name + UTC day, so remaining same-day namesakes get the city, then start time, then host appended.
  */
 export function uniqueActivities(items: MappedActivity[]): ScrapedEvent[] {
 	const seen = new Set<string>();
-	const unique = items.filter(({ event, city }) => {
-		const key = `${event.name}|${city}|${event.startAt}`.toLowerCase();
-		if (seen.has(key)) return false;
-		seen.add(key);
+	const unique = items.filter(({ event }) => {
+		const base = `${event.name}|${event.startAt}`;
+		const keys = [
+			event.address.length > 2 ? `${base}|venue|${event.address.join(`, `)}` : undefined,
+			event.host ? `${base}|host|${event.host}` : undefined,
+		]
+			.filter((key): key is string => Boolean(key))
+			.map((key) => key.toLowerCase());
+		if (keys.some((key) => seen.has(key))) return false;
+		keys.forEach((key) => seen.add(key));
 		return true;
 	});
 
 	const withCity = suffixSlugCollisions({ events: unique.map((item) => item.event), getSuffix: (index) => unique[index].city });
-	return suffixSlugCollisions({ events: withCity, getSuffix: (index) => withCity[index].startAt.slice(11, 16) });
+	const withTime = suffixSlugCollisions({ events: withCity, getSuffix: (index) => withCity[index].startAt.slice(11, 16) });
+	return suffixSlugCollisions({ events: withTime, getSuffix: (index) => withTime[index].host ?? undefined });
 }
 
 function suffixSlugCollisions(args: { events: ScrapedEvent[]; getSuffix: (index: number) => string | undefined }): ScrapedEvent[] {

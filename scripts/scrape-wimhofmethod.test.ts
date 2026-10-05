@@ -141,10 +141,21 @@ describe(`uniqueActivities`, () => {
 		expect(events[0].name).toBe(`Atemklasse`);
 	});
 
+	it(`keeps different trainers apart when the address is only a city, but merges the same trainer`, () => {
+		const cityOnly = { ...base, address: [`Budapest`, `Hungary`] };
+		const names = uniqueActivities([
+			{ event: { ...cityOnly, host: `Sándor Szűcs` }, city: `Budapest` },
+			{ event: { ...cityOnly, host: `Mustafa Ay` }, city: `Budapest` },
+			{ event: { ...cityOnly, host: `Mustafa Ay`, price: `120€` }, city: `Budapest` },
+		]).map((event) => event.name);
+
+		expect(names).toEqual([`Atemklasse · Budapest · 19:00 · Sándor Szűcs`, `Atemklasse · Budapest · 19:00 · Mustafa Ay`]);
+	});
+
 	it(`appends the city, then the start time, only where stored slugs would collide`, () => {
 		const names = uniqueActivities([
 			{ event: base, city: `Münster` },
-			{ event: base, city: `Köln` },
+			{ event: { ...base, host: `Ada`, address: [`Domplatz 1`, `Köln`, `Germany`] }, city: `Köln` },
 			{ event: at(`2026-11-09T08:30:00+01:00`, `2026-11-09T12:30:00+01:00`), city: `Senlisse` },
 			{ event: at(`2026-11-09T14:00:00+01:00`, `2026-11-09T18:00:00+01:00`), city: `Senlisse` },
 			{ event: { ...base, name: `Ice bath` }, city: `Oslo` },
