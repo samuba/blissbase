@@ -35,7 +35,9 @@
 	let mounted = false;
 	let observer = null;
 	let resultsEl = null;
-	let submitEl = null;
+	let searchId = 0;
+	let pickingEnd = false;
+	let pendingStart = null;
 
 	const range = {
 		start: startOfDay(new Date()),
@@ -82,12 +84,6 @@
 			form.append(citySelect());
 		}
 		form.append(datePicker());
-		const submit = el(`button`, `bw-submit`);
-		submit.type = `submit`;
-		submit.dataset.testid = `breathwork-embed-search`;
-		submit.textContent = `Suchen`;
-		submitEl = submit;
-		form.append(submit);
 		form.addEventListener(`submit`, (event) => {
 			event.preventDefault();
 			initialLimit = null;
@@ -149,9 +145,7 @@
 		select.addEventListener(`change`, () => {
 			chosenLocationId = select.value;
 			initialLimit = null;
-			events = null;
-			cursor = null;
-			paintResults();
+			runSearch({ append: false });
 		});
 		return select;
 	}
@@ -161,13 +155,16 @@
 		const button = el(`button`, `bw-date`);
 		button.type = `button`;
 		button.dataset.testid = `breathwork-embed-date`;
+		const dateLabel = el(`span`, `bw-date-label`);
+		button.append(calendarIcon(), dateLabel);
 		const popover = el(`div`, `bw-popover`);
 		popover.hidden = true;
 		let visibleMonth = new Date(range.start.getFullYear(), range.start.getMonth(), 1);
-		let pickingEnd = false;
 
 		function paintButton() {
-			button.textContent = formatRangeLabel(range.start, range.end);
+			const start = pickingEnd && pendingStart ? pendingStart : range.start;
+			const end = pickingEnd && pendingStart ? pendingStart : range.end;
+			dateLabel.textContent = formatRangeLabel(start, end);
 		}
 
 		function paintCalendar() {
@@ -214,21 +211,25 @@
 				cell.textContent = String(day);
 				cell.addEventListener(`click`, () => {
 					if (!pickingEnd) {
-						range.start = date;
-						range.end = date;
+						pendingStart = date;
 						pickingEnd = true;
-					} else {
-						range.end = date;
-						if (range.end < range.start) {
-							const swap = range.start;
-							range.start = range.end;
-							range.end = swap;
-						}
-						pickingEnd = false;
-						popover.hidden = true;
+						paintButton();
+						paintCalendar();
+						return;
 					}
+					range.start = pendingStart;
+					range.end = date;
+					if (range.end < range.start) {
+						const swap = range.start;
+						range.start = range.end;
+						range.end = swap;
+					}
+					pickingEnd = false;
+					pendingStart = null;
+					popover.hidden = true;
+					initialLimit = null;
 					paintButton();
-					paintCalendar();
+					runSearch({ append: false });
 				});
 				grid.append(cell);
 			}
@@ -244,7 +245,12 @@
 			}
 		});
 		document.addEventListener(`click`, (event) => {
-			if (!event.composedPath().includes(wrap)) popover.hidden = true;
+			if (event.composedPath().includes(wrap)) return;
+			popover.hidden = true;
+			if (!pickingEnd) return;
+			pickingEnd = false;
+			pendingStart = null;
+			paintButton();
 		});
 		paintButton();
 		wrap.append(button, popover);
@@ -252,18 +258,21 @@
 	}
 
 	function dayClass(date) {
+		const start = pickingEnd && pendingStart ? pendingStart : range.start;
+		const end = pickingEnd && pendingStart ? pendingStart : range.end;
 		const key = dayKey(date);
-		const startKey = dayKey(range.start);
-		const endKey = dayKey(range.end);
+		const startKey = dayKey(start);
+		const endKey = dayKey(end);
 		const classes = [`bw-day`];
 		if (key === startKey || key === endKey) classes.push(`bw-day-end`);
-		else if (date > range.start && date < range.end) classes.push(`bw-day-in`);
+		else if (date > start && date < end) classes.push(`bw-day-in`);
 		if (key === dayKey(new Date())) classes.push(`bw-day-today`);
 		return classes.join(` `);
 	}
 
 	async function runSearch({ append }) {
-		if (loading || !chosenLocationId) return;
+		if (!chosenLocationId) return;
+		const id = ++searchId;
 		if (!append) {
 			events = null;
 			cursor = null;
@@ -276,6 +285,7 @@
 				headers: { "Content-Type": `application/json` },
 				body: JSON.stringify(requestBody()),
 			});
+			if (id !== searchId) return;
 			if (!response.ok) throw new Error(`breathwork embed search failed`);
 			const data = await response.json();
 			const batch = Array.isArray(data?.results) ? data.results : [];
@@ -290,10 +300,12 @@
 			cursor = data?.nextCursor ?? null;
 			events = append && events ? events.concat(next) : next;
 		} catch (error) {
+			if (id !== searchId) return;
 			console.error(error);
 			if (append) cursor = null;
 			else events = [];
 		} finally {
+			if (id !== searchId) return;
 			loading = false;
 			paintResults();
 		}
@@ -316,7 +328,6 @@
 	function paintResults() {
 		const results = resultsEl;
 		if (!results) return;
-		if (submitEl) submitEl.disabled = loading;
 		observer?.disconnect();
 		results.replaceChildren();
 
@@ -465,6 +476,31 @@
 		document.head.append(link);
 	}
 
+	function calendarIcon() {
+		const svg = document.createElementNS(`http://www.w3.org/2000/svg`, `svg`);
+		svg.setAttribute(`viewBox`, `0 0 24 24`);
+		svg.setAttribute(`fill`, `none`);
+		svg.setAttribute(`stroke`, `currentColor`);
+		svg.setAttribute(`stroke-width`, `2`);
+		svg.setAttribute(`stroke-linecap`, `round`);
+		svg.setAttribute(`stroke-linejoin`, `round`);
+		svg.setAttribute(`aria-hidden`, `true`);
+		svg.setAttribute(`class`, `bw-cal-icon`);
+		for (const d of [`M8 2v4`, `M16 2v4`, `M3 10h18`]) {
+			const path = document.createElementNS(`http://www.w3.org/2000/svg`, `path`);
+			path.setAttribute(`d`, d);
+			svg.append(path);
+		}
+		const rect = document.createElementNS(`http://www.w3.org/2000/svg`, `rect`);
+		rect.setAttribute(`width`, `18`);
+		rect.setAttribute(`height`, `18`);
+		rect.setAttribute(`x`, `3`);
+		rect.setAttribute(`y`, `4`);
+		rect.setAttribute(`rx`, `2`);
+		svg.append(rect);
+		return svg;
+	}
+
 	function pinIcon() {
 		const svg = document.createElementNS(`http://www.w3.org/2000/svg`, `svg`);
 		svg.setAttribute(`viewBox`, `0 0 24 24`);
@@ -541,14 +577,14 @@
 .bw-embed h4,.bw-embed p{margin:0}
 .bw-embed img{display:block;max-width:100%;border:0}
 .bw-inner{display:flex;width:100%;max-width:56rem;flex-direction:column;gap:1.5rem}
-.bw-form{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:1rem}
-.bw-embed .bw-city,.bw-embed .bw-date,.bw-embed .bw-submit{height:2.5rem;border-radius:0.375rem;font:500 0.875rem/1 "DM Sans",Arial,sans-serif}
-.bw-embed .bw-city,.bw-embed .bw-date{width:100%;border:1px solid #e4e4e7;background:#fff;color:#18181b}
-.bw-city{padding:0 0.75rem}
-.bw-date{display:flex;align-items:center;justify-content:flex-start;padding:0 0.75rem;white-space:nowrap;text-align:left}
+.bw-form{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1rem}
+.bw-embed .bw-city,.bw-embed .bw-submit{height:2.5rem;border-radius:0.375rem;font:500 0.875rem/1 "DM Sans",Arial,sans-serif}
+.bw-embed .bw-city{width:100%;max-width:100%;border:1px solid #e4e4e7;background:#fff;color:#18181b;padding:0 0.75rem}
+.bw-embed .bw-date{display:inline-flex;align-items:center;gap:0.5rem;width:fit-content;max-width:100%;height:2.5rem;padding:0 1rem;border:1px solid #e4e4e7;border-radius:0.375rem;background:#fff;color:#18181b;font:500 0.875rem/1 "DM Sans",Arial,sans-serif;white-space:nowrap}
+.bw-cal-icon{width:1rem;height:1rem;flex:none}
 .bw-embed .bw-submit{display:inline-flex;align-items:center;justify-content:center;border:0;background:#92b28d;color:#fff;padding:0 1rem}
 .bw-submit:disabled{cursor:default;opacity:0.6}
-.bw-date-wrap{position:relative;min-width:0}
+.bw-date-wrap{position:relative;width:fit-content;max-width:100%;flex:none}
 .bw-popover{position:absolute;z-index:50;top:calc(100% + 0.25rem);left:0;max-width:calc(100vw - 2rem);padding:0.75rem;border:1px solid #e4e4e7;border-radius:0.5rem;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.12)}
 .bw-popover[hidden]{display:none}
 .bw-cal-nav{display:flex;justify-content:space-between;margin-bottom:0.5rem}
@@ -588,8 +624,6 @@
 @media(min-width:768px){
 .bw-form{flex-direction:row;align-items:center}
 .bw-embed .bw-city{width:12rem;flex:none}
-.bw-date-wrap{width:auto;flex:none}
-.bw-embed .bw-date,.bw-embed .bw-submit{width:auto;flex:none}
 }`;
 	}
 

@@ -74,6 +74,5 @@ test(`date and city search returns blissbase breathwork events`, async ({ page }
 	});
 	await page.goto(`/embed-host`);
 	await page.getByTestId(`breathwork-embed-city`).selectOption(`197`);
-	await page.getByTestId(`breathwork-embed-search`).click();
 	await expect(page.getByTestId(`breathwork-embed-empty`)).toHaveText(`Keine Events gefunden`);
 });
