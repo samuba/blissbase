@@ -35,7 +35,7 @@ The script renders into `#app`. If that element is missing, it creates one next 
 | 206 | Zürich |
 | 205 | Bern |
 
-`initial-limit` loads that many events as soon as the widget is ready. “Mehr Events anzeigen” then loads the next page, and further pages load on scroll. Without `initial-limit`, nothing loads until the visitor searches. The date range starts as today through 40 days later, and each search asks for 8 events.
+`initial-limit` loads that many events as soon as the widget is ready. “Mehr Events anzeigen” then loads the next page, and further pages load on scroll. Without `initial-limit`, events load when the visitor picks a city or finishes a date range. The date range starts as today through 40 days later, and each search asks for 8 events.
 
 `https://breathwork.global`, `https://www.breathwork.global`, and local `http://localhost` / `http://127.0.0.1` pages can use the search. Other sites can load the script file, but the browser blocks the request.
 
