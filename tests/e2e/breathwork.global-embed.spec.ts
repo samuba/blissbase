@@ -52,6 +52,10 @@ test(`date and city search returns blissbase breathwork events`, async ({ page }
 			</body></html>`,
 		});
 	});
+	let searches = 0;
+	page.on(`request`, (request) => {
+		if (request.method() === `POST` && request.url().includes(`/api/embed/breathwork.global`)) searches += 1;
+	});
 	await page.goto(`/embed-host`);
 
 	await expect(page.getByTestId(`breathwork-embed-event`).filter({ hasText: `Atemkreis am Wasser` })).toBeVisible();
@@ -60,6 +64,10 @@ test(`date and city search returns blissbase breathwork events`, async ({ page }
 	await expect(page.getByTestId(`breathwork-embed-more`)).toBeVisible();
 	await page.getByTestId(`breathwork-embed-more`).click();
 	await expect(page.getByText(`Zweiter Atemkreis`)).toBeVisible();
+	await expect(page.getByTestId(`breathwork-embed-loading`)).toHaveCount(0);
+	const settled = searches;
+	await page.waitForTimeout(1200);
+	expect(searches).toBe(settled);
 
 	await page.unroute(`**/embed-host`);
 	await page.route(`**/embed-host`, async (route) => {

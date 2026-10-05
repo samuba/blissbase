@@ -272,6 +272,7 @@
 
 	async function runSearch({ append }) {
 		if (!chosenLocationId) return;
+		if (append && loading) return;
 		const id = ++searchId;
 		if (!append) {
 			events = null;
@@ -297,7 +298,7 @@
 					console.error(error);
 				}
 			}
-			cursor = data?.nextCursor ?? null;
+			cursor = next.length ? (data?.nextCursor ?? null) : null;
 			events = append && events ? events.concat(next) : next;
 		} catch (error) {
 			if (id !== searchId) return;
@@ -376,11 +377,17 @@
 			});
 			moreWrap.append(more);
 			results.append(moreWrap);
-		} else if (!initialLimit && cursor && events?.length) {
+		} else if (!loading && !initialLimit && cursor && events?.length) {
 			const sentinel = el(`div`, `bw-sentinel`);
 			results.append(sentinel);
+			let armed = false;
 			observer = new IntersectionObserver((entries) => {
-				if (!entries.some((entry) => entry.isIntersecting)) return;
+				const visible = entries.some((entry) => entry.isIntersecting);
+				if (!visible) {
+					armed = true;
+					return;
+				}
+				if (!armed || loading) return;
 				observer?.disconnect();
 				runSearch({ append: true });
 			});
