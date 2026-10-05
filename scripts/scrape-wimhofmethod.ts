@@ -148,7 +148,6 @@ export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: 
 	if (!name || !startAt || !sourceUrl) return undefined;
 
 	const imageUrls = uniqueStrings([listingCover(listing), ...getImageUrls(html)]);
-	const tags = uniqueStrings([...getTags(html), ...listingTags(listing)]);
 
 	return {
 		name,
@@ -165,7 +164,7 @@ export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: 
 		contact: getContact(html),
 		latitude: getLatitude(html),
 		longitude: getLongitude(html),
-		tags,
+		tags: getTags(html),
 		sourceUrl,
 		source: getSource(html),
 	};
@@ -346,16 +345,8 @@ function getLongitude(html: string): number | null {
 }
 
 function getTags(html: string): string[] {
-	const $ = cheerio.load(html);
-	let language: string | undefined;
-	$(`div`).each((_, el) => {
-		if (language) return;
-		if ($(el).text().trim() !== `Language`) return;
-		const value = $(el).next(`div`).text().replace(/\s+/g, ` `).trim();
-		if (!value || value.length > 40) return;
-		language = value;
-	});
-	return language ? [language] : [];
+	void html;
+	return [];
 }
 
 function getSourceUrl(html: string): string | undefined {
@@ -447,17 +438,6 @@ function listingCover(listing: WhmActivity): string | undefined {
 	const url = listing.headerBackgroundURL?.trim();
 	if (!url || !isUsefulImage(url)) return undefined;
 	return url;
-}
-
-function listingTags(listing: WhmActivity): string[] {
-	const tags: string[] = [];
-	for (const category of listing.categories ?? []) {
-		const title = category?.title?.trim();
-		if (title) tags.push(title);
-	}
-	const language = listing.language?.trim();
-	if (language) tags.push(language);
-	return tags;
 }
 
 function activityUrl(listing: WhmActivity | undefined): string | undefined {

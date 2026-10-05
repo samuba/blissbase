@@ -68,7 +68,7 @@ describe(`mapWhmActivity`, () => {
 			priceIsHtml: false,
 			imageUrls: [`https://media-cdn.wimhofmethod.com/uploads/workshops/cover.jpg`],
 			host: `Levent Semercioglu`,
-			tags: [`German`, `Breathing Class`],
+			tags: [],
 			sourceUrl: `https://activities.wimhofmethod.com/activities/atemklasse-muenster/71143`,
 			source: `wimhofmethod`,
 			contact: [
