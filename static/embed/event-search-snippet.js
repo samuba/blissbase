@@ -160,6 +160,7 @@
 		const popover = el(`div`, `bw-popover`);
 		popover.hidden = true;
 		let visibleMonth = new Date(range.start.getFullYear(), range.start.getMonth(), 1);
+		let hoverDate = null;
 
 		function paintButton() {
 			const start = pickingEnd && pendingStart ? pendingStart : range.start;
@@ -170,7 +171,7 @@
 		function paintCalendar() {
 			popover.replaceChildren();
 			const nav = el(`div`, `bw-cal-nav`);
-			nav.append(navButton(`‹`, -1), el(`div`, `bw-cal-gap`), navButton(`›`, 1));
+			nav.append(navButton(-1), navButton(1));
 			const months = el(`div`, `bw-months`);
 			const count = window.matchMedia(`(max-width: 767px)`).matches ? 1 : 2;
 			for (let index = 0; index < count; index += 1) {
@@ -179,11 +180,13 @@
 			popover.append(nav, months);
 		}
 
-		function navButton(label, delta) {
+		function navButton(delta) {
 			const control = el(`button`, `bw-cal-nav-btn`);
 			control.type = `button`;
-			control.textContent = label;
+			control.setAttribute(`aria-label`, delta < 0 ? `Vorheriger Monat` : `Nächster Monat`);
+			control.append(chevronIcon(delta));
 			control.addEventListener(`click`, () => {
+				hoverDate = null;
 				visibleMonth = addMonths(visibleMonth, delta);
 				paintCalendar();
 			});
@@ -203,35 +206,10 @@
 			const first = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
 			const lead = (first.getDay() + 6) % 7;
 			const days = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
-			for (let index = 0; index < lead; index += 1) grid.append(el(`div`, `bw-day bw-day-empty`));
+			for (let index = 0; index < lead; index += 1) grid.append(el(`div`, `bw-slot`));
 			for (let day = 1; day <= days; day += 1) {
 				const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
-				const cell = el(`button`, dayClass(date));
-				cell.type = `button`;
-				cell.textContent = String(day);
-				cell.addEventListener(`click`, () => {
-					if (!pickingEnd) {
-						pendingStart = date;
-						pickingEnd = true;
-						paintButton();
-						paintCalendar();
-						return;
-					}
-					range.start = pendingStart;
-					range.end = date;
-					if (range.end < range.start) {
-						const swap = range.start;
-						range.start = range.end;
-						range.end = swap;
-					}
-					pickingEnd = false;
-					pendingStart = null;
-					popover.hidden = true;
-					initialLimit = null;
-					paintButton();
-					runSearch({ append: false });
-				});
-				grid.append(cell);
+				grid.append(dayCell(date));
 			}
 			month.append(title, grid);
 			return month;
@@ -247,27 +225,136 @@
 		document.addEventListener(`click`, (event) => {
 			if (event.composedPath().includes(wrap)) return;
 			popover.hidden = true;
+			hoverDate = null;
 			if (!pickingEnd) return;
 			pickingEnd = false;
 			pendingStart = null;
 			paintButton();
 		});
+		popover.addEventListener(`pointerover`, (event) => {
+			if (!pickingEnd || !pendingStart) return;
+			const button = event.target.closest?.(`button.bw-day`);
+			if (!button) return;
+			const next = dateFromKey(button.parentElement.dataset.day);
+			if (hoverDate && dayKey(hoverDate) === dayKey(next)) return;
+			hoverDate = next;
+			paintRange();
+		});
+		popover.addEventListener(`pointerleave`, () => {
+			if (!hoverDate) return;
+			hoverDate = null;
+			paintRange();
+		});
+
+		function boundsForPaint() {
+			if (pickingEnd && pendingStart) {
+				const end = hoverDate || pendingStart;
+				if (end < pendingStart) return { start: end, end: pendingStart, preview: Boolean(hoverDate) };
+				return { start: pendingStart, end, preview: Boolean(hoverDate) };
+			}
+			return { start: range.start, end: range.end, preview: false };
+		}
+
+		function paintRange() {
+			for (const slot of popover.querySelectorAll(`[data-day]`)) syncDay(slot);
+		}
+
+		function syncDay(slot) {
+			const date = dateFromKey(slot.dataset.day);
+			const bounds = boundsForPaint();
+			const key = dayKey(date);
+			const isStart = key === dayKey(bounds.start);
+			const isEnd = key === dayKey(bounds.end);
+			const isIn = !isStart && !isEnd && date > bounds.start && date < bounds.end;
+			const weekday = (date.getDay() + 6) % 7;
+			const prev = addDays(date, -1);
+			const next = addDays(date, 1);
+			const joinLeft = weekday !== 0 && sameMonth(date, prev) && isSelectedDay(prev, bounds);
+			const joinRight = weekday !== 6 && sameMonth(date, next) && isSelectedDay(next, bounds);
+			const marked = isIn || isStart || isEnd;
+			const slotClasses = [`bw-slot`];
+			if (isIn) slotClasses.push(bounds.preview ? `bw-slot-preview` : `bw-slot-in`);
+			if (isStart) slotClasses.push(`bw-slot-start`);
+			if (isEnd) slotClasses.push(`bw-slot-end`);
+			if (marked && joinLeft) slotClasses.push(`bw-slot-join-left`);
+			if (marked && joinRight) slotClasses.push(`bw-slot-join-right`);
+			slot.className = slotClasses.join(` `);
+
+			const buttonClasses = [`bw-day`];
+			if (isStart || isEnd) buttonClasses.push(`bw-day-end`);
+			else if (isIn) buttonClasses.push(`bw-day-in`);
+			if (key === dayKey(new Date())) buttonClasses.push(`bw-day-today`);
+			slot.querySelector(`button`).className = buttonClasses.join(` `);
+		}
+
+		function dayCell(date) {
+			const slot = el(`div`, `bw-slot`);
+			slot.dataset.day = dayKey(date);
+			const cell = el(`button`, `bw-day`);
+			cell.type = `button`;
+			cell.textContent = String(date.getDate());
+			cell.addEventListener(`click`, () => {
+				if (!pickingEnd) {
+					pendingStart = date;
+					pickingEnd = true;
+					hoverDate = null;
+					paintButton();
+					paintCalendar();
+					return;
+				}
+				range.start = pendingStart;
+				range.end = date;
+				if (range.end < range.start) {
+					const swap = range.start;
+					range.start = range.end;
+					range.end = swap;
+				}
+				pickingEnd = false;
+				pendingStart = null;
+				hoverDate = null;
+				popover.hidden = true;
+				initialLimit = null;
+				paintButton();
+				runSearch({ append: false });
+			});
+			slot.append(cell);
+			syncDay(slot);
+			return slot;
+		}
+
 		paintButton();
 		wrap.append(button, popover);
 		return wrap;
 	}
 
-	function dayClass(date) {
-		const start = pickingEnd && pendingStart ? pendingStart : range.start;
-		const end = pickingEnd && pendingStart ? pendingStart : range.end;
+	function dateFromKey(key) {
+		const [year, month, day] = key.split(`-`).map(Number);
+		return new Date(year, month, day);
+	}
+
+	function sameMonth(a, b) {
+		return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+	}
+
+	function isSelectedDay(date, bounds) {
 		const key = dayKey(date);
-		const startKey = dayKey(start);
-		const endKey = dayKey(end);
-		const classes = [`bw-day`];
-		if (key === startKey || key === endKey) classes.push(`bw-day-end`);
-		else if (date > start && date < end) classes.push(`bw-day-in`);
-		if (key === dayKey(new Date())) classes.push(`bw-day-today`);
-		return classes.join(` `);
+		if (key === dayKey(bounds.start) || key === dayKey(bounds.end)) return true;
+		return date > bounds.start && date < bounds.end;
+	}
+
+	function chevronIcon(delta) {
+		const svg = document.createElementNS(`http://www.w3.org/2000/svg`, `svg`);
+		svg.setAttribute(`viewBox`, `0 0 24 24`);
+		svg.setAttribute(`fill`, `none`);
+		svg.setAttribute(`stroke`, `currentColor`);
+		svg.setAttribute(`stroke-width`, `2.5`);
+		svg.setAttribute(`stroke-linecap`, `round`);
+		svg.setAttribute(`stroke-linejoin`, `round`);
+		svg.setAttribute(`aria-hidden`, `true`);
+		const path = document.createElementNS(`http://www.w3.org/2000/svg`, `path`);
+		path.setAttribute(`d`, delta < 0 ? `M14.5 6.5 9 12l5.5 5.5` : `M9.5 6.5 15 12l-5.5 5.5`);
+		svg.append(path);
+		return svg;
 	}
 
 	async function runSearch({ append }) {
@@ -592,21 +679,34 @@
 .bw-embed .bw-submit{display:inline-flex;align-items:center;justify-content:center;border:0;background:#92b28d;color:#fff;padding:0 1rem}
 .bw-submit:disabled{cursor:default;opacity:0.6}
 .bw-date-wrap{position:relative;width:fit-content;max-width:100%;flex:none}
-.bw-popover{position:absolute;z-index:50;top:calc(100% + 0.25rem);left:0;max-width:calc(100vw - 2rem);padding:0.75rem;border:1px solid #e4e4e7;border-radius:0.5rem;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.12)}
+.bw-popover{position:absolute;z-index:50;top:calc(100% + 0.25rem);left:0;max-width:calc(100vw - 2rem);padding:0.4rem 0.35rem 0.3rem;border:1px solid #e4e4e7;border-radius:0.5rem;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.12)}
 .bw-popover[hidden]{display:none}
-.bw-cal-nav{display:flex;justify-content:space-between;margin-bottom:0.5rem}
-.bw-cal-nav-btn{width:2rem;height:2rem;border-radius:0.375rem;font-size:1.25rem;line-height:1;color:#3f3f46}
+.bw-cal-nav{position:absolute;z-index:2;top:0.15rem;left:0.05rem;right:0.05rem;display:flex;justify-content:space-between;pointer-events:none}
+.bw-embed .bw-cal-nav-btn{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:0.375rem;color:#3f3f46}
+.bw-cal-nav-btn svg{width:1.7rem;height:1.7rem;display:block}
 .bw-cal-nav-btn:hover{background:#f4f4f5}
-.bw-months{display:flex;gap:1rem}
-.bw-month-title{margin-bottom:0.5rem;text-align:center;font-weight:500;text-transform:capitalize}
-.bw-grid{display:grid;grid-template-columns:repeat(7,2.25rem);gap:0.15rem}
-.bw-weekday{display:flex;align-items:center;justify-content:center;height:2.25rem;font-size:0.75rem;color:#71717a}
-.bw-embed .bw-day{width:2.25rem;height:2.25rem;border-radius:0.375rem;background:transparent;color:#1f1f1f;font-size:0.875rem;font-weight:400}
+.bw-months{display:flex;gap:0.75rem}
+.bw-month-title{display:flex;align-items:center;justify-content:center;height:2rem;margin-bottom:0.1rem;text-align:center;font-weight:500;text-transform:capitalize}
+.bw-grid{display:grid;grid-template-columns:repeat(7,2.55rem)}
+.bw-weekday{display:flex;align-items:center;justify-content:center;height:1.7rem;font-size:0.8rem;color:#71717a}
+.bw-slot{position:relative;display:flex;align-items:center;justify-content:center;height:2.7rem}
+.bw-slot::before{content:"";position:absolute;top:0.32rem;bottom:0.32rem;background:#d6e1d4;display:none}
+.bw-slot-in::before,.bw-slot-preview::before{display:block;left:0;right:0}
+.bw-slot-preview::before{background:#e7f0e3}
+.bw-slot-in.bw-slot-join-left::before,.bw-slot-preview.bw-slot-join-left::before{left:-1px}
+.bw-slot-in.bw-slot-join-right::before,.bw-slot-preview.bw-slot-join-right::before{right:-1px}
+.bw-slot-in:not(.bw-slot-join-left)::before,.bw-slot-preview:not(.bw-slot-join-left)::before{border-top-left-radius:999px;border-bottom-left-radius:999px}
+.bw-slot-in:not(.bw-slot-join-right)::before,.bw-slot-preview:not(.bw-slot-join-right)::before{border-top-right-radius:999px;border-bottom-right-radius:999px}
+.bw-slot-start.bw-slot-join-right::before{display:block;left:50%;right:-1px}
+.bw-slot-end.bw-slot-join-left::before{display:block;left:-1px;right:50%}
+.bw-slot-start.bw-slot-end::before{display:none}
+.bw-embed .bw-day{position:relative;z-index:1;width:2.3rem;height:2.3rem;border-radius:0.45rem;background:transparent;color:#1f1f1f;font-size:0.95rem;font-weight:400}
 .bw-embed .bw-day:hover{background:#f4f4f5}
-.bw-embed .bw-day-in,.bw-embed .bw-day-in:hover{background:#d6e1d4}
-.bw-embed .bw-day-end,.bw-embed .bw-day-end:hover{background:#92b28d;color:#fff}
-.bw-day-today{box-shadow:inset 0 0 0 1px #92b28d}
-.bw-day-empty{height:2.25rem}
+.bw-embed .bw-day-in{background:transparent;border-radius:0}
+.bw-embed .bw-day-in:hover{background:#c5d6c1;border-radius:999px}
+.bw-slot-preview .bw-day-in:hover{background:#d5e6d0}
+.bw-embed .bw-day-end,.bw-embed .bw-day-end:hover{border-radius:999px;background:#4f7348;color:#fff;font-weight:500}
+.bw-day-today:not(.bw-day-end){box-shadow:inset 0 0 0 1px #92b28d}
 .bw-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;margin-top:0.5rem;font-size:0.875rem}
 .bw-embed .bw-add{color:#92b28d}
 .bw-embed .bw-add:hover,.bw-embed .bw-powered:hover{text-decoration:underline}
