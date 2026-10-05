@@ -43,6 +43,7 @@ describe(`whmDateToIso`, () => {
 		expect(whmDateToIso(`2026-10-05CEST19:00 `)).toBe(`2026-10-05T19:00:00+02:00`);
 		expect(whmDateToIso(`2026-11-09CET19:00`)).toBe(`2026-11-09T19:00:00+01:00`);
 		expect(whmDateToIso(`2026-10-10PDT09:00`)).toBe(`2026-10-10T09:00:00-07:00`);
+		expect(whmDateToIso(`2026-11-07NST09:00 `)).toBe(`2026-11-07T09:00:00-03:30`);
 		expect(whmDateToIso(`2026-10-10+0309:45`)).toBe(`2026-10-10T09:45:00+03:00`);
 		expect(whmDateToIso(`2026-10-10+053010:30`)).toBe(`2026-10-10T10:30:00+05:30`);
 		expect(whmDateToIso(`not-a-date`)).toBeUndefined();

@@ -108,7 +108,7 @@ export async function collectActivityPages(args: {
 			}
 
 			try {
-				const html = await loadHtmlRetrying({ url, loadHtml });
+				const html = await loadHtml(url);
 				const event = mapWhmActivity({ html, listing, url });
 				if (!event) {
 					failed += 1;
@@ -148,7 +148,7 @@ export async function collectActivityPages(args: {
 export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: string }): ScrapedEvent | undefined {
 	const { html, listing, url } = args;
 	const name = getName(html) || listing.title?.trim() || undefined;
-	const startAt = getStartAt(html) || listingClockToIso({ clock: listing.start, country: listing.location?.country });
+	const startAt = getStartAt(html);
 	const sourceUrl = getSourceUrl(html) || url;
 	if (!name || !startAt || !sourceUrl) return undefined;
 
@@ -158,10 +158,10 @@ export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: 
 	return {
 		name,
 		startAt,
-		endAt: getEndAt(html) || listingClockToIso({ clock: listing.end, country: listing.location?.country }),
+		endAt: getEndAt(html),
 		timezone: resolveTimezone({ html, country: listing.location?.country }),
 		address: withAddressFallback({ html, listing }),
-		price: getPrice(html) || listingPrice(listing),
+		price: getPrice(html),
 		priceIsHtml: getPriceIsHtml(html),
 		description: getDescription(html),
 		imageUrls,
@@ -419,7 +419,7 @@ async function fetchAllActivities(): Promise<WhmActivity[]> {
 	}
 
 	if (total > 0 && activities.length < total) {
-		throw new Error(`Wim Hof search returned ${activities.length} activities, expected ${total}`);
+		console.error(`Wim Hof search returned ${activities.length} activities, expected ${total}`);
 	}
 
 	return activities;
@@ -451,143 +451,37 @@ function listingTags(listing: WhmActivity): string[] {
 	return tags;
 }
 
-function listingPrice(listing: WhmActivity): string | undefined {
-	const amount = Number(listing.customerPrice ?? listing.price);
-	if (!Number.isFinite(amount)) return undefined;
-	if (amount === 0) return `Kostenlos`;
-	return formatMoney({ amount, currency: currencyCode(listing.currency) });
-}
-
-function listingClockToIso(args: { clock: WhmClock | null | undefined; country: string | null | undefined }): string | undefined {
-	const { clock, country } = args;
-	const dayMatch = clock?.day?.trim().match(/^(\d{1,2})\s+([A-Za-z]{3})$/);
-	const timeMatch = clock?.time?.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-	if (!dayMatch || !timeMatch) return undefined;
-
-	const month = MONTHS[dayMatch[2]];
-	const day = Number(dayMatch[1]);
-	if (!month || day < 1 || day > 31) return undefined;
-
-	let hour = Number(timeMatch[1]);
-	const minute = Number(timeMatch[2]);
-	const ampm = timeMatch[3].toUpperCase();
-	if (ampm === `PM` && hour < 12) hour += 12;
-	if (ampm === `AM` && hour === 12) hour = 0;
-
-	const year = inferYear({ month, day });
-	const timeZone = countryTimezone(country) || `UTC`;
-	return isoInTimeZone({ year, month, day, hour, minute, timeZone });
-}
-
-function inferYear(args: { month: number; day: number; now?: Date }): number {
-	const { month, day, now = new Date() } = args;
-	const thisYear = now.getUTCFullYear();
-	const candidate = Date.UTC(thisYear, month - 1, day);
-	const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-	return candidate >= today ? thisYear : thisYear + 1;
-}
-
-function isoInTimeZone(args: {
-	year: number;
-	month: number;
-	day: number;
-	hour: number;
-	minute: number;
-	timeZone: string;
-}): string | undefined {
-	const { year, month, day, hour, minute, timeZone } = args;
-	try {
-		const reference = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-		const formatter = new Intl.DateTimeFormat(`en`, { timeZone, timeZoneName: `longOffset` });
-		const offsetPart = formatter.formatToParts(reference).find((part) => part.type === `timeZoneName`);
-		const offset = offsetPart?.value?.match(/[+-]\d{2}:\d{2}/)?.[0] || `+00:00`;
-		const pad = (value: number) => String(value).padStart(2, `0`);
-		return `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00${offset}`;
-	} catch (error) {
-		console.error(`Failed to format ${timeZone} clock time:`, error);
-		return undefined;
-	}
-}
-
-async function loadHtmlRetrying(args: { url: string; loadHtml: (url: string) => Promise<string> }): Promise<string> {
-	const { url, loadHtml } = args;
-	try {
-		return await loadHtml(url);
-	} catch (error) {
-		console.error(`Retrying ${url}:`, error);
-		await Bun.sleep(1500);
-		return loadHtml(url);
-	}
-}
-
 function activityUrl(listing: WhmActivity | undefined): string | undefined {
 	const slug = listing?.workshopSlug?.trim();
 	if (!slug || typeof listing?.workshopDateId !== `number`) return undefined;
 	return `${SITE_BASE}/activities/${slug}/${listing.workshopDateId}`;
 }
 
-const eventCache = new Map<string, WhmJsonLdEvent | undefined>();
+let lastHtml: string | undefined;
+let lastEvent: WhmJsonLdEvent | undefined;
 
 function readEvent(html: string): WhmJsonLdEvent | undefined {
-	if (eventCache.has(html)) return eventCache.get(html);
-	const event = readEventUncached(html);
-	eventCache.set(html, event);
-	return event;
+	if (html === lastHtml) return lastEvent;
+	lastHtml = html;
+	lastEvent = readEventUncached(html);
+	return lastEvent;
 }
 
 function readEventUncached(html: string): WhmJsonLdEvent | undefined {
 	const $ = cheerio.load(html);
-	let found: WhmJsonLdEvent | undefined;
-	let looseScript: string | undefined;
-	$(`script[type="application/ld+json"]`).each((_, el) => {
-		if (found) return;
+	for (const el of $(`script[type="application/ld+json"]`).toArray()) {
 		const text = $(el).text();
-		if (!text.includes(`Event`)) return;
+		if (!text.includes(`Event`)) continue;
 		try {
-			const parsed = JSON.parse(text) as WhmJsonLdEvent | WhmJsonLdEvent[];
-			const nodes = Array.isArray(parsed) ? parsed : [parsed];
-			for (const node of nodes) {
-				if (node?.[`@type`] !== `Event`) continue;
-				found = node;
-				return;
-			}
-		} catch {
-			looseScript = text;
-			console.error(`Activity JSON-LD was not valid JSON; reading fields from the script text.`);
+			// Descriptions sometimes contain raw tabs/newlines, which JSON.parse rejects inside strings.
+			const parsed = JSON.parse(text.replace(/[\u0000-\u001f]+/g, ` `)) as WhmJsonLdEvent | WhmJsonLdEvent[];
+			const event = (Array.isArray(parsed) ? parsed : [parsed]).find((node) => node?.[`@type`] === `Event`);
+			if (event) return event;
+		} catch (error) {
+			console.error(`Activity JSON-LD is not valid JSON:`, error);
 		}
-	});
-	if (found) return found;
-	if (!looseScript) return undefined;
-	return looseEvent(looseScript);
-}
-
-function looseEvent(script: string): WhmJsonLdEvent | undefined {
-	const name = jsonStringField(script, `name`);
-	const startDate = jsonStringField(script, `startDate`);
-	if (!name && !startDate) return undefined;
-
-	const locationName = script.match(/"location"\s*:\s*\{[\s\S]*?"name"\s*:\s*"([^"]*)"/)?.[1];
-	const performer = script.match(/"performer"\s*:\s*\{[\s\S]*?"name"\s*:\s*"([^"]*)"/)?.[1];
-	const image = jsonStringField(script, `image`);
-
-	return {
-		"@type": `Event`,
-		name: name ? decodeHtml(name) : undefined,
-		startDate,
-		endDate: jsonStringField(script, `endDate`),
-		eventAttendanceMode: jsonStringField(script, `eventAttendanceMode`),
-		image,
-		location: locationName ? { name: decodeHtml(locationName) } : undefined,
-		offers: {
-			price: jsonStringField(script, `price`),
-			priceCurrency: jsonStringField(script, `priceCurrency`),
-		},
-		performer: performer ? { name: decodeHtml(performer) } : undefined,
-	};
-}
-
-function jsonStringField(script: string, key: string): string | undefined {
-	return script.match(new RegExp(`"${key}"\\s*:\\s*"([^"]*)"`))?.[1];
+	}
+	return undefined;
 }
 
 function isOnline(event: WhmJsonLdEvent | undefined): boolean {
@@ -613,17 +507,6 @@ function offsetForZone(zone: string): string | undefined {
 function countryTimezone(country: string | null | undefined): string | undefined {
 	if (!country) return undefined;
 	return COUNTRY_TIMEZONES[country];
-}
-
-function currencyCode(raw: string | null | undefined): string | undefined {
-	if (!raw) return undefined;
-	const text = decodeHtml(raw);
-	if (text.includes(`€`) || text.includes(`euro`)) return `EUR`;
-	if (text.includes(`£`)) return `GBP`;
-	if (text.startsWith(`A$`)) return `AUD`;
-	if (text.startsWith(`C$`)) return `CAD`;
-	if (text === `$` || text.includes(`$`)) return `USD`;
-	return text;
 }
 
 function formatAmount(args: { amount: number; currency: string | undefined }): string {
@@ -686,94 +569,6 @@ function escapeHtml(text: string): string {
 	return text.replaceAll(`&`, `&amp;`).replaceAll(`<`, `&lt;`).replaceAll(`>`, `&gt;`);
 }
 
-if (import.meta.main) {
-	try {
-		const scraper = new WebsiteScraper();
-		const events = await scraper.scrapeWebsite();
-		console.log(JSON.stringify(events, null, 2));
-	} catch (error) {
-		console.error(`Unhandled error in main execution:`, error);
-		process.exit(1);
-	}
-}
-
-type MappedActivity = {
-	event: ScrapedEvent;
-	city?: string;
-	host?: string;
-	id: string;
-};
-
-type WhmClock = {
-	day?: string | null;
-	time?: string | null;
-};
-
-type WhmActivity = {
-	title?: string | null;
-	headerBackgroundURL?: string | null;
-	isDefaultHeaderBackground?: boolean | null;
-	price?: number | null;
-	currency?: string | null;
-	customerPrice?: string | null;
-	start?: WhmClock | null;
-	end?: WhmClock | null;
-	location?: { country?: string | null; city?: string | null } | null;
-	language?: string | null;
-	workshopSlug?: string | null;
-	workshopDateId?: number | null;
-	categories?: { id?: number; title?: string | null }[] | null;
-	trainerName?: string | null;
-};
-
-type WhmSearchResponse = {
-	pagination?: {
-		current_page?: number;
-		last_page?: number;
-		total?: number;
-		data?: WhmActivity[];
-	};
-};
-
-type WhmJsonLdEvent = {
-	"@type"?: string;
-	name?: string;
-	startDate?: string;
-	endDate?: string;
-	eventAttendanceMode?: string;
-	description?: string;
-	image?: string | string[];
-	location?: {
-		name?: string;
-		address?: {
-			addressLocality?: string;
-			addressCountry?: { name?: string } | string;
-		};
-	};
-	offers?: {
-		price?: string | number;
-		priceCurrency?: string;
-	};
-	performer?: {
-		name?: string;
-	};
-};
-
-const MONTHS: Record<string, number> = {
-	Jan: 1,
-	Feb: 2,
-	Mar: 3,
-	Apr: 4,
-	May: 5,
-	Jun: 6,
-	Jul: 7,
-	Aug: 8,
-	Sep: 9,
-	Oct: 10,
-	Nov: 11,
-	Dec: 12,
-};
-
 const ZONE_OFFSETS: Record<string, string> = {
 	GMT: `+00:00`,
 	UTC: `+00:00`,
@@ -788,7 +583,6 @@ const ZONE_OFFSETS: Record<string, string> = {
 	TRT: `+03:00`,
 	MSK: `+03:00`,
 	GST: `+04:00`,
-	IST_IN: `+05:30`,
 	ICT: `+07:00`,
 	WIB: `+07:00`,
 	HKT: `+08:00`,
@@ -802,6 +596,8 @@ const ZONE_OFFSETS: Record<string, string> = {
 	AEDT: `+11:00`,
 	NZST: `+12:00`,
 	NZDT: `+13:00`,
+	NDT: `-02:30`,
+	NST: `-03:30`,
 	AST: `-04:00`,
 	EDT: `-04:00`,
 	EST: `-05:00`,
@@ -816,6 +612,7 @@ const ZONE_OFFSETS: Record<string, string> = {
 	HST: `-10:00`,
 };
 
+// Standard-time tokens map to zones without DST, so a token like AEST in January (Brisbane) keeps its offset.
 const ZONE_IANA: Record<string, string> = {
 	GMT: `Europe/London`,
 	UTC: `UTC`,
@@ -830,17 +627,19 @@ const ZONE_IANA: Record<string, string> = {
 	TRT: `Europe/Istanbul`,
 	JST: `Asia/Tokyo`,
 	AWST: `Australia/Perth`,
-	ACST: `Australia/Adelaide`,
+	ACST: `Australia/Darwin`,
 	ACDT: `Australia/Adelaide`,
-	AEST: `Australia/Sydney`,
+	AEST: `Australia/Brisbane`,
 	AEDT: `Australia/Sydney`,
 	NZST: `Pacific/Auckland`,
 	NZDT: `Pacific/Auckland`,
+	NST: `America/St_Johns`,
+	NDT: `America/St_Johns`,
 	EST: `America/New_York`,
 	EDT: `America/New_York`,
 	CST: `America/Chicago`,
 	CDT: `America/Chicago`,
-	MST: `America/Denver`,
+	MST: `America/Phoenix`,
 	MDT: `America/Denver`,
 	PST: `America/Los_Angeles`,
 	PDT: `America/Los_Angeles`,
@@ -888,4 +687,67 @@ const COUNTRY_TIMEZONES: Record<string, string> = {
 	Turkey: `Europe/Istanbul`,
 	"United Kingdom": `Europe/London`,
 	"United States": `America/New_York`,
+};
+
+if (import.meta.main) {
+	try {
+		const scraper = new WebsiteScraper();
+		const events = await scraper.scrapeWebsite();
+		console.log(JSON.stringify(events, null, 2));
+	} catch (error) {
+		console.error(`Unhandled error in main execution:`, error);
+		process.exit(1);
+	}
+}
+
+type MappedActivity = {
+	event: ScrapedEvent;
+	city?: string;
+	host?: string;
+	id: string;
+};
+
+type WhmActivity = {
+	title?: string | null;
+	headerBackgroundURL?: string | null;
+	isDefaultHeaderBackground?: boolean | null;
+	location?: { country?: string | null; city?: string | null } | null;
+	language?: string | null;
+	workshopSlug?: string | null;
+	workshopDateId?: number | null;
+	categories?: { id?: number; title?: string | null }[] | null;
+	trainerName?: string | null;
+};
+
+type WhmSearchResponse = {
+	pagination?: {
+		current_page?: number;
+		last_page?: number;
+		total?: number;
+		data?: WhmActivity[];
+	};
+};
+
+type WhmJsonLdEvent = {
+	"@type"?: string;
+	name?: string;
+	startDate?: string;
+	endDate?: string;
+	eventAttendanceMode?: string;
+	description?: string;
+	image?: string | string[];
+	location?: {
+		name?: string;
+		address?: {
+			addressLocality?: string;
+			addressCountry?: { name?: string } | string;
+		};
+	};
+	offers?: {
+		price?: string | number;
+		priceCurrency?: string;
+	};
+	performer?: {
+		name?: string;
+	};
 };
