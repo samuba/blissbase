@@ -673,7 +673,8 @@
 .bw-inner{display:flex;width:100%;max-width:56rem;flex-direction:column;gap:1.5rem}
 .bw-form{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1rem}
 .bw-embed .bw-city,.bw-embed .bw-submit{height:2.5rem;border-radius:0.375rem;font:500 0.875rem/1 "DM Sans",Arial,sans-serif}
-.bw-embed .bw-city{width:100%;max-width:100%;border:1px solid #e4e4e7;background:#fff;color:#18181b;padding:0 0.75rem}
+.bw-embed .bw-city{appearance:none;-webkit-appearance:none;width:100%;max-width:100%;border:1px solid #e4e4e7;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233f3f46' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.7rem center;background-size:1.05rem 1.05rem;color:#18181b;padding:0 2.15rem 0 0.85rem;line-height:2.5rem;cursor:pointer}
+.bw-embed .bw-city:hover{border-color:#d4d4d8}
 .bw-embed .bw-date{display:inline-flex;align-items:center;gap:0.5rem;width:fit-content;max-width:100%;height:2.5rem;padding:0 1rem;border:1px solid #e4e4e7;border-radius:0.375rem;background:#fff;color:#18181b;font:500 0.875rem/1 "DM Sans",Arial,sans-serif;white-space:nowrap}
 .bw-cal-icon{width:1rem;height:1rem;flex:none}
 .bw-embed .bw-submit{display:inline-flex;align-items:center;justify-content:center;border:0;background:#92b28d;color:#fff;padding:0 1rem}
