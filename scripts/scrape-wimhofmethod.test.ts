@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { assignUniqueNames, collectActivityPages, mapWhmActivity, whmDateToIso } from "./scrape-wimhofmethod.ts";
+import { collectActivityPages, uniqueActivities, mapWhmActivity, whmDateToIso } from "./scrape-wimhofmethod.ts";
 
 const html = `<!doctype html>
 <html><head>
@@ -123,26 +123,55 @@ line two",
 	});
 });
 
-describe(`assignUniqueNames`, () => {
-	it(`adds the city when two activities would share a stored slug`, () => {
-		const first = mapWhmActivity({
-			html,
-			listing,
-			url: `https://activities.wimhofmethod.com/activities/atemklasse-muenster/71143`,
-		});
-		const second = mapWhmActivity({
-			html: html.replaceAll(`Münster`, `Köln`).replaceAll(`muenster`, `koeln`).replaceAll(`71143`, `72000`),
-			listing: { ...listing, workshopDateId: 72000, workshopSlug: `atemklasse-koeln`, location: { city: `Köln`, country: `Germany` } },
-			url: `https://activities.wimhofmethod.com/activities/atemklasse-koeln/72000`,
-		});
-		if (!first || !second) throw new Error(`expected both events`);
+describe(`uniqueActivities`, () => {
+	const base = mapWhmActivity({
+		html,
+		listing,
+		url: `https://activities.wimhofmethod.com/activities/atemklasse-muenster/71143`,
+	});
+	if (!base) throw new Error(`expected base event`);
+	const at = (startAt: string, endAt: string) => ({ ...base, startAt, endAt });
 
-		const named = assignUniqueNames([
-			{ event: first, city: `Münster`, host: first.host ?? undefined, id: `71143` },
-			{ event: second, city: `Köln`, host: second.host ?? undefined, id: `72000` },
+	it(`collapses co-host and ticket-tier listings of the same activity`, () => {
+		const events = uniqueActivities([
+			{ event: { ...base, host: `Dr. Martin Zeitz` }, city: `Düsseldorf` },
+			{ event: { ...base, host: `Stefan Reiters` }, city: `Düsseldorf` },
 		]);
+		expect(events).toHaveLength(1);
+		expect(events[0].name).toBe(`Atemklasse`);
+	});
 
-		expect(named.map((event) => event.name).sort()).toEqual([`Atemklasse · Köln`, `Atemklasse · Münster`]);
+	it(`appends the city, then the start time, only where stored slugs would collide`, () => {
+		const names = uniqueActivities([
+			{ event: base, city: `Münster` },
+			{ event: base, city: `Köln` },
+			{ event: at(`2026-11-09T08:30:00+01:00`, `2026-11-09T12:30:00+01:00`), city: `Senlisse` },
+			{ event: at(`2026-11-09T14:00:00+01:00`, `2026-11-09T18:00:00+01:00`), city: `Senlisse` },
+			{ event: { ...base, name: `Ice bath` }, city: `Oslo` },
+		]).map((event) => event.name);
+
+		expect(names).toEqual([
+			`Atemklasse · Münster`,
+			`Atemklasse · Köln`,
+			`Atemklasse · Senlisse · 08:30`,
+			`Atemklasse · Senlisse · 14:00`,
+			`Ice bath`,
+		]);
+	});
+});
+
+describe(`HTML entities in JSON-LD`, () => {
+	it(`decodes host, name and address`, () => {
+		const encoded = html
+			.replace(`"name": "Atemklasse"`, `"name": "WHM Weekend &amp; Ice"`)
+			.replace(`"Levent Semercioglu"`, `"Laurent D&#039;acunto"`)
+			.replace(`Rudolf-Diesel-Straße 1`, `YOGA&amp;CO`);
+		const mapped = mapWhmActivity({ html: encoded, listing, url: `https://activities.wimhofmethod.com/x/1` });
+		expect(mapped).toMatchObject({
+			name: `WHM Weekend & Ice`,
+			host: `Laurent D'acunto`,
+			address: [`YOGA&CO`, `Münster`, `Germany`],
+		});
 	});
 });
 
@@ -157,6 +186,7 @@ describe(`collectActivityPages`, () => {
 			],
 			loadHtml: async (url) => {
 				if (url.includes(`/broken/`)) throw new Error(`boom`);
+				if (url.includes(`/other/`)) return html.replaceAll(`2026-11-09`, `2026-11-10`);
 				return html;
 			},
 		});

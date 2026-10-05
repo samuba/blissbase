@@ -114,12 +114,7 @@ export async function collectActivityPages(args: {
 					failed += 1;
 					console.error(`Skipping ${url}: missing name or start.`);
 				} else {
-					mapped[current] = {
-						event,
-						city: listing.location?.city?.trim() || undefined,
-						host: event.host?.trim() || listing.trainerName?.trim() || undefined,
-						id: String(listing.workshopDateId),
-					};
+					mapped[current] = { event, city: listing.location?.city?.trim() || undefined };
 				}
 			} catch (error) {
 				failed += 1;
@@ -142,7 +137,7 @@ export async function collectActivityPages(args: {
 		console.error(`${failed} activities could not be mapped.`);
 	}
 
-	return assignUniqueNames(mapped.filter((item) => item?.event));
+	return uniqueActivities(mapped.filter((item) => item?.event));
 }
 
 export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: string }): ScrapedEvent | undefined {
@@ -177,34 +172,39 @@ export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: 
 }
 
 /**
- * Same-day activities often share a title ("Fundamentals Workshop").
- * Stored slugs are name + UTC day, so identical titles on one day would collapse to one row.
+ * Co-hosts and ticket tiers list the same activity several times (same title, city and start), so those collapse to one.
+ * Stored slugs are name + UTC day, so remaining same-day namesakes get the city, then the start time, appended.
  */
-export function assignUniqueNames(items: MappedActivity[]): ScrapedEvent[] {
-	const names = items.map((item) => item.event.name);
-	const discriminators = [
-		(item: MappedActivity) => item.city,
-		(item: MappedActivity) => item.host,
-		(item: MappedActivity) => item.event.startAt.slice(11, 16),
-		(item: MappedActivity) => item.id,
-	];
+export function uniqueActivities(items: MappedActivity[]): ScrapedEvent[] {
+	const seen = new Set<string>();
+	const unique = items.filter(({ event, city }) => {
+		const key = `${event.name}|${city}|${event.startAt}`.toLowerCase();
+		if (seen.has(key)) return false;
+		seen.add(key);
+		return true;
+	});
 
-	for (const next of discriminators) {
-		const groups = groupIndexesBySlug({ items, names });
-		const collisions = [...groups.values()].filter((indexes) => indexes.length > 1);
-		if (!collisions.length) break;
+	const withCity = suffixSlugCollisions({ events: unique.map((item) => item.event), getSuffix: (index) => unique[index].city });
+	return suffixSlugCollisions({ events: withCity, getSuffix: (index) => withCity[index].startAt.slice(11, 16) });
+}
 
-		for (const indexes of collisions) {
-			for (const index of indexes) {
-				const extra = next(items[index])?.trim();
-				if (!extra) continue;
-				if (names[index].toLowerCase().includes(extra.toLowerCase())) continue;
-				names[index] = `${names[index]} · ${extra}`;
-			}
-		}
-	}
+function suffixSlugCollisions(args: { events: ScrapedEvent[]; getSuffix: (index: number) => string | undefined }): ScrapedEvent[] {
+	const { events, getSuffix } = args;
+	const slugs = events.map(slugOf);
+	return events.map((event, index) => {
+		if (slugs.indexOf(slugs[index]) === slugs.lastIndexOf(slugs[index])) return event;
+		const suffix = getSuffix(index)?.trim();
+		if (!suffix || event.name.toLowerCase().includes(suffix.toLowerCase())) return event;
+		return { ...event, name: `${event.name} · ${suffix}` };
+	});
+}
 
-	return items.map((item, index) => ({ ...item.event, name: names[index] }));
+function slugOf(event: ScrapedEvent): string {
+	return generateSlug({
+		name: event.name,
+		startAt: new Date(event.startAt),
+		endAt: event.endAt ? new Date(event.endAt) : undefined,
+	});
 }
 
 export function whmDateToIso(raw: string | undefined): string | undefined {
@@ -230,10 +230,7 @@ export function whmDateToIso(raw: string | undefined): string | undefined {
 }
 
 function getName(html: string): string | undefined {
-	const name = readEvent(html)?.name;
-	if (typeof name !== `string`) return undefined;
-	const trimmed = name.trim();
-	return trimmed || undefined;
+	return textValue(readEvent(html)?.name);
 }
 
 function getStartAt(html: string): string | undefined {
@@ -308,10 +305,7 @@ function getImageUrls(html: string): string[] {
 }
 
 function getHost(html: string): string | undefined {
-	const name = readEvent(html)?.performer?.name;
-	if (typeof name !== `string`) return undefined;
-	const trimmed = name.trim();
-	return trimmed || undefined;
+	return textValue(readEvent(html)?.performer?.name);
 }
 
 function getHostLink(html: string): string | undefined {
@@ -528,21 +522,6 @@ function formatMoney(args: { amount: number; currency: string | undefined }): st
 	return `${formatted}€`;
 }
 
-function groupIndexesBySlug(args: { items: MappedActivity[]; names: string[] }): Map<string, number[]> {
-	const groups = new Map<string, number[]>();
-	args.items.forEach((item, index) => {
-		const slug = generateSlug({
-			name: args.names[index],
-			startAt: new Date(item.event.startAt),
-			endAt: item.event.endAt ? new Date(item.event.endAt) : undefined,
-		});
-		const indexes = groups.get(slug) ?? [];
-		indexes.push(index);
-		groups.set(slug, indexes);
-	});
-	return groups;
-}
-
 function uniqueStrings(values: (string | undefined | null)[]): string[] {
 	const seen = new Set<string>();
 	const result: string[] = [];
@@ -555,10 +534,10 @@ function uniqueStrings(values: (string | undefined | null)[]): string[] {
 	return result;
 }
 
+/** JSON-LD strings are HTML-entity encoded (`D&#039;acunto`, `YOGA&amp;CO`). */
 function textValue(value: string | undefined | null): string | undefined {
 	if (typeof value !== `string`) return undefined;
-	const trimmed = value.trim();
-	return trimmed || undefined;
+	return decodeHtml(value).trim() || undefined;
 }
 
 function decodeHtml(value: string): string {
@@ -700,12 +679,7 @@ if (import.meta.main) {
 	}
 }
 
-type MappedActivity = {
-	event: ScrapedEvent;
-	city?: string;
-	host?: string;
-	id: string;
-};
+type MappedActivity = { event: ScrapedEvent; city?: string };
 
 type WhmActivity = {
 	title?: string | null;
