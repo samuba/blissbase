@@ -142,7 +142,7 @@ export async function collectActivityPages(args: {
 
 export function mapWhmActivity(args: { html: string; listing: WhmActivity; url: string }): ScrapedEvent | undefined {
 	const { html, listing, url } = args;
-	const name = getName(html) || listing.title?.trim() || undefined;
+	const name = getName(html) || withWhmTitle(listing.title?.trim());
 	const startAt = getStartAt(html);
 	const sourceUrl = getSourceUrl(html) || url;
 	if (!name || !startAt || !sourceUrl) return undefined;
@@ -239,7 +239,13 @@ export function whmDateToIso(raw: string | undefined): string | undefined {
 }
 
 function getName(html: string): string | undefined {
-	return textValue(readEvent(html)?.name);
+	return withWhmTitle(textValue(readEvent(html)?.name));
+}
+
+function withWhmTitle(name: string | undefined): string | undefined {
+	if (!name) return undefined;
+	if (/\b(wim|whm)\b/i.test(name)) return name;
+	return `WHM ${name}`;
 }
 
 function getStartAt(html: string): string | undefined {

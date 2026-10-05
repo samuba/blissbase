@@ -59,7 +59,7 @@ describe(`mapWhmActivity`, () => {
 		});
 
 		expect(mapped).toMatchObject({
-			name: `Atemklasse`,
+			name: `WHM Atemklasse`,
 			startAt: `2026-11-09T19:00:00+01:00`,
 			endAt: `2026-11-09T20:00:00+01:00`,
 			timezone: `Europe/Berlin`,
@@ -113,7 +113,7 @@ line two",
 		});
 
 		expect(mapped).toMatchObject({
-			name: `Ice bath`,
+			name: `WHM Ice bath`,
 			startAt: `2026-12-01T18:00:00+01:00`,
 			endAt: `2026-12-01T20:00:00+01:00`,
 			address: [`Harbor 1`, `Oslo`, `Norway`],
@@ -138,7 +138,7 @@ describe(`uniqueActivities`, () => {
 			{ event: { ...base, host: `Stefan Reiters` }, city: `Düsseldorf` },
 		]);
 		expect(events).toHaveLength(1);
-		expect(events[0].name).toBe(`Atemklasse`);
+		expect(events[0].name).toBe(`WHM Atemklasse`);
 	});
 
 	it(`keeps different trainers apart when the address is only a city, but merges the same trainer`, () => {
@@ -149,7 +149,10 @@ describe(`uniqueActivities`, () => {
 			{ event: { ...cityOnly, host: `Mustafa Ay`, price: `120€` }, city: `Budapest` },
 		]).map((event) => event.name);
 
-		expect(names).toEqual([`Atemklasse · Budapest · 19:00 · Sándor Szűcs`, `Atemklasse · Budapest · 19:00 · Mustafa Ay`]);
+		expect(names).toEqual([
+			`WHM Atemklasse · Budapest · 19:00 · Sándor Szűcs`,
+			`WHM Atemklasse · Budapest · 19:00 · Mustafa Ay`,
+		]);
 	});
 
 	it(`appends the city, then the start time, only where stored slugs would collide`, () => {
@@ -158,16 +161,32 @@ describe(`uniqueActivities`, () => {
 			{ event: { ...base, host: `Ada`, address: [`Domplatz 1`, `Köln`, `Germany`] }, city: `Köln` },
 			{ event: at(`2026-11-09T08:30:00+01:00`, `2026-11-09T12:30:00+01:00`), city: `Senlisse` },
 			{ event: at(`2026-11-09T14:00:00+01:00`, `2026-11-09T18:00:00+01:00`), city: `Senlisse` },
-			{ event: { ...base, name: `Ice bath` }, city: `Oslo` },
+			{ event: { ...base, name: `WHM Ice bath` }, city: `Oslo` },
 		]).map((event) => event.name);
 
 		expect(names).toEqual([
-			`Atemklasse · Münster`,
-			`Atemklasse · Köln`,
-			`Atemklasse · Senlisse · 08:30`,
-			`Atemklasse · Senlisse · 14:00`,
-			`Ice bath`,
+			`WHM Atemklasse · Münster`,
+			`WHM Atemklasse · Köln`,
+			`WHM Atemklasse · Senlisse · 08:30`,
+			`WHM Atemklasse · Senlisse · 14:00`,
+			`WHM Ice bath`,
 		]);
+	});
+});
+
+describe(`WHM in the title`, () => {
+	it(`keeps a title that already has WIM or WHM as a word, and appends WHM otherwise`, () => {
+		const mapped = (name: string) =>
+			mapWhmActivity({
+				html: html.replace(`"name": "Atemklasse"`, `"name": "${name}"`),
+				listing,
+				url: `https://activities.wimhofmethod.com/activities/atemklasse-muenster/71143`,
+			});
+
+		expect(mapped(`Atemklasse`)?.name).toBe(`WHM Atemklasse`);
+		expect(mapped(`Wim Hof Breathing`)?.name).toBe(`Wim Hof Breathing`);
+		expect(mapped(`whm fundamentals`)?.name).toBe(`whm fundamentals`);
+		expect(mapped(`Swimming class`)?.name).toBe(`WHM Swimming class`);
 	});
 });
 
