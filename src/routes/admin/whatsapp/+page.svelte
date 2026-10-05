@@ -330,7 +330,7 @@
 	class={[
 		`fixed inset-x-0 z-0 flex flex-col gap-4 overflow-hidden px-4 pt-4 pb-4`,
 		`top-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))]`,
-		`md:top-20 md:bottom-0 md:gap-4 md:pt-0`,
+		`md:top-20 md:bottom-[calc(2rem+1px)] md:gap-4 md:pt-0`,
 	]}
 >
 	<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-wrap items-start justify-between gap-3">
