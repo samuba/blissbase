@@ -77,4 +77,5 @@ export const whiteListSources = [
     'tantrazentrumleipzig',
     'consciousevents',
     'dieliebelle',
+    'wimhofmethod',
 ] satisfies WebsiteScrapeSourceName[];
