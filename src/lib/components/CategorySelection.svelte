@@ -224,8 +224,7 @@
 
 <style>
 	.category-rail-scrollbar {
-		/* Horizontal scroller only. overflow-x: auto would otherwise compute overflow-y to auto, and iOS rubber-bands that axis. */
-		overflow-y: clip;
+		/* overflow-y-clip on this element: overflow-x:auto would otherwise compute overflow-y to auto, and iOS rubber-bands that axis. */
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		scrollbar-gutter: stable;
