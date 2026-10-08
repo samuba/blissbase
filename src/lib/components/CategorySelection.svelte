@@ -157,7 +157,7 @@
 
 			<div class="relative w-full overflow-hidden">
 				<div
-					class="category-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center overflow-x-auto"
+					class="category-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center overflow-x-auto overflow-y-clip"
 					{@attach trackCategoryRail}
 					onscroll={(event) => updateCategoryRailShadows(event.currentTarget)}
 					onwheel={(event) => handleCategoryRailWheel({ event, element: event.currentTarget })}
@@ -224,6 +224,8 @@
 
 <style>
 	.category-rail-scrollbar {
+		/* Horizontal scroller only. overflow-x: auto would otherwise compute overflow-y to auto, and iOS rubber-bands that axis. */
+		overflow-y: clip;
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		scrollbar-gutter: stable;
