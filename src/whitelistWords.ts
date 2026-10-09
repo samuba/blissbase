@@ -28,6 +28,8 @@ const blackListWords = [
     'pilates',
     'beginner yoga',
     'Engpassdehnungskurs',
+    'Faszienyoga',
+    'Faszien-Yoga',
     // no crypto 
     'bitcoin', 
     'crypto',
