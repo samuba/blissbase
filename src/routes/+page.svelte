@@ -235,7 +235,7 @@
 			{#if showOfferingsPromo}
 				<CrossPromoFooter
 					icon="icon-[ph--hand-heart]"
-					title="Suchst du Eins-zu-eins-Sessions?"
+					title="Suchst du Einzelsessions?"
 					description="Wir haben viele verschiedene Angebote."
 					href={offeringsPromoHref}
 					linkLabel="Angebote anzeigen"

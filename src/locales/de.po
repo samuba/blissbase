@@ -3923,8 +3923,8 @@ msgid "Tags neu vorschlagen"
 msgstr "Tags neu vorschlagen"
 
 #: src/routes/+page.svelte
-msgid "Suchst du Eins-zu-eins-Sessions?"
-msgstr "Suchst du Eins-zu-eins-Sessions?"
+msgid "Suchst du Einzelsessions?"
+msgstr "Suchst du Einzelsessions?"
 
 #: src/routes/+page.svelte
 msgid "Wir haben viele verschiedene Angebote."

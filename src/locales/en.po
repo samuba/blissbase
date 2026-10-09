@@ -3972,7 +3972,7 @@ msgid "Tags neu vorschlagen"
 msgstr "Suggest new tags"
 
 #: src/routes/+page.svelte
-msgid "Suchst du Eins-zu-eins-Sessions?"
+msgid "Suchst du Einzelsessions?"
 msgstr "Looking for one-on-one sessions"
 
 #: src/routes/+page.svelte
