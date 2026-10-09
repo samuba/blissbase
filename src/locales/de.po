@@ -1221,16 +1221,8 @@ msgid "Jetzt Buchen <0/>"
 msgstr "Jetzt Buchen <0/>"
 
 #: src/routes/offerings/+page.svelte
-msgid "<0/> Suchst du Events?"
-msgstr "<0/> Suchst du Events?"
-
-#: src/routes/offerings/+page.svelte
 msgid "Wir haben sehr viele!"
 msgstr "Wir haben sehr viele!"
-
-#: src/routes/offerings/+page.svelte
-msgid "Events anzeigen <0/>"
-msgstr "Events anzeigen <0/>"
 
 #: src/lib/components/ImageGalleryInput.svelte
 msgid "<0/>Bilder werden lokal verarbeitet und hochgeladen."
@@ -2295,9 +2287,6 @@ msgstr "Sexuelles Embodiment"
 msgid "Bewusste Berührung"
 msgstr "Bewusste Berührung"
 
-#~ msgid "Intimitätspraxis"
-#~ msgstr "Intimitätspraxis"
-
 #: src/lib/eventCategories.ts
 msgid "Erotische Energie"
 msgstr "Erotische Energie"
@@ -2855,12 +2844,6 @@ msgstr "Wissen"
 #: src/lib/eventCategories.ts
 msgid "Kurs"
 msgstr "Kurs"
-
-#~ msgid "Jahrestraining"
-#~ msgstr "Jahrestraining"
-
-#~ msgid "Programm"
-#~ msgstr "Programm"
 
 #: src/lib/eventCategories.ts
 msgid "Arbeit und Karriere"
@@ -3456,9 +3439,6 @@ msgstr "Natur"
 msgid "Retreat"
 msgstr "Retreat"
 
-#~ msgid "Vortrag"
-#~ msgstr "Vortrag"
-
 #: src/lib/eventCategories.ts
 msgid "Messe"
 msgstr "Messe"
@@ -3503,9 +3483,6 @@ msgstr "Beziehung"
 #: src/lib/components/PeekFooter.svelte
 msgid "Über"
 msgstr "Über"
-
-#~ msgid "Workshop"
-#~ msgstr "Workshop"
 
 #: src/lib/eventCategories.ts
 msgid "Contemporary Dance"
@@ -3774,15 +3751,6 @@ msgstr "Morgen"
 msgid "Übermorgen"
 msgstr "Übermorgen"
 
-#~ msgid "Event Name"
-#~ msgstr "Event Name"
-
-#~ msgid "Der N"
-#~ msgstr "Der N"
-
-#~ msgid "Der Name deines Events"
-#~ msgstr "Der Name deines Events"
-
 #: src/lib/components/EventForm.svelte
 msgid "Achtsames Tortenwerfen"
 msgstr "Achtsames Tortenwerfen"
@@ -3791,15 +3759,9 @@ msgstr "Achtsames Tortenwerfen"
 msgid "Zen Meditation auf der Kirmes"
 msgstr "Zen Meditation auf der Kirmes"
 
-#~ msgid "Schamanisches IKEA-Aufbauen"
-#~ msgstr "Schamanisches IKEA-Aufbauen"
-
 #: src/lib/components/EventForm.svelte
 msgid "Tantra für die Steuererklärung"
 msgstr "Tantra für die Steuererklärung"
-
-#~ msgid "Vollmond-Karaoke im Baumarkt"
-#~ msgstr "Vollmond-Karaoke im Baumarkt"
 
 #: src/lib/components/EventForm.svelte
 msgid "Klangheilung mit Staubsaugern"
@@ -3829,12 +3791,6 @@ msgstr "Reiki für den Toaster"
 msgid "Atemarbeit im Fahrstuhl"
 msgstr "Atemarbeit im Fahrstuhl"
 
-#~ msgid "Ekstatischer Tanz im Wartezimmer"
-#~ msgstr "Ekstatischer Tanz im Wartezimmer"
-
-#~ msgid "Vipassana im IKEA-Restaurant"
-#~ msgstr "Vipassana im IKEA-Restaurant"
-
 #: src/lib/components/EventForm.svelte
 msgid "Kakaozeremonie mit Nesquik"
 msgstr "Kakaozeremonie mit Nesquik"
@@ -3851,18 +3807,9 @@ msgstr "Familienaufstellung mit Playmobil"
 msgid "Feuerlauf über die Fußbodenheizung"
 msgstr "Feuerlauf über die Fußbodenheizung"
 
-#~ msgid "Stilles Retreat im Callcenter"
-#~ msgstr "Stilles Retreat im Callcenter"
-
 #: src/lib/components/EventForm.svelte
 msgid "Kristallheilung mit Swarovski"
 msgstr "Kristallheilung mit Swarovski"
-
-#~ msgid "Schamanische Reise mit Google Maps"
-#~ msgstr "Schamanische Reise mit Google Maps"
-
-#~ msgid "Holotropes Atmen im Bällebad"
-#~ msgstr "Holotropes Atmen im Bällebad"
 
 #: src/routes/+page.svelte
 msgid "Später diese Woche"
@@ -3872,18 +3819,9 @@ msgstr "Später diese Woche"
 msgid "Später"
 msgstr "Später"
 
-#~ msgid "Schamanisches IKEA-Reg"
-#~ msgstr "Schamanisches IKEA-Reg"
-
 #: src/lib/components/EventForm.svelte
 msgid "Schamanisches IKEA-Regale aufbauen"
 msgstr "Schamanisches IKEA-Regale aufbauen"
-
-#~ msgid "Schamanisches Regale aufbauen"
-#~ msgstr "Schamanisches Regale aufbauen"
-
-#~ msgid "Schamanisches IKEARegale aufbauen"
-#~ msgstr "Schamanisches IKEARegale aufbauen"
 
 #: src/lib/eventCategories.ts
 msgid "Stimme"
@@ -3927,10 +3865,6 @@ msgid "Suchst du Einzelsessions?"
 msgstr "Suchst du Einzelsessions?"
 
 #: src/routes/+page.svelte
-msgid "Wir haben viele verschiedene Angebote."
-msgstr "Wir haben viele verschiedene Angebote."
-
-#: src/routes/+page.svelte
 msgid "Angebote anzeigen"
 msgstr "Angebote anzeigen"
 
@@ -3941,3 +3875,7 @@ msgstr "Suchst du Events?"
 #: src/routes/offerings/+page.svelte
 msgid "Events anzeigen"
 msgstr "Events anzeigen"
+
+#: src/routes/+page.svelte
+msgid "Wir haben viele verschiedene Angebote!"
+msgstr "Wir haben viele verschiedene Angebote!"

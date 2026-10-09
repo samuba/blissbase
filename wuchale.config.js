@@ -29,7 +29,6 @@ export default defineConfig({
             console.time('translation took');
             const { text } = await generateText({
                 model: `openai/gpt-6-luna`,
-                providerOptions: { gateway: { inferenceRegion: { scope: "zone", geoRegion: "eu" } } },
                 reasoning: `low`,
                 system: `${instruction}\n\nGlossary: the noun "Angebot" is "offering" and "Angebote" is "offerings". Never translate those nouns as "deal", "deals", "offer", "offers", "listing", or "listings".`,
                 prompt: messages,

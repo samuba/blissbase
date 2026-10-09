@@ -1221,16 +1221,8 @@ msgid "Jetzt Buchen <0/>"
 msgstr "Book now <0/>"
 
 #: src/routes/offerings/+page.svelte
-msgid "<0/> Suchst du Events?"
-msgstr "<0/> Looking for events?"
-
-#: src/routes/offerings/+page.svelte
 msgid "Wir haben sehr viele!"
 msgstr "We have plenty!"
-
-#: src/routes/offerings/+page.svelte
-msgid "Events anzeigen <0/>"
-msgstr "Show events <0/>"
 
 #: src/lib/components/ImageGalleryInput.svelte
 msgid "<0/>Bilder werden lokal verarbeitet und hochgeladen."
@@ -2295,9 +2287,6 @@ msgstr "Sexual Embodiment"
 msgid "Bewusste Berührung"
 msgstr "Conscious Touch"
 
-#~ msgid "Intimitätspraxis"
-#~ msgstr "Intimacy Practice"
-
 #: src/lib/eventCategories.ts
 msgid "Erotische Energie"
 msgstr "Erotic Energy"
@@ -2855,12 +2844,6 @@ msgstr "Knowledge"
 #: src/lib/eventCategories.ts
 msgid "Kurs"
 msgstr "Course"
-
-#~ msgid "Jahrestraining"
-#~ msgstr "Year-Long Training"
-
-#~ msgid "Programm"
-#~ msgstr "Program"
 
 #: src/lib/eventCategories.ts
 msgid "Arbeit und Karriere"
@@ -3456,9 +3439,6 @@ msgstr "Nature"
 msgid "Retreat"
 msgstr "Retreat"
 
-#~ msgid "Vortrag"
-#~ msgstr "Lecture"
-
 #: src/lib/eventCategories.ts
 msgid "Messe"
 msgstr "Trade Fair"
@@ -3503,9 +3483,6 @@ msgstr "Relationship"
 #: src/lib/components/PeekFooter.svelte
 msgid "Über"
 msgstr "About"
-
-#~ msgid "Workshop"
-#~ msgstr "Workshop"
 
 #: src/lib/eventCategories.ts
 msgid "Contemporary Dance"
@@ -3783,18 +3760,6 @@ msgstr "Tomorrow"
 msgid "Übermorgen"
 msgstr "Day after tomorrow"
 
-#, ai
-#~ msgid "Event Name"
-#~ msgstr "Event Name"
-
-#, ai
-#~ msgid "Der N"
-#~ msgstr "The N"
-
-#, ai
-#~ msgid "Der Name deines Events"
-#~ msgstr "The name of your event"
-
 #: src/lib/components/EventForm.svelte
 #, ai
 msgid "Achtsames Tortenwerfen"
@@ -3805,18 +3770,10 @@ msgstr "Mindful Pie Throwing"
 msgid "Zen Meditation auf der Kirmes"
 msgstr "Zen meditation at the fair"
 
-#, ai
-#~ msgid "Schamanisches IKEA-Aufbauen"
-#~ msgstr "Shamanic IKEA Assembly"
-
 #: src/lib/components/EventForm.svelte
 #, ai
 msgid "Tantra für die Steuererklärung"
 msgstr "Tantra for Filing Your Taxes"
-
-#, ai
-#~ msgid "Vollmond-Karaoke im Baumarkt"
-#~ msgstr "Full Moon Karaoke at the Hardware Store"
 
 #: src/lib/components/EventForm.svelte
 #, ai
@@ -3853,14 +3810,6 @@ msgstr "Reiki for the Toaster"
 msgid "Atemarbeit im Fahrstuhl"
 msgstr "Breathwork in the Elevator"
 
-#, ai
-#~ msgid "Ekstatischer Tanz im Wartezimmer"
-#~ msgstr "Ecstatic Dance in the Waiting Room"
-
-#, ai
-#~ msgid "Vipassana im IKEA-Restaurant"
-#~ msgstr "Vipassana in the IKEA Restaurant"
-
 #: src/lib/components/EventForm.svelte
 #, ai
 msgid "Kakaozeremonie mit Nesquik"
@@ -3881,22 +3830,10 @@ msgstr "Family Constellations with Playmobil"
 msgid "Feuerlauf über die Fußbodenheizung"
 msgstr "Firewalking over Underfloor Heating"
 
-#, ai
-#~ msgid "Stilles Retreat im Callcenter"
-#~ msgstr "Silent Retreat in the Call Center"
-
 #: src/lib/components/EventForm.svelte
 #, ai
 msgid "Kristallheilung mit Swarovski"
 msgstr "Crystal Healing with Swarovski"
-
-#, ai
-#~ msgid "Schamanische Reise mit Google Maps"
-#~ msgstr "Shamanic Journey with Google Maps"
-
-#, ai
-#~ msgid "Holotropes Atmen im Bällebad"
-#~ msgstr "Holotropic Breathwork in the Ball Pit"
 
 #: src/routes/+page.svelte
 #, ai
@@ -3908,22 +3845,10 @@ msgstr "Later this week"
 msgid "Später"
 msgstr "Later"
 
-#, ai
-#~ msgid "Schamanisches IKEA-Reg"
-#~ msgstr "Shamanic IKEA Shelf"
-
 #: src/lib/components/EventForm.svelte
 #, ai
 msgid "Schamanisches IKEA-Regale aufbauen"
 msgstr "Shamanic IKEA shelf assembly"
-
-#, ai
-#~ msgid "Schamanisches Regale aufbauen"
-#~ msgstr "Build shamanic shelves"
-
-#, ai
-#~ msgid "Schamanisches IKEARegale aufbauen"
-#~ msgstr "Shamanic IKEA shelf assembly"
 
 #: src/lib/eventCategories.ts
 #, ai
@@ -3973,11 +3898,7 @@ msgstr "Suggest new tags"
 
 #: src/routes/+page.svelte
 msgid "Suchst du Einzelsessions?"
-msgstr "Looking for one-on-one sessions"
-
-#: src/routes/+page.svelte
-msgid "Wir haben viele verschiedene Angebote."
-msgstr "We have all kinds of offerings."
+msgstr "Looking for one-on-one sessions?"
 
 #: src/routes/+page.svelte
 msgid "Angebote anzeigen"
@@ -3990,3 +3911,8 @@ msgstr "Looking for events?"
 #: src/routes/offerings/+page.svelte
 msgid "Events anzeigen"
 msgstr "Show events"
+
+#: src/routes/+page.svelte
+#, ai
+msgid "Wir haben viele verschiedene Angebote!"
+msgstr "We have many different offerings!"
