@@ -3970,3 +3970,23 @@ msgstr "Tags <0/>"
 #, ai
 msgid "Tags neu vorschlagen"
 msgstr "Suggest new tags"
+
+#: src/routes/+page.svelte
+msgid "Suchst du Einzelsessions?"
+msgstr "Looking for one-on-one sessions"
+
+#: src/routes/+page.svelte
+msgid "Wir haben viele verschiedene Angebote."
+msgstr "We have all kinds of offerings."
+
+#: src/routes/+page.svelte
+msgid "Angebote anzeigen"
+msgstr "Show offerings"
+
+#: src/routes/offerings/+page.svelte
+msgid "Suchst du Events?"
+msgstr "Looking for events?"
+
+#: src/routes/offerings/+page.svelte
+msgid "Events anzeigen"
+msgstr "Show events"

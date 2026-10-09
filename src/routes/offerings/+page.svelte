@@ -2,6 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import CreateCta from "$lib/components/CreateCta.svelte";
+	import CrossPromoFooter from "$lib/components/CrossPromoFooter.svelte";
 	import OfferingCard from "$lib/components/OfferingCard.svelte";
 	import LocationDistanceInput from "$lib/components/LocationDistanceInput.svelte";
 	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
@@ -349,21 +350,14 @@
 				</section>
 			{/if}
 
-			<section class="card bg-base-100 mt-4 shadow-sm">
-				<div class="card-body flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-					<div>
-						<h2 class="card-title">
-							<i class="icon-[ph--calendar] size-6"></i>
-							Suchst du Events?
-						</h2>
-						<p class="text-base-content/70 text-sm">Wir haben sehr viele!</p>
-					</div>
-					<a href={ctaHref} class="btn">
-						Events anzeigen
-						<i class="icon-[ph--arrow-right] size-5"></i>
-					</a>
-				</div>
-			</section>
+			<CrossPromoFooter
+				icon="icon-[ph--calendar]"
+				title="Suchst du Events?"
+				description="Wir haben sehr viele!"
+				href={ctaHref}
+				linkLabel="Events anzeigen"
+				testId="events-cross-promo"
+			/>
 		</div>
 	</div>
 </div>

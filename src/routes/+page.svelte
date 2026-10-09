@@ -1,6 +1,7 @@
 <script lang="ts">
 	import EventCard from '$lib/components/EventCard.svelte';
 	import CreateCta from '$lib/components/CreateCta.svelte';
+	import CrossPromoFooter from '$lib/components/CrossPromoFooter.svelte';
 	import { routes } from '$lib/routes';
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
@@ -82,6 +83,20 @@
 	}
 
 	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
+	const showOfferingsPromo = $derived(
+		!eventsStore.isLoading &&
+			!eventsStore.isLoadingMore &&
+			(!eventsStore.hasEvents ||
+				(eventsStore.pagination.totalPages != null && eventsStore.pagination.page >= eventsStore.pagination.totalPages)),
+	);
+	const offeringsPromoHref = $derived(
+		routes.offeringsList({
+			location: eventsStore.pagination.plzCity ?? null,
+			distance: eventsStore.pagination.distance ?? null,
+			lat: eventsStore.pagination.lat ?? null,
+			lng: eventsStore.pagination.lng ?? null,
+		}),
+	);
 </script>
 
 
@@ -201,6 +216,7 @@
 					<div
 						{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
 						class="-translate-y-72"
+						data-testid="events-load-more"
 					></div>
 
 					{#if eventsStore.isLoadingMore}
@@ -214,6 +230,17 @@
 					{@render createEventCta()}
 				</div>
 				{@render noResults(false)}
+			{/if}
+
+			{#if showOfferingsPromo}
+				<CrossPromoFooter
+					icon="icon-[ph--hand-heart]"
+					title="Suchst du Einzelsessions?"
+					description="Wir haben viele verschiedene Angebote."
+					href={offeringsPromoHref}
+					linkLabel="Angebote anzeigen"
+					testId="offerings-cross-promo"
+				/>
 			{/if}
 		</div>
 
