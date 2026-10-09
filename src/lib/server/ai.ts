@@ -2,7 +2,7 @@ import { generateText, jsonSchema, NoObjectGeneratedError, NoOutputGeneratedErro
 import { allTagSlugs, type EventStructure } from "../eventCategories";
 import { suggestTagsWithJev } from "./jev/tagQuestions";
 import { WEBSITE_SCRAPE_SOURCE_URLS } from "../commonWithScripts";
-import { stripHtml, trimAllWhitespaces } from "../common";
+import { rewriteRelativeAnchorHrefs, stripHtml, trimAllWhitespaces } from "../common";
 
 const TAG_SLUGS_AI_DESCRIPTION = `Maximum 4 Tags (most relevant first) that describe the event. Only use these exact catalog tags: ${Array.from(allTagSlugs).join(`, `)}.`;
 
@@ -347,13 +347,14 @@ const PRESERVED_HTML_ENTITY_REGEX = /&(?:amp|lt|gt|quot|apos|#\d+|#x[\da-fA-F]+)
  * linkifyBareUrls(`More: https://example.com`)
  */
 function linkifyBareUrls(text: string) {
-	return text.replace(/https?:\/\/[^\s<]+/g, (match, offset) => {
+	const linkified = text.replace(/https?:\/\/[^\s<]+/g, (match, offset) => {
 		if (isInsideAnchorTag({ text, offset })) return match;
 
 		const trailingPunctuation = match.match(TRAILING_URL_PUNCTUATION_REGEX)?.[0] ?? ``;
 		const url = trailingPunctuation ? match.slice(0, -trailingPunctuation.length) : match;
 		return `<a href="${escapeHtmlAttribute(url)}">${escapeHtmlText(url)}</a>${trailingPunctuation}`;
 	});
+	return rewriteRelativeAnchorHrefs(linkified);
 }
 
 function escapeHtmlAttribute(text: string) {

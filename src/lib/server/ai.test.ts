@@ -46,6 +46,22 @@ Join us for a WhatsApp-only event.`,
 		);
 	});
 
+	it(`prefixes https on anchor hrefs that lack a scheme`, () => {
+		const result = normalizeDescription({
+			description: `See <a href="example.com/path">example.com/path</a> or <a href='www.x.test'>x</a>`,
+			name: null
+		});
+
+		expect(result).toBe(
+			`See <a href="https://example.com/path">example.com/path</a> or <a href='https://www.x.test'>x</a>`
+		);
+	});
+
+	it(`keeps mailto, tel, and already-schemed hrefs as-is`, () => {
+		const description = `Mail <a href="mailto:hi@x.test">hi</a>, call <a href="tel:+123">call</a>, web <a href="http://x.test">x</a>`;
+		expect(normalizeDescription({ description, name: null })).toBe(description);
+	});
+
 	it(`converts plain-text line breaks to br tags`, () => {
 		const result = normalizeDescription({
 			description: `Line 1\nLine 2\n\n\nLine 3`,

@@ -7,6 +7,7 @@ import { anyOf, channelPost, message } from "telegraf/filters";
 import type { MsgAnalysisAnswer } from "./server/ai";
 import type { Context } from "telegraf";
 import type { Api } from "teleproto";
+import { ensureAbsoluteHref } from "./common";
 
 export const msgFilters = anyOf(
     message('text'),
@@ -268,13 +269,13 @@ export function resolveTelegramFormattingToHtml(text: string, entities: Api.Type
             case "strikethrough": return '<s>';
             case "code": return '<code>';
             case "pre": return '<pre>';
-            case "text_link": return `<a href="${entity.url?.startsWith("http") ? entity.url : "https://" + entity.url}" target="_blank">`;
+            case "text_link": return `<a href="${ensureAbsoluteHref(entity.url ?? ``)}" target="_blank">`;
             case "text_mention": return `<a href="tg://resolve?domain=${entity.user?.id}" target="_blank">`;
             case "mention": return `<a href="tg://resolve?domain=${content.slice(1)}" target="_blank">`;
             case "hashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
             case "cashtag": return `<a href="tg://search?query=${encodeURIComponent(content)}" target="_blank">`;
             case "bot_command": return '<code>';
-            case "url": return `<a href="${content}" target="_blank">`;
+            case "url": return `<a href="${ensureAbsoluteHref(content)}" target="_blank">`;
             case "email": return `<a href="mailto:${content}" target="_blank">`;
             case "phone_number": return `<a href="tel:${content}" target="_blank">`;
             case "spoiler": return '<span class="tg-spoiler">';
