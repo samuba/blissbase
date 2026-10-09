@@ -1169,7 +1169,7 @@ msgstr "<0/> Events"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Offerings-Hinweis ausblenden"
-msgstr "Hide offer notice"
+msgstr "Hide offerings notice"
 
 #. 0: normalizedSearchTerm
 #: src/routes/offerings/+page.svelte
@@ -1245,12 +1245,12 @@ msgstr "Registration could not be confirmed. Please try again."
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot konnte nicht gelöscht werden."
-msgstr "The listing could not be deleted."
+msgstr "The offering could not be deleted."
 
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Dieses Angebot dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
-msgstr "Permanently delete this listing? This action cannot be undone."
+msgstr "Permanently delete this offering? This action cannot be undone."
 
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
@@ -1260,12 +1260,12 @@ msgstr "<0/> Delete"
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot konnte nicht deaktiviert werden."
-msgstr "The listing could not be deactivated."
+msgstr "The offering could not be deactivated."
 
 #: src/routes/offerings/OfferingDetails.svelte
 #: src/routes/offerings/[slug]/edit/+page.svelte
 msgid "Angebot konnte nicht aktiviert werden."
-msgstr "The listing could not be activated."
+msgstr "The offering could not be activated."
 
 #: src/routes/offerings/[slug]/+page.server.ts
 #: src/routes/offerings/[slug]/edit/+page.server.ts
@@ -1344,7 +1344,7 @@ msgstr "Invalid offering slug"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Angebot"
-msgstr "Offer"
+msgstr "Offering"
 
 #: src/routes/events/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
@@ -1518,7 +1518,7 @@ msgstr "Describe your event"
 
 #: src/lib/components/OfferingForm.svelte
 msgid "Beschreibe dein Angebot"
-msgstr "Describe your offer"
+msgstr "Describe your offering"
 
 #: src/lib/components/LexicalEditor.svelte
 msgid "Wiederholen"
@@ -3698,15 +3698,15 @@ msgstr "Send code"
 #: src/routes/offerings/new/+page.svelte
 #: src/routes/offerings/new/+page.svelte
 msgid "Angebot konnte nicht automatisch veröffentlicht werden. Bitte klicke auf „Angebot erstellen“."
-msgstr "The offer could not be published automatically. Please click “Create offer”."
+msgstr "The offering could not be published automatically. Please click “Create offering”."
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Dein Angebot geht erst live, wenn die Anmeldung abgeschlossen ist."
-msgstr "Your offer will only go live once registration is complete."
+msgstr "Your offering will only go live once registration is complete."
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Melde dich mit Google an oder lass dir einen Code per E-Mail schicken. Dein Angebot geht erst live, wenn die Anmeldung abgeschlossen ist."
-msgstr "Sign in with Google or have a code sent to you by email. Your offer will only go live once registration is complete."
+msgstr "Sign in with Google or have a code sent to you by email. Your offering will only go live once registration is complete."
 
 #: src/lib/components/ImageGalleryInput.svelte
 msgid "Nochmal versuchen"
@@ -3731,7 +3731,7 @@ msgstr "Event is being created…"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Angebot wird erstellt…"
-msgstr "Creating offer…"
+msgstr "Creating offering…"
 
 #: src/lib/components/EventForm.svelte
 msgid "Event Name *"
