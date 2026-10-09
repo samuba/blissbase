@@ -236,7 +236,7 @@
 				<CrossPromoFooter
 					icon="icon-[ph--hand-heart]"
 					title="Suchst du Eins-zu-eins-Sessions?"
-					description="Wir haben alle Arten von Angeboten."
+					description="Wir haben viele verschiedene Angebote."
 					href={offeringsPromoHref}
 					linkLabel="Angebote anzeigen"
 					testId="offerings-cross-promo"

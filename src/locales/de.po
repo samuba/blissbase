@@ -3927,8 +3927,8 @@ msgid "Suchst du Eins-zu-eins-Sessions?"
 msgstr "Suchst du Eins-zu-eins-Sessions?"
 
 #: src/routes/+page.svelte
-msgid "Wir haben alle Arten von Angeboten."
-msgstr "Wir haben alle Arten von Angeboten."
+msgid "Wir haben viele verschiedene Angebote."
+msgstr "Wir haben viele verschiedene Angebote."
 
 #: src/routes/+page.svelte
 msgid "Angebote anzeigen"
