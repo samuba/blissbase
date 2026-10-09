@@ -3921,3 +3921,23 @@ msgstr "Tags <0/>"
 #: src/lib/components/EventForm.svelte
 msgid "Tags neu vorschlagen"
 msgstr "Tags neu vorschlagen"
+
+#: src/routes/+page.svelte
+msgid "Suchst du Eins-zu-eins-Sessions?"
+msgstr "Suchst du Eins-zu-eins-Sessions?"
+
+#: src/routes/+page.svelte
+msgid "Wir haben alle Arten von Angeboten."
+msgstr "Wir haben alle Arten von Angeboten."
+
+#: src/routes/+page.svelte
+msgid "Angebote anzeigen"
+msgstr "Angebote anzeigen"
+
+#: src/routes/offerings/+page.svelte
+msgid "Suchst du Events?"
+msgstr "Suchst du Events?"
+
+#: src/routes/offerings/+page.svelte
+msgid "Events anzeigen"
+msgstr "Events anzeigen"
