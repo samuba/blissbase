@@ -89,11 +89,11 @@ test.describe(`cross promo footer`, () => {
 		await expect(page.getByTestId(`event-card`)).toHaveCount(8);
 		await expect(page.getByTestId(`offerings-cross-promo`)).toHaveCount(0);
 
+		await page.getByTestId(`events-load-more`).scrollIntoViewIfNeeded();
+
+		await expect(page.getByTestId(`event-card`)).toHaveCount(9);
 		const promo = page.getByTestId(`offerings-cross-promo`);
-		await expect(async () => {
-			await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-			await expect(page.getByTestId(`event-card`)).toHaveCount(9);
-			await expect(promo).toBeVisible();
-		}).toPass({ timeout: 15000 });
+		await promo.scrollIntoViewIfNeeded();
+		await expect(promo).toBeVisible();
 	});
 });

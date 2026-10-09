@@ -216,6 +216,7 @@
 					<div
 						{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
 						class="-translate-y-72"
+						data-testid="events-load-more"
 					></div>
 
 					{#if eventsStore.isLoadingMore}
