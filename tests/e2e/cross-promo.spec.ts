@@ -50,8 +50,8 @@ test.describe(`cross promo footer`, () => {
 
 		const promo = page.getByTestId(`offerings-cross-promo`);
 		await expect(promo).toBeVisible();
-		await expect(promo).toContainText(`Suchst du Angebote?`);
-		await expect(promo).toContainText(`Wir haben sehr viele!`);
+		await expect(promo).toContainText(`Suchst du Eins-zu-eins-Sessions?`);
+		await expect(promo).toContainText(`Wir haben alle Arten von Angeboten.`);
 		await expect(page.getByTestId(`offerings-cross-promo-link`)).toHaveAttribute(`href`, `/offerings`);
 		await expect(page.getByTestId(`offerings-cross-promo-link`)).toContainText(`Angebote anzeigen`);
 		await page.getByTestId(`offerings-cross-promo-link`).click();
