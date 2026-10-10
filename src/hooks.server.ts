@@ -52,7 +52,7 @@ const extractVercelHeader: Handle = async ({ event, resolve }) => {
         timezone: event.request.headers.get('x-vercel-ip-timezone'),
         postalCode: event.request.headers.get('x-vercel-ip-postal-code'),
     }
-    console.log('requestInfo', event.locals.requestInfo);
+    console.debug('requestInfo', event.locals.requestInfo);
     return resolve(event);
 }
 

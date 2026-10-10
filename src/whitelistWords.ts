@@ -1,4 +1,3 @@
-
 import type { WebsiteScrapeSourceName } from '$lib/commonWithScripts';
 import whitelistWords from './whitelistWords.json' with { type: 'json' };
 
@@ -49,10 +48,18 @@ const flatWhiteListWords = whitelistWords.reduce((acc, cur) => {
     return acc;
 }, [] as { word: string, synonyms: string[] }[])
 
-const whiteListWordsRegex = flatWhiteListWords.map(x => {
+const whiteListWordsRegex = flatWhiteListWords.flatMap(x => {
     const words = [x.word, ...x.synonyms]
-    return new RegExp(`(^|\\s|\\W)(${words.join("|")})($|\\s|\\W)`, 'i')
+        .map(word => word.trim())
+        .filter(Boolean)
+        .map(escapeRegex)
+    if (!words.length) return []
+    return [new RegExp(`(^|\\s|\\W)(${words.join("|")})($|\\s|\\W)`, 'i')]
 })
+
+function escapeRegex(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, `\\$&`)
+}
 
 export function matchesWhiteListWords(text: string) {
     if (!text) return false;

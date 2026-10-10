@@ -62,7 +62,9 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		.onConflictDoUpdate({
 			target: s.events.slug,
 			set: {
-				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`, `tagSlugs`]),
+				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`, `tagSlugs`, `language`, `structure`, `listed`]),
+				// Unlisting is sticky so Jev's not-conscious verdict survives rescrapes.
+				listed: sql`${s.events.listed} and excluded.listed`,
 				source: sql`
 					case
 						when ${s.events.source} = ${FORM_CREATED_EVENT_SOURCE} then ${s.events.source}
@@ -94,6 +96,19 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 					case
 						when coalesce(cardinality(${s.events.tagSlugs}), 0) > 0 then ${s.events.tagSlugs}
 						else coalesce(excluded.tag_slugs, ARRAY[]::text[])
+					end
+				`,
+				// Keep Jev-filled language/structure across scrapes that omit them.
+				language: sql`
+					case
+						when ${s.events.language} is not null then ${s.events.language}
+						else excluded.language
+					end
+				`,
+				structure: sql`
+					case
+						when ${s.events.structure} is not null then ${s.events.structure}
+						else excluded.structure
 					end
 				`,
 				// Preserve existing Telegram chat IDs when a scrape has none, otherwise merge both sides.

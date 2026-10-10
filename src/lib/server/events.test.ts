@@ -315,6 +315,60 @@ describe('Events Module - Happy Flow Tests', () => {
             expect(preserved[0].description).toBe('Should keep yoga');
         });
 
+        it('should fill empty language and structure on conflicting upserts and keep existing ones', async () => {
+            const startAt = new Date('2024-12-22T19:00:00Z');
+
+            await upsertEvents([
+                createTestEvent({
+                    name: 'Conflict Language Structure Event',
+                    startAt,
+                    endAt: new Date('2024-12-22T22:00:00Z'),
+                    slug: '',
+                    language: null,
+                    structure: null,
+                })
+            ]);
+
+            const filled = await upsertEvents([
+                createTestEvent({
+                    name: 'Conflict Language Structure Event',
+                    startAt,
+                    endAt: new Date('2024-12-22T22:00:00Z'),
+                    slug: '',
+                    language: 'german',
+                    structure: 'session',
+                })
+            ]);
+
+            expect(filled[0].language).toBe('german');
+            expect(filled[0].structure).toBe('session');
+
+            const preserved = await upsertEvents([
+                createTestEvent({
+                    name: 'Conflict Language Structure Event',
+                    startAt,
+                    endAt: new Date('2024-12-22T22:00:00Z'),
+                    slug: '',
+                    language: 'english',
+                    structure: 'retreat',
+                })
+            ]);
+
+            expect(preserved[0].language).toBe('german');
+            expect(preserved[0].structure).toBe('session');
+        });
+
+        it('should keep an unlisted event unlisted on conflicting upserts', async () => {
+            const startAt = new Date('2024-12-22T19:00:00Z');
+            const event = { name: 'Conflict Listed Event', startAt, endAt: new Date('2024-12-22T22:00:00Z'), slug: '' };
+
+            const [inserted] = await upsertEvents([createTestEvent({ ...event, listed: true })]);
+            await db.update(s.events).set({ listed: false }).where(eq(s.events.id, inserted.id));
+
+            const [reupserted] = await upsertEvents([createTestEvent({ ...event, listed: true })]);
+            expect(reupserted.listed).toBe(false);
+        });
+
         it('should preserve existing Telegram chat IDs when a conflicting upsert has none', async () => {
             const startAt = new Date('2024-12-23T19:00:00Z');
 

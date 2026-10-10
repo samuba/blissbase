@@ -21,7 +21,7 @@
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import { db, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
-import { fillMissingEventTagSlugs } from './tagScrapedEvents.ts';
+import { fillMissingEventAttributes } from './fillScrapedEventAttributes.ts';
 import { and, inArray, notInArray } from 'drizzle-orm';
 import { format } from 'util';
 import { AsyncLocalStorage } from 'async_hooks';
@@ -270,14 +270,19 @@ async function main() {
             const upserted = await upsertEvents(batch);
             successCount += batch.length;
             try {
-                await fillMissingEventTagSlugs({
+                await fillMissingEventAttributes({
                     events: upserted,
-                    updateTagSlugs: async ({ ids, tagSlugs }) => {
-                        await db.update(s.events).set({ tagSlugs }).where(inArray(s.events.id, ids));
+                    updateEventAttributes: async ({ ids, tagSlugs, language, structure, listed }) => {
+                        await db.update(s.events).set({
+                            tagSlugs,
+                            ...(language != null ? { language } : {}),
+                            ...(structure != null ? { structure } : {}),
+                            ...(listed === false ? { listed: false } : {}),
+                        }).where(inArray(s.events.id, ids));
                     },
                 });
             } catch (error) {
-                console.error(`Error tagging batch starting at index ${i}:`, error);
+                console.error(`Error judging batch starting at index ${i}:`, error);
             }
 
             console.log(` -> Progress: ${successCount}/${eventsToInsert.length} events processed`);

@@ -19,7 +19,12 @@ vi.mock("@typesafe-ai/sdk", async (importOriginal) => ({
 	},
 }));
 
-import { interpretJevAnswer, messageTextForJev, resolveMessengerAnalysis } from "./messengerCheck";
+import {
+	interpretEventAttributes,
+	interpretJevAnswer,
+	messageTextForJev,
+	resolveMessengerAnalysis,
+} from "./messengerCheck";
 
 const baseArgs = {
 	messageDate: new Date(`2026-09-01T12:00:00.000Z`),
@@ -111,6 +116,43 @@ describe(`interpretJevAnswer`, () => {
 			eventIsDefinitelyConscious: false,
 		});
 		expect(unsure.language).toBeUndefined();
+	});
+});
+
+describe(`interpretEventAttributes`, () => {
+	it(`maps tags, language, structure, and is_conscious without messenger gates`, () => {
+		expect(
+			interpretEventAttributes(
+				attributeAnswers({
+					is_conscious: 0.2,
+					dance: 0.9,
+					language: { type: `choice`, choice: `german`, confidence: 0.8 },
+					event_structure: { type: `choice`, choice: `retreat`, confidence: 0.7 },
+				}),
+			),
+		).toEqual({
+			tags: [`dance`],
+			language: `german`,
+			structure: `retreat`,
+			isConscious: false,
+		});
+	});
+
+	it(`keeps a conscious yes and omits unsure language or none structure`, () => {
+		expect(
+			interpretEventAttributes(
+				attributeAnswers({
+					is_conscious: 0.9,
+					language: { type: `choice`, choice: `english`, confidence: 0.2 },
+					event_structure: { type: `choice`, choice: `none`, confidence: 0.9 },
+				}),
+			),
+		).toEqual({
+			tags: [],
+			language: undefined,
+			structure: undefined,
+			isConscious: true,
+		});
 	});
 });
 
@@ -265,4 +307,17 @@ function answers(overrides: Record<string, number | Record<string, unknown>>) {
 		built[id] = typeof value === `number` ? { type: `noul`, noul: value } : value;
 	}
 	return built as Parameters<typeof interpretJevAnswer>[0][`answers`];
+}
+
+function attributeAnswers(overrides: Record<string, number | Record<string, unknown>>) {
+	const built: Record<string, unknown> = {
+		is_conscious: { type: `noul`, noul: 0.9 },
+		language: { type: `choice`, choice: `other`, confidence: 0.8 },
+		event_structure: { type: `choice`, choice: `none`, confidence: 0.8 },
+	};
+	for (const slug of broadestTagSlugs) built[slug] = { type: `noul`, noul: 0.1 };
+	for (const [id, value] of Object.entries(overrides)) {
+		built[id] = typeof value === `number` ? { type: `noul`, noul: value } : value;
+	}
+	return built as Parameters<typeof interpretEventAttributes>[0];
 }

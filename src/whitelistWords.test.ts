@@ -18,4 +18,10 @@ describe(`matchesWhiteListWords`, () => {
 	it(`matches known conscious-event terms`, () => {
 		expect(matchesWhiteListWords(`Ecstatic Dance Berlin`)).toBe(true);
 	});
+
+	it(`matches event category labels and synonyms`, () => {
+		expect(matchesWhiteListWords(`5Rhythms Workshop`)).toBe(true);
+		expect(matchesWhiteListWords(`Kuschelparty Hamburg`)).toBe(true);
+		expect(matchesWhiteListWords(`Gewaltfreie Kommunikation Abend`)).toBe(true);
+	});
 });

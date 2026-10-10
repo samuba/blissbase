@@ -367,6 +367,42 @@ export function dateToIsoStr(year: number, month: number, day: number, hour: num
     return `${isoStringLocal}${offset}`;
 }
 
+/** Joins positional args so `Berlin`, `Byron Bay`, and `United Kingdom` all work. Empty means every location. */
+export function locationQueryFromArgs(): string | undefined {
+	const query = process.argv
+		.slice(2)
+		.filter((arg) => !arg.startsWith(`-`))
+		.join(` `)
+		.trim();
+	return query || undefined;
+}
+
+/** Case-insensitive match on the location name, the city before a comma, or the country. */
+export function selectLocationsByQuery<T extends { name: string; country: string; aliases?: readonly string[] }>({
+	locations,
+	query,
+}: {
+	locations: readonly T[];
+	query?: string;
+}): T[] {
+	const needle = query?.trim().toLowerCase();
+	if (!needle) return [...locations];
+
+	const matched = locations.filter((location) =>
+		locationLabels(location).some((label) => label.toLowerCase() === needle),
+	);
+	if (!matched.length) throw new Error(`No location, city, or country matches "${query?.trim()}"`);
+	return matched;
+}
+
+function locationLabels(location: { name: string; country: string; aliases?: readonly string[] }): string[] {
+	const name = location.name.trim();
+	const city = name.split(`,`)[0]?.trim();
+	const labels = [name, location.country.trim(), ...(location.aliases ?? [])];
+	if (city && city.toLowerCase() !== name.toLowerCase()) labels.push(city);
+	return labels;
+}
+
 export interface WebsiteScraperInterface {
     // scrapes the entire website and returns a list of events
     scrapeWebsite(): Promise<ScrapedEvent[]>;

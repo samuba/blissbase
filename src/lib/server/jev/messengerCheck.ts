@@ -122,28 +122,109 @@ export function interpretJevAnswer(args: {
 	answers: JevAnswers;
 	eventIsDefinitelyConscious: boolean;
 }) {
-	const { is_event, has_start_date, is_conscious, attendance, contact_author, language, event_structure } = args.answers;
+	const { is_event, has_start_date, is_conscious, attendance, contact_author } = args.answers;
 
 	if (isFalse(is_event)) return { skipReason: `not an event announcement` };
 	if (isFalse(has_start_date)) return { skipReason: `no start date` };
-	const isConscious = args.eventIsDefinitelyConscious || isTrue(is_conscious);
+	const attributes = interpretEventAttributes(args.answers);
+	const isConscious = args.eventIsDefinitelyConscious || attributes.isConscious;
 	if (!isConscious) return { skipReason: `not a conscious event` };
 
 	const attendanceMode = attendance.confidence >= 0.5 && attendance.choice !== `unknown`
 		? attendance.choice
 		: `offline`;
 	const contactAuthorForMore = isTrue(contact_author);
-	const tags = tagsFromNouls(args.answers);
-	const structure = chosenEventStructure(event_structure);
-	const eventLanguage = chosenEventLanguage(language);
 
 	return {
-		tags,
-		structure,
-		language: eventLanguage,
+		tags: attributes.tags,
+		structure: attributes.structure,
+		language: attributes.language,
 		attendanceMode,
 		contactAuthorForMore,
 		omitFields: JEV_CLOSED_EXTRACTION_FIELDS,
+	};
+}
+
+/**
+ * Tags + is_conscious + language + event_structure — same question semantics as askJev,
+ * without messenger-only gates (is_event, has_start_date, contact_author, attendance).
+ */
+export async function askJevEventAttributes(text: string) {
+	const result = await jevClient().systemOne({
+		state: { message: text },
+		questions: eventAttributeQuestions(),
+	});
+	console.log(`[jev] ${result.model} (${result.usage?.input_tokens ?? 0} input tokens)`);
+	return result;
+}
+
+export function interpretEventAttributes(answers: EventAttributeAnswers) {
+	return {
+		tags: tagsFromNouls(answers),
+		structure: chosenEventStructure(answers.event_structure),
+		language: chosenEventLanguage(answers.language),
+		isConscious: isTrue(answers.is_conscious),
+	};
+}
+
+export async function askJev(text: string) {
+	const result = await jevClient().systemOne({
+		state: { message: text },
+		questions: {
+			is_event: noul(`Could the message be an event announcement?`, {
+				true: `A gathering, class, workshop, ceremony, or similar.`,
+			}),
+			has_start_date: noul(`Does the message state a start date or a specific day for the event?`, {
+				true: `A calendar date, a weekday, or a relative day such as tomorrow is given.`,
+			}),
+			contact_author: noul(
+				`Does the message say to contact the author via messenger or phone to register or learn more, and give no other contact method?`,
+				{
+					true: `The author is the only way to register or get details.`,
+					false: `Another contact method is given, like a website or email address, or the message does not ask to contact the author.`,
+				},
+			),
+			attendance: choice(`How can people attend the event described in the message?`, {
+				online: `Online only. No in-person gathering.`,
+				offline: `People meeting in person.`,
+				"offline+online": `Its possible to attend in person and online.`,
+				unknown: null,
+			}),
+			...eventAttributeQuestions(),
+		},
+	});
+	console.log(`[jev] ${result.model} (${result.usage?.input_tokens ?? 0} input tokens)`);
+	//console.debug(`[jev] result ${JSON.stringify(result, null, 2)}`);
+	return result
+}
+
+function eventAttributeQuestions() {
+	return {
+		is_conscious: noul(`Is this a conscious, somatic, spiritual, sexual, ritual, community, or self-development event?`, {
+			true: `Ecstatic dance, tantra, breathwork, meditation, ceremony, or a similar conscious/hippie event.`,
+			false: `A generic gym class, club night, pure sport, or business meetup.`,
+		}),
+		language: choice(`Whats the events main language?`, {
+			english: null,
+			spanish: null,
+			portuguese: null,
+			french: null,
+			german: null,
+			dutch: null,
+			russian: null,
+			ukrainian: null,
+			other: null,
+			multiple: null,
+		}),
+		event_structure: choice(`How is this event structured?`, {
+			festival: null,
+			retreat: `One contained immersion: e.g. day retreat, camp, multi-day seminar.`,
+			session: `One sitting: e.g. workshop, class, circle, jam, concert`,
+			course: `A course/training/program that meets more than once.`,
+			conference: `A conference/congress with several sessions.`,
+			none: `None of these. The message gives no hint on how its structured.`,
+		}),
+		...tagNouls(),
 	};
 }
 
@@ -170,62 +251,8 @@ function isFalse(answer: NoulResponse) {
 	return answer.noul < NOUL_YES
 }
 
-export async function askJev(text: string) {
-	const result = await jevClient().systemOne({
-		state: { message: text },
-		questions: {
-			is_event: noul(`Could the message be an event announcement?`, {
-				true: `A gathering, class, workshop, ceremony, or similar.`,
-			}),
-			has_start_date: noul(`Does the message state a start date or a specific day for the event?`, {
-				true: `A calendar date, a weekday, or a relative day such as tomorrow is given.`,
-			}),
-			is_conscious: noul(`Is this a conscious, somatic, spiritual, sexual, ritual, community, or self-development event?`, {
-				true: `Ecstatic dance, tantra, breathwork, meditation, ceremony, or a similar conscious/hippie event.`,
-				false: `A generic gym class, club night, pure sport, or business meetup.`,
-			}),
-			contact_author: noul(
-				`Does the message say to contact the author via messenger or phone to register or learn more, and give no other contact method?`,
-				{
-					true: `The author is the only way to register or get details.`,
-					false: `Another contact method is given, like a website or email address, or the message does not ask to contact the author.`,
-				},
-			),
-			attendance: choice(`How can people attend the event described in the message?`, {
-				online: `Online only. No in-person gathering.`,
-				offline: `People meeting in person.`,
-				"offline+online": `Its possible to attend in person and online.`,
-				unknown: null,
-			}),
-			language: choice(`Whats the events main language?`, {
-				english: null,
-				spanish: null,
-				portuguese: null,
-				french: null,
-				german: null,
-				dutch: null,
-				russian: null,
-				ukrainian: null,
-				other: null,
-				multiple: null,
-			}),
-			event_structure: choice(`How is this event structured?`, {
-				festival: null,
-				retreat: `One contained immersion: e.g. day retreat, camp, multi-day seminar.`,
-				session: `One sitting: e.g. workshop, class, circle, jam, concert`,
-				course: `A course/training/program that meets more than once.`,
-				conference: `A conference/congress with several sessions.`,
-				none: `None of these. The message gives no hint on how its structured.`,
-			}),
-			...tagNouls(),
-		},
-	});
-	console.log(`[jev] ${result.model} (${result.usage?.input_tokens ?? 0} input tokens)`);
-	//console.debug(`[jev] result ${JSON.stringify(result, null, 2)}`);
-	return result
-}
-
 type JevAnswers = Awaited<ReturnType<typeof askJev>>['answers'];
+type EventAttributeAnswers = Awaited<ReturnType<typeof askJevEventAttributes>>['answers'];
 
 type ResolveMessengerAnalysisArgs = AiExtractEventDataArgs & {
 	beforeLlmExtract?: () => Promise<unknown> | unknown;

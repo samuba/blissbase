@@ -19,6 +19,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     dieliebelle: { module: './scrape-dieliebelle.ts', label: 'DIE LIEBE.LLE', url: 'https://www.die-liebelle.de' },
     createparty: { module: './scrape-createparty.ts', label: 'create.party', url: 'https://create.party' },
     wimhofmethod: { module: './scrape-wimhofmethod.ts', label: 'Wim Hof Method', url: 'https://activities.wimhofmethod.com' },
+    meetup: { module: './scrape-meetup.ts', label: 'Meetup', url: 'https://www.meetup.com' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string, label: string, url: string, retryOnNewIp?: boolean }>;
 
