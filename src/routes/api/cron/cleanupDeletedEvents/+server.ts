@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		.from(s.eventDeletedOutbox)
 		.where(and(
 			eq(s.eventDeletedOutbox.status, `pending`),
-			lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))
+			// lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))
 		))
 		.orderBy(asc(s.eventDeletedOutbox.createdAt))
 		.limit(200);
