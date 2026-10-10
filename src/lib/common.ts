@@ -338,6 +338,36 @@ export function stripHtml(html: string | undefined) {
     return html?.replace(/<[^>]*>?/g, '');
 }
 
+/**
+ * Ensures an href is absolute. Bare host-like values get `https://`.
+ * Leaves mailto:, tel:, tg://, http(s)://, and site-relative `/` `#` `?` alone.
+ *
+ * @example
+ * ensureAbsoluteHref(`example.com/path`) // `https://example.com/path`
+ */
+export function ensureAbsoluteHref(href: string) {
+	const trimmed = href.trim();
+	if (!trimmed) return trimmed;
+	if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) return trimmed;
+	if (trimmed.startsWith(`//`)) return `https:${trimmed}`;
+	if (trimmed.startsWith(`/`) || trimmed.startsWith(`#`) || trimmed.startsWith(`?`)) return trimmed;
+	return `https://${trimmed}`;
+}
+
+/**
+ * Rewrites `<a href>` values that lack an absolute scheme to `https://...`.
+ *
+ * @example
+ * rewriteRelativeAnchorHrefs(`See <a href="example.com">x</a>`)
+ */
+export function rewriteRelativeAnchorHrefs(html: string) {
+	return html.replace(/\bhref\s*=\s*(["'])(.*?)\1/gi, (full, quote: string, href: string) => {
+		const normalized = ensureAbsoluteHref(href);
+		if (normalized === href) return full;
+		return `href=${quote}${normalized}${quote}`;
+	});
+}
+
 export const trimAllWhitespaces = (text: string | undefined) => {
     return text
         ?.replace(/\s+/g, ' ')
