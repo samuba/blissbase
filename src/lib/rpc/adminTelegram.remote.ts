@@ -6,6 +6,7 @@ import * as v from 'valibot';
 import { isAdminSession } from '$lib/server/admin';
 import { db, eq, s } from '$lib/server/db';
 import { geocodeAddressCached } from '$lib/server/google';
+import { excludeExistingTelegramTargets } from '$lib/server/telegramDialogs';
 import { routes } from '$lib/routes';
 
 function toAddressLines(address: string) {
@@ -68,6 +69,22 @@ export const getTelegramScrapingTargets = query(async () => {
 		lastMessageId: target.lastMessageId?.toString() ?? null,
 		topicIds: target.topicIds.map((id) => id.toString()),
 	}));
+});
+
+/**
+ * Groups/channels the PRIMARY scrape account is in, excluding existing scraping targets.
+ * Fetches via the split `/admin/telegram/dialogs` function so teleproto stays out of remotes.
+ */
+export const getAvailableTelegramDialogs = query(async () => {
+	assertAdmin();
+
+	const targets = await db.query.telegramScrapingTargets.findMany({
+		columns: { roomId: true },
+	});
+	const existingRoomIds = targets.map((target) => target.roomId);
+
+	const dialogs = await fetchPrimaryTelegramDialogs();
+	return excludeExistingTelegramTargets({ dialogs, existingRoomIds });
 });
 
 export const saveTelegramScrapingTarget = form(saveTelegramScrapingTargetSchema, async (data, issue) => {
@@ -194,6 +211,8 @@ export const deleteTelegramScrapingTarget = command(deleteTelegramScrapingTarget
 function refreshTelegramScrapingTargets() {
 	getTelegramScrapingTargets().refresh();
 	void requested(getTelegramScrapingTargets, 1).refreshAll();
+	getAvailableTelegramDialogs().refresh();
+	void requested(getAvailableTelegramDialogs, 1).refreshAll();
 }
 
 /**
@@ -214,6 +233,30 @@ async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 
 	const body = await res.json().catch(() => null) as { message?: string } | null;
 	throw new Error(body?.message ?? `Telegram-Raum konnte nicht verifiziert werden`);
+}
+
+async function fetchPrimaryTelegramDialogs() {
+	const { fetch, url } = getRequestEvent();
+	const res = await fetch(new URL(routes.adminTelegramDialogs(), url.origin));
+
+	if (res.ok) {
+		const body = (await res.json()) as {
+			dialogs: {
+				roomId: string
+				name: string
+				kind: `group` | `channel`
+				username: string | null
+				lastMessageTime: string | null
+			}[]
+		};
+		return body.dialogs.map((dialog) => ({
+			...dialog,
+			lastMessageTime: dialog.lastMessageTime ? new Date(dialog.lastMessageTime) : null,
+		}));
+	}
+
+	const body = await res.json().catch(() => null) as { message?: string } | null;
+	throw new Error(body?.message ?? `Telegram-Dialoge konnten nicht geladen werden`);
 }
 
 function assertAdmin() {
