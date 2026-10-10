@@ -5,7 +5,7 @@
  *
  * Organizer REST at api.humanitix.com needs a private key and is not used.
  * Search cards omit descriptions; kept events are enriched from the event page
- * JSON-LD (`application/ld+json`), which is structured data rather than HTML CSS scraping.
+ * SvelteKit payload (`{slug}/__data.json` → `event.eventModules` richtext HTML).
  *
  * Places come from `scripts/locations.ts` (same set as Meetup/Eventbrite).
  * Discovery uses healthAndWellness + religionAndSpirituality + Blissbase theme
@@ -234,6 +234,9 @@ export function getDescription({
 	detail?: HxEventDetail;
 }): string | undefined {
 	void event;
+	const full = detail?.descriptionHtml?.trim();
+	if (full) return cleanProseHtml(full) || undefined;
+
 	const text = detail?.description?.trim();
 	if (!text) return undefined;
 	const html = text.includes(`<`) ? text : `<p>${escapeHtml(text)}</p>`;
@@ -484,27 +487,117 @@ async function enrichDetails(candidates: DetailCandidate[]) {
 }
 
 async function fetchEventDetail(sourceUrl: string): Promise<HxEventDetail | undefined> {
-	const html = (await customFetch(sourceUrl, {
-		returnType: `text`,
-		headers: { accept: `text/html` },
-	})) as string;
+	const dataUrl = eventDataUrl(sourceUrl);
+	if (!dataUrl) return undefined;
+
+	const payload = (await customFetch(dataUrl, {
+		returnType: `json`,
+		headers: { accept: `application/json` },
+	})) as HxDataPayload;
 	await sleep(REQUEST_DELAY_MS);
 
-	const match = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/i);
-	if (!match?.[1]) return undefined;
+	const event = readEventFromDataPayload(payload);
+	if (!event) return undefined;
 
+	const descriptionHtml = richtextDescription(event.eventModules);
+	const seoDescription =
+		typeof event.seo?.descriptions?.openGraph === `string`
+			? event.seo.descriptions.openGraph
+			: typeof event.seo?.descriptions?.default === `string`
+				? event.seo.descriptions.default
+				: undefined;
+	const image =
+		typeof event.seo?.image === `string`
+			? event.seo.image
+			: typeof event.images?.banner === `string`
+				? event.images.banner
+				: undefined;
+	const startDate = firstOccurrenceIso(event.dates?.startDate ?? event.occurrences?.[0]?.startDate);
+	const endDate = firstOccurrenceIso(event.dates?.endDate ?? event.occurrences?.[0]?.endDate);
+
+	return {
+		descriptionHtml,
+		description: seoDescription,
+		startDate,
+		endDate,
+		image,
+	};
+}
+
+function eventDataUrl(sourceUrl: string): string | undefined {
 	try {
-		const json = JSON.parse(match[1]) as Record<string, unknown>;
-		if (json?.[`@type`] !== `Event`) return undefined;
-		return {
-			startDate: typeof json.startDate === `string` ? json.startDate : undefined,
-			endDate: typeof json.endDate === `string` ? json.endDate : undefined,
-			description: typeof json.description === `string` ? json.description : undefined,
-			image: typeof json.image === `string` ? json.image : Array.isArray(json.image) ? String(json.image[0] ?? ``) : undefined,
-		};
+		const url = new URL(sourceUrl);
+		const path = url.pathname.replace(/\/+$/, ``);
+		if (!path || path === `/`) return undefined;
+		return `${url.origin}${path}/__data.json`;
 	} catch {
 		return undefined;
 	}
+}
+
+function readEventFromDataPayload(payload: HxDataPayload): HxPageEvent | undefined {
+	const nodes = payload?.nodes;
+	if (!nodes?.length) return undefined;
+
+	for (const node of nodes) {
+		if (node?.type !== `data` || !node.data?.length) continue;
+		const rootRefs = node.data[0];
+		if (!rootRefs || typeof rootRefs !== `object` || Array.isArray(rootRefs)) continue;
+		if (!(`event` in rootRefs)) continue;
+
+		const resolved = resolveSvelteKitValue(node.data, 0);
+		if (!resolved || typeof resolved !== `object` || Array.isArray(resolved)) continue;
+		const event = (resolved as { event?: HxPageEvent }).event;
+		if (event && typeof event === `object`) return event;
+	}
+	return undefined;
+}
+
+function richtextDescription(modules: HxEventModule[] | undefined): string | undefined {
+	if (!modules?.length) return undefined;
+
+	const richtexts = modules.filter(
+		(module) => module?.component === `richtext` && typeof module.props?.content === `string` && module.props.content.trim(),
+	);
+	if (!richtexts.length) return undefined;
+
+	const preferred = richtexts.find((module) => module.props?.title?.trim().toLowerCase() === `description`);
+	const chosen = preferred ? [preferred] : richtexts;
+	const html = chosen.map((module) => module.props?.content?.trim()).filter(Boolean).join(`\n`);
+	return html || undefined;
+}
+
+function firstOccurrenceIso(value: unknown): string | undefined {
+	if (typeof value === `string`) return parseIsoInstant(value) ?? parseHumanitixDate(value);
+	return undefined;
+}
+
+/** Decode SvelteKit `devalue`-style numbered tables used by `/__data.json`. */
+function resolveSvelteKitValue(table: unknown[], index: number, memo = new Map<number, unknown>()): unknown {
+	if (memo.has(index)) return memo.get(index);
+	if (index < 0 || index >= table.length) return undefined;
+
+	const value = table[index];
+	if (value === null || typeof value !== `object`) {
+		memo.set(index, value);
+		return value;
+	}
+
+	if (Array.isArray(value)) {
+		const out: unknown[] = [];
+		memo.set(index, out);
+		for (const item of value) {
+			out.push(typeof item === `number` ? resolveSvelteKitValue(table, item, memo) : item);
+		}
+		return out;
+	}
+
+	const out: Record<string, unknown> = {};
+	memo.set(index, out);
+	for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+		out[key] = typeof item === `number` ? resolveSvelteKitValue(table, item, memo) : item;
+	}
+	return out;
 }
 
 async function mapPool<T>({
@@ -689,6 +782,41 @@ type HxEvent = {
 type HxEventDetail = {
 	startDate?: string;
 	endDate?: string;
+	/** Full richtext HTML from event page modules. */
+	descriptionHtml?: string;
+	/** Short SEO / openGraph blurb fallback. */
 	description?: string;
 	image?: string;
+};
+
+type HxDataPayload = {
+	nodes?: Array<{
+		type?: string;
+		data?: unknown[];
+	}>;
+};
+
+type HxEventModule = {
+	component?: string;
+	props?: {
+		title?: string;
+		content?: string;
+	};
+};
+
+type HxPageEvent = {
+	dates?: { startDate?: string; endDate?: string };
+	occurrences?: Array<{ startDate?: string; endDate?: string }>;
+	eventModules?: HxEventModule[];
+	seo?: {
+		image?: string;
+		descriptions?: {
+			default?: string;
+			openGraph?: string;
+			twitter?: string;
+		};
+	};
+	images?: {
+		banner?: string;
+	};
 };
