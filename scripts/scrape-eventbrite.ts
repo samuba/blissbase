@@ -5,8 +5,9 @@
  * the JSON API the site itself uses. A `csrftoken` cookie from the homepage
  * response is enough — no private token.
  *
- * Search results only include a short `summary`. Full descriptions are
- * fetched per kept event from `/api/v3/events/{id}/description/`.
+ * Search results only include a short `summary` and one cover image. For each
+ * kept event we fetch the event page and read full description + gallery
+ * images from `__NEXT_DATA__`.
  *
  * Places come from `scripts/locations.ts`. Only entries with an Eventbrite
  * place id are searched. Names are kept when they match the Blissbase
@@ -32,7 +33,6 @@ import { LOCATIONS, eventbriteLocations, SEARCH_THEMES, type ScrapeLocation } fr
 import { matchesBlackListWords, matchesWhiteListWords } from "../src/whitelistWords.ts";
 
 const SEARCH_URL = `https://www.eventbrite.com/api/v3/destination/search/`;
-const DESCRIPTION_URL = (eventId: string) => `https://www.eventbrite.com/api/v3/events/${eventId}/description/`;
 const SOURCE = `eventbrite` as const;
 const PAGE_SIZE = 50;
 const MAX_PAGES = 12;
@@ -42,7 +42,7 @@ const RADIUS_KM = 30;
 const WINDOW_DAYS = 30;
 /** Modest pools — enough to cut wall time, low enough to stay polite. */
 const LOCATION_CONCURRENCY = 3;
-const DESCRIPTION_CONCURRENCY = 4;
+const DETAIL_CONCURRENCY = 4;
 const BLACKLISTED_VENUES = [`soul dimension`];
 // Queries the destination API actually narrows. Other terms (retreat, tantra, …)
 // expand the result set past the place instead of filtering it.
@@ -52,12 +52,12 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const locations = eventbriteLocations(selectLocationsByQuery({ locations: LOCATIONS, query }));
 		if (!locations.length) throw new Error(`No Eventbrite place matches "${query?.trim()}"`);
 		console.error(
-			`Fetching upcoming Eventbrite events for ${locations.length} conscious places${query ? ` matching "${query}"` : ``}${limit != null ? ` (limit ${limit})` : ``} (locations×${LOCATION_CONCURRENCY}, descriptions×${DESCRIPTION_CONCURRENCY})...`,
+			`Fetching upcoming Eventbrite events for ${locations.length} conscious places${query ? ` matching "${query}"` : ``}${limit != null ? ` (limit ${limit})` : ``} (locations×${LOCATION_CONCURRENCY}, details×${DETAIL_CONCURRENCY})...`,
 		);
 		const session: SearchSession = { csrfToken: await getCsrfToken() };
 		const from = isoDay(-1);
 		const to = isoDay(WINDOW_DAYS);
-		const candidates: DescriptionCandidate[] = [];
+		const candidates: EnrichCandidate[] = [];
 		const seen = new Set<string>();
 		let failedLocations = 0;
 
@@ -96,7 +96,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		}
 
 		const selected = limit != null ? candidates.slice(0, limit) : candidates;
-		await enrichDescriptions(selected);
+		await enrichEvents(selected);
 
 		console.error(`--- Scraping finished. Total events collected: ${selected.length} ---`);
 		return selected.map((candidate) => candidate.mapped);
@@ -145,9 +145,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 export function mapEventbriteEvent({
 	event,
 	fullDescription,
+	galleryUrls,
 }: {
 	event: EbEvent;
 	fullDescription?: string;
+	galleryUrls?: string[];
 }): ScrapedEvent | undefined {
 	const name = getName(event);
 	const startAt = getStartAt(event);
@@ -163,7 +165,7 @@ export function mapEventbriteEvent({
 		price: getPrice(event),
 		priceIsHtml: getPriceIsHtml(event),
 		description: getDescription({ event, fullDescription }),
-		imageUrls: getImageUrls(event),
+		imageUrls: getImageUrls({ event, galleryUrls }),
 		host: getHost(event),
 		hostLink: getHostLink(event),
 		contact: getContact(event),
@@ -240,37 +242,60 @@ export function getDescription({
 	return cleanProseHtml(html) || undefined;
 }
 
-async function enrichDescriptions(candidates: DescriptionCandidate[]) {
-	const withId = candidates.filter((candidate) => candidate.event.id);
-	if (!withId.length) return;
+async function enrichEvents(candidates: EnrichCandidate[]) {
+	if (!candidates.length) return;
 
 	await mapPool({
-		items: withId,
-		concurrency: DESCRIPTION_CONCURRENCY,
+		items: candidates,
+		concurrency: DETAIL_CONCURRENCY,
 		mapper: async (candidate) => {
-			const eventId = candidate.event.id;
-			if (!eventId) return;
+			const label = candidate.event.id ?? candidate.mapped.sourceUrl;
 			try {
-				const fullDescription = await fetchFullDescription(eventId);
-				const description = getDescription({ event: candidate.event, fullDescription });
+				const html = await customFetch(candidate.mapped.sourceUrl, { returnType: `text` });
+				await sleep(REQUEST_DELAY_MS);
+				const page = parseEventPage(html);
+				const description = getDescription({ event: candidate.event, fullDescription: page.description });
 				if (description) candidate.mapped.description = description;
+				const imageUrls = getImageUrls({ event: candidate.event, galleryUrls: page.imageUrls });
+				if (imageUrls.length) candidate.mapped.imageUrls = imageUrls;
 			} catch (error) {
-				console.error(`Failed to fetch eventbrite description for ${eventId}:`, error);
+				console.error(`Failed to enrich eventbrite event ${label}:`, error);
 			}
 		},
 	});
 }
 
-async function fetchFullDescription(eventId: string): Promise<string | undefined> {
-	const json = (await customFetch(DESCRIPTION_URL(eventId), {
-		returnType: `json`,
-		headers: { accept: `application/json` },
-	})) as { description?: string };
-	await sleep(REQUEST_DELAY_MS);
+export function parseEventPage(html: string): { description?: string; imageUrls: string[] } {
+	const match = html.match(/<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s);
+	if (!match?.[1]) return { imageUrls: [] };
 
-	if (typeof json?.description !== `string`) return undefined;
-	const description = json.description.trim();
-	return description || undefined;
+	try {
+		const data = JSON.parse(match[1]) as {
+			props?: {
+				pageProps?: {
+					context?: {
+						structuredContent?: { modules?: Array<{ text?: string }> };
+						gallery?: { images?: EbGalleryImage[] };
+					};
+				};
+			};
+		};
+		const context = data?.props?.pageProps?.context;
+		const texts = (context?.structuredContent?.modules ?? [])
+			.map((module) => (typeof module?.text === `string` ? module.text.trim() : ``))
+			.filter(Boolean);
+		const description = texts.length ? texts.join(``) : undefined;
+
+		const imageUrls: string[] = [];
+		for (const image of context?.gallery?.images ?? []) {
+			const url = pickGalleryUrl(image);
+			if (url) imageUrls.push(url);
+		}
+
+		return { description, imageUrls };
+	} catch {
+		return { imageUrls: [] };
+	}
 }
 
 async function mapPool<T>({
@@ -295,11 +320,48 @@ async function mapPool<T>({
 	await Promise.all(workers);
 }
 
-function getImageUrls(event: EbEvent): string[] {
-	const url = event?.image?.url?.trim();
-	if (!url) return [];
-	if (!url.startsWith(`http://`) && !url.startsWith(`https://`)) return [];
-	return [url];
+export function getImageUrls({
+	event,
+	galleryUrls,
+}: {
+	event: EbEvent;
+	galleryUrls?: string[];
+}): string[] {
+	const urls: string[] = [];
+	const seen = new Set<string>();
+
+	const add = (url?: string) => {
+		const trimmed = url?.trim();
+		if (!trimmed) return;
+		if (!trimmed.startsWith(`http://`) && !trimmed.startsWith(`https://`)) return;
+		const key = imageDedupeKey(trimmed);
+		if (seen.has(key)) return;
+		seen.add(key);
+		urls.push(trimmed);
+	};
+
+	for (const url of galleryUrls ?? []) add(url);
+	add(event?.image?.url);
+	return urls;
+}
+
+function pickGalleryUrl(image: EbGalleryImage): string | undefined {
+	const candidates = [
+		image.croppedLogoUrl1880,
+		image.url,
+		image.croppedLogoUrl940,
+		image.croppedLogoUrl600,
+		image.croppedLogoUrl480,
+	];
+	return candidates.find((url) => typeof url === `string` && url.startsWith(`http`));
+}
+
+function imageDedupeKey(url: string): string {
+	const encoded = url.match(/images%2F(\d+)/i)?.[1];
+	if (encoded) return encoded;
+	const plain = url.match(/\/images\/(\d+)\//i)?.[1];
+	if (plain) return plain;
+	return url;
 }
 
 function getHost(event: EbEvent): string | undefined {
@@ -650,9 +712,17 @@ if (import.meta.main) {
 
 type EbLocation = ScrapeLocation & { eventbritePlaceId: string };
 
-type DescriptionCandidate = {
+type EnrichCandidate = {
 	event: EbEvent;
 	mapped: ScrapedEvent;
+};
+
+type EbGalleryImage = {
+	url?: string;
+	croppedLogoUrl480?: string;
+	croppedLogoUrl600?: string;
+	croppedLogoUrl940?: string;
+	croppedLogoUrl1880?: string;
 };
 
 type SearchSession = {

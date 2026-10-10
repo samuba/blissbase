@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getDescription, mapEventbriteEvent, parseCliArgs } from "./scrape-eventbrite.ts";
+import {
+	getDescription,
+	getImageUrls,
+	mapEventbriteEvent,
+	parseCliArgs,
+	parseEventPage,
+} from "./scrape-eventbrite.ts";
 
 const event = {
 	id: `1979702056142`,
@@ -48,6 +54,63 @@ describe(`getDescription`, () => {
 		expect(description).toBe(
 			`<p>Mantrasingen ist die einfachste und zugleich wirkungsvollste spirituelle Aktivität.</p>`,
 		);
+	});
+});
+
+describe(`getImageUrls`, () => {
+	it(`keeps gallery images and dedupes the search cover`, () => {
+		const urls = getImageUrls({
+			event: {
+				...event,
+				image: {
+					url: `https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F1154833463%2F1%2Foriginal?w=512`,
+				},
+			},
+			galleryUrls: [
+				`https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F1154833463%2F1%2Foriginal?w=1880`,
+				`https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F1154833323%2F1%2Foriginal?w=1880`,
+				`https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F1154833183%2F1%2Foriginal?w=1880`,
+			],
+		});
+
+		expect(urls).toHaveLength(3);
+		expect(urls[0]).toContain(`1154833463`);
+		expect(urls[1]).toContain(`1154833323`);
+		expect(urls[2]).toContain(`1154833183`);
+	});
+
+	it(`falls back to the search cover image`, () => {
+		expect(getImageUrls({ event })).toEqual([`https://img.evbuc.com/example.jpg`]);
+	});
+});
+
+describe(`parseEventPage`, () => {
+	it(`reads description text modules and gallery image urls`, () => {
+		const html = `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+			props: {
+				pageProps: {
+					context: {
+						structuredContent: {
+							modules: [{ type: `text`, text: `<p>Full body</p>` }],
+						},
+						gallery: {
+							images: [
+								{
+									url: `https://img.evbuc.com/a?w=1200`,
+									croppedLogoUrl1880: `https://img.evbuc.com/a?w=1880`,
+								},
+								{ url: `https://img.evbuc.com/b?w=1200` },
+							],
+						},
+					},
+				},
+			},
+		})}</script></html>`;
+
+		expect(parseEventPage(html)).toEqual({
+			description: `<p>Full body</p>`,
+			imageUrls: [`https://img.evbuc.com/a?w=1880`, `https://img.evbuc.com/b?w=1200`],
+		});
 	});
 });
 
