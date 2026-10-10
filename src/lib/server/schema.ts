@@ -237,6 +237,21 @@ export const favorites = pgTable("favorites", {
 	(t) => [primaryKey({ columns: [t.userId, t.eventId] })],
 );
 
+export const eventDeletedOutboxStatusEnum = pgEnum("event_deleted_outbox_status", ["pending", "done", "failed"]);
+
+// Filled by the `event_deleted_outbox` trigger below with the full deleted events row (snake_case keys).
+export const eventDeletedOutbox = pgTable("event_deleted_outbox", {
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		event: jsonb().$type<DeletedEventRow>().notNull(),
+		status: eventDeletedOutboxStatusEnum().notNull().default("pending"),
+		attempts: integer().notNull().default(0),
+		lastError: text(),
+		createdAt: timestamp().notNull().defaultNow(),
+		processedAt: timestamp(),
+	},
+	(t) => [index().on(t.status, t.createdAt)],
+);
+
 export type Favorite = typeof favorites.$inferSelect;
 
 export const favoritesRelations = relations(favorites, ({ one }) => ({
@@ -259,3 +274,19 @@ export const favoritesRelations = relations(favorites, ({ one }) => ({
 //         WHERE created_at < NOW() - INTERVAL '30 days';
 //     $$
 // );
+
+/*** Triggers - need to be run manually ***/
+// CREATE OR REPLACE FUNCTION enqueue_deleted_events() RETURNS trigger LANGUAGE plpgsql AS $$
+// BEGIN
+//     INSERT INTO event_deleted_outbox (event)
+//     SELECT to_jsonb(deleted_events) FROM deleted_events;
+//     RETURN NULL;
+// END;
+// $$;
+//
+// CREATE TRIGGER event_deleted_outbox
+//     AFTER DELETE ON events
+//     REFERENCING OLD TABLE AS deleted_events
+//     FOR EACH STATEMENT EXECUTE FUNCTION enqueue_deleted_events();
+
+export type DeletedEventRow = { id: number; slug: string; image_urls: string[] | null } & Record<string, unknown>;

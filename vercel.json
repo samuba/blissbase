@@ -1,0 +1,8 @@
+{
+	"crons": [
+		{
+			"path": "/api/cron/cleanupDeletedEvents",
+			"schedule": "0 4 * * *"
+		}
+	]
+}

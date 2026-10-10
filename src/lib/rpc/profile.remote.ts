@@ -17,6 +17,7 @@ import {
 	getUpcomingEventsForPublicProfile,
 } from "$lib/server/profile";
 import { resolveProfileImageUrl, signProfileImageClaim } from "$lib/server/profileImages";
+import { sweepProfileImagePrefix } from "$lib/server/savePublicProfile";
 import { error, invalid, redirect } from "@sveltejs/kit";
 import type { Profile } from "$lib/server/schema";
 import * as v from "valibot";
@@ -221,27 +222,6 @@ async function syncDisplayNameToAuthUser(displayName: string) {
 	}
 }
 
-/**
- * Deletes every object under `profiles/{userId}/{kind}-` except the one pointed to by `keepUrl`.
- * Runs after a profile save so orphaned uploads from aborted sessions or failed submits disappear.
- *
- * @example
- * await sweepProfileImagePrefix({ userId: `u1`, kind: `profile`, keepUrl: `https://.../profile-xyz.webp` });
- */
-async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
-	if (isE2eTestMode) return;
-
-	// No trailing dash so this also matches any legacy `profiles/{userId}/{kind}.ext` keys
-	// that were stored before timestamp suffixes were introduced. The prefix still cannot
-	// cross over to the other kind (e.g. `profile` does not match `banner-*`).
-	const prefix = `profiles/${args.userId}/${args.kind}`;
-	const keepKey = assets.objectKeyFromPublicUrl(args.keepUrl);
-	const allKeys = await assets.listObjectKeysByPrefix({ prefix, creds: eventAssetsCreds });
-	const orphanKeys = allKeys.filter((key) => key !== keepKey);
-	if (!orphanKeys?.length) return;
-	await assets.deleteObjects(orphanKeys, eventAssetsCreds);
-}
-
 function emailProfileCompleteness(profile: Profile | null | undefined) {
 	return {
 		isPublic: isPublicProfile(profile),
@@ -253,9 +233,3 @@ function emailProfileCompleteness(profile: Profile | null | undefined) {
 		socialLinks: profile?.socialLinks ?? [],
 	};
 }
-
-type SweepProfileImagePrefixArgs = {
-	userId: string;
-	kind: `profile` | `banner`;
-	keepUrl: string | null;
-};

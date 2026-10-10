@@ -144,9 +144,19 @@ async function isProfileSlugAvailable(args: { slug: string; profileId: string })
 	return !existingSlugOwner;
 }
 
-async function sweepProfileImagePrefix(args: SweepProfileImagePrefixArgs) {
+/**
+ * Deletes every object under `profiles/{userId}/{kind}-` except the one pointed to by `keepUrl`.
+ * Runs after a profile save so orphaned uploads from aborted sessions or failed submits disappear.
+ *
+ * @example
+ * await sweepProfileImagePrefix({ userId: `u1`, kind: `profile`, keepUrl: `https://.../profile-xyz.webp` });
+ */
+export async function sweepProfileImagePrefix(args: { userId: string; kind: `profile` | `banner`; keepUrl: string | null }) {
 	if (isE2eTestMode) return;
 
+	// No trailing dash so this also matches any legacy `profiles/{userId}/{kind}.ext` keys
+	// that were stored before timestamp suffixes were introduced. The prefix still cannot
+	// cross over to the other kind (e.g. `profile` does not match `banner-*`).
 	const prefix = `profiles/${args.userId}/${args.kind}`;
 	const keepKey = assets.objectKeyFromPublicUrl(args.keepUrl);
 	const allKeys = await assets.listObjectKeysByPrefix({ prefix, creds: eventAssetsCreds });
@@ -183,9 +193,3 @@ type MergeProfileFromFormArgs = {
 };
 
 type InvalidIssue = Parameters<typeof invalid>[0];
-
-type SweepProfileImagePrefixArgs = {
-	userId: string;
-	kind: `profile` | `banner`;
-	keepUrl: string | null;
-};

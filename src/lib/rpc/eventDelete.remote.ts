@@ -1,10 +1,8 @@
 import { command } from '$app/server';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
-import * as assets from '$lib/assets';
 import { db, eq, s } from '$lib/server/db';
-import { E2E_TEST } from '$env/static/private';
-import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
+import { assertUserIsAllowedToEditEvent } from '$lib/events.remote.shared';
 import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
 import { setFlash } from '$lib/server/flash';
 
@@ -21,10 +19,6 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 			.delete(s.events)
 			.where(eq(s.events.id, eventId))
 			.returning({ id: s.events.id, name: s.events.name, imageUrls: s.events.imageUrls });
-
-		if (result[0].imageUrls?.length && E2E_TEST !== `true`) {
-			await assets.deleteObjects(result[0].imageUrls, eventAssetsCreds);
-		}
 
 		getMyAuthoredUpcomingEvents().refresh();
 		getMyAuthoredPastEvents().refresh();

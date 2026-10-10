@@ -1,5 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull, lt, or } from 'drizzle-orm';
-import * as assets from '../src/lib/assets';
+import { and, eq, isNotNull, isNull, lt, or } from 'drizzle-orm';
 import { db, s } from '../src/lib/server/db.script.ts';
 
 const cleanupAgeDays = 60;
@@ -19,51 +18,16 @@ export async function main(args: { confirmed: boolean; dryRun: boolean }) {
 	const oldUnlistedEvents = args.dryRun ?
 		await getOldUnlistedEvents({ cutoffDate }) :
 		await deleteOldUnlistedEvents({ cutoffDate });
-	const imageUrls = getEventImageUrls(oldUnlistedEvents);
-
-	if (!oldUnlistedEvents?.length) {
-		console.log(`No old unlisted events found.`);
-		printCleanupSummary({
-			mode,
-			eventCount: 0,
-			imageFileCount: 0
-		});
-		return;
-	}
 
 	const action = args.dryRun ? `Would delete` : `Deleted`;
-	console.log(`${action} ${oldUnlistedEvents.length} old unlisted events.`);
 	for (const event of oldUnlistedEvents) {
 		const relevantDate = event.endAt ?? event.startAt;
 		console.log(`${action} event ${event.id}: ${event.name} (${relevantDate.toISOString()})`);
 	}
 
-	if (!imageUrls?.length) {
-		console.log(`No event images to delete.`);
-		printCleanupSummary({
-			mode,
-			eventCount: oldUnlistedEvents.length,
-			imageFileCount: 0
-		});
-		return;
-	}
-
-	if (args.dryRun) {
-		console.log(`Would delete ${imageUrls.length} event images from R2.`);
-		printCleanupSummary({
-			mode,
-			eventCount: oldUnlistedEvents.length,
-			imageFileCount: imageUrls.length
-		});
-		return;
-	}
-
-	await deleteEventImages({ imageUrls });
-	printCleanupSummary({
-		mode,
-		eventCount: oldUnlistedEvents.length,
-		imageFileCount: imageUrls.length
-	});
+	console.log(``);
+	console.log(`Cleanup summary (${mode})`);
+	console.log(`${action} ${oldUnlistedEvents.length} old unlisted events. Their images are cleaned up by the event_deleted_outbox cron.`);
 }
 
 if (import.meta.main) {
@@ -94,8 +58,7 @@ async function getOldUnlistedEvents(args: { cutoffDate: Date }) {
 			id: s.events.id,
 			name: s.events.name,
 			startAt: s.events.startAt,
-			endAt: s.events.endAt,
-			imageUrls: s.events.imageUrls
+			endAt: s.events.endAt
 		})
 		.from(s.events)
 		.where(getOldUnlistedEventCondition({ cutoffDate: args.cutoffDate }));
@@ -116,46 +79,8 @@ async function deleteOldUnlistedEvents(args: { cutoffDate: Date }) {
 			id: s.events.id,
 			name: s.events.name,
 			startAt: s.events.startAt,
-			endAt: s.events.endAt,
-			imageUrls: s.events.imageUrls
+			endAt: s.events.endAt
 		});
-}
-
-/**
- * Deletes event image objects from R2 and removes matching cache entries.
- *
- * @example
- * await deleteEventImages({ imageUrls: [`https://assets.blissbase.app/events/foo/bar.webp`] });
- */
-async function deleteEventImages(args: { imageUrls: string[] }) {
-	console.log(`Deleting ${args.imageUrls.length} event images from R2.`);
-	await assets.deleteObjects(args.imageUrls, assets.loadCreds());
-	await db.delete(s.imageCacheMap).where(inArray(s.imageCacheMap.url, args.imageUrls));
-	console.log(`Deleted event images and image cache entries.`);
-}
-
-/**
- * Returns a deduplicated list of image URLs attached to deleted events.
- *
- * @example
- * getEventImageUrls([{ imageUrls: [`https://assets.blissbase.app/events/foo/bar.webp`] }]);
- */
-function getEventImageUrls(events: { imageUrls: string[] | null }[]) {
-	return [...new Set(events.flatMap((event) => event.imageUrls ?? []).filter((url) => url?.trim()))];
-}
-
-/**
- * Prints the final cleanup totals in a GitHub Actions friendly format.
- *
- * @example
- * printCleanupSummary({ mode: `live run`, eventCount: 3, imageFileCount: 4 });
- */
-function printCleanupSummary(args: { mode: string; eventCount: number; imageFileCount: number }) {
-	const action = args.mode === `dry run` ? `would be deleted` : `deleted`;
-	console.log(``);
-	console.log(`Cleanup summary (${args.mode})`);
-	console.log(`Events ${action}: ${args.eventCount}`);
-	console.log(`R2 image files ${action}: ${args.imageFileCount}`);
 }
 
 /**
