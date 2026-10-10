@@ -319,3 +319,25 @@ export type ScrapeLocation = {
 	eventbritePlaceId?: string;
 	aliases?: readonly string[];
 };
+
+export const SEARCH_THEMES = [
+	`meditation`,
+	`breathwork`,
+	`ecstatic dance`,
+	`contact improvisation`,
+	`embodiment`,
+	`cacao`,
+	`sound healing`,
+	`tantra`,
+	`kundalini`,
+	`kirtan`,
+	`intimacy`,
+	`ceremony`,
+	`inner-work`,
+	`bodywork`,
+	`relationship`,
+	`energy-work`,
+	`spirituality`,
+	`shamanism`,
+	`circle`,
+];

@@ -28,7 +28,7 @@ import {
 	REQUEST_DELAY_MS,
 	selectLocationsByQuery,
 } from "./common.ts";
-import { LOCATIONS, eventbriteLocations, type ScrapeLocation } from "./locations.ts";
+import { LOCATIONS, eventbriteLocations, SEARCH_THEMES, type ScrapeLocation } from "./locations.ts";
 import { matchesBlackListWords, matchesWhiteListWords } from "../src/whitelistWords.ts";
 
 const SEARCH_URL = `https://www.eventbrite.com/api/v3/destination/search/`;
@@ -46,7 +46,6 @@ const DESCRIPTION_CONCURRENCY = 4;
 const BLACKLISTED_VENUES = [`soul dimension`];
 // Queries the destination API actually narrows. Other terms (retreat, tantra, …)
 // expand the result set past the place instead of filtering it.
-const NARROW_QUERIES = [`meditation`, `breathwork`, `yoga`, `sound bath`];
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(query?: string, limit?: number): Promise<ScrapedEvent[]> {
@@ -403,7 +402,7 @@ async function fetchLocationEvents({
 
 	console.error(`${location.name}: ${first.objectCount} events, searching conscious terms`);
 	const events = [...first.results];
-	for (const query of NARROW_QUERIES) {
+	for (const query of SEARCH_THEMES) {
 		try {
 			const page = await searchEvents({ session, placeId: location.eventbritePlaceId, page: 1, from, to, query });
 			if (!page.results?.length) continue;

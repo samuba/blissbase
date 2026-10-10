@@ -16,7 +16,7 @@
 import type { ScrapedEvent } from "../src/lib/types.ts";
 import { matchesBlackListWords, matchesWhiteListWords } from "../src/whitelistWords.ts";
 import { WebsiteScraperInterface, cleanProseHtml, locationQueryFromArgs, markdownToHtml, selectLocationsByQuery } from "./common.ts";
-import { LOCATIONS, type ScrapeLocation } from "./locations.ts";
+import { LOCATIONS, SEARCH_THEMES, type ScrapeLocation } from "./locations.ts";
 
 const API_URL = `https://api.meetup.com/gql-ext`;
 const SOURCE = `meetup` as const;
@@ -33,26 +33,6 @@ const SEARCH_CATEGORIES = [
 	{ id: `511`, name: `Health & Wellbeing` },
 	{ id: `449`, name: `Support & Coaching` },
 ] as const;
-
-const SEARCH_THEMES = [
-	`meditation`,
-	`breathwork`,
-	`ecstatic dance`,
-	`cacao`,
-	`sound healing`,
-	`tantra`,
-	`kundalini`,
-	`kirtan`,
-	`intimacy`,
-	`ceremony`,
-	`inner-work`,
-	`bodywork`,
-	`relationship`,
-	`energy-work`,
-	`spirituality`,
-	`shamanism`,
-	`circle`,
-];
 
 const EVENT_FIELDS = `
         id
