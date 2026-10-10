@@ -20,6 +20,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     createparty: { module: './scrape-createparty.ts', label: 'create.party', url: 'https://create.party' },
     wimhofmethod: { module: './scrape-wimhofmethod.ts', label: 'Wim Hof Method', url: 'https://activities.wimhofmethod.com' },
     meetup: { module: './scrape-meetup.ts', label: 'Meetup', url: 'https://www.meetup.com' },
+    eventbrite: { module: './scrape-eventbrite.ts', label: 'Eventbrite', url: 'https://www.eventbrite.com' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string, label: string, url: string, retryOnNewIp?: boolean }>;
 

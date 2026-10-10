@@ -1,6 +1,36 @@
+meetup.com
+eventbrite
+humanitix
+www.miteinandersein.net
+https://www.yoga-vidya.de/
+
+only broad tags in tag input
+
+tag scrolling is impossible on small devices, especially when one is already selected
+
+sicherstellen in logs das jev events vernünftig filtert und tagged
+
+hubs to add
+- kpg
+- cnx 
+- tulum
+- ibiza
+- san marco
+- nosara 
+- santa teresa
+- Austin 
+- Portland
+- berlin 
+- freiburg
+- cologne
+
 use this more: restate in your own words what you think my goals are and what the problem i'm trying to solve is
 
 wenn neue tags mit jev sich bewäht haben: knownTagSlugs kann entfernt werden
+
+scrapen https://www.soulcollective.eu/conscious-events-in-berlin
+https://arivela-collective.com/ >> lumaya
+
 
 neue telegram gruppen adden
 whatsapp om gruppe
