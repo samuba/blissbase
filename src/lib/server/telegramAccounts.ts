@@ -1,3 +1,9 @@
+import { TelegramClient } from 'teleproto'
+import { StringSession } from 'teleproto/sessions'
+
+// teleproto reconnects forever when Telegram rejects an auth key, so connect() alone may never settle.
+const CONNECT_TIMEOUT_MS = 60_000
+
 const ACCESS_ERROR_MARKERS = [
 	`Could not find Telegram entity`,
 	`No chat found for name`,
@@ -9,11 +15,6 @@ const ACCESS_ERROR_MARKERS = [
 	`CHAT_INVALID`,
 	`USERNAME_NOT_OCCUPIED`,
 	`USERNAME_INVALID`,
-	// A dead session can't access anything either — let the other account take over.
-	`AUTH_KEY_UNREGISTERED`,
-	`SESSION_REVOKED`,
-	`USER_DEACTIVATED`,
-	`is invalid or expired`,
 ]
 
 /**
@@ -33,6 +34,53 @@ export function parseTelegramAccountSessions(env: {
 	if (primary) accounts.push({ id: `primary`, session: primary })
 	if (fallback && fallback !== primary) accounts.push({ id: `fallback`, session: fallback })
 	return accounts
+}
+
+/**
+ * Connects every configured session. Throws if any one fails to connect or isn't authorized
+ * (expired, revoked, needs interactive login) — a bad session must fail the run, not be skipped.
+ */
+export async function connectTelegramAccounts(args: {
+	apiId: number
+	apiHash: string
+	sessions: { id: TelegramAccountId; session: string }[]
+}) {
+	const accounts: { id: TelegramAccountId; client: TelegramClient }[] = []
+	for (const { id, session } of args.sessions) {
+		try {
+			const client = new TelegramClient(new StringSession(session), args.apiId, args.apiHash, {
+				connectionRetries: 5,
+			})
+			accounts.push({ id, client })
+			await withTimeout({
+				ms: CONNECT_TIMEOUT_MS,
+				message: `timed out after ${CONNECT_TIMEOUT_MS / 1000}s connecting`,
+				promise: (async () => {
+					await client.connect()
+					if (!(await client.checkAuthorization())) throw new Error(`not authorized`)
+				})(),
+			})
+		} catch (err) {
+			await Promise.allSettled(accounts.map(({ client }) => client.disconnect()))
+			const message = err instanceof Error ? err.message : String(err)
+			throw new Error(
+				`Telegram session "${id}" is unusable (${message}). Mint a new one with scripts/telegram-login.ts and update its secret.`,
+			)
+		}
+	}
+	return accounts
+}
+
+async function withTimeout<T>(args: { promise: Promise<T>; ms: number; message: string }) {
+	let timer: ReturnType<typeof setTimeout> | undefined
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(() => reject(new Error(args.message)), args.ms)
+	})
+	try {
+		return await Promise.race([args.promise, timeout])
+	} finally {
+		clearTimeout(timer)
+	}
 }
 
 export function isTelegramAccessError(err: unknown) {

@@ -1,5 +1,4 @@
 import { Api, TelegramClient, utils } from "teleproto";
-import { StringSession } from "teleproto/sessions";
 import 'dotenv/config'
 import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { InsertEvent } from "../src/lib/types";
@@ -14,6 +13,7 @@ import type { Entity } from "teleproto/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml, telegramEntityLookupCandidates } from "../src/lib/telegramCommon";
 import {
+    connectTelegramAccounts,
     missingTelegramSessionConfigMessage,
     parseTelegramAccountSessions,
     withFirstAccessibleAccount,
@@ -1169,22 +1169,10 @@ if (!apiId || !apiHash || !accountSessions.length) {
     throw new Error(missingTelegramSessionConfigMessage());
 }
 
-const accounts: ScraperAccount[] = [];
-const unauthorizedAccountIds: TelegramAccountId[] = [];
-for (const { id, session } of accountSessions) {
-    const client = new TelegramClient(new StringSession(session), apiId, apiHash, { connectionRetries: 5 });
-    await client.connect();
-    if (!(await client.checkAuthorization())) {
-        console.error(`❌ Telegram session for account "${id}" is invalid or expired. Mint a new one with scripts/telegram-login.ts`);
-        unauthorizedAccountIds.push(id);
-        await client.disconnect();
-        continue;
-    }
-    accounts.push({ id, client });
-}
-if (!accounts.length) {
-    throw new Error(`No authorized Telegram scraper account (tried: ${accountSessions.map((a) => a.id).join(`, `)})`);
-}
+const accounts = await connectTelegramAccounts({ apiId, apiHash, sessions: accountSessions }).catch((err) => {
+    console.error(`❌ ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+});
 console.log(`Connected Telegram scraper account(s): ${accounts.map((a) => a.id).join(`, `)}`);
 
 /**
@@ -1332,11 +1320,6 @@ try {
     // in the end log fatal erors and exit so sam can have a look at them
     if (fatalErrors.length > 0) {
         console.error(`\n❌ Fatal errors occurred:`, fatalErrors.map(e => e.message));
-        process.exit(1);
-    }
-
-    if (unauthorizedAccountIds.length) {
-        console.error(`\n❌ Skipped unauthorized Telegram account(s): ${unauthorizedAccountIds.join(`, `)}`);
         process.exit(1);
     }
 

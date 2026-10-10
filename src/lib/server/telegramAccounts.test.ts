@@ -1,9 +1,79 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	connectTelegramAccounts,
 	isTelegramAccessError,
 	parseTelegramAccountSessions,
 	withFirstAccessibleAccount,
 } from './telegramAccounts';
+
+const teleproto = vi.hoisted(() => ({
+	authorizedBySession: new Map<string, boolean | Error | `hang`>(),
+	disconnect: vi.fn(),
+}));
+
+vi.mock(`teleproto/sessions`, () => ({
+	StringSession: class {
+		constructor(public value: string) {}
+	},
+}));
+
+vi.mock(`teleproto`, () => ({
+	TelegramClient: class {
+		constructor(public session: { value: string }) {}
+		async connect() {
+			const state = teleproto.authorizedBySession.get(this.session.value);
+			if (state === `hang`) return new Promise(() => {});
+			if (state instanceof Error) throw state;
+		}
+		async checkAuthorization() {
+			return teleproto.authorizedBySession.get(this.session.value) === true;
+		}
+		disconnect = teleproto.disconnect;
+	},
+}));
+
+describe(`connectTelegramAccounts`, () => {
+	const sessions = [
+		{ id: `primary` as const, session: `p` },
+		{ id: `fallback` as const, session: `f` },
+	];
+
+	beforeEach(() => {
+		teleproto.authorizedBySession.clear();
+		teleproto.disconnect.mockClear();
+	});
+
+	it(`connects all authorized sessions in order`, async () => {
+		teleproto.authorizedBySession.set(`p`, true).set(`f`, true);
+		const accounts = await connectTelegramAccounts({ apiId: 1, apiHash: `h`, sessions });
+		expect(accounts.map((account) => account.id)).toEqual([`primary`, `fallback`]);
+	});
+
+	it(`fails when any session is not authorized, even if another works`, async () => {
+		teleproto.authorizedBySession.set(`p`, true).set(`f`, false);
+		await expect(connectTelegramAccounts({ apiId: 1, apiHash: `h`, sessions })).rejects.toThrow(
+			`Telegram session "fallback" is unusable (not authorized)`,
+		);
+		expect(teleproto.disconnect).toHaveBeenCalledTimes(2);
+	});
+
+	it(`fails when connecting never settles (rejected auth key reconnect loop)`, async () => {
+		vi.useFakeTimers();
+		teleproto.authorizedBySession.set(`p`, `hang`);
+		const result = connectTelegramAccounts({ apiId: 1, apiHash: `h`, sessions });
+		const assertion = expect(result).rejects.toThrow(`Telegram session "primary" is unusable (timed out after 60s connecting)`);
+		await vi.advanceTimersByTimeAsync(60_000);
+		await assertion;
+		vi.useRealTimers();
+	});
+
+	it(`fails when a session cannot connect`, async () => {
+		teleproto.authorizedBySession.set(`p`, new Error(`AUTH_KEY_UNREGISTERED`));
+		await expect(connectTelegramAccounts({ apiId: 1, apiHash: `h`, sessions })).rejects.toThrow(
+			`Telegram session "primary" is unusable (AUTH_KEY_UNREGISTERED)`,
+		);
+	});
+});
 
 describe(`parseTelegramAccountSessions`, () => {
 	it(`uses PRIMARY and FALLBACK when both are set`, () => {
@@ -62,7 +132,6 @@ describe(`isTelegramAccessError`, () => {
 		).toBe(true);
 		expect(isTelegramAccessError(new Error(`CHANNEL_PRIVATE`))).toBe(true);
 		expect(isTelegramAccessError({ errorMessage: `USER_NOT_PARTICIPANT` })).toBe(true);
-		expect(isTelegramAccessError(new Error(`Telegram session for account "primary" is invalid or expired.`))).toBe(true);
 		expect(isTelegramAccessError(new Error(`No chat found for name "Foo". Is the scraper account a member?`))).toBe(
 			true,
 		);
@@ -72,6 +141,11 @@ describe(`isTelegramAccessError`, () => {
 		expect(isTelegramAccessError(new Error(`FATAL->EXIT: forum but no topicIds`))).toBe(false);
 		expect(isTelegramAccessError(new Error(`telegram file reference expired`))).toBe(false);
 		expect(isTelegramAccessError(new Error(`R2 upload failed`))).toBe(false);
+	});
+
+	it(`does not treat dead sessions as access misses`, () => {
+		expect(isTelegramAccessError({ errorMessage: `AUTH_KEY_UNREGISTERED` })).toBe(false);
+		expect(isTelegramAccessError(new Error(`SESSION_REVOKED`))).toBe(false);
 	});
 });
 
