@@ -1129,7 +1129,10 @@ async function selectClientForTarget(target: TelegramScrapingTarget, accounts: S
             const entity = await resolveScrapingEntity(client, roomId);
             // Resolving can succeed without membership (e.g. stale access hash); reading surfaces CHANNEL_PRIVATE etc.
             await client.getMessages(entity, { limit: 1 });
-            console.log(`Using Telegram account "${id}" for target ${target.roomId}`);
+            // withFirstAccessibleAccount logs the switch when primary missed; log clean wins here.
+            if (id === `primary`) {
+                console.log(`Using Telegram account "primary" for target ${target.roomId}`);
+            }
             return { client, entity, resolvedRoomId: utils.getPeerId(entity) };
         },
     });
