@@ -1047,8 +1047,18 @@ async function processMessages(
     }
 }
 
-async function getChatIdByName(client: TelegramClient, name: string) {
+const dialogsByClient = new WeakMap<TelegramClient, Awaited<ReturnType<TelegramClient[`getDialogs`]>>>();
+
+async function getDialogsCached(client: TelegramClient) {
+    const cached = dialogsByClient.get(client);
+    if (cached) return cached;
     const dialogs = await client.getDialogs({});
+    dialogsByClient.set(client, dialogs);
+    return dialogs;
+}
+
+async function getChatIdByName(client: TelegramClient, name: string) {
+    const dialogs = await getDialogsCached(client);
     for (const dialog of dialogs) {
         if (dialog.name === name) {
             return dialog.id?.toString();
@@ -1056,28 +1066,32 @@ async function getChatIdByName(client: TelegramClient, name: string) {
     }
 }
 
-/**
- * Resolves a scraping target entity. Retries with -100… candidates and warms dialogs
- * when a bare channel id was stored as a positive PeerUser-looking id.
- */
-async function resolveScrapingEntity(client: TelegramClient, roomId: string) {
-    for (const candidate of telegramEntityLookupCandidates(roomId)) {
-        try {
-            return await client.getEntity(candidate);
-        } catch {
-            continue;
-        }
-    }
-
-    // Warm access hashes — needed when session cache never saw this peer as a channel.
-    const dialogs = await client.getDialogs({});
+function findDialogEntity(clientDialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>, roomId: string) {
     const wanted = new Set(
         telegramEntityLookupCandidates(roomId).map((candidate) => candidate.toString()),
     );
-    for (const dialog of dialogs) {
+    for (const dialog of clientDialogs) {
         const dialogId = dialog.id?.toString();
         if (!dialogId || !wanted.has(dialogId)) continue;
         if (dialog.entity) return dialog.entity;
+    }
+}
+
+/**
+ * Resolves a scraping target entity.
+ * Dialogs first (membership + access hash); numeric ids not in dialogs are treated as
+ * not-a-member without calling GetChannels (avoids CHANNEL_INVALID spam on primary probe).
+ */
+async function resolveScrapingEntity(client: TelegramClient, roomId: string) {
+    const dialogs = await getDialogsCached(client);
+    const fromDialogs = findDialogEntity(dialogs, roomId);
+    if (fromDialogs) return fromDialogs;
+
+    // Private/numeric room ids only resolve via membership. Skip GetChannels when absent.
+    if (/^-?\d+$/.test(roomId.trim())) {
+        throw new Error(
+            `Could not find Telegram entity for "${roomId}". Use @username, resolveName:Chat Title, or the full chat id (e.g. -100…). The scraper account must be a member of the chat.`,
+        );
     }
 
     for (const candidate of telegramEntityLookupCandidates(roomId)) {
@@ -1174,6 +1188,8 @@ const accounts = await connectTelegramAccounts({ apiId, apiHash, sessions: accou
     process.exit(1);
 });
 console.log(`Connected Telegram scraper account(s): ${accounts.map((a) => a.id).join(`, `)}`);
+// Warm dialog caches once per account so primary membership probes don't re-fetch dialogs.
+await Promise.all(accounts.map(({ client }) => getDialogsCached(client)));
 
 /**
  * Processes targets with a truly parallel worker pool that maintains exactly 3 concurrent workers

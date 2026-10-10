@@ -1,6 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { extractTelegramRoomIdFromInput, telegramEntityLookupCandidates } from '$lib/telegramCommon';
 import { TelegramClient, utils } from 'teleproto';
+import { LogLevel } from 'teleproto/extensions/Logger';
 import { StringSession } from 'teleproto/sessions';
 import {
 	missingTelegramSessionConfigMessage,
@@ -60,6 +61,7 @@ async function resolveWithSession(args: {
 				`Telegram session for account "${args.accountId}" is invalid or expired. Run scripts/telegram-login.ts and update TELEGRAM_APP_SESSION_PRIMARY / TELEGRAM_APP_SESSION_FALLBACK (or legacy TELEGRAM_APP_SESSION) in .env`,
 			);
 		}
+		client.setLogLevel(LogLevel.NONE);
 
 		// Warm entity cache so numeric IDs can be resolved (teleproto needs access hashes).
 		const dialogs = await client.getDialogs({});
@@ -98,6 +100,13 @@ async function resolveEntity(args: {
 
 	const fromDialogs = findDialogEntity({ dialogs, roomId });
 	if (fromDialogs) return fromDialogs;
+
+	// Numeric ids without a dialog mean this account isn't a member — skip GetChannels spam.
+	if (/^-?\d+$/.test(roomId.trim())) {
+		throw new Error(
+			`Could not find Telegram entity for "${roomId}". Use @username, resolveName:Chat Title, or the full chat id (e.g. -100…). The scraper account must be a member of the chat.`,
+		);
+	}
 
 	for (const candidate of telegramEntityLookupCandidates(roomId)) {
 		try {

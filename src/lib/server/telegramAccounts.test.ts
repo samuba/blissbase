@@ -17,6 +17,10 @@ vi.mock(`teleproto/sessions`, () => ({
 	},
 }));
 
+vi.mock(`teleproto/extensions/Logger`, () => ({
+	LogLevel: { NONE: `none` },
+}));
+
 vi.mock(`teleproto`, () => ({
 	TelegramClient: class {
 		constructor(public session: { value: string }) {}
@@ -28,6 +32,7 @@ vi.mock(`teleproto`, () => ({
 		async checkAuthorization() {
 			return teleproto.authorizedBySession.get(this.session.value) === true;
 		}
+		setLogLevel = vi.fn();
 		disconnect = teleproto.disconnect;
 	},
 }));

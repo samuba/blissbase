@@ -1,4 +1,5 @@
 import { TelegramClient } from 'teleproto'
+import { LogLevel } from 'teleproto/extensions/Logger'
 import { StringSession } from 'teleproto/sessions'
 
 // teleproto reconnects forever when Telegram rejects an auth key, so connect() alone may never settle.
@@ -58,6 +59,9 @@ export async function connectTelegramAccounts(args: {
 				promise: (async () => {
 					await client.connect()
 					if (!(await client.checkAuthorization())) throw new Error(`not authorized`)
+					// Expected CHANNEL_INVALID while probing non-member chats is handled by us;
+					// teleproto still prints ERROR stacks for those — keep scraper logs readable.
+					client.setLogLevel(LogLevel.NONE)
 				})(),
 			})
 		} catch (err) {
