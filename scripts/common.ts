@@ -307,6 +307,48 @@ function getHtmlBody($: cheerio.Root): string {
 }
 
 /**
+ * Render markdown to simple prose HTML via Bun's built-in markdown parser.
+ * Disables raw HTML in the source; prefers https for schemeless absolute hrefs.
+ * Scrape scripts run under bun; under node (vitest) falls back to escaped paragraphs.
+ */
+export function markdownToHtml(markdown: string): string {
+	if (!markdown) return ``;
+
+	const bunMarkdown = typeof Bun !== `undefined` ? Bun.markdown : undefined;
+	if (typeof bunMarkdown?.html !== `function`) {
+		return markdown
+			.split(/\r?\n+/)
+			.map((line) => line.trim())
+			.filter(Boolean)
+			.map((line) => `<p>${escapeHtmlText(line)}</p>`)
+			.join(``);
+	}
+
+	const html = bunMarkdown.html(markdown, {
+		autolinks: true,
+		noHtmlBlocks: true,
+		noHtmlSpans: true,
+	});
+	return preferHttpsInAnchors(html);
+}
+
+function escapeHtmlText(text: string) {
+	return text.replaceAll(`&`, `&amp;`).replaceAll(`<`, `&lt;`).replaceAll(`>`, `&gt;`);
+}
+
+function preferHttpsInAnchors(html: string): string {
+	const $ = cheerio.load(html);
+	$(`a[href]`).each((_, el) => {
+		const href = $(el).attr(`href`)?.trim();
+		if (!href) return;
+		if (/^[a-z][a-z0-9+.-]*:/i.test(href)) return;
+		if (href.startsWith(`#`) || href.startsWith(`/`) || href.startsWith(`?`)) return;
+		$(el).attr(`href`, href.startsWith(`//`) ? `https:${href}` : `https://${href}`);
+	});
+	return getHtmlBody($);
+}
+
+/**
  * Finds all links which are not already wrapped in <a> tags and wraps them in <a> tags
  */
 export function linkify(html: string): string {

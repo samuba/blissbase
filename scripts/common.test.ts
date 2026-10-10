@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { linkify } from './common';
+import { linkify, markdownToHtml } from './common';
 
 describe('linkify', () => {
     it('should convert plain URLs to clickable links', () => {
@@ -162,4 +162,31 @@ describe('linkify', () => {
         const expected = 'Visit<a href="https://example-test.com" target="_blank">https://example-test.com</a>';
         expect(linkify(input)).toBe(expected);
     });
+});
+
+const hasBunMarkdown = typeof Bun !== `undefined` && typeof Bun.markdown?.html === `function`;
+const markdownIt = hasBunMarkdown ? it : it.skip;
+
+describe(`markdownToHtml`, () => {
+	markdownIt(`renders Meetup markdown links and lists to simple HTML`, () => {
+		const input = `Join us!\n\n- breathe\n- [https://impacttrips.co/creativeescape/](https://impacttrips.co/creativeescape/)`;
+		const html = markdownToHtml(input);
+		expect(html).toContain(`<ul>`);
+		expect(html).toContain(`<li>breathe</li>`);
+		expect(html).toContain(
+			`<a href="https://impacttrips.co/creativeescape/">https://impacttrips.co/creativeescape/</a>`,
+		);
+		expect(html).not.toContain(`[https://impacttrips.co/creativeescape/]`);
+	});
+
+	markdownIt(`keeps absolute http urls and prefers https when scheme is missing`, () => {
+		expect(markdownToHtml(`[docs](http://example.com/a)`)).toContain(`<a href="http://example.com/a">docs</a>`);
+		expect(markdownToHtml(`[site](example.com/path)`)).toContain(`<a href="https://example.com/path">site</a>`);
+	});
+
+	markdownIt(`renders emphasis as tags and does not pass through raw HTML`, () => {
+		const html = markdownToHtml(`Hi <b>there</b> and **bold**`);
+		expect(html).toContain(`<strong>bold</strong>`);
+		expect(html).not.toContain(`<b>there</b>`);
+	});
 }); 

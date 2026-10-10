@@ -97,6 +97,23 @@ describe(`mapMeetupEvent dates`, () => {
 	});
 });
 
+const hasBunMarkdown = typeof Bun !== `undefined` && typeof Bun.markdown?.html === `function`;
+const markdownIt = hasBunMarkdown ? it : it.skip;
+
+describe(`mapMeetupEvent description markdown`, () => {
+	markdownIt(`renders Meetup markdown descriptions to simple HTML`, () => {
+		const mapped = mapMeetupEvent({
+			...event,
+			description: `Join us!\n\n- breathe\n- [https://impacttrips.co/creativeescape/](https://impacttrips.co/creativeescape/)`,
+		});
+		expect(mapped?.description).toContain(`<li>`);
+		expect(mapped?.description).toContain(
+			`<a href="https://impacttrips.co/creativeescape/">https://impacttrips.co/creativeescape/</a>`,
+		);
+		expect(mapped?.description).not.toContain(`[https://impacttrips.co/creativeescape/]`);
+	});
+});
+
 describe(`collectMeetupEvents`, () => {
 	it(`keeps going when one event fails to parse`, () => {
 		const errorSpy = vi.spyOn(console, `error`).mockImplementation(() => {});

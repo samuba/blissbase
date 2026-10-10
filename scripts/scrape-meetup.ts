@@ -15,7 +15,7 @@
  */
 import type { ScrapedEvent } from "../src/lib/types.ts";
 import { matchesBlackListWords, matchesWhiteListWords } from "../src/whitelistWords.ts";
-import { WebsiteScraperInterface, cleanProseHtml, locationQueryFromArgs, selectLocationsByQuery } from "./common.ts";
+import { WebsiteScraperInterface, cleanProseHtml, locationQueryFromArgs, markdownToHtml, selectLocationsByQuery } from "./common.ts";
 import { LOCATIONS, type ScrapeLocation } from "./locations.ts";
 
 const API_URL = `https://api.meetup.com/gql-ext`;
@@ -323,14 +323,7 @@ function getDescription(event: MeetupEvent): string | undefined {
 	if (typeof event?.description !== `string`) return undefined;
 	const raw = event.description.trim();
 	if (!raw) return undefined;
-
-	const html = raw
-		.split(/\r?\n+/)
-		.map((line) => line.trim())
-		.filter(Boolean)
-		.map((line) => `<p>${escapeHtml(line)}</p>`)
-		.join(``);
-	return cleanProseHtml(html) || undefined;
+	return cleanProseHtml(markdownToHtml(raw)) || undefined;
 }
 
 function getImageUrls(event: MeetupEvent): string[] {
@@ -670,10 +663,6 @@ function upcomingRange() {
 
 function meetupDateTime(date: Date) {
 	return date.toISOString().replace(/\.\d{3}Z$/, `Z`);
-}
-
-function escapeHtml(text: string) {
-	return text.replaceAll(`&`, `&amp;`).replaceAll(`<`, `&lt;`).replaceAll(`>`, `&gt;`);
 }
 
 if (import.meta.main) {
