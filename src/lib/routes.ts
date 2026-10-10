@@ -70,6 +70,7 @@ export const routes = {
     admin: () => resolve(`/admin`) ,
     adminTelegram: () => resolve(`/admin/telegram`) ,
     adminTelegramResolve: () => resolve(`/admin/telegram/resolve`) ,
+    adminTelegramDialogs: () => resolve(`/admin/telegram/dialogs`) ,
     adminWhatsapp: () => resolve(`/admin/whatsapp`) ,
     breathworkEventSearch: () => resolve(`/api/embed/breathwork.global`) ,
     breathworkEventSearchSnippet: () => `/embed/event-search-snippet.js` ,

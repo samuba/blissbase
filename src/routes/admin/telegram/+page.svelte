@@ -5,6 +5,7 @@
 	import { routes } from '$lib/routes';
 	import {
 		deleteTelegramScrapingTarget,
+		getAvailableTelegramDialogs,
 		getTelegramScrapingTargets,
 		lookupTimezoneFromAddress,
 		saveTelegramScrapingTarget,
@@ -14,7 +15,9 @@
 
 	let { data } = $props();
 	const targetsQuery = getTelegramScrapingTargets();
+	const availableDialogsQuery = getAvailableTelegramDialogs();
 	const targets = $derived(targetsQuery.current ?? data.targets);
+	const availableDialogs = $derived(availableDialogsQuery.current ?? data.availableDialogs);
 	const defaultFormValues = {
 		originalRoomId: ``,
 		roomId: ``,
@@ -27,14 +30,37 @@
 	let isAddDialogOpen = $state(false);
 	let isEditDialogOpen = $state(false);
 	let selectedRoomId = $state<string | null>(null);
+	let selectedDialogForAdd = $state<{ roomId: string; name: string } | null>(null);
+	let dialogFilter = $state(``);
+	let dialogKindFilter = $state<DialogKindFilter>(`groups`);
 	let isDeleting = $state(false);
 	let timezoneLookupAddress = ``;
 	const selectedTarget = $derived(targets.find((target) => target.roomId === selectedRoomId) ?? null);
 
+	const dialogKindOptions = [
+		{ value: `all`, label: `Alle` },
+		{ value: `groups`, label: `Gruppen` },
+		{ value: `channels`, label: `Kanäle` },
+	] as const;
+
+	const filteredAvailableDialogs = $derived.by(() => {
+		const query = dialogFilter.trim().toLowerCase();
+		return availableDialogs.filter((dialog) => {
+			if (dialogKindFilter === `groups` && dialog.kind !== `group`) return false;
+			if (dialogKindFilter === `channels` && dialog.kind !== `channel`) return false;
+			if (!query) return true;
+			return (
+				dialog.name.toLowerCase().includes(query) ||
+				dialog.roomId.toLowerCase().includes(query) ||
+				(dialog.username?.toLowerCase().includes(query) ?? false)
+			);
+		});
+	});
+
 	saveTelegramScrapingTarget.fields.set(defaultFormValues);
 
 	const formProps = saveTelegramScrapingTarget.enhance(async (form) => {
-		const ok = await form.submit().updates(getTelegramScrapingTargets);
+		const ok = await form.submit().updates(getTelegramScrapingTargets, getAvailableTelegramDialogs);
 		if (!ok) return;
 
 		const result = form.result;
@@ -72,12 +98,19 @@
 	});
 
 	function openAddDialog() {
+		selectedDialogForAdd = null;
+		dialogFilter = ``;
+		dialogKindFilter = `groups`;
 		saveTelegramScrapingTarget.fields.set(defaultFormValues);
+		void availableDialogsQuery.refresh();
 		isAddDialogOpen = true;
 	}
 
 	function closeAddDialog() {
 		isAddDialogOpen = false;
+		selectedDialogForAdd = null;
+		dialogFilter = ``;
+		dialogKindFilter = `groups`;
 		saveTelegramScrapingTarget.fields.set(defaultFormValues);
 	}
 
@@ -87,6 +120,19 @@
 			return;
 		}
 		closeAddDialog();
+	}
+
+	function selectDialogForAdd(dialog: AvailableDialog) {
+		selectedDialogForAdd = { roomId: dialog.roomId, name: dialog.name };
+		saveTelegramScrapingTarget.fields.set({
+			...defaultFormValues,
+			roomId: dialog.roomId,
+		});
+	}
+
+	function clearSelectedDialogForAdd() {
+		selectedDialogForAdd = null;
+		saveTelegramScrapingTarget.fields.set(defaultFormValues);
 	}
 
 	async function fillTimezoneFromAddress(address: string) {
@@ -141,7 +187,10 @@
 		isDeleting = true;
 		try {
 			await deleteTelegramScrapingTarget({ roomId: selectedTarget.roomId });
-			await getTelegramScrapingTargets().refresh();
+			await Promise.all([
+				getTelegramScrapingTargets().refresh(),
+				getAvailableTelegramDialogs().refresh(),
+			]);
 			toast.success(`Target „${label}“ gelöscht`);
 			onEditDialogOpenChange(false);
 		} catch (err) {
@@ -237,6 +286,8 @@
 	}
 
 	type Target = (typeof targets)[number];
+	type AvailableDialog = (typeof availableDialogs)[number];
+	type DialogKindFilter = `all` | `groups` | `channels`;
 	type SortKey =
 		| `name`
 		| `roomId`
@@ -399,103 +450,177 @@
 		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class="bg-base-100 fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg shadow-xl"
+			data-testid="telegram-add-dialog"
 		>
 			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">
 				Target hinzufügen
 			</Dialog.Title>
 
 			{#if isAddDialogOpen}
-				<form {...formProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
-					<input type="hidden" {...saveTelegramScrapingTarget.fields.originalRoomId.as(`text`)} />
-
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">roomId *</legend>
-						<input
-							class="input w-full peer"
-							{...saveTelegramScrapingTarget.fields.roomId.as(`text`)}
-							required
-							placeholder="t.me/…, -100123…, @channel oder resolveName:Chat Name"
-						/>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.roomId} />
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<label class="label cursor-pointer justify-start gap-2">
+				{#if !selectedDialogForAdd}
+					<div class="flex flex-col gap-3 px-6 py-4">
+						<p class="text-base-content/70 text-sm">
+							Wähle eine Gruppe oder einen Kanal aus, der noch kein Scraping-Target ist.
+						</p>
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<select
+								class="select w-full sm:w-44"
+								bind:value={dialogKindFilter}
+								aria-label="Art filtern"
+								data-testid="telegram-dialog-kind-filter"
+							>
+								{#each dialogKindOptions as option (option.value)}
+									<option value={option.value}>{option.label}</option>
+								{/each}
+							</select>
 							<input
-								class="checkbox"
-								{...saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents.as(`checkbox`)}
+								class="input w-full min-w-0 flex-1"
+								type="search"
+								placeholder="Gruppe/Kanal suchen…"
+								bind:value={dialogFilter}
+								data-testid="telegram-dialog-filter"
 							/>
-							<span class="font-bold text-base-content">
-								hasOnlyConsciousEvents
-								<span class="block text-xs text-base-content/65 font-normal">
-									Wenn aktiv, wird der Consciousness-Check übersprungen.
-								</span>
-							</span>
-						</label>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents} />
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">defaultAddress</legend>
-						<textarea
-							class="textarea min-h-20 w-full peer"
-							{...saveTelegramScrapingTarget.fields.defaultAddress.as(`text`)}
-							placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-							onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
-						></textarea>
-						<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultAddress} />
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">topicIds</legend>
-						<input
-							class="input w-full peer font-mono"
-							{...saveTelegramScrapingTarget.fields.topicIds.as(`text`)}
-							placeholder="z.B. 1, 2 oder -1"
-						/>
-						<p class="label">Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics.</p>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.topicIds} />
-					</fieldset>
-
-					<fieldset class="fieldset">
-						<legend class="fieldset-legend">
-							defaultTimezone *
-							{#if lookupTimezoneFromAddress.pending > 0}
-								<span class="loading loading-spinner loading-xs"></span>
-							{/if}
-						</legend>
-						<input
-							class="input w-full peer"
-							{...saveTelegramScrapingTarget.fields.defaultTimezone.as(`text`)}
-							required
-						/>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultTimezone} />
-					</fieldset>
-
-					{#if saveTelegramScrapingTarget.fields.allIssues()?.length}
-						<div class="flex flex-col gap-1">
-							{#each saveTelegramScrapingTarget.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
-								<div class="text-error text-xs">{issue.message}</div>
-							{/each}
 						</div>
-					{/if}
-
-					<div class="flex flex-wrap gap-2 pt-2">
-						<button
-							type="submit"
-							class="btn btn-primary"
-							disabled={saveTelegramScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
-						>
-							{#if saveTelegramScrapingTarget.pending > 0}
-								<span class="loading loading-spinner loading-sm"></span>
-								Wird gespeichert...
-							{:else}
-								Speichern
+						{#if availableDialogsQuery.loading}
+							<div class="flex items-center gap-2">
+								<span class="loading loading-spinner loading-xs"></span>
+								<span class="text-base-content/70 text-sm">Lade…</span>
+							</div>
+						{/if}
+						{#if !availableDialogs.length}
+							{#if !availableDialogsQuery.loading}
+								<p class="text-base-content/70 text-sm">
+									Keine verfügbaren Gruppen/Kanäle. Alle sind bereits Targets, oder TELEGRAM_APP_SESSION_PRIMARY fehlt bzw. der Primary-Account ist noch in keiner Gruppe.
+								</p>
 							{/if}
-						</button>
+						{:else if !filteredAvailableDialogs.length}
+							<p class="text-base-content/70 text-sm">
+								Keine Einträge für diese Filterung.
+							</p>
+						{:else}
+							<div class="max-h-[70vh] overflow-y-auto overscroll-contain">
+								<ul class="flex w-full flex-col gap-1.5">
+									{#each filteredAvailableDialogs as dialog (dialog.roomId)}
+										<li class="w-full min-w-0">
+											<button
+												type="button"
+												class="card card-border bg-base-200 flex w-full min-w-0 flex-col items-start gap-0.5 rounded-box px-2.5 py-1.5 text-start"
+												data-testid="telegram-dialog-option"
+												onclick={() => selectDialogForAdd(dialog)}
+											>
+												<span class="flex w-full min-w-0 items-center gap-1.5">
+													<span class="truncate text-sm font-medium">{dialog.name}</span>
+													<span class="badge badge-ghost badge-xs shrink-0">
+														{dialog.kind === `channel` ? `Kanal` : `Gruppe`}
+													</span>
+												</span>
+												{#if dialog.username}
+													<span class="w-full truncate text-xs opacity-70">@{dialog.username}</span>
+												{/if}
+												<span class="w-full break-all font-mono text-xs opacity-70">{dialog.roomId}</span>
+												<span class="text-xs opacity-60">
+													Letzte Nachricht: {formatDate(dialog.lastMessageTime)}
+												</span>
+											</button>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
 					</div>
-				</form>
+				{:else}
+					<form {...formProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+						<input type="hidden" {...saveTelegramScrapingTarget.fields.originalRoomId.as(`text`)} />
+						<input type="hidden" {...saveTelegramScrapingTarget.fields.roomId.as(`text`)} />
+
+						<div class="bg-base-200 flex items-start justify-between gap-2 rounded-box p-3">
+							<div class="min-w-0 space-y-0.5">
+								<p class="truncate font-medium">{selectedDialogForAdd.name}</p>
+								<p class="font-mono text-xs opacity-70 break-all">{selectedDialogForAdd.roomId}</p>
+							</div>
+							<button type="button" class="btn btn-ghost btn-sm shrink-0" onclick={clearSelectedDialogForAdd}>
+								Ändern
+							</button>
+						</div>
+
+						<fieldset class="fieldset">
+							<label class="label cursor-pointer justify-start gap-2">
+								<input
+									class="checkbox"
+									{...saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents.as(`checkbox`)}
+								/>
+								<span class="font-bold text-base-content">
+									hasOnlyConsciousEvents
+									<span class="block text-xs text-base-content/65 font-normal">
+										Wenn aktiv, wird der Consciousness-Check übersprungen.
+									</span>
+								</span>
+							</label>
+							<FormFieldIssues field={saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents} />
+						</fieldset>
+
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">defaultAddress</legend>
+							<textarea
+								class="textarea min-h-20 w-full peer"
+								{...saveTelegramScrapingTarget.fields.defaultAddress.as(`text`)}
+								placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
+								onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
+							></textarea>
+							<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
+							<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultAddress} />
+						</fieldset>
+
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">topicIds</legend>
+							<input
+								class="input w-full peer font-mono"
+								{...saveTelegramScrapingTarget.fields.topicIds.as(`text`)}
+								placeholder="z.B. 1, 2 oder -1"
+							/>
+							<p class="label">Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics.</p>
+							<FormFieldIssues field={saveTelegramScrapingTarget.fields.topicIds} />
+						</fieldset>
+
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">
+								defaultTimezone *
+								{#if lookupTimezoneFromAddress.pending > 0}
+									<span class="loading loading-spinner loading-xs"></span>
+								{/if}
+							</legend>
+							<input
+								class="input w-full peer"
+								{...saveTelegramScrapingTarget.fields.defaultTimezone.as(`text`)}
+								required
+							/>
+							<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultTimezone} />
+						</fieldset>
+
+						{#if saveTelegramScrapingTarget.fields.allIssues()?.length}
+							<div class="flex flex-col gap-1">
+								{#each saveTelegramScrapingTarget.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
+									<div class="text-error text-xs">{issue.message}</div>
+								{/each}
+							</div>
+						{/if}
+
+						<div class="flex flex-wrap gap-2 pt-2">
+							<button
+								type="submit"
+								class="btn btn-primary"
+								disabled={saveTelegramScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
+							>
+								{#if saveTelegramScrapingTarget.pending > 0}
+									<span class="loading loading-spinner loading-sm"></span>
+									Wird gespeichert...
+								{:else}
+									Speichern
+								{/if}
+							</button>
+						</div>
+					</form>
+				{/if}
 			{/if}
 
 			<Dialog.Close
