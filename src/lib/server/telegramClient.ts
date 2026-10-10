@@ -2,22 +2,69 @@ import { env } from '$env/dynamic/private';
 import { extractTelegramRoomIdFromInput, telegramEntityLookupCandidates } from '$lib/telegramCommon';
 import { TelegramClient, utils } from 'teleproto';
 import { StringSession } from 'teleproto/sessions';
+import {
+	isTelegramAccessError,
+	missingTelegramSessionConfigMessage,
+	parseTelegramAccountSessions,
+	telegramAccountTryOrder,
+	type TelegramAccountId,
+} from './telegramAccounts';
 
 /**
- * Confirms a Telegram room/channel exists for the scraper session and returns its display name.
+ * Confirms a Telegram room/channel exists for a scraper session and returns its display name.
+ * Tries PRIMARY then FALLBACK (legacy TELEGRAM_APP_SESSION maps to FALLBACK when unset).
  */
 export async function resolveTelegramScrapingTarget({ roomId }: { roomId: string }) {
 	const apiId = Number(env.TELEGRAM_APP_ID);
 	const apiHash = env.TELEGRAM_APP_HASH?.trim();
-	const sessionAuthKeyString = env.TELEGRAM_APP_SESSION?.trim();
+	const accounts = parseTelegramAccountSessions({
+		TELEGRAM_APP_SESSION_PRIMARY: env.TELEGRAM_APP_SESSION_PRIMARY,
+		TELEGRAM_APP_SESSION_FALLBACK: env.TELEGRAM_APP_SESSION_FALLBACK,
+		TELEGRAM_APP_SESSION: env.TELEGRAM_APP_SESSION,
+	});
 
-	if (!apiId || !apiHash || !sessionAuthKeyString) {
-		throw new Error(`Telegram scraper credentials are not configured (TELEGRAM_APP_ID/HASH/SESSION)`);
+	if (!apiId || !apiHash || !accounts.length) {
+		throw new Error(missingTelegramSessionConfigMessage());
 	}
 
 	const normalizedRoomId = extractTelegramRoomIdFromInput(roomId);
+	const order = telegramAccountTryOrder({
+		accountIds: accounts.map((account) => account.id),
+		orderEnv: env.TELEGRAM_SCRAPE_ACCOUNT_ORDER,
+	});
 
-	const client = new TelegramClient(new StringSession(sessionAuthKeyString), apiId, apiHash, {
+	let lastErr: unknown;
+	for (const accountId of order) {
+		const account = accounts.find((entry) => entry.id === accountId);
+		if (!account) continue;
+
+		try {
+			return await resolveWithSession({
+				apiId,
+				apiHash,
+				session: account.session,
+				accountId,
+				roomId: normalizedRoomId,
+			});
+		} catch (err) {
+			if (!isTelegramAccessError(err)) throw err;
+			lastErr = err;
+		}
+	}
+
+	throw lastErr instanceof Error
+		? lastErr
+		: new Error(`Could not resolve Telegram room "${roomId}" with any configured scraper account`);
+}
+
+async function resolveWithSession(args: {
+	apiId: number
+	apiHash: string
+	session: string
+	accountId: TelegramAccountId
+	roomId: string
+}) {
+	const client = new TelegramClient(new StringSession(args.session), args.apiId, args.apiHash, {
 		connectionRetries: 5,
 	});
 
@@ -26,14 +73,14 @@ export async function resolveTelegramScrapingTarget({ roomId }: { roomId: string
 		const authorized = await client.checkAuthorization();
 		if (!authorized) {
 			throw new Error(
-				`TELEGRAM_APP_SESSION is invalid or expired. Run scripts/telegram-login.ts and update TELEGRAM_APP_SESSION in .env`,
+				`Telegram session for account "${args.accountId}" is invalid or expired. Run scripts/telegram-login.ts and update TELEGRAM_APP_SESSION_PRIMARY / TELEGRAM_APP_SESSION_FALLBACK (or legacy TELEGRAM_APP_SESSION) in .env`,
 			);
 		}
 
 		// Warm entity cache so numeric IDs can be resolved (teleproto needs access hashes).
 		const dialogs = await client.getDialogs({});
 
-		let resolvedRoomId = normalizedRoomId;
+		let resolvedRoomId = args.roomId;
 		if (resolvedRoomId.includes(`resolveName:`)) {
 			const chatName = resolvedRoomId.split(`:`)[1]?.trim();
 			if (!chatName) {
