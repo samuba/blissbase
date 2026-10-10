@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	isTelegramAccessError,
 	parseTelegramAccountSessions,
-	TelegramAccountRoomCache,
-	telegramAccountTryOrder,
+	withFirstAccessibleAccount,
 } from './telegramAccounts';
 
 describe(`parseTelegramAccountSessions`, () => {
@@ -54,43 +53,6 @@ describe(`parseTelegramAccountSessions`, () => {
 	});
 });
 
-describe(`telegramAccountTryOrder`, () => {
-	it(`defaults to primary then fallback`, () => {
-		expect(
-			telegramAccountTryOrder({
-				accountIds: [`primary`, `fallback`],
-			}),
-		).toEqual([`primary`, `fallback`]);
-	});
-
-	it(`uses only the sticky cached account for the rest of the run`, () => {
-		expect(
-			telegramAccountTryOrder({
-				accountIds: [`primary`, `fallback`],
-				cachedId: `fallback`,
-			}),
-		).toEqual([`fallback`]);
-	});
-
-	it(`honors TELEGRAM_SCRAPE_ACCOUNT_ORDER`, () => {
-		expect(
-			telegramAccountTryOrder({
-				accountIds: [`primary`, `fallback`],
-				orderEnv: `fallback,primary`,
-			}),
-		).toEqual([`fallback`, `primary`]);
-	});
-
-	it(`ignores cached ids that are not available`, () => {
-		expect(
-			telegramAccountTryOrder({
-				accountIds: [`fallback`],
-				cachedId: `primary`,
-			}),
-		).toEqual([`fallback`]);
-	});
-});
-
 describe(`isTelegramAccessError`, () => {
 	it(`detects membership / private channel failures`, () => {
 		expect(
@@ -100,6 +62,7 @@ describe(`isTelegramAccessError`, () => {
 		).toBe(true);
 		expect(isTelegramAccessError(new Error(`CHANNEL_PRIVATE`))).toBe(true);
 		expect(isTelegramAccessError({ errorMessage: `USER_NOT_PARTICIPANT` })).toBe(true);
+		expect(isTelegramAccessError(new Error(`Telegram session for account "primary" is invalid or expired.`))).toBe(true);
 		expect(isTelegramAccessError(new Error(`No chat found for name "Foo". Is the scraper account a member?`))).toBe(
 			true,
 		);
@@ -112,15 +75,59 @@ describe(`isTelegramAccessError`, () => {
 	});
 });
 
-describe(`TelegramAccountRoomCache`, () => {
-	it(`remembers account ids for multiple room id aliases`, () => {
-		const cache = new TelegramAccountRoomCache();
-		cache.remember({
-			roomIds: [`resolveName:Foo`, `-100123`],
-			accountId: `fallback`,
+describe(`withFirstAccessibleAccount`, () => {
+	const accounts = [{ id: `primary` as const }, { id: `fallback` as const }];
+
+	it(`uses primary when it can access the chat`, async () => {
+		const tried: string[] = [];
+		const result = await withFirstAccessibleAccount({
+			accounts,
+			target: `-1001`,
+			attempt: async ({ id }) => {
+				tried.push(id);
+				return id;
+			},
 		});
-		expect(cache.get(`resolveName:Foo`)).toBe(`fallback`);
-		expect(cache.get(`-100123`)).toBe(`fallback`);
-		expect(cache.get(`other`)).toBeUndefined();
+		expect(result).toBe(`primary`);
+		expect(tried).toEqual([`primary`]);
+	});
+
+	it(`falls back on access errors`, async () => {
+		const result = await withFirstAccessibleAccount({
+			accounts,
+			target: `-1001`,
+			attempt: async ({ id }) => {
+				if (id === `primary`) throw new Error(`CHANNEL_PRIVATE`);
+				return id;
+			},
+		});
+		expect(result).toBe(`fallback`);
+	});
+
+	it(`does not fall back on unrelated errors`, async () => {
+		const tried: string[] = [];
+		await expect(
+			withFirstAccessibleAccount({
+				accounts,
+				target: `-1001`,
+				attempt: async ({ id }) => {
+					tried.push(id);
+					throw new Error(`FATAL->EXIT: forum but no topicIds`);
+				},
+			}),
+		).rejects.toThrow(`FATAL->EXIT`);
+		expect(tried).toEqual([`primary`]);
+	});
+
+	it(`reports every account's miss when none can access`, async () => {
+		await expect(
+			withFirstAccessibleAccount({
+				accounts,
+				target: `-1001`,
+				attempt: async ({ id }) => {
+					throw new Error(id === `primary` ? `USER_NOT_PARTICIPANT` : `CHANNEL_PRIVATE`);
+				},
+			}),
+		).rejects.toThrow(`No Telegram scraper account can access "-1001". [primary] USER_NOT_PARTICIPANT [fallback] CHANNEL_PRIVATE`);
 	});
 });

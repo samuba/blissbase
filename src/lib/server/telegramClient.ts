@@ -3,10 +3,9 @@ import { extractTelegramRoomIdFromInput, telegramEntityLookupCandidates } from '
 import { TelegramClient, utils } from 'teleproto';
 import { StringSession } from 'teleproto/sessions';
 import {
-	isTelegramAccessError,
 	missingTelegramSessionConfigMessage,
 	parseTelegramAccountSessions,
-	telegramAccountTryOrder,
+	withFirstAccessibleAccount,
 	type TelegramAccountId,
 } from './telegramAccounts';
 
@@ -28,33 +27,18 @@ export async function resolveTelegramScrapingTarget({ roomId }: { roomId: string
 	}
 
 	const normalizedRoomId = extractTelegramRoomIdFromInput(roomId);
-	const order = telegramAccountTryOrder({
-		accountIds: accounts.map((account) => account.id),
-		orderEnv: env.TELEGRAM_SCRAPE_ACCOUNT_ORDER,
-	});
-
-	let lastErr: unknown;
-	for (const accountId of order) {
-		const account = accounts.find((entry) => entry.id === accountId);
-		if (!account) continue;
-
-		try {
-			return await resolveWithSession({
+	return withFirstAccessibleAccount({
+		accounts,
+		target: normalizedRoomId,
+		attempt: (account) =>
+			resolveWithSession({
 				apiId,
 				apiHash,
 				session: account.session,
-				accountId,
+				accountId: account.id,
 				roomId: normalizedRoomId,
-			});
-		} catch (err) {
-			if (!isTelegramAccessError(err)) throw err;
-			lastErr = err;
-		}
-	}
-
-	throw lastErr instanceof Error
-		? lastErr
-		: new Error(`Could not resolve Telegram room "${roomId}" with any configured scraper account`);
+			}),
+	});
 }
 
 async function resolveWithSession(args: {

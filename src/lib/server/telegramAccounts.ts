@@ -1,13 +1,5 @@
-export type TelegramAccountId = `primary` | `fallback`
-
-export type TelegramAccountSession = {
-	id: TelegramAccountId
-	session: string
-}
-
 const ACCESS_ERROR_MARKERS = [
 	`Could not find Telegram entity`,
-	`must be a member`,
 	`No chat found for name`,
 	`CHANNEL_PRIVATE`,
 	`CHAT_ID_INVALID`,
@@ -17,96 +9,66 @@ const ACCESS_ERROR_MARKERS = [
 	`CHAT_INVALID`,
 	`USERNAME_NOT_OCCUPIED`,
 	`USERNAME_INVALID`,
+	// A dead session can't access anything either — let the other account take over.
+	`AUTH_KEY_UNREGISTERED`,
+	`SESSION_REVOKED`,
+	`USER_DEACTIVATED`,
+	`is invalid or expired`,
 ]
 
 /**
- * Builds the scraper account list from env.
+ * Builds the scraper account list from env, in try order.
  * PRIMARY = new number; FALLBACK = old number.
  * Legacy TELEGRAM_APP_SESSION fills FALLBACK when FALLBACK is unset.
  */
 export function parseTelegramAccountSessions(env: {
-	TELEGRAM_APP_SESSION_PRIMARY?: string | undefined
-	TELEGRAM_APP_SESSION_FALLBACK?: string | undefined
-	TELEGRAM_APP_SESSION?: string | undefined
-}): TelegramAccountSession[] {
-	const primary = env.TELEGRAM_APP_SESSION_PRIMARY?.trim() || ``
-	const fallbackExplicit = env.TELEGRAM_APP_SESSION_FALLBACK?.trim() || ``
-	const legacy = env.TELEGRAM_APP_SESSION?.trim() || ``
-	const fallback = fallbackExplicit || legacy
+	TELEGRAM_APP_SESSION_PRIMARY?: string
+	TELEGRAM_APP_SESSION_FALLBACK?: string
+	TELEGRAM_APP_SESSION?: string
+}) {
+	const primary = env.TELEGRAM_APP_SESSION_PRIMARY?.trim()
+	const fallback = env.TELEGRAM_APP_SESSION_FALLBACK?.trim() || env.TELEGRAM_APP_SESSION?.trim()
 
-	const accounts: TelegramAccountSession[] = []
-	if (primary) {
-		accounts.push({ id: `primary`, session: primary })
-	}
-	if (fallback && fallback !== primary) {
-		accounts.push({ id: `fallback`, session: fallback })
-	}
+	const accounts: { id: TelegramAccountId; session: string }[] = []
+	if (primary) accounts.push({ id: `primary`, session: primary })
+	if (fallback && fallback !== primary) accounts.push({ id: `fallback`, session: fallback })
 	return accounts
 }
 
-/**
- * Try order for resolving a chat.
- * Sticky cache hit → only that account (never scrape the same chat with both in one run).
- * Otherwise PRIMARY then FALLBACK (or TELEGRAM_SCRAPE_ACCOUNT_ORDER).
- */
-export function telegramAccountTryOrder(args: {
-	accountIds: TelegramAccountId[]
-	cachedId?: TelegramAccountId
-	orderEnv?: string | undefined
-}): TelegramAccountId[] {
-	const available = new Set(args.accountIds)
-	if (!available.size) return []
-
-	if (args.cachedId && available.has(args.cachedId)) {
-		return [args.cachedId]
-	}
-
-	const fromEnv = args.orderEnv
-		?.split(`,`)
-		.map((part) => part.trim())
-		.filter((part): part is TelegramAccountId => part === `primary` || part === `fallback`)
-
-	const base: TelegramAccountId[] = []
-	for (const id of fromEnv?.length ? fromEnv : [`primary` as const, `fallback` as const]) {
-		if (!available.has(id)) continue
-		if (base.includes(id)) continue
-		base.push(id)
-	}
-	for (const id of args.accountIds) {
-		if (base.includes(id)) continue
-		base.push(id)
-	}
-	return base
-}
-
-export function isTelegramAccessError(err: unknown): boolean {
-	if (err instanceof Error && err.message.includes(`FATAL->EXIT`)) return false
-
+export function isTelegramAccessError(err: unknown) {
 	const message = err instanceof Error ? err.message : String(err)
+	if (message.includes(`FATAL->EXIT`)) return false
+
 	const rpcMessage =
-		typeof err === `object` && err && `errorMessage` in err
-			? String((err as { errorMessage: unknown }).errorMessage)
-			: ``
-	const haystack = `${message} ${rpcMessage}`
-	return ACCESS_ERROR_MARKERS.some((marker) => haystack.includes(marker))
+		typeof err === `object` && err && `errorMessage` in err ? String(err.errorMessage) : ``
+	return ACCESS_ERROR_MARKERS.some((marker) => `${message} ${rpcMessage}`.includes(marker))
 }
 
-/** Sticky roomId → account for one scrape run. */
-export class TelegramAccountRoomCache {
-	#byRoom = new Map<string, TelegramAccountId>()
-
-	get(roomId: string) {
-		return this.#byRoom.get(roomId)
-	}
-
-	remember(args: { roomIds: string[]; accountId: TelegramAccountId }) {
-		for (const roomId of args.roomIds) {
-			if (!roomId) continue
-			this.#byRoom.set(roomId, args.accountId)
+/**
+ * Runs `attempt` with each account in order and returns the first success.
+ * Only access errors move on to the next account; anything else is rethrown.
+ */
+export async function withFirstAccessibleAccount<TAccount extends { id: TelegramAccountId }, TResult>(args: {
+	accounts: TAccount[]
+	target: string
+	attempt: (account: TAccount) => Promise<TResult>
+}) {
+	const misses: string[] = []
+	for (const account of args.accounts) {
+		try {
+			return await args.attempt(account)
+		} catch (err) {
+			if (!isTelegramAccessError(err)) throw err
+			const message = err instanceof Error ? err.message : String(err)
+			console.log(`Telegram account "${account.id}" cannot access ${args.target}: ${message}`)
+			misses.push(`[${account.id}] ${message}`)
 		}
 	}
+	throw new Error(`No Telegram scraper account can access "${args.target}". ${misses.join(` `)}`)
 }
 
 export function missingTelegramSessionConfigMessage() {
 	return `Telegram scraper credentials are not configured. Set TELEGRAM_APP_ID, TELEGRAM_APP_HASH, and at least one of TELEGRAM_APP_SESSION_PRIMARY, TELEGRAM_APP_SESSION_FALLBACK, or legacy TELEGRAM_APP_SESSION.`
 }
+
+export type TelegramAccountId = `primary` | `fallback`

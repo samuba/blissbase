@@ -1,6 +1,5 @@
 import { Api, TelegramClient, utils } from "teleproto";
 import { StringSession } from "teleproto/sessions";
-import readline from "readline";
 import 'dotenv/config'
 import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { InsertEvent } from "../src/lib/types";
@@ -15,11 +14,9 @@ import type { Entity } from "teleproto/define";
 import * as assets from "../src/lib/assets";
 import { resolveTelegramFormattingToHtml, telegramEntityLookupCandidates } from "../src/lib/telegramCommon";
 import {
-    isTelegramAccessError,
     missingTelegramSessionConfigMessage,
     parseTelegramAccountSessions,
-    TelegramAccountRoomCache,
-    telegramAccountTryOrder,
+    withFirstAccessibleAccount,
     type TelegramAccountId,
 } from "../src/lib/server/telegramAccounts";
 import { knownTagSlugs } from "../src/lib/eventCategories";
@@ -30,12 +27,6 @@ import { resolveEventImageUrls } from "./ogImageFallback";
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!;
-const accountOrderEnv = process.env.TELEGRAM_SCRAPE_ACCOUNT_ORDER;
-
-type ScraperAccount = {
-    id: TelegramAccountId
-    client: TelegramClient
-}
 
 const maxSecondsBetweenMessagesForSameEvent = 20 * 60; // 20 minutes
 /** Only scrape messages younger than this many months. */
@@ -855,23 +846,18 @@ async function validateAndBuildEventBase(args: {
 /**
  * Processes a single scraping target and returns the result
  */
-async function processScrapingTarget(args: {
-    target: TelegramScrapingTarget
-    accounts: ScraperAccount[]
-    accountCache: TelegramAccountRoomCache
-}): Promise<{
+async function processScrapingTarget(target: TelegramScrapingTarget, accounts: ScraperAccount[]): Promise<{
     success: boolean;
     error?: Error;
     target: TelegramScrapingTarget;
     newMessagesCount: number;
     scrapedEventsCount: number;
 }> {
-    const { target, accounts, accountCache } = args;
     let resolvedRoomId = target.roomId;
     try {
         console.log(`\n#### Processing target: ${target.roomId}`);
 
-        const selected = await selectClientForTarget({ target, accounts, accountCache });
+        const selected = await selectClientForTarget(target, accounts);
         const { client, entity } = selected;
         // Persist Bot-API marked peer id (-100…) — bare Channel.id breaks later getEntity as PeerUser.
         resolvedRoomId = selected.resolvedRoomId;
@@ -1108,76 +1094,32 @@ async function resolveScrapingEntity(client: TelegramClient, roomId: string) {
 }
 
 /**
- * Picks PRIMARY then FALLBACK for a target. Sticky-caches the winning account for the run
- * so the same chat is never scraped by both accounts.
+ * Picks the first account (PRIMARY, then FALLBACK) that can resolve the target and read its messages.
+ * Only that account scrapes the target, so one chat is never scraped by both accounts.
  */
-async function selectClientForTarget(args: {
-    target: TelegramScrapingTarget
-    accounts: ScraperAccount[]
-    accountCache: TelegramAccountRoomCache
-}): Promise<{
-    account: ScraperAccount
-    client: TelegramClient
-    entity: Entity
-    resolvedRoomId: string
-}> {
-    const { target, accounts, accountCache } = args;
-    const order = telegramAccountTryOrder({
-        accountIds: accounts.map((account) => account.id),
-        cachedId: accountCache.get(target.roomId),
-        orderEnv: accountOrderEnv,
-    });
-
-    let lastErr: unknown;
-    for (const accountId of order) {
-        const account = accounts.find((entry) => entry.id === accountId);
-        if (!account) continue;
-
-        try {
-            let resolvedRoomId = target.roomId;
-            if (resolvedRoomId.includes(`resolveName:`)) {
-                const chatName = resolvedRoomId.split(`:`)[1]?.trim();
-                if (!chatName) {
-                    throw new Error(`resolveName: requires a chat name`);
-                }
-                const chatId = await getChatIdByName(account.client, chatName);
-                if (!chatId) {
-                    throw new Error(`No chat found for name "${chatName}". Is the scraper account a member?`);
-                }
-                resolvedRoomId = chatId;
-                console.log(`resolved "${chatName}" to ${chatId} via account "${accountId}"`);
+async function selectClientForTarget(target: TelegramScrapingTarget, accounts: ScraperAccount[]) {
+    return withFirstAccessibleAccount({
+        accounts,
+        target: target.roomId,
+        attempt: async ({ id, client }) => {
+            let roomId = target.roomId;
+            if (roomId.includes(`resolveName:`)) {
+                const chatName = roomId.split(`:`)[1]?.trim();
+                if (!chatName) throw new Error(`resolveName: requires a chat name`);
+                const chatId = await getChatIdByName(client, chatName);
+                if (!chatId) throw new Error(`No chat found for name "${chatName}". Is the scraper account a member?`);
+                roomId = chatId;
+                console.log(`resolved "${chatName}" to ${chatId} via account "${id}"`);
             }
 
-            const entity = await resolveScrapingEntity(account.client, resolvedRoomId);
-            resolvedRoomId = utils.getPeerId(entity);
-            accountCache.remember({
-                roomIds: [target.roomId, resolvedRoomId],
-                accountId,
-            });
-            console.log(`Using Telegram account "${accountId}" for target ${target.roomId}`);
-            return { account, client: account.client, entity, resolvedRoomId };
-        } catch (err) {
-            if (!isTelegramAccessError(err)) throw err;
-            console.log(
-                `Account "${accountId}" cannot access ${target.roomId}: ${err instanceof Error ? err.message : String(err)}`,
-            );
-            lastErr = err;
-        }
-    }
-
-    throw lastErr instanceof Error
-        ? lastErr
-        : new Error(`Could not access Telegram target "${target.roomId}" with any configured scraper account`);
+            const entity = await resolveScrapingEntity(client, roomId);
+            // Resolving can succeed without membership (e.g. stale access hash); reading surfaces CHANNEL_PRIVATE etc.
+            await client.getMessages(entity, { limit: 1 });
+            console.log(`Using Telegram account "${id}" for target ${target.roomId}`);
+            return { client, entity, resolvedRoomId: utils.getPeerId(entity) };
+        },
+    });
 }
-
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
-/**
- * Prompts user for input and returns a promise
- */
-const askQuestion = (question: string): Promise<string> => {
-    return new Promise((resolve) => rl.question(question, resolve));
-};
 
 /**
  * Gets entity name from Telegram entity
@@ -1228,22 +1170,22 @@ if (!apiId || !apiHash || !accountSessions.length) {
 }
 
 const accounts: ScraperAccount[] = [];
-for (const accountSession of accountSessions) {
-    const client = new TelegramClient(new StringSession(accountSession.session), apiId, apiHash, {
-        connectionRetries: 5,
-    });
-    await client.start({
-        phoneNumber: async () => await askQuestion(`Please enter your number (${accountSession.id}): `),
-        password: async () => await askQuestion(`Please enter your password (${accountSession.id}): `),
-        phoneCode: async () => await askQuestion(`Please enter the code you received (${accountSession.id}): `),
-        onError: (err) => console.log(err),
-    });
-    accounts.push({ id: accountSession.id, client });
-    console.log(`Connected Telegram account "${accountSession.id}"`);
+const unauthorizedAccountIds: TelegramAccountId[] = [];
+for (const { id, session } of accountSessions) {
+    const client = new TelegramClient(new StringSession(session), apiId, apiHash, { connectionRetries: 5 });
+    await client.connect();
+    if (!(await client.checkAuthorization())) {
+        console.error(`❌ Telegram session for account "${id}" is invalid or expired. Mint a new one with scripts/telegram-login.ts`);
+        unauthorizedAccountIds.push(id);
+        await client.disconnect();
+        continue;
+    }
+    accounts.push({ id, client });
 }
-
-const accountCache = new TelegramAccountRoomCache();
-console.log(`Connected ${accounts.length} Telegram scraper account(s): ${accounts.map((a) => a.id).join(`, `)}`);
+if (!accounts.length) {
+    throw new Error(`No authorized Telegram scraper account (tried: ${accountSessions.map((a) => a.id).join(`, `)})`);
+}
+console.log(`Connected Telegram scraper account(s): ${accounts.map((a) => a.id).join(`, `)}`);
 
 /**
  * Processes targets with a truly parallel worker pool that maintains exactly 3 concurrent workers
@@ -1345,7 +1287,7 @@ async function createWorker(
         console.log(`\n🔄 Worker #${workerId} processing: ${target.roomId} (${remainingTargets} remaining)`);
 
         try {
-            const result = await processScrapingTarget({ target, accounts, accountCache });
+            const result = await processScrapingTarget(target, accounts);
             stats.totalNewMessagesCount += result.newMessagesCount;
             stats.totalScrapedEventsCount += result.scrapedEventsCount;
 
@@ -1393,6 +1335,11 @@ try {
         process.exit(1);
     }
 
+    if (unauthorizedAccountIds.length) {
+        console.error(`\n❌ Skipped unauthorized Telegram account(s): ${unauthorizedAccountIds.join(`, `)}`);
+        process.exit(1);
+    }
+
     if (totalNewMessagesCount > 0 && totalScrapedEventsCount === 0) {
         console.error(`\n❌ Processed ${totalNewMessagesCount} new Telegram messages but extracted no events`);
         process.exit(1);
@@ -1403,5 +1350,9 @@ try {
     throw error;
 }
 
-rl.close(); // Close the readline interface
 process.exit(0);
+
+type ScraperAccount = {
+    id: TelegramAccountId
+    client: TelegramClient
+}
