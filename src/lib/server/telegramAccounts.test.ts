@@ -17,6 +17,10 @@ vi.mock(`teleproto/sessions`, () => ({
 	},
 }));
 
+vi.mock(`teleproto/extensions/Logger`, () => ({
+	LogLevel: { NONE: `none` },
+}));
+
 vi.mock(`teleproto`, () => ({
 	TelegramClient: class {
 		constructor(public session: { value: string }) {}
@@ -28,6 +32,7 @@ vi.mock(`teleproto`, () => ({
 		async checkAuthorization() {
 			return teleproto.authorizedBySession.get(this.session.value) === true;
 		}
+		setLogLevel = vi.fn();
 		disconnect = teleproto.disconnect;
 	},
 }));
@@ -166,7 +171,8 @@ describe(`withFirstAccessibleAccount`, () => {
 		expect(tried).toEqual([`primary`]);
 	});
 
-	it(`falls back on access errors`, async () => {
+	it(`falls back on access errors and logs the switch`, async () => {
+		const log = vi.spyOn(console, `log`).mockImplementation(() => {});
 		const result = await withFirstAccessibleAccount({
 			accounts,
 			target: `-1001`,
@@ -176,6 +182,13 @@ describe(`withFirstAccessibleAccount`, () => {
 			},
 		});
 		expect(result).toBe(`fallback`);
+		expect(log).toHaveBeenCalledWith(
+			`Telegram "primary" account cannot access -1001 (not a member / no access). Switching to "fallback".`,
+		);
+		expect(log).toHaveBeenCalledWith(
+			`Using Telegram "fallback" for -1001 — switched after primary could not access it`,
+		);
+		log.mockRestore();
 	});
 
 	it(`does not fall back on unrelated errors`, async () => {

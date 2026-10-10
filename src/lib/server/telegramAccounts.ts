@@ -1,4 +1,5 @@
 import { TelegramClient } from 'teleproto'
+import { LogLevel } from 'teleproto/extensions/Logger'
 import { StringSession } from 'teleproto/sessions'
 
 // teleproto reconnects forever when Telegram rejects an auth key, so connect() alone may never settle.
@@ -58,6 +59,9 @@ export async function connectTelegramAccounts(args: {
 				promise: (async () => {
 					await client.connect()
 					if (!(await client.checkAuthorization())) throw new Error(`not authorized`)
+					// Expected CHANNEL_INVALID while probing non-member chats is handled by us;
+					// teleproto still prints ERROR stacks for those — keep scraper logs readable.
+					client.setLogLevel(LogLevel.NONE)
 				})(),
 			})
 		} catch (err) {
@@ -95,6 +99,7 @@ export function isTelegramAccessError(err: unknown) {
 /**
  * Runs `attempt` with each account in order and returns the first success.
  * Only access errors move on to the next account; anything else is rethrown.
+ * Logs clearly when primary cannot access a chat and we switch to fallback.
  */
 export async function withFirstAccessibleAccount<TAccount extends { id: TelegramAccountId }, TResult>(args: {
 	accounts: TAccount[]
@@ -102,14 +107,29 @@ export async function withFirstAccessibleAccount<TAccount extends { id: Telegram
 	attempt: (account: TAccount) => Promise<TResult>
 }) {
 	const misses: string[] = []
-	for (const account of args.accounts) {
+	for (let i = 0; i < args.accounts.length; i++) {
+		const account = args.accounts[i]
+		const next = args.accounts[i + 1]
 		try {
-			return await args.attempt(account)
+			const result = await args.attempt(account)
+			if (misses.length) {
+				const failed = misses.map((miss) => miss.replace(/^\[([^\]]+)\].*$/, `$1`)).join(`, `)
+				console.log(
+					`Using Telegram "${account.id}" for ${args.target} — switched after ${failed} could not access it`,
+				)
+			}
+			return result
 		} catch (err) {
 			if (!isTelegramAccessError(err)) throw err
 			const message = err instanceof Error ? err.message : String(err)
-			console.log(`Telegram account "${account.id}" cannot access ${args.target}: ${message}`)
 			misses.push(`[${account.id}] ${message}`)
+			if (next) {
+				console.log(
+					`Telegram "${account.id}" account cannot access ${args.target} (not a member / no access). Switching to "${next.id}".`,
+				)
+				continue
+			}
+			console.log(`Telegram "${account.id}" account cannot access ${args.target}: ${message}`)
 		}
 	}
 	throw new Error(`No Telegram scraper account can access "${args.target}". ${misses.join(` `)}`)
