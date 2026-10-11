@@ -22,6 +22,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     meetup: { module: './scrape-meetup.ts', label: 'Meetup', url: 'https://www.meetup.com' },
     eventbrite: { module: './scrape-eventbrite.ts', label: 'Eventbrite', url: 'https://www.eventbrite.com' },
     humanitix: { module: './scrape-humanitix.ts', label: 'Humanitix', url: 'https://humanitix.com' },
+    miteinandersein: { module: './scrape-miteinandersein.ts', label: 'MiteinanderSein', url: 'https://www.miteinandersein.net' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string, label: string, url: string, retryOnNewIp?: boolean }>;
 
