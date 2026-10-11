@@ -1,5 +1,5 @@
 /**
- * Scrapes balievents.co via their public Supabase REST API
+ * Scrapes balievents.co via their public PostgREST API at api.balievents.co
  * (`active_validated_events` + venues). Recurring events expand up to 90
  * days. Names are filtered with the whitelist/blacklist.
  *
@@ -15,8 +15,8 @@ import {
 } from "./common.ts";
 import { matchesBlackListWords, matchesWhiteListWords } from "../src/whitelistWords.ts";
 
-const SUPABASE_URL = `https://uyueqyedxphgdkaiwwsj.supabase.co`;
-const SUPABASE_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5dWVxeWVkeHBoZ2RrYWl3d3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxMzgxNzMsImV4cCI6MjA2MjcxNDE3M30.ZjOlKUcEQDlFp9S3jeTwRqcINcOrz6z-5wClJvLkjXA`;
+const SUPABASE_URL = `https://api.balievents.co`;
+const SUPABASE_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJiYWxpZXZlbnRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODU1MDYsImV4cCI6MjEwNTI0NTUwNn0.JO3F9sXjYp3ojst91YbX4kcJSCkjsvSUkvjGE1BuxT4`;
 const SITE_BASE = `https://www.balievents.co`;
 const TIMEZONE = `Asia/Makassar`;
 const PAGE_SIZE = 100;
@@ -68,18 +68,11 @@ const VENUE_COLUMNS = [
 	`slug`,
 ] as const;
 
-const EVENT_EXTRAS_COLUMNS = [
-	`id`,
-	`contact_whatsapp`,
-	`venues(lat,lng)`,
-] as const;
-const EVENT_EXTRAS_SELECT = EVENT_EXTRAS_COLUMNS.join(`,`);
-
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
 
-		console.error(`Fetching BaliEvents via Supabase REST...`);
+		console.error(`Fetching BaliEvents via PostgREST...`);
 		await this.assertExpectedSchema();
 
 		const rangeStart = startOfLocalDay(new Date(), TIMEZONE);
@@ -90,15 +83,26 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			this.fetchAllVenues(),
 		]);
 		const venueByKey = indexVenues(venues);
-		const extrasByEventId = await this.fetchEventExtras(rows.map((row) => row.id));
-		console.error(`Fetched ${rows.length} future events and ${venues.length} venues. Mapping...`);
+		const candidateIds = rows
+			.filter((row) => {
+				const name = this.extractNameFromRow(row);
+				if (!name) return false;
+				if (matchesBlackListWords(name) || !matchesWhiteListWords(name)) return false;
+				return true;
+			})
+			.map((row) => row.id);
+		console.error(
+			`Fetched ${rows.length} future events and ${venues.length} venues (${candidateIds.length} whitelist matches).`,
+		);
+		const whatsappByEventId = await this.fetchWhatsappByEventIds(candidateIds);
+		console.error(`Mapping events...`);
 
 		for (const row of rows) {
 			try {
 				const events = await this.rowToEvents({
 					row,
 					venueByKey,
-					extrasByEventId,
+					whatsappByEventId,
 					rangeStart,
 					rangeEnd,
 				});
@@ -163,11 +167,6 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 				path: `venues`,
 				select: VENUE_COLUMNS.join(`,`),
 			},
-			{
-				label: `events extras`,
-				path: `events`,
-				select: EVENT_EXTRAS_SELECT,
-			},
 		];
 
 		for (const check of checks) {
@@ -184,7 +183,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			);
 		}
 
-		console.error(`Schema check passed for events, venues, and events→venues join.`);
+		console.error(`Schema check passed for events and venues.`);
 	}
 
 	private async fetchAllEvents(args: {
@@ -255,55 +254,55 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		return rows;
 	}
 
-	private async fetchEventExtras(eventIds: string[]) {
-		const extrasByEventId = new Map<string, EventExtras>();
-		if (!eventIds?.length) return extrasByEventId;
+	private async fetchWhatsappByEventIds(eventIds: string[]) {
+		const whatsappByEventId = new Map<string, string>();
+		if (!eventIds?.length) return whatsappByEventId;
 
-		for (let i = 0; i < eventIds.length; i += 50) {
-			const chunk = eventIds.slice(i, i + 50);
-			const params = new URLSearchParams({
-				select: EVENT_EXTRAS_SELECT,
-				id: `in.(${chunk.join(`,`)})`,
-			});
+		const concurrency = 8;
+		for (let i = 0; i < eventIds.length; i += concurrency) {
+			const chunk = eventIds.slice(i, i + concurrency);
+			await Promise.all(
+				chunk.map(async (eventId) => {
+					try {
+						const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_event_sensitive_fields`, {
+							method: `POST`,
+							headers: {
+								...supabaseHeaders(),
+								"Content-Type": `application/json`,
+							},
+							body: JSON.stringify({ p_event_id: eventId }),
+						});
+						if (!res.ok) {
+							console.error(
+								`WhatsApp lookup failed for ${eventId}: ${res.status} ${await res.text()}`,
+							);
+							return;
+						}
 
-			const res = await fetch(`${SUPABASE_URL}/rest/v1/events?${params}`, {
-				headers: supabaseHeaders(),
-			});
-			if (!res.ok) {
-				console.error(`Event extras query failed: ${res.status} ${await res.text()}`);
-				continue;
-			}
-
-			const page = (await res.json()) as {
-				id: string;
-				contact_whatsapp: string | null;
-				venues: { lat: number | null; lng: number | null } | null;
-			}[];
-
-			for (const item of page) {
-				const lat = item.venues?.lat;
-				const lng = item.venues?.lng;
-				extrasByEventId.set(item.id, {
-					contactWhatsapp: item.contact_whatsapp?.trim() || undefined,
-					lat: typeof lat === `number` ? lat : undefined,
-					lng: typeof lng === `number` ? lng : undefined,
-				});
-			}
-
+						const page = (await res.json()) as { contact_whatsapp?: string | null }[];
+						const whatsapp = page?.[0]?.contact_whatsapp?.trim();
+						if (!whatsapp) return;
+						whatsappByEventId.set(eventId, whatsapp);
+					} catch (error) {
+						console.error(`WhatsApp lookup failed for ${eventId}:`, error);
+					}
+				}),
+			);
 			await sleep(50);
 		}
 
-		return extrasByEventId;
+		console.error(`Resolved WhatsApp for ${whatsappByEventId.size}/${eventIds.length} whitelist events.`);
+		return whatsappByEventId;
 	}
 
 	private async rowToEvents(args: {
 		row: BaliEventsRow;
 		venueByKey: Map<string, BaliVenue>;
-		extrasByEventId: Map<string, EventExtras>;
+		whatsappByEventId: Map<string, string>;
 		rangeStart: Date;
 		rangeEnd: Date;
 	}): Promise<ScrapedEvent[]> {
-		const { row, venueByKey, extrasByEventId, rangeStart, rangeEnd } = args;
+		const { row, venueByKey, whatsappByEventId, rangeStart, rangeEnd } = args;
 
 		const name = this.extractNameFromRow(row);
 		if (!name) return [];
@@ -315,7 +314,6 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const occurrenceDates = this.getOccurrenceDates({ row, rangeStart, rangeEnd });
 		if (!occurrenceDates?.length) return [];
 
-		const extras = extrasByEventId.get(row.id);
 		const description = this.extractDescriptionFromRow(row);
 		const address = this.extractAddressFromRow(row);
 		const price = this.extractPriceFromRow(row);
@@ -323,8 +321,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const host = this.extractHostFromRow(row);
 		const hostLink = this.extractHostLinkFromRow(row);
 		const tags = this.extractTagsFromRow(row);
-		const contact = this.extractContactFromRow(row, extras);
-		const coords = this.resolveCoordinates({ row, venueByKey, extras });
+		const contact = this.extractContactFromRow(row, whatsappByEventId.get(row.id));
+		const coords = this.resolveCoordinates({ row, venueByKey });
 
 		const events: ScrapedEvent[] = [];
 		for (const occurrenceDate of occurrenceDates) {
@@ -427,7 +425,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		return toInstagramUrl(row.artist_instagram) || toInstagramUrl(row.organizer_instagram);
 	}
 
-	private extractContactFromRow(row: BaliEventsRow, extras?: EventExtras): string[] {
+	private extractContactFromRow(row: BaliEventsRow, contactWhatsapp?: string): string[] {
 		const contact: string[] = [];
 
 		const artistIg = toInstagramUrl(row.artist_instagram);
@@ -436,7 +434,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const organizerIg = toInstagramUrl(row.organizer_instagram);
 		if (organizerIg && !contact.includes(organizerIg)) contact.push(organizerIg);
 
-		const whatsapp = toWhatsappUrl(extras?.contactWhatsapp ?? row.contact_whatsapp);
+		const whatsapp = toWhatsappUrl(contactWhatsapp);
 		if (whatsapp && !contact.includes(whatsapp)) contact.push(whatsapp);
 
 		const ticketUrl = row.ticket_url?.trim();
@@ -573,13 +571,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	private resolveCoordinates(args: {
 		row: BaliEventsRow;
 		venueByKey: Map<string, BaliVenue>;
-		extras?: EventExtras;
 	}) {
-		const { row, venueByKey, extras } = args;
-
-		if (typeof extras?.lat === `number` && typeof extras?.lng === `number`) {
-			return { lat: extras.lat, lng: extras.lng, timezone: TIMEZONE };
-		}
+		const { row, venueByKey } = args;
 
 		const venue = lookupVenue(venueByKey, row.venue, row.location);
 		if (venue && typeof venue.lat === `number` && typeof venue.lng === `number`) {
@@ -763,16 +756,9 @@ type BaliEventsRow = {
 	organizer_instagram: string | null;
 	artist_name: string | null;
 	artist_instagram: string | null;
-	contact_whatsapp?: string | null;
 	is_festival: boolean | null;
 	event_timestamp: string | null;
 	start_dates: string[] | null;
-};
-
-type EventExtras = {
-	contactWhatsapp?: string;
-	lat?: number;
-	lng?: number;
 };
 
 type BaliVenue = {
