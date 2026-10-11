@@ -24,6 +24,10 @@ const SOURCE = `yogavidya` as const;
 const DEFAULT_TIMEZONE = `Europe/Berlin` as const;
 const DETAIL_CONCURRENCY = 6;
 const HOST_DEFAULT = `Yoga Vidya`;
+/** Past events still starting within this grace window are kept (ongoing same-day). */
+const PAST_GRACE_MS = 12 * 60 * 60 * 1000;
+/** Listing + detail scrape horizon — Solr has years of future seminars. */
+const MAX_FUTURE_DAYS = 365;
 
 /** Street-level fallbacks when the detail map only has a place name. */
 const VENUE_BY_ORT: Record<string, string[]> = {
@@ -103,13 +107,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 export async function collectSeminarPages(args: {
 	urls: string[];
 	loadHtml?: (url: string) => Promise<string>;
+	nowMs?: number;
 }): Promise<ScrapedEvent[]> {
-	const { urls, loadHtml = (url) => customFetch(url, { returnType: `text` }) } = args;
+	const { urls, loadHtml = (url) => customFetch(url, { returnType: `text` }), nowMs = Date.now() } = args;
 	const events: ScrapedEvent[] = [];
 	let index = 0;
 	let done = 0;
 	let failed = 0;
-	const nowMs = Date.now() - 12 * 60 * 60 * 1000;
+	const { minMs, maxMs } = scrapeWindowBounds(nowMs);
 
 	async function worker() {
 		while (index < urls.length) {
@@ -122,8 +127,15 @@ export async function collectSeminarPages(args: {
 				if (!event) {
 					failed += 1;
 					console.error(`Skipping ${url}: missing name or start.`);
-				} else if (Date.parse(event.startAt) < nowMs) {
-					console.error(`Skipping past event ${event.name} (${event.startAt})`);
+				} else if (!isInScrapeWindow(event.startAt, { minMs, maxMs })) {
+					const startMs = Date.parse(event.startAt);
+					if (startMs < minMs) {
+						console.error(`Skipping past event ${event.name} (${event.startAt})`);
+					} else {
+						console.error(
+							`Skipping event more than ${MAX_FUTURE_DAYS} days out ${event.name} (${event.startAt})`,
+						);
+					}
 				} else {
 					events.push(event);
 				}
@@ -184,14 +196,21 @@ export function mapSeminarPage(args: { html: string; url: string }): ScrapedEven
 export async function fetchAllSeminarUrls(args: {
 	limit?: number;
 	loadHtml?: (url: string) => Promise<string>;
+	nowMs?: number;
 } = {}): Promise<string[]> {
-	const { limit, loadHtml = (url) => customFetch(url, { returnType: `text` }) } = args;
+	const {
+		limit,
+		loadHtml = (url) => customFetch(url, { returnType: `text` }),
+		nowMs = Date.now(),
+	} = args;
+	const { minMs, maxMs } = scrapeWindowBounds(nowMs);
 	const urls: string[] = [];
 	const seen = new Set<string>();
 	let page = 1;
-	let totalPages = Number.POSITIVE_INFINITY;
+	/** Solr only shows a sliding window of page links — use as a hint, not a hard stop. */
+	let hintedMaxPage = 1;
 
-	while (page <= totalPages) {
+	while (true) {
 		if (limit && urls.length >= limit) break;
 
 		const pageUrl = page === 1 ? SEARCH_URL : `${SEARCH_URL}&tx_solr%5Bpage%5D=${page}`;
@@ -203,24 +222,57 @@ export async function fetchAllSeminarUrls(args: {
 			break;
 		}
 
-		if (!Number.isFinite(totalPages) || totalPages === Number.POSITIVE_INFINITY) {
-			totalPages = detectTotalPages(html);
-			console.error(`  listing pages: ${totalPages}`);
+		hintedMaxPage = Math.max(hintedMaxPage, detectTotalPages(html));
+		if (page === 1) {
+			console.error(
+				`  listing horizon: next ${MAX_FUTURE_DAYS} days (Solr page hint: ${hintedMaxPage}+)`,
+			);
 		}
 
-		const pageUrls = extractSeminarUrls(html);
+		const entries = extractListingEntries(html);
+		if (!entries?.length) {
+			console.error(`  page ${page} — no seminar links, stopping`);
+			break;
+		}
+
 		let added = 0;
-		for (const url of pageUrls) {
-			if (seen.has(url)) continue;
-			seen.add(url);
-			urls.push(url);
+		let skippedPast = 0;
+		let skippedFuture = 0;
+		let hitHorizon = false;
+
+		for (const entry of entries) {
+			if (entry.startMs != null) {
+				if (entry.startMs < minMs) {
+					skippedPast += 1;
+					continue;
+				}
+				if (entry.startMs > maxMs) {
+					skippedFuture += 1;
+					hitHorizon = true;
+					continue;
+				}
+			}
+
+			if (seen.has(entry.url)) continue;
+			seen.add(entry.url);
+			urls.push(entry.url);
 			added += 1;
 			if (limit && urls.length >= limit) break;
 		}
-		console.error(`  page ${page}/${totalPages} — ${pageUrls.length} links, ${added} new (${urls.length} total)`);
 
-		if (!pageUrls?.length) break;
+		console.error(
+			`  page ${page} (hint ≤${hintedMaxPage}) — ${entries.length} links, ${added} new` +
+				`${skippedPast ? `, ${skippedPast} past` : ``}` +
+				`${skippedFuture ? `, ${skippedFuture} beyond ${MAX_FUTURE_DAYS}d` : ``}` +
+				` (${urls.length} total)`,
+		);
+
 		if (limit && urls.length >= limit) break;
+		// Listing is date-ascending; once we see dates past the horizon, later pages are further out.
+		if (hitHorizon) {
+			console.error(`  reached ${MAX_FUTURE_DAYS}-day horizon on page ${page}, stopping listing`);
+			break;
+		}
 		page += 1;
 	}
 
@@ -228,26 +280,53 @@ export async function fetchAllSeminarUrls(args: {
 }
 
 export function extractSeminarUrls(html: string): string[] {
+	return extractListingEntries(html).map((entry) => entry.url);
+}
+
+/** Per-card listing rows with optional start day (Solr search results). */
+export function extractListingEntries(html: string): { url: string; startMs?: number }[] {
 	const $ = cheerio.load(html);
-	const urls: string[] = [];
+	const entries: { url: string; startMs?: number }[] = [];
 	const seen = new Set<string>();
 
-	for (const el of $(`a[href*="/seminare/seminar/"]`).toArray()) {
-		const href = ($(el).attr(`href`) || ``).trim();
-		if (!href || href.includes(`?`)) continue;
-		const absolute = normalizeSeminarUrl(makeAbsoluteUrl(href, SITE_BASE) || href);
-		if (!absolute || seen.has(absolute)) continue;
-		if (!/\/seminare\/seminar\/[^/]+\/?$/.test(absolute.replace(SITE_BASE, ``)) &&
-			!absolute.includes(`/seminare/seminar/`)) {
-			continue;
+	const cards = $(`.seminar-search-item`).toArray();
+	if (cards?.length) {
+		for (const el of cards) {
+			const href = ($(el).find(`a[href*="/seminare/seminar/"]`).first().attr(`href`) || ``).trim();
+			const absolute = normalizeListingSeminarHref(href);
+			if (!absolute || seen.has(absolute)) continue;
+			seen.add(absolute);
+			const range = parseDateRange($(el).text());
+			entries.push({
+				url: absolute,
+				startMs: range ? ymdToUtcMs(range.start) : undefined,
+			});
 		}
-		// Skip the bare /seminare/seminar/ index.
-		if (/\/seminare\/seminar\/?$/.test(absolute)) continue;
-		seen.add(absolute);
-		urls.push(absolute);
+		return entries;
 	}
 
-	return urls;
+	// Fallback when card markup is missing.
+	for (const el of $(`a[href*="/seminare/seminar/"]`).toArray()) {
+		const absolute = normalizeListingSeminarHref(($(el).attr(`href`) || ``).trim());
+		if (!absolute || seen.has(absolute)) continue;
+		seen.add(absolute);
+		entries.push({ url: absolute });
+	}
+	return entries;
+}
+
+function normalizeListingSeminarHref(href: string): string | undefined {
+	if (!href || href.includes(`?`)) return undefined;
+	const absolute = normalizeSeminarUrl(makeAbsoluteUrl(href, SITE_BASE) || href);
+	if (!absolute) return undefined;
+	if (/\/seminare\/seminar\/?$/.test(absolute)) return undefined;
+	if (
+		!/\/seminare\/seminar\/[^/]+\/?$/.test(absolute.replace(SITE_BASE, ``)) &&
+		!absolute.includes(`/seminare/seminar/`)
+	) {
+		return undefined;
+	}
+	return absolute;
 }
 
 export function detectTotalPages(html: string): number {
@@ -256,6 +335,26 @@ export function detectTotalPages(html: string): number {
 	].map((match) => Number(match[1]));
 	if (!pages?.length) return 1;
 	return Math.max(1, ...pages);
+}
+
+export function scrapeWindowBounds(nowMs = Date.now()): { minMs: number; maxMs: number } {
+	return {
+		minMs: nowMs - PAST_GRACE_MS,
+		maxMs: nowMs + MAX_FUTURE_DAYS * 24 * 60 * 60 * 1000,
+	};
+}
+
+export function isInScrapeWindow(
+	startAt: string,
+	bounds: { minMs: number; maxMs: number } = scrapeWindowBounds(),
+): boolean {
+	const startMs = Date.parse(startAt);
+	if (Number.isNaN(startMs)) return false;
+	return startMs >= bounds.minMs && startMs <= bounds.maxMs;
+}
+
+function ymdToUtcMs(day: Ymd): number {
+	return Date.UTC(day.year, day.month - 1, day.day);
 }
 
 function getName(html: string): string | undefined {

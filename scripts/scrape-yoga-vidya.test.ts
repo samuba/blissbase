@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
 	detectTotalPages,
+	extractListingEntries,
 	extractSeminarUrls,
+	fetchAllSeminarUrls,
+	isInScrapeWindow,
 	mapSeminarPage,
 	parseCliArgs,
 	parseDateRange,
+	scrapeWindowBounds,
 } from "./scrape-yoga-vidya.ts";
 
 const listingHtml = `
@@ -12,6 +16,7 @@ const listingHtml = `
   <a href=" /seminare/seminar/mantra-konzert-b261010-1/" title="Mantra-Konzert">
     <h3>Mantra-Konzert</h3>
   </a>
+  Bad Meinberg 10.10.26
 </div>
 <a href="/seminare/suchergebnisse/?tx_solr%5Bpage%5D=2&amp;tx_solr%5Bq%5D=">2</a>
 <a href="/seminare/suchergebnisse/?tx_solr%5Bpage%5D=161#top">last</a>
@@ -80,8 +85,94 @@ describe(`listing helpers`, () => {
 			`https://www.yoga-vidya.de/seminare/seminar/mantra-konzert-b261010-1/`,
 		]);
 		expect(detectTotalPages(listingHtml)).toBe(161);
+		expect(extractListingEntries(listingHtml)).toEqual([
+			{
+				url: `https://www.yoga-vidya.de/seminare/seminar/mantra-konzert-b261010-1/`,
+				startMs: Date.UTC(2026, 9, 10),
+			},
+		]);
+	});
+
+	it(`keeps paging past Solr's first-page hint and stops at the 1-year horizon`, async () => {
+		const nowMs = Date.UTC(2026, 9, 11); // 2026-10-11
+		const pages: Record<number, string> = {
+			1: listingPageHtml({
+				items: [{ slug: `soon-a`, date: `12.10.26` }],
+				pageLinks: [2, 3, 4, 5, 6, 7, 8, 9, 10],
+			}),
+			2: listingPageHtml({
+				items: [{ slug: `soon-b`, date: `01.11.26` }],
+				pageLinks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+			}),
+			3: listingPageHtml({
+				items: [
+					{ slug: `within-year`, date: `10.10.27` },
+					{ slug: `beyond-year`, date: `12.10.27` },
+				],
+				pageLinks: [1, 2, 3, 4, 5],
+			}),
+			4: listingPageHtml({
+				items: [{ slug: `should-not-fetch`, date: `01.11.27` }],
+				pageLinks: [3, 4, 5],
+			}),
+		};
+
+		const fetched: string[] = [];
+		const urls = await fetchAllSeminarUrls({
+			nowMs,
+			loadHtml: async (url) => {
+				fetched.push(url);
+				const page = Number(new URL(url).searchParams.get(`tx_solr[page]`) || `1`);
+				return pages[page] ?? ``;
+			},
+		});
+
+		expect(fetched.length).toBe(3);
+		expect(urls).toEqual([
+			`https://www.yoga-vidya.de/seminare/seminar/soon-a/`,
+			`https://www.yoga-vidya.de/seminare/seminar/soon-b/`,
+			`https://www.yoga-vidya.de/seminare/seminar/within-year/`,
+		]);
 	});
 });
+
+describe(`scrape window`, () => {
+	it(`keeps events from slightly past through 365 days ahead`, () => {
+		const nowMs = Date.UTC(2026, 9, 11, 12);
+		const { minMs, maxMs } = scrapeWindowBounds(nowMs);
+		expect(isInScrapeWindow(new Date(nowMs - 60 * 60 * 1000).toISOString(), { minMs, maxMs })).toBe(
+			true,
+		);
+		expect(isInScrapeWindow(new Date(nowMs + 364 * 24 * 60 * 60 * 1000).toISOString(), { minMs, maxMs })).toBe(
+			true,
+		);
+		expect(isInScrapeWindow(new Date(nowMs + 366 * 24 * 60 * 60 * 1000).toISOString(), { minMs, maxMs })).toBe(
+			false,
+		);
+		expect(isInScrapeWindow(new Date(nowMs - 24 * 60 * 60 * 1000).toISOString(), { minMs, maxMs })).toBe(
+			false,
+		);
+	});
+});
+
+function listingPageHtml(args: {
+	items: { slug: string; date: string }[];
+	pageLinks: number[];
+}): string {
+	const cards = args.items
+		.map(
+			(item) => `
+<div class="cell seminar-search-item">
+  <a href="/seminare/seminar/${item.slug}/"><h3>${item.slug}</h3></a>
+  Bad Meinberg ${item.date}
+</div>`,
+		)
+		.join(`\n`);
+	const links = args.pageLinks
+		.map((page) => `<a href="/seminare/suchergebnisse/?tx_solr%5Bpage%5D=${page}">${page}</a>`)
+		.join(`\n`);
+	return `${cards}\n${links}`;
+}
 
 describe(`parseCliArgs`, () => {
 	it(`parses --limit forms`, () => {
