@@ -16,6 +16,9 @@
  * The '--clean' flag deletes existing events from sources that scraped successfully this run.
  * The '--exclude' flag skips one or more sources (comma-separated, repeatable).
  * Per-source console output is teed to scrape-logs/<source>.log (override with --log-dir).
+ * The '--dry-run' flag scrapes and runs health checks (see scrape-health.ts) without touching the events table.
+ * The '--write-baseline' flag stores field fill rates of healthy sources in scrape-health-baseline.json.
+ * Sites failing health checks are not written to the DB, and the run exits non-zero.
  */
 
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
@@ -25,18 +28,21 @@ import { fillMissingEventAttributes } from './fillScrapedEventAttributes.ts';
 import { and, inArray, notInArray } from 'drizzle-orm';
 import { format } from 'util';
 import { AsyncLocalStorage } from 'async_hooks';
-import { createWriteStream, mkdirSync, writeFileSync, type WriteStream } from 'fs';
+import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, type WriteStream } from 'fs';
 import { join } from 'path';
 import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
 import { WEBSITE_SCRAPER_CONFIG, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts.ts';
 import { resolveWebsiteScrapePlan } from './website-scrape-plan.ts';
+import { evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type ScrapeHealth, type ScrapeHealthBaseline } from './scrape-health.ts';
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
 
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
+const errorsLoggedByStream = new WeakMap<WriteStream, number>();
 let consolePatchedForScrapeLogs = false;
+const BASELINE_PATH = join(import.meta.dir, `scrape-health-baseline.json`);
 
 /** Tees console output to the active per-source log file while keeping stdout/stderr as-is. */
 function patchConsoleForScrapeLogs() {
@@ -50,6 +56,7 @@ function patchConsoleForScrapeLogs() {
             const stream = scrapeLogContext.getStore();
             if (!stream) return;
             stream.write(`${format(...args)}\n`);
+            if (method === `error`) errorsLoggedByStream.set(stream, (errorsLoggedByStream.get(stream) ?? 0) + 1);
         };
     }
 }
@@ -68,14 +75,23 @@ function writeSourceStatus({ logDir, source, ok }: { logDir: string; source: str
     writeFileSync(join(logDir, `${source}.status`), ok ? `ok\n` : `fail\n`);
 }
 
-async function scrapeSource({ source, logDir }: { source: string; logDir: string }): Promise<ScrapedEvent[]> {
+function readBaseline(): ScrapeHealthBaseline {
+    if (!existsSync(BASELINE_PATH)) return {};
+    return JSON.parse(readFileSync(BASELINE_PATH, `utf8`));
+}
+
+function sortKeys<T extends Record<string, unknown>>(obj: T) {
+    return Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+async function scrapeSource({ source, logDir, baseline }: { source: string; logDir: string; baseline: ScrapeHealthBaseline }): Promise<ScrapeHealth> {
     mkdirSync(logDir, { recursive: true });
     const logPath = join(logDir, `${source}.log`);
     const stream = createWriteStream(logPath, { flags: `w` });
     stream.write(`=== ${source} @ ${new Date().toISOString()} ===\n`);
 
     try {
-        const events = await scrapeLogContext.run(stream, async () => {
+        const health = await scrapeLogContext.run(stream, async () => {
             console.log(`Scraping ${source}...`);
 
             try {
@@ -91,18 +107,19 @@ async function scrapeSource({ source, logDir }: { source: string; logDir: string
                 const scraped = await new ScraperClass().scrapeWebsite();
                 console.log(` -> Found ${scraped.length} events in ${source}`);
 
-                if (scraped.length === 0 && source !== `vortexapp`) {
-                    throw new Error(`No ${source} events found`);
-                }
-
-                return scraped;
+                const health = evaluateScrapeHealth({ source, events: scraped, baseline: baseline[source] });
+                health.errorsLogged = errorsLoggedByStream.get(stream) ?? 0;
+                console.log(` -> Field fill rates: ${formatFillRates(health.fillRates)}`);
+                if (!baseline[source]) console.log(` -> No coverage baseline for ${source}; run with --dry-run --write-baseline to add one`);
+                console.log(` -> ${formatScrapeHealthLine(health)}`);
+                return health;
             } catch (error) {
                 console.error(`Error scraping ${source}:`, error);
                 throw error;
             }
         });
-        writeSourceStatus({ logDir, source, ok: true });
-        return events;
+        writeSourceStatus({ logDir, source, ok: health.ok });
+        return health;
     } catch (error) {
         writeSourceStatus({ logDir, source, ok: false });
         throw error;
@@ -115,7 +132,7 @@ async function main() {
     console.log('--- Starting Website Event Scraper ---');
     patchConsoleForScrapeLogs();
 
-    const { sources: sourcesToScrape, shouldClean, logDir, targetSource, excludedSources } = resolveWebsiteScrapePlan(process.argv.slice(2));
+    const { sources: sourcesToScrape, shouldClean, logDir, targetSource, excludedSources, dryRun, writeBaseline } = resolveWebsiteScrapePlan(process.argv.slice(2));
 
     if (excludedSources.length > 0) {
         console.log(`Excluding sources: ${excludedSources.join(`, `)}`);
@@ -138,8 +155,10 @@ async function main() {
         process.exit(1);
     }
 
+    const baseline = readBaseline();
+
     // --- Run Scrapers in Parallel ---
-    const scrapePromises = sourcesToScrape.map(source => scrapeSource({ source, logDir }));
+    const scrapePromises = sourcesToScrape.map(source => scrapeSource({ source, logDir, baseline }));
 
     // Wait for all scrapers to complete (using allSettled to not fail on first error)
     const results = await Promise.allSettled(scrapePromises);
@@ -147,23 +166,52 @@ async function main() {
     // Separate successful results from failures
     const failedSources: { source: string; error: unknown }[] = [];
     const successfulSources: string[] = [];
+    const healthySites: ScrapeHealth[] = [];
     const allEvents: ScrapedEvent[] = [];
+    const summaryLines: string[] = [];
     
     results.forEach((result, index) => {
         const source = sourcesToScrape[index];
-        if (result.status === 'fulfilled') {
-            successfulSources.push(source);
-            allEvents.push(...result.value);
-        } else {
+        if (result.status === 'rejected') {
             failedSources.push({ source, error: result.reason });
+            summaryLines.push(`FAIL ${source}: crashed: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`);
             console.error(`Source "${source}" failed:`, result.reason);
+            return;
         }
+
+        summaryLines.push(formatScrapeHealthLine(result.value));
+        if (!result.value.ok) {
+            failedSources.push({ source, error: new Error(result.value.problems.join(`; `)) });
+            return;
+        }
+
+        successfulSources.push(source);
+        healthySites.push(result.value);
+        allEvents.push(...result.value.validEvents);
     });
+
+    console.log(`--- Scrape health summary ---\n${summaryLines.join(`\n`)}`);
+    if (process.env.GITHUB_ACTIONS) {
+        for (const { source, error } of failedSources) {
+            console.log(`::error title=Scrape ${source} failed::${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
 
     console.log(`--- Total events scraped this run: ${allEvents.length} ---`);
     
     if (failedSources.length > 0) {
         console.warn(`--- ${failedSources.length} source(s) failed: ${failedSources.map(f => f.source).join(', ')} ---`);
+    }
+
+    if (writeBaseline) {
+        for (const health of healthySites) baseline[health.source] = health.fillRates;
+        writeFileSync(BASELINE_PATH, `${JSON.stringify(sortKeys(baseline), null, 4)}\n`);
+        console.log(`Wrote coverage baseline for ${healthySites.map(h => h.source).join(`, `) || `no sources`} to ${BASELINE_PATH}`);
+    }
+
+    if (dryRun) {
+        console.log(`--dry-run: skipping database writes.`);
+        process.exit(failedSources.length ? 1 : 0);
     }
 
     if (allEvents.length === 0) {

@@ -707,7 +707,11 @@ export function parseCliArgs(argv = process.argv.slice(2)): { limit?: number; fi
 			limit = parseLimitValue(arg.slice(`--limit=`.length));
 			continue;
 		}
-		if (arg.startsWith(`-`)) throw new Error(`Unknown option: ${arg}`);
+		// Ignore runner flags (`--clean`, `--dry-run`, …) and other unknowns.
+		if (arg.startsWith(`-`)) {
+			if (arg === `--log-dir` || arg === `--exclude`) i++;
+			continue;
+		}
 		files.push(arg);
 	}
 

@@ -7,7 +7,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     kuschelraum: { module: './scrape-kuschelraum.ts', label: 'Kuschelraum', url: 'https://kuschelraum.de' },
     ciglobalcalendar: { module: './scrape-ciglobalcalendar.ts', label: 'CI Globalcalendar', url: 'https://ciglobalcalendar.net' },
     todotoday: { module: './scrape-todotoday.ts', label: 'Todo.Today', url: 'https://todo.today' },
-    vortexapp: { module: './scrape-vortexapp.ts', label: 'Vortexapp', url: 'https://vortexapp.dev' },
+    // vortexapp: { module: './scrape-vortexapp.ts', label: 'Vortexapp', url: 'https://vortexapp.dev' },
     megatix_indonesia: { module: './scrape-megatix_indonesia.ts', label: 'Megatix Indonesia', url: 'https://megatix.co.id' },
     whatsupdanang: { module: './scrape-whatsupdanang.ts', label: 'WhatsUpDaNang', url: 'https://whatsupdanang.com' },
     soulwise: { module: './scrape-soulwise.ts', label: 'Soulwise', url: 'https://soulwise.io' },

@@ -32,6 +32,14 @@ export function resolveWebsiteScrapePlan(args: string[]): WebsiteScrapePlan {
 				type: `string`,
 				default: DEFAULT_LOG_DIR,
 			},
+			'dry-run': {
+				type: `boolean`,
+				default: false,
+			},
+			'write-baseline': {
+				type: `boolean`,
+				default: false,
+			},
 		},
 		allowPositionals: true,
 	});
@@ -65,6 +73,8 @@ export function resolveWebsiteScrapePlan(args: string[]): WebsiteScrapePlan {
 		logDir: values[`log-dir`] || DEFAULT_LOG_DIR,
 		targetSource,
 		excludedSources,
+		dryRun: Boolean(values[`dry-run`]),
+		writeBaseline: Boolean(values[`write-baseline`]),
 	};
 }
 
@@ -110,6 +120,8 @@ type WebsiteScrapePlan = {
 	logDir: string;
 	targetSource: WebsiteScrapeSourceName | null;
 	excludedSources: WebsiteScrapeSourceName[];
+	dryRun: boolean;
+	writeBaseline: boolean;
 };
 
 type GithubActionsScrapeMatrix = {

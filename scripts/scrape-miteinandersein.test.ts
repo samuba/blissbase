@@ -105,6 +105,21 @@ describe(`parseCliArgs`, () => {
 		expect(() => parseCliArgs([`--limit`, `0`])).toThrow(/Invalid --limit/);
 		expect(() => parseCliArgs([`--limit=foo`])).toThrow(/Invalid --limit/);
 	});
+
+	it(`ignores scrape-websites runner flags`, () => {
+		expect(parseCliArgs([`miteinandersein`, `--clean`, `--dry-run`])).toEqual({
+			limit: undefined,
+			files: [`miteinandersein`],
+		});
+		expect(parseCliArgs([`--dry-run`, `--limit`, `7`, `--clean`, `--log-dir`, `scrape-logs`])).toEqual({
+			limit: 7,
+			files: [],
+		});
+		expect(parseCliArgs([`--write-baseline`, `-n`, `2`, `--exclude`, `meetup`, `a.html`])).toEqual({
+			limit: 2,
+			files: [`a.html`],
+		});
+	});
 });
 
 describe(`field getters`, () => {
