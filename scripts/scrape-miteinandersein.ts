@@ -11,11 +11,11 @@
 import * as cheerio from 'cheerio';
 import type { ScrapedEvent } from '../src/lib/types.ts';
 import {
-	REQUEST_DELAY_MS,
 	WebsiteScraperInterface,
 	cleanProseHtml,
 	customFetch,
 	dateToIsoStr,
+	isTimeoutError,
 	makeAbsoluteUrl,
 	sleep,
 	superTrim,
@@ -28,6 +28,10 @@ const DEFAULT_TIMEZONE = `Europe/Berlin` as const;
 const SOURCE = `miteinandersein` as const;
 /** One at a time — small site; avoid hammering detail pages. */
 const DETAIL_CONCURRENCY = 1;
+/** GHA IPs get 429 after ~40 requests at ~1.2s spacing; stay well under that. */
+const DETAIL_DELAY_MS = 3000;
+const SOFT_BLOCK_COOLDOWN_MS = 60_000;
+const MAX_CONSECUTIVE_SOFT_BLOCKS = 5;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(limit?: number): Promise<ScrapedEvent[]> {
@@ -49,15 +53,36 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			`Found ${allUrls.length} event URLs${resolvedLimit ? `, fetching ${urls.length}` : ``}. Loading detail pages...`,
 		);
 
+		let consecutiveSoftBlocks = 0;
+		let abortRemaining = false;
+
 		const results = await mapWithConcurrency({
 			items: urls,
 			concurrency: DETAIL_CONCURRENCY,
 			mapper: async (url) => {
+				if (abortRemaining) return undefined;
+
 				try {
 					const html = await customFetch(url, { returnType: `text` });
+					consecutiveSoftBlocks = 0;
 					return await this.extractEventData(html, url);
 				} catch (error) {
 					console.error(`Failed to process ${url}:`, error);
+					if (!isSoftBlockError(error)) return undefined;
+
+					consecutiveSoftBlocks += 1;
+					const pauseMs = Math.min(SOFT_BLOCK_COOLDOWN_MS * consecutiveSoftBlocks, 180_000);
+					console.error(
+						`Soft-blocked (${consecutiveSoftBlocks}x). Cooling down ${pauseMs}ms before continuing...`,
+					);
+					await sleep(pauseMs);
+
+					if (consecutiveSoftBlocks >= MAX_CONSECUTIVE_SOFT_BLOCKS) {
+						console.error(
+							`Stopping detail fetches after ${consecutiveSoftBlocks} consecutive soft blocks.`,
+						);
+						abortRemaining = true;
+					}
 					return undefined;
 				}
 			},
@@ -639,6 +664,11 @@ function inferFileUrl(filePath: string): string {
 	return filePath;
 }
 
+function isSoftBlockError(error: unknown): boolean {
+	if (isTimeoutError(error)) return true;
+	return error instanceof Error && error.message.includes(`429`);
+}
+
 async function mapWithConcurrency<T, R>(args: {
 	items: T[];
 	concurrency: number;
@@ -655,7 +685,7 @@ async function mapWithConcurrency<T, R>(args: {
 			const index = nextIndex;
 			nextIndex += 1;
 			results[index] = await mapper(items[index]);
-			if (nextIndex < items.length) await sleep(REQUEST_DELAY_MS);
+			if (nextIndex < items.length) await sleep(DETAIL_DELAY_MS);
 		}
 	}
 

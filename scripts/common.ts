@@ -36,6 +36,14 @@ export function randomInt({ min, max }: { min: number; max: number }): number {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/** Bun's AbortSignal.timeout throws TimeoutError; some runtimes use AbortError. */
+export function isTimeoutError(error: unknown): boolean {
+	return (
+		error instanceof DOMException &&
+		(error.name === `TimeoutError` || error.name === `AbortError`)
+	);
+}
+
 export function customFetch(
     url: string,
     options: RequestInit & { returnType?: 'json' }
@@ -64,11 +72,13 @@ export async function customFetch(
 ): Promise<string | Uint8Array<ArrayBufferLike>> {
     const maxRetries = 5;
     let lastError: Error | undefined;
+    let nextBackoffMs: number | undefined;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
             if (attempt > 0) {
-                const backoffDelay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Cap at 10 seconds
+                const backoffDelay = nextBackoffMs ?? Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                nextBackoffMs = undefined;
                 console.warn(`Retry attempt ${attempt}/${maxRetries} for ${url} after ${backoffDelay}ms delay`);
                 await Bun.sleep(backoffDelay);
             } else {
@@ -108,6 +118,13 @@ export async function customFetch(
                     throw new NotFoundError(`Error fetching ${url}: 404 Not Found`);
                 }
 
+                // 429: long cooldown — short retries keep the ban hot and escalate to timeouts
+                if (response.status === 429 && attempt < maxRetries) {
+                    lastError = new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
+                    nextBackoffMs = rateLimitBackoffMs({ response, attempt });
+                    continue;
+                }
+
                 // Check if error is retryable (5xx server errors or specific network errors)
                 if (response.status >= 500 && response.status < 600 && attempt < maxRetries) {
                     lastError = new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
@@ -134,14 +151,15 @@ export async function customFetch(
                 throw error;
             }
 
-            if (error instanceof DOMException && error.name === 'AbortError') {
+            // Don't retry timeouts — Bun uses TimeoutError, not AbortError
+            if (isTimeoutError(error)) {
                 console.error(`Timeout fetching ${url}: Request took longer than ${FETCH_TIMEOUT_MS}ms`);
-            } else {
-                console.error(`Network error fetching ${url}:`, error);
+                throw error;
             }
 
-            // Don't retry on timeout errors or if we've reached max retries
-            if ((error instanceof DOMException && error.name === 'AbortError') || attempt === maxRetries) {
+            console.error(`Network error fetching ${url}:`, error);
+
+            if (attempt === maxRetries) {
                 throw error;
             }
         }
@@ -149,6 +167,17 @@ export async function customFetch(
 
     // This should never be reached, but just in case
     throw lastError || new Error(`Failed to fetch ${url} after ${maxRetries + 1} attempts`);
+}
+
+function rateLimitBackoffMs({ response, attempt }: { response: Response; attempt: number }): number {
+	const retryAfter = response.headers.get(`retry-after`);
+	if (retryAfter) {
+		const seconds = Number(retryAfter);
+		if (Number.isFinite(seconds)) return Math.min(Math.max(seconds * 1000, 1000), 180_000);
+		const date = Date.parse(retryAfter);
+		if (!Number.isNaN(date)) return Math.min(Math.max(date - Date.now(), 1000), 180_000);
+	}
+	return Math.min(30_000 * 2 ** attempt, 180_000);
 }
 
 /**
