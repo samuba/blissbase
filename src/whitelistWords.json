@@ -493,45 +493,6 @@
 		}
 	},
 	{
-		"word": "comedy",
-		"synonyms": {
-			"de": [
-				"Komödie",
-				"Stand-up"
-			],
-			"en": [
-				"humor",
-				"comic"
-			],
-			"es": [
-				"comedia"
-			],
-			"fr": [
-				"comédie",
-				"humour"
-			],
-			"it": [
-				"commedia",
-				"umorismo"
-			],
-			"pt": [
-				"comédia"
-			],
-			"ru": [
-				"комедия",
-				"юмор"
-			],
-			"tr": [
-				"komedi",
-				"mizah"
-			],
-			"hi": [
-				"हास्य",
-				"कॉमेडी"
-			]
-		}
-	},
-	{
 		"word": "culture",
 		"synonyms": {
 			"de": [
