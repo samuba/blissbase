@@ -26,10 +26,11 @@
 	);
 	const targets = $derived(targetsQuery.current ?? data.targets);
 	const availableDialogsPayload = $derived(
-		availableDialogsQuery?.current ?? { accounts: [], dialogs: [] },
+		availableDialogsQuery?.current ?? { accounts: [], accountStatuses: [], dialogs: [] },
 	);
 	const availableDialogs = $derived(availableDialogsPayload.dialogs);
 	const scrapeAccounts = $derived(availableDialogsPayload.accounts);
+	const accountStatuses = $derived(availableDialogsPayload.accountStatuses);
 	const availableDialogsLoading = $derived(availableDialogsQuery?.loading ?? false);
 	const availableDialogsError = $derived.by(() => {
 		const queryError = availableDialogsQuery?.error;
@@ -55,7 +56,7 @@
 	let selectedRoomId = $state<string | null>(null);
 	let selectedDialogForAdd = $state<{ roomId: string; name: string } | null>(null);
 	let dialogFilter = $state(``);
-	let dialogKindFilter = $state<DialogKindFilter>(`groups`);
+	let dialogKindFilter = $state<DialogKindFilter>(`all`);
 	let dialogAccountFilter = $state<TelegramDialogAccountId>(`primary`);
 	let isDeleting = $state(false);
 	let timezoneLookupAddress = ``;
@@ -79,6 +80,10 @@
 		return scrapeAccounts[0] ?? `primary`;
 	});
 
+	const selectedAccountStatus = $derived(
+		accountStatuses.find((status) => status.accountId === selectedDialogAccount) ?? null,
+	);
+
 	const filteredAvailableDialogs = $derived.by(() => {
 		const query = dialogFilter.trim().toLowerCase();
 		return availableDialogs.filter((dialog) => {
@@ -92,6 +97,18 @@
 				(dialog.username?.toLowerCase().includes(query) ?? false)
 			);
 		});
+	});
+
+	const selectedAccountEmptyMessage = $derived.by(() => {
+		const label = telegramAccountLabel(selectedDialogAccount);
+		if (selectedAccountStatus?.error) return selectedAccountStatus.error;
+		if ((selectedAccountStatus?.listed ?? 0) === 0) {
+			return `Account „${label}“ ist in keiner Gruppe/keinem Kanal (oder die Session liefert keine Dialoge).`;
+		}
+		if ((selectedAccountStatus?.available ?? 0) === 0) {
+			return `Alle Gruppen/Kanäle von „${label}“ sind bereits Targets.`;
+		}
+		return `Keine Einträge für „${label}“ mit dieser Filterung.`;
 	});
 
 	saveTelegramScrapingTarget.fields.set(defaultFormValues);
@@ -137,7 +154,7 @@
 	function openAddDialog() {
 		selectedDialogForAdd = null;
 		dialogFilter = ``;
-		dialogKindFilter = `groups`;
+		dialogKindFilter = `all`;
 		dialogAccountFilter = `primary`;
 		saveTelegramScrapingTarget.fields.set(defaultFormValues);
 		isAddDialogOpen = true;
@@ -156,7 +173,7 @@
 		isAddDialogOpen = false;
 		selectedDialogForAdd = null;
 		dialogFilter = ``;
-		dialogKindFilter = `groups`;
+		dialogKindFilter = `all`;
 		dialogAccountFilter = `primary`;
 		saveTelegramScrapingTarget.fields.set(defaultFormValues);
 	}
@@ -563,23 +580,21 @@
 								<span class="text-base-content/70 text-sm">Aktualisiere Dialoge…</span>
 							</div>
 						{/if}
-						{#if !availableDialogs.length}
-							{#if !availableDialogsLoading}
-								{#if availableDialogsError}
-									<p class="text-error text-sm" data-testid="telegram-dialogs-error">
-										{availableDialogsError}
-									</p>
-								{:else}
-									<p class="text-base-content/70 text-sm">
-										Keine verfügbaren Gruppen/Kanäle. Alle sind bereits Targets, oder keine Scrape-Session ist in einer Gruppe/einem Kanal.
-									</p>
-								{/if}
-							{/if}
-						{:else if !filteredAvailableDialogs.length}
-							<p class="text-base-content/70 text-sm">
-								Keine Einträge für „{telegramAccountLabel(selectedDialogAccount)}“ mit dieser Filterung.
+						{#if !availableDialogsLoading && availableDialogsError && !availableDialogs.length}
+							<p class="text-error text-sm" data-testid="telegram-dialogs-error">
+								{availableDialogsError}
 							</p>
-						{:else}
+						{:else if !availableDialogsLoading && !filteredAvailableDialogs.length}
+							<p
+								class={[
+									`text-sm`,
+									selectedAccountStatus?.error ? `text-error` : `text-base-content/70`,
+								]}
+								data-testid="telegram-dialogs-empty"
+							>
+								{selectedAccountEmptyMessage}
+							</p>
+						{:else if filteredAvailableDialogs.length}
 							<div class="max-h-[70vh] overflow-y-auto overscroll-contain">
 								<ul class="flex w-full flex-col gap-1.5">
 									{#each filteredAvailableDialogs as dialog (`${dialog.accountId}:${dialog.roomId}`)}

@@ -87,10 +87,16 @@ export const getAvailableTelegramDialogs = query(async () => {
 	});
 	const existingRoomIds = targets.map((target) => target.roomId);
 
-	const { accounts, dialogs } = await fetchPrimaryTelegramDialogs();
+	const { accounts, dialogs, accountStatuses } = await fetchPrimaryTelegramDialogs();
+	const availableDialogs = excludeExistingTelegramTargets({ dialogs, existingRoomIds });
 	return {
 		accounts,
-		dialogs: excludeExistingTelegramTargets({ dialogs, existingRoomIds }),
+		accountStatuses: accountStatuses.map((status) => ({
+			...status,
+			available: availableDialogs.filter((dialog) => dialog.accountId === status.accountId)
+				.length,
+		})),
+		dialogs: availableDialogs,
 	};
 });
 
@@ -256,6 +262,11 @@ async function fetchPrimaryTelegramDialogs() {
 	if (res.ok) {
 		const body = (await res.json()) as {
 			accounts: TelegramDialogAccountId[]
+			accountStatuses: {
+				accountId: TelegramDialogAccountId
+				listed: number
+				error: string | null
+			}[]
 			dialogs: {
 				roomId: string
 				name: string
@@ -267,6 +278,7 @@ async function fetchPrimaryTelegramDialogs() {
 		};
 		return {
 			accounts: body.accounts,
+			accountStatuses: body.accountStatuses,
 			dialogs: body.dialogs.map(
 				(dialog): AvailableTelegramDialog => ({
 					...dialog,
