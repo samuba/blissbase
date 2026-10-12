@@ -7,7 +7,11 @@ import { isAdminSession } from '$lib/server/admin';
 import { db, eq, s } from '$lib/server/db';
 import { geocodeAddressCached } from '$lib/server/google';
 import { routes } from '$lib/routes';
-import { excludeExistingTelegramTargets } from './dialogs/availableDialogs';
+import {
+	excludeExistingTelegramTargets,
+	type AvailableTelegramDialog,
+	type TelegramDialogAccountId,
+} from './dialogs/availableDialogs';
 
 function toAddressLines(address: string) {
 	if (!address.trim()) return [];
@@ -72,7 +76,7 @@ export const getTelegramScrapingTargets = query(async () => {
 });
 
 /**
- * Groups/channels scrape accounts are in (PRIMARY + FALLBACK/legacy), excluding existing targets.
+ * Groups/channels per scrape account (PRIMARY + FALLBACK/legacy), excluding existing targets.
  * Fetches via the split `/admin/telegram/dialogs` function so teleproto stays out of remotes.
  */
 export const getAvailableTelegramDialogs = query(async () => {
@@ -83,8 +87,11 @@ export const getAvailableTelegramDialogs = query(async () => {
 	});
 	const existingRoomIds = targets.map((target) => target.roomId);
 
-	const dialogs = await fetchPrimaryTelegramDialogs();
-	return excludeExistingTelegramTargets({ dialogs, existingRoomIds });
+	const { accounts, dialogs } = await fetchPrimaryTelegramDialogs();
+	return {
+		accounts,
+		dialogs: excludeExistingTelegramTargets({ dialogs, existingRoomIds }),
+	};
 });
 
 export const saveTelegramScrapingTarget = form(saveTelegramScrapingTargetSchema, async (data, issue) => {
@@ -248,18 +255,25 @@ async function fetchPrimaryTelegramDialogs() {
 
 	if (res.ok) {
 		const body = (await res.json()) as {
+			accounts: TelegramDialogAccountId[]
 			dialogs: {
 				roomId: string
 				name: string
 				kind: `group` | `channel`
 				username: string | null
+				accountId: TelegramDialogAccountId
 				lastMessageTime: string | null
 			}[]
 		};
-		return body.dialogs.map((dialog) => ({
-			...dialog,
-			lastMessageTime: dialog.lastMessageTime ? new Date(dialog.lastMessageTime) : null,
-		}));
+		return {
+			accounts: body.accounts,
+			dialogs: body.dialogs.map(
+				(dialog): AvailableTelegramDialog => ({
+					...dialog,
+					lastMessageTime: dialog.lastMessageTime ? new Date(dialog.lastMessageTime) : null,
+				}),
+			),
+		};
 	}
 
 	throw new Error(await readSplitRouteError({

@@ -13,7 +13,7 @@ export const load = (async () => {
 	const availableDialogs = await getAvailableTelegramDialogs().catch((err) => {
 		console.error(`Failed to load available Telegram dialogs:`, err);
 		availableDialogsError = dialogsLoadErrorMessage(err);
-		return [];
+		return { accounts: [], dialogs: [] };
 	});
 
 	return { targets, availableDialogs, availableDialogsError };

@@ -2,6 +2,7 @@ import { env } from '$env/dynamic/private';
 import {
 	missingTelegramSessionConfigMessage,
 	parseTelegramAccountSessions,
+	type TelegramAccountId,
 } from '$lib/server/telegramAccounts';
 import { TelegramClient } from 'teleproto';
 import { LogLevel } from 'teleproto/extensions/Logger';
@@ -12,11 +13,13 @@ import {
 } from './availableDialogs';
 
 /**
- * Lists groups/channels from configured scrape accounts (PRIMARY then FALLBACK/legacy).
- * Merges by roomId so membership on either account shows up in the admin picker.
- * Per-account failures are skipped so one bad session does not hide the other's dialogs.
+ * Lists groups/channels per configured scrape account (PRIMARY, then FALLBACK/legacy).
+ * Each dialog is tagged with `accountId` so the admin picker can filter by account.
  */
-export async function listPrimaryTelegramGroupDialogs(): Promise<AvailableTelegramDialog[]> {
+export async function listPrimaryTelegramGroupDialogs(): Promise<{
+	accounts: TelegramAccountId[]
+	dialogs: AvailableTelegramDialog[]
+}> {
 	const apiId = Number(env.TELEGRAM_APP_ID);
 	const apiHash = env.TELEGRAM_APP_HASH?.trim();
 	const accounts = parseTelegramAccountSessions({
@@ -29,7 +32,8 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<AvailableTelegr
 		throw new Error(missingTelegramSessionConfigMessage());
 	}
 
-	const byRoomId = new Map<string, AvailableTelegramDialog>();
+	const accountIds = accounts.map((account) => account.id);
+	const available: AvailableTelegramDialog[] = [];
 	const accountErrors: string[] = [];
 
 	for (const account of accounts) {
@@ -40,16 +44,7 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<AvailableTelegr
 				session: account.session,
 				accountId: account.id,
 			});
-			for (const dialog of listed) {
-				const existing = byRoomId.get(dialog.roomId);
-				if (!existing) {
-					byRoomId.set(dialog.roomId, dialog);
-					continue;
-				}
-				const existingTime = existing.lastMessageTime?.getTime() ?? 0;
-				const nextTime = dialog.lastMessageTime?.getTime() ?? 0;
-				if (nextTime > existingTime) byRoomId.set(dialog.roomId, dialog);
-			}
+			available.push(...listed);
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err);
 			console.error(`Failed listing Telegram dialogs for ${account.id}:`, err);
@@ -57,26 +52,27 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<AvailableTelegr
 		}
 	}
 
-	if (!byRoomId.size && accountErrors.length) {
+	if (!available.length && accountErrors.length) {
 		throw new Error(accountErrors.join(`; `));
 	}
 
-	const available = [...byRoomId.values()];
 	available.sort((a, b) => {
+		const accountCmp = a.accountId.localeCompare(b.accountId);
+		if (accountCmp !== 0) return accountCmp;
 		const aTime = a.lastMessageTime?.getTime() ?? 0;
 		const bTime = b.lastMessageTime?.getTime() ?? 0;
 		if (aTime !== bTime) return bTime - aTime;
 		return a.name.localeCompare(b.name, `de`, { sensitivity: `base` });
 	});
 
-	return available;
+	return { accounts: accountIds, dialogs: available };
 }
 
 async function listDialogsForSession(args: {
 	apiId: number
 	apiHash: string
 	session: string
-	accountId: string
+	accountId: TelegramAccountId
 }) {
 	const client = new TelegramClient(new StringSession(args.session), args.apiId, args.apiHash, {
 		connectionRetries: 5,
@@ -96,7 +92,7 @@ async function listDialogsForSession(args: {
 		const available: AvailableTelegramDialog[] = [];
 		for (const dialog of dialogs) {
 			try {
-				const mapped = availableTelegramDialogFromDialog(dialog);
+				const mapped = availableTelegramDialogFromDialog(dialog, args.accountId);
 				if (!mapped) continue;
 				available.push(mapped);
 			} catch (err) {
