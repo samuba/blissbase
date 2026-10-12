@@ -22,8 +22,10 @@ export const GET: RequestHandler = async ({ locals }) => {
 			})),
 		});
 	} catch (err) {
+		console.error(`Failed to list Telegram dialogs:`, err);
 		const message =
 			err instanceof Error ? err.message : `Telegram-Dialoge konnten nicht geladen werden`;
-		error(400, message);
+		// Always JSON so the remote's internal fetch (which may forward Accept: text/html) can read `message`.
+		return json({ message }, { status: 400 });
 	}
 };

@@ -18,6 +18,16 @@
 	const availableDialogsQuery = getAvailableTelegramDialogs();
 	const targets = $derived(targetsQuery.current ?? data.targets);
 	const availableDialogs = $derived(availableDialogsQuery.current ?? data.availableDialogs);
+	const availableDialogsError = $derived.by(() => {
+		const queryError = availableDialogsQuery.error;
+		if (queryError instanceof Error && queryError.message.trim()) return queryError.message;
+		if (typeof queryError === `object` && queryError && `body` in queryError) {
+			const body = (queryError as { body?: { message?: string } }).body;
+			if (body?.message?.trim()) return body.message;
+		}
+		if (queryError) return `Telegram-Dialoge konnten nicht geladen werden`;
+		return data.availableDialogsError ?? null;
+	});
 	const defaultFormValues = {
 		originalRoomId: ``,
 		roomId: ``,
@@ -489,15 +499,13 @@
 						{/if}
 						{#if !availableDialogs.length}
 							{#if !availableDialogsQuery.loading}
-								{#if availableDialogsQuery.error}
-									<p class="text-error text-sm">
-										{availableDialogsQuery.error instanceof Error
-											? availableDialogsQuery.error.message
-											: `Telegram-Dialoge konnten nicht geladen werden`}
+								{#if availableDialogsError}
+									<p class="text-error text-sm" data-testid="telegram-dialogs-error">
+										{availableDialogsError}
 									</p>
 								{:else}
 									<p class="text-base-content/70 text-sm">
-										Keine verfügbaren Gruppen/Kanäle. Alle sind bereits Targets, oder TELEGRAM_APP_SESSION_PRIMARY fehlt bzw. der Primary-Account ist noch in keiner Gruppe.
+										Keine verfügbaren Gruppen/Kanäle. Alle sind bereits Targets, oder keine Scrape-Session ist in einer Gruppe/einem Kanal.
 									</p>
 								{/if}
 							{/if}

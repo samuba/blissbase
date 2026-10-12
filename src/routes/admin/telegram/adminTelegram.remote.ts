@@ -72,7 +72,7 @@ export const getTelegramScrapingTargets = query(async () => {
 });
 
 /**
- * Groups/channels the PRIMARY scrape account is in, excluding existing scraping targets.
+ * Groups/channels scrape accounts are in (PRIMARY + FALLBACK/legacy), excluding existing targets.
  * Fetches via the split `/admin/telegram/dialogs` function so teleproto stays out of remotes.
  */
 export const getAvailableTelegramDialogs = query(async () => {
@@ -223,7 +223,10 @@ async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 	const { fetch, url } = getRequestEvent();
 	const res = await fetch(new URL(routes.adminTelegramResolve(), url.origin), {
 		method: `POST`,
-		headers: { 'content-type': `application/json` },
+		headers: {
+			'content-type': `application/json`,
+			accept: `application/json`,
+		},
 		body: JSON.stringify({ roomId }),
 	});
 
@@ -231,13 +234,17 @@ async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 		return (await res.json()) as { roomId: string; name: string };
 	}
 
-	const body = await res.json().catch(() => null) as { message?: string } | null;
-	throw new Error(body?.message ?? `Telegram-Raum konnte nicht verifiziert werden`);
+	throw new Error(await readSplitRouteError({
+		res,
+		fallback: `Telegram-Raum konnte nicht verifiziert werden`,
+	}));
 }
 
 async function fetchPrimaryTelegramDialogs() {
 	const { fetch, url } = getRequestEvent();
-	const res = await fetch(new URL(routes.adminTelegramDialogs(), url.origin));
+	const res = await fetch(new URL(routes.adminTelegramDialogs(), url.origin), {
+		headers: { accept: `application/json` },
+	});
 
 	if (res.ok) {
 		const body = (await res.json()) as {
@@ -255,8 +262,17 @@ async function fetchPrimaryTelegramDialogs() {
 		}));
 	}
 
-	const body = await res.json().catch(() => null) as { message?: string } | null;
-	throw new Error(body?.message ?? `Telegram-Dialoge konnten nicht geladen werden`);
+	throw new Error(await readSplitRouteError({
+		res,
+		fallback: `Telegram-Dialoge konnten nicht geladen werden`,
+	}));
+}
+
+async function readSplitRouteError(args: { res: Response; fallback: string }) {
+	const body = await args.res.json().catch(() => null) as { message?: string } | null;
+	const message = body?.message?.trim();
+	if (message) return message;
+	return `${args.fallback} (HTTP ${args.res.status})`;
 }
 
 function assertAdmin() {

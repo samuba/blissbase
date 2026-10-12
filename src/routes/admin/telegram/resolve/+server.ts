@@ -23,7 +23,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const resolved = await resolveTelegramScrapingTarget({ roomId });
 		return json(resolved);
 	} catch (err) {
+		console.error(`Failed to resolve Telegram room:`, err);
 		const message = err instanceof Error ? err.message : `Telegram-Raum konnte nicht verifiziert werden`;
-		error(400, message);
+		// Always JSON so the remote's internal fetch (which may forward Accept: text/html) can read `message`.
+		return json({ message }, { status: 400 });
 	}
 };
