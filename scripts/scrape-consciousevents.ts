@@ -28,8 +28,10 @@ const SOURCE = `consciousevents` as const;
 const DETAIL_CONCURRENCY = 1;
 /** Pace detail/listing fetches so retries do not keep a soft-ban hot. */
 const DETAIL_DELAY_MS = 3000;
+/** Keep per-URL 429 retries short so unrecovered bans fail the job in minutes, not hours. */
+const FETCH_MAX_RETRIES = 2;
 const SOFT_BLOCK_COOLDOWN_MS = 60_000;
-const MAX_CONSECUTIVE_SOFT_BLOCKS = 5;
+const MAX_CONSECUTIVE_SOFT_BLOCKS = 3;
 const SKIP_SLUGS = new Set([`anmeldung-testevent`]);
 
 export class WebsiteScraper implements WebsiteScraperInterface {
@@ -43,16 +45,13 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		console.error(`Fetching ${occurrenceUrls.length} upcoming occurrence pages...`);
 
 		let consecutiveSoftBlocks = 0;
-		let abortRemaining = false;
 
 		const results = await mapWithConcurrency({
 			items: occurrenceUrls,
 			concurrency: DETAIL_CONCURRENCY,
 			mapper: async (url) => {
-				if (abortRemaining) return undefined;
-
 				try {
-					const html = await customFetch(url, { returnType: `text` });
+					const html = await fetchPage(url);
 					consecutiveSoftBlocks = 0;
 					return await this.extractEventData(html, url);
 				} catch (error) {
@@ -60,18 +59,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 					if (!isSoftBlockError(error)) return undefined;
 
 					consecutiveSoftBlocks += 1;
-					const pauseMs = Math.min(SOFT_BLOCK_COOLDOWN_MS * consecutiveSoftBlocks, 180_000);
-					console.error(
-						`Soft-blocked (${consecutiveSoftBlocks}x). Cooling down ${pauseMs}ms before continuing...`,
-					);
-					await sleep(pauseMs);
-
 					if (consecutiveSoftBlocks >= MAX_CONSECUTIVE_SOFT_BLOCKS) {
-						console.error(
-							`Stopping detail fetches after ${consecutiveSoftBlocks} consecutive soft blocks.`,
-						);
-						abortRemaining = true;
+						throw softBlockFailure({ phase: `detail`, consecutiveSoftBlocks });
 					}
+
+					console.error(
+						`Soft-blocked (${consecutiveSoftBlocks}/${MAX_CONSECUTIVE_SOFT_BLOCKS}). Cooling down ${SOFT_BLOCK_COOLDOWN_MS}ms before continuing...`,
+					);
+					await sleep(SOFT_BLOCK_COOLDOWN_MS);
 					return undefined;
 				}
 			},
@@ -464,7 +459,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	private async fetchEventUrlsFromSitemap(): Promise<string[]> {
-		const xml = await customFetch(SITEMAP_URL, { returnType: `text` });
+		const xml = await fetchPage(SITEMAP_URL);
 		const urls = [...xml.matchAll(/<loc>(https:\/\/conscious-events\.com\/de\/event\/[^<]+)<\/loc>/g)]
 			.map((match) => match[1])
 			.filter((url) => !/\/\d{6}$/.test(url))
@@ -479,16 +474,13 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	private async collectOccurrenceUrls(baseUrls: string[]): Promise<string[]> {
 		const occurrenceUrls = new Set<string>();
 		let consecutiveSoftBlocks = 0;
-		let abortRemaining = false;
 
 		const results = await mapWithConcurrency({
 			items: baseUrls,
 			concurrency: DETAIL_CONCURRENCY,
 			mapper: async (baseUrl) => {
-				if (abortRemaining) return [];
-
 				try {
-					const html = await customFetch(baseUrl, { returnType: `text` });
+					const html = await fetchPage(baseUrl);
 					consecutiveSoftBlocks = 0;
 					const occ = this.extractOccurrenceUrls(html);
 					if (occ?.length) return occ;
@@ -502,18 +494,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 					if (!isSoftBlockError(error)) return [];
 
 					consecutiveSoftBlocks += 1;
-					const pauseMs = Math.min(SOFT_BLOCK_COOLDOWN_MS * consecutiveSoftBlocks, 180_000);
-					console.error(
-						`Soft-blocked while listing (${consecutiveSoftBlocks}x). Cooling down ${pauseMs}ms...`,
-					);
-					await sleep(pauseMs);
-
 					if (consecutiveSoftBlocks >= MAX_CONSECUTIVE_SOFT_BLOCKS) {
-						console.error(
-							`Stopping occurrence listing after ${consecutiveSoftBlocks} consecutive soft blocks.`,
-						);
-						abortRemaining = true;
+						throw softBlockFailure({ phase: `listing`, consecutiveSoftBlocks });
 					}
+
+					console.error(
+						`Soft-blocked while listing (${consecutiveSoftBlocks}/${MAX_CONSECUTIVE_SOFT_BLOCKS}). Cooling down ${SOFT_BLOCK_COOLDOWN_MS}ms...`,
+					);
+					await sleep(SOFT_BLOCK_COOLDOWN_MS);
 					return [];
 				}
 			},
@@ -720,9 +708,19 @@ function isFutureYymmddTime(args: {
 	return isFutureIso(iso, now);
 }
 
+function fetchPage(url: string) {
+	return customFetch(url, { returnType: `text`, maxRetries: FETCH_MAX_RETRIES });
+}
+
 function isSoftBlockError(error: unknown): boolean {
 	if (isTimeoutError(error)) return true;
 	return error instanceof Error && error.message.includes(`429`);
+}
+
+function softBlockFailure(args: { phase: `listing` | `detail`; consecutiveSoftBlocks: number }) {
+	return new Error(
+		`conscious-events.com rate limit not recovering during ${args.phase} (${args.consecutiveSoftBlocks} consecutive soft blocks)`,
+	);
 }
 
 async function mapWithConcurrency<T, R>(args: {
@@ -901,10 +899,16 @@ type LdEvent = {
 
 // Allow running this file directly for quick smoke tests.
 if (import.meta.main) {
-	const scraper = new WebsiteScraper();
-	const filePaths = process.argv.slice(2);
-	const events = filePaths?.length
-		? await scraper.scrapeHtmlFiles(filePaths)
-		: await scraper.scrapeWebsite();
-	console.log(JSON.stringify(events, null, 2));
+	try {
+		const scraper = new WebsiteScraper();
+		const filePaths = process.argv.slice(2);
+		const events = filePaths?.length
+			? await scraper.scrapeHtmlFiles(filePaths)
+			: await scraper.scrapeWebsite();
+		console.log(JSON.stringify(events, null, 2));
+		process.exit(0);
+	} catch (error) {
+		console.error(`Unhandled error in main execution:`, error);
+		process.exit(1);
+	}
 }

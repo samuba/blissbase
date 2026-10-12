@@ -46,17 +46,17 @@ export function isTimeoutError(error: unknown): boolean {
 
 export function customFetch(
     url: string,
-    options: RequestInit & { returnType?: 'json' }
+    options?: CustomFetchOptions & { returnType?: 'json' }
 ): Promise<any>;
 
 export function customFetch(
     url: string,
-    options: RequestInit & { returnType?: 'text' }
+    options?: CustomFetchOptions & { returnType?: 'text' }
 ): Promise<string>;
 
 export function customFetch(
     url: string,
-    options: RequestInit & { returnType: 'bytes' }
+    options: CustomFetchOptions & { returnType: 'bytes' }
 ): Promise<Uint8Array<ArrayBufferLike>>;
 
 /**
@@ -68,9 +68,9 @@ export function customFetch(
  */
 export async function customFetch(
     url: string,
-    options: RequestInit & { returnType?: 'text' | 'bytes' | 'json' } = { returnType: 'text' }
+    options: CustomFetchOptions & { returnType?: 'text' | 'bytes' | 'json' } = { returnType: 'text' }
 ): Promise<string | Uint8Array<ArrayBufferLike>> {
-    const maxRetries = 5;
+    const { maxRetries = 5, returnType = `text`, ...fetchOptions } = options;
     let lastError: Error | undefined;
     let nextBackoffMs: number | undefined;
 
@@ -89,15 +89,15 @@ export async function customFetch(
             const timeoutSignal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
 
             // Combine with any existing signal if provided in options
-            const signal = options.signal
-                ? AbortSignal.any([options.signal, timeoutSignal])
+            const signal = fetchOptions.signal
+                ? AbortSignal.any([fetchOptions.signal, timeoutSignal])
                 : timeoutSignal;
 
             const response = await fetch(url, {
-                ...options,
+                ...fetchOptions,
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
-                    ...(options.headers || {})
+                    ...(fetchOptions.headers || {})
                 },
                 signal
             });
@@ -134,14 +134,14 @@ export async function customFetch(
                 throw new Error(`Error fetching ${url}: ${response.status} ${response.statusText}`);
             }
 
-            if (options.returnType === 'bytes') {
+            if (returnType === 'bytes') {
                 return await response.bytes();
-            } else if (options.returnType === 'text') {
+            } else if (returnType === 'text') {
                 return await response.text();
-            } else if (options.returnType === 'json') {
+            } else if (returnType === 'json') {
                 return await response.json();
             } else {
-                throw new Error(`Invalid return type: ${options.returnType}`);
+                throw new Error(`Invalid return type: ${returnType}`);
             }
         } catch (error) {
             lastError = error instanceof Error ? error : new Error(String(error));
@@ -495,3 +495,8 @@ export interface WebsiteScraperInterface {
     extractHostLink(html: string): string | undefined;
     extractTags(html: string): string[] | undefined;
 }
+
+type CustomFetchOptions = RequestInit & {
+	/** Extra attempts after the first request. Defaults to 5. */
+	maxRetries?: number;
+};
