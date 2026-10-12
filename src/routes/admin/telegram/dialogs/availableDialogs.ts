@@ -1,18 +1,21 @@
 /**
- * Maps a primary-account dialog to an admin picker candidate.
+ * Maps a scrape-account dialog to an admin picker candidate.
  * Skips users/bots and forbidden chats; keeps groups and channels only.
  * `dialog.id` is already the marked peer id from teleproto (`utils.getPeerId`).
  */
-export function availableTelegramDialogFromDialog(dialog: {
-	isUser: boolean
-	isGroup: boolean
-	isChannel: boolean
-	id?: { toString(): string } | null
-	name?: string | null
-	title?: string | null
-	date?: number
-	entity?: { className?: string; username?: string | null } | null
-}): AvailableTelegramDialog | null {
+export function availableTelegramDialogFromDialog(
+	dialog: {
+		isUser: boolean
+		isGroup: boolean
+		isChannel: boolean
+		id?: { toString(): string } | null
+		name?: string | null
+		title?: string | null
+		date?: number
+		entity?: { className?: string; username?: string | null } | null
+	},
+	accountId: TelegramDialogAccountId,
+): AvailableTelegramDialog | null {
 	if (dialog.isUser) return null
 	if (!dialog.isGroup && !dialog.isChannel) return null
 
@@ -40,6 +43,7 @@ export function availableTelegramDialogFromDialog(dialog: {
 		name,
 		kind,
 		username,
+		accountId,
 		lastMessageTime: dialog.date ? new Date(dialog.date * 1000) : null,
 	}
 }
@@ -54,10 +58,17 @@ export function excludeExistingTelegramTargets(args: {
 	return args.dialogs.filter((dialog) => !existing.has(dialog.roomId))
 }
 
+export function telegramAccountLabel(accountId: TelegramDialogAccountId) {
+	return accountId === `primary` ? `Primär` : `Sekundär`
+}
+
+export type TelegramDialogAccountId = `primary` | `fallback`
+
 export type AvailableTelegramDialog = {
 	roomId: string
 	name: string
 	kind: `group` | `channel`
 	username: string | null
+	accountId: TelegramDialogAccountId
 	lastMessageTime: Date | null
 }

@@ -10,6 +10,10 @@
 		lookupTimezoneFromAddress,
 		saveTelegramScrapingTarget,
 	} from './adminTelegram.remote';
+	import {
+		telegramAccountLabel,
+		type TelegramDialogAccountId,
+	} from './dialogs/availableDialogs';
 	import { TableStickyScroll } from '$lib/tableStickyScroll.svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -17,7 +21,9 @@
 	const targetsQuery = getTelegramScrapingTargets();
 	const availableDialogsQuery = getAvailableTelegramDialogs();
 	const targets = $derived(targetsQuery.current ?? data.targets);
-	const availableDialogs = $derived(availableDialogsQuery.current ?? data.availableDialogs);
+	const availableDialogsPayload = $derived(availableDialogsQuery.current ?? data.availableDialogs);
+	const availableDialogs = $derived(availableDialogsPayload.dialogs);
+	const scrapeAccounts = $derived(availableDialogsPayload.accounts);
 	const availableDialogsError = $derived.by(() => {
 		const queryError = availableDialogsQuery.error;
 		if (queryError instanceof Error && queryError.message.trim()) return queryError.message;
@@ -43,6 +49,7 @@
 	let selectedDialogForAdd = $state<{ roomId: string; name: string } | null>(null);
 	let dialogFilter = $state(``);
 	let dialogKindFilter = $state<DialogKindFilter>(`groups`);
+	let dialogAccountFilter = $state<TelegramDialogAccountId>(`primary`);
 	let isDeleting = $state(false);
 	let timezoneLookupAddress = ``;
 	const selectedTarget = $derived(targets.find((target) => target.roomId === selectedRoomId) ?? null);
@@ -53,9 +60,22 @@
 		{ value: `channels`, label: `Kanäle` },
 	] as const;
 
+	const dialogAccountOptions = $derived(
+		scrapeAccounts.map((accountId) => ({
+			value: accountId,
+			label: telegramAccountLabel(accountId),
+		})),
+	);
+
+	const selectedDialogAccount = $derived.by(() => {
+		if (scrapeAccounts.includes(dialogAccountFilter)) return dialogAccountFilter;
+		return scrapeAccounts[0] ?? `primary`;
+	});
+
 	const filteredAvailableDialogs = $derived.by(() => {
 		const query = dialogFilter.trim().toLowerCase();
 		return availableDialogs.filter((dialog) => {
+			if (dialog.accountId !== selectedDialogAccount) return false;
 			if (dialogKindFilter === `groups` && dialog.kind !== `group`) return false;
 			if (dialogKindFilter === `channels` && dialog.kind !== `channel`) return false;
 			if (!query) return true;
@@ -472,9 +492,24 @@
 						<p class="text-base-content/70 text-sm">
 							Wähle eine Gruppe oder einen Kanal aus, der noch kein Scraping-Target ist.
 						</p>
-						<div class="flex flex-col gap-2 sm:flex-row">
+						<div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+							{#if dialogAccountOptions.length}
+								<select
+									class="select w-full sm:w-40"
+									value={selectedDialogAccount}
+									aria-label="Account wählen"
+									data-testid="telegram-dialog-account-filter"
+									onchange={(event) => {
+										dialogAccountFilter = event.currentTarget.value as TelegramDialogAccountId;
+									}}
+								>
+									{#each dialogAccountOptions as option (option.value)}
+										<option value={option.value}>{option.label}</option>
+									{/each}
+								</select>
+							{/if}
 							<select
-								class="select w-full sm:w-44"
+								class="select w-full sm:w-40"
 								bind:value={dialogKindFilter}
 								aria-label="Art filtern"
 								data-testid="telegram-dialog-kind-filter"
@@ -511,12 +546,12 @@
 							{/if}
 						{:else if !filteredAvailableDialogs.length}
 							<p class="text-base-content/70 text-sm">
-								Keine Einträge für diese Filterung.
+								Keine Einträge für „{telegramAccountLabel(selectedDialogAccount)}“ mit dieser Filterung.
 							</p>
 						{:else}
 							<div class="max-h-[70vh] overflow-y-auto overscroll-contain">
 								<ul class="flex w-full flex-col gap-1.5">
-									{#each filteredAvailableDialogs as dialog (dialog.roomId)}
+									{#each filteredAvailableDialogs as dialog (`${dialog.accountId}:${dialog.roomId}`)}
 										<li class="w-full min-w-0">
 											<button
 												type="button"
@@ -528,6 +563,9 @@
 													<span class="truncate text-sm font-medium">{dialog.name}</span>
 													<span class="badge badge-ghost badge-xs shrink-0">
 														{dialog.kind === `channel` ? `Kanal` : `Gruppe`}
+													</span>
+													<span class="badge badge-outline badge-xs shrink-0">
+														{telegramAccountLabel(dialog.accountId)}
 													</span>
 												</span>
 												{#if dialog.username}
