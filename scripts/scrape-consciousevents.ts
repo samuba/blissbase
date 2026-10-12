@@ -13,6 +13,7 @@ import {
 	cleanProseHtml,
 	customFetch,
 	dateToIsoStr,
+	isTimeoutError,
 	sleep,
 	superTrim,
 	type TimeZoneString,
@@ -23,7 +24,12 @@ const SITE_BASE = `https://conscious-events.com`;
 const SITEMAP_URL = `${SITE_BASE}/sitemap.xml`;
 const DEFAULT_TIMEZONE = `Europe/Berlin` as const;
 const SOURCE = `consciousevents` as const;
-const DETAIL_CONCURRENCY = 6;
+/** One at a time — GHA IPs hit Vercel 429 when concurrency bursts. */
+const DETAIL_CONCURRENCY = 1;
+/** Pace detail/listing fetches so retries do not keep a soft-ban hot. */
+const DETAIL_DELAY_MS = 3000;
+const SOFT_BLOCK_COOLDOWN_MS = 60_000;
+const MAX_CONSECUTIVE_SOFT_BLOCKS = 5;
 const SKIP_SLUGS = new Set([`anmeldung-testevent`]);
 
 export class WebsiteScraper implements WebsiteScraperInterface {
@@ -36,15 +42,36 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const occurrenceUrls = await this.collectOccurrenceUrls(baseUrls);
 		console.error(`Fetching ${occurrenceUrls.length} upcoming occurrence pages...`);
 
+		let consecutiveSoftBlocks = 0;
+		let abortRemaining = false;
+
 		const results = await mapWithConcurrency({
 			items: occurrenceUrls,
 			concurrency: DETAIL_CONCURRENCY,
 			mapper: async (url) => {
+				if (abortRemaining) return undefined;
+
 				try {
 					const html = await customFetch(url, { returnType: `text` });
+					consecutiveSoftBlocks = 0;
 					return await this.extractEventData(html, url);
 				} catch (error) {
 					console.error(`Failed to process ${url}:`, error);
+					if (!isSoftBlockError(error)) return undefined;
+
+					consecutiveSoftBlocks += 1;
+					const pauseMs = Math.min(SOFT_BLOCK_COOLDOWN_MS * consecutiveSoftBlocks, 180_000);
+					console.error(
+						`Soft-blocked (${consecutiveSoftBlocks}x). Cooling down ${pauseMs}ms before continuing...`,
+					);
+					await sleep(pauseMs);
+
+					if (consecutiveSoftBlocks >= MAX_CONSECUTIVE_SOFT_BLOCKS) {
+						console.error(
+							`Stopping detail fetches after ${consecutiveSoftBlocks} consecutive soft blocks.`,
+						);
+						abortRemaining = true;
+					}
 					return undefined;
 				}
 			},
@@ -451,13 +478,18 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 	private async collectOccurrenceUrls(baseUrls: string[]): Promise<string[]> {
 		const occurrenceUrls = new Set<string>();
+		let consecutiveSoftBlocks = 0;
+		let abortRemaining = false;
 
 		const results = await mapWithConcurrency({
 			items: baseUrls,
 			concurrency: DETAIL_CONCURRENCY,
 			mapper: async (baseUrl) => {
+				if (abortRemaining) return [];
+
 				try {
 					const html = await customFetch(baseUrl, { returnType: `text` });
+					consecutiveSoftBlocks = 0;
 					const occ = this.extractOccurrenceUrls(html);
 					if (occ?.length) return occ;
 
@@ -467,6 +499,21 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 					return [];
 				} catch (error) {
 					console.error(`Failed to list occurrences for ${baseUrl}:`, error);
+					if (!isSoftBlockError(error)) return [];
+
+					consecutiveSoftBlocks += 1;
+					const pauseMs = Math.min(SOFT_BLOCK_COOLDOWN_MS * consecutiveSoftBlocks, 180_000);
+					console.error(
+						`Soft-blocked while listing (${consecutiveSoftBlocks}x). Cooling down ${pauseMs}ms...`,
+					);
+					await sleep(pauseMs);
+
+					if (consecutiveSoftBlocks >= MAX_CONSECUTIVE_SOFT_BLOCKS) {
+						console.error(
+							`Stopping occurrence listing after ${consecutiveSoftBlocks} consecutive soft blocks.`,
+						);
+						abortRemaining = true;
+					}
 					return [];
 				}
 			},
@@ -673,6 +720,11 @@ function isFutureYymmddTime(args: {
 	return isFutureIso(iso, now);
 }
 
+function isSoftBlockError(error: unknown): boolean {
+	if (isTimeoutError(error)) return true;
+	return error instanceof Error && error.message.includes(`429`);
+}
+
 async function mapWithConcurrency<T, R>(args: {
 	items: T[];
 	concurrency: number;
@@ -689,7 +741,7 @@ async function mapWithConcurrency<T, R>(args: {
 			const index = nextIndex;
 			nextIndex += 1;
 			results[index] = await mapper(items[index]);
-			if (nextIndex < items.length) await sleep(50);
+			if (nextIndex < items.length) await sleep(DETAIL_DELAY_MS);
 		}
 	}
 
