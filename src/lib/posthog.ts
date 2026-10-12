@@ -36,6 +36,11 @@ export function filterPosthogBrowserNoise(event: CaptureResult | null): CaptureR
 	return event;
 }
 
+export function capturePosthogException(error: unknown, properties: Record<string, unknown>) {
+	if (!browser || !posthog.__loaded) return;
+	posthog.captureException(error, properties);
+}
+
 /** Shared by the browser `identify` call and the server-side `$set` so both stay in sync. */
 export function buildPosthogPersonProperties(args: {
 	email: string | undefined;
