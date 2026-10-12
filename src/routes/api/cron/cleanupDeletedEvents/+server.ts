@@ -8,6 +8,7 @@ import type { DeletedEventRow } from "$lib/server/schema";
 // cron job: cleanupDeletedEvents
 
 const MAX_ATTEMPTS = 5;
+const BATCH_SIZE = 1000;
 // Scrapers delete and re-insert events with the same image urls, so give them time to finish.
 const MIN_AGE_MS = 60 * 60 * 1000;
 const DONE_RETENTION_MS = 60 * 24 * 60 * 60 * 1000;
@@ -17,21 +18,26 @@ export const GET: RequestHandler = async ({ request }) => {
 		return error(401, `Unauthorized`);
 	}
 
-	const rows = await db
-		.select()
-		.from(s.eventDeletedOutbox)
-		.where(and(
-			eq(s.eventDeletedOutbox.status, `pending`),
-			lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))
-		))
-		.orderBy(asc(s.eventDeletedOutbox.createdAt))
-		.limit(1000);
-
+	let processedCount = 0;
 	let doneCount = 0;
 	let failedCount = 0;
-	const rowIds = rows.map((row) => row.id);
 
-	if (rowIds?.length) {
+	while (true) {
+		const rows = await db
+			.select()
+			.from(s.eventDeletedOutbox)
+			.where(and(
+				eq(s.eventDeletedOutbox.status, `pending`),
+				lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))
+			))
+			.orderBy(asc(s.eventDeletedOutbox.createdAt))
+			.limit(BATCH_SIZE);
+
+		if (!rows?.length) break;
+
+		processedCount += rows.length;
+		const rowIds = rows.map((row) => row.id);
+
 		try {
 			// Events are already gone from DB (and any search index) via the delete trigger;
 			// this outbox only cleans orphaned R2 images + imageCacheMap rows.
@@ -45,10 +51,10 @@ export const GET: RequestHandler = async ({ request }) => {
 					processedAt: new Date()
 				})
 				.where(inArray(s.eventDeletedOutbox.id, rowIds));
-			doneCount = rows.length;
+			doneCount += rows.length;
 		} catch (err) {
 			console.error(`Failed to clean up deleted event images:`, err);
-			failedCount = rows.length;
+			failedCount += rows.length;
 			const lastError = err instanceof Error ? err.message : String(err);
 			// Shared blob cleanup failed together — attribute the failure to every row in this run.
 			for (const row of rows) {
@@ -62,7 +68,11 @@ export const GET: RequestHandler = async ({ request }) => {
 					})
 					.where(eq(s.eventDeletedOutbox.id, row.id));
 			}
+			// Stop so we don't immediately re-pick the same still-pending rows.
+			break;
 		}
+
+		if (rows.length < BATCH_SIZE) break;
 	}
 
 	const purged = await db
@@ -73,7 +83,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		))
 		.returning({ id: s.eventDeletedOutbox.id });
 
-	const result = { processedCount: rows.length, doneCount, failedCount, purgedOutboxEntriesCount: purged.length };
+	const result = { processedCount, doneCount, failedCount, purgedOutboxEntriesCount: purged.length };
 	console.log(`Cleaned up deleted events:`, result);
 	return json(result);
 };
