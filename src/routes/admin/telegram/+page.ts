@@ -1,8 +1,8 @@
+import type { PageLoad } from "./$types";
 import {
 	getAvailableTelegramDialogs,
 	getTelegramScrapingTargets,
-} from "$lib/rpc/adminTelegram.remote";
-import type { PageLoad } from "./$types";
+} from "./adminTelegram.remote";
 
 export const load = (async () => {
 	const targets = await getTelegramScrapingTargets();

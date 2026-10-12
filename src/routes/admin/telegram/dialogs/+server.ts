@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { Config } from '@sveltejs/adapter-vercel';
 import type { RequestHandler } from './$types';
-import { listPrimaryTelegramGroupDialogs } from '$lib/server/telegramClient';
+import { listPrimaryTelegramGroupDialogs } from './listPrimary';
 
 export const config: Config = {
 	// teleproto is heavy — keep it out of the shared remotes/catchall function

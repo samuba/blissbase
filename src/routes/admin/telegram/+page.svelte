@@ -9,7 +9,7 @@
 		getTelegramScrapingTargets,
 		lookupTimezoneFromAddress,
 		saveTelegramScrapingTarget,
-	} from '$lib/rpc/adminTelegram.remote';
+	} from './adminTelegram.remote';
 	import { TableStickyScroll } from '$lib/tableStickyScroll.svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -489,9 +489,17 @@
 						{/if}
 						{#if !availableDialogs.length}
 							{#if !availableDialogsQuery.loading}
-								<p class="text-base-content/70 text-sm">
-									Keine verfügbaren Gruppen/Kanäle. Alle sind bereits Targets, oder TELEGRAM_APP_SESSION_PRIMARY fehlt bzw. der Primary-Account ist noch in keiner Gruppe.
-								</p>
+								{#if availableDialogsQuery.error}
+									<p class="text-error text-sm">
+										{availableDialogsQuery.error instanceof Error
+											? availableDialogsQuery.error.message
+											: `Telegram-Dialoge konnten nicht geladen werden`}
+									</p>
+								{:else}
+									<p class="text-base-content/70 text-sm">
+										Keine verfügbaren Gruppen/Kanäle. Alle sind bereits Targets, oder TELEGRAM_APP_SESSION_PRIMARY fehlt bzw. der Primary-Account ist noch in keiner Gruppe.
+									</p>
+								{/if}
 							{/if}
 						{:else if !filteredAvailableDialogs.length}
 							<p class="text-base-content/70 text-sm">

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	availableTelegramDialogFromDialog,
 	excludeExistingTelegramTargets,
-} from './telegramDialogs'
+} from './availableDialogs'
 
 describe(`availableTelegramDialogFromDialog`, () => {
 	it(`maps megagroups as groups with peer roomId`, () => {

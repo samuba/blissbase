@@ -6,8 +6,8 @@ import * as v from 'valibot';
 import { isAdminSession } from '$lib/server/admin';
 import { db, eq, s } from '$lib/server/db';
 import { geocodeAddressCached } from '$lib/server/google';
-import { excludeExistingTelegramTargets } from '$lib/server/telegramDialogs';
 import { routes } from '$lib/routes';
+import { excludeExistingTelegramTargets } from './dialogs/availableDialogs';
 
 function toAddressLines(address: string) {
 	if (!address.trim()) return [];
