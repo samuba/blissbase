@@ -10,6 +10,7 @@ import { StringSession } from 'teleproto/sessions';
 import {
 	availableTelegramDialogFromDialog,
 	type AvailableTelegramDialog,
+	type TelegramDialogAccountId,
 } from './availableDialogs';
 
 /**
@@ -20,6 +21,7 @@ import {
 export async function listPrimaryTelegramGroupDialogs(): Promise<{
 	accounts: TelegramAccountId[]
 	dialogs: AvailableTelegramDialog[]
+	accountStatuses: AccountDialogStatus[]
 }> {
 	const apiId = Number(env.TELEGRAM_APP_ID);
 	const apiHash = env.TELEGRAM_APP_HASH?.trim();
@@ -43,23 +45,39 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<{
 					session: account.session,
 					accountId: account.id,
 				});
-				return { accountId: account.id, dialogs, error: null };
+				return { accountId: account.id, dialogs, error: null as string | null };
 			} catch (err) {
 				const message = err instanceof Error ? err.message : String(err);
 				console.error(`Failed listing Telegram dialogs for ${account.id}:`, err);
-				return { accountId: account.id, dialogs: [], error: message };
+				return { accountId: account.id, dialogs: [] as AvailableTelegramDialog[], error: message };
 			}
 		}),
 	);
 
 	const available = results.flatMap((result) => result.dialogs);
-	const accountErrors = results
-		.filter((result) => result.error)
-		.map((result) => `${result.accountId}: ${result.error}`);
+	const accountStatuses = results.map((result) => ({
+		accountId: result.accountId as TelegramDialogAccountId,
+		listed: result.dialogs.length,
+		error: result.error,
+	}));
+	const accountErrors = accountStatuses
+		.filter((status) => status.error)
+		.map((status) => `${status.accountId}: ${status.error}`);
 
 	if (!available.length && accountErrors.length) {
 		throw new Error(accountErrors.join(`; `));
 	}
+
+	console.info(
+		`Telegram dialog listing:`,
+		accountStatuses
+			.map((status) =>
+				status.error
+					? `${status.accountId}=error(${status.error})`
+					: `${status.accountId}=${status.listed}`,
+			)
+			.join(`, `),
+	);
 
 	available.sort((a, b) => {
 		const accountCmp = a.accountId.localeCompare(b.accountId);
@@ -70,7 +88,7 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<{
 		return a.name.localeCompare(b.name, `de`, { sensitivity: `base` });
 	});
 
-	return { accounts: accountIds, dialogs: available };
+	return { accounts: accountIds, dialogs: available, accountStatuses };
 }
 
 async function listDialogsForSession(args: {
@@ -93,7 +111,8 @@ async function listDialogsForSession(args: {
 			);
 		}
 
-		const dialogs = await client.getDialogs({ ignoreMigrated: true });
+		// Match scraper: do not pass ignoreMigrated (can hide still-useful dialogs).
+		const dialogs = await client.getDialogs({});
 		const available: AvailableTelegramDialog[] = [];
 		for (const dialog of dialogs) {
 			try {
@@ -108,4 +127,10 @@ async function listDialogsForSession(args: {
 	} finally {
 		await client.disconnect();
 	}
+}
+
+type AccountDialogStatus = {
+	accountId: TelegramDialogAccountId
+	listed: number
+	error: string | null
 }

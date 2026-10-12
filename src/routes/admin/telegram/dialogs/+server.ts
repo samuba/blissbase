@@ -16,9 +16,10 @@ export const GET: RequestHandler = async ({ locals }) => {
 	}
 
 	try {
-		const { accounts, dialogs } = await listPrimaryTelegramGroupDialogs();
+		const { accounts, dialogs, accountStatuses } = await listPrimaryTelegramGroupDialogs();
 		return json({
 			accounts,
+			accountStatuses,
 			dialogs: dialogs.map((dialog) => ({
 				...dialog,
 				lastMessageTime: dialog.lastMessageTime?.toISOString() ?? null,
