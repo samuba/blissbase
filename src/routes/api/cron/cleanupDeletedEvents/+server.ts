@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))
 		))
 		.orderBy(asc(s.eventDeletedOutbox.createdAt))
-		.limit(200);
+		.limit(1000);
 
 	let doneCount = 0;
 	let failedCount = 0;
