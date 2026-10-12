@@ -6,6 +6,8 @@ import { listPrimaryTelegramGroupDialogs } from './listPrimary';
 export const config: Config = {
 	// teleproto is heavy — keep it out of the shared remotes/catchall function
 	split: true,
+	// Connecting scrape sessions + getDialogs regularly exceeds the default limit.
+	maxDuration: 60,
 };
 
 export const GET: RequestHandler = async ({ locals }) => {

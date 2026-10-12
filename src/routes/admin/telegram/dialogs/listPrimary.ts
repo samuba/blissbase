@@ -15,6 +15,7 @@ import {
 /**
  * Lists groups/channels per configured scrape account (PRIMARY, then FALLBACK/legacy).
  * Each dialog is tagged with `accountId` so the admin picker can filter by account.
+ * Accounts are listed in parallel — sequential connects made the picker feel stuck.
  */
 export async function listPrimaryTelegramGroupDialogs(): Promise<{
 	accounts: TelegramAccountId[]
@@ -33,24 +34,28 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<{
 	}
 
 	const accountIds = accounts.map((account) => account.id);
-	const available: AvailableTelegramDialog[] = [];
-	const accountErrors: string[] = [];
+	const results = await Promise.all(
+		accounts.map(async (account) => {
+			try {
+				const dialogs = await listDialogsForSession({
+					apiId,
+					apiHash,
+					session: account.session,
+					accountId: account.id,
+				});
+				return { accountId: account.id, dialogs, error: null };
+			} catch (err) {
+				const message = err instanceof Error ? err.message : String(err);
+				console.error(`Failed listing Telegram dialogs for ${account.id}:`, err);
+				return { accountId: account.id, dialogs: [], error: message };
+			}
+		}),
+	);
 
-	for (const account of accounts) {
-		try {
-			const listed = await listDialogsForSession({
-				apiId,
-				apiHash,
-				session: account.session,
-				accountId: account.id,
-			});
-			available.push(...listed);
-		} catch (err) {
-			const message = err instanceof Error ? err.message : String(err);
-			console.error(`Failed listing Telegram dialogs for ${account.id}:`, err);
-			accountErrors.push(`${account.id}: ${message}`);
-		}
-	}
+	const available = results.flatMap((result) => result.dialogs);
+	const accountErrors = results
+		.filter((result) => result.error)
+		.map((result) => `${result.accountId}: ${result.error}`);
 
 	if (!available.length && accountErrors.length) {
 		throw new Error(accountErrors.join(`; `));
@@ -77,6 +82,7 @@ async function listDialogsForSession(args: {
 	const client = new TelegramClient(new StringSession(args.session), args.apiId, args.apiHash, {
 		connectionRetries: 5,
 	});
+	client.setLogLevel(LogLevel.NONE);
 
 	try {
 		await client.connect();
@@ -86,7 +92,6 @@ async function listDialogsForSession(args: {
 				`Telegram session for account "${args.accountId}" is invalid or expired. Run scripts/telegram-login.ts and update the matching TELEGRAM_APP_SESSION_* env.`,
 			);
 		}
-		client.setLogLevel(LogLevel.NONE);
 
 		const dialogs = await client.getDialogs({ ignoreMigrated: true });
 		const available: AvailableTelegramDialog[] = [];

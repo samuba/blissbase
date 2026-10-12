@@ -19,20 +19,27 @@
 
 	let { data } = $props();
 	const targetsQuery = getTelegramScrapingTargets();
-	const availableDialogsQuery = getAvailableTelegramDialogs();
+	// Lazy: teleproto listing is slow — only start when the add dialog opens.
+	// raw: RemoteQuery must not be deeply proxied by $state.
+	let availableDialogsQuery = $state.raw<ReturnType<typeof getAvailableTelegramDialogs> | null>(
+		null,
+	);
 	const targets = $derived(targetsQuery.current ?? data.targets);
-	const availableDialogsPayload = $derived(availableDialogsQuery.current ?? data.availableDialogs);
+	const availableDialogsPayload = $derived(
+		availableDialogsQuery?.current ?? { accounts: [], dialogs: [] },
+	);
 	const availableDialogs = $derived(availableDialogsPayload.dialogs);
 	const scrapeAccounts = $derived(availableDialogsPayload.accounts);
+	const availableDialogsLoading = $derived(availableDialogsQuery?.loading ?? false);
 	const availableDialogsError = $derived.by(() => {
-		const queryError = availableDialogsQuery.error;
+		const queryError = availableDialogsQuery?.error;
+		if (!queryError) return null;
 		if (queryError instanceof Error && queryError.message.trim()) return queryError.message;
 		if (typeof queryError === `object` && queryError && `body` in queryError) {
 			const body = (queryError as { body?: { message?: string } }).body;
 			if (body?.message?.trim()) return body.message;
 		}
-		if (queryError) return `Telegram-Dialoge konnten nicht geladen werden`;
-		return data.availableDialogsError ?? null;
+		return `Telegram-Dialoge konnten nicht geladen werden`;
 	});
 	const defaultFormValues = {
 		originalRoomId: ``,
@@ -131,9 +138,18 @@
 		selectedDialogForAdd = null;
 		dialogFilter = ``;
 		dialogKindFilter = `groups`;
+		dialogAccountFilter = `primary`;
 		saveTelegramScrapingTarget.fields.set(defaultFormValues);
-		void availableDialogsQuery.refresh();
 		isAddDialogOpen = true;
+		ensureAvailableDialogsLoaded();
+	}
+
+	function ensureAvailableDialogsLoaded() {
+		if (!availableDialogsQuery) {
+			availableDialogsQuery = getAvailableTelegramDialogs();
+			return;
+		}
+		void availableDialogsQuery.refresh();
 	}
 
 	function closeAddDialog() {
@@ -141,6 +157,7 @@
 		selectedDialogForAdd = null;
 		dialogFilter = ``;
 		dialogKindFilter = `groups`;
+		dialogAccountFilter = `primary`;
 		saveTelegramScrapingTarget.fields.set(defaultFormValues);
 	}
 
@@ -351,7 +368,12 @@
 			</p>
 		</div>
 		<div class="flex flex-wrap items-center gap-2">
-			<button type="button" class="btn btn-primary btn-sm" onclick={openAddDialog}>
+			<button
+				type="button"
+				class="btn btn-primary btn-sm"
+				data-testid="telegram-add-target-button"
+				onclick={openAddDialog}
+			>
 				<i class="icon-[ph--plus] size-4"></i>
 				Hinzufügen
 			</button>
@@ -526,14 +548,23 @@
 								data-testid="telegram-dialog-filter"
 							/>
 						</div>
-						{#if availableDialogsQuery.loading}
-							<div class="flex items-center gap-2">
+						{#if availableDialogsLoading && !availableDialogs.length}
+							<div
+								class="flex flex-col items-center justify-center gap-2 py-10"
+								data-testid="telegram-dialogs-loading"
+							>
+								<span class="loading loading-spinner loading-md"></span>
+								<p class="text-base-content/70 text-sm">Telegram-Dialoge werden geladen…</p>
+								<p class="text-base-content/50 text-xs">Das kann einige Sekunden dauern.</p>
+							</div>
+						{:else if availableDialogsLoading}
+							<div class="flex items-center gap-2" data-testid="telegram-dialogs-loading">
 								<span class="loading loading-spinner loading-xs"></span>
-								<span class="text-base-content/70 text-sm">Lade…</span>
+								<span class="text-base-content/70 text-sm">Aktualisiere Dialoge…</span>
 							</div>
 						{/if}
 						{#if !availableDialogs.length}
-							{#if !availableDialogsQuery.loading}
+							{#if !availableDialogsLoading}
 								{#if availableDialogsError}
 									<p class="text-error text-sm" data-testid="telegram-dialogs-error">
 										{availableDialogsError}
