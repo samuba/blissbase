@@ -1,5 +1,8 @@
 import { env } from '$env/dynamic/private';
-import { missingTelegramSessionConfigMessage } from '$lib/server/telegramAccounts';
+import {
+	missingTelegramSessionConfigMessage,
+	parseTelegramAccountSessions,
+} from '$lib/server/telegramAccounts';
 import { TelegramClient } from 'teleproto';
 import { LogLevel } from 'teleproto/extensions/Logger';
 import { StringSession } from 'teleproto/sessions';
@@ -9,24 +12,73 @@ import {
 } from './availableDialogs';
 
 /**
- * Lists groups/channels the PRIMARY scrape account is a member of.
- * Does not use FALLBACK — the admin picker is intentionally primary-only.
+ * Lists groups/channels from configured scrape accounts (PRIMARY then FALLBACK/legacy).
+ * Merges by roomId so membership on either account shows up in the admin picker.
+ * Per-account failures are skipped so one bad session does not hide the other's dialogs.
  */
 export async function listPrimaryTelegramGroupDialogs(): Promise<AvailableTelegramDialog[]> {
 	const apiId = Number(env.TELEGRAM_APP_ID);
 	const apiHash = env.TELEGRAM_APP_HASH?.trim();
-	const primarySession = env.TELEGRAM_APP_SESSION_PRIMARY?.trim();
+	const accounts = parseTelegramAccountSessions({
+		TELEGRAM_APP_SESSION_PRIMARY: env.TELEGRAM_APP_SESSION_PRIMARY,
+		TELEGRAM_APP_SESSION_FALLBACK: env.TELEGRAM_APP_SESSION_FALLBACK,
+		TELEGRAM_APP_SESSION: env.TELEGRAM_APP_SESSION,
+	});
 
-	if (!apiId || !apiHash) {
+	if (!apiId || !apiHash || !accounts.length) {
 		throw new Error(missingTelegramSessionConfigMessage());
 	}
-	if (!primarySession) {
-		throw new Error(
-			`TELEGRAM_APP_SESSION_PRIMARY is required to list Telegram groups/channels. Mint a session with scripts/telegram-login.ts and set it on Vercel / .env.`,
-		);
+
+	const byRoomId = new Map<string, AvailableTelegramDialog>();
+	const accountErrors: string[] = [];
+
+	for (const account of accounts) {
+		try {
+			const listed = await listDialogsForSession({
+				apiId,
+				apiHash,
+				session: account.session,
+				accountId: account.id,
+			});
+			for (const dialog of listed) {
+				const existing = byRoomId.get(dialog.roomId);
+				if (!existing) {
+					byRoomId.set(dialog.roomId, dialog);
+					continue;
+				}
+				const existingTime = existing.lastMessageTime?.getTime() ?? 0;
+				const nextTime = dialog.lastMessageTime?.getTime() ?? 0;
+				if (nextTime > existingTime) byRoomId.set(dialog.roomId, dialog);
+			}
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			console.error(`Failed listing Telegram dialogs for ${account.id}:`, err);
+			accountErrors.push(`${account.id}: ${message}`);
+		}
 	}
 
-	const client = new TelegramClient(new StringSession(primarySession), apiId, apiHash, {
+	if (!byRoomId.size && accountErrors.length) {
+		throw new Error(accountErrors.join(`; `));
+	}
+
+	const available = [...byRoomId.values()];
+	available.sort((a, b) => {
+		const aTime = a.lastMessageTime?.getTime() ?? 0;
+		const bTime = b.lastMessageTime?.getTime() ?? 0;
+		if (aTime !== bTime) return bTime - aTime;
+		return a.name.localeCompare(b.name, `de`, { sensitivity: `base` });
+	});
+
+	return available;
+}
+
+async function listDialogsForSession(args: {
+	apiId: number
+	apiHash: string
+	session: string
+	accountId: string
+}) {
+	const client = new TelegramClient(new StringSession(args.session), args.apiId, args.apiHash, {
 		connectionRetries: 5,
 	});
 
@@ -35,7 +87,7 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<AvailableTelegr
 		const authorized = await client.checkAuthorization();
 		if (!authorized) {
 			throw new Error(
-				`Telegram session for account "primary" is invalid or expired. Run scripts/telegram-login.ts and update TELEGRAM_APP_SESSION_PRIMARY in .env`,
+				`Telegram session for account "${args.accountId}" is invalid or expired. Run scripts/telegram-login.ts and update the matching TELEGRAM_APP_SESSION_* env.`,
 			);
 		}
 		client.setLogLevel(LogLevel.NONE);
@@ -48,17 +100,9 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<AvailableTelegr
 				if (!mapped) continue;
 				available.push(mapped);
 			} catch (err) {
-				console.error(`Skipping Telegram dialog while listing:`, err);
+				console.error(`Skipping Telegram dialog while listing (${args.accountId}):`, err);
 			}
 		}
-
-		available.sort((a, b) => {
-			const aTime = a.lastMessageTime?.getTime() ?? 0;
-			const bTime = b.lastMessageTime?.getTime() ?? 0;
-			if (aTime !== bTime) return bTime - aTime;
-			return a.name.localeCompare(b.name, `de`, { sensitivity: `base` });
-		});
-
 		return available;
 	} finally {
 		await client.disconnect();
