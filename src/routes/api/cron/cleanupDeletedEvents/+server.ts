@@ -2,7 +2,7 @@ import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import * as assets from "$lib/assets";
 import { eventAssetsCreds } from "$lib/events.remote.shared";
-import { and, arrayOverlaps, asc, db, eq, inArray, lt, s } from "$lib/server/db";
+import { and, arrayOverlaps, asc, db, eq, inArray, lt, s, sql } from "$lib/server/db";
 import type { DeletedEventRow } from "$lib/server/schema";
 
 // cron job: cleanupDeletedEvents
@@ -25,30 +25,43 @@ export const GET: RequestHandler = async ({ request }) => {
 			lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))
 		))
 		.orderBy(asc(s.eventDeletedOutbox.createdAt))
-		.limit(200);
+		.limit(1000);
 
 	let doneCount = 0;
 	let failedCount = 0;
-	for (const row of rows) {
-		const attempts = row.attempts + 1;
+	const rowIds = rows.map((row) => row.id);
+
+	if (rowIds?.length) {
 		try {
-			await onEventDeleted(row.event);
-			await db
-				.update(s.eventDeletedOutbox)
-				.set({ status: `done`, attempts, lastError: null, processedAt: new Date() })
-				.where(eq(s.eventDeletedOutbox.id, row.id));
-			doneCount++;
-		} catch (err) {
-			console.error(`Failed to clean up deleted event ${row.event.id}:`, err);
-			failedCount++;
+			// Events are already gone from DB (and any search index) via the delete trigger;
+			// this outbox only cleans orphaned R2 images + imageCacheMap rows.
+			await deleteOrphanedEventImages(rows.map((row) => row.event));
 			await db
 				.update(s.eventDeletedOutbox)
 				.set({
-					status: attempts >= MAX_ATTEMPTS ? `failed` : `pending`,
-					attempts,
-					lastError: err instanceof Error ? err.message : String(err)
+					status: `done`,
+					attempts: sql`${s.eventDeletedOutbox.attempts} + 1`,
+					lastError: null,
+					processedAt: new Date()
 				})
-				.where(eq(s.eventDeletedOutbox.id, row.id));
+				.where(inArray(s.eventDeletedOutbox.id, rowIds));
+			doneCount = rows.length;
+		} catch (err) {
+			console.error(`Failed to clean up deleted event images:`, err);
+			failedCount = rows.length;
+			const lastError = err instanceof Error ? err.message : String(err);
+			// Shared blob cleanup failed together — attribute the failure to every row in this run.
+			for (const row of rows) {
+				const attempts = row.attempts + 1;
+				await db
+					.update(s.eventDeletedOutbox)
+					.set({
+						status: attempts >= MAX_ATTEMPTS ? `failed` : `pending`,
+						attempts,
+						lastError
+					})
+					.where(eq(s.eventDeletedOutbox.id, row.id));
+			}
 		}
 	}
 
@@ -65,16 +78,13 @@ export const GET: RequestHandler = async ({ request }) => {
 	return json(result);
 };
 
-async function onEventDeleted(event: DeletedEventRow) {
-	await deleteOrphanedEventImages(event);
-}
-
 /**
- * Deletes the deleted event's images from R2 and the image cache,
- * skipping urls that are still used by another event (e.g. merged duplicates or re-scraped events).
+ * Deletes orphaned images for many deleted events in one pass:
+ * one overlap check, one R2 deleteObjects call, one imageCacheMap delete.
+ * Skips urls still used by another event (e.g. merged duplicates or re-scraped events).
  */
-async function deleteOrphanedEventImages(event: DeletedEventRow) {
-	const imageUrls = [...new Set(event.image_urls?.filter((url) => url?.trim()) ?? [])];
+async function deleteOrphanedEventImages(events: DeletedEventRow[]) {
+	const imageUrls = [...new Set(events.flatMap((event) => event.image_urls?.filter((url) => url?.trim()) ?? []))];
 	if (!imageUrls?.length) return;
 
 	const eventsStillUsingImages = await db
