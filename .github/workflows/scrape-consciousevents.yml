@@ -1,0 +1,19 @@
+name: Scrape conscious-events
+
+# Narrow workflow so scraper fixes on main get an immediate CI check without
+# waiting for the twice-daily full website scrape (workflow_dispatch needs write).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/scrape-consciousevents.ts'
+      - '.github/workflows/scrape-consciousevents.yml'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    name: consciousevents
+    uses: ./.github/workflows/scrape-source.yml
+    with:
+      source: consciousevents
+    secrets: inherit
