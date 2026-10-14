@@ -24,10 +24,15 @@ const SITE_BASE = `https://conscious-events.com`;
 const SITEMAP_URL = `${SITE_BASE}/sitemap.xml`;
 const DEFAULT_TIMEZONE = `Europe/Berlin` as const;
 const SOURCE = `consciousevents` as const;
-/** One at a time — GHA IPs hit Vercel 429 when concurrency bursts. */
+/**
+ * Share-preview UA — their robots.txt allows preview fetching; Chrome UA from
+ * GHA/datacenter IPs gets an immediate Vercel Security Checkpoint (429).
+ */
+const PREVIEW_USER_AGENT = `Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)`;
+/** One at a time — avoid bursts even with the preview UA. */
 const DETAIL_CONCURRENCY = 1;
-/** Pace detail/listing fetches so retries do not keep a soft-ban hot. */
-const DETAIL_DELAY_MS = 3000;
+/** Pace listing/detail fetches; preview UA is allowed but still be gentle. */
+const DETAIL_DELAY_MS = 1000;
 /** Keep per-URL 429 retries short so unrecovered bans fail the job in minutes, not hours. */
 const FETCH_MAX_RETRIES = 2;
 const SOFT_BLOCK_COOLDOWN_MS = 60_000;
@@ -709,7 +714,11 @@ function isFutureYymmddTime(args: {
 }
 
 function fetchPage(url: string) {
-	return customFetch(url, { returnType: `text`, maxRetries: FETCH_MAX_RETRIES });
+	return customFetch(url, {
+		returnType: `text`,
+		maxRetries: FETCH_MAX_RETRIES,
+		headers: { [`User-Agent`]: PREVIEW_USER_AGENT },
+	});
 }
 
 function isSoftBlockError(error: unknown): boolean {
