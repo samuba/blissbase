@@ -27,6 +27,9 @@ jobs:
     name: ${{ inputs.source }}
     runs-on: ubuntu-latest
     environment: production
+    env:
+      # Each matrix job holds its own pool; keep it tiny so N parallel jobs stay under the pooler's pool_size
+      DB_POOL_MAX: 2
     outputs:
       ok: ${{ steps.scrape.outcome == 'success' }}
     steps:
