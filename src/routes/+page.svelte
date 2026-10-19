@@ -83,12 +83,7 @@
 	}
 
 	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
-	const showOfferingsPromo = $derived(
-		!eventsStore.isLoading &&
-			!eventsStore.isLoadingMore &&
-			(!eventsStore.hasEvents ||
-				(eventsStore.pagination.totalPages != null && eventsStore.pagination.page >= eventsStore.pagination.totalPages)),
-	);
+	const reachedEndOfList = $derived(eventsStore.loadingState === `not-loading` && !eventsStore.canLoadMore);
 	const offeringsPromoHref = $derived(
 		routes.offeringsList({
 			location: eventsStore.pagination.plzCity ?? null,
@@ -213,15 +208,18 @@
 						{/each}
 					</div>
 
-					<div
-						{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
-						class="-translate-y-72"
-						data-testid="events-load-more"
-					></div>
+					<!-- Re-observe after each page: the observer only fires on changes, so a sentinel that stays in view would never load the next page. -->
+					{#key eventsStore.events.length}
+						<div
+							{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
+							class="-translate-y-72"
+							data-testid="events-load-more"
+						></div>
+					{/key}
 
 					{#if eventsStore.isLoadingMore}
 						{@render loading(false)}
-					{:else if !eventsStore.canLoadMore}
+					{:else if reachedEndOfList}
 						{@render noResults(true)}
 					{/if}
 				</div>
@@ -232,7 +230,7 @@
 				{@render noResults(false)}
 			{/if}
 
-			{#if showOfferingsPromo}
+			{#if reachedEndOfList}
 				<CrossPromoFooter
 					icon="icon-[ph--hand-heart]"
 					title="Suchst du Einzelsessions?"
@@ -273,7 +271,8 @@
 
 {#snippet loading(reserveVerticalSpace: boolean)}
 	<div class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? 'h-dvh' : 'h-15']}
-		id="events-loading-spinner" 
+		id="events-loading-spinner"
+		data-testid="events-loading"
 	>
 	<span class="loading loading-spinner loading-xl"></span>
 		<p class="">Lade...</p>
