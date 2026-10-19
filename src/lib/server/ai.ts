@@ -6,8 +6,6 @@ import { rewriteRelativeAnchorHrefs, stripHtml, trimAllWhitespaces } from "../co
 
 const TAG_SLUGS_AI_DESCRIPTION = `Maximum 4 Tags (most relevant first) that describe the event. Only use these exact catalog tags: ${Array.from(allTagSlugs).join(`, `)}.`;
 
-const providerOptions = { gateway: { inferenceRegion: { scope: "zone", geoRegion: "eu" } } };
-
 /**
  * Extracts structured event fields from free text (same pipeline as the Telegram bot).
  */
@@ -25,7 +23,6 @@ export async function aiExtractEventData(args: AiExtractEventDataArgs): Promise<
 	try {
 		const { output, usage } = await generateText({
 			model: `openai/gpt-5.6-luna`,
-			providerOptions,
 			reasoning: `medium`,
 			output: Output.object({
 				name: `eventExtraction`,
@@ -80,7 +77,6 @@ export async function aiTranscribeImage({ imageInputs }: { imageInputs: AiImageI
 	try {
 		const { output, usage } = await generateText({
 			model: `openai/gpt-6-luna`,
-			providerOptions,
 			reasoning: `medium`,
 			output: Output.object({
 				name: `imageTranscript`,
@@ -535,7 +531,6 @@ export async function aiPickEmojisForTitles({
 
 	const { output } = await generateText({
 		model: `openai/gpt-6-luna`,
-		providerOptions,
 		reasoning: "low",
 		output: Output.object({
 			name: `titleEmojis`,
