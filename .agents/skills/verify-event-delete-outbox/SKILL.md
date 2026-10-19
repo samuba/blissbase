@@ -93,7 +93,7 @@ Do this when regenerating or after a large model edit:
 
 Last confirmed that this verification describes the code at:
 
-`SYNC_COMMIT: 08787d0610b1674e5b2504533247564f77803a07` — set to the commit that adds this skill on the formal-verify PR; agents must update this only after reconfirming model↔code at a new commit.
+`SYNC_COMMIT: 598b543fe7afc7f289ff10f4bad4283c3523c225` — commit that added this model; product outbox code matched `main` at `d82f0dc361fe6c2879c8a9c17609a6365696eb7d`. Move this forward only after reconfirming model↔code at a new commit.
 
 Covered functions at sync: `GET` and `deleteOrphanedEventImages` in `src/routes/api/cron/cleanupDeletedEvents/+server.ts`.
 
