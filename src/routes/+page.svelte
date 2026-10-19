@@ -2,6 +2,7 @@
 	import EventCard from '$lib/components/EventCard.svelte';
 	import CreateCta from '$lib/components/CreateCta.svelte';
 	import CrossPromoFooter from '$lib/components/CrossPromoFooter.svelte';
+	import EventsNoResults from '$lib/components/EventsNoResults.svelte';
 	import { routes } from '$lib/routes';
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
@@ -296,23 +297,5 @@
 {/snippet}
 
 {#snippet noResults(foundSomeResultsBefore: boolean)}
-	<div class={[noResultsContainerClasses, "h-15"]} role="status" data-testid="events-no-results">
-		<div class="text-gray-500 text-center">
-			{#if foundSomeResultsBefore}
-				Keine weiteren Events gefunden
-			{:else}
-				Keine Events gefunden
-			{/if}
-			{#if eventsStore.hasSearchFilter}
-				mit <br />
-				{#each eventsStore.searchFilter?.split(/\s+/) ?? [] as term, index (index)}{index ? ` & ` : ``}<b>{term}</b>{/each}<br />
-			{/if}
-			{#if eventsStore.hasLocationFilter}
-				in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km Radius)</span><br />
-			{/if}
-			{#if eventsStore.hasDateFilter}
-				vom <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.start!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span> bis <br /> <span class="font-bold">{new Date(eventsStore.dateFilter.end!).toLocaleDateString('de-DE', { dateStyle: 'medium' })}</span><br />
-			{/if}
-		</div>
-	</div>
+	<EventsNoResults {foundSomeResultsBefore} />
 {/snippet}
