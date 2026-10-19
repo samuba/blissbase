@@ -39,9 +39,17 @@ test.describe(`Admin Telegram targets`, () => {
 
 		// Click the row while the add dialog still plays its close animation.
 		await page.evaluate(async () => {
-			document.querySelector<HTMLElement>(`[data-testid="telegram-add-dialog"] button[aria-label="Schließen"]`)?.click();
+			const close = document.querySelector(`[data-testid="telegram-add-dialog"] button[aria-label="Schließen"]`);
+			const row = document.querySelector(`[data-testid="telegram-target-row"]`);
+			if (!(close instanceof HTMLElement) || !(row instanceof HTMLElement)) {
+				throw new Error(`missing add-dialog close button or target row`);
+			}
+			close.click();
 			await new Promise((resolve) => setTimeout(resolve, 30));
-			document.querySelector<HTMLElement>(`[data-testid="telegram-target-row"]`)?.click();
+			if (!document.querySelector(`[data-testid="telegram-add-dialog"] form`)) {
+				throw new Error(`add form unmounted before the close animation finished`);
+			}
+			row.click();
 		});
 
 		const editDialog = page.getByTestId(`telegram-edit-dialog`);

@@ -91,9 +91,12 @@ const telegramDialogsResponseSchema = v.object({
 			kind: v.picklist([`group`, `channel`]),
 			username: v.nullable(v.string()),
 			accountId: accountIdSchema,
-			lastMessageTime: v.pipe(
-				v.nullable(v.string()),
-				v.transform((value) => (value ? new Date(value) : null)),
+			lastMessageTime: v.nullable(
+				v.pipe(
+					v.string(),
+					v.isoTimestamp(),
+					v.transform((value) => new Date(value)),
+				),
 			),
 		}),
 	),

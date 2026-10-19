@@ -171,7 +171,25 @@ describe(`parseTelegramDialogsResponse`, () => {
 		expect(parsed?.dialogs[0].lastMessageTime).toEqual(new Date(dialog.lastMessageTime))
 	})
 
+	it(`keeps a null lastMessageTime`, () => {
+		const parsed = parseTelegramDialogsResponse({
+			accounts: [`primary`],
+			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
+			dialogs: [{ ...dialog, lastMessageTime: null }],
+		})
+
+		expect(parsed?.dialogs[0].lastMessageTime).toBeNull()
+	})
+
 	it(`rejects a response without accounts and accountStatuses`, () => {
 		expect(parseTelegramDialogsResponse({ dialogs: [] })).toBeNull()
+	})
+
+	it(`rejects a dialog whose lastMessageTime is not an ISO timestamp`, () => {
+		expect(parseTelegramDialogsResponse({
+			accounts: [`primary`],
+			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
+			dialogs: [{ ...dialog, lastMessageTime: `not-a-date` }],
+		})).toBeNull()
 	})
 })

@@ -258,16 +258,30 @@ async function fetchPrimaryTelegramDialogs() {
 		headers: { accept: `application/json` },
 	});
 
-	if (res.ok) {
-		const body = parseTelegramDialogsResponse(await res.json());
-		if (body) return body;
-		throw new Error(`Telegram-Dialoge haben ein unerwartetes Format. Bitte später erneut versuchen.`);
+	if (!res.ok) {
+		const status = res.status >= 400 && res.status <= 599 ? res.status : 502;
+		error(status, await readSplitRouteError({
+			res,
+			fallback: `Telegram-Dialoge konnten nicht geladen werden`,
+		}));
 	}
 
-	throw new Error(await readSplitRouteError({
-		res,
-		fallback: `Telegram-Dialoge konnten nicht geladen werden`,
-	}));
+	// A plain Error is rewritten to "Internal Error" before it reaches the admin UI.
+	const unexpectedFormat = `Telegram-Dialoge haben ein unerwartetes Format. Bitte später erneut versuchen.`;
+	let body: unknown;
+	try {
+		body = await res.json();
+	} catch (err) {
+		console.error(`Telegram dialogs response was not JSON:`, err);
+		error(400, unexpectedFormat);
+	}
+
+	const parsed = parseTelegramDialogsResponse(body);
+	if (!parsed) {
+		console.error(`Unexpected Telegram dialogs response shape`);
+		error(400, unexpectedFormat);
+	}
+	return parsed;
 }
 
 async function readSplitRouteError(args: { res: Response; fallback: string }) {

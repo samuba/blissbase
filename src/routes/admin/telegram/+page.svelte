@@ -35,11 +35,12 @@
 	const availableDialogsError = $derived.by(() => {
 		const queryError = availableDialogsQuery?.error;
 		if (!queryError) return null;
-		if (queryError instanceof Error && queryError.message.trim()) return queryError.message;
-		if (typeof queryError === `object` && queryError && `body` in queryError) {
+		// HttpError carries the admin-facing text on body.message and does not extend Error.
+		if (typeof queryError === `object` && `body` in queryError) {
 			const body = (queryError as { body?: { message?: string } }).body;
 			if (body?.message?.trim()) return body.message;
 		}
+		if (queryError instanceof Error && queryError.message.trim()) return queryError.message;
 		return `Telegram-Dialoge konnten nicht geladen werden`;
 	});
 	const defaultFormValues = {
@@ -114,11 +115,11 @@
 	// One instance per dialog: a closing dialog keeps its <form> attached during the out transition.
 	const addTargetForm = saveTelegramScrapingTarget.for(`add`);
 	const editTargetForm = saveTelegramScrapingTarget.for(`edit`);
-	const addFormProps = enhanceSaveTarget(addTargetForm);
-	const editFormProps = enhanceSaveTarget(editTargetForm);
+	const addFormProps = enhanceSaveTarget({ targetForm: addTargetForm, dialog: `add` });
+	const editFormProps = enhanceSaveTarget({ targetForm: editTargetForm, dialog: `edit` });
 
-	function enhanceSaveTarget(targetForm: typeof addTargetForm) {
-		return targetForm.enhance(async (form) => {
+	function enhanceSaveTarget(args: { targetForm: typeof addTargetForm; dialog: `add` | `edit` }) {
+		return args.targetForm.enhance(async (form) => {
 			const ok = await form.submit().updates(getTelegramScrapingTargets, getAvailableTelegramDialogs);
 			if (!ok) return;
 
@@ -126,11 +127,14 @@
 			const name = result?.name;
 			if (result?.action === `updated`) {
 				toast.success(name ? `Target „${name}“ aktualisiert` : `Target aktualisiert`);
+			} else {
+				toast.success(name ? `Target „${name}“ hinzugefügt` : `Target hinzugefügt`);
+			}
+
+			if (args.dialog === `edit`) {
 				onEditDialogOpenChange(false);
 				return;
 			}
-
-			toast.success(name ? `Target „${name}“ hinzugefügt` : `Target hinzugefügt`);
 			closeAddDialog();
 		});
 	}
