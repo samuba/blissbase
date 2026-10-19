@@ -46,5 +46,6 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Search events](./event-search.md) covers text search filtering on the homepage.
 - [Open event details](./event-details.md) covers opening and dismissing the event details dialog.
 - [Filter events](./event-filters.md) covers the filter dialog and category application.
+- [Complete single-day date range on close](./date-range-single-day.md) covers choosing one day then closing the Zeitraum picker.
 - [Create an event](./create-event.md) covers the create-flow CTA and signed-in publish path.
 - [Discover offerings](./offerings-discovery.md) covers the offerings tab list and search.

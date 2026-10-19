@@ -83,9 +83,11 @@ Browser actions:
   goto --path /                     Navigate (retries Vite compile 500s)
   wait --testid NAME                Wait for element
   click --testid NAME [--text TEXT]
+  click --role ROLE --name NAME     Click by accessible role + name (when no testid)
   fill --testid NAME --value TEXT
   press --key KEY                   e.g. Enter, Escape
   expect-visible --testid NAME [--text TEXT] [--timeout MS]
+  expect-visible --role ROLE --name NAME
   expect-count --testid NAME --count N [--text TEXT]
   screenshot --path REL_OR_ABS
   snapshot --path REL_OR_ABS        Accessibility tree dump
@@ -97,6 +99,8 @@ Flags:
   --port N        Preferred port (default 5190); picks next free in stride
   --path PATH     URL path for goto
   --testid NAME   data-testid selector
+  --role ROLE     ARIA role for role+name locate
+  --name NAME     Accessible name (exact) for role+name locate
   --value TEXT    Fill value
   --text TEXT     Filter by visible text
   --key KEY       Keyboard key
@@ -443,6 +447,23 @@ async function runBrowserAction(args: {
 			await locate(page, flags).waitFor({ state: `visible`, timeout: Number(flags.timeout) || 15000 });
 			break;
 		}
+		case `expect-text`: {
+			const expected = requireFlag(flags, `text`);
+			const locator = locate(page, flags);
+			const timeout = Number(flags.timeout) || 15000;
+			await locator.waitFor({ state: `visible`, timeout });
+			const started = Date.now();
+			let actual = ``;
+			while (Date.now() - started < timeout) {
+				actual = (await locator.innerText()).replace(/\s+/g, ` `).trim();
+				if (actual.includes(expected)) break;
+				await sleep(200);
+			}
+			if (!actual.includes(expected)) {
+				throw new Error(`Expected text including ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+			}
+			break;
+		}
 		case `expect-count`: {
 			const testid = requireFlag(flags, `testid`);
 			const expected = Number(requireFlag(flags, `count`));
@@ -674,6 +695,14 @@ async function cleanup(flags: Flags) {
 }
 
 function locate(page: Page, flags: Flags) {
+	if (flags.role && flags.name) {
+		let locator = page.getByRole(flags.role as Parameters<Page[`getByRole`]>[0], {
+			name: flags.name,
+			exact: flags.exact !== `false`,
+		});
+		if (flags.text) locator = locator.filter({ hasText: flags.text });
+		return locator.first();
+	}
 	const testid = requireFlag(flags, `testid`);
 	// Skip [inert] so CreateCta's inline control (inert while FAB shows) does not steal clicks.
 	let locator = page.getByTestId(testid).and(page.locator(`:not([inert])`));

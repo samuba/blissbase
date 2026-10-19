@@ -53,6 +53,14 @@
 		onChange?.(newValue);
 	}
 
+	function completeSingleDayOnClose(nextOpen: boolean) {
+		if (nextOpen) return;
+		if (!value?.start || value.end) return;
+		const start = value.start;
+		value = { start, end: start };
+		internalOnChange({ start, end: start });
+	}
+
 	function setDateRange(start: CalendarDate | undefined, end: CalendarDate | undefined) {
 		value = { start, end };
 		internalOnChange({ start, end });
@@ -98,8 +106,10 @@
 	bind:open
 	locale="de-DE"
 	onValueChange={internalOnChange}
+	onOpenChange={completeSingleDayOnClose}
 >
 	<DateRangePicker.Trigger
+		data-testid="date-range-picker-trigger"
 		class={["h-input input focus-within:border-neutral focus-within:shadow-date-field-focus w-full! grow cursor-pointer justify-center pr-4 select-none", triggerProps?.class, value?.start && 'active']}
 	>
 		<i class="icon-[ph--calendar-dots] size-6"></i>
@@ -185,6 +195,7 @@
 												class="relative m-0 size-10 overflow-visible p-0! text-center text-sm focus-within:relative focus-within:z-20"
 											>
 												<DateRangePicker.Day
+													data-testid={`date-range-day-${date}`}
 													class={'rounded-9px text-base-content hover:border-primary focus-visible:ring-primary! data-highlighted:bg-base-300 data-selected:bg-base-300 data-selection-end:bg-primary data-selection-start:bg-primary data-disabled:text-base-content/30 data-selected:text-primary-content data-selection-end:text-primary-content data-selection-start:text-primary-content data-unavailable:text-base-content/50 data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:border-primary group relative inline-flex size-10  items-center justify-center overflow-visible border border-transparent bg-transparent p-0 text-sm font-normal whitespace-nowrap transition-all data-disabled:pointer-events-none data-highlighted:rounded-none data-outside-month:pointer-events-none data-selected:font-medium data-selection-end:rounded-r-3xl data-selection-end:font-medium data-selection-start:rounded-l-3xl data-selection-start:font-medium data-selection-start:focus-visible:ring-2 data-selection-start:focus-visible:ring-offset-2! data-unavailable:line-through data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:rounded-none data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-0! data-selected:[&:not([data-selection-start])]:[&:not([data-selection-end])]:focus-visible:ring-offset-0!'}
 												>
 													<div
