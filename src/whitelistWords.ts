@@ -68,7 +68,8 @@ export function matchesWhiteListWords(text: string) {
 
 export function matchesBlackListWords(text: string) {
     if (!text) return false;
-    return blackListWords.some(x => text.toLowerCase().includes(x));
+    const haystack = text.toLowerCase();
+    return blackListWords.some(x => haystack.includes(x.toLowerCase()));
 }
 
 export const whiteListSources = [

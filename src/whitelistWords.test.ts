@@ -8,6 +8,12 @@ describe(`matchesBlackListWords`, () => {
 		expect(matchesBlackListWords(`Sanftes Yoga für Anfänger`)).toBe(true);
 	});
 
+	it(`matches capitalized blacklist keywords case-insensitively`, () => {
+		expect(matchesBlackListWords(`fortlaufender Engpassdehnungskurs nach Liebscher & Bracht`)).toBe(true);
+		expect(matchesBlackListWords(`Bewegungs-Kurs nach Liebscher & Bracht/ fayo®-Faszienyoga`)).toBe(true);
+		expect(matchesBlackListWords(`Abend mit Faszien-Yoga`)).toBe(true);
+	});
+
 	it(`does not match conscious event titles`, () => {
 		expect(matchesBlackListWords(`Ecstatic Dance Berlin`)).toBe(false);
 		expect(matchesBlackListWords(`Tantra Abend`)).toBe(false);
