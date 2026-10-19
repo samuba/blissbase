@@ -13,12 +13,14 @@
 		buttonText,
 		href,
 		requireLogin = false,
+		'data-testid': dataTestId,
 	}: {
 		title: Snippet;
 		description: Snippet;
 		buttonText: string;
 		href: string;
 		requireLogin?: boolean;
+		'data-testid': string;
 	} = $props();
 
 	const userId = $derived(page.data.userId);
@@ -148,7 +150,7 @@
 		<a
 			{@attach observeCtaForFab}
 			href={href}
-			data-testid="create-offering"
+			data-testid={dataTestId}
 			class={[`btn btn-primary w-fit`, showFab && `invisible`]}
 			inert={showFab}
 		>
@@ -160,7 +162,7 @@
 			{@attach observeCtaForFab}
 			type="button"
 			onclick={showLoginDialog}
-			data-testid="create-offering"
+			data-testid={dataTestId}
 			class={[`btn btn-primary w-fit`, showFab && `invisible`]}
 			inert={showFab}
 		>
@@ -173,6 +175,7 @@
 {#if showFab && useLink}
 	<a
 		href={href}
+		data-testid={dataTestId}
 		class={fabClasses}
 		aria-label={buttonText}
 		transition:fly={{ y: 24, duration: 300 }}
@@ -184,6 +187,7 @@
 	<button
 		type="button"
 		onclick={showLoginDialog}
+		data-testid={dataTestId}
 		class={fabClasses}
 		aria-label={buttonText}
 		transition:fly={{ y: 24, duration: 300 }}

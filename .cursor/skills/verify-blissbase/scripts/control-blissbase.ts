@@ -675,9 +675,9 @@ async function cleanup(flags: Flags) {
 
 function locate(page: Page, flags: Flags) {
 	const testid = requireFlag(flags, `testid`);
-	let locator = page.getByTestId(testid);
+	// Skip [inert] so CreateCta's inline control (inert while FAB shows) does not steal clicks.
+	let locator = page.getByTestId(testid).and(page.locator(`:not([inert])`));
 	if (flags.text) locator = locator.filter({ hasText: flags.text });
-	if (flags.first || flags.text) return locator.first();
 	return locator.first();
 }
 

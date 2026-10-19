@@ -274,6 +274,7 @@
 	<CreateCta
 		buttonText="Event hinzufügen"
 		href={routes.newEvent()}
+		data-testid="create-event"
 	>
 		{#snippet title()}
 		<i class="icon-[ph--signpost] size-6 shrink-0 mr-1"></i>

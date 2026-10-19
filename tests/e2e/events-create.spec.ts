@@ -49,7 +49,7 @@ test.describe("Event creation", () => {
 
 	test("logged-out homepage CTA opens the create form without a login dialog", async ({ page }) => {
 		await page.goto(`/`);
-		await page.locator(`[data-testid="create-offering"]:not([inert])`).click();
+		await page.locator(`[data-testid="create-event"]:not([inert])`).click();
 		await expect(page).toHaveURL(/\/events\/new/);
 		await expect(page.getByTestId(`create-event-heading`)).toHaveAttribute(`data-step`, `event`);
 		await expect(page.getByTestId(`event-email-input`)).toHaveCount(0);

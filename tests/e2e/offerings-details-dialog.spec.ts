@@ -117,7 +117,7 @@ test.describe(`Offering details dialog`, () => {
 		});
 		await page.goto(listUrl);
 		await waitForClientHydration(page);
-		await page.getByTestId(`create-offering`).click();
+		await page.locator(`[data-testid="create-offering"]:not([inert])`).click();
 		await expect(page.getByTestId(`offering-wizard-heading`)).toHaveAttribute(`data-step`, `offering`);
 		await page.getByTestId(`offering-title-input`).fill(`Post Create Dialog Offering`);
 		await page.getByTestId(`wizard-primary`).click();
