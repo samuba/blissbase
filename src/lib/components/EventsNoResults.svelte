@@ -128,24 +128,25 @@
 
 	{#if eventsStore.hasLocationFilter}
 		<div class="flex flex-col items-center gap-2" data-testid="events-no-results-radius">
-			<p class="text-center text-sm text-base-content/60">
+			<p class="text-center text-sm text-base-content/60">Möchtest du den Radius erweitern?</p>
+			<div class="flex flex-wrap items-center justify-center gap-2">
 				{#if locationLabel}
-					<span data-testid="events-no-results-location">{locationLabel}</span>
-					<br />
+					<span class="text-sm text-base-content/60" data-testid="events-no-results-location">
+						{locationLabel}
+					</span>
 				{/if}
-				Möchtest du den Radius erweitern?
-			</p>
-			<select
-				class="select w-fit"
-				data-testid="events-no-results-radius-select"
-				value={selectedDistance}
-				onchange={onRadiusChange}
-			>
-				<option value="">Überall</option>
-				{#each ALLOWED_DISTANCE_VALUES as value (value)}
-					<option {value}>{value} km Radius</option>
-				{/each}
-			</select>
+				<select
+					class="select w-fit"
+					data-testid="events-no-results-radius-select"
+					value={selectedDistance}
+					onchange={onRadiusChange}
+				>
+					<option value="">Überall</option>
+					{#each ALLOWED_DISTANCE_VALUES as value (value)}
+						<option {value}>{value} km Radius</option>
+					{/each}
+				</select>
+			</div>
 		</div>
 	{/if}
 </div>
