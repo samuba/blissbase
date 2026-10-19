@@ -68,7 +68,8 @@ test.describe(`events infinite scroll`, () => {
 		await page.getByTestId(`events-load-more`).scrollIntoViewIfNeeded();
 		await expect(error).toBeVisible();
 		await expect(error).toHaveAttribute(`role`, `alert`);
-		await expect(error).toContainText(`Weitere Events konnten nicht geladen werden`);
+		await expect(error).toContainText(`Fehler beim laden weiterer Events.`);
+		await expect(retry).toContainText(`Erneut versuchen`);
 		await expect(cards).toHaveCount(8);
 		await expect(page.getByTestId(`events-no-results`)).toHaveCount(0);
 		await expect(page.getByTestId(`offerings-cross-promo`)).toHaveCount(0);
