@@ -36,3 +36,7 @@ src/locales/.wuchale
 test-results/
 playwright-report/
 playwright/.cache/
+
+# TLC formal verification artifacts
+.agents/skills/verify-event-delete-outbox/.tlc-states/
+.agents/skills/verify-event-delete-outbox/EventDeleteOutbox_TTrace_*
