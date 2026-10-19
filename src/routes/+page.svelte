@@ -83,11 +83,8 @@
 	}
 
 	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
-	const showOfferingsPromo = $derived(
-		!eventsStore.isLoading &&
-			!eventsStore.isLoadingMore &&
-			(!eventsStore.hasEvents ||
-				(eventsStore.pagination.totalPages != null && eventsStore.pagination.page >= eventsStore.pagination.totalPages)),
+	const reachedEndOfList = $derived(
+		eventsStore.loadingState === `not-loading` && !eventsStore.loadMoreFailed && !eventsStore.canLoadMore,
 	);
 	const offeringsPromoHref = $derived(
 		routes.offeringsList({
@@ -213,15 +210,31 @@
 						{/each}
 					</div>
 
-					<div
-						{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
-						class="-translate-y-72"
-						data-testid="events-load-more"
-					></div>
+					<!-- Re-observe after each page: the observer only fires on changes, so a sentinel that stays in view would never load the next page. -->
+					{#key eventsStore.events.length}
+						<div
+							{@attach intersect({ onIntersecting: eventsStore.loadMoreEvents })}
+							class="-translate-y-72"
+							data-testid="events-load-more"
+						></div>
+					{/key}
 
 					{#if eventsStore.isLoadingMore}
 						{@render loading(false)}
-					{:else}
+					{:else if eventsStore.loadMoreFailed}
+						<div role="alert" class="flex flex-col items-center gap-3 py-10 text-center" data-testid="events-load-more-error">
+							<p class="text-base-content/70">Weitere Events konnten nicht geladen werden.</p>
+							<button
+								type="button"
+								class="btn"
+								onclick={() => eventsStore.loadMoreEvents()}
+								data-testid="events-load-more-retry"
+							>
+								<i class="icon-[ph--arrow-clockwise] size-5"></i>
+								Erneut versuchen
+							</button>
+						</div>
+					{:else if reachedEndOfList}
 						{@render noResults(true)}
 					{/if}
 				</div>
@@ -232,7 +245,7 @@
 				{@render noResults(false)}
 			{/if}
 
-			{#if showOfferingsPromo}
+			{#if reachedEndOfList}
 				<CrossPromoFooter
 					icon="icon-[ph--hand-heart]"
 					title="Suchst du Einzelsessions?"
@@ -244,7 +257,7 @@
 			{/if}
 		</div>
 
-		{#snippet failed(error, reset)}
+		{#snippet failed(error)}
 			<div role="alert" class="alert alert-error">
 				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -273,7 +286,9 @@
 
 {#snippet loading(reserveVerticalSpace: boolean)}
 	<div class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? 'h-dvh' : 'h-15']}
-		id="events-loading-spinner" 
+		id="events-loading-spinner"
+		role="status"
+		data-testid="events-loading"
 	>
 	<span class="loading loading-spinner loading-xl"></span>
 		<p class="">Lade...</p>
@@ -281,7 +296,7 @@
 {/snippet}
 
 {#snippet noResults(foundSomeResultsBefore: boolean)}
-	<div class={[noResultsContainerClasses, "h-15"]}>
+	<div class={[noResultsContainerClasses, "h-15"]} role="status" data-testid="events-no-results">
 		<div class="text-gray-500 text-center">
 			{#if foundSomeResultsBefore}
 				Keine weiteren Events gefunden
@@ -289,7 +304,8 @@
 				Keine Events gefunden
 			{/if}
 			{#if eventsStore.hasSearchFilter}
-				mit <br /> {@html eventsStore.searchFilter?.split(' ').map(x => `<b>${x}</b>`).join(' & ')}<br />
+				mit <br />
+				{#each eventsStore.searchFilter?.split(/\s+/) ?? [] as term, index (index)}{index ? ` & ` : ``}<b>{term}</b>{/each}<br />
 			{/if}
 			{#if eventsStore.hasLocationFilter}
 				in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km Radius)</span><br />
