@@ -21,6 +21,7 @@ vi.mock("@bradenmacdonald/s3-lite-client", () => ({
 
 import { S3Client } from "@bradenmacdonald/s3-lite-client";
 import {
+	deleteObjects,
 	eventImageObjectKey,
 	eventTempImageObjectKey,
 	finalizeOfferingImage,
@@ -148,6 +149,52 @@ describe(`profile image object keys`, () => {
 
 	it(`strips signed URL fragments from public asset URLs`, () => {
 		expect(objectKeyFromPublicUrl(`https://assets.blissbase.app/profiles/temp/profile-b.webp#claim`)).toBe(`profiles/temp/profile-b.webp`);
+	});
+});
+
+describe(`deleteObjects`, () => {
+	beforeEach(() => {
+		getS3ClientMock().mockClear();
+	});
+
+	it(`deletes every key without opening unbounded parallel connections`, async () => {
+		const keys = Array.from({ length: 55 }, (_, i) => `events/demo/hash${i}.webp`);
+		let inFlight = 0;
+		let maxInFlight = 0;
+		const deleted: string[] = [];
+
+		// Instantiate client so we can replace deleteObject before the call.
+		const creds = loadCreds({
+			S3_ACCESS_KEY_ID: `test-access`,
+			S3_SECRET_ACCESS_KEY: `test-secret`,
+			S3_BUCKET_NAME: `test-bucket`,
+			CLOUDFLARE_ACCOUNT_ID: `test-account`,
+		});
+		// Warm a client instance via a no-op path: deleteObjects creates its own S3Client.
+		// Patch the constructor mock for this test so each new client tracks concurrency.
+		getS3ClientMock().mockClear();
+		(S3Client as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(function S3Client() {
+			return {
+				copyObject: vi.fn(),
+				putObject: vi.fn(),
+				deleteObject: vi.fn(async (key: string) => {
+					inFlight++;
+					maxInFlight = Math.max(maxInFlight, inFlight);
+					await Promise.resolve();
+					deleted.push(key);
+					inFlight--;
+				}),
+				exists: vi.fn(),
+				listObjects: vi.fn(),
+				getPartialObject: vi.fn(),
+			};
+		});
+
+		await deleteObjects(keys, creds);
+
+		expect(deleted).toEqual(keys);
+		expect(maxInFlight).toBeLessThanOrEqual(20);
+		expect(maxInFlight).toBeGreaterThan(0);
 	});
 });
 

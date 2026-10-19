@@ -90,6 +90,7 @@ msgid "Ausgebucht"
 msgstr "Sold out"
 
 #: src/lib/components/EventCard.svelte
+#: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingCard.svelte
 #: src/lib/components/OfferingForm.svelte
@@ -294,6 +295,7 @@ msgstr "Clear input"
 msgid "Aktuellen Standort verwenden"
 msgstr "Use current location"
 
+#: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Überall"
@@ -391,6 +393,10 @@ msgstr "Price"
 msgid "Adresse *"
 msgstr "Address *"
 
+#: src/lib/components/EventsNoResults.svelte
+#: src/lib/components/EventsNoResults.svelte
+#: src/lib/components/EventsNoResults.svelte
+#: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "Entfernen"
 msgstr "Remove"
@@ -522,13 +528,11 @@ msgstr "Set a location first"
 msgid "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 msgstr "Sorting by distance only makes sense for in-person events"
 
-#: src/routes/+page.svelte
-msgid "mit <0/> <1/><2/>"
-msgstr "with <0/> <1/><2/>"
+#~ msgid "mit <0/> <1/><2/>"
+#~ msgstr "with <0/> <1/><2/>"
 
-#: src/routes/+page.svelte
-msgid "vom <0/> <1/> bis <2/> <3/><4/>"
-msgstr "from <0/> <1/> to <2/> <3/><4/>"
+#~ msgid "vom <0/> <1/> bis <2/> <3/><4/>"
+#~ msgstr "from <0/> <1/> to <2/> <3/><4/>"
 
 #: src/routes/offerings/+page.svelte
 msgid "Hero image"
@@ -780,11 +784,11 @@ msgstr "Login link comes from a different browser"
 msgid "Anmeldung / Tickets über"
 msgstr "Registration / Tickets via"
 
-#: src/routes/+page.svelte
+#: src/lib/components/EventsNoResults.svelte
 msgid "Keine Events gefunden"
 msgstr "No events found"
 
-#: src/routes/+page.svelte
+#: src/lib/components/EventsNoResults.svelte
 msgid "Keine weiteren Events gefunden"
 msgstr "No more events found"
 
@@ -1075,15 +1079,14 @@ msgstr "<0/> Saving…"
 msgid "Suchen"
 msgstr "Search"
 
+#: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/OfferingForm.svelte
 msgid "Vor Ort"
 msgstr "In-Person"
 
-#. 1.0: eventsStore.locationFilter.plzCity; 1.1: eventsStore.locationFilter.distance
-#: src/routes/+page.svelte
-msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
-msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
+#~ msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
+#~ msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
 
 #: src/lib/components/TextSearchInput.svelte
 #: src/lib/components/TextSearchInput.svelte
@@ -3617,6 +3620,7 @@ msgstr "Privacy Policy / Data Protection Statement | Blissbase"
 msgid "Nutzungsbedingungen / AGB"
 msgstr "General Terms and Conditions"
 
+#: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "Standort"
 msgstr "Location"
@@ -3637,7 +3641,9 @@ msgstr "In Safari, tap the share icon and then „Add to Home Screen“."
 msgid "Standort verwenden"
 msgstr "Use location"
 
+#. 0: value
 #. 0: selectedDistance
+#: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "{0} km Radius"
 msgstr "{0} km radius"
@@ -3916,3 +3922,39 @@ msgstr "Show events"
 #, ai
 msgid "Wir haben viele verschiedene Angebote!"
 msgstr "We have many different offerings!"
+
+#, ai
+#~ msgid "Weitere Events konnten nicht geladen werden."
+#~ msgstr "More events could not be loaded."
+
+#: src/routes/+page.svelte
+#, ai
+msgid "<0/> Erneut versuchen"
+msgstr "<0/> Try again"
+
+#: src/lib/components/EventsNoResults.svelte
+#, ai
+msgid "Vor Ort + Online"
+msgstr "On-site + online"
+
+#: src/lib/components/EventsNoResults.svelte
+#, ai
+msgid "Möchtest du den Radius erweitern?"
+msgstr "Would you like to expand the radius?"
+
+#, ai
+#~ msgid "Fehler Weitere Events konnten nicht geladen werden."
+#~ msgstr "Error: More events could not be loaded."
+
+#, ai
+#~ msgid "Fehler beim laden weitere Events konnten nicht geladen werden."
+#~ msgstr "Error loading more events."
+
+#, ai
+#~ msgid "Fehler beim laden weiterer Events konnten nicht geladen werden."
+#~ msgstr "Failed to load more events."
+
+#: src/routes/+page.svelte
+#, ai
+msgid "Fehler beim laden weiterer Events."
+msgstr "Error loading more events."

@@ -37,7 +37,13 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+<<<<<<< HEAD
 # Verification skill runtime
 .cursor/skills/verify-blissbase/.active-run
 .cursor/skills/verify-blissbase/artifacts/**
 !.cursor/skills/verify-blissbase/artifacts/.gitkeep
+=======
+# TLC formal verification artifacts
+.agents/skills/verify-event-delete-outbox/.tlc-states/
+.agents/skills/verify-event-delete-outbox/EventDeleteOutbox_TTrace_*
+>>>>>>> origin/main
