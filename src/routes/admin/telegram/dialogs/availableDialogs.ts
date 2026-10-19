@@ -1,3 +1,5 @@
+import * as v from 'valibot'
+
 /**
  * Maps a scrape-account dialog to an admin picker candidate.
  * Skips users/bots and forbidden chats; keeps groups and channels only.
@@ -58,11 +60,49 @@ export function excludeExistingTelegramTargets(args: {
 	return args.dialogs.filter((dialog) => !existing.has(dialog.roomId))
 }
 
+/**
+ * Validates the `/admin/telegram/dialogs` JSON. Returns null on a shape mismatch, e.g. when
+ * the split function and the remote run different deployments.
+ */
+export function parseTelegramDialogsResponse(body: unknown) {
+	const result = v.safeParse(telegramDialogsResponseSchema, body)
+	return result.success ? result.output : null
+}
+
 export function telegramAccountLabel(accountId: TelegramDialogAccountId) {
 	return accountId === `primary` ? `Primär` : `Sekundär`
 }
 
-export type TelegramDialogAccountId = `primary` | `fallback`
+const accountIdSchema = v.picklist([`primary`, `fallback`])
+
+const telegramDialogsResponseSchema = v.object({
+	accounts: v.array(accountIdSchema),
+	accountStatuses: v.array(
+		v.object({
+			accountId: accountIdSchema,
+			listed: v.number(),
+			error: v.nullable(v.string()),
+		}),
+	),
+	dialogs: v.array(
+		v.object({
+			roomId: v.string(),
+			name: v.string(),
+			kind: v.picklist([`group`, `channel`]),
+			username: v.nullable(v.string()),
+			accountId: accountIdSchema,
+			lastMessageTime: v.nullable(
+				v.pipe(
+					v.string(),
+					v.isoTimestamp(),
+					v.transform((value) => new Date(value)),
+				),
+			),
+		}),
+	),
+})
+
+export type TelegramDialogAccountId = v.InferOutput<typeof accountIdSchema>
 
 export type AvailableTelegramDialog = {
 	roomId: string

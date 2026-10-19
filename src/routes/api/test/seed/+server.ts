@@ -68,7 +68,16 @@ export const POST: RequestHandler = async ({ request }) => {
 				await db.delete(s.offerings);
 				await db.delete(s.events);
 				await db.delete(s.profiles);
+				await db.delete(s.telegramScrapingTargets);
 				return json({ success: true });
+
+			case "createTelegramScrapingTarget": {
+				const [target] = await db
+					.insert(s.telegramScrapingTargets)
+					.values({ roomId: data.roomId, name: data.name ?? null })
+					.returning({ roomId: s.telegramScrapingTargets.roomId });
+				return json({ success: true, target });
+			}
 
 			case "getEventById": {
 				const event = await db.query.events.findFirst({

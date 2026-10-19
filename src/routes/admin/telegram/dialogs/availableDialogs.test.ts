@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	availableTelegramDialogFromDialog,
 	excludeExistingTelegramTargets,
+	parseTelegramDialogsResponse,
 	telegramAccountLabel,
 } from './availableDialogs'
 
@@ -146,5 +147,49 @@ describe(`telegramAccountLabel`, () => {
 	it(`labels primary and fallback for the admin picker`, () => {
 		expect(telegramAccountLabel(`primary`)).toBe(`Primär`)
 		expect(telegramAccountLabel(`fallback`)).toBe(`Sekundär`)
+	})
+})
+
+describe(`parseTelegramDialogsResponse`, () => {
+	const dialog = {
+		roomId: `-1001`,
+		name: `A`,
+		kind: `group`,
+		username: null,
+		accountId: `primary`,
+		lastMessageTime: `2026-10-12T14:00:00.000Z`,
+	}
+
+	it(`parses dialogs and converts lastMessageTime to a Date`, () => {
+		const parsed = parseTelegramDialogsResponse({
+			accounts: [`primary`],
+			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
+			dialogs: [dialog],
+		})
+
+		expect(parsed?.accounts).toEqual([`primary`])
+		expect(parsed?.dialogs[0].lastMessageTime).toEqual(new Date(dialog.lastMessageTime))
+	})
+
+	it(`keeps a null lastMessageTime`, () => {
+		const parsed = parseTelegramDialogsResponse({
+			accounts: [`primary`],
+			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
+			dialogs: [{ ...dialog, lastMessageTime: null }],
+		})
+
+		expect(parsed?.dialogs[0].lastMessageTime).toBeNull()
+	})
+
+	it(`rejects a response without accounts and accountStatuses`, () => {
+		expect(parseTelegramDialogsResponse({ dialogs: [] })).toBeNull()
+	})
+
+	it(`rejects a dialog whose lastMessageTime is not an ISO timestamp`, () => {
+		expect(parseTelegramDialogsResponse({
+			accounts: [`primary`],
+			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
+			dialogs: [{ ...dialog, lastMessageTime: `not-a-date` }],
+		})).toBeNull()
 	})
 })
