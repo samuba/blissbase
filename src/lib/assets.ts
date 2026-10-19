@@ -320,6 +320,9 @@ export async function uploadProfileBannerImage(args: UploadProfileImageArgs) {
 	);
 }
 
+/** Cap parallel R2 deletes — unbounded Promise.all hits EMFILE (too many sockets) on Vercel. */
+const DELETE_OBJECT_CONCURRENCY = 20;
+
 /**
  * Deletes multiple objects from R2 storage.
  * @param objectKeys - Array of image keys to delete or URLs
@@ -333,11 +336,14 @@ export async function deleteObjects(objectKeys: string[], creds: S3Creds) {
 	}
 
 	objectKeys = objectKeys.map((x) => objectKeyFromPublicUrl(x) ?? x);
-	console.log(`Deleting from R2: ${objectKeys}`);
+	console.log(`Deleting from R2: ${objectKeys.length} objects`);
 
 	try {
 		const s3 = new S3Client(creds);
-		await Promise.all(objectKeys.map((x) => s3.deleteObject(x.trim())));
+		for (let i = 0; i < objectKeys.length; i += DELETE_OBJECT_CONCURRENCY) {
+			const chunk = objectKeys.slice(i, i + DELETE_OBJECT_CONCURRENCY);
+			await Promise.all(chunk.map((key) => s3.deleteObject(key.trim())));
+		}
 		console.log(`Deletion completed`);
 	} catch (error) {
 		console.error(`Error in deleteImages:`, error);
