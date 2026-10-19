@@ -98,7 +98,7 @@ export class EventsStore {
         const applyPagination = (params: Parameters<typeof fetchEventsWithCookiePersistence>[0]) => {
                 // Normalize undefined to null for consistency with PaginationState type.
                 // Preserve totals/relevance across optimistic request updates that omit them
-                // so canLoadMore stays correct if a load-more request fails or is superseded.
+                // so canLoadMore stays correct if a request fails or is superseded.
                 this.pagination = {
                     ...this.pagination,
                     page: params.page ?? this.pagination.page,
@@ -122,7 +122,8 @@ export class EventsStore {
 
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
-            applyPagination(requestParams); // optimistically set pagination state
+            // Optimistically show new filters. Skipped for load-more so a failed request does not skip a page.
+            if (!append) applyPagination(requestParams);
             const data = await fetchEventsWithCookiePersistence(requestParams);
 
             if (requestId !== this.loadRequestId) return;
@@ -138,15 +139,17 @@ export class EventsStore {
 
             applyPagination(data.pagination);
         } finally {
-            this.loadingState = 'not-loading';
-            this.finishedLoadingCallbacks.forEach((callback) => callback(append));
+            // A superseded request must not end the loading state of the request that replaced it
+            if (requestId === this.loadRequestId) {
+                this.loadingState = 'not-loading';
+                this.finishedLoadingCallbacks.forEach((callback) => callback(append));
+            }
         }
     }
 
     // Load more events for infinite scroll
     async loadMoreEvents() {
-        if (this.loadingState !== 'not-loading') return;
-        if (this.pagination.totalPages != null && this.pagination.page >= this.pagination.totalPages) return;
+        if (!this.canLoadMore) return;
 
         return this.loadEvents(
             {
