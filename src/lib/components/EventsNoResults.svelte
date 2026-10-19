@@ -34,8 +34,7 @@
 			eventsStore.hasSearchFilter ||
 				selectedCategories.length ||
 				eventsStore.hasDateFilter ||
-				eventsStore.hasAttendanceModeFilter ||
-				eventsStore.hasLocationFilter,
+				eventsStore.hasAttendanceModeFilter,
 		),
 	);
 
@@ -74,95 +73,68 @@
 	{#if hasChips}
 		<div class="flex max-w-lg flex-wrap items-center justify-center gap-2">
 			{#if eventsStore.hasSearchFilter}
-				<div class="badge badge-ghost break-keep gap-1 pr-0" data-testid="events-no-results-chip-search">
+				<button
+					type="button"
+					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+					data-testid="events-no-results-chip-search"
+					aria-label="Entfernen"
+					onclick={() => eventsStore.handleSearchTermChange(``)}
+				>
 					{eventsStore.searchFilter}
-					<button
-						type="button"
-						class="mx-0 flex cursor-pointer items-center justify-center pr-1.5"
-						aria-label="Entfernen"
-						onclick={() => eventsStore.handleSearchTermChange(``)}
-					>
-						<i class="icon-[ph--x] size-4"></i>
-					</button>
-				</div>
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
 			{/if}
 
 			{#each selectedCategories as category (category.slug)}
-				<div
-					class="badge badge-ghost break-keep gap-1 pr-0"
+				<button
+					type="button"
+					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
 					data-testid={`events-no-results-chip-category-${category.slug}`}
+					aria-label="Entfernen"
+					onclick={() => removeCategory(category.slug)}
 				>
 					{category.label}
-					<button
-						type="button"
-						class="mx-0 flex cursor-pointer items-center justify-center pr-1.5"
-						aria-label="Entfernen"
-						onclick={() => removeCategory(category.slug)}
-					>
-						<i class="icon-[ph--x] size-4"></i>
-					</button>
-				</div>
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
 			{/each}
 
 			{#if eventsStore.hasDateFilter && dateLabel}
-				<div class="badge badge-ghost break-keep gap-1 pr-0" data-testid="events-no-results-chip-date">
+				<button
+					type="button"
+					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+					data-testid="events-no-results-chip-date"
+					aria-label="Entfernen"
+					onclick={() => eventsStore.clearDateFilter()}
+				>
 					{dateLabel}
-					<button
-						type="button"
-						class="mx-0 flex cursor-pointer items-center justify-center pr-1.5"
-						aria-label="Entfernen"
-						onclick={() => eventsStore.clearDateFilter()}
-					>
-						<i class="icon-[ph--x] size-4"></i>
-					</button>
-				</div>
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
 			{/if}
 
 			{#if eventsStore.hasAttendanceModeFilter && attendanceLabel}
-				<div
-					class="badge badge-ghost break-keep gap-1 pr-0"
+				<button
+					type="button"
+					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
 					data-testid="events-no-results-chip-attendance"
+					aria-label="Entfernen"
+					onclick={() => eventsStore.handleAttendanceModeChange(null)}
 				>
 					{attendanceLabel}
-					<button
-						type="button"
-						class="mx-0 flex cursor-pointer items-center justify-center pr-1.5"
-						aria-label="Entfernen"
-						onclick={() => eventsStore.handleAttendanceModeChange(null)}
-					>
-						<i class="icon-[ph--x] size-4"></i>
-					</button>
-				</div>
-			{/if}
-
-			{#if locationLabel}
-				<div
-					class="badge badge-ghost break-keep gap-1 pr-0"
-					data-testid="events-no-results-chip-location"
-				>
-					{locationLabel}
-					<button
-						type="button"
-						class="mx-0 flex cursor-pointer items-center justify-center pr-1.5"
-						aria-label="Entfernen"
-						onclick={() =>
-							eventsStore.handleLocationDistanceChange({
-								location: null,
-								distance: null,
-								latitude: null,
-								longitude: null,
-							})}
-					>
-						<i class="icon-[ph--x] size-4"></i>
-					</button>
-				</div>
+					<i class="icon-[ph--x] size-5"></i>
+				</button>
 			{/if}
 		</div>
 	{/if}
 
 	{#if eventsStore.hasLocationFilter}
 		<div class="flex flex-col items-center gap-2" data-testid="events-no-results-radius">
-			<p class="text-center text-sm text-base-content/60">Möchtest du den Radius erweitern?</p>
+			<p class="text-center text-sm text-base-content/60">
+				{#if locationLabel}
+					<span data-testid="events-no-results-location">{locationLabel}</span>
+					<br />
+				{/if}
+				Möchtest du den Radius erweitern?
+			</p>
 			<select
 				class="select w-fit"
 				data-testid="events-no-results-radius-select"

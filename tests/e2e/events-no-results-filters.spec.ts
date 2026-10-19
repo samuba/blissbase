@@ -32,7 +32,8 @@ test.describe(`events no-results filter controls`, () => {
 
 		const empty = page.getByTestId(`events-no-results`);
 		await expect(empty).toContainText(`Keine Events gefunden`);
-		await expect(page.getByTestId(`events-no-results-chip-location`)).toContainText(`Berlin`);
+		await expect(page.getByTestId(`events-no-results-location`)).toContainText(`Berlin`);
+		await expect(page.getByTestId(`events-no-results-chip-location`)).toHaveCount(0);
 		await expect(page.getByTestId(`events-no-results-radius`)).toContainText(
 			`Möchtest du den Radius erweitern?`,
 		);
@@ -45,17 +46,13 @@ test.describe(`events no-results filter controls`, () => {
 		await expect(page.getByTestId(`events-no-results-radius-select`)).toHaveValue(`100`);
 		await expect(page.getByTestId(`plzCityInput-header-summary`)).toContainText(`Berlin`);
 		await expect(page.getByTestId(`events-no-results-chip-category-meditation`)).toBeVisible();
+		await expect(page.getByTestId(`events-no-results-location`)).toContainText(`Berlin`);
 
-		await page.getByTestId(`events-no-results-chip-category-meditation`).getByRole(`button`, {
-			name: `Entfernen`,
-		}).click();
+		await page.getByTestId(`events-no-results-chip-category-meditation`).click();
 		await expect(page.getByTestId(`events-no-results-chip-category-meditation`)).toHaveCount(0);
 
-		await page.getByTestId(`events-no-results-chip-location`).getByRole(`button`, {
-			name: `Entfernen`,
-		}).click();
-		await expect(page.getByTestId(`events-no-results-chip-location`)).toHaveCount(0);
-		await expect(page.getByTestId(`events-no-results-radius`)).toHaveCount(0);
+		await expect(page.getByTestId(`events-no-results-location`)).toContainText(`Berlin`);
+		await expect(page.getByTestId(`events-no-results-radius`)).toBeVisible();
 	});
 
 	test(`end-of-list state keeps radius controls after scrolling through filtered results`, async ({
@@ -84,6 +81,7 @@ test.describe(`events no-results filter controls`, () => {
 			`Keine weiteren Events gefunden`,
 		);
 		await expect(page.getByTestId(`events-no-results-radius-select`)).toHaveValue(`50`);
-		await expect(page.getByTestId(`events-no-results-chip-location`)).toContainText(`Berlin`);
+		await expect(page.getByTestId(`events-no-results-location`)).toContainText(`Berlin`);
+		await expect(page.getByTestId(`events-no-results-chip-location`)).toHaveCount(0);
 	});
 });
