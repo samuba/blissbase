@@ -189,6 +189,15 @@ export class EventsStore {
         });
     };
 
+    clearDateFilter() {
+        this.loadEvents({
+            ...this.pagination,
+            page: 1,
+            startDate: null,
+            endDate: null,
+        });
+    }
+
     // Location/distance change handler
     handleLocationDistanceChange = (event: LocationChangeEvent) => {
         setLocationInteractedCookie();
@@ -202,6 +211,15 @@ export class EventsStore {
         });
     };
 
+    /** Refresh with a new radius while keeping the current location. */
+    handleDistanceChange(distance: string | null) {
+        this.handleLocationDistanceChange({
+            location: this.pagination.plzCity ?? null,
+            distance,
+            latitude: this.pagination.lat ?? null,
+            longitude: this.pagination.lng ?? null,
+        });
+    }
 
     // Sort change handler
     handleSortChanged = (value: string) => {
