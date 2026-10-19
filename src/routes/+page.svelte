@@ -83,7 +83,9 @@
 	}
 
 	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
-	const reachedEndOfList = $derived(eventsStore.loadingState === `not-loading` && !eventsStore.canLoadMore);
+	const reachedEndOfList = $derived(
+		eventsStore.loadingState === `not-loading` && !eventsStore.loadMoreFailed && !eventsStore.canLoadMore,
+	);
 	const offeringsPromoHref = $derived(
 		routes.offeringsList({
 			location: eventsStore.pagination.plzCity ?? null,
@@ -219,6 +221,19 @@
 
 					{#if eventsStore.isLoadingMore}
 						{@render loading(false)}
+					{:else if eventsStore.loadMoreFailed}
+						<div role="alert" class="flex flex-col items-center gap-3 py-10 text-center" data-testid="events-load-more-error">
+							<p class="text-base-content/70">Weitere Events konnten nicht geladen werden.</p>
+							<button
+								type="button"
+								class="btn"
+								onclick={() => eventsStore.loadMoreEvents()}
+								data-testid="events-load-more-retry"
+							>
+								<i class="icon-[ph--arrow-clockwise] size-5"></i>
+								Erneut versuchen
+							</button>
+						</div>
 					{:else if reachedEndOfList}
 						{@render noResults(true)}
 					{/if}

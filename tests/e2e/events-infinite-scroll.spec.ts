@@ -45,6 +45,51 @@ test.describe(`events infinite scroll`, () => {
 		await expect(page.getByTestId(`events-no-results`)).toContainText(`Keine weiteren Events gefunden`);
 	});
 
+	test(`shows a retry button when loading more fails and recovers on retry`, async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 500 });
+		await page.goto(`/`);
+		await waitForClientHydration(page);
+		const cards = page.getByTestId(`event-card`);
+		const error = page.getByTestId(`events-load-more-error`);
+		const retry = page.getByTestId(`events-load-more-retry`);
+		await expect(cards).toHaveCount(8);
+
+		let attempt = 0;
+		let releaseRetry = () => {};
+		const retryReleased = new Promise<void>((resolve) => (releaseRetry = resolve));
+		await page.route(`**/_app/remote/**`, async (route) => {
+			if (!isEventsRequest(route.request().url())) return route.continue();
+			attempt++;
+			if (attempt === 1) return route.abort(`failed`);
+			if (attempt === 2) await retryReleased;
+			return route.continue();
+		});
+
+		await page.getByTestId(`events-load-more`).scrollIntoViewIfNeeded();
+		await expect(error).toBeVisible();
+		await expect(error).toHaveAttribute(`role`, `alert`);
+		await expect(error).toContainText(`Weitere Events konnten nicht geladen werden`);
+		await expect(cards).toHaveCount(8);
+		await expect(page.getByTestId(`events-no-results`)).toHaveCount(0);
+		await expect(page.getByTestId(`offerings-cross-promo`)).toHaveCount(0);
+
+		await retry.focus();
+		await expect(retry).toBeFocused();
+		await page.keyboard.press(`Enter`);
+		await expect(page.getByTestId(`events-loading`)).toBeVisible();
+		await expect(error).toHaveCount(0);
+
+		releaseRetry();
+		// 16 (not 9) cards proves the retry re-requested page 2 instead of skipping to page 3.
+		await expect(cards).toHaveCount(16);
+		await expect(error).toHaveCount(0);
+		await expect(page.getByTestId(`events-no-results`)).toHaveCount(0);
+
+		await page.getByTestId(`events-load-more`).scrollIntoViewIfNeeded();
+		await expect(cards).toHaveCount(17);
+		await expect(page.getByTestId(`events-no-results`)).toContainText(`Keine weiteren Events gefunden`);
+	});
+
 	test(`keeps the loading state while a newer filter request is still pending`, async ({ page }) => {
 		await page.goto(`/`);
 		await waitForClientHydration(page);

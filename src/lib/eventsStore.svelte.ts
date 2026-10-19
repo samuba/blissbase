@@ -45,6 +45,7 @@ export class EventsStore {
     events = $state<UiEvent[]>([]);
     pagination = $state<PaginationState>(initialPagination());
     loadingState = $state<LoadingState>('not-loading');
+    loadMoreFailed = $state(false);
     showTextSearch = $state(false);
 
     private finishedLoadingCallbacks = new SvelteSet<FinishedLoadingCallback>();
@@ -122,6 +123,7 @@ export class EventsStore {
 
         try {
             this.loadingState = append ? 'loading-more' : 'loading';
+            this.loadMoreFailed = false;
             // Optimistically show new filters. Skipped for load-more so a failed request does not skip a page.
             if (!append) applyPagination(requestParams);
             const data = await fetchEventsWithCookiePersistence(requestParams);
@@ -138,6 +140,10 @@ export class EventsStore {
             }
 
             applyPagination(data.pagination);
+        } catch (error) {
+            if (!append) throw error;
+            console.error('Failed to load more events', error);
+            if (requestId === this.loadRequestId) this.loadMoreFailed = true;
         } finally {
             // A superseded request must not end the loading state of the request that replaced it
             if (requestId === this.loadRequestId) {
