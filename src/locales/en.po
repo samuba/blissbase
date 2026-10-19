@@ -397,7 +397,6 @@ msgstr "Address *"
 #: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/EventsNoResults.svelte
-#: src/lib/components/EventsNoResults.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "Entfernen"
 msgstr "Remove"
