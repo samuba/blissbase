@@ -3923,18 +3923,38 @@ msgstr "Show events"
 msgid "Wir haben viele verschiedene Angebote!"
 msgstr "We have many different offerings!"
 
-#: src/routes/+page.svelte
-msgid "Weitere Events konnten nicht geladen werden."
-msgstr ""
+#, ai
+#~ msgid "Weitere Events konnten nicht geladen werden."
+#~ msgstr "More events could not be loaded."
 
 #: src/routes/+page.svelte
+#, ai
 msgid "<0/> Erneut versuchen"
-msgstr ""
+msgstr "<0/> Try again"
 
 #: src/lib/components/EventsNoResults.svelte
+#, ai
 msgid "Vor Ort + Online"
-msgstr ""
+msgstr "On-site + online"
 
 #: src/lib/components/EventsNoResults.svelte
+#, ai
 msgid "Möchtest du den Radius erweitern?"
-msgstr ""
+msgstr "Would you like to expand the radius?"
+
+#, ai
+#~ msgid "Fehler Weitere Events konnten nicht geladen werden."
+#~ msgstr "Error: More events could not be loaded."
+
+#, ai
+#~ msgid "Fehler beim laden weitere Events konnten nicht geladen werden."
+#~ msgstr "Error loading more events."
+
+#, ai
+#~ msgid "Fehler beim laden weiterer Events konnten nicht geladen werden."
+#~ msgstr "Failed to load more events."
+
+#: src/routes/+page.svelte
+#, ai
+msgid "Fehler beim laden weiterer Events."
+msgstr "Error loading more events."

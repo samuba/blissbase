@@ -3886,9 +3886,8 @@ msgstr "Events anzeigen"
 msgid "Wir haben viele verschiedene Angebote!"
 msgstr "Wir haben viele verschiedene Angebote!"
 
-#: src/routes/+page.svelte
-msgid "Weitere Events konnten nicht geladen werden."
-msgstr "Weitere Events konnten nicht geladen werden."
+#~ msgid "Weitere Events konnten nicht geladen werden."
+#~ msgstr "Weitere Events konnten nicht geladen werden."
 
 #: src/routes/+page.svelte
 msgid "<0/> Erneut versuchen"
@@ -3901,3 +3900,16 @@ msgstr "Vor Ort + Online"
 #: src/lib/components/EventsNoResults.svelte
 msgid "Möchtest du den Radius erweitern?"
 msgstr "Möchtest du den Radius erweitern?"
+
+#~ msgid "Fehler Weitere Events konnten nicht geladen werden."
+#~ msgstr "Fehler Weitere Events konnten nicht geladen werden."
+
+#~ msgid "Fehler beim laden weitere Events konnten nicht geladen werden."
+#~ msgstr "Fehler beim laden weitere Events konnten nicht geladen werden."
+
+#~ msgid "Fehler beim laden weiterer Events konnten nicht geladen werden."
+#~ msgstr "Fehler beim laden weiterer Events konnten nicht geladen werden."
+
+#: src/routes/+page.svelte
+msgid "Fehler beim laden weiterer Events."
+msgstr "Fehler beim laden weiterer Events."

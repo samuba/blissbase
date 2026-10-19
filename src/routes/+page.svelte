@@ -224,7 +224,7 @@
 						{@render loading(false)}
 					{:else if eventsStore.loadMoreFailed}
 						<div role="alert" class="flex flex-col items-center gap-3 py-10 text-center" data-testid="events-load-more-error">
-							<p class="text-base-content/70">Weitere Events konnten nicht geladen werden.</p>
+							<p class="text-base-content/70">Fehler beim laden weiterer Events.</p>
 							<button
 								type="button"
 								class="btn"
