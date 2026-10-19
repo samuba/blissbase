@@ -36,3 +36,8 @@ src/locales/.wuchale
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Verification skill runtime
+.cursor/skills/verify-blissbase/.active-run
+.cursor/skills/verify-blissbase/artifacts/**
+!.cursor/skills/verify-blissbase/artifacts/.gitkeep
