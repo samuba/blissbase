@@ -242,7 +242,7 @@
 			{/if}
 		</div>
 
-		{#snippet failed(error, reset)}
+		{#snippet failed(error)}
 			<div role="alert" class="alert alert-error">
 				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -272,6 +272,7 @@
 {#snippet loading(reserveVerticalSpace: boolean)}
 	<div class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? 'h-dvh' : 'h-15']}
 		id="events-loading-spinner"
+		role="status"
 		data-testid="events-loading"
 	>
 	<span class="loading loading-spinner loading-xl"></span>
@@ -280,7 +281,7 @@
 {/snippet}
 
 {#snippet noResults(foundSomeResultsBefore: boolean)}
-	<div class={[noResultsContainerClasses, "h-15"]} data-testid="events-no-results">
+	<div class={[noResultsContainerClasses, "h-15"]} role="status" data-testid="events-no-results">
 		<div class="text-gray-500 text-center">
 			{#if foundSomeResultsBefore}
 				Keine weiteren Events gefunden
@@ -288,7 +289,8 @@
 				Keine Events gefunden
 			{/if}
 			{#if eventsStore.hasSearchFilter}
-				mit <br /> {@html eventsStore.searchFilter?.split(' ').map(x => `<b>${x}</b>`).join(' & ')}<br />
+				mit <br />
+				{#each eventsStore.searchFilter?.split(/\s+/) ?? [] as term, index (index)}{index ? ` & ` : ``}<b>{term}</b>{/each}<br />
 			{/if}
 			{#if eventsStore.hasLocationFilter}
 				in <br /> <span class="font-bold">{eventsStore.locationFilter.plzCity} ({eventsStore.locationFilter.distance}km Radius)</span><br />
