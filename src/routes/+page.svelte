@@ -221,7 +221,7 @@
 
 					{#if eventsStore.isLoadingMore}
 						{@render loading(false)}
-					{:else}
+					{:else if !eventsStore.canLoadMore}
 						{@render noResults(true)}
 					{/if}
 				</div>
@@ -281,7 +281,7 @@
 {/snippet}
 
 {#snippet noResults(foundSomeResultsBefore: boolean)}
-	<div class={[noResultsContainerClasses, "h-15"]}>
+	<div class={[noResultsContainerClasses, "h-15"]} data-testid="events-no-results">
 		<div class="text-gray-500 text-center">
 			{#if foundSomeResultsBefore}
 				Keine weiteren Events gefunden
