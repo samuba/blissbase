@@ -111,23 +111,29 @@
 		return `Keine Einträge für „${label}“ mit dieser Filterung.`;
 	});
 
-	saveTelegramScrapingTarget.fields.set(defaultFormValues);
+	// One instance per dialog: a closing dialog keeps its <form> attached during the out transition.
+	const addTargetForm = saveTelegramScrapingTarget.for(`add`);
+	const editTargetForm = saveTelegramScrapingTarget.for(`edit`);
+	const addFormProps = enhanceSaveTarget(addTargetForm);
+	const editFormProps = enhanceSaveTarget(editTargetForm);
 
-	const formProps = saveTelegramScrapingTarget.enhance(async (form) => {
-		const ok = await form.submit().updates(getTelegramScrapingTargets, getAvailableTelegramDialogs);
-		if (!ok) return;
+	function enhanceSaveTarget(targetForm: typeof addTargetForm) {
+		return targetForm.enhance(async (form) => {
+			const ok = await form.submit().updates(getTelegramScrapingTargets, getAvailableTelegramDialogs);
+			if (!ok) return;
 
-		const result = form.result;
-		const name = result?.name;
-		if (result?.action === `updated`) {
-			toast.success(name ? `Target „${name}“ aktualisiert` : `Target aktualisiert`);
-			onEditDialogOpenChange(false);
-			return;
-		}
+			const result = form.result;
+			const name = result?.name;
+			if (result?.action === `updated`) {
+				toast.success(name ? `Target „${name}“ aktualisiert` : `Target aktualisiert`);
+				onEditDialogOpenChange(false);
+				return;
+			}
 
-		toast.success(name ? `Target „${name}“ hinzugefügt` : `Target hinzugefügt`);
-		closeAddDialog();
-	});
+			toast.success(name ? `Target „${name}“ hinzugefügt` : `Target hinzugefügt`);
+			closeAddDialog();
+		});
+	}
 
 	const sortColumns: { key: SortKey; label: string }[] = [
 		{ key: `name`, label: `Name` },
@@ -156,7 +162,7 @@
 		dialogFilter = ``;
 		dialogKindFilter = `all`;
 		dialogAccountFilter = `primary`;
-		saveTelegramScrapingTarget.fields.set(defaultFormValues);
+		addTargetForm.fields.set(defaultFormValues);
 		isAddDialogOpen = true;
 		ensureAvailableDialogsLoaded();
 	}
@@ -175,7 +181,7 @@
 		dialogFilter = ``;
 		dialogKindFilter = `all`;
 		dialogAccountFilter = `primary`;
-		saveTelegramScrapingTarget.fields.set(defaultFormValues);
+		addTargetForm.fields.set(defaultFormValues);
 	}
 
 	function onAddDialogOpenChange(open: boolean) {
@@ -188,7 +194,7 @@
 
 	function selectDialogForAdd(dialog: AvailableDialog) {
 		selectedDialogForAdd = { roomId: dialog.roomId, name: dialog.name };
-		saveTelegramScrapingTarget.fields.set({
+		addTargetForm.fields.set({
 			...defaultFormValues,
 			roomId: dialog.roomId,
 		});
@@ -196,11 +202,11 @@
 
 	function clearSelectedDialogForAdd() {
 		selectedDialogForAdd = null;
-		saveTelegramScrapingTarget.fields.set(defaultFormValues);
+		addTargetForm.fields.set(defaultFormValues);
 	}
 
-	async function fillTimezoneFromAddress(address: string) {
-		const trimmed = address.trim();
+	async function fillTimezoneFromAddress(args: { address: string; targetForm: typeof addTargetForm }) {
+		const trimmed = args.address.trim();
 		if (!trimmed) return;
 
 		timezoneLookupAddress = trimmed;
@@ -211,7 +217,7 @@
 				toast.error(`Zeitzone zur Adresse nicht gefunden`);
 				return;
 			}
-			saveTelegramScrapingTarget.fields.defaultTimezone.set(timezone);
+			args.targetForm.fields.defaultTimezone.set(timezone);
 		} catch (error) {
 			if (timezoneLookupAddress !== trimmed) return;
 			console.error(`Failed to look up timezone:`, error);
@@ -221,7 +227,7 @@
 
 	function selectTarget(target: Target) {
 		selectedRoomId = target.roomId;
-		saveTelegramScrapingTarget.fields.set({
+		editTargetForm.fields.set({
 			originalRoomId: target.roomId,
 			roomId: target.roomId,
 			defaultAddress: target.defaultAddress?.join(`\n`) ?? ``,
@@ -237,7 +243,7 @@
 		if (open) return;
 		selectedRoomId = null;
 		isDeleting = false;
-		saveTelegramScrapingTarget.fields.set(defaultFormValues);
+		editTargetForm.fields.set(defaultFormValues);
 	}
 
 	async function deleteSelectedTarget() {
@@ -452,6 +458,7 @@
 										`hover:bg-base-200 cursor-pointer`,
 										selectedRoomId === target.roomId && `bg-primary/10`,
 									]}
+									data-testid="telegram-target-row"
 									onclick={() => selectTarget(target)}
 								>
 									<td class="min-w-64 font-medium">
@@ -629,9 +636,9 @@
 						{/if}
 					</div>
 				{:else}
-					<form {...formProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
-						<input type="hidden" {...saveTelegramScrapingTarget.fields.originalRoomId.as(`text`)} />
-						<input type="hidden" {...saveTelegramScrapingTarget.fields.roomId.as(`text`)} />
+					<form {...addFormProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+						<input type="hidden" {...addTargetForm.fields.originalRoomId.as(`text`)} />
+						<input type="hidden" {...addTargetForm.fields.roomId.as(`text`)} />
 
 						<div class="bg-base-200 flex items-start justify-between gap-2 rounded-box p-3">
 							<div class="min-w-0 space-y-0.5">
@@ -647,7 +654,7 @@
 							<label class="label cursor-pointer justify-start gap-2">
 								<input
 									class="checkbox"
-									{...saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents.as(`checkbox`)}
+									{...addTargetForm.fields.hasOnlyConsciousEvents.as(`checkbox`)}
 								/>
 								<span class="font-bold text-base-content">
 									hasOnlyConsciousEvents
@@ -656,30 +663,30 @@
 									</span>
 								</span>
 							</label>
-							<FormFieldIssues field={saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents} />
+							<FormFieldIssues field={addTargetForm.fields.hasOnlyConsciousEvents} />
 						</fieldset>
 
 						<fieldset class="fieldset">
 							<legend class="fieldset-legend">defaultAddress</legend>
 							<textarea
 								class="textarea min-h-20 w-full peer"
-								{...saveTelegramScrapingTarget.fields.defaultAddress.as(`text`)}
+								{...addTargetForm.fields.defaultAddress.as(`text`)}
 								placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-								onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
+								onblur={(event) => void fillTimezoneFromAddress({ address: event.currentTarget.value, targetForm: addTargetForm })}
 							></textarea>
 							<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
-							<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultAddress} />
+							<FormFieldIssues field={addTargetForm.fields.defaultAddress} />
 						</fieldset>
 
 						<fieldset class="fieldset">
 							<legend class="fieldset-legend">topicIds</legend>
 							<input
 								class="input w-full peer font-mono"
-								{...saveTelegramScrapingTarget.fields.topicIds.as(`text`)}
+								{...addTargetForm.fields.topicIds.as(`text`)}
 								placeholder="z.B. 1, 2 oder -1"
 							/>
 							<p class="label">Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics.</p>
-							<FormFieldIssues field={saveTelegramScrapingTarget.fields.topicIds} />
+							<FormFieldIssues field={addTargetForm.fields.topicIds} />
 						</fieldset>
 
 						<fieldset class="fieldset">
@@ -691,15 +698,15 @@
 							</legend>
 							<input
 								class="input w-full peer"
-								{...saveTelegramScrapingTarget.fields.defaultTimezone.as(`text`)}
+								{...addTargetForm.fields.defaultTimezone.as(`text`)}
 								required
 							/>
-							<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultTimezone} />
+							<FormFieldIssues field={addTargetForm.fields.defaultTimezone} />
 						</fieldset>
 
-						{#if saveTelegramScrapingTarget.fields.allIssues()?.length}
+						{#if addTargetForm.fields.allIssues()?.length}
 							<div class="flex flex-col gap-1">
-								{#each saveTelegramScrapingTarget.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
+								{#each addTargetForm.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
 									<div class="text-error text-xs">{issue.message}</div>
 								{/each}
 							</div>
@@ -709,9 +716,9 @@
 							<button
 								type="submit"
 								class="btn btn-primary"
-								disabled={saveTelegramScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
+								disabled={addTargetForm.pending > 0 || lookupTimezoneFromAddress.pending > 0}
 							>
-								{#if saveTelegramScrapingTarget.pending > 0}
+								{#if addTargetForm.pending > 0}
 									<span class="loading loading-spinner loading-sm"></span>
 									Wird gespeichert...
 								{:else}
@@ -738,31 +745,32 @@
 		<Dialog.OverlayAnimated />
 		<Dialog.ContentAnimated
 			class="bg-base-100 fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg shadow-xl"
+			data-testid="telegram-edit-dialog"
 		>
 			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">
 				Target bearbeiten
 			</Dialog.Title>
 
 			{#if isEditDialogOpen}
-				<form {...formProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
-					<input type="hidden" {...saveTelegramScrapingTarget.fields.originalRoomId.as(`text`)} />
+				<form {...editFormProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+					<input type="hidden" {...editTargetForm.fields.originalRoomId.as(`text`)} />
 
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">roomId *</legend>
 						<input
 							class="input w-full peer"
-							{...saveTelegramScrapingTarget.fields.roomId.as(`text`)}
+							{...editTargetForm.fields.roomId.as(`text`)}
 							required
 							placeholder="t.me/…, -100123…, @channel oder resolveName:Chat Name"
 						/>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.roomId} />
+						<FormFieldIssues field={editTargetForm.fields.roomId} />
 					</fieldset>
 
 					<fieldset class="fieldset">
 						<label class="label cursor-pointer justify-start gap-2">
 							<input
 								class="checkbox"
-								{...saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents.as(`checkbox`)}
+								{...editTargetForm.fields.hasOnlyConsciousEvents.as(`checkbox`)}
 							/>
 							<span class="font-bold text-base-content">
 								hasOnlyConsciousEvents
@@ -771,30 +779,30 @@
 								</span>
 							</span>
 						</label>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.hasOnlyConsciousEvents} />
+						<FormFieldIssues field={editTargetForm.fields.hasOnlyConsciousEvents} />
 					</fieldset>
 
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">defaultAddress</legend>
 						<textarea
 							class="textarea min-h-20 w-full peer"
-							{...saveTelegramScrapingTarget.fields.defaultAddress.as(`text`)}
+							{...editTargetForm.fields.defaultAddress.as(`text`)}
 							placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
-							onblur={(event) => void fillTimezoneFromAddress(event.currentTarget.value)}
+							onblur={(event) => void fillTimezoneFromAddress({ address: event.currentTarget.value, targetForm: editTargetForm })}
 						></textarea>
 						<p class="label">Komma- oder zeilengetrennt. Leer = keine Fallback-Adresse.</p>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultAddress} />
+						<FormFieldIssues field={editTargetForm.fields.defaultAddress} />
 					</fieldset>
 
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">topicIds</legend>
 						<input
 							class="input w-full peer font-mono"
-							{...saveTelegramScrapingTarget.fields.topicIds.as(`text`)}
+							{...editTargetForm.fields.topicIds.as(`text`)}
 							placeholder="z.B. 1, 2 oder -1"
 						/>
 						<p class="label">Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics.</p>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.topicIds} />
+						<FormFieldIssues field={editTargetForm.fields.topicIds} />
 					</fieldset>
 
 					<fieldset class="fieldset">
@@ -806,15 +814,15 @@
 						</legend>
 						<input
 							class="input w-full peer"
-							{...saveTelegramScrapingTarget.fields.defaultTimezone.as(`text`)}
+							{...editTargetForm.fields.defaultTimezone.as(`text`)}
 							required
 						/>
-						<FormFieldIssues field={saveTelegramScrapingTarget.fields.defaultTimezone} />
+						<FormFieldIssues field={editTargetForm.fields.defaultTimezone} />
 					</fieldset>
 
-					{#if saveTelegramScrapingTarget.fields.allIssues()?.length}
+					{#if editTargetForm.fields.allIssues()?.length}
 						<div class="flex flex-col gap-1">
-							{#each saveTelegramScrapingTarget.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
+							{#each editTargetForm.fields.allIssues() ?? [] as issue, i (`${issue.message}-${i}`)}
 								<div class="text-error text-xs">{issue.message}</div>
 							{/each}
 						</div>
@@ -824,7 +832,7 @@
 						<button
 							type="button"
 							class="btn btn-error btn-outline"
-							disabled={isDeleting || saveTelegramScrapingTarget.pending > 0}
+							disabled={isDeleting || editTargetForm.pending > 0}
 							onclick={deleteSelectedTarget}
 						>
 							{#if isDeleting}
@@ -838,9 +846,9 @@
 						<button
 							type="submit"
 							class="btn btn-primary"
-							disabled={isDeleting || saveTelegramScrapingTarget.pending > 0 || lookupTimezoneFromAddress.pending > 0}
+							disabled={isDeleting || editTargetForm.pending > 0 || lookupTimezoneFromAddress.pending > 0}
 						>
-							{#if saveTelegramScrapingTarget.pending > 0}
+							{#if editTargetForm.pending > 0}
 								<span class="loading loading-spinner loading-sm"></span>
 								Wird gespeichert...
 							{:else}

@@ -9,8 +9,7 @@ import { geocodeAddressCached } from '$lib/server/google';
 import { routes } from '$lib/routes';
 import {
 	excludeExistingTelegramTargets,
-	type AvailableTelegramDialog,
-	type TelegramDialogAccountId,
+	parseTelegramDialogsResponse,
 } from './dialogs/availableDialogs';
 
 function toAddressLines(address: string) {
@@ -260,32 +259,9 @@ async function fetchPrimaryTelegramDialogs() {
 	});
 
 	if (res.ok) {
-		const body = (await res.json()) as {
-			accounts: TelegramDialogAccountId[]
-			accountStatuses: {
-				accountId: TelegramDialogAccountId
-				listed: number
-				error: string | null
-			}[]
-			dialogs: {
-				roomId: string
-				name: string
-				kind: `group` | `channel`
-				username: string | null
-				accountId: TelegramDialogAccountId
-				lastMessageTime: string | null
-			}[]
-		};
-		return {
-			accounts: body.accounts,
-			accountStatuses: body.accountStatuses,
-			dialogs: body.dialogs.map(
-				(dialog): AvailableTelegramDialog => ({
-					...dialog,
-					lastMessageTime: dialog.lastMessageTime ? new Date(dialog.lastMessageTime) : null,
-				}),
-			),
-		};
+		const body = parseTelegramDialogsResponse(await res.json());
+		if (body) return body;
+		throw new Error(`Telegram-Dialoge haben ein unerwartetes Format. Bitte später erneut versuchen.`);
 	}
 
 	throw new Error(await readSplitRouteError({
