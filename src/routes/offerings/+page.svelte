@@ -176,8 +176,8 @@
 <svelte:window bind:scrollY />
 
 <div class="grid w-full overflow-hidden" id="content-before-menu">
-	<!-- hero image layer -->
-	<div class="col-start-1 row-start-1 h-72 w-full overflow-hidden md:h-[550px]">
+	<!-- hero image layer — same height behavior as homepage -->
+	<div class="col-start-1 row-start-1">
 		<picture>
 			{#each Object.entries(offeringHeroMobile.sources) as [format, srcset] (format)}
 				<source media="(max-width: 499px)" {srcset} type={`image/${format}`} />
@@ -195,7 +195,7 @@
 				width={offeringHeroTablet.img.w}
 				height={offeringHeroTablet.img.h}
 				alt="Hero"
-				class="h-full w-full object-cover object-center"
+				class="h-72 w-full object-cover md:h-auto md:max-h-[550px]"
 			/>
 		</picture>
 	</div>
