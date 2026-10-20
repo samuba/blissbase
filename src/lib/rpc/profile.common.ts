@@ -198,7 +198,7 @@ export const publicProfileFields = {
 			}
 			return true;
 		}, `Website is not a valid URL`),
-		v.filterItems((link) => Boolean(link.value?.trim())),
+		v.filterItems((link) => Boolean(link.value)),
 	),
 } satisfies v.ObjectEntries;
 

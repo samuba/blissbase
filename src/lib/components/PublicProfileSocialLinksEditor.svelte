@@ -140,7 +140,7 @@
 <div class="flex flex-col gap-4">
 	{#if socialLinks.length > 0}
 		<ul class="mt-3 flex flex-col gap-4 md:grid md:grid-cols-2">
-			{#each socialLinks as link, i (`${link.type}-${i}`)}
+			{#each socialLinks as link, i}
 				<li
 					data-testid="social-link-row"
 					class={[`bg-base-200 flex flex-col gap-3 rounded-2xl px-4 py-3`]}
