@@ -195,12 +195,7 @@
 				width={offeringHeroTablet.img.w}
 				height={offeringHeroTablet.img.h}
 				alt="Hero"
-				class={[
-					`h-72 w-full object-cover object-center`,
-					// No max-height on md+: keep the ~2.5:1 intrinsic ratio so
-					// ultra-wide viewports don't force object-cover to zoom in.
-					`md:h-auto`,
-				]}
+				class="h-72 w-full object-cover object-center md:h-[550px]"
 			/>
 		</picture>
 	</div>
