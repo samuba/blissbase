@@ -39,6 +39,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const kept: ScrapedEvent[] = [];
 		const seen = new Set<string>();
 		let itemFailures = 0;
+		let outsideRadius = 0;
+		let notUpcoming = 0;
 
 		for (const hit of named) {
 			if (limit != null && kept.length >= limit) break;
@@ -56,14 +58,20 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 					console.error(`No coordinates for ${hit.name}`);
 					continue;
 				}
-				if (!nearestLocation({ point, locations })) continue;
+				if (!nearestLocation({ point, locations })) {
+					outsideRadius++;
+					continue;
+				}
 
 				const mapped = mapMegatixEvent({ hit, detail, point });
 				if (!mapped) {
 					itemFailures++;
 					continue;
 				}
-				if (!isUpcomingStart({ startAt: mapped.startAt, now: Date.now() })) continue;
+				if (!isUpcomingStart({ startAt: mapped.startAt, now: Date.now() })) {
+					notUpcoming++;
+					continue;
+				}
 				if (seen.has(mapped.sourceUrl)) continue;
 				seen.add(mapped.sourceUrl);
 				kept.push(mapped);
@@ -80,6 +88,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 			);
 		}
 
+		console.error(
+			`Megatix keep: ${kept.length} within 30km and upcoming, ${outsideRadius} outside 30km, ${notUpcoming} not upcoming, ${itemFailures} unplaced`,
+		);
 		console.error(`--- Scraping finished. Total events collected: ${kept.length} ---`);
 		return kept;
 	}

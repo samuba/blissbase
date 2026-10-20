@@ -36,9 +36,14 @@ export function createGoogleCacheApi(db: DB) {
 				return geocodeLocalCache.get(cacheKey) ?? null;
 			}
 
-			const dbCachedResult = await db.query.geocodeCache.findFirst({
-				where: eq(geocodeCache.address, cacheKey)
-			});
+			let dbCachedResult: Awaited<ReturnType<typeof db.query.geocodeCache.findFirst>> = undefined;
+			try {
+				dbCachedResult = await db.query.geocodeCache.findFirst({
+					where: eq(geocodeCache.address, cacheKey)
+				});
+			} catch (cacheReadError) {
+				console.error(`Geocode cache read failed for ${geocodeLabel}: ${cacheReadError instanceof Error ? cacheReadError.message : String(cacheReadError)}`);
+			}
 
 			if (dbCachedResult) {
 				console.log(`Found cached geocoding result for ${geocodeLabel} in db: ${dbCachedResult.latitude}, ${dbCachedResult.longitude}`);
