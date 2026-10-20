@@ -11,20 +11,21 @@
 		<div class="card bg-base-100 p-6 shadow">
 			<h1 class="text-2xl font-semibold">FAQ</h1>
 			<p class="mt-2 text-base-content/75">
-				Answers to the most common questions about Blissbase.
+				Antworten auf die häufigsten Fragen rund um Blissbase.
 			</p>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">What is Blissbase?</h2>
+			<h2 class="text-lg font-semibold">Was ist Blissbase?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Blissbase is your portal for expansion. We bring events and personal offerings together in
-					one searchable place to support wellbeing, personal growth, and deep human connection.
+					Blissbase ist dein Portal für Expansion. Wir bringen Events und persönliche Angebote an
+					einem durchsuchbaren Ort zusammen – für Wohlbefinden, persönliches Wachstum und tiefe
+					menschliche Verbindung.
 				</p>
 				<p>
-					Spend less time searching and more time discovering what’s happening around you,
-					finding your people, and taking part.
+					Verbringe weniger Zeit mit Suchen und mehr damit, zu entdecken, was um dich herum
+					passiert, deine Menschen zu finden und dabei zu sein.
 				</p>
 			</div>
 		</div>
@@ -53,231 +54,237 @@
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">Who is Blissbase for?</h2>
+			<h2 class="text-lg font-semibold">Für wen ist Blissbase?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
-				<p>For people looking for meaningful experiences and the people creating them.</p>
+				<p>Für Menschen, die nach bedeutsamen Erfahrungen suchen, und für die, die sie gestalten.</p>
 				<p>
-					We call those exploring seekers, and those sharing their work providers. Providers include
-					facilitators, teachers, event organizers, venues, schools, and retreat leaders.
+					Die Entdeckenden nennen wir Suchende, und die, die ihre Arbeit teilen, Anbieter. Zu den
+					Anbietern gehören Facilitators, Lehrer:innen, Veranstalter:innen, Locations, Schulen und
+					Retreat-Leiter:innen.
 				</p>
 				<p>
-					Whether you’re finding your community or bringing people together, you’re
-					welcome here.
+					Ob du deine Community findest oder Menschen zusammenbringst – hier bist du willkommen.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">Is Blissbase free?</h2>
+			<h2 class="text-lg font-semibold">Ist Blissbase kostenlos?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Yes. Browsing, creating a profile, saving favorite events, and listing your events and
-					offerings are free.
+					Ja. Stöbern, ein Profil anlegen, Lieblings-Events speichern und deine Events und Angebote
+					einstellen ist kostenlos.
 				</p>
-				<p>Individual experiences may have their own price, set by the provider.</p>
+				<p>Einzelne Erfahrungen können einen eigenen Preis haben – den legt der Anbieter fest.</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">What’s the difference between Events and Offerings?</h2>
+			<h2 class="text-lg font-semibold">Was ist der Unterschied zwischen Events und Angeboten?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Events happen at a scheduled time, such as a workshop, dance, festival, or community
-					gathering.
+					Events finden zu einem festgelegten Zeitpunkt statt – zum Beispiel Workshops, Tänze,
+					Festivals oder Community-Treffen.
 				</p>
 				<p>
-					Offerings are personal sessions and services available on request, such as coaching,
-					massage, or a private session. They can be available in person, online, or both.
-				</p>
-			</div>
-		</div>
-
-		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">Why create an account if I’m looking for experiences?</h2>
-			<div class="mt-2 space-y-3 text-base-content/80">
-				<p>
-					Save events that catch your eye and keep them together under
-					<a href={routes.favorites()} class="link font-semibold">Favorites</a>. Tap the heart on an
-					event to come back to it when you’re making plans.
-				</p>
-				<p>
-					You can browse without an account. To sign up, open
-					<a href={routes.profile()} class="link font-semibold">Profile</a> and use Google or receive
-					a login code by email.
+					Angebote sind persönliche Sessions und Services auf Anfrage, zum Beispiel Coaching,
+					Massage oder eine private Session. Sie können vor Ort, online oder beides verfügbar sein.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">Why create a profile if I offer events or services?</h2>
+			<h2 class="text-lg font-semibold">
+				Warum sollte ich ein Konto anlegen, wenn ich nach Erfahrungen suche?
+			</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Introduce yourself and bring your events, offerings, website, and social links together on
-					one public page you can share.
+					Speichere Events, die dich ansprechen, und behalte sie unter
+					<a href={routes.favorites()} class="link font-semibold">Favoriten</a> zusammen. Tippe auf
+					das Herz bei einem Event, um später darauf zurückzukommen, wenn du Pläne machst.
 				</p>
 				<p>
-					Your profile helps people discover your work and explore what else you offer. Creating your
-					profile and publishing listings is free. Start through
-					<a href={routes.profile()} class="link font-semibold">Profile</a>, using Google or an email
-					login code.
+					Du kannst ohne Konto stöbern. Zum Anmelden öffne
+					<a href={routes.profile()} class="link font-semibold">Profil</a> und nutze Google oder
+					lass dir einen Login-Code per E-Mail schicken.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">How do I search for events?</h2>
+			<h2 class="text-lg font-semibold">
+				Warum sollte ich ein Profil anlegen, wenn ich Events oder Services anbiete?
+			</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
-				<p>Search by keyword and combine these filters:</p>
+				<p>
+					Stelle dich vor und bringe deine Events, Angebote, Website und Social-Links auf einer
+					öffentlichen Seite zusammen, die du teilen kannst.
+				</p>
+				<p>
+					Dein Profil hilft anderen, deine Arbeit zu entdecken und zu sehen, was du noch anbietest.
+					Profil anlegen und Einträge veröffentlichen ist kostenlos. Starte über
+					<a href={routes.profile()} class="link font-semibold">Profil</a> – mit Google oder einem
+					Login-Code per E-Mail.
+				</p>
+			</div>
+		</div>
+
+		<div class="card bg-base-100 p-6 shadow">
+			<h2 class="text-lg font-semibold">Wie suche ich nach Events?</h2>
+			<div class="mt-2 space-y-3 text-base-content/80">
+				<p>Suche per Stichwort und kombiniere diese Filter:</p>
 				<ul class="list-disc space-y-2 pl-5">
 					<li>
-						<b>Categories:</b> Dance, Breathwork, Tantra, Meditation, Movement, Energy Work, Sound
-						Healing, Bodywork, Music, Relationship, Personal Growth, Spirituality, and Ceremony.
-						You’ll find even more under Other.
+						<b>Kategorien:</b> Tanz, Breathwork, Tantra, Meditation, Bewegung, Energiearbeit, Sound
+						Healing, Körperarbeit, Musik, Beziehung, Persönliche Entwicklung, Spiritualität und
+						Zeremonie. Unter Sonstiges findest du noch mehr.
 					</li>
 					<li>
-						<b>Location and distance:</b> Enter a city or postal code, then choose a search radius or
-						Everywhere.
+						<b>Ort und Entfernung:</b> Gib eine Stadt oder Postleitzahl ein und wähle einen
+						Suchradius oder Überall.
 					</li>
 					<li>
-						<b>Time period:</b> Pick dates or choose This week, This weekend, Next week, Next 30 days,
-						or All upcoming events.
+						<b>Zeitraum:</b> Wähle Daten oder Diese Woche, Dieses Wochenende, Nächste Woche, Nächste
+						30 Tage oder Alle zukünftigen Events.
 					</li>
-					<li><b>Attendance:</b> Choose In-Person or Online.</li>
+					<li><b>Teilnahme:</b> Wähle Vor Ort oder Online.</li>
 				</ul>
 				<p>
-					Sort by start time or distance. If you’re finding little, widen your distance or
-					dates, remove a category, or select Reset all filters.
+					Sortiere nach Startzeit oder Entfernung. Wenn du wenig findest, erweitere Entfernung oder
+					Zeitraum, entferne eine Kategorie oder wähle Alle Filter zurücksetzen.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">Can I explore somewhere other than my current location?</h2>
+			<h2 class="text-lg font-semibold">Kann ich auch woanders als an meinem aktuellen Ort stöbern?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Yes. Blissbase helps you connect with your community at home and find your community while
-					traveling.
+					Ja. Blissbase hilft dir, dich mit deiner Community zu Hause zu verbinden und deine
+					Community unterwegs zu finden.
 				</p>
 				<p>
-					Change the location to wherever you’re heading and explore what’s happening
-					there.
+					Ändere den Ort zu dem Ziel, wohin du unterwegs bist, und entdecke, was dort passiert.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">How do I find private sessions and services?</h2>
+			<h2 class="text-lg font-semibold">Wie finde ich private Sessions und Services?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Open <a href={routes.offeringsList()} class="link font-semibold">Offerings</a> and search by
-					keyword, location, and distance. Select "Also show online offerings" to include sessions
-					available remotely.
+					Öffne <a href={routes.offeringsList()} class="link font-semibold">Angebote</a> und suche
+					nach Stichwort, Ort und Entfernung. Wähle „Online Angebote auch anzeigen“, um Sessions
+					einzubeziehen, die remote verfügbar sind.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">How do I get more information or book an event or offering?</h2>
+			<h2 class="text-lg font-semibold">
+				Wie bekomme ich mehr Infos oder buche ich ein Event oder Angebot?
+			</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					It depends on the event or offering and the provider. Use the contact details or booking
-					instructions in the listing. These may include a link, WhatsApp, Telegram, email, or phone
-					number. Some events don’t require registration.
+					Das hängt vom Event oder Angebot und vom Anbieter ab. Nutze die Kontaktdaten oder
+					Buchungsangaben im Eintrag. Das kann ein Link, WhatsApp, Telegram, E-Mail oder eine
+					Telefonnummer sein. Manche Events brauchen keine Anmeldung.
 				</p>
 				<p>
-					Some provider profiles also include website and Instagram buttons. For events collected from
-					another platform, follow the Source link to the original listing.
+					Manche Anbieter-Profile haben auch Website- und Instagram-Buttons. Bei Events, die von
+					einer anderen Plattform stammen, folge dem Quellen-Link zum Original-Eintrag.
 				</p>
-				<p>Ticketing through Blissbase is planned for the future.</p>
+				<p>Ticketing über Blissbase ist für die Zukunft geplant.</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">How do I post my event?</h2>
+			<h2 class="text-lg font-semibold">Wie stelle ich mein Event ein?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Select <a href={routes.newEvent()} class="link font-semibold">Add event</a> and enter the
-					name, date, time, description, location or online format, and registration details. Add
-					images, a price, and tags where relevant.
+					Wähle <a href={routes.newEvent()} class="link font-semibold">Event hinzufügen</a> und gib
+					Name, Datum, Uhrzeit, Beschreibung, Ort oder Online-Format und Anmelde-Details ein. Füge
+					Bilder, einen Preis und Tags hinzu, wo es passt.
 				</p>
 				<p>
-					Already have promotional text or a flyer? Use Auto-fill to help fill in the fields, then
-					check the details before continuing.
+					Hast du schon Werbetext oder einen Flyer? Nutze Automatisch ausfüllen, um beim Ausfüllen
+					der Felder zu helfen – und prüfe die Angaben danach.
 				</p>
 				<p>
-					Keep your existing booking method by adding it under "Registration / Tickets via." For an
-					event you only want to share by link, select "Don’t show event in search."
+					Behalte deine bestehende Buchungsmethode, indem du sie unter „Anmeldung / Tickets über“
+					hinterlegst. Für ein Event, das du nur per Link teilen willst, wähle „Event nicht in Suche
+					anzeigen“.
 				</p>
 				<p>
-					You can also submit through
+					Du kannst auch über
 					<a
 						href="https://t.me/blissbase_bot"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="link font-semibold">@blissbase_bot</a
-					> on Telegram. Include the description, location, date, and image together in a single
-					message.
+					> auf Telegram einreichen. Beschreibung, Ort, Datum und Bild müssen zusammen in einer
+					einzigen Nachricht stehen.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">How do I list my personal sessions or services?</h2>
+			<h2 class="text-lg font-semibold">Wie stelle ich meine persönlichen Sessions oder Services ein?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Open <a href={routes.offeringsList()} class="link font-semibold">Offerings</a> and select
-					<a href={routes.newOffering()} class="link font-semibold">Add offering</a>. Add your title,
-					description, images, and whether it’s available in person, online, or both.
+					Öffne <a href={routes.offeringsList()} class="link font-semibold">Angebote</a> und wähle
+					<a href={routes.newOffering()} class="link font-semibold">Angebot hinzufügen</a>. Ergänze
+					Titel, Beschreibung, Bilder und ob es vor Ort, online oder beides verfügbar ist.
 				</p>
 				<p>
-					Your offering can appear on the Offerings page and in your public profile.
+					Dein Angebot kann auf der Angebote-Seite und in deinem öffentlichen Profil erscheinen.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">Where do Blissbase’s event listings come from?</h2>
+			<h2 class="text-lg font-semibold">Woher kommen die Event-Einträge auf Blissbase?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Providers post events directly, and Blissbase also gathers listings from public calendars,
-					websites, and community channels.
+					Anbieter stellen Events direkt ein, und Blissbase sammelt außerdem Einträge aus
+					öffentlichen Kalendern, Websites und Community-Kanälen.
 				</p>
 				<p>
-					We bring the information together so you don’t have to search through separate
-					websites, apps, and groups.
+					Wir bringen die Informationen zusammen, damit du nicht durch separate Websites, Apps und
+					Gruppen suchen musst.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">Where is Blissbase growing next?</h2>
+			<h2 class="text-lg font-semibold">Wo wächst Blissbase als Nächstes?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
 				<p>
-					Our aim is to become the easiest place to find the most relevant experiences, wherever you
-					find yourself on your journey.
+					Unser Ziel ist, der einfachste Ort zu werden, um die relevantesten Erfahrungen zu finden –
+					wo immer du dich auf deiner Reise befindest.
 				</p>
 				<p>
-					We’re focusing our expansion on spiritual hubs, including Ubud in Bali, San Marcos
-					on Lake Atitlán in Guatemala, Ibiza, Tulum, Goa, and Koh Phangan. We also plan to grow into
-					places with conscious communities, including Austin in the US and Byron Bay in Australia.
-					More coming soon.
+					Wir fokussieren unsere Expansion auf spirituelle Hubs, darunter Ubud auf Bali, San Marcos
+					am Lago de Atitlán in Guatemala, Ibiza, Tulum, Goa und Koh Phangan. Außerdem wollen wir in
+					Orte mit bewussten Communities wachsen, darunter Austin in den USA und Byron Bay in
+					Australien. Mehr folgt bald.
 				</p>
 			</div>
 		</div>
 
 		<div class="card bg-base-100 p-6 shadow">
-			<h2 class="text-lg font-semibold">How can I help bring my local community to Blissbase?</h2>
+			<h2 class="text-lg font-semibold">Wie kann ich meine lokale Community zu Blissbase bringen?</h2>
 			<div class="mt-2 space-y-3 text-base-content/80">
-				<p>Would you like to see your city better represented? Help us open the door.</p>
+				<p>Möchtest du deine Stadt besser vertreten sehen? Hilf uns, die Tür zu öffnen.</p>
 				<p>
-					Introduce us to local providers, share public event calendars and community channels, or
-					connect us with the people bringing your community together.
+					Stelle uns lokale Anbieter vor, teile öffentliche Event-Kalender und Community-Kanäle oder
+					verbinde uns mit den Menschen, die deine Community zusammenbringen.
 				</p>
 				<p>
-					We welcome ambassadors and collaborators who want to bring their city’s experiences
-					into one place. Email
-					<a href="mailto:hi@blissbase.app" class="link font-semibold">hi@blissbase.app</a> with your
-					location and how you’d like to contribute.
+					Wir freuen uns über Ambassadors und Collaborators, die die Erfahrungen ihrer Stadt an
+					einem Ort zusammenbringen wollen. Schreib an
+					<a href="mailto:hi@blissbase.app" class="link font-semibold">hi@blissbase.app</a> mit
+					deinem Ort und wie du mitwirken möchtest.
 				</p>
 			</div>
 		</div>
