@@ -2,6 +2,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { browser } from '$app/environment';
 import { shouldSkipRecipient } from '$lib/common';
+import { captureSignInStarted } from '$lib/posthog';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export function getSupabaseBrowserClient() {
@@ -19,6 +20,7 @@ export function getSupabaseBrowserClient() {
 		if (`email` in credentials && shouldSkipRecipient(credentials.email)) {
 			return { data: { user: null, session: null }, error: null };
 		}
+		captureSignInStarted(`email`);
 		return signInWithOtp(credentials);
 	};
 	globalThis.__supabaseClient = client;

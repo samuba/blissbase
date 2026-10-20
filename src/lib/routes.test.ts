@@ -4,7 +4,7 @@ vi.mock(`$app/paths`, () => ({
 	resolve: (path: string) => path,
 }));
 
-const { AUTH_NEXT_QUERY, BASE_URL, isAuthFlowPath, isEventOrOfferingListPath, routePathname, routes, safeAuthNextPath } = await import(`$lib/routes`);
+const { AUTH_METHOD_QUERY, AUTH_NEXT_QUERY, BASE_URL, authCallbackUrl, isAuthFlowPath, isEventOrOfferingListPath, routePathname, routes, safeAuthNextPath } = await import(`$lib/routes`);
 
 describe(`routePathname`, () => {
 	it(`turns relative SSR resolve() results into absolute pathnames`, () => {
@@ -52,6 +52,13 @@ describe(`auth routes`, () => {
 	it(`does not loop next back into auth routes`, () => {
 		expect(routes.login({ next: `/auth/login` })).toBe(`/auth/login`);
 		expect(routes.authCallback({ next: `/auth/callback` })).toBe(`/auth/callback`);
+	});
+
+	it(`marks Google sign-in in the callback URL`, () => {
+		const url = new URL(authCallbackUrl({ origin: BASE_URL, next: `/profile/favorites`, method: `google` }));
+		expect(url.searchParams.get(AUTH_METHOD_QUERY)).toBe(`google`);
+		expect(url.searchParams.get(AUTH_NEXT_QUERY)).toBe(`/profile/favorites`);
+		expect(new URL(authCallbackUrl({ origin: BASE_URL })).searchParams.has(AUTH_METHOD_QUERY)).toBe(false);
 	});
 });
 

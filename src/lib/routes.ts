@@ -78,12 +78,15 @@ export const routes = {
 
 export const BASE_URL = "https://blissbase.app" as const
 export const AUTH_NEXT_QUERY = `next` as const
+export const AUTH_METHOD_QUERY = `method` as const
 export const OFFERING_SLUG_QUERY = `offeringSlug` as const
 export const EVENT_SLUG_QUERY = `eventSlug` as const
 
 /** Absolute callback URL for Supabase `redirectTo` / `emailRedirectTo`. */
-export function authCallbackUrl(args: { origin: string; next?: string | null }) {
-    return new URL(routes.authCallback({ next: args.next }), args.origin).href;
+export function authCallbackUrl(args: { origin: string; next?: string | null; method?: `google` }) {
+    const url = new URL(routes.authCallback({ next: args.next }), args.origin);
+    if (args.method) url.searchParams.set(AUTH_METHOD_QUERY, args.method);
+    return url.href;
 }
 
 export function isAuthFlowPath(pathname: string, origin: string = BASE_URL) {
