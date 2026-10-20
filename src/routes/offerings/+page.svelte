@@ -177,7 +177,7 @@
 
 <div class="grid w-full overflow-hidden" id="content-before-menu">
 	<!-- hero image layer -->
-	<div class="col-start-1 row-start-1">
+	<div class="col-start-1 row-start-1 h-72 w-full overflow-hidden md:h-[550px]">
 		<picture>
 			{#each Object.entries(offeringHeroMobile.sources) as [format, srcset] (format)}
 				<source media="(max-width: 499px)" {srcset} type={`image/${format}`} />
@@ -185,7 +185,7 @@
 			<source
 				media="(min-width: 1100px)"
 				srcset={offeringHeroDesktopUrl}
-				type="image/{offeringHeroDesktopUrl.split(`.`).pop()}"
+				type="image/{offeringHeroDesktopUrl.split(`.`).pop()?.split(`?`)[0]}"
 			/>
 			{#each Object.entries(offeringHeroTablet.sources) as [format, srcset] (format)}
 				<source {srcset} type={`image/${format}`} />
@@ -195,7 +195,7 @@
 				width={offeringHeroTablet.img.w}
 				height={offeringHeroTablet.img.h}
 				alt="Hero"
-				class="h-72 w-full object-cover object-center md:h-[550px]"
+				class="h-full w-full object-cover object-center"
 			/>
 		</picture>
 	</div>
