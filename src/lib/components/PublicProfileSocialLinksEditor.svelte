@@ -12,8 +12,6 @@
 		type ProfileSocialType,
 	} from "$lib/socialLinks";
 	import type { RemoteFormField, RemoteFormIssue } from "@sveltejs/kit";
-	import { flip } from "svelte/animate";
-	import { fade } from "svelte/transition";
 
 	let {
 		socialLinks = $bindable(),
@@ -131,10 +129,11 @@
 		[index: number]: {
 			type: RemoteFormField<ProfileSocialType>;
 			value: RemoteFormField<string>;
+			issues?: () => RemoteFormIssue[] | undefined;
+			allIssues?: () => RemoteFormIssue[] | undefined;
 		};
 		set: (value: PublicProfileSocialLinks) => PublicProfileSocialLinks;
 		issues?: () => RemoteFormIssue[] | undefined;
-		allIssues?: () => RemoteFormIssue[] | undefined;
 	};
 </script>
 
@@ -143,9 +142,8 @@
 		<ul class="mt-3 flex flex-col gap-4 md:grid md:grid-cols-2">
 			{#each socialLinks as link, i (`${link.type}-${i}`)}
 				<li
+					data-testid="social-link-row"
 					class={[`bg-base-200 flex flex-col gap-3 rounded-2xl px-4 py-3`]}
-					out:fade={{ duration: 160 }}
-					animate:flip={{ duration: 370, delay: 50 }}
 				>
 					<input type="hidden" {...field[i].type.as(`text`)} value={link.type} />
 					<fieldset class="fieldset">
@@ -192,13 +190,14 @@
 								oninput={(event) => onSocialLinkValueInput({ index: i, value: event.currentTarget.value })}
 							/>
 						{/if}
+						<FormFieldIssues field={field[i]} />
 					</fieldset>
 				</li>
 			{/each}
 		</ul>
 	{/if}
 
-	<FormFieldIssues {field} />
+	<FormFieldIssues field={{ issues: field.issues }} />
 
 	<button
 		type="button"
