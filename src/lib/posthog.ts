@@ -76,6 +76,6 @@ export function resetPosthogIdentity() {
 
 /** Denominator for sign-in failures that the auth callback reports. */
 export function captureSignInStarted(method: `google` | `email`) {
-	if (!browser || !posthog.__loaded) return;
+	if (!posthog.__loaded) return;
 	posthog.capture(`sign_in_started`, { method });
 }
