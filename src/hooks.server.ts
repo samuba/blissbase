@@ -1,12 +1,12 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import type { HandleServerError } from '@sveltejs/kit';
-import { PostHog } from 'posthog-node';
 import { dev } from '$app/environment';
 import { waitUntil } from '@vercel/functions';
 import { createSupabaseServerClient } from '$lib/server/supabase';
 import { refreshAuthLocalsFromSupabase, setAuthLocalsFromClaims } from '$lib/server/authLocals';
 import { posthogDistinctId } from '$lib/server/common';
+import { createServerPosthog, posthogApiKey } from '$lib/server/posthog';
 import * as main from './locales/main.loader.server.svelte.js'
 import * as js from './locales/js.loader.server.js'
 import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
@@ -56,8 +56,7 @@ const extractVercelHeader: Handle = async ({ event, resolve }) => {
     return resolve(event);
 }
 
-const posthogApiKey = "phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ"
-const posthog = new PostHog(posthogApiKey, { host: 'https://eu.i.posthog.com' })
+const posthog = createServerPosthog({ dev })
 const insertPosthog: Handle = async ({ event, resolve }) => {
     event.locals.posthog = posthog
     const cookieStr = event.cookies.get(`ph_${posthogApiKey}_posthog`)
