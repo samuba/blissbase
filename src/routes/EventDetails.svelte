@@ -14,11 +14,13 @@
 	import { resolve } from '$app/paths';
 	import PublicProfileCard from '$lib/components/PublicProfileCard.svelte';
 	import { labelsForTagSlugs } from '$lib/eventCategories';
+	import EventRegistration from '$lib/components/EventRegistration.svelte';
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
 		$props();
 
 	const isAuthor = $derived(user.id && event.authorId && user.id === event.authorId);
+	const showRegistration = $derived(Boolean(event.registrationEnabled || isAuthor || user.isAdmin));
 
 	let showOriginal = $state(false);
 
@@ -303,7 +305,8 @@
 				</div>
 			</section>
 
-			<div class="flex w-full flex-wrap justify-center gap-4 pt-1">
+			<div class="flex w-full flex-col items-center gap-4 pt-1">
+				<div class="flex w-full flex-wrap justify-center gap-4">
 				{#if isAuthor}
 					<a href={resolve(`/edit/${event.id}`)} class="btn">
 						<i class="icon-[ph--pencil] mr-1 size-4"></i>
@@ -313,7 +316,9 @@
 
 				<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
 	
-				{#if showQuelleInsteadOfAnmelden}
+				{#if event.registrationEnabled}
+					<!-- Anmeldung replaces the external booking button -->
+				{:else if showQuelleInsteadOfAnmelden}
 					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn" data-testid="event-source-link">
 						Quelle
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
@@ -360,6 +365,13 @@
 							{/if}
 						{/snippet}
 					</PopOver>
+				{/if}
+				</div>
+
+				{#if showRegistration}
+					{#key event.id}
+						<EventRegistration eventId={event.id} />
+					{/key}
 				{/if}
 			</div>
 		</div>

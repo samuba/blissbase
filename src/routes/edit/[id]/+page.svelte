@@ -5,6 +5,7 @@
 	import { deleteEvent } from '$lib/rpc/eventDelete.remote';
 	import { updateEvent } from '$lib/rpc/eventMutations.remote';
 	import EventForm from '$lib/components/EventForm.svelte';
+	import EventRegistration from '$lib/components/EventRegistration.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -12,6 +13,7 @@
 	let editFormValues = $derived(data.editFormValues);
 	let initializedFormEventId = $state<number | null>(null);
 
+	const hostSecret = $derived(page.url.searchParams.get(`hostSecret`) ?? ``);
 	let isDeletingEvent = $state(false);
 	let isSubmitting = $derived(!!updateEvent.pending);
 	let imageBusy = $state(false);
@@ -59,6 +61,10 @@
 	<div class="sm:rounded-box bg-base-100 shadow">
 		<div class="card-body gap-6">
 			<h1 class="card-title text-2xl" data-testid="event-edit-heading">Event bearbeiten</h1>
+
+			{#key event.id}
+				<EventRegistration eventId={event.id} {hostSecret} mode="settings" />
+			{/key}
 
 			{#if initializedFormEventId === event.id}
 				<EventForm
