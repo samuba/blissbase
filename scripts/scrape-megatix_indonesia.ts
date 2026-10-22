@@ -1,417 +1,454 @@
-/**
- * Scrapes megatix.co.id via the search + event APIs. Only keeps listings
- * hosted by The Yoga Barn or Paradiso.
- *
- * Usage:
- *   bun run scripts/scrape-megatix_indonesia.ts
- */
-import { ScrapedEvent } from "../src/lib/types.ts";
+import type { ScrapedEvent } from "../src/lib/types.ts";
 import {
-    customFetch,
-    WebsiteScraperInterface,
-    cleanProseHtml,
-    dateToIsoStr,
+	WebsiteScraperInterface,
+	cleanProseHtml,
+	customFetch,
+	dateToIsoStr,
+	sleep,
+	REQUEST_DELAY_MS,
+	selectLocationsByQuery,
 } from "./common.ts";
-import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
+import { LOCATIONS, type ScrapeLocation } from "./locations.ts";
+import { matchesBlackListWords, matchesWhiteListWords } from "../src/whitelistWords.ts";
+import { getDistanceInKm, hasValidCoordinates } from "../src/lib/locationFilter.ts";
+import { geocodeAddressCached } from "../src/lib/server/google.script.ts";
+import { parseCliArgs } from "./scrape-eventbrite.ts";
+
+const SEARCH_URL = `https://megatix.co.id/api/v2/events/search`;
+const DETAIL_URL = `https://megatix.co.id/api/v3/events`;
+const SOURCE = `megatix_indonesia` as const;
+const RADIUS_KM = 30;
+const TIME_ZONE = `Asia/Makassar` as const;
+const GEOCODE_BIAS = [`Bali`, `Indonesia`];
+const MAX_PAGES = 200;
+const MAX_TOTAL = 2500;
+const MAX_ITEM_FAILURE_SHARE = 0.5;
+const UPCOMING_GRACE_MS = 24 * 60 * 60 * 1000;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
-    async scrapeWebsite(): Promise<ScrapedEvent[]> {
-        const allEvents: ScrapedEvent[] = [];
+	async scrapeWebsite(query?: string, limit?: number): Promise<ScrapedEvent[]> {
+		const locations = megatixLocations(query);
+		console.error(
+			`Fetching Megatix Indonesia for ${locations.map((location) => location.name).join(`, `)}${limit != null ? ` (limit ${limit})` : ``}...`,
+		);
 
-        const pagesToFetch = [1,2,3,4,5];
-        for (const page of pagesToFetch) {
-            const pageResults = await (customFetch(`https://megatix.co.id/api/v2/events/search?page=${page}&pageSize=16&search`, { returnType: 'json' }) as Promise<SearchEntry>);
-            for (const result of pageResults.data) {
-                const event = await this.extractEntryData(result);
-                if (event) allEvents.push(event);
-            }
-        }
-        console.log({ allEvents });
+		const hits = await fetchCompleteCatalog();
+		const named = hits.filter((hit) => passesNameLists(getName(hit)));
+		console.error(`Megatix catalog: ${hits.length} events, ${named.length} names match the word lists`);
 
-        console.error(`--- Scraping finished. Total events collected: ${allEvents.length} ---`);
-        return allEvents;
-    }
+		const kept: ScrapedEvent[] = [];
+		const seen = new Set<string>();
+		let itemFailures = 0;
+		let outsideRadius = 0;
+		let notUpcoming = 0;
 
-    async extractEntryData(entry: SearchEntry['data'][number]): Promise<ScrapedEvent | undefined> {
-        const host = entry.promoter_name;
-        const hostsToInclude = ['the yoga barn', 'paradiso'];
-        if (!hostsToInclude.some(x => host.toLowerCase().includes(x) || entry.venue_name?.toLowerCase()?.includes(x))) {
-            console.log(`Skipping ${entry.name} because it is not hosted by known host`);
-            return undefined;
-        }
+		for (const hit of named) {
+			if (limit != null && kept.length >= limit) break;
+			try {
+				await sleep(REQUEST_DELAY_MS);
+				const detail = await fetchEventDetail(hit.id);
+				if (!detail) {
+					itemFailures++;
+					console.error(`No Megatix detail for ${hit.id} (${hit.name})`);
+					continue;
+				}
+				const point = await resolvePoint(detail);
+				if (!point) {
+					itemFailures++;
+					console.error(`No coordinates for ${hit.name}`);
+					continue;
+				}
+				if (!nearestLocation({ point, locations })) {
+					outsideRadius++;
+					continue;
+				}
 
-        const name = entry.name;
-        const price = entry.display_price
-        const imageUrls: string[] = []
-        if (entry.cover && entry.cover.startsWith('http')) {
-            imageUrls.push(entry.cover)
-        }
-        const sourceUrl = `https://megatix.co.id/events/${entry.slug}`;
-        const eventData = await (customFetch(`https://megatix.co.id/api/v3/events/${entry.id}`, { returnType: 'json' }) as Promise<EventData>)
-        const data = eventData.data;
-        const description = cleanProseHtml(data.description);
+				const mapped = mapMegatixEvent({ hit, detail, point });
+				if (!mapped) {
+					itemFailures++;
+					continue;
+				}
+				if (!isUpcomingStart({ startAt: mapped.startAt, now: Date.now() })) {
+					notUpcoming++;
+					continue;
+				}
+				if (seen.has(mapped.sourceUrl)) continue;
+				seen.add(mapped.sourceUrl);
+				kept.push(mapped);
+			} catch (error) {
+				itemFailures++;
+				console.error(`Failed to process Megatix event ${hit.id} (${hit.name}):`, error);
+			}
+		}
 
-        let [year, month, day] = entry.start_datetime.split(' ')[0].split('-').map(x => parseInt(x));
-        let [hour, minute] = entry.start_datetime.split(' ')[1].split(':').map(x => parseInt(x));
-        const startAt = dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
-        [year, month, day] = entry.end_datetime.split(' ')[0].split('-').map(x => parseInt(x));
-        [hour, minute] = entry.end_datetime.split(' ')[1].split(':').map(x => parseInt(x));
-        const endAt = dateToIsoStr(year, month, day, hour, minute, 'Asia/Makassar', false);
+		const stoppedEarly = limit != null && kept.length >= limit;
+		if (!stoppedEarly && named.length && itemFailures / named.length > MAX_ITEM_FAILURE_SHARE) {
+			throw new Error(
+				`Megatix could not place ${itemFailures} of ${named.length} name matches. Check GOOGLE_MAPS_API_KEY and the geocode cache.`,
+			);
+		}
 
-        let address: string[] = [] 
-        if (data.venue?.full_address?.includes('The Yoga Barn')) {
-            address.push('The Yoga Barn', 'Ubud');
-        } else if (data.venue?.full_address?.includes('Paradiso ')) {
-            address.push('Paradiso ', 'Ubud');
-        } else {
-            address = data.venue.full_address?.split(',').map(part => part.trim())
-        }
-        const timezoneLookup = await geocodeAddressCached({
-            addressLines: address,
-            apiKey: process.env.GOOGLE_MAPS_API_KEY || ``
-        });
-        const coordinates = data.venue.latitude && data.venue.longitude
-            ? { lat: data.venue.latitude, lng: data.venue.longitude }
-            : timezoneLookup;
-        
-        const event = {
-            name,
-            description,
-            imageUrls,
-            startAt,
-            endAt,
-            address,
-            price,
-            priceIsHtml: false,
-            host,
-            hostLink: undefined,
-            contact: [],
-            latitude: coordinates?.lat,
-            longitude: coordinates?.lng,
-            timezone: timezoneLookup?.timezone,
-            tags: [],
-            sourceUrl,
-            source: 'megatix_indonesia' as const
-        } satisfies ScrapedEvent;
-        console.log({ event });
-        return event;
-    }
-    extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
-        throw new Error("Method not implemented.");
-    }
-    scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]> {
-        throw new Error("Method not implemented." + filePath);
-    }
-    extractName(html: string): string | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractStartAt(html: string): string | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractEndAt(html: string): string | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractAddress(html: string): string[] | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractPrice(html: string): string | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractDescription(html: string): string | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractImageUrls(html: string): string[] | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractHost(html: string): string | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractHostLink(html: string): string | undefined {
-        throw new Error("Method not implemented." + html);
-    }
-    extractTags(html: string): string[] | undefined {
-        throw new Error("Method not implemented." + html);
-    }
+		console.error(
+			`Megatix keep: ${kept.length} within 30km and upcoming, ${outsideRadius} outside 30km, ${notUpcoming} not upcoming, ${itemFailures} unplaced`,
+		);
+		console.error(`--- Scraping finished. Total events collected: ${kept.length} ---`);
+		return kept;
+	}
+
+	async scrapeHtmlFiles(filePath: string[]): Promise<ScrapedEvent[]> {
+		throw new Error(`Method not implemented.` + filePath);
+	}
+
+	async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
+		throw new Error(`Method not implemented.` + html + url);
+	}
+
+	extractName(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractStartAt(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractEndAt(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractAddress(html: string): string[] | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractPrice(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractDescription(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractImageUrls(html: string): string[] | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractHost(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractHostLink(html: string): string | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
+	extractTags(html: string): string[] | undefined {
+		throw new Error(`Method not implemented.` + html);
+	}
 }
 
-// Execute the main function only when run directly
+export function megatixLocations(query?: string): ScrapeLocation[] {
+	const indonesia = LOCATIONS.filter((location) => location.country === `Indonesia`);
+	return selectLocationsByQuery({ locations: indonesia, query });
+}
+
+export function passesNameLists(name: string | undefined): boolean {
+	if (!name) return false;
+	if (!matchesWhiteListWords(name)) return false;
+	if (matchesBlackListWords(name)) return false;
+	return true;
+}
+
+export function nearestLocation({
+	point,
+	locations,
+}: {
+	point: { lat: number; lng: number };
+	locations: readonly ScrapeLocation[];
+}): ScrapeLocation | undefined {
+	let best: { location: ScrapeLocation; km: number } | undefined;
+	for (const location of locations) {
+		const km = getDistanceInKm({
+			fromLat: location.lat,
+			fromLng: location.lon,
+			toLat: point.lat,
+			toLng: point.lng,
+		});
+		if (km > RADIUS_KM) continue;
+		if (!best || km < best.km) best = { location, km };
+	}
+	return best?.location;
+}
+
+export function isUpcomingStart({ startAt, now }: { startAt: string; now: number }): boolean {
+	const start = new Date(startAt).getTime();
+	if (Number.isNaN(start)) return false;
+	return start >= now - UPCOMING_GRACE_MS;
+}
+
+export function assembleCatalog({
+	pages,
+	total,
+}: {
+	pages: readonly { currentPage: number; hits: readonly SearchHit[] }[];
+	total: number;
+}): SearchHit[] {
+	if (!pages.length) throw new Error(`Megatix catalog returned no pages`);
+
+	const ids = new Set<number>();
+	const hits: SearchHit[] = [];
+	for (const [index, page] of pages.entries()) {
+		if (page.currentPage !== index + 1) {
+			throw new Error(`Megatix catalog page ${index + 1} came back as ${page.currentPage}`);
+		}
+		if (index < pages.length - 1 && !page.hits.length) {
+			throw new Error(`Megatix catalog page ${page.currentPage} was empty`);
+		}
+		for (const hit of page.hits) {
+			if (ids.has(hit.id)) continue;
+			ids.add(hit.id);
+			hits.push(hit);
+		}
+	}
+
+	if (hits.length !== total) {
+		throw new Error(`Megatix catalog has ${hits.length} events, expected ${total}`);
+	}
+	return hits;
+}
+
+export function mapMegatixEvent({
+	hit,
+	detail,
+	point,
+}: {
+	hit: SearchHit;
+	detail: EventDetail;
+	point: { lat: number; lng: number };
+}): ScrapedEvent | undefined {
+	const name = getName(hit);
+	const startAt = getStartAt(hit);
+	const sourceUrl = getSourceUrl(hit);
+	if (!name || !startAt || !sourceUrl) return undefined;
+
+	return {
+		name,
+		description: getDescription(detail),
+		imageUrls: getImageUrls(hit),
+		startAt,
+		endAt: getEndAt(hit),
+		address: detail.addressLines,
+		price: getPrice(hit),
+		priceIsHtml: false,
+		host: getHost(hit),
+		hostLink: undefined,
+		contact: [],
+		latitude: point.lat,
+		longitude: point.lng,
+		timezone: TIME_ZONE,
+		tags: [],
+		sourceUrl,
+		source: SOURCE,
+	};
+}
+
+async function fetchCompleteCatalog(): Promise<SearchHit[]> {
+	const first = await fetchUnfilteredSearchPage(1);
+	if (first.lastPage < 1 || first.lastPage > MAX_PAGES) {
+		throw new Error(`Megatix catalog last_page ${first.lastPage} is out of range`);
+	}
+	if (first.total < 0 || first.total > MAX_TOTAL) {
+		throw new Error(`Megatix catalog total ${first.total} is out of range`);
+	}
+
+	const pages = [first];
+	for (let page = 2; page <= first.lastPage; page++) {
+		await sleep(REQUEST_DELAY_MS);
+		const next = await fetchUnfilteredSearchPage(page);
+		if (next.lastPage !== first.lastPage || next.currentPage !== page || next.total !== first.total) {
+			throw new Error(`Megatix catalog page ${page} disagreed with page 1`);
+		}
+		pages.push(next);
+		if (page % 25 === 0) console.error(`Megatix catalog page ${page}/${first.lastPage}`);
+	}
+
+	return assembleCatalog({ pages, total: first.total });
+}
+
+async function fetchUnfilteredSearchPage(page: number): Promise<SearchPage> {
+	const body = await customFetch(`${SEARCH_URL}?page=${page}&search=`, { returnType: `json` });
+	return parseSearchPage(body, page);
+}
+
+async function fetchEventDetail(id: number): Promise<EventDetail | undefined> {
+	const body = await customFetch(`${DETAIL_URL}/${id}`, { returnType: `json` });
+	return parseEventDetail(body);
+}
+
+async function resolvePoint(detail: EventDetail): Promise<{ lat: number; lng: number } | undefined> {
+	if (detail.venuePoint) return detail.venuePoint;
+	if (!detail.addressLines.length) return undefined;
+
+	const geocoded = await geocodeAddressCached({
+		addressLines: detail.addressLines,
+		apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		biasAddressLines: GEOCODE_BIAS,
+	});
+	if (!geocoded || !hasValidCoordinates({ lat: geocoded.lat, lng: geocoded.lng })) return undefined;
+	return { lat: geocoded.lat, lng: geocoded.lng };
+}
+
+function parseSearchPage(body: unknown, expectedPage: number): SearchPage {
+	if (!body || typeof body !== `object`) throw new Error(`Megatix search page ${expectedPage} was not an object`);
+	const record = body as { data?: unknown; meta?: unknown };
+	if (!Array.isArray(record.data)) throw new Error(`Megatix search page ${expectedPage} has no data`);
+	const meta = record.meta;
+	if (!meta || typeof meta !== `object`) throw new Error(`Megatix search page ${expectedPage} has no meta`);
+	const metaRecord = meta as { current_page?: unknown; last_page?: unknown; total?: unknown };
+	const currentPage = readNumber(metaRecord.current_page);
+	const lastPage = readNumber(metaRecord.last_page);
+	const total = readNumber(metaRecord.total);
+	if (currentPage == null || lastPage == null || total == null) {
+		throw new Error(`Megatix search page ${expectedPage} has incomplete meta`);
+	}
+	if (currentPage !== expectedPage) {
+		throw new Error(`Megatix search page ${expectedPage} came back as ${currentPage}`);
+	}
+
+	const hits: SearchHit[] = [];
+	for (const row of record.data) {
+		const hit = parseSearchHit(row);
+		if (!hit) continue;
+		hits.push(hit);
+	}
+	return { currentPage, lastPage, total, hits };
+}
+
+function parseSearchHit(row: unknown): SearchHit | undefined {
+	if (!row || typeof row !== `object`) return undefined;
+	const record = row as Record<string, unknown>;
+	const id = readNumber(record.id);
+	const slug = readText(record.slug);
+	if (id == null || !slug) return undefined;
+	return {
+		id,
+		name: readText(record.name) ?? ``,
+		slug,
+		promoterName: readText(record.promoter_name),
+		startDatetime: readText(record.start_datetime) ?? ``,
+		endDatetime: readText(record.end_datetime),
+		displayPrice: readText(record.display_price),
+		coverUrl: readText(record.cover),
+	};
+}
+
+export function parseEventDetail(body: unknown): EventDetail | undefined {
+	if (!body || typeof body !== `object`) return undefined;
+	const data = (body as { data?: unknown }).data;
+	if (!data || typeof data !== `object`) return undefined;
+	const record = data as Record<string, unknown>;
+	const venue = record.venue && typeof record.venue === `object` ? (record.venue as Record<string, unknown>) : undefined;
+	const venueName = readText(venue?.name);
+	const fullAddress = readText(venue?.full_address);
+	const parts =
+		fullAddress
+			?.split(`,`)
+			.map((part) => part.trim())
+			.filter(Boolean) ?? [];
+	const addressLines = venueName && !parts.some((part) => part.toLowerCase() === venueName.toLowerCase()) ? [venueName, ...parts] : parts;
+	const lat = readNumber(venue?.latitude);
+	const lng = readNumber(venue?.longitude);
+	const venuePoint = hasValidCoordinates({ lat, lng }) && lat != null && lng != null ? { lat, lng } : undefined;
+
+	return {
+		descriptionHtml: readText(record.description),
+		addressLines,
+		venuePoint,
+	};
+}
+
+function getName(hit: SearchHit): string | undefined {
+	const name = hit.name.trim();
+	return name || undefined;
+}
+
+function getStartAt(hit: SearchHit): string | undefined {
+	return wallTimeToIso(hit.startDatetime);
+}
+
+function getEndAt(hit: SearchHit): string | undefined {
+	return wallTimeToIso(hit.endDatetime);
+}
+
+function getPrice(hit: SearchHit): string | undefined {
+	const price = hit.displayPrice?.trim();
+	return price || undefined;
+}
+
+function getImageUrls(hit: SearchHit): string[] {
+	if (hit.coverUrl?.startsWith(`http`)) return [hit.coverUrl];
+	return [];
+}
+
+function getHost(hit: SearchHit): string | undefined {
+	const host = hit.promoterName?.trim();
+	return host || undefined;
+}
+
+function getSourceUrl(hit: SearchHit): string | undefined {
+	if (!hit.slug) return undefined;
+	return `https://megatix.co.id/events/${hit.slug}`;
+}
+
+function getDescription(detail: EventDetail): string | undefined {
+	const description = cleanProseHtml(detail.descriptionHtml);
+	const trimmed = description?.trim();
+	return trimmed || undefined;
+}
+
+function wallTimeToIso(value: string | undefined): string | undefined {
+	if (!value) return undefined;
+	const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(value);
+	if (!match) return undefined;
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	const hour = Number(match[4]);
+	const minute = Number(match[5]);
+	if (![year, month, day, hour, minute].every(Number.isFinite)) return undefined;
+	return dateToIsoStr(year, month, day, hour, minute, TIME_ZONE, false);
+}
+
+function readNumber(value: unknown): number | undefined {
+	if (typeof value === `number` && Number.isFinite(value)) return value;
+	if (typeof value === `string` && value.trim() && Number.isFinite(Number(value))) return Number(value);
+	return undefined;
+}
+
+function readText(value: unknown): string | undefined {
+	if (typeof value !== `string`) return undefined;
+	return value;
+}
+
 if (import.meta.main) {
-    try {
-        const scraper = new WebsiteScraper();
-        console.log(await scraper.scrapeWebsite())
-    } catch (error) {
-        console.error("Unhandled error in main execution:", error);
-        process.exit(1);
-    }
+	try {
+		const { query, limit } = parseCliArgs();
+		const events = await new WebsiteScraper().scrapeWebsite(query, limit);
+		console.log(JSON.stringify(events, null, 2));
+	} catch (error) {
+		console.error(error instanceof Error ? error.message : error);
+		process.exit(1);
+	}
 }
 
+type SearchHit = {
+	id: number;
+	name: string;
+	slug: string;
+	promoterName: string | undefined;
+	startDatetime: string;
+	endDatetime: string | undefined;
+	displayPrice: string | undefined;
+	coverUrl: string | undefined;
+};
 
-type EventData = {
-    data: {
-      id: number
-      promoter_id: number
-      name: string
-      description: string
-      cover: string
-      checkout_cover: any
-      banner: any
-      booking_image_url: any
-      background_colour: any
-      is_password_protected: boolean
-      discount_as_password_enabled: boolean
-      is_sales_closed: boolean
-      countdown_enabled: boolean
-      on_sale_datetime: any
-      is_on_sale_soon: boolean
-      api_time: string
-      api_time_local: string
-      start_datetime: any
-      end_datetime: any
-      locale: string
-      is_r_rated: boolean
-      age_range: string
-      rating: string
-      is_free: boolean
-      is_recurring: boolean
-      is_transport: boolean
-      currency_code: string
-      currency_code_iso4217: string
-      payment_gateway: string
-      zippay_enabled: boolean
-      afterpay_enabled: boolean
-      pace_enabled: boolean
-      atome_enabled: boolean
-      backpocket_enabled: boolean
-      paypal_enabled: boolean
-      payto_enabled: boolean
-      payments_123_disabled: boolean
-      enable_2c2p_instalments: boolean
-      gateway_fees: {
-        fixedFee: number
-        percentageFee: number
-        minimumFee: number
-        paymentUrl: any
-        upliftFixedFee: number
-        upliftPercentageFee: number
-        currency_code: string
-      }
-      transaction_fees: any
-      gateway_payment_url: any
-      payment_options: any
-      doku_mall_id: string
-      hide_breakdown: boolean
-      split_fee_listing: boolean
-      hide_end_times: boolean
-      show_end_time: boolean
-      slug: string
-      facebook: {
-        pixel: any
-        campaign: any
-        confirmation_pixel: any
-      }
-      google: {
-        conversion_code: any
-      }
-      twitter: {
-        pixel: any
-        checkout: any
-        conversion: any
-      }
-      tickets: Array<{
-        id: number
-        name: string
-        ticket_group_id: any
-        ticket_page_id: any
-        subtitle?: string
-        is_free: boolean
-        price: number
-        rounding: number
-        booking_fee: number
-        fixed_transaction_fee: number
-        event_protect_fee: number
-        promoter_rebate: number
-        price_display: number
-        fees_display: any
-        hide_fees: any
-        hide_breakdown: any
-        split_fee_listing: boolean
-        min_tickets: number
-        max_allowed: number
-        multiplier: number
-        is_invisible: boolean
-        hide_on_allocation_exhausted: boolean
-        is_on_sale_soon: boolean
-        is_sold_out: boolean
-        is_sales_closed: boolean
-        allocation_exhausted: boolean
-        show_remainder: boolean
-        pos_enabled: boolean
-        free_seats_count: number
-        buy_x: any
-        get_y_free: any
-        hide_dropdown: boolean
-        is_return: boolean
-        session_ids: any
-        payment_options: any
-        notes: any
-        is_companion_card: boolean
-        upgrade_price: any
-        image: string
-        ems_credential_profile_id: any
-        ticket_types: any
-      }>
-      ticket_groups: Array<any>
-      ticket_pages: Array<any>
-      extras: Array<any>
-      venue: {
-        id: number
-        name: string
-        full_address: string
-        suburb: string
-        phone: any
-        email: any
-        country_code: string
-        latitude: any
-        longitude: any
-        about_text: any
-        image_url: string
-        timezone: string
-      }
-      is_ticket_suppressed: boolean
-      enable_captcha: boolean
-      has_questions: boolean
-      question_set: any
-      pos_enabled: boolean
-      cash_enabled: boolean
-      other_payments_enabled: boolean
-      autoscan: string
-      is_ecommerce: boolean
-      accept_card_type: any
-      delivery: any
-      stripe_connect_account: any
-      user_details_options: {
-        address_required: boolean
-        suburb_required: boolean
-        state_required: boolean
-        country_required: boolean
-        postcode_required: boolean
-        phone_required: boolean
-        dob_required: boolean
-        gender_required: boolean
-        user_details_per_ticket: boolean
-        disable_email_required_per_ticket: boolean
-      }
-      change_details_percent: any
-      change_details_minimum: any
-      order_fee_fixed: number
-      order_fee_percent: any
-      order_fee_name: string
-      event_protect_percent: number
-      refund_protect_enabled: boolean
-      refund_protect_percent: string
-      xcover_enabled: boolean
-      transaction_uplift_enabled: boolean
-      accessibility_enabled: boolean
-      ekko_carbon_enabled: boolean
-      ems_enabled: boolean
-      ems_project_id: any
-      has_ems_event: boolean
-      tiktok_discovery_enabled: number
-      instalment_count: any
-      instalment_final_datetime: any
-      laybuy_deposit_amount: number
-      laybuy_final_datetime: any
-      is_deposit: boolean
-      is_sold_out: boolean
-      allocation_exhausted: boolean
-      registration_waitlist_enabled: boolean
-      presale_waitlist_enabled: boolean
-      sold_out_waitlist_enabled: boolean
-      waitlist_name_required: boolean
-      waitlist_phone_required: boolean
-      waitlist_dob_required: boolean
-      checkout_complete_html: any
-      covid_region: any
-      disable_facebook_login: boolean
-      fast_checkout_enabled: boolean
-      max_orders_per_account: any
-      preregistration_enabled: boolean
-      reservation_enabled: boolean
-      reservation_options: {
-        reservation_header: string
-        reservation_page1_subheader: any
-        reservation_page1_description: string
-        reservation_page1_button_text: string
-        reservation_page1_button_text_mobile: string
-        reservation_page2_subheader: string
-        reservation_page2_description: string
-        reservation_page2_button_text: string
-        reservation_page3_subheader: string
-        reservation_page3_description: string
-        reservation_payment_disclaimer: string
-      }
-      afterpay_stripe_connect_enabled: boolean
-      requires_affiliate: boolean
-      whatsapp_enabled: boolean
-    }
-    meta: {
-      locales: {
-        "0": string
-        "2": string
-        "4": string
-        "5": string
-        "6": string
-        "7": string
-        "8": string
-        "9": string
-        "10": string
-      }
-    }
-  }
+type EventDetail = {
+	descriptionHtml: string | undefined;
+	addressLines: string[];
+	venuePoint: { lat: number; lng: number } | undefined;
+};
 
-type SearchEntry = {
-    data: Array<{
-      id: number
-      name: string
-      slug: string
-      promoter_name: string
-      venue_name: string
-      country_code: string
-      is_recurring: boolean
-      is_published: boolean
-      is_on_sale: boolean
-      cover: string
-      banner: string
-      visibility: string
-      currency_code: string
-      display_price: string
-      is_ecommerce: boolean
-      ekko_carbon_enabled: boolean
-      user_affiliate_code: any
-      start_datetime: string
-      start_datetime_formatted: string
-      end_datetime: string
-      on_sale_datetime: any
-    }>
-    links: {
-      first: string
-      last: string
-      prev: string
-      next: string
-    }
-    meta: {
-      current_page: number
-      from: number
-      last_page: number
-      links: Array<{
-        url?: string
-        label: string
-        active: boolean
-      }>
-      path: string
-      per_page: number
-      to: number
-      total: number
-    }
-  }
-  
+type SearchPage = {
+	currentPage: number;
+	lastPage: number;
+	total: number;
+	hits: SearchHit[];
+};
