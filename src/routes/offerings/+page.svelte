@@ -20,7 +20,7 @@
 	import { fade } from "svelte/transition";
 	import { toast } from "svelte-sonner";
 	import {
-		offeringHeroDesktopUrl,
+		offeringHeroDesktop,
 		offeringHeroMobile,
 		offeringHeroTablet,
 	} from "$lib/assets/offering-hero-images";
@@ -182,11 +182,9 @@
 			{#each Object.entries(offeringHeroMobile.sources) as [format, srcset] (format)}
 				<source media="(max-width: 499px)" {srcset} type={`image/${format}`} />
 			{/each}
-			<source
-				media="(min-width: 1100px)"
-				srcset={offeringHeroDesktopUrl}
-				type="image/{offeringHeroDesktopUrl.split(`.`).pop()?.split(`?`)[0]}"
-			/>
+			{#each Object.entries(offeringHeroDesktop.sources) as [format, srcset] (format)}
+				<source media="(min-width: 1100px)" {srcset} type={`image/${format}`} />
+			{/each}
 			{#each Object.entries(offeringHeroTablet.sources) as [format, srcset] (format)}
 				<source {srcset} type={`image/${format}`} />
 			{/each}
