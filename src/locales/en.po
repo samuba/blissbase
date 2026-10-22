@@ -534,9 +534,8 @@ msgstr "Sorting by distance only makes sense for in-person events"
 #~ msgid "vom <0/> <1/> bis <2/> <3/><4/>"
 #~ msgstr "from <0/> <1/> to <2/> <3/><4/>"
 
-#: src/routes/offerings/+page.svelte
-msgid "Hero image"
-msgstr "Hero Image"
+#~ msgid "Hero image"
+#~ msgstr "Hero Image"
 
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
@@ -1795,9 +1794,8 @@ msgstr "<0>Via an event source:</0> Add your event to one of the listed websites
 msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 msgstr "The easiest way is via <0>Add event</0> on the homepage."
 
-#: src/routes/offerings/+page.svelte
-msgid "✨ Persönliche Sessions & Services aus der Community ✨"
-msgstr "✨ Personal Sessions & Services from the Community ✨"
+#~ msgid "✨ Persönliche Sessions & Services aus der Community ✨"
+#~ msgstr "✨ Personal Sessions & Services from the Community ✨"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Für private Sessions und Services:"
@@ -1808,6 +1806,7 @@ msgid "Angebot hinzufügen | Blissbase"
 msgstr "Add offering | Blissbase"
 
 #: src/routes/+page.svelte
+#: src/routes/offerings/+page.svelte
 msgid "Hero"
 msgstr "Hero"
 
@@ -3958,3 +3957,8 @@ msgstr "Would you like to expand the radius?"
 #, ai
 msgid "Fehler beim laden weiterer Events."
 msgstr "Error loading more events."
+
+#: src/routes/offerings/+page.svelte
+#, ai
+msgid "✨ 1:1 Sessions & Services aus der Community ✨"
+msgstr "✨ 1:1 Sessions & Services from the Community ✨"

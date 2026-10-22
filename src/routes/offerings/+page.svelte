@@ -205,7 +205,7 @@
 		</div>
 
 		<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand drop-shadow-md">
-			✨ Persönliche Sessions & Services aus der Community ✨
+			✨ 1:1 Sessions & Services aus der Community ✨
 		</h2>
 	</div>
 </div>
