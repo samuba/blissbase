@@ -245,11 +245,11 @@ export function buildRegistrationView(args: {
 
 	const guests = showNames
 		? registrations
-				.filter((row) => row.status === `registered` || row.status === `waitlist`)
+				.filter((row) => row.status === `registered` || row.status === `waitlist` || row.status === `cancelled`)
 				.map((row) => ({
 					name: row.name,
 					comment: row.comment,
-					status: row.status as `registered` | `waitlist`,
+					status: row.status,
 				}))
 		: null;
 
@@ -401,7 +401,7 @@ export type StoredRegistration = {
 export type PublicGuest = {
 	name: string;
 	comment: string | null;
-	status: `registered` | `waitlist`;
+	status: RegistrationStatus;
 };
 
 export type HostRegistration = {

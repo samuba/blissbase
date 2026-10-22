@@ -139,6 +139,11 @@ describe(`registration database`, () => {
 		});
 		const statuses = Object.fromEntries((after?.hostRegistrations ?? []).map((row) => [row.name, row.status]));
 		expect(statuses).toEqual({ "Ada Lovelace": `cancelled`, "Grace Hopper": `registered` });
+		expect(after?.registeredCount).toBe(1);
+		expect(after?.guests?.map((guest) => `${guest.name}:${guest.status}`)).toEqual([
+			`Ada Lovelace:cancelled`,
+			`Grace Hopper:registered`,
+		]);
 
 		const again = await cancelRegistration({ eventId, userId: adaId });
 		expect(again).toMatchObject({ ok: false });

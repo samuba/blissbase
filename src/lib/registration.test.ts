@@ -299,6 +299,68 @@ describe(`buildRegistrationView`, () => {
 		expect(view.mine?.answers).toEqual([{ questionId: 1, answer: `Jedi` }]);
 	});
 
+	it(`keeps a cancelled guest on the name list without a seat`, () => {
+		const linus = registration({
+			id: 3,
+			userId: `linus`,
+			name: `Linus`,
+			email: `linus@secret.test`,
+			status: `cancelled`,
+			comment: `doch nicht`,
+			createdAt: new Date(`2026-01-03T00:00:00Z`),
+		});
+		const view = buildRegistrationView({
+			event: eventSettings({ guestListVisibility: `public`, maxGuests: 1 }),
+			questions: [],
+			registrations: [ada, linus],
+			viewerUserId: null,
+			viewerEmail: null,
+			viewerName: null,
+			hostSecret: null,
+			isAdmin: false,
+		});
+		expect(view.registeredCount).toBe(1);
+		expect(view.guests).toEqual([
+			{ name: `Ada`, comment: null, status: `registered` },
+			{ name: `Linus`, comment: `doch nicht`, status: `cancelled` },
+		]);
+		expect(JSON.stringify(view.guests)).not.toContain(`secret.test`);
+	});
+
+	it(`hides a cancelled name when the viewer cannot see the guest list`, () => {
+		const linus = registration({
+			id: 3,
+			userId: `linus`,
+			name: `Linus`,
+			email: `linus@secret.test`,
+			status: `cancelled`,
+		});
+		const stranger = buildRegistrationView({
+			event: eventSettings({ guestListVisibility: `guests` }),
+			questions: [],
+			registrations: [ada, linus],
+			viewerUserId: null,
+			viewerEmail: null,
+			viewerName: null,
+			hostSecret: null,
+			isAdmin: false,
+		});
+		expect(stranger.guests).toBeNull();
+		expect(JSON.stringify(stranger)).not.toContain(`Linus`);
+
+		const registered = buildRegistrationView({
+			event: eventSettings({ guestListVisibility: `guests` }),
+			questions: [],
+			registrations: [ada, linus],
+			viewerUserId: `ada`,
+			viewerEmail: `ada@secret.test`,
+			viewerName: null,
+			hostSecret: null,
+			isAdmin: false,
+		});
+		expect(registered.guests?.map((guest) => `${guest.name}:${guest.status}`)).toEqual([`Ada:registered`, `Linus:cancelled`]);
+	});
+
 	it(`hides names and counts from a stranger when only guests may look`, () => {
 		const view = buildRegistrationView({
 			event: eventSettings({ guestListVisibility: `guests` }),

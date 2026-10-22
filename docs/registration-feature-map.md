@@ -127,7 +127,7 @@ Host question: "Who can see guest names?"
 | `owners`              | Only hosts                              | Hosts                                         | Hosts       |
 | `owners_count_public` | Only hosts + everyone sees guest count  | Hosts                                         | Everyone    |
 
-Waitlist and declined guests do **not** count as "guests" for the guests-only name rule. Only `ATTENDING` and `MAYBE`.
+Waitlist and declined guests do **not** count as "guests" for the guests-only name rule. Only `ATTENDING` and `MAYBE`. When names are visible, declined guests are still listed under "not coming". They are hidden together with the other names when the viewer cannot see the list.
 
 The header count is hidden when the viewer cannot see the count. `owners` on `ecstatic-frequency` rendered no guest count and no "show" button. `guests_count_public` on `wintergrillen` rendered the count `2` and no "show" button. When names are allowed, a **show** button (`open-guest-list-btn`) opens sections for registered, maybe, not coming, and waitlist. Comments are included for whoever can see names. The comment field's hint switches with the same three groups (everyone / other guests / hosts).
 
@@ -178,7 +178,7 @@ Tested without a database:
 - Name, email, comment, and answer validation (same limits as Create Party: name 40, comment 200, free-text answer 3000).
 - Question normalisation: order is the list order, blank predefined answers drop, duplicates rejected, multiple-answers forced off when there is no list.
 - Seat rule: a new or previously cancelled guest becomes `registered` until `maxGuests` registered people exist, then `waitlist`. Someone already registered or waitlisted keeps that status when they edit answers. Registered people are the only seats. Waitlist and cancelled do not take a seat.
-- Cancelling a registered guest promotes the oldest waitlist row when auto-move is on. Cancelling a waitlist row promotes nobody.
+- Cancelling a registered guest promotes the oldest waitlist row when auto-move is on. Cancelling a waitlist row promotes nobody. The cancelled row stays on the guest list as "Kann nicht" whenever that viewer can see names. It does not take a seat and is omitted when names are hidden.
 - Visibility matrix above. "Guest" means status `registered` (Create Party's attending/maybe). Waitlist does not unlock a guests-only list. Hosts (author, matching `hostSecret`, or admin) always see names, count, emails, and answers.
 
 `buildRegistrationView` is what the page receives. Emails and answers of other people are omitted unless the viewer is a host. Counts are omitted when the viewer must not see them, so they are not only hidden in CSS.
@@ -187,7 +187,7 @@ Tested without a database:
 
 - Event page, only when registration is enabled or the viewer is the author: **Anmelden** opens the form. Signed-out visitors get the existing login dialog first.
 - Signed-in guests with an active registration can change answers and **Abmelden**.
-- Guest list (names and/or count) follows the visibility setting.
+- Guest list (names and/or count) follows the visibility setting. Cancelled guests appear under **Kann nicht** when names are visible.
 - Host block on the event page and on the edit page: enable registration, visibility, limit, auto-move, questions, and the registration table.
 
 Identity is the Blissbase user id. Name and email are stored on the registration (prefilled from the profile and session email) so the host keeps what was submitted.
@@ -202,7 +202,7 @@ Resend, same helper as event-created mail. The guest is mailed when they registe
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PayPal, price confirmation, "paid allegedly"           | Explicitly out of scope.                                                                                                                                                                                                |
 | Maybe                                                  | Explicitly out of scope.                                                                                                                                                                                                |
-| Upfront decline button                                 | Explicitly out of scope. Public Create Party events already only show Register. Cancel after sign-in is **Abmelden**, which marks the row `cancelled` and frees the seat. It does not leave a public "can't go" roster. |
+| Upfront decline button                                 | Explicitly out of scope. The event page only has **Anmelden**. After sign-in, **Abmelden** stores `cancelled`, frees the seat, and leaves the name under **Kann nicht** when the guest list is visible. |
 | Anonymous cookie users                                 | Blissbase guests are signed-in users.                                                                                                                                                                                   |
 | Phone / SMS contact channel and `requiredGuestContact` | The Blissbase form always asks for email, which is the account channel.                                                                                                                                                 |
 | Companions and the bringing list                       | Separate from the sign-up questions. They change capacity math and the public list. Left out so one registration is one seat.                                                                                           |

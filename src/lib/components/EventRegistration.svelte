@@ -179,6 +179,19 @@
 							{/each}
 						</ul>
 					{/if}
+					{#if view.guests.some((guest) => guest.status === `cancelled`)}
+						<h3 class="font-medium">Kann nicht</h3>
+						<ul class="flex flex-col gap-2">
+							{#each view.guests.filter((guest) => guest.status === `cancelled`) as guest (`cancelled-${guest.name}-${guest.comment ?? ``}`)}
+								<li data-testid="guest-list-declined">
+									<span class="font-medium">{guest.name}</span>
+									{#if guest.comment}
+										<span class="text-base-content/70 text-sm"> — {guest.comment}</span>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					{/if}
 				{:else if !view.showNames && !view.showCount && view.guestListVisibility === `owners`}
 					<p class="text-base-content/70 text-sm" data-testid="guest-list-hidden">Die Gästeliste ist nur für den Veranstalter sichtbar.</p>
 				{:else if !view.showNames && !view.showCount}
