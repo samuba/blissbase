@@ -469,7 +469,6 @@ msgstr "Error while loading events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/createFlowAuth.svelte.ts
-#: src/lib/createFlowAuth.svelte.ts
 msgid "Ein Fehler ist aufgetreten"
 msgstr "An error occurred"
 
@@ -527,15 +526,6 @@ msgstr "Set a location first"
 #: src/lib/components/HeaderControls.svelte
 msgid "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 msgstr "Sorting by distance only makes sense for in-person events"
-
-#~ msgid "mit <0/> <1/><2/>"
-#~ msgstr "with <0/> <1/><2/>"
-
-#~ msgid "vom <0/> <1/> bis <2/> <3/><4/>"
-#~ msgstr "from <0/> <1/> to <2/> <3/><4/>"
-
-#~ msgid "Hero image"
-#~ msgstr "Hero Image"
 
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
@@ -1084,9 +1074,6 @@ msgstr "Search"
 msgid "Vor Ort"
 msgstr "In-Person"
 
-#~ msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
-#~ msgstr "in <0/> <1>{0} ({1}km radius)</1><2/>"
-
 #: src/lib/components/TextSearchInput.svelte
 #: src/lib/components/TextSearchInput.svelte
 msgid "Suche starten"
@@ -1100,7 +1087,6 @@ msgstr "Add a contact link so people can reach you."
 msgid "<0/> Angebot erstellen"
 msgstr "<0/> Create offering"
 
-#: src/lib/createFlowAuth.svelte.ts
 #: src/lib/createFlowAuth.svelte.ts
 msgid "Bitte gib deine E-Mail-Adresse ein."
 msgstr "Please enter your email address."
@@ -1793,9 +1779,6 @@ msgstr "<0>Via an event source:</0> Add your event to one of the listed websites
 #: src/routes/faq/+page.svelte
 msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 msgstr "The easiest way is via <0>Add event</0> on the homepage."
-
-#~ msgid "✨ Persönliche Sessions & Services aus der Community ✨"
-#~ msgstr "✨ Personal Sessions & Services from the Community ✨"
 
 #: src/lib/components/HeaderControls.svelte
 msgid "Für private Sessions und Services:"
@@ -3922,10 +3905,6 @@ msgstr "Show events"
 msgid "Wir haben viele verschiedene Angebote!"
 msgstr "We have many different offerings!"
 
-#, ai
-#~ msgid "Weitere Events konnten nicht geladen werden."
-#~ msgstr "More events could not be loaded."
-
 #: src/routes/+page.svelte
 #, ai
 msgid "<0/> Erneut versuchen"
@@ -3940,18 +3919,6 @@ msgstr "On-site + online"
 #, ai
 msgid "Möchtest du den Radius erweitern?"
 msgstr "Would you like to expand the radius?"
-
-#, ai
-#~ msgid "Fehler Weitere Events konnten nicht geladen werden."
-#~ msgstr "Error: More events could not be loaded."
-
-#, ai
-#~ msgid "Fehler beim laden weitere Events konnten nicht geladen werden."
-#~ msgstr "Error loading more events."
-
-#, ai
-#~ msgid "Fehler beim laden weiterer Events konnten nicht geladen werden."
-#~ msgstr "Failed to load more events."
 
 #: src/routes/+page.svelte
 #, ai
