@@ -528,12 +528,6 @@ msgstr "Setze zuerst einen Standort"
 msgid "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 msgstr "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 
-#~ msgid "mit <0/> <1/><2/>"
-#~ msgstr "mit <0/> <1/><2/>"
-
-#~ msgid "vom <0/> <1/> bis <2/> <3/><4/>"
-#~ msgstr "vom <0/> <1/> bis <2/> <3/><4/>"
-
 #: src/routes/offerings/+page.svelte
 msgid "Hero image"
 msgstr "Hero image"
@@ -800,10 +794,6 @@ msgstr "FAQ"
 #: src/routes/faq/+page.svelte
 msgid "Antworten auf die häufigsten Fragen rund um Blissbase."
 msgstr "Antworten auf die häufigsten Fragen rund um Blissbase."
-
-#: src/routes/faq/+page.svelte
-msgid "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
-msgstr "Deine Frage ist nicht dabei? <0>Schreib mir.</0>"
 
 #: src/lib/components/ImageGalleryInput.svelte
 #: src/lib/components/LocationAutocompleteInput.svelte
@@ -1084,9 +1074,6 @@ msgstr "Suchen"
 #: src/lib/components/OfferingForm.svelte
 msgid "Vor Ort"
 msgstr "Vor Ort"
-
-#~ msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
-#~ msgstr "in <0/> <1>{0} ({1}km Radius)</1><2/>"
 
 #: src/lib/components/TextSearchInput.svelte
 #: src/lib/components/TextSearchInput.svelte
@@ -1762,38 +1749,6 @@ msgstr "Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot ko
 #: src/routes/faq/+page.svelte
 msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
 msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-
-#: src/routes/faq/+page.svelte
-msgid "Woher kommen die Events?"
-msgstr "Woher kommen die Events?"
-
-#: src/routes/faq/+page.svelte
-msgid "Von Veranstalter:innen, die ihre Termine direkt auf Blissbase teilen – und aus öffentlichen Kalendern, Websites und Community-Kanälen. So bleibt die achtsame Szene sichtbar, ohne dass du zehn Apps und Gruppen durchforsten musst."
-msgstr "Von Veranstalter:innen, die ihre Termine direkt auf Blissbase teilen – und aus öffentlichen Kalendern, Websites und Community-Kanälen. So bleibt die achtsame Szene sichtbar, ohne dass du zehn Apps und Gruppen durchforsten musst."
-
-#: src/routes/faq/+page.svelte
-msgid "Die vollständige Liste findest du unter <0>Event-Quellen</0>."
-msgstr "Die vollständige Liste findest du unter <0>Event-Quellen</0>."
-
-#: src/routes/faq/+page.svelte
-msgid "Wie kann ich selbst ein Event eintragen?"
-msgstr "Wie kann ich selbst ein Event eintragen?"
-
-#: src/routes/faq/+page.svelte
-msgid "Weitere Wege:"
-msgstr "Weitere Wege:"
-
-#: src/routes/faq/+page.svelte
-msgid "<0>Telegram-Bot:</0> Schick deinen Event an <1>@blissbase_bot</1>. Wichtig: Beschreibung, Ort, Datum und Bild müssen in <2>einer einzigen Nachricht</2> stehen."
-msgstr "<0>Telegram-Bot:</0> Schick deinen Event an <1>@blissbase_bot</1>. Wichtig: Beschreibung, Ort, Datum und Bild müssen in <2>einer einzigen Nachricht</2> stehen."
-
-#: src/routes/faq/+page.svelte
-msgid "<0>Über eine Event-Quelle:</0> Trag deinen Termin auf einer der gelisteten Websites oder in einem Community-Kanal ein. Ich hole diese Quellen mehrmals täglich ab – nach ein paar Stunden solltest du dein Event hier sehen. Alle Quellen findest du unter <1>Event-Quellen</1>."
-msgstr "<0>Über eine Event-Quelle:</0> Trag deinen Termin auf einer der gelisteten Websites oder in einem Community-Kanal ein. Ich hole diese Quellen mehrmals täglich ab – nach ein paar Stunden solltest du dein Event hier sehen. Alle Quellen findest du unter <1>Event-Quellen</1>."
-
-#: src/routes/faq/+page.svelte
-msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
-msgstr "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 
 #: src/routes/offerings/+page.svelte
 msgid "✨ Persönliche Sessions & Services aus der Community ✨"
@@ -3724,26 +3679,6 @@ msgstr "Event Name *"
 msgid "Was ist Blissbase?"
 msgstr "Was ist Blissbase?"
 
-#: src/routes/faq/+page.svelte
-msgid "Blissbase ist die App, in der du alle achtsamen Events an einem Ort findest – Ecstatic Dance, Workshops, Festivals, Community-Treffen und mehr."
-msgstr "Blissbase ist die App, in der du alle achtsamen Events an einem Ort findest – Ecstatic Dance, Workshops, Festivals, Community-Treffen und mehr."
-
-#: src/routes/faq/+page.svelte
-msgid "Kostet die Nutzung etwas?"
-msgstr "Kostet die Nutzung etwas?"
-
-#: src/routes/faq/+page.svelte
-msgid "Nein. Blissbase zu nutzen ist kostenlos."
-msgstr "Nein. Blissbase zu nutzen ist kostenlos."
-
-#: src/routes/faq/+page.svelte
-msgid "Wie kann ich Feedback schicken oder Hallo sagen?"
-msgstr "Wie kann ich Feedback schicken oder Hallo sagen?"
-
-#: src/routes/faq/+page.svelte
-msgid "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
-msgstr "Am einfachsten per Mail an hi@blissbase.app. Ich freue mich über jedes Feedback, Ideen, Korrekturen und Kooperationen."
-
 #. 0: value
 #: src/lib/components/LocationDistanceInput.svelte
 msgid "{0} km radius"
@@ -3886,9 +3821,6 @@ msgstr "Events anzeigen"
 msgid "Wir haben viele verschiedene Angebote!"
 msgstr "Wir haben viele verschiedene Angebote!"
 
-#~ msgid "Weitere Events konnten nicht geladen werden."
-#~ msgstr "Weitere Events konnten nicht geladen werden."
-
 #: src/routes/+page.svelte
 msgid "<0/> Erneut versuchen"
 msgstr "<0/> Erneut versuchen"
@@ -3901,15 +3833,214 @@ msgstr "Vor Ort + Online"
 msgid "Möchtest du den Radius erweitern?"
 msgstr "Möchtest du den Radius erweitern?"
 
-#~ msgid "Fehler Weitere Events konnten nicht geladen werden."
-#~ msgstr "Fehler Weitere Events konnten nicht geladen werden."
-
-#~ msgid "Fehler beim laden weitere Events konnten nicht geladen werden."
-#~ msgstr "Fehler beim laden weitere Events konnten nicht geladen werden."
-
-#~ msgid "Fehler beim laden weiterer Events konnten nicht geladen werden."
-#~ msgstr "Fehler beim laden weiterer Events konnten nicht geladen werden."
-
 #: src/routes/+page.svelte
 msgid "Fehler beim laden weiterer Events."
 msgstr "Fehler beim laden weiterer Events."
+
+#: src/routes/faq/+page.svelte
+msgid "Blissbase ist dein Portal für Expansion. Wir bringen Events und persönliche Angebote an einem durchsuchbaren Ort zusammen – für Wohlbefinden, persönliches Wachstum und tiefe menschliche Verbindung."
+msgstr "Blissbase ist dein Portal für Expansion. Wir bringen Events und persönliche Angebote an einem durchsuchbaren Ort zusammen – für Wohlbefinden, persönliches Wachstum und tiefe menschliche Verbindung."
+
+#: src/routes/faq/+page.svelte
+msgid "Verbringe weniger Zeit mit Suchen und mehr damit, zu entdecken, was um dich herum passiert, deine Menschen zu finden und dabei zu sein."
+msgstr "Verbringe weniger Zeit mit Suchen und mehr damit, zu entdecken, was um dich herum passiert, deine Menschen zu finden und dabei zu sein."
+
+#: src/routes/faq/+page.svelte
+msgid "Für Menschen, die nach bedeutsamen Erfahrungen suchen, und für die, die sie gestalten."
+msgstr "Für Menschen, die nach bedeutsamen Erfahrungen suchen, und für die, die sie gestalten."
+
+#: src/routes/faq/+page.svelte
+msgid "Die Entdeckenden nennen wir Suchende, und die, die ihre Arbeit teilen, Anbieter. Zu den Anbietern gehören Facilitators, Lehrer:innen, Veranstalter:innen, Locations, Schulen und Retreat-Leiter:innen."
+msgstr "Die Entdeckenden nennen wir Suchende, und die, die ihre Arbeit teilen, Anbieter. Zu den Anbietern gehören Facilitators, Lehrer:innen, Veranstalter:innen, Locations, Schulen und Retreat-Leiter:innen."
+
+#: src/routes/faq/+page.svelte
+msgid "Ob du deine Community findest oder Menschen zusammenbringst – hier bist du willkommen."
+msgstr "Ob du deine Community findest oder Menschen zusammenbringst – hier bist du willkommen."
+
+#: src/routes/faq/+page.svelte
+msgid "Für wen ist Blissbase?"
+msgstr "Für wen ist Blissbase?"
+
+#: src/routes/faq/+page.svelte
+msgid "Ja. Stöbern, ein Profil anlegen, Lieblings-Events speichern und deine Events und Angebote einstellen ist kostenlos."
+msgstr "Ja. Stöbern, ein Profil anlegen, Lieblings-Events speichern und deine Events und Angebote einstellen ist kostenlos."
+
+#: src/routes/faq/+page.svelte
+msgid "Einzelne Erfahrungen können einen eigenen Preis haben – den legt der Anbieter fest."
+msgstr "Einzelne Erfahrungen können einen eigenen Preis haben – den legt der Anbieter fest."
+
+#: src/routes/faq/+page.svelte
+msgid "Ist Blissbase kostenlos?"
+msgstr "Ist Blissbase kostenlos?"
+
+#: src/routes/faq/+page.svelte
+msgid "Events finden zu einem festgelegten Zeitpunkt statt – zum Beispiel Workshops, Tänze, Festivals oder Community-Treffen."
+msgstr "Events finden zu einem festgelegten Zeitpunkt statt – zum Beispiel Workshops, Tänze, Festivals oder Community-Treffen."
+
+#: src/routes/faq/+page.svelte
+msgid "Angebote sind persönliche Sessions und Services auf Anfrage, zum Beispiel Coaching, Massage oder eine private Session. Sie können vor Ort, online oder beides verfügbar sein."
+msgstr "Angebote sind persönliche Sessions und Services auf Anfrage, zum Beispiel Coaching, Massage oder eine private Session. Sie können vor Ort, online oder beides verfügbar sein."
+
+#: src/routes/faq/+page.svelte
+msgid "Was ist der Unterschied zwischen Events und Angeboten?"
+msgstr "Was ist der Unterschied zwischen Events und Angeboten?"
+
+#: src/routes/faq/+page.svelte
+msgid "Speichere Events, die dich ansprechen, und behalte sie unter <0>Favoriten</0> zusammen. Tippe auf das Herz bei einem Event, um später darauf zurückzukommen, wenn du Pläne machst."
+msgstr "Speichere Events, die dich ansprechen, und behalte sie unter <0>Favoriten</0> zusammen. Tippe auf das Herz bei einem Event, um später darauf zurückzukommen, wenn du Pläne machst."
+
+#: src/routes/faq/+page.svelte
+msgid "Du kannst ohne Konto stöbern. Zum Anmelden öffne <0>Profil</0> und nutze Google oder lass dir einen Login-Code per E-Mail schicken."
+msgstr "Du kannst ohne Konto stöbern. Zum Anmelden öffne <0>Profil</0> und nutze Google oder lass dir einen Login-Code per E-Mail schicken."
+
+#: src/routes/faq/+page.svelte
+msgid "Warum sollte ich ein Konto anlegen, wenn ich nach Erfahrungen suche?"
+msgstr "Warum sollte ich ein Konto anlegen, wenn ich nach Erfahrungen suche?"
+
+#: src/routes/faq/+page.svelte
+msgid "Stelle dich vor und bringe deine Events, Angebote, Website und Social-Links auf einer öffentlichen Seite zusammen, die du teilen kannst."
+msgstr "Stelle dich vor und bringe deine Events, Angebote, Website und Social-Links auf einer öffentlichen Seite zusammen, die du teilen kannst."
+
+#: src/routes/faq/+page.svelte
+msgid "Dein Profil hilft anderen, deine Arbeit zu entdecken und zu sehen, was du noch anbietest. Profil anlegen und Einträge veröffentlichen ist kostenlos. Starte über <0>Profil</0> – mit Google oder einem Login-Code per E-Mail."
+msgstr "Dein Profil hilft anderen, deine Arbeit zu entdecken und zu sehen, was du noch anbietest. Profil anlegen und Einträge veröffentlichen ist kostenlos. Starte über <0>Profil</0> – mit Google oder einem Login-Code per E-Mail."
+
+#: src/routes/faq/+page.svelte
+msgid "Warum sollte ich ein Profil anlegen, wenn ich Events oder Services anbiete?"
+msgstr "Warum sollte ich ein Profil anlegen, wenn ich Events oder Services anbiete?"
+
+#: src/routes/faq/+page.svelte
+msgid "<0>Kategorien:</0> Tanz, Breathwork, Tantra, Meditation, Bewegung, Energiearbeit, Sound Healing, Körperarbeit, Musik, Beziehung, Persönliche Entwicklung, Spiritualität und Zeremonie. Unter Sonstiges findest du noch mehr."
+msgstr "<0>Kategorien:</0> Tanz, Breathwork, Tantra, Meditation, Bewegung, Energiearbeit, Sound Healing, Körperarbeit, Musik, Beziehung, Persönliche Entwicklung, Spiritualität und Zeremonie. Unter Sonstiges findest du noch mehr."
+
+#: src/routes/faq/+page.svelte
+msgid "<0>Ort und Entfernung:</0> Gib eine Stadt oder Postleitzahl ein und wähle einen Suchradius oder Überall."
+msgstr "<0>Ort und Entfernung:</0> Gib eine Stadt oder Postleitzahl ein und wähle einen Suchradius oder Überall."
+
+#: src/routes/faq/+page.svelte
+msgid "<0>Zeitraum:</0> Wähle Daten oder Diese Woche, Dieses Wochenende, Nächste Woche, Nächste 30 Tage oder Alle zukünftigen Events."
+msgstr "<0>Zeitraum:</0> Wähle Daten oder Diese Woche, Dieses Wochenende, Nächste Woche, Nächste 30 Tage oder Alle zukünftigen Events."
+
+#: src/routes/faq/+page.svelte
+msgid "<0>Teilnahme:</0> Wähle Vor Ort oder Online."
+msgstr "<0>Teilnahme:</0> Wähle Vor Ort oder Online."
+
+#: src/routes/faq/+page.svelte
+msgid "Suche per Stichwort und kombiniere diese Filter:"
+msgstr "Suche per Stichwort und kombiniere diese Filter:"
+
+#: src/routes/faq/+page.svelte
+msgid "Sortiere nach Startzeit oder Entfernung. Wenn du wenig findest, erweitere Entfernung oder Zeitraum, entferne eine Kategorie oder wähle Alle Filter zurücksetzen."
+msgstr "Sortiere nach Startzeit oder Entfernung. Wenn du wenig findest, erweitere Entfernung oder Zeitraum, entferne eine Kategorie oder wähle Alle Filter zurücksetzen."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie suche ich nach Events?"
+msgstr "Wie suche ich nach Events?"
+
+#: src/routes/faq/+page.svelte
+msgid "Ja. Blissbase hilft dir, dich mit deiner Community zu Hause zu verbinden und deine Community unterwegs zu finden."
+msgstr "Ja. Blissbase hilft dir, dich mit deiner Community zu Hause zu verbinden und deine Community unterwegs zu finden."
+
+#: src/routes/faq/+page.svelte
+msgid "Ändere den Ort zu dem Ziel, wohin du unterwegs bist, und entdecke, was dort passiert."
+msgstr "Ändere den Ort zu dem Ziel, wohin du unterwegs bist, und entdecke, was dort passiert."
+
+#: src/routes/faq/+page.svelte
+msgid "Kann ich auch woanders als an meinem aktuellen Ort stöbern?"
+msgstr "Kann ich auch woanders als an meinem aktuellen Ort stöbern?"
+
+#: src/routes/faq/+page.svelte
+msgid "Öffne <0>Angebote</0> und suche nach Stichwort, Ort und Entfernung. Wähle „Online Angebote auch anzeigen“, um Sessions einzubeziehen, die remote verfügbar sind."
+msgstr "Öffne <0>Angebote</0> und suche nach Stichwort, Ort und Entfernung. Wähle „Online Angebote auch anzeigen“, um Sessions einzubeziehen, die remote verfügbar sind."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie finde ich private Sessions und Services?"
+msgstr "Wie finde ich private Sessions und Services?"
+
+#: src/routes/faq/+page.svelte
+msgid "Das hängt vom Event oder Angebot und vom Anbieter ab. Nutze die Kontaktdaten oder Buchungsangaben im Eintrag. Das kann ein Link, WhatsApp, Telegram, E-Mail oder eine Telefonnummer sein. Manche Events brauchen keine Anmeldung."
+msgstr "Das hängt vom Event oder Angebot und vom Anbieter ab. Nutze die Kontaktdaten oder Buchungsangaben im Eintrag. Das kann ein Link, WhatsApp, Telegram, E-Mail oder eine Telefonnummer sein. Manche Events brauchen keine Anmeldung."
+
+#: src/routes/faq/+page.svelte
+msgid "Manche Anbieter-Profile haben auch Website- und Instagram-Buttons. Bei Events, die von einer anderen Plattform stammen, folge dem Quellen-Link zum Original-Eintrag."
+msgstr "Manche Anbieter-Profile haben auch Website- und Instagram-Buttons. Bei Events, die von einer anderen Plattform stammen, folge dem Quellen-Link zum Original-Eintrag."
+
+#: src/routes/faq/+page.svelte
+msgid "Ticketing über Blissbase ist für die Zukunft geplant."
+msgstr "Ticketing über Blissbase ist für die Zukunft geplant."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie bekomme ich mehr Infos oder buche ich ein Event oder Angebot?"
+msgstr "Wie bekomme ich mehr Infos oder buche ich ein Event oder Angebot?"
+
+#: src/routes/faq/+page.svelte
+msgid "Wähle <0>Event hinzufügen</0> und gib Name, Datum, Uhrzeit, Beschreibung, Ort oder Online-Format und Anmelde-Details ein. Füge Bilder, einen Preis und Tags hinzu, wo es passt."
+msgstr "Wähle <0>Event hinzufügen</0> und gib Name, Datum, Uhrzeit, Beschreibung, Ort oder Online-Format und Anmelde-Details ein. Füge Bilder, einen Preis und Tags hinzu, wo es passt."
+
+#: src/routes/faq/+page.svelte
+msgid "Hast du schon Werbetext oder einen Flyer? Nutze Automatisch ausfüllen, um beim Ausfüllen der Felder zu helfen – und prüfe die Angaben danach."
+msgstr "Hast du schon Werbetext oder einen Flyer? Nutze Automatisch ausfüllen, um beim Ausfüllen der Felder zu helfen – und prüfe die Angaben danach."
+
+#: src/routes/faq/+page.svelte
+msgid "Behalte deine bestehende Buchungsmethode, indem du sie unter „Anmeldung / Tickets über“ hinterlegst. Für ein Event, das du nur per Link teilen willst, wähle „Event nicht in Suche anzeigen“."
+msgstr "Behalte deine bestehende Buchungsmethode, indem du sie unter „Anmeldung / Tickets über“ hinterlegst. Für ein Event, das du nur per Link teilen willst, wähle „Event nicht in Suche anzeigen“."
+
+#: src/routes/faq/+page.svelte
+msgid "Du kannst auch über <0>@blissbase_bot</0> auf Telegram einreichen. Beschreibung, Ort, Datum und Bild müssen zusammen in einer einzigen Nachricht stehen."
+msgstr "Du kannst auch über <0>@blissbase_bot</0> auf Telegram einreichen. Beschreibung, Ort, Datum und Bild müssen zusammen in einer einzigen Nachricht stehen."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie stelle ich mein Event ein?"
+msgstr "Wie stelle ich mein Event ein?"
+
+#: src/routes/faq/+page.svelte
+msgid "Öffne <0>Angebote</0> und wähle <1>Angebot hinzufügen</1>. Ergänze Titel, Beschreibung, Bilder und ob es vor Ort, online oder beides verfügbar ist."
+msgstr "Öffne <0>Angebote</0> und wähle <1>Angebot hinzufügen</1>. Ergänze Titel, Beschreibung, Bilder und ob es vor Ort, online oder beides verfügbar ist."
+
+#: src/routes/faq/+page.svelte
+msgid "Dein Angebot kann auf der Angebote-Seite und in deinem öffentlichen Profil erscheinen."
+msgstr "Dein Angebot kann auf der Angebote-Seite und in deinem öffentlichen Profil erscheinen."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie stelle ich meine persönlichen Sessions oder Services ein?"
+msgstr "Wie stelle ich meine persönlichen Sessions oder Services ein?"
+
+#: src/routes/faq/+page.svelte
+msgid "Anbieter stellen Events direkt ein, und Blissbase sammelt außerdem Einträge aus öffentlichen Kalendern, Websites und Community-Kanälen."
+msgstr "Anbieter stellen Events direkt ein, und Blissbase sammelt außerdem Einträge aus öffentlichen Kalendern, Websites und Community-Kanälen."
+
+#: src/routes/faq/+page.svelte
+msgid "Wir bringen die Informationen zusammen, damit du nicht durch separate Websites, Apps und Gruppen suchen musst."
+msgstr "Wir bringen die Informationen zusammen, damit du nicht durch separate Websites, Apps und Gruppen suchen musst."
+
+#: src/routes/faq/+page.svelte
+msgid "Woher kommen die Event-Einträge auf Blissbase?"
+msgstr "Woher kommen die Event-Einträge auf Blissbase?"
+
+#: src/routes/faq/+page.svelte
+msgid "Unser Ziel ist, der einfachste Ort zu werden, um die relevantesten Erfahrungen zu finden – wo immer du dich auf deiner Reise befindest."
+msgstr "Unser Ziel ist, der einfachste Ort zu werden, um die relevantesten Erfahrungen zu finden – wo immer du dich auf deiner Reise befindest."
+
+#: src/routes/faq/+page.svelte
+msgid "Wir fokussieren unsere Expansion auf spirituelle Hubs, darunter Ubud auf Bali, San Marcos am Lago de Atitlán in Guatemala, Ibiza, Tulum, Goa und Koh Phangan. Außerdem wollen wir in Orte mit bewussten Communities wachsen, darunter Austin in den USA und Byron Bay in Australien. Mehr folgt bald."
+msgstr "Wir fokussieren unsere Expansion auf spirituelle Hubs, darunter Ubud auf Bali, San Marcos am Lago de Atitlán in Guatemala, Ibiza, Tulum, Goa und Koh Phangan. Außerdem wollen wir in Orte mit bewussten Communities wachsen, darunter Austin in den USA und Byron Bay in Australien. Mehr folgt bald."
+
+#: src/routes/faq/+page.svelte
+msgid "Wo wächst Blissbase als Nächstes?"
+msgstr "Wo wächst Blissbase als Nächstes?"
+
+#: src/routes/faq/+page.svelte
+msgid "Möchtest du deine Stadt besser vertreten sehen? Hilf uns, die Tür zu öffnen."
+msgstr "Möchtest du deine Stadt besser vertreten sehen? Hilf uns, die Tür zu öffnen."
+
+#: src/routes/faq/+page.svelte
+msgid "Stelle uns lokale Anbieter vor, teile öffentliche Event-Kalender und Community-Kanäle oder verbinde uns mit den Menschen, die deine Community zusammenbringen."
+msgstr "Stelle uns lokale Anbieter vor, teile öffentliche Event-Kalender und Community-Kanäle oder verbinde uns mit den Menschen, die deine Community zusammenbringen."
+
+#: src/routes/faq/+page.svelte
+msgid "Wir freuen uns über Ambassadors und Collaborators, die die Erfahrungen ihrer Stadt an einem Ort zusammenbringen wollen. Schreib an <0>hi@blissbase.app</0> mit deinem Ort und wie du mitwirken möchtest."
+msgstr "Wir freuen uns über Ambassadors und Collaborators, die die Erfahrungen ihrer Stadt an einem Ort zusammenbringen wollen. Schreib an <0>hi@blissbase.app</0> mit deinem Ort und wie du mitwirken möchtest."
+
+#: src/routes/faq/+page.svelte
+msgid "Wie kann ich meine lokale Community zu Blissbase bringen?"
+msgstr "Wie kann ich meine lokale Community zu Blissbase bringen?"
