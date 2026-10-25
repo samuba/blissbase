@@ -16,6 +16,29 @@
 	let videoFailed = $state(false);
 	let innerHeight = $state(700);
 	let explanationDiv: HTMLDivElement | null = $state(null);
+	let videoEl: HTMLVideoElement | null = $state(null);
+	let stallTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// A stalled load on a slow connection never fires `onerror`, so start a timer
+	// when the dialog opens and show the text fallback if the video does not have
+	// a playable frame in time.
+	const stallTimeoutMs = 3000;
+
+	function clearStallTimer() {
+		if (stallTimer) {
+			clearTimeout(stallTimer);
+			stallTimer = null;
+		}
+	}
+
+	function startStallTimer() {
+		clearStallTimer();
+		stallTimer = setTimeout(() => {
+			if ((videoEl?.readyState ?? 0) < HTMLMediaElement.HAVE_CURRENT_DATA) {
+				videoFailed = true;
+			}
+		}, stallTimeoutMs);
+	}
 
 	const mode = $derived(browser ? detectIosDevice() : 'not-ios');
 	const iosBrowser = $derived(browser ? detectIosBrowser() : 'safari');
@@ -109,6 +132,8 @@
 	onDestroy(() => {
 		if (!browser) return;
 
+		clearStallTimer();
+
 		window.removeEventListener('beforeinstallprompt', (e) => {
 			deferredPrompt = e;
 		});
@@ -121,6 +146,7 @@
 		if (mode === 'smallIosDevice' || mode === 'ipad') {
 			videoFailed = false;
 			showIosInstallHowto = true;
+			if (iosBrowser === 'safari') startStallTimer();
 			return;
 		}
 
@@ -194,16 +220,22 @@
 				</div>
 			{:else}
 				<video
+					bind:this={videoEl}
 					src="/{iosVideoPrefix}-install-howto-{localeStore.locale}.mp4"
 					poster="/blissbase-poster.png"
-					preload="auto"
+					preload="metadata"
 					autoplay
 					loop
 					muted
+					controls
 					playsinline
 					disablepictureinpicture
 					disableremoteplayback
-					onerror={() => (videoFailed = true)}
+					onloadeddata={clearStallTimer}
+					onerror={() => {
+						clearStallTimer();
+						videoFailed = true;
+					}}
 					class="mx-auto flex-1 rounded-[3rem] object-contain"
 					style="height: {innerHeight - ((explanationDiv?.offsetHeight ?? 0) + 30)}px"
 				></video>
