@@ -2,11 +2,12 @@ import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db, s, sql } from '$lib/server/db';
 import { resolveSupportedLocale } from '$lib/common';
-import { AUTH_NEXT_QUERY, routePathname, routes, safeAuthNextPath } from '$lib/routes';
+import { AUTH_METHOD_QUERY, AUTH_NEXT_QUERY, routePathname, routes, safeAuthNextPath } from '$lib/routes';
 
 /**
  * Builds a same-origin redirect path with auth feedback query params for the client toast.
  * Forwards `error_code` when Supabase supplied one (OAuth callback query or API error `.code`).
+ * Forwards `auth_method` so the toast can tell a Google sign-in from a magic link.
  */
 function redirectWithAuthFeedback(args: {
 	origin: string;
@@ -15,13 +16,15 @@ function redirectWithAuthFeedback(args: {
 	authSuccess?: boolean;
 	authError?: string;
 	errorCode?: string | null;
+	authMethod?: string | null;
 }) {
-	const { origin, nextPath, fallback, authSuccess, authError, errorCode } = args;
+	const { origin, nextPath, fallback, authSuccess, authError, errorCode, authMethod } = args;
 	const safe = safeAuthNextPath({ next: nextPath, fallback, origin });
 	const u = new URL(safe, origin);
 	if (authSuccess) u.searchParams.set(`auth_success`, `1`);
 	if (authError) u.searchParams.set(`auth_error`, authError);
 	if (errorCode) u.searchParams.set(`error_code`, errorCode);
+	if (authMethod) u.searchParams.set(`auth_method`, authMethod);
 	return `${u.pathname}${u.search}${u.hash}`;
 }
 
@@ -48,6 +51,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 		fallback,
 		origin,
 	});
+	const authMethod = url.searchParams.get(AUTH_METHOD_QUERY);
 
 	const oauthError = url.searchParams.get(`error`);
 	const oauthErrorDescription = url.searchParams.get(`error_description`);
@@ -61,7 +65,8 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 				nextPath,
 				fallback,
 				authError: msg,
-				errorCode: oauthErrorCode
+				errorCode: oauthErrorCode,
+				authMethod
 			})
 		);
 	}
@@ -91,7 +96,8 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 				nextPath,
 				fallback,
 				authError: msg,
-				errorCode: error?.code ?? null
+				errorCode: error?.code ?? null,
+				authMethod
 			})
 		);
 	}
