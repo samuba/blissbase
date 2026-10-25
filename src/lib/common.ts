@@ -19,6 +19,33 @@ export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/** Waits `baseDelayMs * 2^(attempt - 1)` between attempts and rethrows the last error. */
+export async function retryWithBackoff<T>(args: {
+    attempts: number;
+    baseDelayMs: number;
+    run: (attempt: number) => Promise<T>;
+    shouldRetry?: () => boolean;
+}) {
+    for (let attempt = 1; ; attempt++) {
+        try {
+            return await args.run(attempt);
+        } catch (error) {
+            if (attempt >= args.attempts || args.shouldRetry?.() === false) throw error;
+            await sleep(args.baseDelayMs * 2 ** (attempt - 1));
+        }
+    }
+}
+
+export async function runWithConcurrency<T>(args: { items: T[]; limit: number; run: (item: T) => Promise<unknown> }) {
+    const queue = [...args.items];
+    const worker = async () => {
+        for (let item = queue.shift(); item !== undefined; item = queue.shift()) {
+            await args.run(item).catch(console.error);
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(args.limit, queue.length) }, worker));
+}
+
 export function shouldSkipRecipient(email: string) {
     return email.toLowerCase().endsWith(`@example.com`);
 }
