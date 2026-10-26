@@ -1,5 +1,6 @@
 import type { MetaTagsProps } from "svelte-meta-tags";
 import { hasValidCoordinates } from "$lib/locationFilter";
+import { WEBSITE_SCRAPE_SOURCE_URLS } from "$lib/commonWithScripts";
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -384,6 +385,7 @@ export const noindexPageMetaTags = {
 /**
  * Only Blissbase-created and messenger events may be indexed by Google.
  * Website-scraped sources (and any unknown source) stay out of the index.
+ * Messenger/form events that link to a scrape-source domain are also noindex.
  */
 export const GOOGLE_INDEXABLE_EVENT_SOURCES = [`website-form`, `telegram`, `whatsapp`] as const
 
@@ -392,24 +394,40 @@ export function isGoogleIndexableEventSource(source: string) {
 }
 
 /**
- * Website-scraped / unknown sources are noindex; form + telegram + whatsapp stay indexable.
+ * True when `sourceUrl` points at a host we already scrape (or a subdomain of one).
+ */
+export function isWebsiteScrapeDomainUrl(sourceUrl: string | null | undefined) {
+	const host = hostnameForScrapeDomainMatch(sourceUrl)
+	if (!host) return false
+	return WEBSITE_SCRAPE_SOURCE_HOSTS.some(
+		(scrapeHost) => host === scrapeHost || host.endsWith(`.${scrapeHost}`),
+	)
+}
+
+/**
+ * Website-scraped / unknown sources are noindex; form + telegram + whatsapp stay indexable
+ * unless their `sourceUrl` is on a scrape domain.
  * Offerings/profiles omit `source` and remain indexable.
  */
-export function shouldNoindexEventForGoogle(source: string | null | undefined) {
-	if (!source?.trim()) return false
-	return !isGoogleIndexableEventSource(source)
+export function shouldNoindexEventForGoogle(args: {
+	source?: string | null
+	sourceUrl?: string | null
+}) {
+	if (isWebsiteScrapeDomainUrl(args.sourceUrl)) return true
+	if (!args.source?.trim()) return false
+	return !isGoogleIndexableEventSource(args.source)
 }
 
 export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl, source }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null, source?: string | null }) {
     let descriptionTeaser = trimAllWhitespaces(stripHtml(description ?? '')) ?? ''
     descriptionTeaser = descriptionTeaser.length > 140 ? descriptionTeaser.slice(0, 140) + "…" : descriptionTeaser
-    const noindexForScrape = shouldNoindexEventForGoogle(source)
+    const noindexForScrape = shouldNoindexEventForGoogle({ source, sourceUrl })
     const useExternalCanonical = noindexForScrape && (sourceUrl?.trim()?.length ?? 0) > 0
     return {
         title: `${name} | Blissbase`,
         description: descriptionTeaser,
-        // Scraped pages: point canonical at the origin so we don't claim duplicate ranking.
-        // Indexable events (incl. telegram/whatsapp with an external booking URL): Blissbase URL.
+        // Scraped / scrape-domain pages: point canonical at the origin so we don't claim duplicate ranking.
+        // Other indexable events (messenger/form with a non-scrape booking URL): Blissbase URL.
         canonical: useExternalCanonical ? sourceUrl! : url.href,
         robots: noindexForScrape ? `noindex, follow` : undefined,
         openGraph: {
@@ -426,6 +444,21 @@ export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl, s
         }
     } satisfies MetaTagsProps
 }
+
+function hostnameForScrapeDomainMatch(value: string | null | undefined) {
+	if (!value?.trim()) return null
+	try {
+		const trimmed = value.trim()
+		const href = trimmed.includes(`://`) ? trimmed : `https://${trimmed}`
+		return new URL(href).hostname.toLowerCase().replace(/^www\./, ``) || null
+	} catch {
+		return null
+	}
+}
+
+const WEBSITE_SCRAPE_SOURCE_HOSTS = WEBSITE_SCRAPE_SOURCE_URLS.map((scrapeUrl) =>
+	hostnameForScrapeDomainMatch(scrapeUrl),
+).filter((host): host is string => !!host)
 
 export function parseTelegramContacts(contacts: string[] | undefined) {
     if (!contacts?.length) return [];

@@ -1,5 +1,5 @@
-import { addressLinesFromAnalysis, calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getPageMetaTags, getWebsiteDomainLabel, GOOGLE_INDEXABLE_EVENT_SOURCES, googleMapsSearchUrl, isGoogleIndexableEventSource, matchesWholeWord, shouldNoindexEventForGoogle, toAddressLines } from '../lib/common';
-import { WEBSITE_SCRAPE_SOURCES } from '../lib/commonWithScripts';
+import { addressLinesFromAnalysis, calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getPageMetaTags, getWebsiteDomainLabel, GOOGLE_INDEXABLE_EVENT_SOURCES, googleMapsSearchUrl, isGoogleIndexableEventSource, isWebsiteScrapeDomainUrl, matchesWholeWord, shouldNoindexEventForGoogle, toAddressLines } from '../lib/common';
+import { WEBSITE_SCRAPE_SOURCES, WEBSITE_SCRAPE_SOURCE_URLS } from '../lib/commonWithScripts';
 import { FORM_CREATED_EVENT_SOURCE } from '../lib/server/events.shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -344,23 +344,23 @@ describe(`Google event indexing`, () => {
 		expect(GOOGLE_INDEXABLE_EVENT_SOURCES).toContain(FORM_CREATED_EVENT_SOURCE);
 		for (const source of GOOGLE_INDEXABLE_EVENT_SOURCES) {
 			expect(isGoogleIndexableEventSource(source)).toBe(true);
-			expect(shouldNoindexEventForGoogle(source)).toBe(false);
+			expect(shouldNoindexEventForGoogle({ source })).toBe(false);
 		}
 	});
 
 	it(`blocks every website scrape source and unknown sources`, () => {
 		for (const source of WEBSITE_SCRAPE_SOURCES) {
 			expect(isGoogleIndexableEventSource(source)).toBe(false);
-			expect(shouldNoindexEventForGoogle(source)).toBe(true);
+			expect(shouldNoindexEventForGoogle({ source })).toBe(true);
 		}
-		expect(shouldNoindexEventForGoogle(`theubudian`)).toBe(true);
-		expect(shouldNoindexEventForGoogle(`test`)).toBe(true);
+		expect(shouldNoindexEventForGoogle({ source: `theubudian` })).toBe(true);
+		expect(shouldNoindexEventForGoogle({ source: `test` })).toBe(true);
 	});
 
 	it(`does not noindex offerings/profiles that omit source`, () => {
-		expect(shouldNoindexEventForGoogle(undefined)).toBe(false);
-		expect(shouldNoindexEventForGoogle(null)).toBe(false);
-		expect(shouldNoindexEventForGoogle(``)).toBe(false);
+		expect(shouldNoindexEventForGoogle({})).toBe(false);
+		expect(shouldNoindexEventForGoogle({ source: null, sourceUrl: null })).toBe(false);
+		expect(shouldNoindexEventForGoogle({ source: `` })).toBe(false);
 	});
 
 	it(`noindexes scraped events and canonicalizes to the origin URL`, () => {
@@ -375,7 +375,7 @@ describe(`Google event indexing`, () => {
 		expect(tags.canonical).toBe(`https://tribehaus.app/yoga`);
 	});
 
-	it(`keeps messenger and form events indexable even with an external sourceUrl`, () => {
+	it(`keeps messenger and form events indexable with a non-scrape sourceUrl`, () => {
 		for (const source of GOOGLE_INDEXABLE_EVENT_SOURCES) {
 			const tags = getPageMetaTags({
 				name: `Messenger Event`,
@@ -386,6 +386,27 @@ describe(`Google event indexing`, () => {
 			});
 			expect(tags.robots).toBeUndefined();
 			expect(tags.canonical).toBe(pageUrl.href);
+		}
+	});
+
+	it(`noindexes messenger/form events whose sourceUrl is on a scrape domain`, () => {
+		expect(isWebsiteScrapeDomainUrl(`https://www.meetup.com/de-DE/events/123`)).toBe(true);
+		expect(isWebsiteScrapeDomainUrl(`https://example.com/tickets`)).toBe(false);
+
+		for (const scrapeBase of WEBSITE_SCRAPE_SOURCE_URLS) {
+			const sourceUrl = `${scrapeBase.replace(/\/$/, ``)}/some-event`;
+			expect(isWebsiteScrapeDomainUrl(sourceUrl)).toBe(true);
+			for (const source of GOOGLE_INDEXABLE_EVENT_SOURCES) {
+				const tags = getPageMetaTags({
+					name: `Linked scrape`,
+					description: `From messenger`,
+					url: pageUrl,
+					sourceUrl,
+					source,
+				});
+				expect(tags.robots).toBe(`noindex, follow`);
+				expect(tags.canonical).toBe(sourceUrl);
+			}
 		}
 	});
 
