@@ -1,5 +1,6 @@
 import type { MetaTagsProps } from "svelte-meta-tags";
 import { hasValidCoordinates } from "$lib/locationFilter";
+import { WEBSITE_SCRAPE_SOURCE_URLS } from "$lib/commonWithScripts";
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -381,15 +382,39 @@ export const noindexPageMetaTags = {
     robots: `noindex`,
 } satisfies MetaTagsProps
 
-export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null }) {
+export const GOOGLE_INDEXABLE_EVENT_SOURCES = [`website-form`, `telegram`, `whatsapp`] as const
+
+export function isGoogleIndexableEventSource(source: string) {
+	return (GOOGLE_INDEXABLE_EVENT_SOURCES as readonly string[]).includes(source)
+}
+
+export function isWebsiteScrapeDomainUrl(sourceUrl: string | null | undefined) {
+	const host = hostnameForScrapeDomainMatch(sourceUrl)
+	if (!host) return false
+	return WEBSITE_SCRAPE_SOURCE_HOSTS.some(
+		(scrapeHost) => host === scrapeHost || host.endsWith(`.${scrapeHost}`),
+	)
+}
+
+export function shouldNoindexEventForGoogle(args: {
+	source?: string | null
+	sourceUrl?: string | null
+}) {
+	if (isWebsiteScrapeDomainUrl(args.sourceUrl)) return true
+	if (!args.source?.trim()) return false
+	return !isGoogleIndexableEventSource(args.source)
+}
+
+export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl, source }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null, source?: string | null }) {
     let descriptionTeaser = trimAllWhitespaces(stripHtml(description ?? '')) ?? ''
     descriptionTeaser = descriptionTeaser.length > 140 ? descriptionTeaser.slice(0, 140) + "…" : descriptionTeaser
-    const eventIsFromDifferentWebsite = (sourceUrl?.trim()?.length ?? 0) > 0
+    const noindexForScrape = shouldNoindexEventForGoogle({ source, sourceUrl })
+    const useExternalCanonical = noindexForScrape && (sourceUrl?.trim()?.length ?? 0) > 0
     return {
         title: `${name} | Blissbase`,
         description: descriptionTeaser,
-        canonical: eventIsFromDifferentWebsite ? sourceUrl! : url.href, // prevent damage to event source SEO ranking due to duplicate content
-        robots: eventIsFromDifferentWebsite ? "noindex, follow" : undefined,
+        canonical: useExternalCanonical ? sourceUrl! : url.href,
+        robots: noindexForScrape ? `noindex, follow` : undefined,
         openGraph: {
             title: name,
             description: descriptionTeaser,
@@ -404,6 +429,21 @@ export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }:
         }
     } satisfies MetaTagsProps
 }
+
+function hostnameForScrapeDomainMatch(value: string | null | undefined) {
+	if (!value?.trim()) return null
+	try {
+		const trimmed = value.trim()
+		const href = trimmed.includes(`://`) ? trimmed : `https://${trimmed}`
+		return new URL(href).hostname.toLowerCase().replace(/^www\./, ``) || null
+	} catch {
+		return null
+	}
+}
+
+const WEBSITE_SCRAPE_SOURCE_HOSTS = WEBSITE_SCRAPE_SOURCE_URLS.map((scrapeUrl) =>
+	hostnameForScrapeDomainMatch(scrapeUrl),
+).filter((host): host is string => !!host)
 
 export function parseTelegramContacts(contacts: string[] | undefined) {
     if (!contacts?.length) return [];
