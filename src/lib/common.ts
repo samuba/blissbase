@@ -382,20 +382,12 @@ export const noindexPageMetaTags = {
     robots: `noindex`,
 } satisfies MetaTagsProps
 
-/**
- * Only Blissbase-created and messenger events may be indexed by Google.
- * Website-scraped sources (and any unknown source) stay out of the index.
- * Messenger/form events that link to a scrape-source domain are also noindex.
- */
 export const GOOGLE_INDEXABLE_EVENT_SOURCES = [`website-form`, `telegram`, `whatsapp`] as const
 
 export function isGoogleIndexableEventSource(source: string) {
 	return (GOOGLE_INDEXABLE_EVENT_SOURCES as readonly string[]).includes(source)
 }
 
-/**
- * True when `sourceUrl` points at a host we already scrape (or a subdomain of one).
- */
 export function isWebsiteScrapeDomainUrl(sourceUrl: string | null | undefined) {
 	const host = hostnameForScrapeDomainMatch(sourceUrl)
 	if (!host) return false
@@ -404,11 +396,6 @@ export function isWebsiteScrapeDomainUrl(sourceUrl: string | null | undefined) {
 	)
 }
 
-/**
- * Website-scraped / unknown sources are noindex; form + telegram + whatsapp stay indexable
- * unless their `sourceUrl` is on a scrape domain.
- * Offerings/profiles omit `source` and remain indexable.
- */
 export function shouldNoindexEventForGoogle(args: {
 	source?: string | null
 	sourceUrl?: string | null
@@ -426,8 +413,6 @@ export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl, s
     return {
         title: `${name} | Blissbase`,
         description: descriptionTeaser,
-        // Scraped / scrape-domain pages: point canonical at the origin so we don't claim duplicate ranking.
-        // Other indexable events (messenger/form with a non-scrape booking URL): Blissbase URL.
         canonical: useExternalCanonical ? sourceUrl! : url.href,
         robots: noindexForScrape ? `noindex, follow` : undefined,
         openGraph: {
