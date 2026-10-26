@@ -90,7 +90,7 @@
 	}
 
 	let showQuelleInsteadOfAnmelden = $derived(
-		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source) ||
+		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum', 'kayana'].includes(event.source) ||
 			event.sourceUrl?.includes('ciglobalcalendar.net')
 	);
 
@@ -101,6 +101,13 @@
 		if (!event.sourceUrl?.startsWith('http')) return `https://${event.sourceUrl}`;
 		return event.sourceUrl;
 	});
+
+	let sourceLabel = $derived(
+		WEBSITE_SCRAPER_CONFIG[event.source as keyof typeof WEBSITE_SCRAPER_CONFIG]?.label ||
+			event.source ||
+			(sourceUrl ? getWebsiteDomainLabel(sourceUrl) : undefined) ||
+			`Unbekannt`
+	);
 
 	const hostNamesToHide = ["todo.today"];
 	const shouldShowHost = $derived(event.host && hostNamesToHide.every(x => !event.host?.toLowerCase().includes(x)));
@@ -436,7 +443,7 @@
 					rel="noopener noreferrer"
 					class="cursor-pointer underline"
 				>
-					{WEBSITE_SCRAPER_CONFIG[event.source as keyof typeof WEBSITE_SCRAPER_CONFIG]?.label}
+					{sourceLabel}
 				</a>
 			</div>
 		{/if}

@@ -427,17 +427,22 @@ export function getContact(data: KayanaEventData): string[] {
 		contacts.push(value);
 	};
 
-	const haystacks = [data.detailHtml, data.post?.content?.rendered, data.card?.articleHtml].filter(
-		Boolean,
-	) as string[];
+	// Only scan prose — listing/detail chrome includes SVG path data that looks like phones.
+	const haystacks = [data.post?.content?.rendered, data.detailHtml]
+		.filter(Boolean)
+		.map((html) => cheerio.load(html as string).root().text());
+
 	for (const haystack of haystacks) {
 		for (const email of haystack.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) ?? []) {
 			if (/awesome-menu|breakdance|wp-content|example\.com/i.test(email)) continue;
 			push(email);
 		}
-		for (const tel of haystack.match(/(?:\+49|0)\s*[\d\s/-]{6,}/g) ?? []) {
-			const cleaned = tel.replace(/\s+/g, ` `).trim();
-			if (cleaned.replace(/\D/g, ``).length >= 8) push(cleaned);
+		for (const tel of haystack.match(/(?:\+|00)?(?:49\s*)?(?:\(?0\)?\s*)?\d(?:[\s./-]?\d){6,}/g) ?? []) {
+			const digits = tel.replace(/\D/g, ``);
+			if (digits.length < 8 || digits.length > 15) continue;
+			// Reject SVG/viewBox leftovers like "0 0 448 512".
+			if (/^0+$/.test(digits) || !/[1-9]/.test(digits.slice(0, 3))) continue;
+			push(tel.replace(/\s+/g, ` `).trim());
 		}
 	}
 

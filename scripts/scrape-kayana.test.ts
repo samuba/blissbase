@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	extractListingCards,
+	getContact,
 	getEndAt,
 	getHost,
 	getName,
@@ -168,6 +169,30 @@ describe(`field getters`, () => {
 				},
 			}),
 		).toBe(`Spendenbasis`);
+	});
+});
+
+describe(`getContact`, () => {
+	it(`ignores SVG path junk from listing chrome and keeps real contacts`, () => {
+		const card = extractListingCards(listingHtml)[0];
+		expect(
+			getContact({
+				url: card.url,
+				card,
+				post: {
+					id: 1,
+					link: card.url,
+					content: {
+						rendered: `<p>Schreib an host@dein-kayana.de oder +49 157 85063105</p>`,
+					},
+				},
+			}),
+		).toEqual([
+			`host@dein-kayana.de`,
+			`+49 157 85063105`,
+			`https://t.me/deinkayana`,
+			`klara@dein-kayana.de`,
+		]);
 	});
 });
 
