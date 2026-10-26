@@ -56,8 +56,8 @@ describe(`extractListingCards`, () => {
 			timeText: `17:00 Uhr`,
 		});
 		expect(cards[0].imageUrls).toEqual([
-			`https://dein-kayana.de/wp-content/uploads/2026/04/host.jpg`,
 			`https://dein-kayana.de/wp-content/uploads/2026/07/event.jpg`,
+			`https://dein-kayana.de/wp-content/uploads/2026/04/host.jpg`,
 		]);
 		expect(cards[1].host).toBe(`Laura`);
 		expect(cards[1].timeText).toBe(`17 - 19 Uhr`);

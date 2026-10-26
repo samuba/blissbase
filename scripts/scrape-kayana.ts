@@ -245,7 +245,8 @@ export function extractListingCards(html: string): ListingCard[] {
 				.map((node) => superTrim($(node).text()))
 				.filter((text): text is string => Boolean(text));
 
-			const imageUrls = extractBackgroundImages($article.html() ?? ``);
+			// Listing CSS paints organizer first, event second — flip for cover-first.
+			const imageUrls = extractBackgroundImages($article.html() ?? ``).reverse();
 
 			const dateText = listTexts.find((text) => /\d{1,2}\.\d{1,2}\.\d{2,4}/.test(text));
 			const timeText = listTexts.find((text) => /\d{1,2}(?::\d{2})?\s*(?:-|–|—)?\s*\d{0,2}(?::\d{2})?\s*Uhr/i.test(text));
