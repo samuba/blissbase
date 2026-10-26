@@ -1,4 +1,6 @@
-import { addressLinesFromAnalysis, calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getWebsiteDomainLabel, googleMapsSearchUrl, matchesWholeWord, toAddressLines } from '../lib/common';
+import { addressLinesFromAnalysis, calendarLocation, deduplicateItems, formatAddress, formatDatesStr, formatTimesStr, generateSlug, getPageMetaTags, getWebsiteDomainLabel, GOOGLE_INDEXABLE_EVENT_SOURCES, googleMapsSearchUrl, isGoogleIndexableEventSource, matchesWholeWord, shouldNoindexEventForGoogle, toAddressLines } from '../lib/common';
+import { WEBSITE_SCRAPE_SOURCES } from '../lib/commonWithScripts';
+import { FORM_CREATED_EVENT_SOURCE } from '../lib/server/events.shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /** Fixed "now": Wed 4 Jun 2025, 12:00 local — used by relative-date logic. */
@@ -332,4 +334,69 @@ describe('generateSlug', () => {
             }))
             .toBe('2025-07-04-5rhythmswave-move-groove');
     });
+});
+
+describe(`Google event indexing`, () => {
+	const pageUrl = new URL(`https://www.blissbase.app/yoga-morning`);
+
+	it(`allows website-form, telegram, and whatsapp only`, () => {
+		expect([...GOOGLE_INDEXABLE_EVENT_SOURCES]).toEqual([`website-form`, `telegram`, `whatsapp`]);
+		expect(GOOGLE_INDEXABLE_EVENT_SOURCES).toContain(FORM_CREATED_EVENT_SOURCE);
+		for (const source of GOOGLE_INDEXABLE_EVENT_SOURCES) {
+			expect(isGoogleIndexableEventSource(source)).toBe(true);
+			expect(shouldNoindexEventForGoogle(source)).toBe(false);
+		}
+	});
+
+	it(`blocks every website scrape source and unknown sources`, () => {
+		for (const source of WEBSITE_SCRAPE_SOURCES) {
+			expect(isGoogleIndexableEventSource(source)).toBe(false);
+			expect(shouldNoindexEventForGoogle(source)).toBe(true);
+		}
+		expect(shouldNoindexEventForGoogle(`theubudian`)).toBe(true);
+		expect(shouldNoindexEventForGoogle(`test`)).toBe(true);
+	});
+
+	it(`does not noindex offerings/profiles that omit source`, () => {
+		expect(shouldNoindexEventForGoogle(undefined)).toBe(false);
+		expect(shouldNoindexEventForGoogle(null)).toBe(false);
+		expect(shouldNoindexEventForGoogle(``)).toBe(false);
+	});
+
+	it(`noindexes scraped events and canonicalizes to the origin URL`, () => {
+		const tags = getPageMetaTags({
+			name: `Scraped Yoga`,
+			description: `A class`,
+			url: pageUrl,
+			sourceUrl: `https://tribehaus.app/yoga`,
+			source: `tribehaus`,
+		});
+		expect(tags.robots).toBe(`noindex, follow`);
+		expect(tags.canonical).toBe(`https://tribehaus.app/yoga`);
+	});
+
+	it(`keeps messenger and form events indexable even with an external sourceUrl`, () => {
+		for (const source of GOOGLE_INDEXABLE_EVENT_SOURCES) {
+			const tags = getPageMetaTags({
+				name: `Messenger Event`,
+				description: `A gathering`,
+				url: pageUrl,
+				sourceUrl: `https://example.com/tickets`,
+				source,
+			});
+			expect(tags.robots).toBeUndefined();
+			expect(tags.canonical).toBe(pageUrl.href);
+		}
+	});
+
+	it(`noindexes scraped events without a sourceUrl using the Blissbase canonical`, () => {
+		const tags = getPageMetaTags({
+			name: `Orphan Scrape`,
+			description: `Missing origin link`,
+			url: pageUrl,
+			source: `heilnetz`,
+		});
+		expect(tags.robots).toBe(`noindex, follow`);
+		expect(tags.canonical).toBe(pageUrl.href);
+	});
 }); 

@@ -381,15 +381,37 @@ export const noindexPageMetaTags = {
     robots: `noindex`,
 } satisfies MetaTagsProps
 
-export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null }) {
+/**
+ * Only Blissbase-created and messenger events may be indexed by Google.
+ * Website-scraped sources (and any unknown source) stay out of the index.
+ */
+export const GOOGLE_INDEXABLE_EVENT_SOURCES = [`website-form`, `telegram`, `whatsapp`] as const
+
+export function isGoogleIndexableEventSource(source: string) {
+	return (GOOGLE_INDEXABLE_EVENT_SOURCES as readonly string[]).includes(source)
+}
+
+/**
+ * Website-scraped / unknown sources are noindex; form + telegram + whatsapp stay indexable.
+ * Offerings/profiles omit `source` and remain indexable.
+ */
+export function shouldNoindexEventForGoogle(source: string | null | undefined) {
+	if (!source?.trim()) return false
+	return !isGoogleIndexableEventSource(source)
+}
+
+export function getPageMetaTags({ name, description, imageUrl, url, sourceUrl, source }: { name: string, description?: string | null, imageUrl?: string | null, url: URL, sourceUrl?: string | null, source?: string | null }) {
     let descriptionTeaser = trimAllWhitespaces(stripHtml(description ?? '')) ?? ''
     descriptionTeaser = descriptionTeaser.length > 140 ? descriptionTeaser.slice(0, 140) + "…" : descriptionTeaser
-    const eventIsFromDifferentWebsite = (sourceUrl?.trim()?.length ?? 0) > 0
+    const noindexForScrape = shouldNoindexEventForGoogle(source)
+    const useExternalCanonical = noindexForScrape && (sourceUrl?.trim()?.length ?? 0) > 0
     return {
         title: `${name} | Blissbase`,
         description: descriptionTeaser,
-        canonical: eventIsFromDifferentWebsite ? sourceUrl! : url.href, // prevent damage to event source SEO ranking due to duplicate content
-        robots: eventIsFromDifferentWebsite ? "noindex, follow" : undefined,
+        // Scraped pages: point canonical at the origin so we don't claim duplicate ranking.
+        // Indexable events (incl. telegram/whatsapp with an external booking URL): Blissbase URL.
+        canonical: useExternalCanonical ? sourceUrl! : url.href,
+        robots: noindexForScrape ? `noindex, follow` : undefined,
         openGraph: {
             title: name,
             description: descriptionTeaser,

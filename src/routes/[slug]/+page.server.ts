@@ -27,7 +27,8 @@ export const load = (async ({ params: { slug }, url }) => {
             }) + " - " + event.description,
             imageUrl: event.imageUrls?.[0],
             url,
-            sourceUrl: event.sourceUrl
+            sourceUrl: event.sourceUrl,
+            source: event.source,
         })
     };
 }) satisfies PageServerLoad;
