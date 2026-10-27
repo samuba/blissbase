@@ -90,3 +90,21 @@ export const whiteListSources = [
     'wimhofmethod',
     'kayana',
 ] satisfies WebsiteScrapeSourceName[];
+
+/**
+ * Website scrapes list an event when the title or description matches the conscious-word list.
+ * Titles like "DISSOLVE :: PLAY" miss the list even though the description is contact improvisation.
+ *
+ * @example
+ * shouldListScrapedEvent({ name: `DISSOLVE :: PLAY`, description: `contact improvisation jam`, source: `megatix_indonesia` })
+ */
+export function shouldListScrapedEvent(args: {
+    name: string;
+    description?: string | null;
+    source: WebsiteScrapeSourceName;
+}) {
+    if (matchesBlackListWords(args.name)) return false;
+    if (whiteListSources.includes(args.source)) return true;
+    const text = args.description ? `${args.name}\n${args.description}` : args.name;
+    return matchesWhiteListWords(text);
+}

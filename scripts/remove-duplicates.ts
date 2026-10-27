@@ -281,9 +281,7 @@ async function mergeAndDeleteDuplicateEvents(args: {
             }
         }
     }
-    if ((eventToDelete.address?.length ?? 0) > (eventToSurvive.address?.length ?? 0)) {
-        eventToSurvive.address = eventToDelete.address;
-    }
+    adoptLongerAddress({ eventToSurvive, eventToDelete });
     eventToSurvive.sourceUrl = getMergedSourceUrl({
         survivingSourceUrl: eventToSurvive.sourceUrl,
         deletedSourceUrl: eventToDelete.sourceUrl,
@@ -485,6 +483,31 @@ export async function processDuplicates<TEvent extends { id: number }>(args: {
     }
 
     return deletedCount;
+}
+
+/**
+ * Copies the longer address and the coordinates that belong to it.
+ * Keeping the old pin after the address grows is how "Paradiso, Ubud" stayed in Switzerland.
+ *
+ * @example
+ * adoptLongerAddress({
+ *   eventToSurvive: { address: [`Paradiso`], latitude: 45.99, longitude: 8.95, timezone: `Europe/Zurich` },
+ *   eventToDelete: { address: [`Paradiso`, `Ubud`], latitude: -8.51, longitude: 115.26, timezone: `Asia/Makassar` },
+ * })
+ */
+export function adoptLongerAddress<T extends {
+    address: string[] | null;
+    latitude: number | null;
+    longitude: number | null;
+    timezone?: string | null;
+}>(args: { eventToSurvive: T; eventToDelete: T }) {
+    const { eventToSurvive, eventToDelete } = args;
+    if ((eventToDelete.address?.length ?? 0) <= (eventToSurvive.address?.length ?? 0)) return;
+    eventToSurvive.address = eventToDelete.address;
+    if (eventToDelete.latitude == null || eventToDelete.longitude == null) return;
+    eventToSurvive.latitude = eventToDelete.latitude;
+    eventToSurvive.longitude = eventToDelete.longitude;
+    if (eventToDelete.timezone) eventToSurvive.timezone = eventToDelete.timezone;
 }
 
 export function mergeArrayDeduplicated(arrayA: string[] | null, arrayB: string[] | null) {

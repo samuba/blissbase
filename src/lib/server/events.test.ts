@@ -363,10 +363,21 @@ describe('Events Module - Happy Flow Tests', () => {
             const event = { name: 'Conflict Listed Event', startAt, endAt: new Date('2024-12-22T22:00:00Z'), slug: '' };
 
             const [inserted] = await upsertEvents([createTestEvent({ ...event, listed: true })]);
-            await db.update(s.events).set({ listed: false }).where(eq(s.events.id, inserted.id));
+            await db.update(s.events).set({ listed: false, tagSlugs: [`yoga`] }).where(eq(s.events.id, inserted.id));
 
             const [reupserted] = await upsertEvents([createTestEvent({ ...event, listed: true })]);
             expect(reupserted.listed).toBe(false);
+        });
+
+        it('relists an unjudged event when a later scrape says it should be listed', async () => {
+            const startAt = new Date('2024-12-22T19:00:00Z');
+            const event = { name: 'Unjudged Listed Event', startAt, endAt: new Date('2024-12-22T22:00:00Z'), slug: '' };
+
+            const [inserted] = await upsertEvents([createTestEvent({ ...event, listed: false, tagSlugs: [] })]);
+            expect(inserted.listed).toBe(false);
+
+            const [reupserted] = await upsertEvents([createTestEvent({ ...event, listed: true })]);
+            expect(reupserted.listed).toBe(true);
         });
 
         it('should preserve existing Telegram chat IDs when a conflicting upsert has none', async () => {

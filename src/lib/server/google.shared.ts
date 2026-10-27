@@ -32,64 +32,22 @@ export function createGoogleCacheApi(db: DB) {
 		});
 
 		try {
-			if (geocodeLocalCache.has(cacheKey)) {
-				return geocodeLocalCache.get(cacheKey) ?? null;
-			}
-
-			const dbCachedResult = await db.query.geocodeCache.findFirst({
-				where: eq(geocodeCache.address, cacheKey)
-			});
-
-			if (dbCachedResult) {
-				console.log(`Found cached geocoding result for ${geocodeLabel} in db: ${dbCachedResult.latitude}, ${dbCachedResult.longitude}`);
-
-				const cachedGeocodeResult = toCachedGeocodeResult({
-					latitude: dbCachedResult.latitude,
-					longitude: dbCachedResult.longitude,
-					timezone: dbCachedResult.timezone
-				});
-				if (!cachedGeocodeResult) {
-					geocodeLocalCache.set(cacheKey, null);
-					return null;
-				}
-
-				if (cachedGeocodeResult.timezone) {
-					geocodeLocalCache.set(cacheKey, cachedGeocodeResult);
-					return cachedGeocodeResult;
-				}
-
-				const timezone = await getTimezoneForCoordinates({
-					lat: cachedGeocodeResult.lat,
-					lng: cachedGeocodeResult.lng,
-					apiKey
-				});
-				const geocodeResult = {
-					...cachedGeocodeResult,
-					timezone
-				} satisfies GeocodeResult;
-
-				try {
-					await db.update(geocodeCache)
-						.set({
-							timezone,
-							cachedAt: new Date()
-						})
-						.where(eq(geocodeCache.address, cacheKey));
-				} catch (cacheError) {
-					console.error(`Error updating cached timezone: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
-				}
-
-				geocodeLocalCache.set(cacheKey, geocodeResult);
-				return geocodeResult;
-			}
-
 			const biasBounds = await getGeocodeBiasBounds({
 				biasAddressLines,
 				apiKey,
 				resolveCoords: geocodeAddressCached
 			});
-			const coordinates = await geocodeLocation({
-				location: addressString,
+			const cachedResult = await readUsableCachedGeocode({
+				cacheKey,
+				geocodeLabel,
+				biasBounds,
+				apiKey
+			});
+			if (cachedResult !== undefined) return cachedResult;
+
+			const coordinates = await geocodeInsideBias({
+				addressString,
+				biasAddressString,
 				apiKey,
 				bounds: biasBounds
 			});
@@ -135,6 +93,72 @@ export function createGoogleCacheApi(db: DB) {
 			console.error(`Error geocoding address ${geocodeLabel}:`, error instanceof Error ? error.message : String(error));
 			return null;
 		}
+	}
+
+	/**
+	 * Returns a cached pin when it can be used. `undefined` means look up again
+	 * because the stored pin sits outside the bias area.
+	 */
+	async function readUsableCachedGeocode(args: {
+		cacheKey: string;
+		geocodeLabel: string;
+		biasBounds?: string;
+		apiKey: string;
+	}): Promise<GeocodeResult | null | undefined> {
+		if (geocodeLocalCache.has(args.cacheKey)) {
+			const local = geocodeLocalCache.get(args.cacheKey) ?? null;
+			if (!isOutsideBias({ result: local, bounds: args.biasBounds })) return local;
+		}
+
+		const dbCachedResult = await db.query.geocodeCache.findFirst({
+			where: eq(geocodeCache.address, args.cacheKey)
+		});
+		if (!dbCachedResult) return undefined;
+
+		console.log(`Found cached geocoding result for ${args.geocodeLabel} in db: ${dbCachedResult.latitude}, ${dbCachedResult.longitude}`);
+
+		const cachedGeocodeResult = toCachedGeocodeResult({
+			latitude: dbCachedResult.latitude,
+			longitude: dbCachedResult.longitude,
+			timezone: dbCachedResult.timezone
+		});
+		if (!cachedGeocodeResult) {
+			geocodeLocalCache.set(args.cacheKey, null);
+			return null;
+		}
+		if (isOutsideBias({ result: cachedGeocodeResult, bounds: args.biasBounds })) {
+			console.log(`Ignoring cached geocode for ${args.geocodeLabel} at ${cachedGeocodeResult.lat}, ${cachedGeocodeResult.lng} because it is outside the bias bounds`);
+			return undefined;
+		}
+
+		if (cachedGeocodeResult.timezone) {
+			geocodeLocalCache.set(args.cacheKey, cachedGeocodeResult);
+			return cachedGeocodeResult;
+		}
+
+		const timezone = await getTimezoneForCoordinates({
+			lat: cachedGeocodeResult.lat,
+			lng: cachedGeocodeResult.lng,
+			apiKey: args.apiKey
+		});
+		const geocodeResult = {
+			...cachedGeocodeResult,
+			timezone
+		} satisfies GeocodeResult;
+
+		try {
+			await db.update(geocodeCache)
+				.set({
+					timezone,
+					cachedAt: new Date()
+				})
+				.where(eq(geocodeCache.address, args.cacheKey));
+		} catch (cacheError) {
+			console.error(`Error updating cached timezone: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
+		}
+
+		geocodeLocalCache.set(args.cacheKey, geocodeResult);
+		return geocodeResult;
 	}
 
 	async function reverseGeocodeCityCached(lat: number, lng: number, apiKey: string): Promise<string | null> {
@@ -284,6 +308,56 @@ export async function getTimezoneForCoordinates(args: { lat: number; lng: number
 	}
 }
 
+/**
+ * True when a pin lies inside a Google bounds string `swLat,swLng|neLat,neLng`.
+ *
+ * @example
+ * coordinateInsideBounds({ lat: -8.51, lng: 115.26, bounds: `-8.7,115.0|-8.3,115.5` })
+ */
+export function coordinateInsideBounds(args: { lat: number; lng: number; bounds: string }) {
+	const [southWest, northEast] = args.bounds.split(`|`);
+	const [south, west] = southWest?.split(`,`).map(Number) ?? [];
+	const [north, east] = northEast?.split(`,`).map(Number) ?? [];
+	if ([south, west, north, east].some((value) => value == null || Number.isNaN(value))) return true;
+	return args.lat >= south && args.lat <= north && args.lng >= west && args.lng <= east;
+}
+
+function isOutsideBias(args: { result: GeocodeResult | null; bounds?: string }) {
+	if (!args.result || !args.bounds) return false;
+	return !coordinateInsideBounds({
+		lat: args.result.lat,
+		lng: args.result.lng,
+		bounds: args.bounds
+	});
+}
+
+/**
+ * Google treats bounds as a hint and region=DE pulls famous European names
+ * (Paradiso to Paradiso, Switzerland) even when the hint is Ubud. Drop those pins
+ * and try again with the bias locality in the query.
+ */
+async function geocodeInsideBias(args: {
+	addressString: string;
+	biasAddressString?: string;
+	apiKey: string;
+	bounds?: string;
+}) {
+	const direct = await geocodeLocation({
+		location: args.addressString,
+		apiKey: args.apiKey,
+		bounds: args.bounds
+	});
+	if (direct || !args.biasAddressString || !args.bounds) return direct;
+
+	const biasedLocation = `${args.addressString}, ${args.biasAddressString}`;
+	if (biasedLocation.toLowerCase() === args.addressString.toLowerCase()) return null;
+	return geocodeLocation({
+		location: biasedLocation,
+		apiKey: args.apiKey,
+		bounds: args.bounds
+	});
+}
+
 async function geocodeLocation(args: {
 	location: string;
 	apiKey: string;
@@ -315,7 +389,15 @@ async function geocodeLocation(args: {
 		const data = await response.json();
 
 		if (data.status === `OK` && data.results?.length) {
-			return data.results[0].geometry.location;
+			for (const result of data.results) {
+				const location = result.geometry?.location as { lat: number; lng: number } | undefined;
+				if (location?.lat == null || location.lng == null) continue;
+				if (args.bounds && !coordinateInsideBounds({ lat: location.lat, lng: location.lng, bounds: args.bounds })) {
+					continue;
+				}
+				return location;
+			}
+			return null;
 		}
 
 		console.error(`Geocoding failed or no results:`, data.status, data.error_message);

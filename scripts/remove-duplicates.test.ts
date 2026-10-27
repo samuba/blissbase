@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { findImageHashDuplicatePairs, getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
+import { adoptLongerAddress, findImageHashDuplicatePairs, getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
 
 describe(`processDuplicates`, () => {
     it(`skips stale duplicate pairs and keeps the latest survivor state`, async () => {
@@ -57,6 +57,32 @@ describe(`processDuplicates`, () => {
         expect(warnSpy).toHaveBeenCalledWith(`Event not found for id: 1 or 3`);
 
         warnSpy.mockRestore();
+    });
+});
+
+describe(`adoptLongerAddress`, () => {
+    it(`moves the pin with the longer address`, () => {
+        const eventToSurvive = {
+            address: [`Paradiso`],
+            latitude: 45.9907,
+            longitude: 8.94526,
+            timezone: `Europe/Zurich`,
+        };
+        const eventToDelete = {
+            address: [`Paradiso`, `Ubud`],
+            latitude: -8.51172,
+            longitude: 115.264,
+            timezone: `Asia/Makassar`,
+        };
+
+        adoptLongerAddress({ eventToSurvive, eventToDelete });
+
+        expect(eventToSurvive).toEqual({
+            address: [`Paradiso`, `Ubud`],
+            latitude: -8.51172,
+            longitude: 115.264,
+            timezone: `Asia/Makassar`,
+        });
     });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchesBlackListWords, matchesWhiteListWords } from './whitelistWords';
+import { matchesBlackListWords, matchesWhiteListWords, shouldListScrapedEvent } from './whitelistWords';
 
 describe(`matchesBlackListWords`, () => {
 	it(`filters ordinary yoga class titles`, () => {
@@ -23,6 +23,19 @@ describe(`matchesBlackListWords`, () => {
 describe(`matchesWhiteListWords`, () => {
 	it(`matches known conscious-event terms`, () => {
 		expect(matchesWhiteListWords(`Ecstatic Dance Berlin`)).toBe(true);
+	});
+
+	it(`lists a conscious description when the title has no whitelist word`, () => {
+		expect(shouldListScrapedEvent({
+			name: `DISSOLVE :: PLAY`,
+			description: `<p>inspired by contact improvisation and authentic relating</p>`,
+			source: `megatix_indonesia`,
+		})).toBe(true);
+		expect(shouldListScrapedEvent({
+			name: `DISSOLVE :: PLAY`,
+			description: `doors open at 11`,
+			source: `megatix_indonesia`,
+		})).toBe(false);
 	});
 
 	it(`matches event category labels and synonyms`, () => {
