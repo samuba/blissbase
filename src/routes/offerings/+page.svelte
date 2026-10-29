@@ -19,6 +19,11 @@
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 	import { toast } from "svelte-sonner";
+	import {
+		offeringHeroDesktop,
+		offeringHeroMobile,
+		offeringHeroTablet,
+	} from "$lib/assets/offering-hero-images";
 
 	let { data } = $props();
 	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
@@ -171,21 +176,36 @@
 <svelte:window bind:scrollY />
 
 <div class="grid w-full overflow-hidden" id="content-before-menu">
+	<!-- hero image layer — same height behavior as homepage -->
 	<div class="col-start-1 row-start-1">
-		<enhanced:img
-			src="/static/offering-hero.jpg?blur=2.5&brightness=0.87"
-			alt="Hero image"
-			class="w-full md:h-auto md:max-h-[550px] h-72 object-cover md:blur-[2px]"
-		/>
+		<picture>
+			{#each Object.entries(offeringHeroMobile.sources) as [format, srcset] (format)}
+				<source media="(max-width: 499px)" {srcset} type={`image/${format}`} />
+			{/each}
+			{#each Object.entries(offeringHeroDesktop.sources) as [format, srcset] (format)}
+				<source media="(min-width: 1100px)" {srcset} type={`image/${format}`} />
+			{/each}
+			{#each Object.entries(offeringHeroTablet.sources) as [format, srcset] (format)}
+				<source {srcset} type={`image/${format}`} />
+			{/each}
+			<img
+				src={offeringHeroTablet.img.src}
+				width={offeringHeroTablet.img.w}
+				height={offeringHeroTablet.img.h}
+				alt="Hero"
+				class="h-72 w-full object-cover md:h-auto md:max-h-[550px]"
+			/>
+		</picture>
 	</div>
 
-	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-3 items-center justify-center">
+	<!-- Content layer -->
+	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-3 sm:gap-8 items-center justify-center">
 		<div class="flex flex-col gap-3 w-full items-center justify-center px-4">
-			<h1 class="md:text-5xl text-4xl text-base-100 font-brand">Angebote</h1>
+			<h1 class="md:text-5xl text-4xl text-base-100 font-brand drop-shadow-lg">Angebote</h1>
 		</div>
 
-		<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
-			✨ Persönliche Sessions & Services aus der Community ✨
+		<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand drop-shadow-md">
+			✨ 1:1 Sessions & Services aus der Community ✨
 		</h2>
 	</div>
 </div>

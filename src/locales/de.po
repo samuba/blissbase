@@ -469,7 +469,6 @@ msgstr "Fehler beim Laden der Events:"
 #: src/lib/components/Login.svelte
 #: src/lib/components/Login.svelte
 #: src/lib/createFlowAuth.svelte.ts
-#: src/lib/createFlowAuth.svelte.ts
 msgid "Ein Fehler ist aufgetreten"
 msgstr "Ein Fehler ist aufgetreten"
 
@@ -527,16 +526,6 @@ msgstr "Setze zuerst einen Standort"
 #: src/lib/components/HeaderControls.svelte
 msgid "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 msgstr "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
-
-#~ msgid "mit <0/> <1/><2/>"
-#~ msgstr "mit <0/> <1/><2/>"
-
-#~ msgid "vom <0/> <1/> bis <2/> <3/><4/>"
-#~ msgstr "vom <0/> <1/> bis <2/> <3/><4/>"
-
-#: src/routes/offerings/+page.svelte
-msgid "Hero image"
-msgstr "Hero image"
 
 #: src/routes/+page.svelte
 msgid "Ort <0/> nicht gefunden"
@@ -1085,9 +1074,6 @@ msgstr "Suchen"
 msgid "Vor Ort"
 msgstr "Vor Ort"
 
-#~ msgid "in <0/> <1>{0} ({1}km Radius)</1><2/>"
-#~ msgstr "in <0/> <1>{0} ({1}km Radius)</1><2/>"
-
 #: src/lib/components/TextSearchInput.svelte
 #: src/lib/components/TextSearchInput.svelte
 msgid "Suche starten"
@@ -1101,7 +1087,6 @@ msgstr "Füge einen Kontakt-Link hinzu, damit dich Menschen erreichen können."
 msgid "<0/> Angebot erstellen"
 msgstr "<0/> Angebot erstellen"
 
-#: src/lib/createFlowAuth.svelte.ts
 #: src/lib/createFlowAuth.svelte.ts
 msgid "Bitte gib deine E-Mail-Adresse ein."
 msgstr "Bitte gib deine E-Mail-Adresse ein."
@@ -1795,10 +1780,6 @@ msgstr "<0>Über eine Event-Quelle:</0> Trag deinen Termin auf einer der geliste
 msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 msgstr "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 
-#: src/routes/offerings/+page.svelte
-msgid "✨ Persönliche Sessions & Services aus der Community ✨"
-msgstr "✨ Persönliche Sessions & Services aus der Community ✨"
-
 #: src/lib/components/HeaderControls.svelte
 msgid "Für private Sessions und Services:"
 msgstr "Für private Sessions und Services:"
@@ -1808,6 +1789,7 @@ msgid "Angebot hinzufügen | Blissbase"
 msgstr "Angebot hinzufügen | Blissbase"
 
 #: src/routes/+page.svelte
+#: src/routes/offerings/+page.svelte
 msgid "Hero"
 msgstr "Hero"
 
@@ -3886,9 +3868,6 @@ msgstr "Events anzeigen"
 msgid "Wir haben viele verschiedene Angebote!"
 msgstr "Wir haben viele verschiedene Angebote!"
 
-#~ msgid "Weitere Events konnten nicht geladen werden."
-#~ msgstr "Weitere Events konnten nicht geladen werden."
-
 #: src/routes/+page.svelte
 msgid "<0/> Erneut versuchen"
 msgstr "<0/> Erneut versuchen"
@@ -3901,15 +3880,10 @@ msgstr "Vor Ort + Online"
 msgid "Möchtest du den Radius erweitern?"
 msgstr "Möchtest du den Radius erweitern?"
 
-#~ msgid "Fehler Weitere Events konnten nicht geladen werden."
-#~ msgstr "Fehler Weitere Events konnten nicht geladen werden."
-
-#~ msgid "Fehler beim laden weitere Events konnten nicht geladen werden."
-#~ msgstr "Fehler beim laden weitere Events konnten nicht geladen werden."
-
-#~ msgid "Fehler beim laden weiterer Events konnten nicht geladen werden."
-#~ msgstr "Fehler beim laden weiterer Events konnten nicht geladen werden."
-
 #: src/routes/+page.svelte
 msgid "Fehler beim laden weiterer Events."
 msgstr "Fehler beim laden weiterer Events."
+
+#: src/routes/offerings/+page.svelte
+msgid "✨ 1:1 Sessions & Services aus der Community ✨"
+msgstr "✨ 1:1 Sessions & Services aus der Community ✨"

@@ -11,6 +11,12 @@ import { mapOAuthError, startGoogleOAuth } from "$lib/oauthSignIn";
 
 const EMAIL_CHECK_DEBOUNCE_MS = 500;
 
+const emailRequiredMessage = /* @wc-include */ `Bitte gib deine E-Mail-Adresse ein.`;
+const genericAuthErrorMessage = /* @wc-include */ `Ein Fehler ist aufgetreten`;
+const otpCodeRequiredMessage = /* @wc-include */ `Bitte gib den 6-stelligen Code ein.`;
+const authConfirmFailedMessage = /* @wc-include */ `Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut.`;
+const emailCheckFailedMessage = /* @wc-include */ `E-Mail konnte nicht geprüft werden.`;
+
 export class CreateFlowAuth {
 	email = $state(``);
 	checkedEmail = $state(``);
@@ -81,7 +87,7 @@ export class CreateFlowAuth {
 		const trimmed = this.email.trim();
 		if (this.isSignedIn) return true;
 		if (!trimmed) {
-			if (args.showError) this.emailCheckError = `Bitte gib deine E-Mail-Adresse ein.`;
+			if (args.showError) this.emailCheckError = emailRequiredMessage;
 			this.#clearEmailProfileFlags();
 			return false;
 		}
@@ -113,7 +119,7 @@ export class CreateFlowAuth {
 		const trimmed = (args.emailAddress ?? this.email).trim();
 		if (this.authBusy) return false;
 		if (!trimmed) {
-			this.authError = `Bitte gib deine E-Mail-Adresse ein.`;
+			this.authError = emailRequiredMessage;
 			return false;
 		}
 
@@ -139,7 +145,7 @@ export class CreateFlowAuth {
 			if (args.resetCode !== false) this.otpCode = ``;
 			return true;
 		} catch (err: unknown) {
-			this.authError = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
+			this.authError = err instanceof Error ? err.message : genericAuthErrorMessage;
 			console.error(`Auth error:`, err);
 			return false;
 		} finally {
@@ -151,7 +157,7 @@ export class CreateFlowAuth {
 		if (this.authBusy) return false;
 		const token = this.otpCode.replace(/\D/g, ``).slice(0, 6);
 		if (token.length !== 6) {
-			this.authError = `Bitte gib den 6-stelligen Code ein.`;
+			this.authError = otpCodeRequiredMessage;
 			return false;
 		}
 
@@ -166,14 +172,14 @@ export class CreateFlowAuth {
 			this.#setSubmitAuthToken(result.submitAuthToken);
 			await invalidateAll();
 			if (!this.submitAuthToken) {
-				this.authError = `Anmeldung konnte nicht bestätigt werden. Bitte versuche es erneut.`;
+				this.authError = authConfirmFailedMessage;
 				return false;
 			}
 
 			this.authVerified = true;
 			return true;
 		} catch (err: unknown) {
-			this.authError = err instanceof Error ? err.message : `Ein Fehler ist aufgetreten`;
+			this.authError = err instanceof Error ? err.message : genericAuthErrorMessage;
 			console.error(`Auth error:`, err);
 			return false;
 		} finally {
@@ -256,7 +262,7 @@ export class CreateFlowAuth {
 				(err: unknown) =>
 					({
 						ok: false,
-						message: err instanceof Error ? err.message : `E-Mail konnte nicht geprüft werden.`,
+						message: err instanceof Error ? err.message : emailCheckFailedMessage,
 					}) satisfies EmailProfileCheckResult,
 			)
 			.finally(() => {

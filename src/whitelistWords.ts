@@ -88,4 +88,5 @@ export const whiteListSources = [
     'consciousevents',
     'dieliebelle',
     'wimhofmethod',
+    'kayana',
 ] satisfies WebsiteScrapeSourceName[];
