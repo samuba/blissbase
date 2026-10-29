@@ -1,10 +1,7 @@
-meetup.com
-eventbrite
-humanitix
-www.miteinandersein.net
-https://www.yoga-vidya.de/
 
 only broad tags in tag input
+
+have a better hint for offerings page - like a arrow floating above it after some time of scrolling
 
 tag scrolling is impossible on small devices, especially when one is already selected
 
