@@ -3973,7 +3973,7 @@ msgstr "I want people to find events happening around them, connect with others 
 
 #: src/routes/about/+page.svelte
 msgid "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo du dich auf der Welt und deiner persönlichen Reise befindest. ✨"
-msgstr "My vision is for Blissbase to become a portal for everyone, everywhere, wherever they are on their journey. ✨"
+msgstr "My vision is for Blissbase to become a portal for growth and connection, wherever you are in the world and on your personal journey. ✨"
 
 #: src/routes/about/+page.svelte
 msgid "Sam"
