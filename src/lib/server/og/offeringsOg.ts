@@ -125,29 +125,32 @@ export async function resolveOfferingsOgImageUrl(filterInput: OfferingsFilter) {
 	return FALLBACK_OFFERINGS_OG_IMAGE;
 }
 
+/** Builds (or reuses) the offerings OG image for a filter. Failures are logged. */
+export async function warmOfferingsOgForFilter(filterInput: OfferingsFilter) {
+	try {
+		const { filter, offerings } = await loadVisibleListedOfferings(filterInput);
+		const coverImageUrls = offerings
+			.map((offering) => offering.imageUrls?.[0]?.trim())
+			.filter((imageUrl): imageUrl is string => Boolean(imageUrl));
+
+		if (!coverImageUrls.length) return { warmed: false };
+
+		const objectKey = offeringsOgObjectKey(offeringsOgCacheKey({ filter, coverImageUrls }));
+		await warmOfferingsOgImage({
+			objectKey,
+			imageUrls: coverImageUrls,
+			locationLabel: offeringsOgLocationLabel(filter),
+		});
+		return { warmed: true };
+	} catch (error) {
+		console.error(`Failed warming offerings OG image for filter:`, error);
+		return { warmed: false };
+	}
+}
+
 /** Fire-and-forget warm for a filter (e.g. after admin cache bust). */
 export function scheduleOfferingsOgWarmForFilter(filterInput: OfferingsFilter) {
-	waitUntil(
-		(async () => {
-			try {
-				const { filter, offerings } = await loadVisibleListedOfferings(filterInput);
-				const coverImageUrls = offerings
-					.map((offering) => offering.imageUrls?.[0]?.trim())
-					.filter((imageUrl): imageUrl is string => Boolean(imageUrl));
-
-				if (!coverImageUrls.length) return;
-
-				const objectKey = offeringsOgObjectKey(offeringsOgCacheKey({ filter, coverImageUrls }));
-				await warmOfferingsOgImage({
-					objectKey,
-					imageUrls: coverImageUrls,
-					locationLabel: offeringsOgLocationLabel(filter),
-				});
-			} catch (error) {
-				console.error(`Failed warming offerings OG image for filter:`, error);
-			}
-		})(),
-	);
+	waitUntil(warmOfferingsOgForFilter(filterInput));
 }
 
 /** Deletes every cached offerings OG image from R2. */
