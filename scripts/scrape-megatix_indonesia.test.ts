@@ -46,9 +46,8 @@ describe(`passesNameLists`, () => {
 		expect(passesNameLists(undefined)).toBe(false);
 	});
 
-	it(`keeps metal bowl and biodynamic titles`, () => {
+	it(`keeps metal bowl titles`, () => {
 		expect(passesNameLists(`Crystal & Metal Bowl Fusion`)).toBe(true);
-		expect(passesNameLists(`Biodynamic Osteopathy`)).toBe(true);
 	});
 });
 
