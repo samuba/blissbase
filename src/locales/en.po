@@ -3956,7 +3956,7 @@ msgid "Die Idee zu Blissbase kam aus meiner eigenen Suche nach Wachstum und echt
 msgstr "Blissbase grew from my own search for growth and meaningful connection. As I traveled and lived nomadically, I looked for events where I could meet others and feel more at home in each new place. But information was scattered across different platforms and hard-to-follow groups. I wanted one place to discover what was happening around me, wherever I found myself."
 
 #: src/routes/about/+page.svelte
-msgid "Ich glaube daran, dass Menschen sich verändern können, und dass echte Verbindung zwischen uns immer wichtiger wird. Deshalb möchte ich, dass mehr Menschen bewusste Events leichter finden."
+msgid "Ich glaube daran, dass Menschen sich verändern können und dass echte Verbindung zwischen uns immer wichtiger wird. Deshalb möchte ich, dass mehr Menschen bewusste Events leichter finden."
 msgstr "I believe in the power of personal transformation and in the growing importance of deep human connection. That's why I'm making conscious events easier for more people to discover."
 
 #: src/routes/about/+page.svelte
