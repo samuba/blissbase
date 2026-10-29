@@ -3948,31 +3948,31 @@ msgid "Fehler beim laden weiterer Events."
 msgstr "Error loading more events."
 
 #: src/routes/about/+page.svelte
-msgid "Blissbase ist dein Portal zu bewussten Events, die dein Wohlbefinden stärken, die Verbindung zu dir selbst und zu anderen vertiefen und Türen zu persönlichem Wachstum und Entfaltung öffnen."
+msgid "Blissbase ist dein Portal zu bewussten Events – für mehr Wohlbefinden, eine tiefere Verbindung zu dir selbst und zu anderen und für persönliches Wachstum."
 msgstr "Blissbase is your portal to conscious events that support well-being, deepen connection with yourself and others, and open doors to personal growth and expansion."
 
 #: src/routes/about/+page.svelte
-msgid "Blissbase ist aus meiner eigenen Suche nach Wachstum und sinnvoller Verbindung entstanden. Ich bin viel gereist und habe nomadisch gelebt. Überall habe ich nach Events gesucht, um Menschen zu treffen und mich am neuen Ort mehr zu Hause zu fühlen. Doch die Infos waren über viele Plattformen und unübersichtliche Gruppen verstreut. Ich wollte einen Ort, an dem ich sehe, was um mich herum passiert – egal, wo ich gerade bin."
+msgid "Die Idee zu Blissbase kam aus meiner eigenen Suche nach Wachstum und echten Begegnungen. Ich bin viel gereist und habe lange nomadisch gelebt. An jedem neuen Ort habe ich nach Events gesucht, um Leute kennenzulernen und mich schneller zu Hause zu fühlen. Nur waren die Infos über viele Plattformen und unübersichtliche Gruppen verstreut. Ich wollte einen Ort, an dem ich sofort sehe, was in meiner Nähe los ist – egal, wo ich gerade bin."
 msgstr "Blissbase grew from my own search for growth and meaningful connection. As I traveled and lived nomadically, I looked for events where I could meet others and feel more at home in each new place. But information was scattered across different platforms and hard-to-follow groups. I wanted one place to discover what was happening around me, wherever I found myself."
 
 #: src/routes/about/+page.svelte
-msgid "Ich glaube an die Kraft persönlicher Transformation und daran, dass tiefe menschliche Verbindung immer wichtiger wird. Deshalb mache ich bewusste Events für mehr Menschen leichter auffindbar."
+msgid "Ich glaube daran, dass Menschen sich verändern können, und dass echte Verbindung zwischen uns immer wichtiger wird. Deshalb möchte ich, dass mehr Menschen bewusste Events leichter finden."
 msgstr "I believe in the power of personal transformation and in the growing importance of deep human connection. That's why I'm making conscious events easier for more people to discover."
 
 #: src/routes/about/+page.svelte
-msgid "Mein Fokus ist, Anbieter und Teilnehmende über kuratierte Angebote von Workshops, Zeremonien, Treffen, Ausbildungen und Kursen zu verbinden. Ich arbeite daran, die umfassendste Sammlung bewusster Events auf einer zugänglichen, leicht navigierbaren Plattform zusammenzubringen."
+msgid "Ich bringe Anbieter und Teilnehmende zusammen – mit einer sorgfältigen Auswahl an Workshops, Zeremonien, Treffen, Ausbildungen und Kursen. Mein Ziel ist, so viele bewusste Events wie möglich an einem Ort zu sammeln, übersichtlich und für alle leicht zugänglich."
 msgstr "My focus is to connect providers with participants through curated listings of workshops, ceremonies, gatherings, training programs and courses. I'm working to bring the most comprehensive collection of conscious events together on one accessible, easy-to-navigate platform."
 
 #: src/routes/about/+page.svelte
-msgid "Ich gebe keinen Weg vor: Anbieter teilen ihre Angebote und Teilnehmende entdecken, was sie anspricht."
+msgid "Dabei gebe ich keinen Weg vor: Anbieter zeigen, was sie anbieten, und du entdeckst, was dich anspricht."
 msgstr "I don't prescribe one path: providers share their offerings and participants discover what resonates with them."
 
 #: src/routes/about/+page.svelte
-msgid "Ich möchte, dass Menschen Events in ihrer Nähe finden, sich mit anderen auf ähnlichen Wegen verbinden und gemeinsam Community aufbauen."
+msgid "Ich wünsche mir, dass Menschen Events in ihrer Nähe finden, Gleichgesinnte kennenlernen und zusammen Gemeinschaft erleben."
 msgstr "I want people to find events happening around them, connect with others exploring similar paths and create community together."
 
 #: src/routes/about/+page.svelte
-msgid "Meine Vision ist, dass Blissbase ein Portal für alle wird – überall und an jedem Punkt ihrer Reise. ✨"
+msgid "Meine Vision: Blissbase als Portal für alle – überall auf der Welt und an jedem Punkt ihres Weges. ✨"
 msgstr "My vision is for Blissbase to become a portal for everyone, everywhere, wherever they are on their journey. ✨"
 
 #: src/routes/about/+page.svelte

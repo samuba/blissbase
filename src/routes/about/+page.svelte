@@ -1,12 +1,12 @@
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:pb-6 md:py-0">
 	<div class="card bg-base-100 shadow p-6 flex flex-col gap-4">
-		<p>Blissbase ist dein Portal zu bewussten Events, die dein Wohlbefinden stärken, die Verbindung zu dir selbst und zu anderen vertiefen und Türen zu persönlichem Wachstum und Entfaltung öffnen.</p>
-		<p>Blissbase ist aus meiner eigenen Suche nach Wachstum und sinnvoller Verbindung entstanden. Ich bin viel gereist und habe nomadisch gelebt. Überall habe ich nach Events gesucht, um Menschen zu treffen und mich am neuen Ort mehr zu Hause zu fühlen. Doch die Infos waren über viele Plattformen und unübersichtliche Gruppen verstreut. Ich wollte einen Ort, an dem ich sehe, was um mich herum passiert – egal, wo ich gerade bin.</p>
-		<p>Ich glaube an die Kraft persönlicher Transformation und daran, dass tiefe menschliche Verbindung immer wichtiger wird. Deshalb mache ich bewusste Events für mehr Menschen leichter auffindbar.</p>
-		<p>Mein Fokus ist, Anbieter und Teilnehmende über kuratierte Angebote von Workshops, Zeremonien, Treffen, Ausbildungen und Kursen zu verbinden. Ich arbeite daran, die umfassendste Sammlung bewusster Events auf einer zugänglichen, leicht navigierbaren Plattform zusammenzubringen.</p>
-		<p>Ich gebe keinen Weg vor: Anbieter teilen ihre Angebote und Teilnehmende entdecken, was sie anspricht.</p>
-		<p>Ich möchte, dass Menschen Events in ihrer Nähe finden, sich mit anderen auf ähnlichen Wegen verbinden und gemeinsam Community aufbauen.</p>
-		<p>Meine Vision ist, dass Blissbase ein Portal für alle wird – überall und an jedem Punkt ihrer Reise. ✨</p>
+		<p>Blissbase ist dein Portal zu bewussten Events – für mehr Wohlbefinden, eine tiefere Verbindung zu dir selbst und zu anderen und für persönliches Wachstum.</p>
+		<p>Die Idee zu Blissbase kam aus meiner eigenen Suche nach Wachstum und echten Begegnungen. Ich bin viel gereist und habe lange nomadisch gelebt. An jedem neuen Ort habe ich nach Events gesucht, um Leute kennenzulernen und mich schneller zu Hause zu fühlen. Nur waren die Infos über viele Plattformen und unübersichtliche Gruppen verstreut. Ich wollte einen Ort, an dem ich sofort sehe, was in meiner Nähe los ist – egal, wo ich gerade bin.</p>
+		<p>Ich glaube daran, dass Menschen sich verändern können, und dass echte Verbindung zwischen uns immer wichtiger wird. Deshalb möchte ich, dass mehr Menschen bewusste Events leichter finden.</p>
+		<p>Ich bringe Anbieter und Teilnehmende zusammen – mit einer sorgfältigen Auswahl an Workshops, Zeremonien, Treffen, Ausbildungen und Kursen. Mein Ziel ist, so viele bewusste Events wie möglich an einem Ort zu sammeln, übersichtlich und für alle leicht zugänglich.</p>
+		<p>Dabei gebe ich keinen Weg vor: Anbieter zeigen, was sie anbieten, und du entdeckst, was dich anspricht.</p>
+		<p>Ich wünsche mir, dass Menschen Events in ihrer Nähe finden, Gleichgesinnte kennenlernen und zusammen Gemeinschaft erleben.</p>
+		<p>Meine Vision: Blissbase als Portal für alle – überall auf der Welt und an jedem Punkt ihres Weges. ✨</p>
 		<div class="flex items-center gap-3">
 			<img src="/me.jpg" alt="Samuel" class="size-12 min-w-12 rounded-full" />
 			<i>Sam</i>
