@@ -21,9 +21,9 @@ const RADIUS_KM = 30;
 const TIME_ZONE = `Asia/Makassar` as const;
 const GEOCODE_BIAS = [`Bali`, `Indonesia`];
 const MAX_PAGES = 200;
-const MAX_TOTAL = 2500;
 const MAX_ITEM_FAILURE_SHARE = 0.5;
 const UPCOMING_GRACE_MS = 24 * 60 * 60 * 1000;
+const TRUSTED_VENUES = [`the yoga barn`, `paradiso`];
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(query?: string, limit?: number): Promise<ScrapedEvent[]> {
@@ -33,8 +33,8 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		);
 
 		const hits = await fetchCompleteCatalog();
-		const named = hits.filter((hit) => passesNameLists(getName(hit)));
-		console.error(`Megatix catalog: ${hits.length} events, ${named.length} names match the word lists`);
+		const candidates = hits.filter((hit) => isTrustedVenue(hit) || passesNameLists(getName(hit)));
+		console.error(`Megatix catalog: ${hits.length} events, ${candidates.length} from trusted venues or matching the word lists`);
 
 		const kept: ScrapedEvent[] = [];
 		const seen = new Set<string>();
@@ -42,7 +42,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		let outsideRadius = 0;
 		let notUpcoming = 0;
 
-		for (const hit of named) {
+		for (const hit of candidates) {
 			if (limit != null && kept.length >= limit) break;
 			try {
 				await sleep(REQUEST_DELAY_MS);
@@ -82,9 +82,9 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		}
 
 		const stoppedEarly = limit != null && kept.length >= limit;
-		if (!stoppedEarly && named.length && itemFailures / named.length > MAX_ITEM_FAILURE_SHARE) {
+		if (!stoppedEarly && candidates.length && itemFailures / candidates.length > MAX_ITEM_FAILURE_SHARE) {
 			throw new Error(
-				`Megatix could not place ${itemFailures} of ${named.length} name matches. Check GOOGLE_MAPS_API_KEY and the geocode cache.`,
+				`Megatix could not place ${itemFailures} of ${candidates.length} candidates. Check GOOGLE_MAPS_API_KEY and the geocode cache.`,
 			);
 		}
 
@@ -147,6 +147,11 @@ export function passesNameLists(name: string | undefined): boolean {
 	return true;
 }
 
+export function isTrustedVenue(hit: Pick<SearchHit, `promoterName` | `venueName`>): boolean {
+	const text = `${hit.promoterName ?? ``} ${hit.venueName ?? ``}`.toLowerCase();
+	return TRUSTED_VENUES.some((venue) => text.includes(venue));
+}
+
 export function nearestLocation({
 	point,
 	locations,
@@ -174,35 +179,8 @@ export function isUpcomingStart({ startAt, now }: { startAt: string; now: number
 	return start >= now - UPCOMING_GRACE_MS;
 }
 
-export function assembleCatalog({
-	pages,
-	total,
-}: {
-	pages: readonly { currentPage: number; hits: readonly SearchHit[] }[];
-	total: number;
-}): SearchHit[] {
-	if (!pages.length) throw new Error(`Megatix catalog returned no pages`);
-
-	const ids = new Set<number>();
-	const hits: SearchHit[] = [];
-	for (const [index, page] of pages.entries()) {
-		if (page.currentPage !== index + 1) {
-			throw new Error(`Megatix catalog page ${index + 1} came back as ${page.currentPage}`);
-		}
-		if (index < pages.length - 1 && !page.hits.length) {
-			throw new Error(`Megatix catalog page ${page.currentPage} was empty`);
-		}
-		for (const hit of page.hits) {
-			if (ids.has(hit.id)) continue;
-			ids.add(hit.id);
-			hits.push(hit);
-		}
-	}
-
-	if (hits.length !== total) {
-		throw new Error(`Megatix catalog has ${hits.length} events, expected ${total}`);
-	}
-	return hits;
+export function uniqueHits(hits: readonly SearchHit[]): SearchHit[] {
+	return [...new Map(hits.map((hit) => [hit.id, hit])).values()];
 }
 
 export function mapMegatixEvent({
@@ -245,22 +223,20 @@ async function fetchCompleteCatalog(): Promise<SearchHit[]> {
 	if (first.lastPage < 1 || first.lastPage > MAX_PAGES) {
 		throw new Error(`Megatix catalog last_page ${first.lastPage} is out of range`);
 	}
-	if (first.total < 0 || first.total > MAX_TOTAL) {
-		throw new Error(`Megatix catalog total ${first.total} is out of range`);
-	}
 
-	const pages = [first];
+	const pageHits = [first.hits];
 	for (let page = 2; page <= first.lastPage; page++) {
 		await sleep(REQUEST_DELAY_MS);
-		const next = await fetchUnfilteredSearchPage(page);
-		if (next.lastPage !== first.lastPage || next.currentPage !== page || next.total !== first.total) {
-			throw new Error(`Megatix catalog page ${page} disagreed with page 1`);
-		}
-		pages.push(next);
+		pageHits.push((await fetchUnfilteredSearchPage(page)).hits);
 		if (page % 25 === 0) console.error(`Megatix catalog page ${page}/${first.lastPage}`);
 	}
 
-	return assembleCatalog({ pages, total: first.total });
+	// Events leave the catalog while we page, so the count drifts; the next run picks up anything a shift skipped.
+	const hits = uniqueHits(pageHits.flat());
+	if (hits.length !== first.total) {
+		console.error(`Megatix catalog changed while paging: ${hits.length} events, page 1 reported ${first.total}`);
+	}
+	return hits;
 }
 
 async function fetchUnfilteredSearchPage(page: number): Promise<SearchPage> {
@@ -323,6 +299,7 @@ function parseSearchHit(row: unknown): SearchHit | undefined {
 		name: readText(record.name) ?? ``,
 		slug,
 		promoterName: readText(record.promoter_name),
+		venueName: readText(record.venue_name),
 		startDatetime: readText(record.start_datetime) ?? ``,
 		endDatetime: readText(record.end_datetime),
 		displayPrice: readText(record.display_price),
@@ -434,6 +411,7 @@ type SearchHit = {
 	name: string;
 	slug: string;
 	promoterName: string | undefined;
+	venueName: string | undefined;
 	startDatetime: string;
 	endDatetime: string | undefined;
 	displayPrice: string | undefined;

@@ -4273,6 +4273,8 @@
 				"singing bowls",
 				"crystal bowl",
 				"crystal bowls",
+				"metal bowl",
+				"metal bowls",
 				"sound bowl",
 				"sound bath",
 				"sound bowls",
@@ -8208,7 +8210,8 @@
 			"en": [
 				"Craniosacral",
 				"Craniosacral Therapy",
-				"Cranio"
+				"Cranio",
+				"Biodynamic"
 			],
 			"es": [],
 			"fr": [],

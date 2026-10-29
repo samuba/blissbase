@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
-	assembleCatalog,
+	isTrustedVenue,
 	isUpcomingStart,
 	mapMegatixEvent,
 	megatixLocations,
 	nearestLocation,
 	parseEventDetail,
 	passesNameLists,
+	uniqueHits,
 } from "./scrape-megatix_indonesia.ts";
 
-const baliPlaces = [`Amed`, `Bali`, `Canggu`, `Lembongan`, `The Nusas`, `Ubud`, `Uluwatu`];
+const baliPlaces = [`Amed`, `Bali`, `Canggu`, `Gili Islands`, `Kuta Lombok`, `Lembongan`, `Lombok`, `The Nusas`, `Ubud`, `Uluwatu`];
 
 describe(`megatixLocations`, () => {
 	it(`uses every Indonesia place and no other country`, () => {
@@ -44,6 +45,19 @@ describe(`passesNameLists`, () => {
 		expect(passesNameLists(``)).toBe(false);
 		expect(passesNameLists(undefined)).toBe(false);
 	});
+
+	it(`keeps metal bowl and biodynamic titles`, () => {
+		expect(passesNameLists(`Crystal & Metal Bowl Fusion`)).toBe(true);
+		expect(passesNameLists(`Biodynamic Osteopathy`)).toBe(true);
+	});
+});
+
+describe(`isTrustedVenue`, () => {
+	it(`trusts Yoga Barn and Paradiso by promoter or venue`, () => {
+		expect(isTrustedVenue({ promoterName: `The Yoga Barn`, venueName: undefined })).toBe(true);
+		expect(isTrustedVenue({ promoterName: `DJ Someone`, venueName: `Paradiso Ubud` })).toBe(true);
+		expect(isTrustedVenue({ promoterName: `Bali Bar Crawl`, venueName: `Cést La Vie` })).toBe(false);
+	});
 });
 
 describe(`nearestLocation`, () => {
@@ -53,6 +67,13 @@ describe(`nearestLocation`, () => {
 
 		expect(nearestLocation({ point, locations: megatixLocations(`Bali`) })).toBeUndefined();
 		expect(nearestLocation({ point, locations: megatixLocations() })?.name).toBe(`Uluwatu`);
+	});
+
+	it(`keeps Nusa Penida, the Gilis, and south Lombok`, () => {
+		const locations = megatixLocations();
+		expect(nearestLocation({ point: { lat: -8.7275, lng: 115.5444 }, locations })?.name).toBe(`The Nusas`);
+		expect(nearestLocation({ point: { lat: -8.3505, lng: 116.0384 }, locations })?.name).toBe(`Gili Islands`);
+		expect(nearestLocation({ point: { lat: -8.9126, lng: 116.2339 }, locations })?.name).toBe(`Kuta Lombok`);
 	});
 
 	it(`drops a Jakarta point`, () => {
@@ -84,40 +105,9 @@ describe(`isUpcomingStart`, () => {
 	});
 });
 
-describe(`assembleCatalog`, () => {
-	it(`returns the hits when the pages cover the reported total`, () => {
-		const hits = assembleCatalog({
-			total: 2,
-			pages: [
-				{ currentPage: 1, hits: [hit({ id: 1 })] },
-				{ currentPage: 2, hits: [hit({ id: 2 })] },
-			],
-		});
-		expect(hits.map((row) => row.id)).toEqual([1, 2]);
-	});
-
-	it(`refuses a short catalog`, () => {
-		expect(() =>
-			assembleCatalog({
-				total: 3,
-				pages: [
-					{ currentPage: 1, hits: [hit({ id: 1 })] },
-					{ currentPage: 2, hits: [hit({ id: 2 })] },
-				],
-			}),
-		).toThrow(/expected 3/);
-	});
-
-	it(`refuses an empty middle page`, () => {
-		expect(() =>
-			assembleCatalog({
-				total: 1,
-				pages: [
-					{ currentPage: 1, hits: [] },
-					{ currentPage: 2, hits: [hit({ id: 1 })] },
-				],
-			}),
-		).toThrow(/empty/);
+describe(`uniqueHits`, () => {
+	it(`drops a hit repeated when the catalog shifts between pages`, () => {
+		expect(uniqueHits([hit({ id: 1 }), hit({ id: 2 }), hit({ id: 2 }), hit({ id: 3 })]).map((row) => row.id)).toEqual([1, 2, 3]);
 	});
 });
 
@@ -209,6 +199,7 @@ function baseHit() {
 		name: `Ecstatic Dance`,
 		slug: `ecstatic-dance`,
 		promoterName: `Host`,
+		venueName: `Venue` as string | undefined,
 		startDatetime: `2026-10-23 19:15:00`,
 		endDatetime: `2026-10-23 21:00:00` as string | undefined,
 		displayPrice: `Rp 120,000` as string | undefined,
