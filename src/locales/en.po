@@ -1982,9 +1982,11 @@ msgstr "Scroll categories right"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Tanz"
 msgstr "Dance"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Meditation"
@@ -1992,9 +1994,11 @@ msgstr "Meditation"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Breathwork"
 msgstr "Breathwork"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Körperarbeit"
@@ -2002,9 +2006,11 @@ msgstr "Bodywork"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Musik"
 msgstr "Music"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Tantra"
@@ -2017,9 +2023,11 @@ msgstr "Personal Growth"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Spiritualität"
 msgstr "Spirituality"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Zeremonie"
@@ -2031,6 +2039,7 @@ msgstr "Other"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Bewegung"
 msgstr "Movement"
 
@@ -2038,6 +2047,7 @@ msgstr "Movement"
 msgid "Heilung"
 msgstr "Healing"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Energiearbeit"
@@ -2232,6 +2242,7 @@ msgid "Sinnlichkeit"
 msgstr "Sensuality"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Intimität"
 msgstr "Intimacy"
 
@@ -2394,6 +2405,7 @@ msgstr "Light Language"
 
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Sound Healing"
 msgstr "Sound Healing"
 
@@ -2443,6 +2455,7 @@ msgstr "Somatic Experiencing"
 msgid "Polyvagal-Theorie"
 msgstr "Polyvagal Theory"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Gesundheit"
 msgstr "Health"
@@ -2633,6 +2646,7 @@ msgid "Liebe"
 msgstr "Love"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Familie"
 msgstr "Family"
 
@@ -2747,6 +2761,7 @@ msgid "Unternehmertum"
 msgstr "Entrepreneurship"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Yoga"
 msgstr "Yoga"
 
@@ -2834,6 +2849,7 @@ msgstr "Laughter Workshop"
 msgid "Selbstausdruck"
 msgstr "Self-Expression"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Kreativität"
 msgstr "Creativity"
@@ -2928,6 +2944,7 @@ msgstr "Regression"
 msgid "Rückführung in frühere Leben"
 msgstr "Past-Life Regression"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Schamanismus"
 msgstr "Shamanism"
@@ -3405,6 +3422,7 @@ msgid "Gathering"
 msgstr "Gathering"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 msgid "Natur"
 msgstr "Nature"
 
@@ -3448,6 +3466,7 @@ msgstr "Silence"
 msgid "Handauflegen"
 msgstr "Laying on of hands"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 msgid "Beziehung"
@@ -3827,25 +3846,30 @@ msgid "Schamanisches IKEA-Regale aufbauen"
 msgstr "Shamanic IKEA shelf assembly"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 #, ai
 msgid "Stimme"
 msgstr "Voice"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #, ai
 msgid "Kreis"
 msgstr "Circle"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 #, ai
 msgid "Innere Arbeit"
 msgstr "Inner Work"
 
 #: src/lib/eventCategories.ts
+#: src/lib/eventCategories.ts
 #, ai
 msgid "Männer"
 msgstr "Men"
 
+#: src/lib/eventCategories.ts
 #: src/lib/eventCategories.ts
 #, ai
 msgid "Frauen"

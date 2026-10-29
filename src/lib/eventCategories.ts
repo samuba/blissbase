@@ -2243,32 +2243,106 @@ function lookupKeys(value: string) {
 	return [...new Set([trimmed, trimmed.toLowerCase(), slugify(trimmed)].filter(Boolean))];
 }
 
-export const broadestTagSlugs = [
-	`meditation`,
-	`dance`,
-	`music`,
-	`ceremony`,
-	`sound-healing`,
-	`tantra`,
-	`intimacy`,
-	`inner-work`,
-	`health`,
-	`breathwork`,
-	`yoga`,
-	`nature`,
-	`bodywork`,
-	`voice`,
-	`relationship`,
-	`creativity`,
-	`energy-work`,
-	`spirituality`,
-	`shamanism`,
-	`movement`,
-	`circle`,
-	`family`,
-	`women`,
-	`men`,
+export const broadestTags = [
+	{
+		slug: `meditation`,
+		get label() { /* @wc-include */ return `Meditation`; },
+	},
+	{
+		slug: `dance`,
+		get label() { /* @wc-include */ return `Tanz`; },
+	},
+	{
+		slug: `music`,
+		get label() { /* @wc-include */ return `Musik`; },
+	},
+	{
+		slug: `ceremony`,
+		get label() { /* @wc-include */ return `Zeremonie`; },
+	},
+	{
+		slug: `sound-healing`,
+		get label() { /* @wc-include */ return `Sound Healing`; },
+	},
+	{
+		slug: `tantra`,
+		get label() { /* @wc-include */ return `Tantra`; },
+	},
+	{
+		slug: `intimacy`,
+		get label() { /* @wc-include */ return `Intimität`; },
+	},
+	{
+		slug: `inner-work`,
+		get label() { /* @wc-include */ return `Innere Arbeit`; },
+	},
+	{
+		slug: `health`,
+		get label() { /* @wc-include */ return `Gesundheit`; },
+	},
+	{
+		slug: `breathwork`,
+		get label() { /* @wc-include */ return `Breathwork`; },
+	},
+	{
+		slug: `yoga`,
+		get label() { /* @wc-include */ return `Yoga`; },
+	},
+	{
+		slug: `nature`,
+		get label() { /* @wc-include */ return `Natur`; },
+	},
+	{
+		slug: `bodywork`,
+		get label() { /* @wc-include */ return `Körperarbeit`; },
+	},
+	{
+		slug: `voice`,
+		get label() { /* @wc-include */ return `Stimme`; },
+	},
+	{
+		slug: `relationship`,
+		get label() { /* @wc-include */ return `Beziehung`; },
+	},
+	{
+		slug: `creativity`,
+		get label() { /* @wc-include */ return `Kreativität`; },
+	},
+	{
+		slug: `energy-work`,
+		get label() { /* @wc-include */ return `Energiearbeit`; },
+	},
+	{
+		slug: `spirituality`,
+		get label() { /* @wc-include */ return `Spiritualität`; },
+	},
+	{
+		slug: `shamanism`,
+		get label() { /* @wc-include */ return `Schamanismus`; },
+	},
+	{
+		slug: `movement`,
+		get label() { /* @wc-include */ return `Bewegung`; },
+	},
+	{
+		slug: `circle`,
+		get label() { /* @wc-include */ return `Kreis`; },
+	},
+	{
+		slug: `family`,
+		get label() { /* @wc-include */ return `Familie`; },
+	},
+	{
+		slug: `women`,
+		get label() { /* @wc-include */ return `Frauen`; },
+	},
+	{
+		slug: `men`,
+		get label() { /* @wc-include */ return `Männer`; },
+	},
 ] as const;
+
+export const broadestTagSlugs = broadestTags.map((tag) => tag.slug);
 
 for (const slug of broadestTagSlugs) {
 	if (!allTagSlugs.has(slug)) throw new Error(`broad tag missing from catalog: ${slug}`);

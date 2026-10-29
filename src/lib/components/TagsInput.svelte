@@ -2,7 +2,7 @@
 	import { Combobox } from 'bits-ui';
 	import { tick } from 'svelte';
 	import type { RemoteFormField } from '@sveltejs/kit';
-	import { allTags } from '$lib/eventCategories';
+	import { broadestTags } from '$lib/eventCategories';
 
 	let {
 		field = $bindable(),
@@ -10,7 +10,9 @@
 		field: RemoteFormField<string[]>;
 	} = $props();
 
-	const sortedTags = [...allTags].sort((a, b) => a.label.localeCompare(b.label));
+	const sortedTags = broadestTags
+		.filter((tag) => tag != null)
+		.sort((a, b) => a.label.localeCompare(b.label));
 	const tagsBySlug = new Map(sortedTags.map((tag) => [tag.slug, tag]));
 
 	let searchValue = $state(``);
