@@ -36,9 +36,14 @@ export function createGoogleCacheApi(db: DB) {
 				return geocodeLocalCache.get(cacheKey) ?? null;
 			}
 
-			const dbCachedResult = await db.query.geocodeCache.findFirst({
-				where: eq(geocodeCache.address, cacheKey)
-			});
+			let dbCachedResult: Awaited<ReturnType<typeof db.query.geocodeCache.findFirst>> = undefined;
+			try {
+				dbCachedResult = await db.query.geocodeCache.findFirst({
+					where: eq(geocodeCache.address, cacheKey)
+				});
+			} catch (cacheReadError) {
+				console.error(`Geocode cache read failed for ${geocodeLabel}: ${cacheReadError instanceof Error ? cacheReadError.message : String(cacheReadError)}`);
+			}
 
 			if (dbCachedResult) {
 				console.log(`Found cached geocoding result for ${geocodeLabel} in db: ${dbCachedResult.latitude}, ${dbCachedResult.longitude}`);
@@ -289,41 +294,26 @@ async function geocodeLocation(args: {
 	apiKey: string;
 	bounds?: string;
 }): Promise<{ lat: number; lng: number } | null> {
-	if (!args.apiKey) {
-		console.error(`Google Maps API key is not set. Skipping geocoding.`);
-		return null;
+	if (!args.apiKey) throw new Error(`Google Maps API key is not set`);
+
+	console.log(`calling google geocode api with`, args.location, args.bounds ? `(biased)` : ``);
+	const url = new URL(`https://maps.googleapis.com/maps/api/geocode/json`);
+	url.searchParams.set(`address`, args.location);
+	url.searchParams.set(`key`, args.apiKey);
+	url.searchParams.set(`language`, `de`);
+	url.searchParams.set(`region`, `DE`);
+	if (args.bounds) {
+		url.searchParams.set(`bounds`, args.bounds);
 	}
 
-	try {
-		console.log(`calling google geocode api with`, args.location, args.bounds ? `(biased)` : ``);
-		const url = new URL(`https://maps.googleapis.com/maps/api/geocode/json`);
-		url.searchParams.set(`address`, args.location);
-		url.searchParams.set(`key`, args.apiKey);
-		url.searchParams.set(`language`, `de`);
-		url.searchParams.set(`region`, `DE`);
-		if (args.bounds) {
-			url.searchParams.set(`bounds`, args.bounds);
-		}
+	const response = await fetch(url);
+	if (!response.ok) throw new Error(`Geocoding API request failed with status ${response.status}`);
 
-		const response = await fetch(url);
-
-		if (!response.ok) {
-			console.error(`Geocoding API request failed with status: ${response.status}`);
-			return null;
-		}
-
-		const data = await response.json();
-
-		if (data.status === `OK` && data.results?.length) {
-			return data.results[0].geometry.location;
-		}
-
-		console.error(`Geocoding failed or no results:`, data.status, data.error_message);
-		return null;
-	} catch (error) {
-		console.error(`Error during geocoding:`, error);
-		return null;
-	}
+	const data = await response.json();
+	if (data.status === `OK` && data.results?.length) return data.results[0].geometry.location;
+	// Only a definitive "no match" may be cached as null; anything else is transient and must be retried next run.
+	if (data.status === `ZERO_RESULTS`) return null;
+	throw new Error(`Geocoding failed: ${data.status} ${data.error_message ?? ``}`.trim());
 }
 
 /**
