@@ -1,6 +1,6 @@
 import { Api, TelegramClient, utils } from "teleproto";
 import 'dotenv/config'
-import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
+import { and, closeDb, db, eq, exitWithDbClose, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";
 import { addressLinesFromAnalysis, generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
@@ -1188,7 +1188,7 @@ if (!apiId || !apiHash || !accountSessions.length) {
 
 const accounts = await connectTelegramAccounts({ apiId, apiHash, sessions: accountSessions }).catch((err) => {
     console.error(`❌ ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
+    return exitWithDbClose(1);
 });
 console.log(`Connected Telegram scraper account(s): ${accounts.map((a) => a.id).join(`, `)}`);
 // Warm dialog caches once per account so primary membership probes don't re-fetch dialogs.
@@ -1320,7 +1320,7 @@ try {
     const scrapingTargets = await db.query.telegramScrapingTargets.findMany();
     if (scrapingTargets.length === 0) {
         console.log("No scraping targets found in database");
-        process.exit(0);
+        await exitWithDbClose(0);
     }
     scrapingTargets.sort(() => Math.random() - 0.5); // Shuffle scrapingTargets randomly
 
@@ -1339,20 +1339,21 @@ try {
     // in the end log fatal erors and exit so sam can have a look at them
     if (fatalErrors.length > 0) {
         console.error(`\n❌ Fatal errors occurred:`, fatalErrors.map(e => e.message));
-        process.exit(1);
+        await exitWithDbClose(1);
     }
 
     if (totalNewMessagesCount > 0 && totalScrapedEventsCount === 0) {
         console.error(`\n❌ Processed ${totalNewMessagesCount} new Telegram messages but extracted no events`);
-        process.exit(1);
+        await exitWithDbClose(1);
     }
 
 } catch (error) {
     console.error("Error processing scraping targets:", error);
+    await closeDb();
     throw error;
 }
 
-process.exit(0);
+await exitWithDbClose(0);
 
 type ScraperAccount = {
     id: TelegramAccountId
