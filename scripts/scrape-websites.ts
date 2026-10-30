@@ -37,7 +37,7 @@ import { resolveWebsiteScrapePlan } from './website-scrape-plan.ts';
 import { evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type ScrapeHealth, type ScrapeHealthBaseline } from './scrape-health.ts';
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
-import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
+import { shouldListScrapedEvent } from '../src/whitelistWords.ts';
 
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
 const errorsLoggedByStream = new WeakMap<WriteStream, number>();
@@ -269,7 +269,7 @@ async function main() {
             endAt: x.endAt ? new Date(x.endAt) : undefined,
             imageUrls: x.imageUrls?.filter(x => x),
             description: cleanProseHtml(x.description),
-            listed: shouldBeListed({ name: cleanedName, source: x.source }),
+            listed: shouldListScrapedEvent({ name: cleanedName, description: scraped.description, source: x.source }),
             attendanceMode: detectAttendanceModeFromAddress({ address: x.address }),
         } satisfies InsertEvent;
     });
@@ -544,12 +544,6 @@ async function main() {
             console.log('All event slugs are unique');
             return events;
         }
-    }
-
-    function shouldBeListed({ name, source }: { name: string, source: WebsiteScrapeSourceName }): boolean {
-        if (matchesBlackListWords(name)) return false;
-        if (whiteListSources.includes(source)) return true; // these sources only have conscious events
-        return matchesWhiteListWords(name);
     }
 
     /**

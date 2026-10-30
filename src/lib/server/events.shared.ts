@@ -63,8 +63,18 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 			target: s.events.slug,
 			set: {
 				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`, `tagSlugs`, `language`, `structure`, `listed`]),
-				// Unlisting is sticky so Jev's not-conscious verdict survives rescrapes.
-				listed: sql`${s.events.listed} and excluded.listed`,
+				// Jev's not-conscious verdict stays unlisted. A row that was never judged
+				// (no tags, language, or structure) can still become listed on a later scrape.
+				listed: sql`
+					case
+						when ${s.events.listed} = false
+							and coalesce(cardinality(${s.events.tagSlugs}), 0) = 0
+							and ${s.events.language} is null
+							and ${s.events.structure} is null
+						then excluded.listed
+						else ${s.events.listed} and excluded.listed
+					end
+				`,
 				source: sql`
 					case
 						when ${s.events.source} = ${FORM_CREATED_EVENT_SOURCE} then ${s.events.source}
