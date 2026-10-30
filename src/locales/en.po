@@ -198,9 +198,13 @@ msgid "Zum Kalender hinzufügen"
 msgstr "Add to calendar"
 
 #: src/routes/about/+page.svelte
-#: src/routes/about/+page.svelte
 msgid "Samuel"
 msgstr "Sam"
+
+#: src/routes/about/+page.svelte
+#, ai
+msgid "Peace, Love & Light 🌻"
+msgstr "Peace, Love & Light 🌻"
 
 #: src/routes/profile/+page.svelte
 msgid "<0/> Wird abgemeldet..."
@@ -704,6 +708,9 @@ msgstr "You don't have any past events yet."
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
 msgstr "You're being shown events around <0/>. If that's not your location, change it below."
 
+#~ msgid "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
+#~ msgstr ""
+
 #: src/routes/profile/favorites/+page.svelte
 msgid "Keine aktuellen Events in deinen Favoriten."
 msgstr "No upcoming events in your favorites."
@@ -812,6 +819,9 @@ msgstr "An event with this name and the same start and end times already exists.
 #: src/routes/faq/+page.svelte
 msgid "Für Regionen liegen gerade keine Zahlen vor."
 msgstr "There are currently no figures available for the regions."
+
+#~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1>verschiedenen Regionen</1> und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
+#~ msgstr ""
 
 #: src/routes/faq/+page.svelte
 msgid "Welche Regionen werden unterstützt?"
@@ -3937,6 +3947,11 @@ msgstr "Would you like to expand the radius?"
 msgid "Fehler beim laden weiterer Events."
 msgstr "Error loading more events."
 
+#: src/routes/offerings/+page.svelte
+#, ai
+msgid "✨ 1:1 Sessions & Services aus der Community ✨"
+msgstr "✨ 1:1 Sessions & Services from the Community ✨"
+
 #: src/routes/about/+page.svelte
 msgid "Blissbase ist dein Portal zu achtsamen Events – für mehr Wohlbefinden, eine tiefere Verbindung zu dir selbst und zu anderen und für persönliches Wachstum."
 msgstr "Blissbase is your portal to conscious events that support well-being, deepen connection with yourself and others, and open doors to personal growth and expansion."
@@ -3961,15 +3976,14 @@ msgstr "I don't prescribe one path: providers share their offerings and particip
 msgid "Ich wünsche mir, dass Menschen Events in ihrer Nähe finden, Gleichgesinnte kennenlernen und zusammen Gemeinschaft erleben."
 msgstr "I want people to find events happening around them, connect with others exploring similar paths and create community together."
 
-#: src/routes/about/+page.svelte
-msgid "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo du dich auf der Welt und deiner persönlichen Reise befindest. ✨"
-msgstr "My vision is for Blissbase to become a portal for growth and connection, wherever you are in the world and on your personal journey. ✨"
+#~ msgid "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo du dich auf der Welt und deiner persönlichen Reise befindest. ✨"
+#~ msgstr "My vision is for Blissbase to become a portal for growth and connection, wherever you are in the world and on your personal journey. ✨"
 
 #: src/routes/about/+page.svelte
 msgid "Sam"
 msgstr "Sam"
 
-#: src/routes/offerings/+page.svelte
+#: src/routes/about/+page.svelte
 #, ai
-msgid "✨ 1:1 Sessions & Services aus der Community ✨"
-msgstr "✨ 1:1 Sessions & Services from the Community ✨"
+msgid "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo du dich auf der Welt und deiner persönlichen Reise befindest."
+msgstr "My vision: Blissbase as a portal for growth and connection, wherever you are in the world and on your personal journey."
