@@ -29,14 +29,50 @@ const PAST_GRACE_MS = 12 * 60 * 60 * 1000;
 /** Listing + detail scrape horizon — Solr has years of future seminars. */
 const MAX_FUTURE_DAYS = 365;
 
-/** Street-level fallbacks when the detail map only has a place name. */
-const VENUE_BY_ORT: Record<string, string[]> = {
-	"Bad Meinberg": [`Yoga Vidya Bad Meinberg`, `Yogaweg 1`, `32805 Horn-Bad Meinberg`],
-	Westerwald: [`Yoga Vidya Westerwald`, `Yogaweg 7`, `57612 Oberlahr`],
-	Nordsee: [`Yoga Vidya Nordsee`],
-	Allgäu: [`Yoga Vidya Allgäu`],
-	Allgaeu: [`Yoga Vidya Allgäu`],
-	"Live Online": [`Online`],
+/**
+ * Camera heights above this are overview maps. `!2d`/`!3d` is then the center
+ * of the view, not the pin. Yoga Vidya's embeds sit ~500km up.
+ */
+const MAX_PIN_CAMERA_METERS = 50_000;
+
+/**
+ * Fixed pins for the houses. The embed does not carry the marker coordinates.
+ * Bad Meinberg's overview center is near Dortmund (~30km from the south of the
+ * city); the ashram is Yogaweg 1 in Horn-Bad Meinberg, about 110km away.
+ */
+const badMeinberg: Venue = {
+	address: [`Yoga Vidya Bad Meinberg`, `Yogaweg 1`, `32805 Horn-Bad Meinberg`],
+	latitude: 51.899913,
+	longitude: 8.991266,
+	queryHints: [`horn-bad meinberg`, `yogaweg`],
+};
+const westerwald: Venue = {
+	address: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
+	latitude: 50.613895,
+	longitude: 7.54478,
+	queryHints: [`westerwald`, `hoffnungsthal`, `hoffnungstal`],
+};
+const nordsee: Venue = {
+	address: [`Yoga Vidya Nordsee`, `Wiarder Altendeich 10`, `26434 Wangerland`],
+	latitude: 53.680658,
+	longitude: 7.986967,
+	queryHints: [`nordsee`, `wiarder`, `wangerland`],
+};
+const allgaeu: Venue = {
+	address: [`Yoga Vidya Allgäu`, `Lärchenweg 3`, `87466 Oy-Mittelberg`],
+	latitude: 47.637208,
+	longitude: 10.494598,
+	queryHints: [`allgäu`, `allgaeu`, `allgau`, `lärchenweg`, `laerchenweg`],
+};
+
+const KNOWN_VENUES = [badMeinberg, westerwald, nordsee, allgaeu];
+
+const VENUE_BY_ORT: Record<string, Venue> = {
+	"Bad Meinberg": badMeinberg,
+	Westerwald: westerwald,
+	Nordsee: nordsee,
+	Allgäu: allgaeu,
+	Allgaeu: allgaeu,
 };
 
 export class WebsiteScraper implements WebsiteScraperInterface {
@@ -171,7 +207,7 @@ export function mapSeminarPage(args: { html: string; url: string }): ScrapedEven
 	const sourceUrl = getSourceUrl(html) || normalizeSeminarUrl(url);
 	if (!name || !startAt || !sourceUrl) return undefined;
 
-	const coords = getCoords(html);
+	const coords = resolveCoordinates(html);
 	return {
 		name,
 		startAt,
@@ -404,7 +440,8 @@ function getAddress(html: string): string[] {
 		return splitAddress(mapAddress);
 	}
 
-	if (ort && VENUE_BY_ORT[ort]) return [...VENUE_BY_ORT[ort]];
+	const venue = venueFor({ ort, mapAddress });
+	if (venue) return [...venue.address];
 
 	if (mapAddress) {
 		const lines = splitAddress(mapAddress);
@@ -576,12 +613,40 @@ function getSourceUrl(html: string): string | undefined {
 	return canonical ? normalizeSeminarUrl(canonical) : undefined;
 }
 
-function getCoords(html: string): { lat: number; lng: number } | undefined {
-	const match = html.match(/1m3!1d[^!]+!2d([0-9.-]+)!3d([0-9.-]+)/);
+/**
+ * Known houses use their real pin. The Google embed's `!1d` value is the
+ * camera height and `!2d`/`!3d` is where that view is centered. On Bad Meinberg
+ * pages that center sits just outside Dortmund, which is why those seminars
+ * showed up ~30km away.
+ */
+function resolveCoordinates(html: string): { lat: number; lng: number } | undefined {
+	const ort = getMeta(html, `Ort`);
+	if (ort && /live\s*online|online/i.test(ort)) return undefined;
+
+	const venue = venueFor({ ort, mapAddress: getMapAddress(html) });
+	if (venue) return { lat: venue.latitude, lng: venue.longitude };
+
+	return readTrustedMapPin(html);
+}
+
+function venueFor(args: { ort?: string; mapAddress?: string }): Venue | undefined {
+	const { ort, mapAddress } = args;
+	if (ort && VENUE_BY_ORT[ort]) return VENUE_BY_ORT[ort];
+
+	const haystack = mapAddress?.toLowerCase();
+	if (!haystack) return undefined;
+	return KNOWN_VENUES.find((venue) => venue.queryHints.some((hint) => haystack.includes(hint)));
+}
+
+/** A close camera is the marker. An overview camera is not. */
+function readTrustedMapPin(html: string): { lat: number; lng: number } | undefined {
+	const match = html.match(/1m3!1d([0-9.]+)!2d([0-9.-]+)!3d([0-9.-]+)/);
 	if (!match) return undefined;
-	const lng = Number(match[1]);
-	const lat = Number(match[2]);
-	if (!Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
+	const cameraMeters = Number(match[1]);
+	const lng = Number(match[2]);
+	const lat = Number(match[3]);
+	if (!Number.isFinite(cameraMeters) || !Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
+	if (cameraMeters > MAX_PIN_CAMERA_METERS) return undefined;
 	if (Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01) return undefined;
 	return { lat, lng };
 }
@@ -769,3 +834,11 @@ if (import.meta.main) {
 }
 
 type Ymd = { year: number; month: number; day: number };
+
+type Venue = {
+	address: string[];
+	latitude: number;
+	longitude: number;
+	/** Lowercase fragments matched against the embed's place query. */
+	queryHints: string[];
+};

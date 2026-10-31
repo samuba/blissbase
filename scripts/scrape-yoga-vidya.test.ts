@@ -56,7 +56,7 @@ const detailHtml = `
     <h3 class="title is-5">Nancy Haywood</h3>
     <a href="/seminare/leiter/nancy-haywood/">Alle Seminare</a>
   </div>
-  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1!2d8.96!3d51.88!2m3!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sYogaweg%201%2C%2032805%20Horn-Bad%20Meinberg!5e0"></iframe>
+  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d532487.2882341355!2d7.534732277391366!3d51.68574339702842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47ba5bb7e3728793%3A0x4905f2df2d5fde94!2sYogaweg%201%2C%2032805%20Horn-Bad%20Meinberg!5e0!3m2!1sde!2sde!4v1767454389983!5m2!1sde!2sde"></iframe>
   <div id="seminar-submit-box">
     Interessen
     <a href="/seminare/interessengebiet/mantras-und-musik/">Mantras und Musik</a>
@@ -211,8 +211,8 @@ describe(`mapSeminarPage`, () => {
 			hostLink: `https://www.yoga-vidya.de/seminare/leiter/nancy-haywood/`,
 			sourceUrl: `https://www.yoga-vidya.de/seminare/seminar/mantra-konzert-b261010-1/`,
 			source: `yogavidya`,
-			latitude: 51.88,
-			longitude: 8.96,
+			latitude: 51.899913,
+			longitude: 8.991266,
 			tags: [`Mantras und Musik`, `Bhakti Yoga`],
 		});
 		expect(mapped?.description).toContain(`Gemeinsames Singen`);
@@ -222,5 +222,133 @@ describe(`mapSeminarPage`, () => {
 		expect(mapped?.description).toContain(`19:00 Uhr`);
 		expect(mapped?.description).not.toContain(`Venue fluff`);
 		expect(mapped?.imageUrls[0]).toContain(`nancy.jpg`);
+
+		// South of Dortmund: the overview-map center reads as ~30km, the ashram does not.
+		const dortmundSouth = { lat: 51.43, lng: 7.4 };
+		const mapCenter = { lat: 51.68574339702842, lng: 7.534732277391366 };
+		expect(kmBetween(dortmundSouth, mapCenter)).toBeLessThan(35);
+		const latitude = mapped?.latitude;
+		const longitude = mapped?.longitude;
+		if (typeof latitude !== `number` || typeof longitude !== `number`) {
+			throw new Error(`Bad Meinberg coordinates missing`);
+		}
+		expect(kmBetween(dortmundSouth, { lat: latitude, lng: longitude })).toBeGreaterThan(100);
+	});
+
+	it(`pins each house and ignores overview-map centers`, () => {
+		const houses = [
+			{
+				ort: `Westerwald`,
+				iframe: embed({
+					cameraMeters: 722979.2691302692,
+					lng: 7.2905133787425145,
+					lat: 50.90482375627769,
+					query: `Yoga%20Vidya%20Westerwald`,
+				}),
+				address: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
+				latitude: 50.613895,
+				longitude: 7.54478,
+			},
+			{
+				ort: `Nordsee`,
+				iframe: embed({
+					cameraMeters: 680652.6524762589,
+					lng: 7.337598669210861,
+					lat: 53.580587653817446,
+					query: `Yoga%20Vidya%20Nordsee`,
+				}),
+				address: [`Yoga Vidya Nordsee`, `Wiarder Altendeich 10`, `26434 Wangerland`],
+				latitude: 53.680658,
+				longitude: 7.986967,
+			},
+			{
+				ort: `Allgäu`,
+				iframe: embed({
+					cameraMeters: 630505.1260841949,
+					lng: 10.151089719236596,
+					lat: 47.687845524136165,
+					query: `Yoga%20Vidya%20Allg%C3%A4u`,
+				}),
+				address: [`Yoga Vidya Allgäu`, `Lärchenweg 3`, `87466 Oy-Mittelberg`],
+				latitude: 47.637208,
+				longitude: 10.494598,
+			},
+		];
+
+		for (const house of houses) {
+			const mapped = mapSeminarPage({
+				html: seminarHtml({ ort: house.ort, iframe: house.iframe }),
+				url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
+			});
+			expect(mapped).toMatchObject({
+				address: house.address,
+				latitude: house.latitude,
+				longitude: house.longitude,
+			});
+		}
+	});
+
+	it(`keeps a close camera for an unknown place and drops an overview camera`, () => {
+		const close = mapSeminarPage({
+			html: seminarHtml({
+				ort: `Hamburg`,
+				iframe: embed({ cameraMeters: 1200, lng: 9.9937, lat: 53.5511, query: `Hamburg` }),
+			}),
+			url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
+		});
+		expect(close).toMatchObject({ latitude: 53.5511, longitude: 9.9937 });
+
+		const overview = mapSeminarPage({
+			html: seminarHtml({
+				ort: `Hamburg`,
+				iframe: embed({
+					cameraMeters: 532487.2882341355,
+					lng: 7.534732277391366,
+					lat: 51.68574339702842,
+					query: `Hamburg`,
+				}),
+			}),
+			url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
+		});
+		expect(overview).toMatchObject({ latitude: null, longitude: null });
+
+		const online = mapSeminarPage({
+			html: seminarHtml({
+				ort: `Live Online`,
+				iframe: embed({
+					cameraMeters: 532487.2882341355,
+					lng: 7.534732277391366,
+					lat: 51.68574339702842,
+					query: `Yogaweg%201%2C%2032805%20Horn-Bad%20Meinberg`,
+				}),
+			}),
+			url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
+		});
+		expect(online).toMatchObject({ address: [`Online`], latitude: null, longitude: null });
 	});
 });
+
+function seminarHtml(args: { ort: string; iframe: string }) {
+	return `<html><body><div class="main">
+    <h1 class="title">Probe</h1>
+    <span class="icon-text"><span class="icon" title="Zeitraum"></span><span>10.10.26</span></span>
+    <span class="icon-text"><span class="icon" title="Ort"></span><span> ${args.ort} </span></span>
+    ${args.iframe}
+  </div></body></html>`;
+}
+
+function embed(args: { cameraMeters: number; lng: number; lat: number; query: string }) {
+	const pb = `!1m3!1d${args.cameraMeters}!2d${args.lng}!3d${args.lat}!2s${args.query}!`;
+	return `<iframe src="https://www.google.com/maps/embed?pb=${pb}"></iframe>`;
+}
+
+/** Kilometers between two WGS84 points. */
+function kmBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+	const earthKm = 6371;
+	const lat1 = (a.lat * Math.PI) / 180;
+	const lat2 = (b.lat * Math.PI) / 180;
+	const dLat = lat2 - lat1;
+	const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+	const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+	return 2 * earthKm * Math.asin(Math.sqrt(h));
+}
