@@ -60,7 +60,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
 		const event = mapSeminarPage({ html, url });
 		if (!event) return undefined;
-		await fillCoordinates({ event });
+		await applyLocation({ event, html });
 		return event;
 	}
 
@@ -102,12 +102,14 @@ export async function collectSeminarPages(args: {
 	loadHtml?: (url: string) => Promise<string>;
 	nowMs?: number;
 	geocode?: GeocodeAddress;
+	loadEmbed?: (url: string) => Promise<string>;
 }): Promise<ScrapedEvent[]> {
 	const {
 		urls,
 		loadHtml = (url) => customFetch(url, { returnType: `text` }),
 		nowMs = Date.now(),
 		geocode,
+		loadEmbed,
 	} = args;
 	const events: ScrapedEvent[] = [];
 	let index = 0;
@@ -136,7 +138,7 @@ export async function collectSeminarPages(args: {
 						);
 					}
 				} else {
-					await fillCoordinates({ event, geocode });
+					await applyLocation({ event, html, geocode, loadEmbed });
 					events.push(event);
 				}
 			} catch (error) {
@@ -575,11 +577,92 @@ function getSourceUrl(html: string): string | undefined {
 }
 
 /**
- * Geocodes the address named on the page. A street from the map query is best.
- * Otherwise the venue or city name is used. Online events and a bare
- * "Yoga Vidya" with no place are left without coordinates. One failure does
- * not drop the event.
+ * Uses the street shown in the map. Bad Meinberg already names it in the embed
+ * URL. The other houses only put the house name there; the street (Gut
+ * Hoffnungsthal, Wiarder Altendeich 10, …) is in the loaded map card. That
+ * text is geocoded. Coordinates from the map are never read.
  */
+async function applyLocation(args: {
+	event: ScrapedEvent;
+	html: string;
+	geocode?: GeocodeAddress;
+	loadEmbed?: (url: string) => Promise<string>;
+}) {
+	const { event, html } = args;
+	if (isOnlineAddress(event.address)) return;
+
+	try {
+		const street = await streetFromEmbed({ html, loadEmbed: args.loadEmbed });
+		if (street && looksLikeStreetAddress(street)) event.address = splitAddress(street);
+	} catch (error) {
+		console.error(`Failed to read map address for ${event.sourceUrl}:`, error);
+	}
+
+	await fillCoordinates({ event, geocode: args.geocode });
+}
+
+/** One load per embed URL. Every seminar at a house shares the same map. */
+const embedAddressLoads = new Map<string, Promise<string | undefined>>();
+
+async function streetFromEmbed(args: {
+	html: string;
+	loadEmbed?: (url: string) => Promise<string>;
+}): Promise<string | undefined> {
+	const named = getMapAddress(args.html);
+	if (named && looksLikeStreetAddress(named)) return named;
+
+	const url = getEmbedUrl(args.html);
+	if (!url) return undefined;
+
+	// Injected loaders stay uncached so tests can supply a different card per call.
+	if (!args.loadEmbed) {
+		const existing = embedAddressLoads.get(url);
+		if (existing) return existing;
+	}
+
+	const loadEmbed = args.loadEmbed ?? ((embedUrl: string) => customFetch(embedUrl, { returnType: `text` }));
+	const pending = loadEmbed(url)
+		.then((payload) => addressFromMapsEmbed(payload))
+		.catch((error: unknown) => {
+			console.error(`Failed to read Google map address:`, error);
+			return undefined;
+		});
+	if (!args.loadEmbed) embedAddressLoads.set(url, pending);
+	return pending;
+}
+
+/**
+ * Street line from the loaded Google map card, for example
+ * "Yoga Vidya Westerwald, Gut Hoffnungsthal, 57641 Oberlahr".
+ * The longest quoted line with a postal code is that card, not the phone number.
+ */
+export function addressFromMapsEmbed(html: string): string | undefined {
+	const candidates = [...html.matchAll(/"((?:[^"\\]|\\.){8,200})"/g)].flatMap((match) => {
+		const decoded = decodeJsonString(match[1]);
+		if (!decoded.includes(`,`)) return [];
+		if (!/\b\d{5}\b/.test(decoded)) return [];
+		return [decoded];
+	});
+	if (!candidates.length) return undefined;
+	return candidates.sort((a, b) => b.length - a.length)[0];
+}
+
+function decodeJsonString(raw: string): string {
+	try {
+		return JSON.parse(`"${raw}"`) as string;
+	} catch {
+		return raw;
+	}
+}
+
+function getEmbedUrl(html: string): string | undefined {
+	const match = html.match(
+		/<iframe\b[^>]*\bsrc\s*=\s*["']?(https:\/\/www\.google\.com\/maps\/embed\?[^"'\s>]+)/i,
+	);
+	if (!match) return undefined;
+	return match[1].replaceAll(`&amp;`, `&`);
+}
+
 async function fillCoordinates(args: { event: ScrapedEvent; geocode?: GeocodeAddress }) {
 	const { event } = args;
 	const addressLines = addressLinesToGeocode(event.address);
@@ -598,6 +681,11 @@ async function fillCoordinates(args: { event: ScrapedEvent; geocode?: GeocodeAdd
 	} catch (error) {
 		console.error(`Geocoding failed for ${event.sourceUrl}:`, error);
 	}
+}
+
+function isOnlineAddress(address: string[] | undefined) {
+	if (!address?.length) return false;
+	return address.every((line) => /live\s*online|^online$/i.test(line.trim()));
 }
 
 /** Street, venue, or city lines. Online and the brand name alone are not a place. */

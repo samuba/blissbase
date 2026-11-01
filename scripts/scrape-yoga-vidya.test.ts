@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+	addressFromMapsEmbed,
 	collectSeminarPages,
 	detectTotalPages,
 	extractListingEntries,
@@ -257,8 +258,9 @@ describe(`geocoded coordinates`, () => {
 		expect(kmBetween(dortmundSouth, { lat: latitude, lng: longitude })).toBeGreaterThan(100);
 	});
 
-	it(`geocodes a venue or city name when the page has no street`, async () => {
-		const geocode = vi.fn(async () => ({ lat: 50.613895, lng: 7.54478, timezone: `Europe/Berlin` }));
+	it(`reads the street from the loaded map card when the embed url only names the house`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 50.614672, lng: 7.544518, timezone: `Europe/Berlin` }));
+		const loadEmbed = vi.fn(async () => westerwaldMapCard);
 		const events = await collectSeminarPages({
 			urls: [seminarUrl],
 			nowMs,
@@ -273,18 +275,46 @@ describe(`geocoded coordinates`, () => {
 					}),
 				}),
 			geocode,
+			loadEmbed,
+		});
+
+		expect(loadEmbed).toHaveBeenCalledOnce();
+		expect(geocode).toHaveBeenCalledWith({
+			addressLines: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		expect(events[0]).toMatchObject({
+			address: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
+			latitude: 50.614672,
+			longitude: 7.544518,
+		});
+		expect(events[0].latitude).not.toBe(50.90482375627769);
+	});
+
+	it(`geocodes the house name when the map card has no street`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 50.6, lng: 7.5, timezone: `Europe/Berlin` }));
+		const events = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () =>
+				seminarHtml({
+					ort: `Westerwald`,
+					iframe: embed({
+						cameraMeters: 722979,
+						lng: 7.29,
+						lat: 50.9,
+						query: `Yoga%20Vidya%20Westerwald`,
+					}),
+				}),
+			geocode,
+			loadEmbed: async () => `initEmbed(["02685 80020"])`,
 		});
 
 		expect(geocode).toHaveBeenCalledWith({
 			addressLines: [`Yoga Vidya Westerwald`],
 			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
 		});
-		expect(events[0]).toMatchObject({
-			address: [`Yoga Vidya Westerwald`],
-			latitude: 50.613895,
-			longitude: 7.54478,
-		});
-		expect(events[0].latitude).not.toBe(50.90482375627769);
+		expect(events[0]).toMatchObject({ address: [`Yoga Vidya Westerwald`], latitude: 50.6, longitude: 7.5 });
 	});
 
 	it(`leaves online events and a nameless brand without coordinates`, async () => {
@@ -332,6 +362,35 @@ describe(`geocoded coordinates`, () => {
 		expect(events[0]).toMatchObject({ address: [`Yoga Vidya Hamburg`, `Hamburg`], latitude: null, longitude: null });
 		expect(errorSpy).toHaveBeenCalled();
 		errorSpy.mockRestore();
+	});
+});
+
+const westerwaldMapCard = `
+initEmbed([["0x47be926a60d0c657:0xcea3bebe3b56ded4","Yoga Vidya Westerwald, Gut Hoffnungsthal, 57641 Oberlahr",[50.6146719,7.5445175]],"Yoga Vidya Westerwald",["Gut Hoffnungsthal","57641 Oberlahr"],"02685 80020","Gut Hoffnungsthal, 57641 Oberlahr"]);
+`;
+
+const nordseeMapCard = [
+	`["Yoga Vidya Nordsee, Wiarder Altendeich 10, 26434 Wangerland-Horumersiel",`,
+	`[53.6807466,7.9872317],"04426 9041610",`,
+	`"Wiarder Altendeich 10, 26434 Wangerland-Horumersiel"]`,
+].join(``);
+const allgaeuMapCard = [
+	`["Yoga Vidya Allgäu, Lärchenweg 3, 87466 Oy-Mittelberg-Maria-Rain",`,
+	`[47.6374178,10.4948084],"08361 925300"]`,
+].join(``);
+
+describe(`addressFromMapsEmbed`, () => {
+	it(`takes the street shown on the map card, not the phone number or the camera`, () => {
+		expect(addressFromMapsEmbed(westerwaldMapCard)).toBe(
+			`Yoga Vidya Westerwald, Gut Hoffnungsthal, 57641 Oberlahr`,
+		);
+		expect(addressFromMapsEmbed(nordseeMapCard)).toBe(
+			`Yoga Vidya Nordsee, Wiarder Altendeich 10, 26434 Wangerland-Horumersiel`,
+		);
+		expect(addressFromMapsEmbed(allgaeuMapCard)).toBe(
+			`Yoga Vidya Allgäu, Lärchenweg 3, 87466 Oy-Mittelberg-Maria-Rain`,
+		);
+		expect(addressFromMapsEmbed(`["02685 80020"]`)).toBeUndefined();
 	});
 });
 
