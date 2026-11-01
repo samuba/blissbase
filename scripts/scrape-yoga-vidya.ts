@@ -29,52 +29,6 @@ const PAST_GRACE_MS = 12 * 60 * 60 * 1000;
 /** Listing + detail scrape horizon — Solr has years of future seminars. */
 const MAX_FUTURE_DAYS = 365;
 
-/**
- * Camera heights above this are overview maps. `!2d`/`!3d` is then the center
- * of the view, not the pin. Yoga Vidya's embeds sit ~500km up.
- */
-const MAX_PIN_CAMERA_METERS = 50_000;
-
-/**
- * Fixed pins for the houses. The embed does not carry the marker coordinates.
- * Bad Meinberg's overview center is near Dortmund (~30km from the south of the
- * city); the ashram is Yogaweg 1 in Horn-Bad Meinberg, about 110km away.
- */
-const badMeinberg: Venue = {
-	address: [`Yoga Vidya Bad Meinberg`, `Yogaweg 1`, `32805 Horn-Bad Meinberg`],
-	latitude: 51.899913,
-	longitude: 8.991266,
-	queryHints: [`horn-bad meinberg`, `yogaweg`],
-};
-const westerwald: Venue = {
-	address: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
-	latitude: 50.613895,
-	longitude: 7.54478,
-	queryHints: [`westerwald`, `hoffnungsthal`, `hoffnungstal`],
-};
-const nordsee: Venue = {
-	address: [`Yoga Vidya Nordsee`, `Wiarder Altendeich 10`, `26434 Wangerland`],
-	latitude: 53.680658,
-	longitude: 7.986967,
-	queryHints: [`nordsee`, `wiarder`, `wangerland`],
-};
-const allgaeu: Venue = {
-	address: [`Yoga Vidya Allgäu`, `Lärchenweg 3`, `87466 Oy-Mittelberg`],
-	latitude: 47.637208,
-	longitude: 10.494598,
-	queryHints: [`allgäu`, `allgaeu`, `allgau`, `lärchenweg`, `laerchenweg`],
-};
-
-const KNOWN_VENUES = [badMeinberg, westerwald, nordsee, allgaeu];
-
-const VENUE_BY_ORT: Record<string, Venue> = {
-	"Bad Meinberg": badMeinberg,
-	Westerwald: westerwald,
-	Nordsee: nordsee,
-	Allgäu: allgaeu,
-	Allgaeu: allgaeu,
-};
-
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(limit?: number): Promise<ScrapedEvent[]> {
 		const resolvedLimit = limit ?? parseCliArgs().limit;
@@ -104,7 +58,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
-		return mapSeminarPage({ html, url });
+		const event = mapSeminarPage({ html, url });
+		if (!event) return undefined;
+		await fillCoordinates({ event });
+		return event;
 	}
 
 	extractName(html: string): string | undefined {
@@ -144,8 +101,14 @@ export async function collectSeminarPages(args: {
 	urls: string[];
 	loadHtml?: (url: string) => Promise<string>;
 	nowMs?: number;
+	geocode?: GeocodeAddress;
 }): Promise<ScrapedEvent[]> {
-	const { urls, loadHtml = (url) => customFetch(url, { returnType: `text` }), nowMs = Date.now() } = args;
+	const {
+		urls,
+		loadHtml = (url) => customFetch(url, { returnType: `text` }),
+		nowMs = Date.now(),
+		geocode,
+	} = args;
 	const events: ScrapedEvent[] = [];
 	let index = 0;
 	let done = 0;
@@ -173,6 +136,7 @@ export async function collectSeminarPages(args: {
 						);
 					}
 				} else {
+					await fillCoordinates({ event, geocode });
 					events.push(event);
 				}
 			} catch (error) {
@@ -207,7 +171,6 @@ export function mapSeminarPage(args: { html: string; url: string }): ScrapedEven
 	const sourceUrl = getSourceUrl(html) || normalizeSeminarUrl(url);
 	if (!name || !startAt || !sourceUrl) return undefined;
 
-	const coords = resolveCoordinates(html);
 	return {
 		name,
 		startAt,
@@ -221,8 +184,9 @@ export function mapSeminarPage(args: { html: string; url: string }): ScrapedEven
 		host: getHost(html) || HOST_DEFAULT,
 		hostLink: getHostLink(html),
 		contact: [],
-		latitude: coords?.lat ?? null,
-		longitude: coords?.lng ?? null,
+		// The Google embed's !2d/!3d pair is the camera, not the pin. Coordinates come from geocoding the address.
+		latitude: null,
+		longitude: null,
 		tags: getTags(html),
 		sourceUrl,
 		source: SOURCE,
@@ -440,9 +404,6 @@ function getAddress(html: string): string[] {
 		return splitAddress(mapAddress);
 	}
 
-	const venue = venueFor({ ort, mapAddress });
-	if (venue) return [...venue.address];
-
 	if (mapAddress) {
 		const lines = splitAddress(mapAddress);
 		if (ort && !lines.some((line) => line.toLowerCase().includes(ort.toLowerCase()))) {
@@ -614,41 +575,39 @@ function getSourceUrl(html: string): string | undefined {
 }
 
 /**
- * Known houses use their real pin. The Google embed's `!1d` value is the
- * camera height and `!2d`/`!3d` is where that view is centered. On Bad Meinberg
- * pages that center sits just outside Dortmund, which is why those seminars
- * showed up ~30km away.
+ * Geocodes the address named on the page. A street from the map query is best.
+ * Otherwise the venue or city name is used. Online events and a bare
+ * "Yoga Vidya" with no place are left without coordinates. One failure does
+ * not drop the event.
  */
-function resolveCoordinates(html: string): { lat: number; lng: number } | undefined {
-	const ort = getMeta(html, `Ort`);
-	if (ort && /live\s*online|online/i.test(ort)) return undefined;
+async function fillCoordinates(args: { event: ScrapedEvent; geocode?: GeocodeAddress }) {
+	const { event } = args;
+	const addressLines = addressLinesToGeocode(event.address);
+	if (!addressLines) return;
 
-	const venue = venueFor({ ort, mapAddress: getMapAddress(html) });
-	if (venue) return { lat: venue.latitude, lng: venue.longitude };
-
-	return readTrustedMapPin(html);
+	try {
+		const geocode = args.geocode ?? (await import(`../src/lib/server/google.script.ts`)).geocodeAddressCached;
+		const geocoded = await geocode({
+			addressLines,
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		if (!geocoded) return;
+		event.latitude = geocoded.lat;
+		event.longitude = geocoded.lng;
+		if (geocoded.timezone) event.timezone = geocoded.timezone;
+	} catch (error) {
+		console.error(`Geocoding failed for ${event.sourceUrl}:`, error);
+	}
 }
 
-function venueFor(args: { ort?: string; mapAddress?: string }): Venue | undefined {
-	const { ort, mapAddress } = args;
-	if (ort && VENUE_BY_ORT[ort]) return VENUE_BY_ORT[ort];
-
-	const haystack = mapAddress?.toLowerCase();
-	if (!haystack) return undefined;
-	return KNOWN_VENUES.find((venue) => venue.queryHints.some((hint) => haystack.includes(hint)));
-}
-
-/** A close camera is the marker. An overview camera is not. */
-function readTrustedMapPin(html: string): { lat: number; lng: number } | undefined {
-	const match = html.match(/1m3!1d([0-9.]+)!2d([0-9.-]+)!3d([0-9.-]+)/);
-	if (!match) return undefined;
-	const cameraMeters = Number(match[1]);
-	const lng = Number(match[2]);
-	const lat = Number(match[3]);
-	if (!Number.isFinite(cameraMeters) || !Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
-	if (cameraMeters > MAX_PIN_CAMERA_METERS) return undefined;
-	if (Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01) return undefined;
-	return { lat, lng };
+/** Street, venue, or city lines. Online and the brand name alone are not a place. */
+function addressLinesToGeocode(address: string[] | undefined): string[] | undefined {
+	if (!address?.length) return undefined;
+	const lines = address.map((line) => line.trim()).filter(Boolean);
+	if (!lines.length) return undefined;
+	if (lines.every((line) => /live\s*online|^online$/i.test(line))) return undefined;
+	if (lines.length === 1 && /^yoga vidya$/i.test(lines[0])) return undefined;
+	return lines;
 }
 
 function getMapAddress(html: string): string | undefined {
@@ -835,10 +794,7 @@ if (import.meta.main) {
 
 type Ymd = { year: number; month: number; day: number };
 
-type Venue = {
-	address: string[];
-	latitude: number;
-	longitude: number;
-	/** Lowercase fragments matched against the embed's place query. */
-	queryHints: string[];
-};
+type GeocodeAddress = (args: {
+	addressLines: string[];
+	apiKey: string;
+}) => Promise<{ lat: number; lng: number; timezone: string | null } | null>;

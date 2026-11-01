@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+	collectSeminarPages,
 	detectTotalPages,
 	extractListingEntries,
 	extractSeminarUrls,
@@ -211,8 +212,8 @@ describe(`mapSeminarPage`, () => {
 			hostLink: `https://www.yoga-vidya.de/seminare/leiter/nancy-haywood/`,
 			sourceUrl: `https://www.yoga-vidya.de/seminare/seminar/mantra-konzert-b261010-1/`,
 			source: `yogavidya`,
-			latitude: 51.899913,
-			longitude: 8.991266,
+			latitude: null,
+			longitude: null,
 			tags: [`Mantras und Musik`, `Bhakti Yoga`],
 		});
 		expect(mapped?.description).toContain(`Gemeinsames Singen`);
@@ -222,118 +223,127 @@ describe(`mapSeminarPage`, () => {
 		expect(mapped?.description).toContain(`19:00 Uhr`);
 		expect(mapped?.description).not.toContain(`Venue fluff`);
 		expect(mapped?.imageUrls[0]).toContain(`nancy.jpg`);
-
-		// South of Dortmund: the overview-map center reads as ~30km, the ashram does not.
-		const dortmundSouth = { lat: 51.43, lng: 7.4 };
-		const mapCenter = { lat: 51.68574339702842, lng: 7.534732277391366 };
-		expect(kmBetween(dortmundSouth, mapCenter)).toBeLessThan(35);
-		const latitude = mapped?.latitude;
-		const longitude = mapped?.longitude;
-		if (typeof latitude !== `number` || typeof longitude !== `number`) {
-			throw new Error(`Bad Meinberg coordinates missing`);
-		}
-		expect(kmBetween(dortmundSouth, { lat: latitude, lng: longitude })).toBeGreaterThan(100);
-	});
-
-	it(`pins each house and ignores overview-map centers`, () => {
-		const houses = [
-			{
-				ort: `Westerwald`,
-				iframe: embed({
-					cameraMeters: 722979.2691302692,
-					lng: 7.2905133787425145,
-					lat: 50.90482375627769,
-					query: `Yoga%20Vidya%20Westerwald`,
-				}),
-				address: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
-				latitude: 50.613895,
-				longitude: 7.54478,
-			},
-			{
-				ort: `Nordsee`,
-				iframe: embed({
-					cameraMeters: 680652.6524762589,
-					lng: 7.337598669210861,
-					lat: 53.580587653817446,
-					query: `Yoga%20Vidya%20Nordsee`,
-				}),
-				address: [`Yoga Vidya Nordsee`, `Wiarder Altendeich 10`, `26434 Wangerland`],
-				latitude: 53.680658,
-				longitude: 7.986967,
-			},
-			{
-				ort: `Allgäu`,
-				iframe: embed({
-					cameraMeters: 630505.1260841949,
-					lng: 10.151089719236596,
-					lat: 47.687845524136165,
-					query: `Yoga%20Vidya%20Allg%C3%A4u`,
-				}),
-				address: [`Yoga Vidya Allgäu`, `Lärchenweg 3`, `87466 Oy-Mittelberg`],
-				latitude: 47.637208,
-				longitude: 10.494598,
-			},
-		];
-
-		for (const house of houses) {
-			const mapped = mapSeminarPage({
-				html: seminarHtml({ ort: house.ort, iframe: house.iframe }),
-				url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
-			});
-			expect(mapped).toMatchObject({
-				address: house.address,
-				latitude: house.latitude,
-				longitude: house.longitude,
-			});
-		}
-	});
-
-	it(`keeps a close camera for an unknown place and drops an overview camera`, () => {
-		const close = mapSeminarPage({
-			html: seminarHtml({
-				ort: `Hamburg`,
-				iframe: embed({ cameraMeters: 1200, lng: 9.9937, lat: 53.5511, query: `Hamburg` }),
-			}),
-			url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
-		});
-		expect(close).toMatchObject({ latitude: 53.5511, longitude: 9.9937 });
-
-		const overview = mapSeminarPage({
-			html: seminarHtml({
-				ort: `Hamburg`,
-				iframe: embed({
-					cameraMeters: 532487.2882341355,
-					lng: 7.534732277391366,
-					lat: 51.68574339702842,
-					query: `Hamburg`,
-				}),
-			}),
-			url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
-		});
-		expect(overview).toMatchObject({ latitude: null, longitude: null });
-
-		const online = mapSeminarPage({
-			html: seminarHtml({
-				ort: `Live Online`,
-				iframe: embed({
-					cameraMeters: 532487.2882341355,
-					lng: 7.534732277391366,
-					lat: 51.68574339702842,
-					query: `Yogaweg%201%2C%2032805%20Horn-Bad%20Meinberg`,
-				}),
-			}),
-			url: `https://www.yoga-vidya.de/seminare/seminar/probe/`,
-		});
-		expect(online).toMatchObject({ address: [`Online`], latitude: null, longitude: null });
 	});
 });
 
-function seminarHtml(args: { ort: string; iframe: string }) {
+describe(`geocoded coordinates`, () => {
+	const nowMs = Date.parse(`2026-10-10T12:00:00+02:00`);
+	const seminarUrl = `https://www.yoga-vidya.de/seminare/seminar/probe/`;
+
+	it(`geocodes the street named in the embed and ignores the map center`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 51.899913, lng: 8.991266, timezone: `Europe/Berlin` }));
+		const events = await collectSeminarPages({
+			urls: [`https://www.yoga-vidya.de/seminare/seminar/mantra-konzert-b261010-1/`],
+			nowMs,
+			loadHtml: async () => detailHtml,
+			geocode,
+		});
+
+		expect(geocode).toHaveBeenCalledWith({
+			addressLines: [`Yogaweg 1`, `32805 Horn-Bad Meinberg`],
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		expect(events).toHaveLength(1);
+		expect(events[0]).toMatchObject({ latitude: 51.899913, longitude: 8.991266 });
+
+		const dortmundSouth = { lat: 51.43, lng: 7.4 };
+		const mapCenter = { lat: 51.68574339702842, lng: 7.534732277391366 };
+		const latitude = events[0]?.latitude;
+		const longitude = events[0]?.longitude;
+		if (typeof latitude !== `number` || typeof longitude !== `number`) {
+			throw new Error(`geocoded coordinates missing`);
+		}
+		expect(kmBetween(dortmundSouth, mapCenter)).toBeLessThan(35);
+		expect(kmBetween(dortmundSouth, { lat: latitude, lng: longitude })).toBeGreaterThan(100);
+	});
+
+	it(`geocodes a venue or city name when the page has no street`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 50.613895, lng: 7.54478, timezone: `Europe/Berlin` }));
+		const events = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () =>
+				seminarHtml({
+					ort: `Westerwald`,
+					iframe: embed({
+						cameraMeters: 722979,
+						lng: 7.2905133787425145,
+						lat: 50.90482375627769,
+						query: `Yoga%20Vidya%20Westerwald`,
+					}),
+				}),
+			geocode,
+		});
+
+		expect(geocode).toHaveBeenCalledWith({
+			addressLines: [`Yoga Vidya Westerwald`],
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		expect(events[0]).toMatchObject({
+			address: [`Yoga Vidya Westerwald`],
+			latitude: 50.613895,
+			longitude: 7.54478,
+		});
+		expect(events[0].latitude).not.toBe(50.90482375627769);
+	});
+
+	it(`leaves online events and a nameless brand without coordinates`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 51, lng: 8, timezone: `Europe/Berlin` }));
+		const online = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () =>
+				seminarHtml({
+					ort: `Live Online`,
+					iframe: embed({
+						cameraMeters: 1200,
+						lng: 8.991266,
+						lat: 51.899913,
+						query: `Yogaweg%201%2C%2032805%20Horn-Bad%20Meinberg`,
+					}),
+				}),
+			geocode,
+		});
+		expect(geocode).not.toHaveBeenCalled();
+		expect(online[0]).toMatchObject({ address: [`Online`], latitude: null, longitude: null });
+
+		const bare = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () => seminarHtml({}),
+			geocode,
+		});
+		expect(geocode).not.toHaveBeenCalled();
+		expect(bare[0]).toMatchObject({ address: [`Yoga Vidya`], latitude: null, longitude: null });
+	});
+
+	it(`keeps the event when geocoding throws`, async () => {
+		const errorSpy = vi.spyOn(console, `error`).mockImplementation(() => {});
+		const events = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () => seminarHtml({ ort: `Hamburg` }),
+			geocode: async () => {
+				throw new Error(`geocoder down`);
+			},
+		});
+
+		expect(events).toHaveLength(1);
+		expect(events[0]).toMatchObject({ address: [`Yoga Vidya Hamburg`, `Hamburg`], latitude: null, longitude: null });
+		expect(errorSpy).toHaveBeenCalled();
+		errorSpy.mockRestore();
+	});
+});
+
+function seminarHtml(args: { ort?: string; iframe?: string }) {
+	const ort = args.ort
+		? `<span class="icon-text"><span class="icon" title="Ort"></span><span> ${args.ort} </span></span>`
+		: ``;
 	return `<html><body><div class="main">
     <h1 class="title">Probe</h1>
     <span class="icon-text"><span class="icon" title="Zeitraum"></span><span>10.10.26</span></span>
-    <span class="icon-text"><span class="icon" title="Ort"></span><span> ${args.ort} </span></span>
-    ${args.iframe}
+    ${ort}
+    ${args.iframe ?? ``}
   </div></body></html>`;
 }
 
