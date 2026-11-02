@@ -42,18 +42,28 @@
 			<h2 class="text-lg font-semibold">Welche Länder werden unterstützt?</h2>
 			<div class="mt-2 text-base-content/80">
 				<p>
-					Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder
-					hier, mit der Anzahl <b>aller Events und der bevorstehenden Termine</b>.
+					Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit folgende Länder.
 				</p>
 				{#if faqCountryEventCounts.regions?.length}
-					<ul class="mt-3 space-y-1.5 text-sm">
-						{#each faqCountryEventCounts.regions as region (region.key)}
-							<li class="flex gap-4 border-b border-base-200 pb-1.5 last:border-0 last:pb-0">
-								<span>{region.label}</span>
-								<span class="grow"></span>
-								<span class="shrink-0 text-right tabular-nums"
-									>{region.count.toLocaleString(localeStore.longLocale)} / {region.upcomingCount.toLocaleString(localeStore.longLocale)} upcoming</span
+					<ul
+						class="mt-3 grid grid-cols-[1fr_auto_auto_auto_auto] items-baseline gap-x-1.5 gap-y-1.5 text-sm"
+					>
+						{#each faqCountryEventCounts.regions as region, i (region.key)}
+							{@const cellBorder =
+								i < faqCountryEventCounts.regions.length - 1
+									? `border-b border-base-200 pb-1.5`
+									: undefined}
+							<li class="contents">
+								<span class={cellBorder}>{region.label}</span>
+								<span class={[`text-right tabular-nums`, cellBorder]}
+									>{region.count.toLocaleString(localeStore.longLocale)}</span
 								>
+								<!-- @wc-context: faq-event-count -->
+								<span class={cellBorder}>Events</span>
+								<span class={[`pl-3 text-right tabular-nums`, cellBorder]}
+									>{region.upcomingCount.toLocaleString(localeStore.longLocale)}</span
+								>
+								<span class={cellBorder}>bevorstehende</span>
 							</li>
 						{/each}
 					</ul>

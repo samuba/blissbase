@@ -3954,19 +3954,35 @@ msgstr "Hier findest du 1:1 Sessions und Services"
 #~ msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
 #~ msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
 
-#. 0: region.count.toLocaleString(localeStore.longLocale); 1: region.upcomingCount.toLocaleString(localeStore.longLocale)
-#: src/routes/faq/+page.svelte
-msgid "{0} / {1} upcoming"
-msgstr "{0} / {1} upcoming"
+#~ msgid "{0} / {1} upcoming"
+#~ msgstr "{0} / {1} upcoming"
 
 #: src/routes/faq/+page.svelte
 msgid "Für Länder liegen gerade keine Zahlen vor."
 msgstr "Für Länder liegen gerade keine Zahlen vor."
 
-#: src/routes/faq/+page.svelte
-msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
-msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+#~ msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+#~ msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
 
 #: src/routes/faq/+page.svelte
 msgid "Welche Länder werden unterstützt?"
 msgstr "Welche Länder werden unterstützt?"
+
+#~ msgid "{0} Events • {1} bevorstehende"
+#~ msgstr "{0} Events • {1} bevorstehende"
+
+#: src/routes/faq/+page.svelte
+msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit folgende Länder."
+msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit folgende Länder."
+
+#~ msgid "{0} Events <0/> {1} bevorstehende"
+#~ msgstr "{0} Events <0/> {1} bevorstehende"
+
+#: src/routes/faq/+page.svelte
+msgid "bevorstehende"
+msgstr "bevorstehende"
+
+#: src/routes/faq/+page.svelte
+msgctxt "faq-event-count"
+msgid "Events"
+msgstr "Events"
