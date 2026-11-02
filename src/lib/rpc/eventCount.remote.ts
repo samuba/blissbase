@@ -102,6 +102,7 @@ const countryLabelsDe: Record<string, string> = {
 	LU: `Luxemburg`,
 	GT: `Guatemala`,
 	IL: `Israel`,
+	PS: `Palästina`,
 	ZA: `Südafrika`,
 	UA: `Ukraine`,
 	NO: `Norwegen`,
