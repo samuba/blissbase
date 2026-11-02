@@ -3,7 +3,7 @@
 	import { routes } from '$lib/routes';
 
 	let { data } = $props();
-	const faqRecentEventCounts = $derived(data.faqRecentEventCounts);
+	const faqRegionEventCounts = $derived(data.faqRegionEventCounts);
 
 	const faqs = [
 		{
@@ -42,15 +42,18 @@
 			<div class="mt-2 text-base-content/80">
 				<p>
 					Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen
-					hier, mit der Anzahl <b>neuer Events der letzten zwei Monate</b>.
+					hier, mit der Anzahl <b>aller Events und der bevorstehenden Termine</b>.
 				</p>
-				{#if faqRecentEventCounts.regions?.length}
+				{#if faqRegionEventCounts.regions?.length}
 					<ul class="mt-3 space-y-1.5 text-sm">
-						{#each faqRecentEventCounts.regions as region (region.key)}
+						{#each faqRegionEventCounts.regions as region (region.key)}
 							<li class="flex gap-4 border-b border-base-200 pb-1.5 last:border-0 last:pb-0">
 								<span>{region.label}</span>
 								<span class="grow"></span>
-								<span class="shrink-0 tabular-nums font-medium">{region.count}</span>Neue Events
+								<span class="shrink-0 text-right tabular-nums">
+									<span class="block font-medium">{region.count} Events</span>
+									<span class="block text-base-content/70">{region.upcomingCount} bevorstehend</span>
+								</span>
 							</li>
 						{/each}
 					</ul>

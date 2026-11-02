@@ -1,6 +1,6 @@
 import { prerender } from '$app/server';
 import { db, eq, s } from '$lib/server/db';
-import { and, gte, isNotNull, lt, lte } from 'drizzle-orm';
+import { and, gte, isNotNull, lte } from 'drizzle-orm';
 import { extractLatLngBounds, mergeLatLngBounds } from '$lib/server/faqEventRegions';
 import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
 
@@ -15,15 +15,12 @@ export const estimateEventCount = prerender(async () => {
 });
 
 /**
- * Returns recent event counts for the FAQ location overview.
+ * Returns total and upcoming listed-event counts per FAQ region.
  *
  * @example
- * await getFaqRecentEventCounts()
+ * await getFaqRegionEventCounts()
  */
-export const getFaqRecentEventCounts = prerender(async () => {
-	const twoMonthsAgo = new Date();
-	twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-
+export const getFaqRegionEventCounts = prerender(async () => {
 	const now = new Date();
 
 	const regions = await Promise.all(
@@ -37,39 +34,40 @@ export const getFaqRecentEventCounts = prerender(async () => {
 				return {
 					key: region.key,
 					label: region.label,
-					count: 0
+					count: 0,
+					upcomingCount: 0
 				};
 			}
 
-			const count = await db.$count(
-				s.events,
-				and(
-					eq(s.events.listed, true),
-					gte(s.events.startAt, twoMonthsAgo),
-					lt(s.events.startAt, now),
-					isNotNull(s.events.latitude),
-					isNotNull(s.events.longitude),
-					gte(s.events.latitude, bounds.southWestLat),
-					lte(s.events.latitude, bounds.northEastLat),
-					gte(s.events.longitude, bounds.southWestLng),
-					lte(s.events.longitude, bounds.northEastLng)
-				)
-			);
+			const inRegion = listedEventsInBoundsCondition(bounds);
+			const [count, upcomingCount] = await Promise.all([
+				db.$count(s.events, inRegion),
+				db.$count(s.events, and(inRegion, gte(s.events.startAt, now)))
+			]);
 
 			return {
 				key: region.key,
 				label: region.label,
-				count
+				count,
+				upcomingCount
 			};
 		})
 	);
 
-	return {
-		from: twoMonthsAgo.toISOString(),
-		to: now.toISOString(),
-		regions
-	};
+	return { regions };
 });
+
+function listedEventsInBoundsCondition(bounds: LatLngBounds) {
+	return and(
+		eq(s.events.listed, true),
+		isNotNull(s.events.latitude),
+		isNotNull(s.events.longitude),
+		gte(s.events.latitude, bounds.southWestLat),
+		lte(s.events.latitude, bounds.northEastLat),
+		gte(s.events.longitude, bounds.southWestLng),
+		lte(s.events.longitude, bounds.northEastLng)
+	);
+}
 
 /**
  * Resolves one or more location queries to a single merged bounding box.
@@ -167,6 +165,13 @@ const faqEventRegionDefinitions = [
 		queries: [`Da Nang, Vietnam`, `Hoi An, Vietnam`]
 	}
 ] as const;
+
+type LatLngBounds = {
+	southWestLat: number;
+	southWestLng: number;
+	northEastLat: number;
+	northEastLng: number;
+};
 
 type GoogleGeocodeResponse = {
 	status: string;
