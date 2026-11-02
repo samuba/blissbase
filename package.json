@@ -111,6 +111,7 @@
 		"@lexical/rich-text": "^0.46.0",
 		"@lexical/selection": "^0.46.0",
 		"@lexical/utils": "^0.46.0",
+		"@rapideditor/country-coder": "^5.6.1",
 		"@supabase/ssr": "^0.10.2",
 		"@supabase/supabase-js": "^2.103.0",
 		"blockhash-core": "^0.1.0",

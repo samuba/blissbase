@@ -1,7 +1,7 @@
-import { getFaqRegionEventCounts } from "$lib/rpc/eventCount.remote";
+import { getFaqCountryEventCounts } from "$lib/rpc/eventCount.remote";
 import type { PageLoad } from "./$types";
 
 export const load = (async () => {
-	const faqRegionEventCounts = await getFaqRegionEventCounts();
-	return { faqRegionEventCounts };
+	const faqCountryEventCounts = await getFaqCountryEventCounts();
+	return { faqCountryEventCounts };
 }) satisfies PageLoad;

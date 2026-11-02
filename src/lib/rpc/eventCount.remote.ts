@@ -1,8 +1,9 @@
 import { prerender } from '$app/server';
 import { db, eq, s } from '$lib/server/db';
-import { and, gte, isNotNull, lte } from 'drizzle-orm';
-import { extractLatLngBounds, mergeLatLngBounds } from '$lib/server/faqEventRegions';
-import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
+import { and, isNotNull } from 'drizzle-orm';
+import { feature, iso1A2Code } from '@rapideditor/country-coder';
+
+const MIN_COUNTRY_EVENT_COUNT = 100;
 
 /**
  * Returns the number of listed events for static UI copy.
@@ -15,176 +16,75 @@ export const estimateEventCount = prerender(async () => {
 });
 
 /**
- * Returns total and upcoming listed-event counts per FAQ region.
+ * Returns total and upcoming listed-event counts per country with more than 100 events.
  *
  * @example
- * await getFaqRegionEventCounts()
+ * await getFaqCountryEventCounts()
  */
-export const getFaqRegionEventCounts = prerender(async () => {
+export const getFaqCountryEventCounts = prerender(async () => {
 	const now = new Date();
 
-	const regions = await Promise.all(
-		faqEventRegionDefinitions.map(async (region) => {
-			const bounds = await resolveRegionBounds({
-				queries: region.queries,
-				apiKey: GOOGLE_MAPS_API_KEY
-			});
-
-			if (!bounds) {
-				return {
-					key: region.key,
-					label: region.label,
-					count: 0,
-					upcomingCount: 0
-				};
-			}
-
-			const inRegion = listedEventsInBoundsCondition(bounds);
-			const [count, upcomingCount] = await Promise.all([
-				db.$count(s.events, inRegion),
-				db.$count(s.events, and(inRegion, gte(s.events.startAt, now)))
-			]);
-
-			return {
-				key: region.key,
-				label: region.label,
-				count,
-				upcomingCount
-			};
+	const events = await db
+		.select({
+			latitude: s.events.latitude,
+			longitude: s.events.longitude,
+			startAt: s.events.startAt
 		})
-	);
+		.from(s.events)
+		.where(
+			and(eq(s.events.listed, true), isNotNull(s.events.latitude), isNotNull(s.events.longitude))
+		);
+
+	const byCountry = new Map<string, { count: number; upcomingCount: number }>();
+
+	for (const event of events) {
+		if (event.latitude == null || event.longitude == null) continue;
+
+		const code = iso1A2Code([event.longitude, event.latitude]);
+		if (!code) continue;
+
+		const stats = byCountry.get(code) ?? { count: 0, upcomingCount: 0 };
+		stats.count += 1;
+		if (event.startAt >= now) stats.upcomingCount += 1;
+		byCountry.set(code, stats);
+	}
+
+	const regions = [...byCountry.entries()]
+		.filter(([, stats]) => stats.count > MIN_COUNTRY_EVENT_COUNT)
+		.map(([code, stats]) => ({
+			key: code.toLowerCase(),
+			label: countryLabelDe(code),
+			count: stats.count,
+			upcomingCount: stats.upcomingCount
+		}))
+		.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, `de`));
 
 	return { regions };
 });
 
-function listedEventsInBoundsCondition(bounds: LatLngBounds) {
-	return and(
-		eq(s.events.listed, true),
-		isNotNull(s.events.latitude),
-		isNotNull(s.events.longitude),
-		gte(s.events.latitude, bounds.southWestLat),
-		lte(s.events.latitude, bounds.northEastLat),
-		gte(s.events.longitude, bounds.southWestLng),
-		lte(s.events.longitude, bounds.northEastLng)
-	);
+function countryLabelDe(code: string) {
+	return countryLabelsDe[code] ?? feature(code)?.properties?.nameEn ?? code;
 }
 
-/**
- * Resolves one or more location queries to a single merged bounding box.
- *
- * @example
- * await resolveRegionBounds({ queries: [`Da Nang, Vietnam`, `Hoi An, Vietnam`], apiKey: `key` })
- */
-async function resolveRegionBounds(args: {
-	queries: readonly string[];
-	apiKey: string;
-}) {
-	if (!args.apiKey) {
-		console.error(`GOOGLE_MAPS_API_KEY is not set. Skipping FAQ region counts.`);
-		return null;
-	}
-
-	const boundsList = await Promise.all(
-		args.queries.map(async (query) => {
-			const geometry = await fetchRegionGeometry({
-				query,
-				apiKey: args.apiKey
-			});
-
-			return extractLatLngBounds(geometry);
-		})
-	);
-
-	return mergeLatLngBounds(
-		boundsList.filter((bounds): bounds is NonNullable<typeof bounds> => Boolean(bounds))
-	);
-}
-
-/**
- * Fetches Google geocode geometry for a region name.
- *
- * @example
- * await fetchRegionGeometry({ query: `Bali, Indonesia`, apiKey: `key` })
- */
-async function fetchRegionGeometry(args: {
-	query: string;
-	apiKey: string;
-}) {
-	try {
-		const url = new URL(`https://maps.googleapis.com/maps/api/geocode/json`);
-		url.searchParams.set(`address`, args.query);
-		url.searchParams.set(`key`, args.apiKey);
-		url.searchParams.set(`language`, `en`);
-
-		const response = await fetch(url);
-		if (!response.ok) {
-			console.error(`FAQ region geocoding failed for "${args.query}" with status ${response.status}`);
-			return null;
-		}
-
-		const data = await response.json() as GoogleGeocodeResponse;
-		if (data.status !== `OK`) {
-			console.error(`FAQ region geocoding failed for "${args.query}": ${data.status}`);
-			return null;
-		}
-
-		return data.results?.[0]?.geometry ?? null;
-	} catch (error) {
-		console.error(
-			`FAQ region geocoding errored for "${args.query}":`,
-			error instanceof Error ? error.message : String(error)
-		);
-		return null;
-	}
-}
-
-const faqEventRegionDefinitions = [
-	{
-		key: `germany`,
-		label: `Deutschland`,
-		queries: [`Germany`]
-	},
-	{
-		key: `austria`,
-		label: `Österreich`,
-		queries: [`Austria`]
-	},
-	{
-		key: `switzerland`,
-		label: `Schweiz`,
-		queries: [`Switzerland`]
-	},
-	{
-		key: `bali`,
-		label: `Bali`,
-		queries: [`Bali, Indonesia`]
-	},
-	{
-		key: `danang-hoi-an`,
-		label: `Da Nang / Hoi An`,
-		queries: [`Da Nang, Vietnam`, `Hoi An, Vietnam`]
-	}
-] as const;
-
-type LatLngBounds = {
-	southWestLat: number;
-	southWestLng: number;
-	northEastLat: number;
-	northEastLng: number;
-};
-
-type GoogleGeocodeResponse = {
-	status: string;
-	results?: {
-		geometry?: {
-			bounds?: {
-				southwest: { lat: number; lng: number };
-				northeast: { lat: number; lng: number };
-			};
-			viewport?: {
-				southwest: { lat: number; lng: number };
-				northeast: { lat: number; lng: number };
-			};
-		};
-	}[];
+const countryLabelsDe: Record<string, string> = {
+	DE: `Deutschland`,
+	AT: `Österreich`,
+	CH: `Schweiz`,
+	ID: `Indonesien`,
+	VN: `Vietnam`,
+	PT: `Portugal`,
+	FR: `Frankreich`,
+	ES: `Spanien`,
+	IT: `Italien`,
+	NL: `Niederlande`,
+	BE: `Belgien`,
+	GB: `Vereinigtes Königreich`,
+	TH: `Thailand`,
+	IN: `Indien`,
+	GR: `Griechenland`,
+	PL: `Polen`,
+	CZ: `Tschechien`,
+	HU: `Ungarn`,
+	US: `USA`,
+	AU: `Australien`
 };
