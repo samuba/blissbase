@@ -50,10 +50,9 @@
 							<li class="flex gap-4 border-b border-base-200 pb-1.5 last:border-0 last:pb-0">
 								<span>{region.label}</span>
 								<span class="grow"></span>
-								<span class="shrink-0 text-right tabular-nums">
-									<span class="block font-medium">{region.count} Events</span>
-									<span class="block text-base-content/70">{region.upcomingCount} bevorstehend</span>
-								</span>
+								<span class="shrink-0 text-right tabular-nums"
+									>{region.count} / {region.upcomingCount} upcoming</span
+								>
 							</li>
 						{/each}
 					</ul>
