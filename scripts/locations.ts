@@ -65,7 +65,11 @@ export const LOCATIONS = [
 	{ name: `Uluwatu`, country: `Indonesia`, lat: -8.829139, lon: 115.084907, eventbritePlaceId: `102019485` },
 	{ name: `Amed`, country: `Indonesia`, lat: -8.3457, lon: 115.6739, eventbritePlaceId: `890495117`, aliases: [`Amet`] },
 	{ name: `Canggu`, country: `Indonesia`, lat: -8.64009, lon: 115.14011, eventbritePlaceId: `890495369` },
-	{ name: `The Nusas`, country: `Indonesia`, lat: 5.4991535, lon: 95.2710558, eventbritePlaceId: `102018453` },
+	// Eventbrite has no place for Nusa Penida, Kuta Lombok, or the Gilis; these ids are the nearest localities (Toyapakeh, Sengkol, Pemenang).
+	{ name: `The Nusas`, country: `Indonesia`, lat: -8.7275, lon: 115.5444, eventbritePlaceId: `890498623`, aliases: [`Nusa Penida`] },
+	{ name: `Lombok`, country: `Indonesia`, lat: -8.5833, lon: 116.1167, eventbritePlaceId: `102019813`, aliases: [`Mataram`, `Senggigi`] },
+	{ name: `Kuta Lombok`, country: `Indonesia`, lat: -8.8955, lon: 116.2775, eventbritePlaceId: `890495261` },
+	{ name: `Gili Islands`, country: `Indonesia`, lat: -8.3533, lon: 116.0564, eventbritePlaceId: `102019495`, aliases: [`Gili`, `Gili Trawangan`, `Gili Air`, `Gili Meno`] },
 	{ name: `Patnem in Goa`, country: `India`, lat: 14.9968861, lon: 74.0335008, eventbritePlaceId: `102029865` },
 	{ name: `Palolem in Goa`, country: `India`, lat: 15.0062335, lon: 74.0329499, eventbritePlaceId: `102028991` },
 	{ name: `Arambol`, country: `India`, lat: 15.687736, lon: 73.7115998, eventbritePlaceId: `102030915` },
