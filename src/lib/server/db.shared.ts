@@ -13,10 +13,16 @@ export const s = schema;
  *
  * @example
  * createPostgresDrizzle()
+ * createPostgresDrizzle({ max: 2 })
  */
-export function createPostgresDrizzle() {
+export function createPostgresDrizzle(options: Omit<postgres.Options<Record<string, postgres.PostgresType>>, `prepare`> & {
+	// postgres.js applies max_pipeline at runtime; the published Options type omits it
+	max_pipeline?: number
+} = {}) {
 	return drizzle({
 		client: postgres(process.env.DATABASE_URL!, {
+			...options,
+			// Supabase pooler (Supavisor) does not support prepared statements in transaction mode
 			prepare: false
 		}),
 		schema,

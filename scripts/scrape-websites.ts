@@ -22,7 +22,7 @@
  */
 
 import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
-import { db, s, upsertEvents } from '../src/lib/server/db.script.ts';
+import { closeDb, db, exitWithDbClose, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
 import { fillMissingEventAttributes } from './fillScrapedEventAttributes.ts';
 import { and, inArray, notInArray } from 'drizzle-orm';
@@ -152,7 +152,7 @@ async function main() {
 
     if (!sourcesToScrape.length) {
         console.error(`No sources left to scrape after applying --exclude.`);
-        process.exit(1);
+        await exitWithDbClose(1);
     }
 
     const baseline = readBaseline();
@@ -211,12 +211,12 @@ async function main() {
 
     if (dryRun) {
         console.log(`--dry-run: skipping database writes.`);
-        process.exit(failedSources.length ? 1 : 0);
+        await exitWithDbClose(failedSources.length ? 1 : 0);
     }
 
     if (allEvents.length === 0) {
         console.log('No events to process. Exiting.');
-        process.exit(1);
+        await exitWithDbClose(1);
     }
 
     // --- Connect to Database and Insert Data ---
@@ -231,7 +231,7 @@ async function main() {
     } catch (e) {
         console.error("Failed to check table existence or table doesn't exist.", e);
         console.error("Please ensure the database schema is created. You might need to run 'npx drizzle-kit push:postgres'.");
-        process.exit(1); // Stop if we can't confirm table existence
+        await exitWithDbClose(1); // Stop if we can't confirm table existence
     }
 
     // --- Clear existing events if requested ---
@@ -349,7 +349,7 @@ async function main() {
         throw new Error(`Scraping completed but ${failedSources.length} source(s) failed:\n${errorMessages}`);
     }
     
-    process.exit(0);
+    await exitWithDbClose(0);
     ///
     ///
     /// End of main function
@@ -589,6 +589,11 @@ async function main() {
         return `offline`;
     }
 }
-await main();
+try {
+    await main();
+} finally {
+    // main() throws when sources failed; make sure the pooler slot is released either way
+    await closeDb();
+}
 
 
