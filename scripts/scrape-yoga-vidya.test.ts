@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+	addressFromMapsEmbed,
+	collectSeminarPages,
 	detectTotalPages,
 	extractListingEntries,
 	extractSeminarUrls,
@@ -56,7 +58,7 @@ const detailHtml = `
     <h3 class="title is-5">Nancy Haywood</h3>
     <a href="/seminare/leiter/nancy-haywood/">Alle Seminare</a>
   </div>
-  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1!2d8.96!3d51.88!2m3!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sYogaweg%201%2C%2032805%20Horn-Bad%20Meinberg!5e0"></iframe>
+  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d532487.2882341355!2d7.534732277391366!3d51.68574339702842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47ba5bb7e3728793%3A0x4905f2df2d5fde94!2sYogaweg%201%2C%2032805%20Horn-Bad%20Meinberg!5e0!3m2!1sde!2sde!4v1767454389983!5m2!1sde!2sde"></iframe>
   <div id="seminar-submit-box">
     Interessen
     <a href="/seminare/interessengebiet/mantras-und-musik/">Mantras und Musik</a>
@@ -211,8 +213,8 @@ describe(`mapSeminarPage`, () => {
 			hostLink: `https://www.yoga-vidya.de/seminare/leiter/nancy-haywood/`,
 			sourceUrl: `https://www.yoga-vidya.de/seminare/seminar/mantra-konzert-b261010-1/`,
 			source: `yogavidya`,
-			latitude: 51.88,
-			longitude: 8.96,
+			latitude: null,
+			longitude: null,
 			tags: [`Mantras und Musik`, `Bhakti Yoga`],
 		});
 		expect(mapped?.description).toContain(`Gemeinsames Singen`);
@@ -224,3 +226,198 @@ describe(`mapSeminarPage`, () => {
 		expect(mapped?.imageUrls[0]).toContain(`nancy.jpg`);
 	});
 });
+
+describe(`geocoded coordinates`, () => {
+	const nowMs = Date.parse(`2026-10-10T12:00:00+02:00`);
+	const seminarUrl = `https://www.yoga-vidya.de/seminare/seminar/probe/`;
+
+	it(`geocodes the street named in the embed and ignores the map center`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 51.899913, lng: 8.991266, timezone: `Europe/Berlin` }));
+		const events = await collectSeminarPages({
+			urls: [`https://www.yoga-vidya.de/seminare/seminar/mantra-konzert-b261010-1/`],
+			nowMs,
+			loadHtml: async () => detailHtml,
+			geocode,
+		});
+
+		expect(geocode).toHaveBeenCalledWith({
+			addressLines: [`Yogaweg 1`, `32805 Horn-Bad Meinberg`],
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		expect(events).toHaveLength(1);
+		expect(events[0]).toMatchObject({ latitude: 51.899913, longitude: 8.991266 });
+
+		const dortmundSouth = { lat: 51.43, lng: 7.4 };
+		const mapCenter = { lat: 51.68574339702842, lng: 7.534732277391366 };
+		const latitude = events[0]?.latitude;
+		const longitude = events[0]?.longitude;
+		if (typeof latitude !== `number` || typeof longitude !== `number`) {
+			throw new Error(`geocoded coordinates missing`);
+		}
+		expect(kmBetween(dortmundSouth, mapCenter)).toBeLessThan(35);
+		expect(kmBetween(dortmundSouth, { lat: latitude, lng: longitude })).toBeGreaterThan(100);
+	});
+
+	it(`reads the street from the loaded map card when the embed url only names the house`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 50.614672, lng: 7.544518, timezone: `Europe/Berlin` }));
+		const loadEmbed = vi.fn(async () => westerwaldMapCard);
+		const events = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () =>
+				seminarHtml({
+					ort: `Westerwald`,
+					iframe: embed({
+						cameraMeters: 722979,
+						lng: 7.2905133787425145,
+						lat: 50.90482375627769,
+						query: `Yoga%20Vidya%20Westerwald`,
+					}),
+				}),
+			geocode,
+			loadEmbed,
+		});
+
+		expect(loadEmbed).toHaveBeenCalledOnce();
+		expect(geocode).toHaveBeenCalledWith({
+			addressLines: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		expect(events[0]).toMatchObject({
+			address: [`Yoga Vidya Westerwald`, `Gut Hoffnungsthal`, `57641 Oberlahr`],
+			latitude: 50.614672,
+			longitude: 7.544518,
+		});
+		expect(events[0].latitude).not.toBe(50.90482375627769);
+	});
+
+	it(`geocodes the house name when the map card has no street`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 50.6, lng: 7.5, timezone: `Europe/Berlin` }));
+		const events = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () =>
+				seminarHtml({
+					ort: `Westerwald`,
+					iframe: embed({
+						cameraMeters: 722979,
+						lng: 7.29,
+						lat: 50.9,
+						query: `Yoga%20Vidya%20Westerwald`,
+					}),
+				}),
+			geocode,
+			loadEmbed: async () => `initEmbed(["02685 80020"])`,
+		});
+
+		expect(geocode).toHaveBeenCalledWith({
+			addressLines: [`Yoga Vidya Westerwald`],
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		expect(events[0]).toMatchObject({ address: [`Yoga Vidya Westerwald`], latitude: 50.6, longitude: 7.5 });
+	});
+
+	it(`leaves online events and a nameless brand without coordinates`, async () => {
+		const geocode = vi.fn(async () => ({ lat: 51, lng: 8, timezone: `Europe/Berlin` }));
+		const online = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () =>
+				seminarHtml({
+					ort: `Live Online`,
+					iframe: embed({
+						cameraMeters: 1200,
+						lng: 8.991266,
+						lat: 51.899913,
+						query: `Yogaweg%201%2C%2032805%20Horn-Bad%20Meinberg`,
+					}),
+				}),
+			geocode,
+		});
+		expect(geocode).not.toHaveBeenCalled();
+		expect(online[0]).toMatchObject({ address: [`Online`], latitude: null, longitude: null });
+
+		const bare = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () => seminarHtml({}),
+			geocode,
+		});
+		expect(geocode).not.toHaveBeenCalled();
+		expect(bare[0]).toMatchObject({ address: [`Yoga Vidya`], latitude: null, longitude: null });
+	});
+
+	it(`keeps the event when geocoding throws`, async () => {
+		const errorSpy = vi.spyOn(console, `error`).mockImplementation(() => {});
+		const events = await collectSeminarPages({
+			urls: [seminarUrl],
+			nowMs,
+			loadHtml: async () => seminarHtml({ ort: `Hamburg` }),
+			geocode: async () => {
+				throw new Error(`geocoder down`);
+			},
+		});
+
+		expect(events).toHaveLength(1);
+		expect(events[0]).toMatchObject({ address: [`Yoga Vidya Hamburg`, `Hamburg`], latitude: null, longitude: null });
+		expect(errorSpy).toHaveBeenCalled();
+		errorSpy.mockRestore();
+	});
+});
+
+const westerwaldMapCard = `
+initEmbed([["0x47be926a60d0c657:0xcea3bebe3b56ded4","Yoga Vidya Westerwald, Gut Hoffnungsthal, 57641 Oberlahr",[50.6146719,7.5445175]],"Yoga Vidya Westerwald",["Gut Hoffnungsthal","57641 Oberlahr"],"02685 80020","Gut Hoffnungsthal, 57641 Oberlahr"]);
+`;
+
+const nordseeMapCard = [
+	`["Yoga Vidya Nordsee, Wiarder Altendeich 10, 26434 Wangerland-Horumersiel",`,
+	`[53.6807466,7.9872317],"04426 9041610",`,
+	`"Wiarder Altendeich 10, 26434 Wangerland-Horumersiel"]`,
+].join(``);
+const allgaeuMapCard = [
+	`["Yoga Vidya Allgäu, Lärchenweg 3, 87466 Oy-Mittelberg-Maria-Rain",`,
+	`[47.6374178,10.4948084],"08361 925300"]`,
+].join(``);
+
+describe(`addressFromMapsEmbed`, () => {
+	it(`takes the street shown on the map card, not the phone number or the camera`, () => {
+		expect(addressFromMapsEmbed(westerwaldMapCard)).toBe(
+			`Yoga Vidya Westerwald, Gut Hoffnungsthal, 57641 Oberlahr`,
+		);
+		expect(addressFromMapsEmbed(nordseeMapCard)).toBe(
+			`Yoga Vidya Nordsee, Wiarder Altendeich 10, 26434 Wangerland-Horumersiel`,
+		);
+		expect(addressFromMapsEmbed(allgaeuMapCard)).toBe(
+			`Yoga Vidya Allgäu, Lärchenweg 3, 87466 Oy-Mittelberg-Maria-Rain`,
+		);
+		expect(addressFromMapsEmbed(`["02685 80020"]`)).toBeUndefined();
+	});
+});
+
+function seminarHtml(args: { ort?: string; iframe?: string }) {
+	const ort = args.ort
+		? `<span class="icon-text"><span class="icon" title="Ort"></span><span> ${args.ort} </span></span>`
+		: ``;
+	return `<html><body><div class="main">
+    <h1 class="title">Probe</h1>
+    <span class="icon-text"><span class="icon" title="Zeitraum"></span><span>10.10.26</span></span>
+    ${ort}
+    ${args.iframe ?? ``}
+  </div></body></html>`;
+}
+
+function embed(args: { cameraMeters: number; lng: number; lat: number; query: string }) {
+	const pb = `!1m3!1d${args.cameraMeters}!2d${args.lng}!3d${args.lat}!2s${args.query}!`;
+	return `<iframe src="https://www.google.com/maps/embed?pb=${pb}"></iframe>`;
+}
+
+/** Kilometers between two WGS84 points. */
+function kmBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+	const earthKm = 6371;
+	const lat1 = (a.lat * Math.PI) / 180;
+	const lat2 = (b.lat * Math.PI) / 180;
+	const dLat = lat2 - lat1;
+	const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+	const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+	return 2 * earthKm * Math.asin(Math.sqrt(h));
+}

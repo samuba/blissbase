@@ -29,16 +29,6 @@ const PAST_GRACE_MS = 12 * 60 * 60 * 1000;
 /** Listing + detail scrape horizon — Solr has years of future seminars. */
 const MAX_FUTURE_DAYS = 365;
 
-/** Street-level fallbacks when the detail map only has a place name. */
-const VENUE_BY_ORT: Record<string, string[]> = {
-	"Bad Meinberg": [`Yoga Vidya Bad Meinberg`, `Yogaweg 1`, `32805 Horn-Bad Meinberg`],
-	Westerwald: [`Yoga Vidya Westerwald`, `Yogaweg 7`, `57612 Oberlahr`],
-	Nordsee: [`Yoga Vidya Nordsee`],
-	Allgäu: [`Yoga Vidya Allgäu`],
-	Allgaeu: [`Yoga Vidya Allgäu`],
-	"Live Online": [`Online`],
-};
-
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(limit?: number): Promise<ScrapedEvent[]> {
 		const resolvedLimit = limit ?? parseCliArgs().limit;
@@ -68,7 +58,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	async extractEventData(html: string, url: string): Promise<ScrapedEvent | undefined> {
-		return mapSeminarPage({ html, url });
+		const event = mapSeminarPage({ html, url });
+		if (!event) return undefined;
+		await applyLocation({ event, html });
+		return event;
 	}
 
 	extractName(html: string): string | undefined {
@@ -108,8 +101,16 @@ export async function collectSeminarPages(args: {
 	urls: string[];
 	loadHtml?: (url: string) => Promise<string>;
 	nowMs?: number;
+	geocode?: GeocodeAddress;
+	loadEmbed?: (url: string) => Promise<string>;
 }): Promise<ScrapedEvent[]> {
-	const { urls, loadHtml = (url) => customFetch(url, { returnType: `text` }), nowMs = Date.now() } = args;
+	const {
+		urls,
+		loadHtml = (url) => customFetch(url, { returnType: `text` }),
+		nowMs = Date.now(),
+		geocode,
+		loadEmbed,
+	} = args;
 	const events: ScrapedEvent[] = [];
 	let index = 0;
 	let done = 0;
@@ -137,6 +138,7 @@ export async function collectSeminarPages(args: {
 						);
 					}
 				} else {
+					await applyLocation({ event, html, geocode, loadEmbed });
 					events.push(event);
 				}
 			} catch (error) {
@@ -171,7 +173,6 @@ export function mapSeminarPage(args: { html: string; url: string }): ScrapedEven
 	const sourceUrl = getSourceUrl(html) || normalizeSeminarUrl(url);
 	if (!name || !startAt || !sourceUrl) return undefined;
 
-	const coords = getCoords(html);
 	return {
 		name,
 		startAt,
@@ -185,8 +186,9 @@ export function mapSeminarPage(args: { html: string; url: string }): ScrapedEven
 		host: getHost(html) || HOST_DEFAULT,
 		hostLink: getHostLink(html),
 		contact: [],
-		latitude: coords?.lat ?? null,
-		longitude: coords?.lng ?? null,
+		// The Google embed's !2d/!3d pair is the camera, not the pin. Coordinates come from geocoding the address.
+		latitude: null,
+		longitude: null,
 		tags: getTags(html),
 		sourceUrl,
 		source: SOURCE,
@@ -404,8 +406,6 @@ function getAddress(html: string): string[] {
 		return splitAddress(mapAddress);
 	}
 
-	if (ort && VENUE_BY_ORT[ort]) return [...VENUE_BY_ORT[ort]];
-
 	if (mapAddress) {
 		const lines = splitAddress(mapAddress);
 		if (ort && !lines.some((line) => line.toLowerCase().includes(ort.toLowerCase()))) {
@@ -576,14 +576,126 @@ function getSourceUrl(html: string): string | undefined {
 	return canonical ? normalizeSeminarUrl(canonical) : undefined;
 }
 
-function getCoords(html: string): { lat: number; lng: number } | undefined {
-	const match = html.match(/1m3!1d[^!]+!2d([0-9.-]+)!3d([0-9.-]+)/);
+/**
+ * Uses the street shown in the map. Bad Meinberg already names it in the embed
+ * URL. The other houses only put the house name there; the street (Gut
+ * Hoffnungsthal, Wiarder Altendeich 10, …) is in the loaded map card. That
+ * text is geocoded. Coordinates from the map are never read.
+ */
+async function applyLocation(args: {
+	event: ScrapedEvent;
+	html: string;
+	geocode?: GeocodeAddress;
+	loadEmbed?: (url: string) => Promise<string>;
+}) {
+	const { event, html } = args;
+	if (isOnlineAddress(event.address)) return;
+
+	try {
+		const street = await streetFromEmbed({ html, loadEmbed: args.loadEmbed });
+		if (street && looksLikeStreetAddress(street)) event.address = splitAddress(street);
+	} catch (error) {
+		console.error(`Failed to read map address for ${event.sourceUrl}:`, error);
+	}
+
+	await fillCoordinates({ event, geocode: args.geocode });
+}
+
+/** One load per embed URL. Every seminar at a house shares the same map. */
+const embedAddressLoads = new Map<string, Promise<string | undefined>>();
+
+async function streetFromEmbed(args: {
+	html: string;
+	loadEmbed?: (url: string) => Promise<string>;
+}): Promise<string | undefined> {
+	const named = getMapAddress(args.html);
+	if (named && looksLikeStreetAddress(named)) return named;
+
+	const url = getEmbedUrl(args.html);
+	if (!url) return undefined;
+
+	// Injected loaders stay uncached so tests can supply a different card per call.
+	if (!args.loadEmbed) {
+		const existing = embedAddressLoads.get(url);
+		if (existing) return existing;
+	}
+
+	const loadEmbed = args.loadEmbed ?? ((embedUrl: string) => customFetch(embedUrl, { returnType: `text` }));
+	const pending = loadEmbed(url)
+		.then((payload) => addressFromMapsEmbed(payload))
+		.catch((error: unknown) => {
+			console.error(`Failed to read Google map address:`, error);
+			return undefined;
+		});
+	if (!args.loadEmbed) embedAddressLoads.set(url, pending);
+	return pending;
+}
+
+/**
+ * Street line from the loaded Google map card, for example
+ * "Yoga Vidya Westerwald, Gut Hoffnungsthal, 57641 Oberlahr".
+ * The longest quoted line with a postal code is that card, not the phone number.
+ */
+export function addressFromMapsEmbed(html: string): string | undefined {
+	const candidates = [...html.matchAll(/"((?:[^"\\]|\\.){8,200})"/g)].flatMap((match) => {
+		const decoded = decodeJsonString(match[1]);
+		if (!decoded.includes(`,`)) return [];
+		if (!/\b\d{5}\b/.test(decoded)) return [];
+		return [decoded];
+	});
+	if (!candidates.length) return undefined;
+	return candidates.sort((a, b) => b.length - a.length)[0];
+}
+
+function decodeJsonString(raw: string): string {
+	try {
+		return JSON.parse(`"${raw}"`) as string;
+	} catch {
+		return raw;
+	}
+}
+
+function getEmbedUrl(html: string): string | undefined {
+	const match = html.match(
+		/<iframe\b[^>]*\bsrc\s*=\s*["']?(https:\/\/www\.google\.com\/maps\/embed\?[^"'\s>]+)/i,
+	);
 	if (!match) return undefined;
-	const lng = Number(match[1]);
-	const lat = Number(match[2]);
-	if (!Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
-	if (Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01) return undefined;
-	return { lat, lng };
+	return match[1].replaceAll(`&amp;`, `&`);
+}
+
+async function fillCoordinates(args: { event: ScrapedEvent; geocode?: GeocodeAddress }) {
+	const { event } = args;
+	const addressLines = addressLinesToGeocode(event.address);
+	if (!addressLines) return;
+
+	try {
+		const geocode = args.geocode ?? (await import(`../src/lib/server/google.script.ts`)).geocodeAddressCached;
+		const geocoded = await geocode({
+			addressLines,
+			apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+		});
+		if (!geocoded) return;
+		event.latitude = geocoded.lat;
+		event.longitude = geocoded.lng;
+		if (geocoded.timezone) event.timezone = geocoded.timezone;
+	} catch (error) {
+		console.error(`Geocoding failed for ${event.sourceUrl}:`, error);
+	}
+}
+
+function isOnlineAddress(address: string[] | undefined) {
+	if (!address?.length) return false;
+	return address.every((line) => /live\s*online|^online$/i.test(line.trim()));
+}
+
+/** Street, venue, or city lines. Online and the brand name alone are not a place. */
+function addressLinesToGeocode(address: string[] | undefined): string[] | undefined {
+	if (!address?.length) return undefined;
+	const lines = address.map((line) => line.trim()).filter(Boolean);
+	if (!lines.length) return undefined;
+	if (lines.every((line) => /live\s*online|^online$/i.test(line))) return undefined;
+	if (lines.length === 1 && /^yoga vidya$/i.test(lines[0])) return undefined;
+	return lines;
 }
 
 function getMapAddress(html: string): string | undefined {
@@ -769,3 +881,8 @@ if (import.meta.main) {
 }
 
 type Ymd = { year: number; month: number; day: number };
+
+type GeocodeAddress = (args: {
+	addressLines: string[];
+	apiKey: string;
+}) => Promise<{ lat: number; lng: number; timezone: string | null } | null>;
