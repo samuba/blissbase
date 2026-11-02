@@ -107,7 +107,7 @@
 	bind:this={wrapperEl}
 	class={[
 		`shrink-0`,
-		variant === `full` ? [`join`, `w-full`] : [`tag-trigger`, `flex`, `items-center`],
+		variant === `full` ? [`join`, `w-full`] : [`flex`, `items-center`],
 		wrapperClass,
 	]}
 >
@@ -171,15 +171,3 @@
 		<i class="icon-[ph--magnifying-glass] size-5 min-w-5"></i>
 	</button>
 </div>
-
-<style>
-	.tag-trigger {
-		padding-bottom: 0;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.tag-trigger {
-			padding-bottom: 10px;
-		}
-	}
-</style>

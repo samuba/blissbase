@@ -1,8 +1,3 @@
-
-only broad tags in tag input
-
-have a better hint for offerings page - like a arrow floating above it after some time of scrolling
-
 tag scrolling is impossible on small devices, especially when one is already selected
 
 sicherstellen in logs das jev events vernünftig filtert und tagged
@@ -32,12 +27,7 @@ https://arivela-collective.com/ >> lumaya
 neue telegram gruppen adden
 whatsapp om gruppe
 
-create.party persönliche details fixen -> msg an josef
-
 pstack testen
-
-DateRangePicker
--> einzelne tage erlauben?
 
 Frank bzgl cooperation antworten 
 

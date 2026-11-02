@@ -130,7 +130,7 @@
 	</div>
 {:else}
 	<div class="flex w-full max-w-full min-w-0 items-center" data-nosnippet>
-		<div class="relative flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-hidden pb-1">
+		<div class="relative flex w-full min-w-0 flex-nowrap items-start gap-2 overflow-hidden pb-1">
 			<TextSearchInput
 				bind:this={textSearchInput}
 				bind:query={filterQuery}
@@ -140,7 +140,7 @@
 				onClose={handleSearchClose}
 			/>
 
-			<div class={[`flex-no-wrap category-trigger flex gap-2`, selectedCategories.length === 0 && `hidden`]}>
+			<div class={[`flex-no-wrap flex gap-2`, selectedCategories.length === 0 && `hidden`]}>
 				{#each selectedCategories as category (category.slug)}
 					<button
 						class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
@@ -157,7 +157,7 @@
 
 			<div class="relative w-full overflow-hidden">
 				<div
-					class="category-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-center overflow-x-auto overflow-y-clip"
+					class="category-rail-scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-transparent flex w-full min-w-0 flex-nowrap items-start overflow-x-auto overflow-y-clip"
 					{@attach trackCategoryRail}
 					onscroll={(event) => updateCategoryRailShadows(event.currentTarget)}
 					onwheel={(event) => handleCategoryRailWheel({ event, element: event.currentTarget })}
@@ -234,10 +234,6 @@
 		bottom: 8px;
 	}
 
-	.category-trigger {
-		padding-bottom: 0;
-	}
-
 	.category-rail-scrollbar::-webkit-scrollbar {
 		height: 6px;
 	}
@@ -260,12 +256,6 @@
 	@media (max-width: 640px) {
 		.category-rail-scrollbar::-webkit-scrollbar {
 			height: 4px;
-		}
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.category-trigger {
-			padding-bottom: 10px;
 		}
 	}
 </style>
