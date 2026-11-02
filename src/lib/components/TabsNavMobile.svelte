@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getAppNavItems, isActiveAppTab } from '$lib/components/tabsNav';
+	import OfferingsNavHintBubble from '$lib/components/OfferingsNavHintBubble.svelte';
+	import { offeringsNavHint } from '$lib/offeringsNavHint.svelte';
 	import { onMount } from 'svelte';
 	import { showLoginDialog } from './LoginDialog.svelte';
 
@@ -92,7 +94,7 @@
 		{#each navItems as tab (tab.href)}
 			{@const isActive = isActiveAppTab(pathname, tab.href)}
 			{@const icon = isActive ? tab.iconActive : tab.icon}
-			<li>
+			<li class="relative">
 				{#if tab.requireLogin && !userId}
 					<button
 						type="button"
@@ -108,6 +110,8 @@
 				{:else}
 					<a
 						href={tab.href}
+						data-testid={`nav-${tab.id}`}
+						onclick={() => tab.id === `offerings` && offeringsNavHint.dismiss()}
 						aria-current={isActive ? `page` : undefined}
 						class={[
 							`flex min-h-10 w-full flex-col items-center justify-center rounded-2xl transition-colors`,
@@ -117,6 +121,9 @@
 						<i class={[icon, `size-6`]}></i>
 						<span class="text-[0.7rem] font-medium">{tab.label}</span>
 					</a>
+				{/if}
+				{#if tab.id === `offerings`}
+					<OfferingsNavHintBubble placement="above" />
 				{/if}
 			</li>
 		{/each}

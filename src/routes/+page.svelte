@@ -15,6 +15,8 @@
 	import { now } from '$lib/now.svelte';
 	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';
 	import { buildEventListingItems, type EventListingDividerSection } from '$lib/eventListingSections';
+	import { offeringsNavHint } from '$lib/offeringsNavHint.svelte';
+	import { onDestroy, onMount } from 'svelte';
 
 	const { data } = $props();
 	const { autoDetectedCity } = $derived(data);
@@ -78,6 +80,9 @@
 		}
 	});
 
+	onMount(() => offeringsNavHint.onHomeScroll(window.scrollY));
+	onDestroy(() => offeringsNavHint.leaveHome());
+
 	function handleLocationDistanceChange(event: LocationChangeEvent) {
 		dismissedAutoLocationHint = true;
 		eventsStore.handleLocationDistanceChange(event);
@@ -96,6 +101,8 @@
 		}),
 	);
 </script>
+
+<svelte:window onscroll={() => offeringsNavHint.onHomeScroll(window.scrollY)} />
 
 
 <div bind:this={contentBeforeMenu} class="grid w-full overflow-hidden" id="content-before-menu">

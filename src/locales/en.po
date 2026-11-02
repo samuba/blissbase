@@ -531,6 +531,7 @@ msgstr "Sorting by distance only makes sense for in-person events"
 msgid "Ort <0/> nicht gefunden"
 msgstr "Location <0/> not found"
 
+#: src/lib/components/OfferingsNavHintBubble.svelte
 #: src/routes/+page.svelte
 msgid "Hinweis schließen"
 msgstr "Close notice"
@@ -1144,7 +1145,6 @@ msgstr "Change your search or delete the search term to see all offerings again.
 msgid "Aktuell keine Angebote."
 msgstr "No offerings available."
 
-#: src/lib/components/HeaderControls.svelte
 #: src/routes/@/[slug]/+page.svelte
 msgid "<0/> Angebote"
 msgstr "<0/> Offerings"
@@ -1153,9 +1153,8 @@ msgstr "<0/> Offerings"
 msgid "<0/> Events"
 msgstr "<0/> Events"
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Offerings-Hinweis ausblenden"
-msgstr "Hide offerings notice"
+#~ msgid "Offerings-Hinweis ausblenden"
+#~ msgstr "Hide offerings notice"
 
 #. 0: normalizedSearchTerm
 #: src/routes/offerings/+page.svelte
@@ -1778,9 +1777,8 @@ msgstr "<0>Via an event source:</0> Add your event to one of the listed websites
 msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 msgstr "The easiest way is via <0>Add event</0> on the homepage."
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Für private Sessions und Services:"
-msgstr "For private sessions and services:"
+#~ msgid "Für private Sessions und Services:"
+#~ msgstr "For private sessions and services:"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Angebot hinzufügen | Blissbase"
@@ -3987,3 +3985,12 @@ msgstr "Sam"
 #, ai
 msgid "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo du dich auf der Welt und deiner persönlichen Reise befindest."
 msgstr "My vision: Blissbase as a portal for growth and connection, wherever you are in the world and on your personal journey."
+
+#, ai
+#~ msgid "Hier findest du 1:1 Sessions & Services"
+#~ msgstr "Here you’ll find 1:1 sessions & services"
+
+#: src/lib/components/OfferingsNavHintBubble.svelte
+#, ai
+msgid "Hier findest du 1:1 Sessions und Services"
+msgstr "Here you’ll find 1:1 sessions and services"

@@ -530,6 +530,7 @@ msgstr "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 msgid "Ort <0/> nicht gefunden"
 msgstr "Ort <0/> nicht gefunden"
 
+#: src/lib/components/OfferingsNavHintBubble.svelte
 #: src/routes/+page.svelte
 msgid "Hinweis schließen"
 msgstr "Hinweis schließen"
@@ -1143,7 +1144,6 @@ msgstr "Ändere deine Suche oder lösche den Suchbegriff, um wieder alle Angebot
 msgid "Aktuell keine Angebote."
 msgstr "Aktuell keine Angebote."
 
-#: src/lib/components/HeaderControls.svelte
 #: src/routes/@/[slug]/+page.svelte
 msgid "<0/> Angebote"
 msgstr "<0/> Angebote"
@@ -1152,9 +1152,8 @@ msgstr "<0/> Angebote"
 msgid "<0/> Events"
 msgstr "<0/> Events"
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Offerings-Hinweis ausblenden"
-msgstr "Offerings-Hinweis ausblenden"
+#~ msgid "Offerings-Hinweis ausblenden"
+#~ msgstr "Offerings-Hinweis ausblenden"
 
 #. 0: normalizedSearchTerm
 #: src/routes/offerings/+page.svelte
@@ -1777,9 +1776,8 @@ msgstr "<0>Über eine Event-Quelle:</0> Trag deinen Termin auf einer der geliste
 msgid "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 msgstr "Am einfachsten über <0>Event hinzufügen</0> auf der Startseite."
 
-#: src/lib/components/HeaderControls.svelte
-msgid "Für private Sessions und Services:"
-msgstr "Für private Sessions und Services:"
+#~ msgid "Für private Sessions und Services:"
+#~ msgstr "Für private Sessions und Services:"
 
 #: src/routes/offerings/new/+page.svelte
 msgid "Angebot hinzufügen | Blissbase"
@@ -3943,3 +3941,10 @@ msgstr "Sam"
 #: src/routes/about/+page.svelte
 msgid "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo du dich auf der Welt und deiner persönlichen Reise befindest."
 msgstr "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo du dich auf der Welt und deiner persönlichen Reise befindest."
+
+#~ msgid "Hier findest du 1:1 Sessions & Services"
+#~ msgstr "Hier findest du 1:1 Sessions & Services"
+
+#: src/lib/components/OfferingsNavHintBubble.svelte
+msgid "Hier findest du 1:1 Sessions und Services"
+msgstr "Hier findest du 1:1 Sessions und Services"

@@ -8,7 +8,6 @@
 	import { Dialog } from "$lib/components/dialog";
 	import ToggleButton from "./ToggleButton.svelte";
 	import TabsNavDesktop from "./TabsNavDesktop.svelte";
-	import { routes } from "$lib/routes";
 	import { user } from "$lib/user.svelte";
 	import AdminEventSourceFilter from "./AdminEventSourceFilter.svelte";
 
@@ -29,8 +28,6 @@
 	let isFilterDialogOpen = $state(false);
 	const sortByTime = $derived(eventsStore.selectedSortValue === "time_asc");
 	const sortByDistance = $derived(eventsStore.selectedSortValue === "distance_asc");
-	let showOfferingsLink = $state(true);
-
 	const startDate = $derived(eventsStore.pagination.startDate ? parseDate(eventsStore.pagination.startDate) : undefined);
 	const endDate = $derived(eventsStore.pagination.endDate ? parseDate(eventsStore.pagination.endDate) : undefined);
 
@@ -85,7 +82,7 @@
 
 <header
 	bind:this={headerElement}
-	class={[`bg-base-200 sticky top-0 z-10 w-full pt-4`, showOfferingsLink ? `mb-3 pb-0 sm:mb-0` : ` pb-1`]}
+	class="bg-base-200 sticky top-0 z-10 w-full pt-4 pb-1"
 	id="header-controls"
 >
 	<!-- shadow -->
@@ -127,37 +124,6 @@
 		<div class="mx-auto flex w-full max-w-2xl items-center gap-4 px-4 sm:px-0">
 			<CategorySelection />
 		</div>
-
-		{#if showOfferingsLink}
-			<div class="mx-auto flex w-full max-w-2xl">
-				<div
-					class="text-base-content/80 bg-base-500 sm:bg-base-100 sm:rounded-box -mt-2 flex w-full items-center py-1 pl-3 text-xs sm:-mt-4 sm:mb-3 sm:w-fit sm:text-sm"
-				>
-					<div class="">
-						<div class="inline-block mr-1.5">
-							Für private Sessions und Services:
-						</div> 
-						<div class="inline-block align-middle">
-							<a
-								href={routes.offeringsList()}
-								class="link text-base-content flex items-center gap-1 font-semibold"
-							>
-								<i class="icon-[ph--hand-heart] size-4"></i>
-								Angebote
-							</a>
-						</div>
-					</div>
-					<div class="grow"></div>
-					<button
-						class="btn btn-ghost btn-circle btn-xs mr-2 ml-1"
-						aria-label="Offerings-Hinweis ausblenden"
-						onclick={() => (showOfferingsLink = false)}
-					>
-						<i class="icon-[ph--x] size-4"></i>
-					</button>
-				</div>
-			</div>
-		{/if}
 	</div>
 </header>
 

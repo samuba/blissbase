@@ -24,8 +24,12 @@
 		offeringHeroMobile,
 		offeringHeroTablet,
 	} from "$lib/assets/offering-hero-images";
+	import { offeringsNavHint } from "$lib/offeringsNavHint.svelte";
+	import { onMount } from "svelte";
 
 	let { data } = $props();
+
+	onMount(() => offeringsNavHint.dismiss());
 	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
 	const offeringsQuery = $derived(getOfferings(filterFromUrl));
 	const offeringsList = $derived(resolveOfferingsListQuery({
