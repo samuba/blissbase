@@ -3,8 +3,6 @@ import { db, eq, s } from '$lib/server/db';
 import { and, isNotNull } from 'drizzle-orm';
 import { feature, iso1A2Code } from '@rapideditor/country-coder';
 
-const MIN_COUNTRY_EVENT_COUNT = 100;
-
 /**
  * Returns the number of listed events for static UI copy.
  *
@@ -16,7 +14,7 @@ export const estimateEventCount = prerender(async () => {
 });
 
 /**
- * Returns total and upcoming listed-event counts per country with more than 100 events.
+ * Returns total and upcoming listed-event counts for every country with events.
  *
  * @example
  * await getFaqCountryEventCounts()
@@ -50,7 +48,6 @@ export const getFaqCountryEventCounts = prerender(async () => {
 	}
 
 	const regions = [...byCountry.entries()]
-		.filter(([, stats]) => stats.count > MIN_COUNTRY_EVENT_COUNT)
 		.map(([code, stats]) => ({
 			key: code.toLowerCase(),
 			label: countryLabelDe(code),
@@ -86,5 +83,55 @@ const countryLabelsDe: Record<string, string> = {
 	CZ: `Tschechien`,
 	HU: `Ungarn`,
 	US: `USA`,
-	AU: `Australien`
+	AU: `Australien`,
+	EG: `Ägypten`,
+	MX: `Mexiko`,
+	FI: `Finnland`,
+	MA: `Marokko`,
+	BR: `Brasilien`,
+	IE: `Irland`,
+	TR: `Türkei`,
+	LI: `Liechtenstein`,
+	PE: `Peru`,
+	HR: `Kroatien`,
+	CO: `Kolumbien`,
+	JP: `Japan`,
+	SE: `Schweden`,
+	PK: `Pakistan`,
+	EC: `Ecuador`,
+	LU: `Luxemburg`,
+	GT: `Guatemala`,
+	IL: `Israel`,
+	ZA: `Südafrika`,
+	UA: `Ukraine`,
+	NO: `Norwegen`,
+	DK: `Dänemark`,
+	AR: `Argentinien`,
+	BG: `Bulgarien`,
+	MY: `Malaysia`,
+	RU: `Russland`,
+	CN: `China`,
+	CA: `Kanada`,
+	IS: `Island`,
+	NZ: `Neuseeland`,
+	PH: `Philippinen`,
+	SG: `Singapur`,
+	NP: `Nepal`,
+	CR: `Costa Rica`,
+	EE: `Estland`,
+	LV: `Lettland`,
+	BA: `Bosnien und Herzegowina`,
+	MK: `Nordmazedonien`,
+	MD: `Moldau`,
+	LA: `Laos`,
+	TN: `Tunesien`,
+	UG: `Uganda`,
+	BW: `Botswana`,
+	SC: `Seychellen`,
+	NG: `Nigeria`,
+	SD: `Sudan`,
+	PY: `Paraguay`,
+	IQ: `Irak`,
+	ET: `Äthiopien`,
+	TZ: `Tansania`
 };
