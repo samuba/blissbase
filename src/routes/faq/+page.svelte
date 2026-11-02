@@ -1,6 +1,7 @@
 <script lang="ts">
 	/* @wc-include */
 	import { routes } from '$lib/routes';
+	import { localeStore } from '../../locales/localeStore.svelte';
 
 	let { data } = $props();
 	const faqCountryEventCounts = $derived(data.faqCountryEventCounts);
@@ -51,7 +52,7 @@
 								<span>{region.label}</span>
 								<span class="grow"></span>
 								<span class="shrink-0 text-right tabular-nums"
-									>{region.count} / {region.upcomingCount} upcoming</span
+									>{region.count.toLocaleString(localeStore.longLocale)} / {region.upcomingCount.toLocaleString(localeStore.longLocale)} upcoming</span
 								>
 							</li>
 						{/each}

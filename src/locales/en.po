@@ -817,20 +817,17 @@ msgstr "Recommended event"
 msgid "Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits."
 msgstr "An event with this name and the same start and end times already exists."
 
-#: src/routes/faq/+page.svelte
-msgid "Für Regionen liegen gerade keine Zahlen vor."
-msgstr "There are currently no figures available for the regions."
+#~ msgid "Für Regionen liegen gerade keine Zahlen vor."
+#~ msgstr "There are currently no figures available for the regions."
 
 #~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1>verschiedenen Regionen</1> und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
 #~ msgstr ""
 
-#: src/routes/faq/+page.svelte
-msgid "Welche Regionen werden unterstützt?"
-msgstr "Which regions are supported?"
+#~ msgid "Welche Regionen werden unterstützt?"
+#~ msgstr "Which regions are supported?"
 
-#: src/routes/faq/+page.svelte
-msgid "<0/> <1/> <2/>Neue Events"
-msgstr "<0/> <1/> <2/>New events"
+#~ msgid "<0/> <1/> <2/>Neue Events"
+#~ msgstr "<0/> <1/> <2/>New events"
 
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bitte wähle eine Bilddatei."
@@ -1741,9 +1738,8 @@ msgstr "<0/> Back to FAQ"
 msgid "Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen."
 msgstr "Whether it's coaching, massage, reiki, or tarot readings—list your offering for free and reach the people who are looking for exactly that."
 
-#: src/routes/faq/+page.svelte
-msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-msgstr "You can use Blissbase worldwide – the regions shown here are currently the best supported, with the number of <0>new events from the last two months</0>."
+#~ msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgstr "You can use Blissbase worldwide – the regions shown here are currently the best supported, with the number of <0>new events from the last two months</0>."
 
 #: src/routes/faq/+page.svelte
 msgid "Woher kommen die Events?"
@@ -3994,3 +3990,36 @@ msgstr "My vision: Blissbase as a portal for growth and connection, wherever you
 #, ai
 msgid "Hier findest du 1:1 Sessions und Services"
 msgstr "Here you’ll find 1:1 sessions and services"
+
+#, ai
+#~ msgid "{0} Events"
+#~ msgstr "{0} events"
+
+#, ai
+#~ msgid "{0} bevorstehend"
+#~ msgstr "{0} upcoming"
+
+#, ai
+#~ msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+#~ msgstr "You can use Blissbase worldwide – the regions listed here are currently best supported, with the number of <0>all events and upcoming dates</0>."
+
+#. 0: region.count.toLocaleString(localeStore.longLocale); 1: region.upcomingCount.toLocaleString(localeStore.longLocale)
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "{0} / {1} upcoming"
+msgstr "{0} / {1} upcoming"
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Für Länder liegen gerade keine Zahlen vor."
+msgstr "There are currently no numbers available for countries."
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+msgstr "You can use Blissbase worldwide – the countries currently best supported are listed here, along with the number of <0>all events and upcoming dates</0>."
+
+#: src/routes/faq/+page.svelte
+#, ai
+msgid "Welche Länder werden unterstützt?"
+msgstr "Which countries are supported?"

@@ -816,20 +816,17 @@ msgstr "Empfohlener Event"
 msgid "Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits."
 msgstr "Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits."
 
-#: src/routes/faq/+page.svelte
-msgid "Für Regionen liegen gerade keine Zahlen vor."
-msgstr "Für Regionen liegen gerade keine Zahlen vor."
+#~ msgid "Für Regionen liegen gerade keine Zahlen vor."
+#~ msgstr "Für Regionen liegen gerade keine Zahlen vor."
 
 #~ msgid "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1>verschiedenen Regionen</1> und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
 #~ msgstr "Ich will die achtsamen Communities Deutschlands zusammen bringen. Dafür sammel ich Events (über <0/>) aus <1>verschiedenen Regionen</1> und Quellen und machen sie hier zugänglich. Durchsuchbar, komfortabel, alles an einem Ort. <2/> Ich hoffe dir gefällt meine Arbeit."
 
-#: src/routes/faq/+page.svelte
-msgid "Welche Regionen werden unterstützt?"
-msgstr "Welche Regionen werden unterstützt?"
+#~ msgid "Welche Regionen werden unterstützt?"
+#~ msgstr "Welche Regionen werden unterstützt?"
 
-#: src/routes/faq/+page.svelte
-msgid "<0/> <1/> <2/>Neue Events"
-msgstr "<0/> <1/> <2/>Neue Events"
+#~ msgid "<0/> <1/> <2/>Neue Events"
+#~ msgstr "<0/> <1/> <2/>Neue Events"
 
 #: src/lib/components/ProfileImageCropInput.svelte
 msgid "Bitte wähle eine Bilddatei."
@@ -1740,9 +1737,8 @@ msgstr "<0/> Zurück zur FAQ"
 msgid "Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen."
 msgstr "Ob Coaching, Massage, Reiki oder Tarot-Reading – stell dein Angebot kostenlos ein und erreich die Menschen, die genau danach suchen."
 
-#: src/routes/faq/+page.svelte
-msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
-msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
+#~ msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>neuer Events der letzten zwei Monate</0>."
 
 #: src/routes/faq/+page.svelte
 msgid "Woher kommen die Events?"
@@ -3948,3 +3944,29 @@ msgstr "Meine Vision: Blissbase als Portal für Wachstum und Verbindung, egal wo
 #: src/lib/components/OfferingsNavHintBubble.svelte
 msgid "Hier findest du 1:1 Sessions und Services"
 msgstr "Hier findest du 1:1 Sessions und Services"
+
+#~ msgid "{0} Events"
+#~ msgstr "{0} Events"
+
+#~ msgid "{0} bevorstehend"
+#~ msgstr "{0} bevorstehend"
+
+#~ msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+#~ msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Regionen hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+
+#. 0: region.count.toLocaleString(localeStore.longLocale); 1: region.upcomingCount.toLocaleString(localeStore.longLocale)
+#: src/routes/faq/+page.svelte
+msgid "{0} / {1} upcoming"
+msgstr "{0} / {1} upcoming"
+
+#: src/routes/faq/+page.svelte
+msgid "Für Länder liegen gerade keine Zahlen vor."
+msgstr "Für Länder liegen gerade keine Zahlen vor."
+
+#: src/routes/faq/+page.svelte
+msgid "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+msgstr "Du kannst Blissbase weltweit nutzen – am besten unterstützt sind zur Zeit die Länder hier, mit der Anzahl <0>aller Events und der bevorstehenden Termine</0>."
+
+#: src/routes/faq/+page.svelte
+msgid "Welche Länder werden unterstützt?"
+msgstr "Welche Länder werden unterstützt?"
