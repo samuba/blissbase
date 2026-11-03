@@ -12,6 +12,7 @@ import * as js from './locales/js.loader.server.js'
 import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
 import { locales } from './locales/data.js'
 import { localeStore } from './locales/localeStore.svelte.js';
+import { resolveLocale } from './locales/resolveLocale';
 import { E2E_TEST } from '$env/static/private';
 import { routes } from '$lib/routes';
 
@@ -19,19 +20,24 @@ import { routes } from '$lib/routes';
 loadLocales(main.key, main.loadCount, main.loadCatalog, locales)
 loadLocales(js.key, js.loadCount, js.loadCatalog, locales)
 const wuchaleLocalization: Handle = async ({ event, resolve }) => {
-    let locale = event.cookies.get('locale')
-    const browserLang = (event.request.headers.get('accept-language') ?? '').split(',')[0]?.split('-')[0]?.trim();
-    if (browserLang === "de") {
-        // force german locale if browser is german. (this overrides the cookie to fix a bug where wrong locale was set in cookies for some time)
-        // TODO: remove this if block in the future when we have a settings to switch language
-        locale = "de";
-    }
-    const localesList = locales as readonly string[];
-    if (!locale || !localesList.includes(locale)) {
-        locale = browserLang && localesList.includes(browserLang) ? browserLang : 'en';
-    }
-    event.cookies.set('locale', locale, { path: '/' });
-    localeStore.locale = locale as 'en' | 'de';
+    const browserLang = (event.request.headers.get('accept-language') ?? '')
+        .split(',')[0]
+        ?.split('-')[0]
+        ?.trim();
+    const locale = resolveLocale({
+        cookieLocale: event.cookies.get('locale'),
+        browserLang,
+    });
+    // Must be readable/writable from the client language switcher (document.cookie).
+    event.cookies.set('locale', locale, {
+        path: '/',
+        httpOnly: false,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 365,
+    });
+    // Prefer locals/page.data for request-scoped UI; keep store in sync for legacy callers.
+    event.locals.locale = locale;
+    localeStore.locale = locale;
     return await runWithLocale(locale, () => resolve(event))
 };
 

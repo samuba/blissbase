@@ -6,5 +6,6 @@ export const load = (async ({ locals, cookies }) => {
         cookies: cookies.getAll(),
         jwtClaims: locals.jwtClaims,
         isAdminSession: locals.isAdminSession,
+        locale: locals.locale,
     };
 }) satisfies LayoutServerLoad;
