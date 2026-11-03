@@ -1,34 +1,59 @@
 <script lang="ts">
+	import PopOver from './PopOver.svelte';
 	import { localeStore } from '../../locales/localeStore.svelte';
 
 	const options = [
 		{ locale: `en` as const, label: `Englisch` },
 		{ locale: `de` as const, label: `Deutsch` },
 	];
+
+	const currentLabel = $derived(
+		options.find((option) => option.locale === localeStore.locale)?.label ?? `Englisch`,
+	);
+	let open = $state(false);
 </script>
 
-<div
-	class="flex items-center gap-1 text-xs leading-none"
-	data-testid="locale-switcher"
-	role="group"
-	aria-label="Sprache"
+<PopOver
+	bind:open
+	contentClass="bg-base-100 z-50 min-w-28 p-1"
+	contentProps={{ side: `top`, align: `start`, sideOffset: 8 }}
 >
-	<i class="icon-[ph--flag] text-base-content/50 size-3.5 shrink-0" aria-hidden="true"></i>
-	{#each options as option, index (option.locale)}
-		{#if index > 0}
-			<span class="text-base-content/30" aria-hidden="true">/</span>
-		{/if}
+	{#snippet trigger({ props })}
 		<button
+			{...props}
 			type="button"
-			data-testid={`locale-${option.locale}`}
-			aria-pressed={localeStore.locale === option.locale}
+			data-testid="locale-switcher"
+			aria-label="Sprache"
 			class={[
-				`link link-hover leading-none`,
-				localeStore.locale === option.locale ? `text-base-content` : `text-base-content/40`,
+				`link link-hover text-base-content/50 inline-flex items-center gap-1 text-xs leading-none`,
+				props.class,
 			]}
-			onclick={() => localeStore.setLocale(option.locale)}
 		>
-			{option.label}
+			<i class="icon-[ph--flag] size-3.5 shrink-0" aria-hidden="true"></i>
+			{currentLabel}
 		</button>
-	{/each}
-</div>
+	{/snippet}
+
+	{#snippet content()}
+		<div class="flex flex-col gap-0.5" role="menu" aria-label="Sprache">
+			{#each options as option (option.locale)}
+				<button
+					type="button"
+					role="menuitemradio"
+					data-testid={`locale-${option.locale}`}
+					aria-checked={localeStore.locale === option.locale}
+					class={[
+						`btn btn-ghost btn-sm justify-start font-normal`,
+						localeStore.locale === option.locale && `pointer-events-none opacity-55`,
+					]}
+					onclick={() => {
+						open = false;
+						localeStore.setLocale(option.locale);
+					}}
+				>
+					{option.label}
+				</button>
+			{/each}
+		</div>
+	{/snippet}
+</PopOver>
