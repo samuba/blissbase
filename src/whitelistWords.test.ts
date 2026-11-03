@@ -8,6 +8,19 @@ describe(`matchesBlackListWords`, () => {
 		expect(matchesBlackListWords(`Sanftes Yoga für Anfänger`)).toBe(true);
 	});
 
+	it(`filters teen, child and kinder yoga titles`, () => {
+		expect(matchesBlackListWords(`Teen Yoga Workshop`)).toBe(true);
+		expect(matchesBlackListWords(`Teen-Yoga für Jugendliche`)).toBe(true);
+		expect(matchesBlackListWords(`Child Yoga Klasse`)).toBe(true);
+		expect(matchesBlackListWords(`Child-Yoga am Samstag`)).toBe(true);
+		expect(matchesBlackListWords(`Children's Yoga for Kids`)).toBe(true);
+		expect(matchesBlackListWords(`Kinder Yoga Gruppe`)).toBe(true);
+		expect(matchesBlackListWords(`Kinder-Yoga im Park`)).toBe(true);
+		expect(matchesBlackListWords(`Kinderyoga Berlin`)).toBe(true);
+		expect(matchesBlackListWords(`Kids Yoga`)).toBe(true);
+		expect(matchesBlackListWords(`Kids-Yoga`)).toBe(true);
+	});
+
 	it(`matches capitalized blacklist keywords case-insensitively`, () => {
 		expect(matchesBlackListWords(`fortlaufender Engpassdehnungskurs nach Liebscher & Bracht`)).toBe(true);
 		expect(matchesBlackListWords(`Bewegungs-Kurs nach Liebscher & Bracht/ fayo®-Faszienyoga`)).toBe(true);
