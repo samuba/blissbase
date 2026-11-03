@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	isBlockedPromoter,
 	isTrustedVenue,
 	isUpcomingStart,
 	mapMegatixEvent,
@@ -56,6 +57,20 @@ describe(`isTrustedVenue`, () => {
 		expect(isTrustedVenue({ promoterName: `The Yoga Barn`, venueName: undefined })).toBe(true);
 		expect(isTrustedVenue({ promoterName: `DJ Someone`, venueName: `Paradiso Ubud` })).toBe(true);
 		expect(isTrustedVenue({ promoterName: `Bali Bar Crawl`, venueName: `Cést La Vie` })).toBe(false);
+	});
+});
+
+describe(`isBlockedPromoter`, () => {
+	it(`blocks package-only organizers regardless of case and spacing`, () => {
+		expect(isBlockedPromoter({ promoterName: `Travolks Bali` })).toBe(true);
+		expect(isBlockedPromoter({ promoterName: ` TRAVOLKS BALI ` })).toBe(true);
+		expect(isBlockedPromoter({ promoterName: `Rip Curl School of Surf` })).toBe(true);
+	});
+
+	it(`keeps event organizers and listings without a promoter`, () => {
+		expect(isBlockedPromoter({ promoterName: `The Yoga Barn` })).toBe(false);
+		expect(isBlockedPromoter({ promoterName: `Travolks Bali Events` })).toBe(false);
+		expect(isBlockedPromoter({ promoterName: undefined })).toBe(false);
 	});
 });
 
