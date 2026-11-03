@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { localeStore } from '../../locales/localeStore.svelte';
 
-	const options = [`en`, `de`] as const;
+	const options = [
+		{ locale: `en` as const, label: `Englisch` },
+		{ locale: `de` as const, label: `Deutsch` },
+	];
 </script>
 
 <div
@@ -11,21 +14,21 @@
 	aria-label="Sprache"
 >
 	<i class="icon-[ph--flag] text-base-content/50 size-3.5 shrink-0" aria-hidden="true"></i>
-	{#each options as option, index (option)}
+	{#each options as option, index (option.locale)}
 		{#if index > 0}
 			<span class="text-base-content/30" aria-hidden="true">/</span>
 		{/if}
 		<button
 			type="button"
-			data-testid={`locale-${option}`}
-			aria-pressed={localeStore.locale === option}
+			data-testid={`locale-${option.locale}`}
+			aria-pressed={localeStore.locale === option.locale}
 			class={[
 				`link link-hover leading-none`,
-				localeStore.locale === option ? `text-base-content` : `text-base-content/40`,
+				localeStore.locale === option.locale ? `text-base-content` : `text-base-content/40`,
 			]}
-			onclick={() => localeStore.setLocale(option)}
+			onclick={() => localeStore.setLocale(option.locale)}
 		>
-			{option.toUpperCase()}
+			{option.label}
 		</button>
 	{/each}
 </div>

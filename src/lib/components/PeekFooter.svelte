@@ -108,7 +108,7 @@
 	]}
 >
 	<nav
-		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1 md:pl-[4.5rem]"
+		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1 md:pl-36"
 	>
 		<!-- Mobile: inline with links. Desktop: pinned left. -->
 		<div
