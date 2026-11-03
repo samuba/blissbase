@@ -85,8 +85,15 @@ test.describe("Offering discovery and details", () => {
 		);
 
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
+		// Ensure both seeds are on the unfiltered list before searching (avoids racing empty SSR).
+		await page.goto(listUrl);
+		await waitForClientHydration(page);
+		await expect(offeringCardById(page, somatic.id)).toBeVisible();
+		await expect(offeringCardById(page, sound.id)).toBeVisible();
+
 		for (const searchTerm of [`somatic`, `grounding`, `E2E User`]) {
 			await page.goto(`${listUrl}&searchTerm=${encodeURIComponent(searchTerm)}`);
+			await waitForClientHydration(page);
 			await expect(offeringCardById(page, somatic.id)).toBeVisible();
 			await expect(offeringCardById(page, sound.id)).toHaveCount(0);
 		}
