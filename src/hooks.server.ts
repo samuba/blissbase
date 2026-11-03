@@ -27,7 +27,13 @@ const wuchaleLocalization: Handle = async ({ event, resolve }) => {
     if (!locale || !localesList.includes(locale)) {
         locale = browserLang === 'de' ? 'de' : 'en';
     }
-    event.cookies.set('locale', locale, { path: '/' });
+    // Must be readable/writable from the client language switcher (document.cookie).
+    event.cookies.set('locale', locale, {
+        path: '/',
+        httpOnly: false,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 365,
+    });
     localeStore.locale = locale as 'en' | 'de';
     return await runWithLocale(locale, () => resolve(event))
 };
