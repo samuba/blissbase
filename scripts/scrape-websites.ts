@@ -25,7 +25,7 @@ import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import { db, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
 import { fillMissingEventAttributes } from './fillScrapedEventAttributes.ts';
-import { and, inArray, notInArray } from 'drizzle-orm';
+import { and, gte, inArray, notInArray } from 'drizzle-orm';
 import { format } from 'util';
 import { AsyncLocalStorage } from 'async_hooks';
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, type WriteStream } from 'fs';
@@ -293,7 +293,7 @@ async function main() {
             .where(and(
                 inArray(s.events.source, successfulSources),
                 notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
-                // gte(s.events.startAt, new Date())
+                gte(s.events.startAt, new Date())
             )).returning();
         console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
     } else {
