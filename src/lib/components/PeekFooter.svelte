@@ -5,6 +5,7 @@
 	import { isEventOrOfferingListPath, routes } from "$lib/routes";
 	import { peekFooter } from "$lib/peekFooter.svelte";
 	import { user } from "$lib/user.svelte";
+	import LocaleSwitcher from "$lib/components/LocaleSwitcher.svelte";
 
 	const SCROLL_THRESHOLD = 8;
 	const TOP_REVEAL_Y = 24;
@@ -106,7 +107,12 @@
 		hidden && `pointer-events-none translate-y-full md:pointer-events-auto md:translate-y-0`,
 	]}
 >
-	<nav class="mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1">
+	<nav
+		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1 pl-14 md:pl-16"
+	>
+		<div class="absolute top-1/2 left-3 -translate-y-1/2">
+			<LocaleSwitcher />
+		</div>
 		{#each links as link, index (link.href)}
 			{@const hide = link.href === routes.privacyPolicy() || link.href === routes.termsOfService()}
 			{#if index > 0 && !hide}

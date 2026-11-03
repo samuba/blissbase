@@ -18,6 +18,17 @@ class LocaleStore {
             document.cookie = `locale=${this.locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
         }
     }
+
+    setLocale(locale: 'en' | 'de') {
+        if (!browser) return;
+        if (this.locale === locale) return;
+        if (!(locales as readonly string[]).includes(locale)) return;
+
+        document.cookie = `locale=${locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
+        this.locale = locale;
+        // Reload so SSR (`runWithLocale`) and all catalogs pick up the cookie.
+        window.location.reload();
+    }
 }
 
 export const localeStore = new LocaleStore();
