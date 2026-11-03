@@ -25,7 +25,7 @@
 			]}
 			onclick={() => localeStore.setLocale(option)}
 		>
-			{option}
+			{option.toUpperCase()}
 		</button>
 	{/each}
 </div>
