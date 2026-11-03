@@ -108,15 +108,10 @@
 	]}
 >
 	<nav
-		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1"
+		class="mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1"
 	>
-		<!-- Mobile: inline with links. Desktop: pinned left (absolute, no padding skew). -->
-		<div
-			class="flex items-center gap-x-2 md:absolute md:top-1/2 md:left-3 md:-translate-y-1/2 md:gap-0"
-		>
-			<LocaleSwitcher forceClose={hidden} />
-			<span class="text-base-content/30 md:hidden" aria-hidden="true">·</span>
-		</div>
+		<LocaleSwitcher forceClose={hidden} />
+		<span class="text-base-content/30" aria-hidden="true">·</span>
 		{#each links as link, index (link.href)}
 			{@const hide = link.href === routes.privacyPolicy() || link.href === routes.termsOfService()}
 			{#if index > 0 && !hide}
