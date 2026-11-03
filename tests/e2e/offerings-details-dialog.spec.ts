@@ -149,7 +149,8 @@ test.describe(`Offering details dialog`, () => {
 		await expect(dialog).toHaveCount(0);
 		await expect(page).toHaveURL(listUrl);
 
-		const favorites = page.getByTestId(`nav-favorites`);
+		// Desktop + mobile both expose nav-favorites; Desktop Chrome only shows one.
+		const favorites = page.getByTestId(`nav-favorites`).filter({ visible: true });
 		await expect(favorites).toBeVisible();
 		await favorites.hover();
 		await page.waitForTimeout(800);
