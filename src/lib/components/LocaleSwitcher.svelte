@@ -5,19 +5,16 @@
 
 	let { forceClose = false }: { forceClose?: boolean } = $props();
 
-	function getOptions() {
-		return [
-			{ locale: `en` as const, label: /* @wc-include */ `Englisch` },
-			{ locale: `de` as const, label: /* @wc-include */ `Deutsch` },
-		];
-	}
+	// Endonyms — never translate these labels.
+	/* @wc-ignore */
+	const options = [
+		{ locale: `en` as const, label: `English` },
+		{ locale: `de` as const, label: `Deutsch` },
+	];
 
-	const options = $derived(getOptions());
 	// Prefer request-scoped page data on SSR to avoid the shared server localeStore race.
 	const locale = $derived(page.data.locale ?? localeStore.locale);
-	const currentLabel = $derived(
-		options.find((option) => option.locale === locale)?.label ?? /* @wc-include */ `Englisch`,
-	);
+	const currentLabel = $derived(options.find((option) => option.locale === locale)?.label ?? `English`);
 
 	let open = $state(false);
 
@@ -33,6 +30,7 @@
 		class="link link-hover text-base-content/50 inline-flex items-center gap-1 text-xs leading-none"
 	>
 		<i class="icon-[ph--flag] size-3.5 shrink-0" aria-hidden="true"></i>
+		<!-- @wc-ignore -->
 		{currentLabel}
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Portal>
@@ -59,6 +57,7 @@
 						data-testid={`locale-${option.locale}`}
 						class="data-highlighted:bg-base-200 flex h-9 w-full cursor-pointer items-center rounded-lg px-3 text-sm outline-hidden select-none"
 					>
+						<!-- @wc-ignore -->
 						{option.label}
 					</DropdownMenu.RadioItem>
 				{/each}
