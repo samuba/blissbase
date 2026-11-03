@@ -108,7 +108,7 @@
 	]}
 >
 	<nav
-		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1 pl-14 md:pl-16"
+		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1 pl-16 md:pl-[4.5rem]"
 	>
 		<div class="absolute top-1/2 left-3 -translate-y-1/2">
 			<LocaleSwitcher />
