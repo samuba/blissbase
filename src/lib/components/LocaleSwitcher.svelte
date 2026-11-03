@@ -10,6 +10,7 @@
 	role="group"
 	aria-label="Sprache"
 >
+	<i class="icon-[ph--flag] text-base-content/50 size-3.5 shrink-0" aria-hidden="true"></i>
 	{#each options as option, index (option)}
 		{#if index > 0}
 			<span class="text-base-content/30" aria-hidden="true">/</span>
