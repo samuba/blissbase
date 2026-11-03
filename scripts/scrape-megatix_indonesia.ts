@@ -24,6 +24,8 @@ const MAX_PAGES = 200;
 const MAX_ITEM_FAILURE_SHARE = 0.5;
 const UPCOMING_GRACE_MS = 24 * 60 * 60 * 1000;
 const TRUSTED_VENUES = [`the yoga barn`, `paradiso`];
+// Organizers that only sell bookable tours, lessons, and packages with daily sessions, never events.
+const BLOCKED_PROMOTERS = [`travolks bali`, `rip curl school of surf`, `pt taman alam nusantara`, `kirana nusantara`];
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(query?: string, limit?: number): Promise<ScrapedEvent[]> {
@@ -33,7 +35,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		);
 
 		const hits = await fetchCompleteCatalog();
-		const candidates = hits.filter((hit) => isTrustedVenue(hit) || passesNameLists(getName(hit)));
+		const candidates = hits.filter((hit) => !isBlockedPromoter(hit) && (isTrustedVenue(hit) || passesNameLists(getName(hit))));
 		console.error(`Megatix catalog: ${hits.length} events, ${candidates.length} from trusted venues or matching the word lists`);
 
 		const kept: ScrapedEvent[] = [];
@@ -150,6 +152,12 @@ export function passesNameLists(name: string | undefined): boolean {
 export function isTrustedVenue(hit: Pick<SearchHit, `promoterName` | `venueName`>): boolean {
 	const text = `${hit.promoterName ?? ``} ${hit.venueName ?? ``}`.toLowerCase();
 	return TRUSTED_VENUES.some((venue) => text.includes(venue));
+}
+
+export function isBlockedPromoter(hit: Pick<SearchHit, `promoterName`>): boolean {
+	const promoter = hit.promoterName?.trim().toLowerCase();
+	if (!promoter) return false;
+	return BLOCKED_PROMOTERS.includes(promoter);
 }
 
 export function nearestLocation({
