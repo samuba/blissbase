@@ -25,6 +25,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
     miteinandersein: { module: './scrape-miteinandersein.ts', label: 'MiteinanderSein', url: 'https://www.miteinandersein.net' },
     yogavidya: { module: './scrape-yoga-vidya.ts', label: 'Yoga Vidya', url: 'https://www.yoga-vidya.de' },
     kayana: { module: './scrape-kayana.ts', label: 'Kayana', url: 'https://dein-kayana.de' },
+    soulcollective: { module: './scrape-soulcollective.ts', label: 'Soul Collective', url: 'https://www.soulcollective.eu' },
     // lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string, label: string, url: string, retryOnNewIp?: boolean }>;
 
