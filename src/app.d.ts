@@ -13,6 +13,7 @@ declare global {
 			jwtClaims: BlissabaseClaims | undefined;
 			isAdminSession: boolean;
 			userId: string | undefined;
+			locale: 'en' | 'de';
 			requestInfo: {
 				ip: string | null;
 				continent: string | null;
@@ -29,6 +30,7 @@ declare global {
 			userId?: string;
 			jwtClaims?: BlissabaseClaims;
 			supabase?: SupabaseClient;
+			locale?: 'en' | 'de';
 		}
 		interface PageState {
 			selectedEventId?: number;

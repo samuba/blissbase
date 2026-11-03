@@ -108,13 +108,13 @@
 	]}
 >
 	<nav
-		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1 md:pl-28"
+		class="relative mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1"
 	>
-		<!-- Mobile: inline with links. Desktop: pinned left. -->
+		<!-- Mobile: inline with links. Desktop: pinned left (absolute, no padding skew). -->
 		<div
 			class="flex items-center gap-x-2 md:absolute md:top-1/2 md:left-3 md:-translate-y-1/2 md:gap-0"
 		>
-			<LocaleSwitcher />
+			<LocaleSwitcher forceClose={hidden} />
 			<span class="text-base-content/30 md:hidden" aria-hidden="true">·</span>
 		</div>
 		{#each links as link, index (link.href)}

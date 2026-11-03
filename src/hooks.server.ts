@@ -12,6 +12,7 @@ import * as js from './locales/js.loader.server.js'
 import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
 import { locales } from './locales/data.js'
 import { localeStore } from './locales/localeStore.svelte.js';
+import { resolveLocale } from './locales/resolveLocale';
 import { E2E_TEST } from '$env/static/private';
 import { routes } from '$lib/routes';
 
@@ -19,14 +20,14 @@ import { routes } from '$lib/routes';
 loadLocales(main.key, main.loadCount, main.loadCatalog, locales)
 loadLocales(js.key, js.loadCount, js.loadCatalog, locales)
 const wuchaleLocalization: Handle = async ({ event, resolve }) => {
-    let locale = event.cookies.get('locale')
-    const browserLang = (event.request.headers.get('accept-language') ?? '').split(',')[0]?.split('-')[0]?.trim();
-    const localesList = locales as readonly string[];
-    // Default: de only when the browser is German; everything else → en.
-    // Cookie (set by the language switcher) always wins when valid.
-    if (!locale || !localesList.includes(locale)) {
-        locale = browserLang === 'de' ? 'de' : 'en';
-    }
+    const browserLang = (event.request.headers.get('accept-language') ?? '')
+        .split(',')[0]
+        ?.split('-')[0]
+        ?.trim();
+    const locale = resolveLocale({
+        cookieLocale: event.cookies.get('locale'),
+        browserLang,
+    });
     // Must be readable/writable from the client language switcher (document.cookie).
     event.cookies.set('locale', locale, {
         path: '/',
@@ -34,7 +35,9 @@ const wuchaleLocalization: Handle = async ({ event, resolve }) => {
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 365,
     });
-    localeStore.locale = locale as 'en' | 'de';
+    // Prefer locals/page.data for request-scoped UI; keep store in sync for legacy callers.
+    event.locals.locale = locale;
+    localeStore.locale = locale;
     return await runWithLocale(locale, () => resolve(event))
 };
 

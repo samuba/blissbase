@@ -7,12 +7,12 @@ import type { LayoutLoad } from './$types';
 import { user } from '$lib/user.svelte';
 import { filterPosthogBrowserNoise, syncPosthogIdentity } from '$lib/posthog';
 
-import { locales } from '../locales/data.js'
 import { loadLocale } from 'wuchale/load-utils'
 // so that the loaders are registered, only here, not required in nested ones (below)
 import '../locales/main.loader.svelte.js'
 import '../locales/js.loader.js'
 import { localeStore } from '../locales/localeStore.svelte';
+import { resolveLocale } from '../locales/resolveLocale';
 
 /** PostHog init must run once per tab; root layout load re-runs on navigation. */
 let posthogClientInitialized = false;
@@ -35,12 +35,10 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
         })
 
     if (browser) {
-        const cookieLocale = cookies.find(x => x.name === 'locale')?.value;
-        const browserLang = navigator.language?.split('-')[0];
-        // Cookie wins when valid; otherwise de only for German browsers, else en.
-        let locale = cookieLocale && locales.includes(cookieLocale)
-            ? cookieLocale
-            : browserLang === 'de' ? 'de' : 'en';
+        const locale = resolveLocale({
+            cookieLocale: cookies.find(x => x.name === 'locale')?.value,
+            browserLang: navigator.language?.split('-')[0],
+        });
         console.log('loading locale', locale);
         await loadLocale(locale)
         localeStore.locale = locale;
