@@ -21,7 +21,7 @@
 			aria-pressed={localeStore.locale === option}
 			class={[
 				`link link-hover leading-none`,
-				localeStore.locale === option ? `text-primary` : `text-base-content/40`,
+				localeStore.locale === option ? `text-base-content` : `text-base-content/40`,
 			]}
 			onclick={() => localeStore.setLocale(option)}
 		>
