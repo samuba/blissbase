@@ -12,8 +12,12 @@ class LocaleStore {
                 const [name, value] = c.trim().split('=');
                 return { name, value: decodeURIComponent(value) };
             });
-            let locale = cookies.find(x => x.name === 'locale')?.value ?? navigator.language?.split('-')[0] ?? 'en';
-            if (!(locales as readonly string[]).includes(locale)) locale = 'en';
+            const cookieLocale = cookies.find(x => x.name === 'locale')?.value;
+            const browserLang = navigator.language?.split('-')[0];
+            // Cookie wins when valid; otherwise de only for German browsers, else en.
+            let locale = cookieLocale && (locales as readonly string[]).includes(cookieLocale)
+                ? cookieLocale
+                : browserLang === 'de' ? 'de' : 'en';
             this.locale = locale as 'en' | 'de';
             document.cookie = `locale=${this.locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
         }

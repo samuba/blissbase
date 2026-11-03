@@ -35,8 +35,12 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
         })
 
     if (browser) {
-        let locale = cookies.find(x => x.name === 'locale')?.value ?? navigator.language?.split('-')[0] ?? 'en';
-        if (!locales.includes(locale)) locale = 'en';
+        const cookieLocale = cookies.find(x => x.name === 'locale')?.value;
+        const browserLang = navigator.language?.split('-')[0];
+        // Cookie wins when valid; otherwise de only for German browsers, else en.
+        let locale = cookieLocale && locales.includes(cookieLocale)
+            ? cookieLocale
+            : browserLang === 'de' ? 'de' : 'en';
         console.log('loading locale', locale);
         await loadLocale(locale)
         localeStore.locale = locale;

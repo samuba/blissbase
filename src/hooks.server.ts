@@ -22,8 +22,10 @@ const wuchaleLocalization: Handle = async ({ event, resolve }) => {
     let locale = event.cookies.get('locale')
     const browserLang = (event.request.headers.get('accept-language') ?? '').split(',')[0]?.split('-')[0]?.trim();
     const localesList = locales as readonly string[];
+    // Default: de only when the browser is German; everything else → en.
+    // Cookie (set by the language switcher) always wins when valid.
     if (!locale || !localesList.includes(locale)) {
-        locale = browserLang && localesList.includes(browserLang) ? browserLang : 'en';
+        locale = browserLang === 'de' ? 'de' : 'en';
     }
     event.cookies.set('locale', locale, { path: '/' });
     localeStore.locale = locale as 'en' | 'de';
