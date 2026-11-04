@@ -121,13 +121,8 @@
 		});
 	}
 
-	function handleIncludeOnlineChange(event: Event) {
-		const target = event.currentTarget;
-		if (!(target instanceof HTMLInputElement)) return;
-
-		navigateWithFilter({
-			includeOnline: target.checked,
-		});
+	function handleIncludeOnlineChange(includeOnline: boolean) {
+		navigateWithFilter({ includeOnline });
 	}
 
 	function clearSearch() {
@@ -217,10 +212,7 @@
 <div class="flex w-full flex-col items-center justify-center pb-4">
 	<header
 		bind:this={headerElement}
-		class={[
-			`z-10 w-full bg-base-200 sticky top-0 pt-4 flex justify-center`,
-			`pb-3`
-		]}
+		class="bg-base-200 sticky top-0 z-10 w-full pt-4 pb-2"
 		id="header-controls"
 	>
 		{#if showShadow}
@@ -230,11 +222,11 @@
 			></div>
 		{/if}
 
-		<div class=" flex w-full max-w-2xl flex-col justify-center gap-3 mx-4">
+		<div class="mx-auto flex w-full max-w-5xl flex-col gap-2.5 px-4">
 			<TabsNavDesktop />
 
-			<div class="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
-				<div class="flex w-full flex-col gap-1.5">
+			<div class="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+				<div class="w-full min-w-0 sm:max-w-sm md:max-w-md">
 					<LocationDistanceInput
 						inputId="plzCityInput-offerings"
 						initialLocation={initialLocation}
@@ -243,11 +235,12 @@
 						locationBiasLat={filter.lat}
 						locationBiasLng={filter.lng}
 						onChange={handleLocationDistanceChange}
+						fullWidthWhenOpen
 					/>
 				</div>
 
-				<div class="flex w-full items-end gap-3">
-					<div class="flex min-w-0 flex-1 flex-col gap-1.5">
+				<div class="flex w-full min-w-0 flex-1 items-center gap-2 sm:gap-3">
+					<div class="min-w-0 flex-1">
 						<TextSearchInput
 							bind:this={searchInput}
 							id="offering-search"
@@ -258,6 +251,17 @@
 							onClose={() => navigateWithFilter({ searchTerm: null })}
 						/>
 					</div>
+
+					<button
+						type="button"
+						class={[`btn min-w-28 shrink-0`, filter.includeOnline && `active`]}
+						aria-pressed={filter.includeOnline}
+						title="Online Angebote auch anzeigen"
+						onclick={() => handleIncludeOnlineChange(!filter.includeOnline)}
+					>
+						<i class="icon-[ph--wifi-high] size-5"></i>
+						Online
+					</button>
 
 					{#if user.isAdmin}
 						<div class="shrink-0">
@@ -309,16 +313,6 @@
 					{/if}
 				</div>
 			</div>
-
-			<label class="label cursor-pointer justify-start gap-2 pl-2.5 sm:-mt-2">
-				<input
-					type="checkbox"
-					class="checkbox checkbox-sm bg-base-100"
-					checked={filter.includeOnline}
-					onchange={handleIncludeOnlineChange}
-				/>
-				<span class="text-sm">Online Angebote auch anzeigen</span>
-			</label>
 		</div>
 	</header>
 
