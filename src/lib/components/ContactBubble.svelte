@@ -54,7 +54,7 @@
 		aria-label="Nachricht schreiben"
 		onclick={() => onOpenChange(true)}
 		class={[
-			`btn btn-circle btn-lg bg-base-100 text-base-content border-base-300 fixed left-4 z-40 shadow-lg`,
+			`btn btn-circle btn-lg bg-base-100/95 text-base-content border-base-300 fixed left-4 z-40 shadow-lg`,
 			`bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-11`,
 			`transition-transform duration-200 ease-out motion-reduce:transition-none`,
 			!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`
