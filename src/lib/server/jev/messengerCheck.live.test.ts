@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import 'varlock/auto-load';
 import { describe, expect, it } from 'vitest';
 import { eventMessages, expectEventFields, expectJudgment, nonEventMessages, uncachedArgs } from '../../../test/fixtures/eventMessages';
 import { resolveMessengerAnalysis } from './messengerCheck';

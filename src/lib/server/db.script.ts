@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import 'varlock/auto-load';
 import { createPostgresDrizzle } from './db.shared';
 import type { InsertEvent } from '$lib/types';
 import { upsertEvents as upsertEventsShared } from './events.shared';

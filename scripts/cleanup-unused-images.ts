@@ -1,6 +1,6 @@
 import { db, s } from '../src/lib/server/db.script.ts';
 import { isNotNull, sql, and, inArray } from 'drizzle-orm';
-import 'dotenv/config';
+import 'varlock/auto-load';
 import * as assets from '../src/lib/assets';
 
 /**

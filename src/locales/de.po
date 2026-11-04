@@ -4218,3 +4218,7 @@ msgstr "Am besten setzt du zuerst deinen Ort. So siehst du direkt, was in deiner
 #: src/routes/faq/+page.svelte
 msgid "In der Textsuche kannst du dann frei eingeben, wonach dir ist, oder eine der Kategorien wählen. Mit weiteren Filtern grenzt du die Ergebnisse ein – etwa nach Zeitraum oder danach, ob ein Event vor Ort oder online stattfindet."
 msgstr "In der Textsuche kannst du dann frei eingeben, wonach dir ist, oder eine der Kategorien wählen. Mit weiteren Filtern grenzt du die Ergebnisse ein – etwa nach Zeitraum oder danach, ob ein Event vor Ort oder online stattfindet."
+
+#: src/lib/components/LocaleSwitcher.svelte
+msgid "English"
+msgstr "English"

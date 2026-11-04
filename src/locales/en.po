@@ -4341,3 +4341,8 @@ msgstr "Start by setting your location to see right away what's happening around
 #, ai
 msgid "In der Textsuche kannst du dann frei eingeben, wonach dir ist, oder eine der Kategorien wählen. Mit weiteren Filtern grenzt du die Ergebnisse ein – etwa nach Zeitraum oder danach, ob ein Event vor Ort oder online stattfindet."
 msgstr "Then use the text search to type in whatever you're looking for, or pick one of the categories. Narrow down the results further with filters – such as time period, or whether an event is in person or online."
+
+#: src/lib/components/LocaleSwitcher.svelte
+#, ai
+msgid "English"
+msgstr "English"

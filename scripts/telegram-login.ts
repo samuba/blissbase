@@ -1,13 +1,13 @@
 /**
  * Mint a Telegram StringSession for the scraper.
  * Run once per phone number during dual-account transition:
- * - New number → TELEGRAM_APP_SESSION_PRIMARY (GitHub secret + Vercel/.env)
+ * - New number → TELEGRAM_APP_SESSION_PRIMARY (KeePass Blissbase entry + GitHub/Vercel secret)
  * - Old number → TELEGRAM_APP_SESSION_FALLBACK (or keep legacy TELEGRAM_APP_SESSION)
  */
 import { TelegramClient } from "teleproto";
 import { StringSession } from "teleproto/sessions";
 import readline from "readline";
-import 'dotenv/config'
+import 'varlock/auto-load'
 
 const apiId = Number(process.env.TELEGRAM_APP_ID!);
 const apiHash = process.env.TELEGRAM_APP_HASH!;

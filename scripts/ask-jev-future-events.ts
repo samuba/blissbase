@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import 'varlock/auto-load'
 import { broadestTagSlugs } from '../src/lib/eventCategories'
 import { and, asc, db, gt, inArray, s } from '../src/lib/server/db.script.ts'
 import { askJev, messageTextForJev } from '../src/lib/server/jev/messengerCheck'

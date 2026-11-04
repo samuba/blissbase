@@ -1,5 +1,5 @@
 import { Api, TelegramClient, utils } from "teleproto";
-import 'dotenv/config'
+import 'varlock/auto-load'
 import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";

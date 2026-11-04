@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import posthog from "@posthog/rollup-plugin";
+import { varlockVitePlugin } from "@varlock/vite-integration";
 import { defineConfig } from "vite";
 import { wuchale } from "wuchale/vite";
 
@@ -49,6 +50,8 @@ export const svelteKitConfig = {
 
 export default defineConfig(() => ({
 	plugins: [
+		// Vercel has no filesystem KeePass — use resolved-env so build-time process env is baked for SSR.
+		varlockVitePlugin({ ssrInjectMode: process.env.VERCEL ? `resolved-env` : `auto-load` }),
 		tailwindcss(),
 		wuchale(),
 		enhancedImages(),

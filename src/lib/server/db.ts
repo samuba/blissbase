@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import 'varlock/auto-load';
 import { E2E_TEST } from '$env/static/private';
 import {
 	createPostgresDrizzle,

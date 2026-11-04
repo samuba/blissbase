@@ -15,8 +15,8 @@ Thumbs.db
 # Env
 .env
 .env.*
-!.env.example
 !.env.test
+!.env.schema
 
 # Vite
 vite.config.js.timestamp-*
@@ -45,3 +45,5 @@ playwright/.cache/
 # TLC formal verification artifacts
 .agents/skills/verify-event-delete-outbox/.tlc-states/
 .agents/skills/verify-event-delete-outbox/EventDeleteOutbox_TTrace_*
+
+*.kdbx

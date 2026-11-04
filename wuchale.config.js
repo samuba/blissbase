@@ -3,7 +3,7 @@ import { adapter as svelte } from "@wuchale/svelte"
 import { adapter as js } from 'wuchale/adapter-vanilla'
 import { defineConfig } from "wuchale"
 import { generateText } from 'ai';
-import 'dotenv/config';
+import 'varlock/auto-load';
 
 export default defineConfig({
     // first locale is the source locale

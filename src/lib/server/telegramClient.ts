@@ -58,7 +58,7 @@ async function resolveWithSession(args: {
 		const authorized = await client.checkAuthorization();
 		if (!authorized) {
 			throw new Error(
-				`Telegram session for account "${args.accountId}" is invalid or expired. Run scripts/telegram-login.ts and update TELEGRAM_APP_SESSION_PRIMARY / TELEGRAM_APP_SESSION_FALLBACK (or legacy TELEGRAM_APP_SESSION) in .env`,
+				`Telegram session for account "${args.accountId}" is invalid or expired. Run scripts/telegram-login.ts and update TELEGRAM_APP_SESSION_PRIMARY / TELEGRAM_APP_SESSION_FALLBACK (or legacy TELEGRAM_APP_SESSION) in KeePass / env`,
 			);
 		}
 		client.setLogLevel(LogLevel.NONE);

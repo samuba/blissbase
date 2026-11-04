@@ -3,7 +3,7 @@ import { S3Client } from "@bradenmacdonald/s3-lite-client"
 import { rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import "dotenv/config"
+import 'varlock/auto-load'
 import { and, db, eq, s, upsertEvents } from "../src/lib/server/db.script.ts"
 import type { InsertEvent } from "../src/lib/types"
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai"

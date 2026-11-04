@@ -1,3 +1,4 @@
+env = false
 [install]
 # Only install package versions published at least 2 days ago
 minimumReleaseAge = 172800
