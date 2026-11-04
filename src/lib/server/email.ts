@@ -34,6 +34,40 @@ ${eventUrl}`.trim();
 	return await sendEmail({from, to: [args.to], subject, text});
 }
 
+/**
+ * Tells a guest what happened to their registration. Failure is reported by `sendEmail` and does not throw.
+ *
+ * @example
+ * await sendRegistrationEmail({ to: `ada@example.com`, eventName: `Kreis`, eventSlug: `kreis`, kind: `registered` });
+ */
+export async function sendRegistrationEmail(args: {
+	to: string;
+	eventName: string;
+	eventSlug: string;
+	kind: `registered` | `waitlist` | `promoted` | `cancelled`;
+}) {
+	const eventUrl = absoluteUrl(routes.eventDetails(args.eventSlug));
+	const lead = {
+		registered: `Du bist für ${args.eventName} angemeldet.`,
+		waitlist: `Du stehst für ${args.eventName} auf der Warteliste. Wir schreiben dir, wenn ein Platz frei wird.`,
+		promoted: `Es ist ein Platz frei geworden. Du bist jetzt für ${args.eventName} angemeldet.`,
+		cancelled: `Deine Anmeldung für ${args.eventName} ist abgemeldet.`,
+	}[args.kind];
+	const subject = {
+		registered: `Anmeldung: ${args.eventName}`,
+		waitlist: `Warteliste: ${args.eventName}`,
+		promoted: `Du bist nachgerückt: ${args.eventName}`,
+		cancelled: `Abgemeldet: ${args.eventName}`,
+	}[args.kind];
+
+	return await sendEmail({
+		from,
+		to: [args.to],
+		subject,
+		text: `${lead}\n\n${eventUrl}`,
+	});
+}
+
 async function sendEmail(payload: SendEmailPayload) {
 	const to = payload.to.filter((address) => !shouldSkipRecipient(address));
 	if (!to.length) return true;

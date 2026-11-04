@@ -16,9 +16,13 @@ import {
 } from "drizzle-orm/pg-core";
 import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
 import { eventStructureSlugs } from "$lib/eventCategories";
+import { GUEST_LIST_VISIBILITIES, REGISTRATION_STATUSES } from "$lib/registration";
+import type { RegistrationAnswerValue } from "$lib/registration";
 import { OFFERING_FORMATS } from "$lib/rpc/offerings.common";
 
 export const eventAttendanceModeEnum = pgEnum("attendance_mode", ["online", "offline", "offline+online"]);
+export const guestListVisibilityEnum = pgEnum("guest_list_visibility", [...GUEST_LIST_VISIBILITIES]);
+export const registrationStatusEnum = pgEnum("registration_status", [...REGISTRATION_STATUSES]);
 export type AttendanceMode = (typeof eventAttendanceModeEnum.enumValues)[number];
 export const attendanceModeEnum = eventAttendanceModeEnum.enumValues;
 export const offeringFormatEnum = pgEnum("offering_format", OFFERING_FORMATS);
@@ -61,15 +65,21 @@ export const events = pgTable("events", {
 	language: text(),
 	authorId: uuid().references(() => profiles.id, { onDelete: "cascade" }),
 	spotlight: text(),
+	registrationEnabled: boolean().notNull().default(false),
+	guestListVisibility: guestListVisibilityEnum().notNull().default("public"),
+	maxGuests: integer(),
+	waitlistAutoMoveUp: boolean().notNull().default(true),
 });
 
 export type SelectEvent = typeof events.$inferSelect;
 
-export const eventsRelations = relations(events, ({ one }) => ({
+export const eventsRelations = relations(events, ({ one, many }) => ({
 	author: one(profiles, {
 		fields: [events.authorId],
 		references: [profiles.id],
 	}),
+	registrationQuestions: many(registrationQuestions),
+	registrations: many(registrations),
 }));
 
 export const botMessages = pgTable("message_to_bot", {
@@ -262,6 +272,78 @@ export const favoritesRelations = relations(favorites, ({ one }) => ({
 	event: one(events, {
 		fields: [favorites.eventId],
 		references: [events.id],
+	}),
+}));
+
+export const registrationQuestions = pgTable(
+	"registration_questions",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		eventId: integer().notNull().references(() => events.id, { onDelete: "cascade" }),
+		text: text().notNull(),
+		description: text(),
+		mandatory: boolean().notNull().default(false),
+		sortOrder: integer().notNull().default(0),
+		possibleAnswers: text().array().notNull().default([]),
+		multipleAnswers: boolean().notNull().default(false),
+	},
+	(t) => [index().on(t.eventId)],
+);
+
+export const registrations = pgTable(
+	"registrations",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		eventId: integer().notNull().references(() => events.id, { onDelete: "cascade" }),
+		userId: uuid().notNull().references(() => profiles.id, { onDelete: "cascade" }),
+		name: text().notNull(),
+		email: text().notNull(),
+		comment: text(),
+		status: registrationStatusEnum().notNull(),
+		createdAt: timestamp().notNull().defaultNow(),
+		updatedAt: timestamp().notNull().defaultNow(),
+	},
+	(t) => [uniqueIndex().on(t.eventId, t.userId), index().on(t.eventId, t.status)],
+);
+
+export const registrationAnswers = pgTable(
+	"registration_answers",
+	{
+		registrationId: integer().notNull().references(() => registrations.id, { onDelete: "cascade" }),
+		questionId: integer().notNull().references(() => registrationQuestions.id, { onDelete: "cascade" }),
+		answer: jsonb().$type<RegistrationAnswerValue>().notNull(),
+	},
+	(t) => [primaryKey({ columns: [t.registrationId, t.questionId] })],
+);
+
+export const registrationQuestionsRelations = relations(registrationQuestions, ({ one, many }) => ({
+	event: one(events, {
+		fields: [registrationQuestions.eventId],
+		references: [events.id],
+	}),
+	answers: many(registrationAnswers),
+}));
+
+export const registrationsRelations = relations(registrations, ({ one, many }) => ({
+	event: one(events, {
+		fields: [registrations.eventId],
+		references: [events.id],
+	}),
+	profile: one(profiles, {
+		fields: [registrations.userId],
+		references: [profiles.id],
+	}),
+	answers: many(registrationAnswers),
+}));
+
+export const registrationAnswersRelations = relations(registrationAnswers, ({ one }) => ({
+	registration: one(registrations, {
+		fields: [registrationAnswers.registrationId],
+		references: [registrations.id],
+	}),
+	question: one(registrationQuestions, {
+		fields: [registrationAnswers.questionId],
+		references: [registrationQuestions.id],
 	}),
 }));
 

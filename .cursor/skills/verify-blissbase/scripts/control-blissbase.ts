@@ -85,6 +85,7 @@ Browser actions:
   click --testid NAME [--text TEXT]
   click --role ROLE --name NAME     Click by accessible role + name (when no testid)
   fill --testid NAME --value TEXT
+  select --testid NAME --value TEXT Choose a native <select> option
   press --key KEY                   e.g. Enter, Escape
   expect-visible --testid NAME [--text TEXT] [--timeout MS]
   expect-visible --role ROLE --name NAME
@@ -92,6 +93,7 @@ Browser actions:
   screenshot --path REL_OR_ABS
   snapshot --path REL_OR_ABS        Accessibility tree dump
   sign-in [--user-id UUID] [--email ADDR]
+  sign-out                          Clear browser cookies
   hydrate                           Wait for data-app-hydrated=true
 
 Flags:
@@ -439,6 +441,10 @@ async function runBrowserAction(args: {
 			await locate(page, flags).fill(requireFlag(flags, `value`));
 			break;
 		}
+		case `select`: {
+			await locate(page, flags).selectOption(requireFlag(flags, `value`));
+			break;
+		}
 		case `press`: {
 			await page.keyboard.press(requireFlag(flags, `key`));
 			break;
@@ -520,6 +526,10 @@ async function runBrowserAction(args: {
 					path: `/`,
 				},
 			]);
+			break;
+		}
+		case `sign-out`: {
+			await context.clearCookies();
 			break;
 		}
 		default:
