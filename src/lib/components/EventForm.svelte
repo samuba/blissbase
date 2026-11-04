@@ -332,7 +332,7 @@
 		<div class="join">
 			<Select
 				bind:value={() => remoteForm.fields.contactMethod.value(), (v) => remoteForm.fields.contactMethod.set(v)}
-				placeholder="Anmelde Methode auswählen"
+				placeholder="Anmeldemethode auswählen"
 				onValueChange={() => {
 					remoteForm.fields.contact.set('');
 					onDirty?.();

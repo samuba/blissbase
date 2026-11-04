@@ -162,6 +162,7 @@ msgstr "<0/> Anrufen"
 msgid "<0/> Email"
 msgstr "<0/> Email"
 
+#: src/lib/components/ContactBubble.svelte
 #: src/lib/components/EventAutofill.svelte
 #: src/lib/components/HeaderControls.svelte
 #: src/lib/components/LoginDialog.svelte
@@ -580,9 +581,8 @@ msgstr "ArrowUp"
 msgid "Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Telegram, etc."
 msgstr "Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Telegram, etc."
 
-#: src/lib/components/EventForm.svelte
-msgid "Anmelde Methode auswählen"
-msgstr "Anmelde Methode auswählen"
+#~ msgid "Anmelde Methode auswählen"
+#~ msgstr "Anmelde Methode auswählen"
 
 #. 0: image.file.name
 #. 0: itemName
@@ -591,7 +591,6 @@ msgstr "Anmelde Methode auswählen"
 msgid "Bild {0} entfernen"
 msgstr "Bild {0} entfernen"
 
-#: src/lib/components/TagsInput.svelte
 #: src/lib/components/TagsInput.svelte
 msgid "Suche nach Tags"
 msgstr "Suche nach Tags"
@@ -3635,6 +3634,7 @@ msgstr "{0} km Radius"
 msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein, um dich anzumelden."
 msgstr "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein, um dich anzumelden."
 
+#: src/lib/components/ContactBubble.svelte
 #: src/lib/components/OtpStep.svelte
 msgid "E-Mail"
 msgstr "E-Mail"
@@ -4231,3 +4231,120 @@ msgstr "<0/> 1:1 Sessions & Services aus der Community <1/>"
 
 #~ msgid "<0>✨AA</0> 1:1 Sessions & Services aus der Community <1/>"
 #~ msgstr "<0>✨AA</0> 1:1 Sessions & Services aus der Community <1/>"
+
+#~ msgid "Was erwartet die Teilnehmenden? Ablauf, Voraussetzungen, Was mitbringen…"
+#~ msgstr "Was erwartet die Teilnehmenden? Ablauf, Voraussetzungen, Was mitbringen…"
+
+#: src/lib/components/EventForm.svelte
+msgid "Anmeldemethode auswählen"
+msgstr "Anmeldemethode auswählen"
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Danke! Ich melde mich bald bei dir."
+msgstr "Danke! Ich melde mich bald bei dir."
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Nachricht konnte nicht gesendet werden. Versuch es bitte nochmal."
+msgstr "Nachricht konnte nicht gesendet werden. Versuch es bitte nochmal."
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Nachricht schreiben"
+msgstr "Nachricht schreiben"
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Damit ich dir antworten kann."
+msgstr "Damit ich dir antworten kann."
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Was möchtest du mir sagen?"
+msgstr "Was möchtest du mir sagen?"
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Nachricht"
+msgstr "Nachricht"
+
+#: src/lib/components/ContactBubble.svelte
+msgid "<0/> Senden"
+msgstr "<0/> Senden"
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Schreib mir"
+msgstr "Schreib mir"
+
+#: src/lib/components/ContactBubble.svelte
+msgid "Fragen, Feedback oder Ideen — ich freue mich über deine Nachricht."
+msgstr "Fragen, Feedback oder Ideen — ich freue mich über deine Nachricht."
+
+#~ msgid "Was bietest du an? Für wen ist es geeignet? Wie läuft eine Session ab?"
+#~ msgstr "Was bietest du an? Für wen ist es geeignet? Wie läuft eine Session ab?"
+
+#: src/lib/components/Login.svelte
+#: src/lib/components/OtpStep.svelte
+msgid "deine@email.de"
+msgstr "deine@email.de"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "z.B. Private Coaching Session"
+msgstr "z.B. Private Coaching Session"
+
+#: src/lib/components/OfferingForm.svelte
+msgid "z.B. Berlin oder 10115"
+msgstr "z.B. Berlin oder 10115"
+
+#~ msgid "z.B. Sarah Meiers"
+#~ msgstr "z.B. Sarah Meiers"
+
+#. 0: getRandomNamePlaceholder()
+#: src/lib/components/EventForm.svelte
+msgid "z.B. {0}"
+msgstr "z.B. {0}"
+
+#~ msgid "z.B. 25 EUR oder Spende"
+#~ msgstr "z.B. 25 EUR oder Spende"
+
+#~ msgid "z.B. Musterstraße 12, Berlin"
+#~ msgstr "z.B. Musterstraße 12, Berlin"
+
+#~ msgid "z.B. hallo@studio.de"
+#~ msgstr "z.B. hallo@studio.de"
+
+#~ msgid "z.B. +49 170 1234567"
+#~ msgstr "z.B. +49 170 1234567"
+
+#~ msgid "z.B. https://studio.de/tickets"
+#~ msgstr "z.B. https://studio.de/tickets"
+
+#~ msgid "z.B. @deinusername"
+#~ msgstr "z.B. @deinusername"
+
+#: src/lib/components/TagsInput.svelte
+msgid "z.B. Meditation, Atemarbeit"
+msgstr "z.B. Meditation, Atemarbeit"
+
+#: src/lib/components/CreateFlowProfileFields.svelte
+msgid "z.B. Sarah Meier"
+msgstr "z.B. Sarah Meier"
+
+#: src/lib/components/EventForm.svelte
+msgid "z.B. 25 EUR"
+msgstr "z.B. 25 EUR"
+
+#~ msgid "z.B. Private Couching Session"
+#~ msgstr "z.B. Private Couching Session"
+
+#: src/lib/components/EventForm.svelte
+msgid "tina@example.com"
+msgstr "tina@example.com"
+
+#: src/lib/components/EventForm.svelte
+#: src/lib/components/EventForm.svelte
+msgid "+49123456789"
+msgstr "+49123456789"
+
+#: src/lib/components/EventForm.svelte
+msgid "https://www.example.com"
+msgstr "https://www.example.com"
+
+#: src/lib/components/EventForm.svelte
+msgid "@username"
+msgstr "@username"

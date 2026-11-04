@@ -70,7 +70,7 @@
 				if ((e.key === `ArrowDown` || e.key === `ArrowUp`) && !open) open = true;
 			}}
 			class="w-full input"
-			placeholder="Suche nach Tags"
+			placeholder="z.B. Meditation, Atemarbeit"
 			aria-label="Suche nach Tags"
 		/>
 	</div>

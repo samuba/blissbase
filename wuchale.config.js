@@ -1,5 +1,5 @@
 // @ts-check
-import { adapter as svelte } from "@wuchale/svelte"
+import { adapter as svelte, svelteKitDefaultHeuristic } from "@wuchale/svelte"
 import { adapter as js } from 'wuchale/adapter-vanilla'
 import { defineConfig } from "wuchale"
 import { generateText } from 'ai';
@@ -9,7 +9,15 @@ export default defineConfig({
     // first locale is the source locale
     locales: ['de', 'en'],
     adapters: {
-        main: svelte({ loader: 'sveltekit' }),
+        main: svelte({
+            loader: 'sveltekit',
+            heuristic: (txt, file) => {
+                if (txt.path.some((scope) => scope.type === `attribute` && scope.name === `placeholder`)) {
+                    return `message`
+                }
+                return svelteKitDefaultHeuristic(txt, file)
+            },
+        }),
         js: js({
             loader: 'vite',
             files: [

@@ -138,7 +138,7 @@
 		/>
 
 		<fieldset class="fieldset">
-			<input class="input peer w-full" data-testid="offering-title-input" {...remoteForm.fields.title.as(`text`)} required placeholder="z.B. Private Couching Session" />
+			<input class="input peer w-full" data-testid="offering-title-input" {...remoteForm.fields.title.as(`text`)} required placeholder="z.B. Private Coaching Session" />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Titel *</legend>
 			<FormFieldIssues field={remoteForm.fields.title} />
 		</fieldset>
@@ -190,6 +190,7 @@
 				<div class="min-w-0 flex-1">
 					<LocationAutocompleteInput
 						inputId="{formId}-location"
+						placeholder="z.B. Berlin oder 10115"
 						initialLabel={resolvedLocationLabel}
 						initialLat={resolvedLocationLat}
 						initialLng={resolvedLocationLng}

@@ -71,6 +71,7 @@
 				value={profile?.displayName ?? ``}
 				autocomplete="name"
 				required
+				placeholder="z.B. Sarah Meier"
 			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Dein Name *</legend>
 			<FormFieldIssues field={fields.displayName} />
