@@ -141,7 +141,9 @@
 			</div>
 
 			<h2 class="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
-				<span class="text-yellow-400">✨</span> Achtsame Events in deiner Nähe <span class="text-yellow-400">✨</span>
+				<span class="text-yellow-400">✨</span> 
+				Achtsame Events in deiner Nähe 
+				<span class="text-yellow-400">✨</span>
 			</h2>
 
 			<div class="pt-6 pb-5 sm:py-2 hidden sm:block">

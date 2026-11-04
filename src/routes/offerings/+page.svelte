@@ -209,7 +209,7 @@
 		</div>
 
 		<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand drop-shadow-md">
-			✨ 1:1 Sessions & Services aus der Community ✨
+			<span class="text-yellow-400">✨</span>  1:1 Sessions & Services aus der Community <span class="text-primary">✨</span> 
 		</h2>
 	</div>
 </div>

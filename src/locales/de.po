@@ -3886,9 +3886,8 @@ msgstr "Möchtest du den Radius erweitern?"
 msgid "Fehler beim laden weiterer Events."
 msgstr "Fehler beim laden weiterer Events."
 
-#: src/routes/offerings/+page.svelte
-msgid "✨ 1:1 Sessions & Services aus der Community ✨"
-msgstr "✨ 1:1 Sessions & Services aus der Community ✨"
+#~ msgid "✨ 1:1 Sessions & Services aus der Community ✨"
+#~ msgstr "✨ 1:1 Sessions & Services aus der Community ✨"
 
 #: src/routes/about/+page.svelte
 msgid "Blissbase ist dein Portal zu achtsamen Events – für mehr Wohlbefinden, eine tiefere Verbindung zu dir selbst und zu anderen und für persönliches Wachstum."
@@ -4222,3 +4221,13 @@ msgstr "In der Textsuche kannst du dann frei eingeben, wonach dir ist, oder eine
 #: src/lib/components/LocaleSwitcher.svelte
 msgid "English"
 msgstr "English"
+
+#: src/routes/offerings/+page.svelte
+msgid "<0/> 1:1 Sessions & Services aus der Community <1/>"
+msgstr "<0/> 1:1 Sessions & Services aus der Community <1/>"
+
+#~ msgid "1:1 Sessions & Services aus der Community"
+#~ msgstr "1:1 Sessions & Services aus der Community"
+
+#~ msgid "<0>✨AA</0> 1:1 Sessions & Services aus der Community <1/>"
+#~ msgstr "<0>✨AA</0> 1:1 Sessions & Services aus der Community <1/>"
