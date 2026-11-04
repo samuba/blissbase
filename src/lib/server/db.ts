@@ -1,4 +1,4 @@
-import 'varlock/auto-load';
+// Env via @varlock/vite-integration — not varlock/auto-load (CLI spawn breaks Vercel SSR).
 import { E2E_TEST } from '$env/static/private';
 import {
 	createPostgresDrizzle,
