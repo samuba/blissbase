@@ -34,6 +34,20 @@ ${eventUrl}`.trim();
 	return await sendEmail({from, to: [args.to], subject, text});
 }
 
+export async function sendContactEmail(args: SendContactEmailArgs) {
+	return await sendEmail({
+		subject: `Blissbase Nachricht von ${args.replyTo}`,
+		from,
+		to: [`hi@blissbase.app`],
+		reply_to: args.replyTo,
+		text: `
+Neue Nachricht über den Kontakt-Bubble.
+Von: ${args.replyTo}
+
+${args.message}`.trim(),
+	});
+}
+
 async function sendEmail(payload: SendEmailPayload) {
 	const to = payload.to.filter((address) => !shouldSkipRecipient(address));
 	if (!to.length) return true;
@@ -64,9 +78,15 @@ type SendEventCreatedEmailArgs = {
 	isOnline: boolean;
 };
 
+type SendContactEmailArgs = {
+	replyTo: string;
+	message: string;
+};
+
 type SendEmailPayload = {
 	from: string;
 	to: string[];
 	subject: string;
 	text: string;
+	reply_to?: string;
 };

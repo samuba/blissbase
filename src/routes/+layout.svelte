@@ -15,6 +15,7 @@
 	import { registerAuthCallbackFeedbackToast } from '$lib/authCallbackFeedbackToast.svelte';
 	import { registerFlashToast } from '$lib/flashToast.svelte';
 	import LoginDialog from '$lib/components/LoginDialog.svelte';
+	import ContactBubble from '$lib/components/ContactBubble.svelte';
 	import { Toaster } from 'svelte-sonner';
 	import TabsNavMobile from '$lib/components/TabsNavMobile.svelte';
 	import TabsNavDesktop from '$lib/components/TabsNavDesktop.svelte';
@@ -118,5 +119,6 @@
 	class={[`pointer-events-auto z-200`]}
 />
 <LoginDialog />
+<ContactBubble />
 
 <EventDetailsDialog />
