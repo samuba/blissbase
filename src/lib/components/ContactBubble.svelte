@@ -76,7 +76,22 @@
 				Fragen, Feedback oder Ideen — ich freue mich über deine Nachricht.
 			</p>
 
-			<form class="flex flex-col gap-4" onsubmit={onSubmit}>
+			<form class="flex flex-col gap-2" onsubmit={onSubmit}>
+
+				<fieldset class="fieldset">
+					<textarea
+						class="textarea w-full min-h-28"
+						name="message"
+						required
+						maxlength={10_000}
+						placeholder="Was möchtest du mir sagen?"
+						bind:value={message}
+						disabled={isPending}
+						data-testid="contact-message"
+					></textarea>
+					<legend class="fieldset-legend">Nachricht</legend>
+				</fieldset>
+
 				<fieldset class="fieldset">
 					<input
 						class="input peer w-full"
@@ -88,27 +103,13 @@
 						disabled={isPending}
 						data-testid="contact-email"
 					/>
-					<legend class="fieldset-legend">E-Mail</legend>
+					<legend class="fieldset-legend">Deine E-Mail-Adresse</legend>
 					<p class="label">Damit ich dir antworten kann.</p>
-				</fieldset>
-
-				<fieldset class="fieldset">
-					<textarea
-						class="textarea w-full min-h-28"
-						name="message"
-						required
-						maxlength={5000}
-						placeholder="Was möchtest du mir sagen?"
-						bind:value={message}
-						disabled={isPending}
-						data-testid="contact-message"
-					></textarea>
-					<legend class="fieldset-legend">Nachricht</legend>
 				</fieldset>
 
 				<button
 					type="submit"
-					class="btn btn-primary w-full"
+					class="btn btn-primary w-full mt-2"
 					disabled={isPending}
 					data-testid="contact-submit"
 				>

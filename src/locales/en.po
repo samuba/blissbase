@@ -3635,7 +3635,6 @@ msgstr "{0} km radius"
 msgid "Wir haben dir einen Code an <0/> geschickt. Gib den Code hier ein, um dich anzumelden."
 msgstr "We sent a code to <0/>. Enter the code here to log in."
 
-#: src/lib/components/ContactBubble.svelte
 #: src/lib/components/OtpStep.svelte
 msgid "E-Mail"
 msgstr "Email"
@@ -4506,3 +4505,12 @@ msgstr "https://www.example.com"
 #, ai
 msgid "@username"
 msgstr "@username"
+
+#, ai
+#~ msgid "Deine E-Mail"
+#~ msgstr "Your email"
+
+#: src/lib/components/ContactBubble.svelte
+#, ai
+msgid "Deine E-Mail-Adresse"
+msgstr "Your email address"
