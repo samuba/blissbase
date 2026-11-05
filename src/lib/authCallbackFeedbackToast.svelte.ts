@@ -5,6 +5,8 @@ import {
 	hasPendingCreateFlowDraft,
 	OFFERING_CREATE_DRAFT_KEY,
 } from '$lib/createFlowDraft';
+import { mapOAuthError, startGoogleOAuth } from '$lib/oauthSignIn';
+import { routes } from '$lib/routes';
 import { afterClientHydration } from '$lib/shallowDialog.svelte';
 import { toast } from 'svelte-sonner';
 
@@ -13,6 +15,9 @@ const otpExpiredTitle = /* @wc-include */ `Der Login-Link ist abgelaufen.`;
 const otpExpiredDescription = /* @wc-include */ `Lass dir einen neuen Login-Link schicken.`;
 const pkceMismatchTitle = /* @wc-include */ `Login-Link stammt aus anderem Browser`;
 const pkceMismatchDescription = /* @wc-include */ `Fordere einen neuen Login-Link an und öffne den Link im selben Browser in dem du ihn angefordert hast.`;
+const googlePkceTitle = /* @wc-include */ `Google-Anmeldung hat nicht geklappt`;
+const googlePkceDescription = /* @wc-include */ `Versuche es noch einmal. Öffne Blissbase dafür am besten direkt im Browser, nicht in einer App wie Instagram.`;
+const googleRetryLabel = /* @wc-include */ `Erneut versuchen`;
 const authFailedTitle = /* @wc-include */ `Anmeldung fehlgeschlagen`;
 const authSuccessTitle = /* @wc-include */ `Du bist jetzt angemeldet. Viel Spaß!`;
 
@@ -49,6 +54,15 @@ export function registerAuthCallbackFeedbackToast() {
 					description: otpExpiredDescription,
 					...errorPros
 				});
+			} else if (
+				errorCode === `pkce_code_verifier_not_found` &&
+				page.url.searchParams.get(`auth_method`) === `google`
+			) {
+				toast.error(googlePkceTitle, {
+					description: googlePkceDescription,
+					action: { label: googleRetryLabel, onClick: retryGoogleSignIn },
+					...errorPros
+				});
 			} else if (errorCode === `pkce_code_verifier_not_found`) {
 				toast.error(pkceMismatchTitle, {
 					description: pkceMismatchDescription,
@@ -66,6 +80,16 @@ export function registerAuthCallbackFeedbackToast() {
 
 		void stripAuthFeedbackFromUrl();
 	});
+}
+
+/** Runs after `stripAuthFeedbackFromUrl`, so the current path no longer has the feedback params. */
+async function retryGoogleSignIn() {
+	try {
+		await startGoogleOAuth({ next: routes.currentPath(page.url) });
+	} catch (err: unknown) {
+		toast.error(mapOAuthError(err), { id: AUTH_FEEDBACK_TOAST_ID });
+		console.error(`Auth error:`, err);
+	}
 }
 
 function shouldSkipAuthSuccessToast() {
@@ -90,6 +114,7 @@ async function stripAuthFeedbackFromUrl() {
 	nextUrl.searchParams.delete(`auth_success`);
 	nextUrl.searchParams.delete(`auth_error`);
 	nextUrl.searchParams.delete(`error_code`);
+	nextUrl.searchParams.delete(`auth_method`);
 	nextUrl.hash = ``;
 	replaceState(`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`, page.state);
 }
