@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Prompt once for the Blissbase KeePass master password, then run the given command.
+# E2E has no KeePass file (CI runners and Playwright workers). Env is already set.
 set -euo pipefail
 
 if [[ -z "${KP_PASSWORD:-}" ]]; then
+	if [[ "${E2E_TEST:-}" == "true" ]]; then
+		exec "$@"
+	fi
 	if [[ ! -t 0 ]]; then
 		echo "KP_PASSWORD is required (no TTY to prompt)." >&2
 		exit 1
