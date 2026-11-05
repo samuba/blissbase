@@ -10,6 +10,7 @@
 	import TabsNavDesktop from "./TabsNavDesktop.svelte";
 	import { user } from "$lib/user.svelte";
 	import AdminEventSourceFilter from "./AdminEventSourceFilter.svelte";
+	import AutoLocationHintBubble, { dismissAutoLocationHint } from "./AutoLocationHintBubble.svelte";
 
 	let {
 		onLocationDistanceChange = eventsStore.handleLocationDistanceChange,
@@ -52,6 +53,11 @@
 			unsubscribe();
 		};
 	});
+
+	function handleLocationDistanceChange(event: LocationChangeEvent) {
+		dismissAutoLocationHint();
+		onLocationDistanceChange(event);
+	}
 
 	function openFilterDialog() {
 		// Defer so Playwright's opening click is not treated as an outside interact
@@ -97,7 +103,8 @@
 		<TabsNavDesktop />
 
 		<div class="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-4 sm:px-0">
-			<div class="w-full min-w-0 flex-1 md:w-auto">
+			<div class="relative w-full min-w-0 flex-1 md:w-auto">
+				<AutoLocationHintBubble />
 				<LocationDistanceInput
 					inputId="plzCityInput-header"
 					{initialLocation}
@@ -105,7 +112,7 @@
 					{resolvedCityName}
 					locationBiasLat={eventsStore.pagination.lat}
 					locationBiasLng={eventsStore.pagination.lng}
-					onChange={onLocationDistanceChange}
+					onChange={handleLocationDistanceChange}
 					fullWidthWhenOpen
 				/>
 			</div>
@@ -168,7 +175,7 @@
 							{resolvedCityName}
 							locationBiasLat={eventsStore.pagination.lat}
 							locationBiasLng={eventsStore.pagination.lng}
-							onChange={onLocationDistanceChange}
+							onChange={handleLocationDistanceChange}
 						/>
 					</div>
 				</div>

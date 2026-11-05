@@ -532,8 +532,8 @@ msgstr "Sorting by distance only makes sense for in-person events"
 msgid "Ort <0/> nicht gefunden"
 msgstr "Location <0/> not found"
 
+#: src/lib/components/AutoLocationHintBubble.svelte
 #: src/lib/components/OfferingsNavHintBubble.svelte
-#: src/routes/+page.svelte
 msgid "Hinweis schließen"
 msgstr "Close notice"
 
@@ -704,9 +704,8 @@ msgstr "You currently have no events."
 msgid "Du hast noch keine vergangenen Events."
 msgstr "You don't have any past events yet."
 
-#: src/routes/+page.svelte
-msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
-msgstr "You're being shown events around <0/>. If that's not your location, change it below."
+#~ msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn unten."
+#~ msgstr "You're being shown events around <0/>. If that's not your location, change it below."
 
 #~ msgid "PS. Das Projekt ist noch in den Kinderschuhen und ich weiß noch nicht wohin es sich entwickelt. Deshalb bin ich sehr dankbar für jedes Feedback, Ideen und Kooperation: <0>hi@blissbase.app</0>"
 #~ msgstr ""
@@ -4514,3 +4513,12 @@ msgstr "@username"
 #, ai
 msgid "Deine E-Mail-Adresse"
 msgstr "Your email address"
+
+#, ai
+#~ msgid "Auch Online"
+#~ msgstr "Also online"
+
+#: src/lib/components/AutoLocationHintBubble.svelte
+#, ai
+msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn hier."
+msgstr "Events are shown to you around <0/>. If that isn’t your location, change it here."

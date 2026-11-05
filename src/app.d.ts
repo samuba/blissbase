@@ -31,6 +31,7 @@ declare global {
 			jwtClaims?: BlissabaseClaims;
 			supabase?: SupabaseClient;
 			locale?: 'en' | 'de';
+			autoDetectedCity?: string | null;
 		}
 		interface PageState {
 			selectedEventId?: number;

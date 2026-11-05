@@ -7,10 +7,8 @@
 	import { intersect } from '$lib/attachments/intersection';
 	import { eventsStore } from '$lib/eventsStore.svelte';
 	import HeaderControls from '$lib/components/HeaderControls.svelte';
-	import type { LocationChangeEvent } from '$lib/components/LocationDistanceInput.svelte';
 	import { browser } from '$app/environment';
 	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
-	import { setLocationInteractedCookie } from '$lib/cookie-utils';
 	import { addHours } from '$lib/common';
 	import { now } from '$lib/now.svelte';
 	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';
@@ -19,7 +17,6 @@
 	import { onDestroy, onMount } from 'svelte';
 
 	const { data } = $props();
-	const { autoDetectedCity } = $derived(data);
 
 	function isEventMostlyElapsed(args: { startAt: Date; endAt?: Date | null }) {
 		const endTime = args.endAt ?? addHours(args.startAt, 4);
@@ -55,8 +52,6 @@
 	}
 
 	let contentBeforeMenu = $state<HTMLElement | null>(null);
-	let dismissedAutoLocationHint = $state(false);
-	const showAutoLocationHint = $derived(Boolean(autoDetectedCity) && !dismissedAutoLocationHint);
 
 	// Always initialize from server data during SSR to prevent state pollution
 	// On client, only initialize if store is empty (preserves navigation state)
@@ -82,11 +77,6 @@
 
 	onMount(() => offeringsNavHint.onHomeScroll(window.scrollY));
 	onDestroy(() => offeringsNavHint.leaveHome());
-
-	function handleLocationDistanceChange(event: LocationChangeEvent) {
-		dismissedAutoLocationHint = true;
-		eventsStore.handleLocationDistanceChange(event);
-	}
 
 	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
 	const reachedEndOfList = $derived(
@@ -154,30 +144,7 @@
 </div>
 	
 <div class="flex w-full flex-col items-center justify-center pb-4">
-	{#if showAutoLocationHint}
-		<div class="mx-auto mt-4 w-full max-w-5xl px-4">
-			<div class="alert bg-base-100 mb-2 relative alert-horizontal">
-				<i class="icon-[ph--info] size-6 shrink-0"></i>
-				<span class="w-full">
-					Dir werden Events um <b>{autoDetectedCity}</b> angezeigt.
-					Wenn das nicht dein Standort ist, ändere ihn unten.
-				</span>
-				<button
-					class="btn btn-circle btn-ghost btn-sm p-0.25"
-					aria-label="Hinweis schließen"
-					onclick={() => {
-						dismissedAutoLocationHint = true;
-						setLocationInteractedCookie();
-					}}
-				>
-					<i class="icon-[ph--x] size-4"></i>
-				</button>
-			</div>
-		</div>
-	{/if}
-
 	<HeaderControls
-		onLocationDistanceChange={handleLocationDistanceChange}
 		eventSources={data.eventSources}
 		eventSourceFilter={data.eventSourceFilter}
 	/>
