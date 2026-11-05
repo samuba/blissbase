@@ -88,8 +88,10 @@
 <!-- Desktop padding matches the fixed peek footer (2rem bar + border) so bottom actions stay visible. -->
 <div class="min-h-dvh pb-[calc(5.25rem+env(safe-area-inset-bottom))] md:pb-[calc(2rem+1px)]">
 	{#if showDesktopNav}
-		<div class="sticky top-0 z-50 bg-base-200 py-4 hidden md:block">
-			<TabsNavDesktop class="w-fit mx-auto" />
+		<div class="sticky top-0 z-50 hidden bg-base-200 py-4 md:block">
+			<div class="mx-auto w-full max-w-5xl px-4">
+				<TabsNavDesktop />
+			</div>
 		</div>
 	{/if}
 	<div class="md:flex md:items-start">

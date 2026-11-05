@@ -8,6 +8,7 @@
 	import { Dialog } from "$lib/components/dialog";
 	import ToggleButton from "./ToggleButton.svelte";
 	import TabsNavDesktop from "./TabsNavDesktop.svelte";
+	import TextSearchInput from "./TextSearchInput.svelte";
 	import { user } from "$lib/user.svelte";
 	import AdminEventSourceFilter from "./AdminEventSourceFilter.svelte";
 
@@ -82,10 +83,9 @@
 
 <header
 	bind:this={headerElement}
-	class="bg-base-200 sticky top-0 z-10 w-full pt-4 pb-1"
+	class="bg-base-200 sticky top-0 z-10 w-full pt-4 pb-2"
 	id="header-controls"
 >
-	<!-- shadow -->
 	{#if showShadow}
 		<div
 			class="pointer-events-none absolute right-0 left-0 z-20 h-6"
@@ -93,11 +93,11 @@
 		></div>
 	{/if}
 
-	<div class="mx-auto flex w-full max-w-2xl flex-col justify-center gap-3">
+	<div class="mx-auto flex w-full max-w-5xl flex-col gap-2.5 px-4">
 		<TabsNavDesktop />
 
-		<div class="mx-auto flex w-full max-w-2xl items-center justify-center gap-3 px-4 sm:px-0">
-			<div class="w-full min-w-0 flex-1 md:w-auto">
+		<div class="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+			<div class="w-full min-w-0 sm:max-w-sm md:max-w-md">
 				<LocationDistanceInput
 					inputId="plzCityInput-header"
 					{initialLocation}
@@ -110,20 +110,37 @@
 				/>
 			</div>
 
-			<button
-				type="button"
-				data-testid="open-filter-dialog"
-				class={[`btn btn-circle relative shrink-0 sm:w-fit sm:px-4`, eventsStore.hasFilterBehindButton && `active`]}
-				onclick={openFilterDialog}
-			>
-				<i class="icon-[ph--sliders] size-5"></i>
-				<span class="hidden sm:block">Filter</span>
-			</button>
+			<div class="flex w-full min-w-0 flex-1 items-center gap-2 sm:gap-3">
+				<div class="min-w-0 flex-1">
+					<TextSearchInput
+						id="event-search-header"
+						query={eventsStore.searchFilter || ``}
+						searched={Boolean(eventsStore.searchFilter)}
+						wrapperClass="w-full"
+						onSearch={(value) => {
+							eventsStore.showTextSearch = true;
+							eventsStore.handleSearchTermChange(value);
+						}}
+						onClose={() => {
+							eventsStore.showTextSearch = false;
+							eventsStore.handleSearchTermChange(``);
+						}}
+					/>
+				</div>
+
+				<button
+					type="button"
+					data-testid="open-filter-dialog"
+					class={[`btn relative min-w-28 shrink-0`, eventsStore.hasFilterBehindButton && `active`]}
+					onclick={openFilterDialog}
+				>
+					<i class="icon-[ph--sliders] size-5"></i>
+					<span class="hidden sm:inline">Filter</span>
+				</button>
+			</div>
 		</div>
 
-		<div class="mx-auto flex w-full max-w-2xl items-center gap-4 px-4 sm:px-0">
-			<CategorySelection />
-		</div>
+		<CategorySelection showSearch={false} />
 	</div>
 </header>
 
@@ -244,14 +261,9 @@
 				{/if}
 			</div>
 
-			<!-- <div class="grow"></div> -->
 			<div class="flex w-full items-center justify-end px-6 pt-3 pb-6">
 				<Dialog.Close class="btn btn-primary w-full md:w-auto" data-testid="filter-apply">Ergebnisse anzeigen</Dialog.Close>
 			</div>
 		</Dialog.ContentAnimated>
 	</Dialog.Portal>
 </Dialog.Root>
-
-{#snippet filteredIndicator()}
-	<div class="bg-primary border-base-100 absolute top-0 right-0 h-3 w-3 rounded-full border-2"></div>
-{/snippet}

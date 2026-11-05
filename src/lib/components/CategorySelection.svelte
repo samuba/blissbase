@@ -5,7 +5,13 @@
 	import { flip } from 'svelte/animate';
 	import TextSearchInput from '$lib/components/TextSearchInput.svelte';
 
-	let { layout = `rail` }: { layout?: `rail` | `wrap` } = $props();
+	let {
+		layout = `rail`,
+		showSearch = true,
+	}: {
+		layout?: `rail` | `wrap`;
+		showSearch?: boolean;
+	} = $props();
 
 	let textSearchInput = $state<TextSearchInput | null>(null);
 
@@ -131,14 +137,16 @@
 {:else}
 	<div class="flex w-full max-w-full min-w-0 items-center" data-nosnippet>
 		<div class="relative flex w-full min-w-0 flex-nowrap items-start gap-2 overflow-hidden pb-1">
-			<TextSearchInput
-				bind:this={textSearchInput}
-				bind:query={filterQuery}
-				bind:searched={keywordSearched}
-				variant="compact"
-				onSearch={handleTextSearch}
-				onClose={handleSearchClose}
-			/>
+			{#if showSearch}
+				<TextSearchInput
+					bind:this={textSearchInput}
+					bind:query={filterQuery}
+					bind:searched={keywordSearched}
+					variant="compact"
+					onSearch={handleTextSearch}
+					onClose={handleSearchClose}
+				/>
+			{/if}
 
 			<div class={[`flex-no-wrap flex gap-2`, selectedCategories.length === 0 && `hidden`]}>
 				{#each selectedCategories as category (category.slug)}
@@ -199,9 +207,9 @@
 				<!-- fade + chevron right -->
 				<div
 					class={[
-						`from-base-200 via-base-200/85 pointer-events-none absolute top-0 right-0 z-10 flex h-10 items-center justify-end bg-linear-to-l to-transparent transition-all duration-300 ease-out`,
+						`from-base-200 via-base-200/90 pointer-events-none absolute top-0 right-0 z-10 flex h-10 items-center justify-end bg-linear-to-l to-transparent transition-all duration-300 ease-out`,
 						showRightShadow ? `opacity-100` : `opacity-0`,
-						showLeftShadow ? `w-14` : `w-18`,
+						showLeftShadow ? `w-16` : `w-20`,
 					]}
 				>
 					<button
