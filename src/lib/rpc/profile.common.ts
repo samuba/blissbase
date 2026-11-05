@@ -9,6 +9,11 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	return v.union([v.pipe(v.literal(``), v.transform(() => undefined)), schema]);
 }
 
+/** Skips empty links. They are filtered out after the checks, so issue indices still match the form rows. */
+function checkFilledLinks(requirement: (link: PublicProfileSocialLink) => boolean, message: string) {
+	return v.checkItems<PublicProfileSocialLink[], string>((link) => !link.value || requirement(link), message);
+}
+
 export const profileLocationFields = {
 	locationLabel: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(200, /* @wc-include */ `Location is too long`)), ``),
 	latitude: v.optional(
@@ -76,26 +81,25 @@ export const publicProfileFields = {
 		value: v.pipe(v.string(), v.trim(), v.maxLength(1000, `Link is too long`),
 	)
 	})), []),
-		v.filterItems((link) => Boolean(link.value?.trim())),
 		v.mapItems((link) => {
 			if (link.type === `telegram`) {
 				link.value = link.value.replace(`@`, ``);
 			}
 			return link
 		}),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `email`) return !!link.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 			return true;
 		}, `Email address is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `phone`) return !!link.value.match(/^\+?[0-9]+$/);
 			return true;
 		}, `Phone number is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `whatsapp`) return !!link.value.match(/^\+?[0-9]+$/);
 			return true;
 		}, `WhatsApp number is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `telegram`) {
 				const value = link.value
 				if (value.length < 3 || value.length > 32 ) {
@@ -114,7 +118,7 @@ export const publicProfileFields = {
 			}
 			return true;
 		}, `Telegram username is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `youtube`) {
 				const value = link.value.trim();
 				// 3-30 chars, alphanum, _ - . ·, not starting or ending with special chars
@@ -131,7 +135,7 @@ export const publicProfileFields = {
 			}
 			return true;
 		}, `YouTube username is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `instagram`) {
 				// Letters, numbers, . and _
 				// Max 30 chars, no spaces, symbols, @, no consecutive . or _, can't start with .
@@ -150,7 +154,7 @@ export const publicProfileFields = {
 			}
 			return true;
 		}, `Instagram username is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `facebook`) {
 				const value = link.value.trim();
 				// Facebook usernames: at least 5 chars, alphanum and periods only
@@ -164,7 +168,7 @@ export const publicProfileFields = {
 			}
 			return true;
 		}, `Facebook username is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `tiktok`) {
 				const value = link.value.trim();
 				// TikTok usernames: max 24 chars, letters, numbers, _ and .
@@ -179,7 +183,7 @@ export const publicProfileFields = {
 			}
 			return true;
 		}, `TikTok username is invalid`),
-		v.checkItems((link) => {
+		checkFilledLinks((link) => {
 			if (link.type === `website`) {
 				if (!link.value.startsWith("https://")) {
 					link.value = "https://" + link.value
@@ -193,7 +197,8 @@ export const publicProfileFields = {
 				}
 			}
 			return true;
-		}, `Website is not a valid URL`)
+		}, `Website is not a valid URL`),
+		v.filterItems((link) => Boolean(link.value)),
 	),
 } satisfies v.ObjectEntries;
 
