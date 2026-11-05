@@ -85,8 +85,8 @@
 
 <MetaTags {...metaTags} />
 
-<!-- Desktop padding matches the fixed peek footer (2rem bar + border) so bottom actions stay visible. -->
-<div class="min-h-dvh pb-[calc(5.25rem+env(safe-area-inset-bottom))] md:pb-[calc(2rem+1px)]">
+<!-- Bottom padding clears fixed chrome: mobile tab bar (4rem) + peek footer (2rem + border); desktop peek only. -->
+<div class="min-h-dvh pb-[calc(4rem+2rem+1px+env(safe-area-inset-bottom))] md:pb-[calc(2rem+1px)]">
 	{#if showDesktopNav}
 		<div class="sticky top-0 z-50 bg-base-200 py-4 hidden md:block">
 			<TabsNavDesktop class="w-fit mx-auto" />

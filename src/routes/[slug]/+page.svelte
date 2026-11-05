@@ -19,8 +19,8 @@
 		/>
 	</div>
 
-	<div class="flex w-full justify-center gap-6 py-3">
-		<a href={resolve('/')} class="btn btn-sm">
+	<div class="flex w-full justify-center gap-6 py-5 md:py-3">
+		<a href={resolve('/')} class="btn btn-sm" data-testid="all-events-link">
 			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 			Alle Events
 		</a>
