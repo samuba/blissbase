@@ -50,6 +50,19 @@ describe(`createFlowDraft`, () => {
 		});
 	});
 
+	it(`saves a non-pending draft that restores without auto-publish`, () => {
+		const storage = new MemoryStorage();
+		saveCreateFlowDraft({ key: OFFERING_CREATE_DRAFT_KEY, draft: offeringDraft({ savedAt: 500 }), storage });
+		const draft = offeringDraft({ savedAt: 1_000 });
+		saveCreateFlowDraft({ key: OFFERING_CREATE_DRAFT_KEY, draft, pending: false, storage });
+
+		expect(hasPendingCreateFlowDraft({ key: OFFERING_CREATE_DRAFT_KEY, storage })).toBe(false);
+		expect(loadCreateFlowResume<OfferingCreateDraft>({ key: OFFERING_CREATE_DRAFT_KEY, storage, now: 1_000 })).toEqual({
+			draft,
+			wasPending: false,
+		});
+	});
+
 	it(`round-trips an event draft`, () => {
 		const storage = new MemoryStorage();
 		const draft = eventDraft({ savedAt: 1_000 });

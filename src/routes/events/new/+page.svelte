@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { onDestroy, onMount } from "svelte";
+	import posthog from "posthog-js";
 	import EventForm from "$lib/components/EventForm.svelte";
 	import CreateFlowProfileFields, { type CreateFlowProfileRemoteFields } from "$lib/components/CreateFlowProfileFields.svelte";
 	import OtpStep from "$lib/components/OtpStep.svelte";
@@ -88,7 +89,9 @@
 	const hideWizardWhilePublishing = $derived(autoPublishing && !submitError && !createFormHasIssues);
 	const primaryBusy = $derived(createEvent.pending > 0 || auth.authBusy || auth.emailCheckBusy || anyImageUploadInFlight);
 
-	const unsaved = new UnsavedChangesGuard();
+	const unsaved = new UnsavedChangesGuard({
+		saveDraft: () => saveCreateFlowDraft({ key: EVENT_CREATE_DRAFT_KEY, draft: snapshotEventDraft(), pending: false }),
+	});
 	const showCreateForm = $derived((isSignedIn || auth.clientReady) && hasInitializedCreateFields);
 
 	useDuplicateEventDraftToast(() => createEvent);
@@ -412,6 +415,7 @@
 			const { draft, wasPending } = loadCreateFlowResume<EventCreateDraft>({ key: EVENT_CREATE_DRAFT_KEY });
 			if (draft) {
 				applyEventDraft(draft);
+				posthog.capture(`create_flow_draft_restored`, { kind: `event`, after_auth: wasPending });
 				requestedStep = createFlowResumeStep({
 					isSignedIn,
 					profileStepApplies,
