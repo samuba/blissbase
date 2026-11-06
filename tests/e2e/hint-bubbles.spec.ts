@@ -11,17 +11,17 @@ test.beforeEach(async ({ page }) => {
 
 test.describe(`hint bubble positioning`, () => {
 	test(`flips at viewport edges and stays inside the screen`, async ({ page }) => {
-		await openHarness(page);
-
+		await openHarness(page, `top`);
 		await expect(page.getByTestId(`top-hint`)).toHaveAttribute(`data-side`, `bottom`);
 		await expectAttached(page, `top-hint`, `top-anchor`);
 
+		await openHarness(page, `bottom`);
 		await expect(page.getByTestId(`bottom-hint`)).toHaveAttribute(`data-side`, `top`);
 		await expectAttached(page, `bottom-hint`, `bottom-anchor`);
 	});
 
 	test(`follows an anchor inside a scroll container and hides when it leaves`, async ({ page }) => {
-		await openHarness(page);
+		await openHarness(page, `scroll`);
 		const scrollBox = page.getByTestId(`scroll-box`);
 
 		await placeAnchor(scrollBox, `scroll-anchor`, { fromTop: 160 });
@@ -46,7 +46,7 @@ test.describe(`hint bubble positioning`, () => {
 	});
 
 	test(`flips above an anchor pinned to the bottom of a scroll container`, async ({ page }) => {
-		await openHarness(page);
+		await openHarness(page, `scroll-bottom`);
 		await expect(page.getByTestId(`scroll-bottom-hint`)).toBeHidden();
 
 		await placeAnchor(page.getByTestId(`scroll-box`), `scroll-bottom-anchor`, { fromBottom: 12 });
@@ -55,7 +55,7 @@ test.describe(`hint bubble positioning`, () => {
 	});
 
 	test(`follows page scroll, flips near the top, and hides off-screen`, async ({ page }) => {
-		await openHarness(page);
+		await openHarness(page, `page`);
 
 		await reveal(page, `page-anchor`);
 		await expect(page.getByTestId(`page-hint`)).toBeVisible();
@@ -76,7 +76,7 @@ test.describe(`hint bubble positioning`, () => {
 	});
 
 	test(`keeps the real nav and location hints with their anchors`, async ({ page }) => {
-		await openHarness(page);
+		await openHarness(page, `offerings`);
 
 		const navHint = page.getByTestId(`offerings-nav-hint`);
 		await expect(navHint).toBeVisible();
@@ -85,6 +85,7 @@ test.describe(`hint bubble positioning`, () => {
 		await expect(navHint).toBeVisible();
 		await expectAttached(page, `offerings-nav-hint`, `nav-offerings`);
 
+		await openHarness(page, `location`);
 		await page.getByTestId(`location-anchor`).evaluate((node) => {
 			const top = node.getBoundingClientRect().top + window.scrollY;
 			window.scrollTo(0, Math.max(0, top - 8));
@@ -100,7 +101,7 @@ test.describe(`hint bubble positioning`, () => {
 	});
 
 	test(`keeps dismissal on the close button while scrolling and clicking outside`, async ({ page }) => {
-		await openHarness(page);
+		await openHarness(page, `top`);
 		const hint = page.getByTestId(`top-hint`);
 		await expect(hint).toBeVisible();
 
@@ -113,12 +114,12 @@ test.describe(`hint bubble positioning`, () => {
 
 		await page.getByTestId(`top-hint-close`).click();
 		await expect(hint).toBeHidden();
-		await expect(page.getByTestId(`bottom-hint`)).toBeVisible();
+		await expect(page.locator(`[data-testid$="hint"]:visible`)).toHaveCount(0);
 	});
 
 	test(`exposes a non-modal status hint and respects reduced motion`, async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: `reduce` });
-		await openHarness(page);
+		await openHarness(page, `top`);
 		const hint = page.getByTestId(`top-hint`);
 		await expect(hint).toHaveAttribute(`role`, `status`);
 		await expect(hint).not.toHaveAttribute(`aria-modal`, `true`);
@@ -135,7 +136,7 @@ test.describe(`hint bubble positioning`, () => {
 	});
 
 	test(`stays fixed on the anchor while the page scrolls`, async ({ page }) => {
-		await openHarness(page);
+		await openHarness(page, `top`);
 		const drift = await page.evaluate(() => {
 			const hint = document.querySelector(`[data-testid="top-hint"]`);
 			const anchor = document.querySelector(`[data-testid="top-anchor"]`);
@@ -151,12 +152,26 @@ test.describe(`hint bubble positioning`, () => {
 	});
 
 	test(`repositions when the viewport is resized`, async ({ page }) => {
-		await openHarness(page);
+		await openHarness(page, `page`);
 		await reveal(page, `page-anchor`);
 		await expectAttached(page, `page-hint`, `page-anchor`);
 		await page.setViewportSize({ width: 820, height: 640 });
 		await expectAttached(page, `page-hint`, `page-anchor`);
-		await expect(page.getByTestId(`top-hint`)).toHaveAttribute(`data-side`, `bottom`);
+	});
+
+	test(`shows one hint at a time`, async ({ page }) => {
+		await openHarness(page, `product`);
+		await page.getByTestId(`location-anchor`).scrollIntoViewIfNeeded();
+		const visible = page.locator(`[data-testid$="hint"]:visible`);
+		await expect(visible).toHaveCount(1);
+		const first = await visible.getAttribute(`data-testid`);
+		await page.locator(`[data-testid$="hint-close"]:visible`).click();
+		await page.getByTestId(`location-anchor`).scrollIntoViewIfNeeded();
+		await expect(visible).toHaveCount(1);
+		const second = await visible.getAttribute(`data-testid`);
+		expect(new Set([first, second])).toEqual(new Set([`auto-location-hint`, `offerings-nav-hint`]));
+		await page.locator(`[data-testid$="hint-close"]:visible`).click();
+		await expect(visible).toHaveCount(0);
 	});
 });
 
@@ -194,10 +209,10 @@ test.describe(`hint bubbles on the homepage`, () => {
 	});
 });
 
-async function openHarness(page: Page) {
-	await page.goto(`/dev/hint-position`);
+async function openHarness(page: Page, only?: string) {
+	const path = only ? `/dev/hint-position?only=${only}` : `/dev/hint-position`;
+	await page.goto(path);
 	await waitForClientHydration(page);
-	await expect(page.getByTestId(`top-hint`)).toBeVisible();
 }
 
 async function openHome(page: Page) {

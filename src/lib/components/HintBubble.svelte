@@ -1,9 +1,40 @@
+<script lang="ts" module>
+	import { untrack } from "svelte";
+
+	class HintSlot {
+		holders = $state<number[]>([]);
+		#next = 0;
+
+		createId() {
+			this.#next += 1;
+			return this.#next;
+		}
+
+		setWanted(id: number, wanted: boolean) {
+			const current = untrack(() => this.holders);
+			const index = current.indexOf(id);
+			if (wanted && index === -1) {
+				this.holders.push(id);
+				return;
+			}
+			if (!wanted && index !== -1) this.holders.splice(index, 1);
+		}
+
+		shows(id: number) {
+			return this.holders[0] === id;
+		}
+	}
+
+	const hintSlot = new HintSlot();
+</script>
+
 <script lang="ts">
 	import { Popover } from "bits-ui";
 	import { fly } from "svelte/transition";
 	import type { Snippet } from "svelte";
 
 	let { open, side = `top`, testId, closeTestId, class: className = ``, onDismiss, children }: Props = $props();
+	const id = hintSlot.createId();
 
 	// Popover already follows the anchor, flips, and hides it once the anchor is clipped.
 	// Its default collision boundary is the viewport, and a portaled bubble is not inside
@@ -15,6 +46,17 @@
 	let anchor = $state<HTMLElement | null>(null);
 	let anchorVisible = $state(false);
 	const collisionBoundary = $derived(anchor ? clippingAncestors(anchor) : []);
+	const wantsOpen = $derived(open && !!anchor && anchorVisible);
+	const showing = $derived(wantsOpen && hintSlot.shows(id));
+
+	// One bubble at a time. The first one that wants the screen keeps it until it closes.
+	$effect(() => {
+		hintSlot.setWanted(id, wantsOpen);
+	});
+
+	$effect(() => {
+		return () => hintSlot.setWanted(id, false);
+	});
 
 	function bindAnchor(node: HTMLElement) {
 		const sync = () => {
@@ -72,7 +114,7 @@
 
 <span {@attach bindAnchor} hidden></span>
 
-{#if open && anchor && anchorVisible}
+{#if showing}
 	<Popover.Root open>
 		<Popover.Portal>
 			<Popover.Content

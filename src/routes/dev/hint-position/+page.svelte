@@ -1,8 +1,16 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import AutoLocationHintBubble from "$lib/components/AutoLocationHintBubble.svelte";
 	import HintBubble from "$lib/components/HintBubble.svelte";
 	import { offeringsNavHint } from "$lib/offeringsNavHint.svelte";
 	import { onMount } from "svelte";
+
+	const only = $derived(page.url.searchParams.get(`only`));
+	const shown = (name: string) => {
+		if (only === `product`) return name === `location` || name === `offerings`;
+		if (!only) return true;
+		return only === name;
+	};
 
 	let topOpen = $state(true);
 	let bottomOpen = $state(true);
@@ -11,7 +19,8 @@
 	let pageOpen = $state(true);
 
 	onMount(() => {
-		offeringsNavHint.onHomeScroll(2200);
+		const name = new URL(window.location.href).searchParams.get(`only`);
+		if (!name || name === `offerings` || name === `product`) offeringsNavHint.onHomeScroll(2200);
 		return () => offeringsNavHint.leaveHome();
 	});
 </script>
@@ -21,7 +30,7 @@
 </svelte:head>
 
 <div class="fixed top-2 left-4 z-60 w-40" data-testid="top-anchor">
-	<HintBubble open={topOpen} side="top" testId="top-hint" closeTestId="top-hint-close" class="w-44" onDismiss={() => (topOpen = false)}>
+	<HintBubble open={topOpen && shown(`top`)} side="top" testId="top-hint" closeTestId="top-hint-close" class="w-44" onDismiss={() => (topOpen = false)}>
 		Oben am Rand
 	</HintBubble>
 	<div class="bg-base-100 rounded-box border-base-300 border px-3 py-2 text-sm">Oberer Anker</div>
@@ -29,7 +38,7 @@
 
 <div class="fixed bottom-2 left-4 z-60 w-40" data-testid="bottom-anchor">
 	<HintBubble
-		open={bottomOpen}
+		open={bottomOpen && shown(`bottom`)}
 		side="bottom"
 		testId="bottom-hint"
 		closeTestId="bottom-hint-close"
@@ -46,7 +55,7 @@
 		<div class="h-[25rem]"></div>
 		<div data-testid="scroll-anchor" class="bg-base-100 rounded-box relative mx-8 h-12 border px-3 py-2">
 			<HintBubble
-				open={scrollOpen}
+				open={scrollOpen && shown(`scroll`)}
 				side="top"
 				testId="scroll-hint"
 				closeTestId="scroll-hint-close"
@@ -60,7 +69,7 @@
 		<div class="h-[25rem]"></div>
 		<div data-testid="scroll-bottom-anchor" class="bg-base-100 rounded-box relative mx-8 h-12 border px-3 py-2">
 			<HintBubble
-				open={scrollBottomOpen}
+				open={scrollBottomOpen && shown(`scroll-bottom`)}
 				side="bottom"
 				testId="scroll-bottom-hint"
 				closeTestId="scroll-bottom-hint-close"
@@ -75,7 +84,9 @@
 	</div>
 
 	<div class="relative z-60 w-72" data-testid="location-anchor">
-		<AutoLocationHintBubble />
+		{#if shown(`location`)}
+			<AutoLocationHintBubble />
+		{/if}
 		<div class="input">Berlin</div>
 	</div>
 
@@ -85,7 +96,7 @@
 
 	<div data-testid="page-anchor" class="bg-base-100 rounded-box relative mx-auto h-12 w-48 border px-3 py-2">
 		<HintBubble
-			open={pageOpen}
+			open={pageOpen && shown(`page`)}
 			side="top"
 			testId="page-hint"
 			closeTestId="page-hint-close"
