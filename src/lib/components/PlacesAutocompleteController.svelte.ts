@@ -1,4 +1,4 @@
-import { COASTAL_HOI_AN, preferCoastalHoiAnPlace, rankHoiAnSuggestions, wantsCoastalHoiAn } from '$lib/placeLabel';
+import { COASTAL_HOI_AN, mentionsHoiAn, omitOtherHoiAnSuggestions, preferCoastalHoiAnPlace } from '$lib/placeLabel';
 
 const MIN_INPUT_LENGTH = 2;
 const DEBOUNCE_MS = 300;
@@ -135,7 +135,7 @@ export class PlacesAutocompleteController {
 		this.isLoading = true;
 		this.hasSearched = false;
 		this.query = trimmed;
-		const coastalQuery = wantsCoastalHoiAn(trimmed);
+		const coastalQuery = mentionsHoiAn(trimmed);
 
 		try {
 			const request: google.maps.places.AutocompleteRequest = {
@@ -168,7 +168,7 @@ export class PlacesAutocompleteController {
 					prediction
 				});
 			}
-			this.suggestions = rankHoiAnSuggestions({ query: trimmed, suggestions: nextSuggestions });
+			this.suggestions = omitOtherHoiAnSuggestions(nextSuggestions);
 
 			this.highlightedIndex = this.suggestions.length > 0 ? 0 : -1;
 			this.hasSearched = true;

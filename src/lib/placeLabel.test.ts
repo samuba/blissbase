@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
 	COASTAL_HOI_AN,
 	disambiguatedPlaceLabel,
+	mentionsHoiAn,
+	omitOtherHoiAnSuggestions,
 	preferCoastalHoiAnCoordinates,
 	preferCoastalHoiAnPlace,
-	rankHoiAnSuggestions,
 	sameDeclaredPlace,
 	wantsCoastalHoiAn,
 } from '$lib/placeLabel';
@@ -39,16 +40,18 @@ describe(`coastal Hoi An selection`, () => {
 		expect(wantsCoastalHoiAn(`Hội An, An Giang`)).toBe(false);
 	});
 
-	it(`moves the An Giang homonym behind the coastal suggestion`, () => {
-		expect(rankHoiAnSuggestions({
-			query: `Hoi An`,
-			suggestions: [
-				{ text: `Hội An, An Giang, Vietnam` },
-				{ text: `Hội An, Đà Nẵng, Vietnam` },
-			],
-		}).map((suggestion) => suggestion.text)).toEqual([
+	it(`hides the An Giang commune and keeps the coastal city and other An Giang places`, () => {
+		expect(mentionsHoiAn(`Hội An, An Giang`)).toBe(true);
+		expect(omitOtherHoiAnSuggestions([
+			{ text: `Hội An, An Giang, Vietnam` },
+			{ text: `Hội An, Chợ Mới, An Giang, Vietnam` },
+			{ text: `Hội An, Đà Nẵng, Vietnam` },
+			{ text: `Long Xuyên, An Giang, Vietnam` },
+			{ text: `The Nam Hai, Hội An` },
+		]).map((suggestion) => suggestion.text)).toEqual([
 			`Hội An, Đà Nẵng, Vietnam`,
-			`Hội An, An Giang, Vietnam`,
+			`Long Xuyên, An Giang, Vietnam`,
+			`The Nam Hai, Hội An`,
 		]);
 	});
 
@@ -67,7 +70,7 @@ describe(`coastal Hoi An selection`, () => {
 		});
 	});
 
-	it(`keeps an explicit An Giang choice and a coastal venue`, () => {
+	it(`rewrites a selected An Giang Hội An pin and keeps a coastal venue`, () => {
 		const anGiang = preferCoastalHoiAnPlace({
 			query: `Hoi An`,
 			suggestionText: `Hội An, An Giang, Vietnam`,
@@ -76,7 +79,8 @@ describe(`coastal Hoi An selection`, () => {
 			latitude: 10.3838,
 			longitude: 105.489,
 		});
-		expect(anGiang.latitude).toBe(10.3838);
+		expect(anGiang.latitude).toBe(COASTAL_HOI_AN.lat);
+		expect(anGiang.longitude).toBe(COASTAL_HOI_AN.lng);
 
 		const namHai = preferCoastalHoiAnPlace({
 			query: `Hoi An`,
@@ -87,6 +91,16 @@ describe(`coastal Hoi An selection`, () => {
 			longitude: 108.3,
 		});
 		expect(namHai.latitude).toBe(15.97);
+
+		const longXuyen = preferCoastalHoiAnPlace({
+			query: `Hoi An`,
+			suggestionText: `Long Xuyên, An Giang, Vietnam`,
+			displayName: `Long Xuyên`,
+			formattedAddress: `Long Xuyên, An Giang, Vietnam`,
+			latitude: 10.386,
+			longitude: 105.435,
+		});
+		expect(longXuyen.latitude).toBe(10.386);
 	});
 
 	it(`geocodes a bare Hoi An query to the coast when Google returns An Giang`, () => {

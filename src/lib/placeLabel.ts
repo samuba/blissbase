@@ -70,19 +70,41 @@ export function asksForOtherHoiAn(value: string | null | undefined) {
 }
 
 /**
- * Puts the An Giang homonym after the coastal city when the query is just Hội An.
+ * Drops the An Giang Hội An commune from autocomplete. Coastal Hội An stays.
+ * Other An Giang places, such as Long Xuyên, stay too.
  *
  * @example
- * rankHoiAnSuggestions({ query: `Hoi An`, suggestions: [{ text: `Hội An, An Giang` }, { text: `Hội An, Đà Nẵng` }] })
+ * omitOtherHoiAnSuggestions([{ text: `Hội An, An Giang, Vietnam` }, { text: `Hội An, Đà Nẵng, Vietnam` }])
  */
-export function rankHoiAnSuggestions<T extends { text: string }>(args: { query: string; suggestions: T[] }) {
-	if (!wantsCoastalHoiAn(args.query)) return args.suggestions;
-	return [...args.suggestions].sort((a, b) => suggestionRank(a.text) - suggestionRank(b.text));
+export function omitOtherHoiAnSuggestions<T extends { text: string }>(suggestions: T[]) {
+	return suggestions.filter((suggestion) => !isOtherHoiAnSuggestion(suggestion.text));
 }
 
 /**
- * Rewrites an accidental An Giang pin to coastal Hội An.
- * A suggestion that already says An Giang is kept.
+ * True when a suggestion names the Mekong commune called Hội An.
+ *
+ * @example
+ * isOtherHoiAnSuggestion(`Hội An, Chợ Mới, An Giang, Vietnam`)
+ */
+export function isOtherHoiAnSuggestion(text: string | null | undefined) {
+	if (!asksForOtherHoiAn(text)) return false;
+	return mentionsHoiAn(text);
+}
+
+/**
+ * True when the text mentions Hội An, Hoyan, or Hoian, with or without a region.
+ *
+ * @example
+ * mentionsHoiAn(`Hội An, An Giang`)
+ */
+export function mentionsHoiAn(value: string | null | undefined) {
+	const folded = foldPlaceText(value ?? ``);
+	return folded.includes(`hoi an`) || folded.includes(`hoian`) || folded.includes(`hoyan`);
+}
+
+/**
+ * Rewrites an An Giang Hội An pin to the coastal city.
+ * A coastal venue such as The Nam Hai is left alone.
  *
  * @example
  * preferCoastalHoiAnPlace({ query: `Hoi An`, displayName: `Hoi An, VN`, formattedAddress: `Hoi An, VN`, latitude: 10.3838, longitude: 105.489, suggestionText: `Hoi An, Vietnam` })
@@ -93,8 +115,7 @@ export function preferCoastalHoiAnPlace<T extends {
 	latitude: number;
 	longitude: number;
 }>(args: T & { query?: string | null; suggestionText?: string | null }): T {
-	if (asksForOtherHoiAn(args.query) || asksForOtherHoiAn(args.suggestionText)) return args;
-	if (!wantsCoastalHoiAn(args.query) && !isBareHoiAnName(args.displayName)) return args;
+	if (!wantsCoastalHoiAn(args.query) && !isBareHoiAnName(args.displayName) && !isOtherHoiAnSuggestion(args.suggestionText)) return args;
 	if (!isOtherHoiAnPin(args)) return args;
 
 	return {
@@ -120,9 +141,7 @@ export function preferCoastalHoiAnCoordinates(args: { query: string; lat: number
 }
 
 function isOtherHoiAnPin(args: { displayName: string; formattedAddress: string; latitude: number; longitude: number }) {
-	const firstAddressPart = args.formattedAddress.split(`,`)[0] ?? ``;
-	const namedHoiAn = isBareHoiAnName(args.displayName) || isBareHoiAnName(firstAddressPart);
-	if (!namedHoiAn && !asksForOtherHoiAn(args.formattedAddress) && !asksForOtherHoiAn(args.displayName)) return false;
+	if (!mentionsHoiAn(args.displayName) && !mentionsHoiAn(args.formattedAddress)) return false;
 	return isFarFromCoastalHoiAn(args);
 }
 
@@ -143,10 +162,6 @@ function isBareHoiAnName(value: string | null | undefined) {
 	if (folded === `hoi an` || folded === `hoian` || folded === `hoyan`) return true;
 	const parts = placeParts(value);
 	return parts.length === 1 && (parts[0] === `hoi an` || parts[0] === `hoian` || parts[0] === `hoyan`);
-}
-
-function suggestionRank(text: string) {
-	return asksForOtherHoiAn(text) ? 1 : 0;
 }
 
 function formattedAddressHasPlaceName(args: { formattedAddress: string; displayName: string }) {
