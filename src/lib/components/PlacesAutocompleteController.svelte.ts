@@ -154,6 +154,7 @@ export class PlacesAutocompleteController {
 			for (const suggestion of suggestions) {
 				const prediction = suggestion.placePrediction;
 				if (!prediction?.placeId) continue;
+				if (isInlandHoiAnSuggestion(prediction)) continue;
 				if (nextSuggestions.some((item) => item.prediction.placeId === prediction.placeId)) continue;
 				nextSuggestions.push({
 					text: prediction.text.toString(),
@@ -251,4 +252,22 @@ export class PlacesAutocompleteController {
 		if (!this.AutocompleteSessionToken) return;
 		this.sessionToken = new this.AutocompleteSessionToken();
 	}
+}
+
+// People kept confusing coastal Hội An with the inland one. The inland commune has nothing going for it, so the suggestion is removed.
+function isInlandHoiAnSuggestion(prediction: google.maps.places.PlacePrediction) {
+	const text = foldPlaceText(
+		`${prediction.mainText?.toString() ?? ``} ${prediction.secondaryText?.toString() ?? ``} ${prediction.text.toString()}`,
+	);
+	const namesHoiAn = text.includes(`hoi an`) || text.includes(`hoian`) || text.includes(`hoyan`);
+	if (!namesHoiAn) return false;
+	return text.includes(`an giang`) || text.includes(`cho moi`);
+}
+
+function foldPlaceText(value: string) {
+	return value
+		.normalize(`NFD`)
+		.replace(/[\u0300-\u036f]/g, ``)
+		.replace(/đ/gi, `d`)
+		.toLowerCase();
 }

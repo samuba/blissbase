@@ -72,7 +72,7 @@ Usage (from repo root):
 Commands:
   launch [--run-id ID] [--port N]   Start isolated Vite+PGlite; write state under /tmp
   doctor [--run-id ID]              Read-only health check (process, seed API, homepage)
-  seed <target> [--run-id ID]       reset | baseline | meditation | yoga | online
+  seed <target> [--run-id ID]       reset | baseline | meditation | yoga | online | offering
   browser <action> [flags]          Drive the live UI (persistent browser session)
   status [--run-id ID]              Print current instance state JSON
   cleanup [--run-id ID]             Stop server + browser; keep artifacts/
@@ -89,6 +89,7 @@ Browser actions:
   expect-visible --testid NAME [--text TEXT] [--timeout MS]
   expect-visible --role ROLE --name NAME
   expect-count --testid NAME --count N [--text TEXT]
+  read-clipboard                    Read navigator.clipboard text
   screenshot --path REL_OR_ABS [--viewport 1]
   scroll [--y N] [--testid NAME --top N]
   viewport --width N --height N
@@ -259,7 +260,7 @@ async function doctor(flags: Flags) {
 }
 
 async function seed(target: string | undefined, flags: Flags) {
-	if (!target) throw new Error(`seed requires a target: reset | baseline | meditation | yoga | online`);
+	if (!target) throw new Error(`seed requires a target: reset | baseline | meditation | yoga | online | offering`);
 	const state = requireLiveState(flags);
 
 	if (target === `reset`) {
@@ -308,6 +309,32 @@ async function seed(target: string | undefined, flags: Flags) {
 		}),
 	};
 
+	if (target === `offering`) {
+		await seedAction(state.baseURL, `resetDatabase`);
+		await seedAction(state.baseURL, `createProfile`, {
+			id: `00000000-0000-4000-8000-000000000001`,
+			slug: `e2e-user`,
+			displayName: `E2E User`,
+			bio: `E2E profile bio`,
+			profileImageUrl: `https://assets.blissbase.app/e2e/profile.webp`,
+			bannerImageUrl: `https://assets.blissbase.app/e2e/banner.webp`,
+			socialLinks: [{ type: `website`, value: `https://example.com` }],
+			locationLabel: `Berlin`,
+			latitude: 52.52,
+			longitude: 13.405,
+		});
+		const created = await seedAction(state.baseURL, `createOffering`, {
+			profileId: `00000000-0000-4000-8000-000000000001`,
+			slug: `verify-offering-share`,
+			title: `Berlin Coaching Session`,
+			descriptionHtml: `<p>Personal coaching in Berlin.</p>`,
+			format: `offline`,
+			listed: true,
+		});
+		console.log(JSON.stringify({ ok: true, action: `createOffering`, created }, null, 2));
+		return;
+	}
+
 	if (target === `baseline`) {
 		await seedAction(state.baseURL, `resetDatabase`);
 		const created = [];
@@ -353,6 +380,7 @@ async function browserDaemon(flags: Flags) {
 		baseURL: state.baseURL,
 		locale: `de-DE`,
 		extraHTTPHeaders: { "Accept-Language": `de` },
+		permissions: [`clipboard-read`, `clipboard-write`],
 	});
 	const page = await context.newPage();
 	installGotoRetries(page);
@@ -483,6 +511,10 @@ async function runBrowserAction(args: {
 			}
 			break;
 		}
+		case `read-clipboard`: {
+			const text = await page.evaluate(async () => navigator.clipboard.readText());
+			return { ok: true, action, text, url: page.url() };
+		}
 		case `screenshot`: {
 			const out = resolveArtifactPath(state, requireFlag(flags, `path`));
 			mkdirSync(dirname(out), { recursive: true });
@@ -557,7 +589,14 @@ async function browserRpc(state: InstanceState, body: { action: string; flags: F
 		body: JSON.stringify(body),
 		signal: AbortSignal.timeout(120000),
 	});
-	return (await response.json()) as { ok: boolean; error?: string; path?: string; url?: string; action?: string };
+	return (await response.json()) as {
+		ok: boolean;
+		error?: string;
+		path?: string;
+		url?: string;
+		action?: string;
+		text?: string;
+	};
 }
 
 async function ensureBrowserDaemon(state: InstanceState) {
