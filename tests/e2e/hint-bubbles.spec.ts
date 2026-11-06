@@ -134,6 +134,22 @@ test.describe(`hint bubble positioning`, () => {
 		expect(animation === `none` || animation === ``).toBeTruthy();
 	});
 
+	test(`stays fixed on the anchor while the page scrolls`, async ({ page }) => {
+		await openHarness(page);
+		const drift = await page.evaluate(() => {
+			const hint = document.querySelector(`[data-testid="top-hint"]`);
+			const anchor = document.querySelector(`[data-testid="top-anchor"]`);
+			const wrapper = hint?.closest(`[data-bits-floating-content-wrapper]`);
+			if (!(wrapper instanceof HTMLElement) || !(anchor instanceof HTMLElement)) return null;
+			const gap = () => Math.abs(wrapper.getBoundingClientRect().top - anchor.getBoundingClientRect().top);
+			const before = gap();
+			window.scrollTo(0, window.scrollY + 280);
+			return { position: getComputedStyle(wrapper).position, before, during: gap() };
+		});
+		expect(drift?.position).toBe(`fixed`);
+		expect(Math.abs((drift?.during ?? 0) - (drift?.before ?? 0))).toBeLessThan(2);
+	});
+
 	test(`repositions when the viewport is resized`, async ({ page }) => {
 		await openHarness(page);
 		await reveal(page, `page-anchor`);

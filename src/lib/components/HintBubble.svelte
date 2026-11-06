@@ -8,6 +8,8 @@
 	// Popover already follows the anchor, flips, and hides it once the anchor is clipped.
 	// Its default collision boundary is the viewport, and a portaled bubble is not inside
 	// the anchor's scroll container, so that container has to be passed in.
+	// strategy fixed is required: without a scroll lock the popover defaults to absolute,
+	// so the bubble rides the page and snaps back when the async position update lands.
 	// checkVisibility is separate: `hidden` / `invisible` anchors still have a box, and both
 	// navs stay mounted, so the hidden one must not portal a second bubble.
 	let anchor = $state<HTMLElement | null>(null);
@@ -80,6 +82,7 @@
 				collisionPadding={12}
 				{collisionBoundary}
 				hideWhenDetached
+				strategy="fixed"
 				trapFocus={false}
 				escapeKeydownBehavior="defer-otherwise-ignore"
 				interactOutsideBehavior="defer-otherwise-ignore"
