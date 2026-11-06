@@ -66,6 +66,7 @@ export async function loadVisibleListedOfferings(filterInput: OfferingsFilter) {
 					socialLinks: true,
 					latitude: true,
 					longitude: true,
+					locationLabel: true,
 				},
 			},
 		},
@@ -84,6 +85,8 @@ export async function loadVisibleListedOfferings(filterInput: OfferingsFilter) {
 					includeOnline: filter.includeOnline,
 					profileLatitude: offering.profile.latitude,
 					profileLongitude: offering.profile.longitude,
+					profileLocationLabel: offering.profile.locationLabel,
+					searchLocation: filter.location,
 					filterCoords,
 					distanceKm,
 				});
