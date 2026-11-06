@@ -3,10 +3,11 @@
 	import ImageDialog from "$lib/components/ImageDialog.svelte";
 	import ProfileContactButtons from "$lib/components/ProfileContactButtons.svelte";
 	import PublicProfileCard from "$lib/components/PublicProfileCard.svelte";
+	import ShareButton from "$lib/components/ShareButton.svelte";
 	import type { OfferingFormat } from "$lib/rpc/offerings.common";
 	import { deleteOffering, listOffering, unlistOffering } from "$lib/rpc/offerings.remote";
 	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-	import { routes } from "$lib/routes";
+	import { absoluteUrl, routes } from "$lib/routes";
 	import { toast } from "svelte-sonner";
 
 	let {
@@ -24,6 +25,7 @@
 	let selectedImageIndex = $state(0);
 	let imageLoadError = $state(false);
 	let pendingManagementAction = $state<OfferingManagementAction | undefined>(undefined);
+	const shareUrl = $derived(absoluteUrl(routes.offeringDetails(offering.slug)));
 	const imageUrl = $derived.by(() => {
 		const rawUrl = offering.imageUrls?.[selectedImageIndex] ?? ``;
 		return imageLoadError ? (rawUrl.split(`https:`)?.[2] ?? ``) : rawUrl;
@@ -144,7 +146,7 @@
 					{offering.title}
 				</h1>
 
-				<div class="text-base-content/75 flex items-center h-auto min-w-0 shrink-0 flex-wrap gap-1.5 py-1 leading-none wrap-break-word">
+				<div class="text-base-content/75 flex h-auto min-w-0 shrink-0 flex-wrap items-center gap-1.5 py-1 leading-none wrap-break-word">
 					{#if offering.format === `online`}
 						<i class="icon-[ph--globe] size-4.5"></i>
 						Online
@@ -178,9 +180,7 @@
 						Deaktiviert — nicht für andere sichtbar
 					</span>
 				{/if}
-				<div class="flex flex-wrap gap-4 sm:flex-row sm:items-center">
-
-
+				<div class="flex flex-wrap items-center justify-center gap-4 sm:justify-start">
 					{#if offering.canManage}
 						<div class="join flex w-full items-center justify-center sm:w-auto">
 							<button
@@ -197,7 +197,14 @@
 								{/if}
 								Löschen
 							</button>
-							<button type="button" class="btn btn-sm join-item" data-testid="offering-toggle-listing" data-listed={String(offering.listed)} onclick={manageListingState} disabled={Boolean(pendingManagementAction)}>
+							<button
+								type="button"
+								class="btn btn-sm join-item"
+								data-testid="offering-toggle-listing"
+								data-listed={String(offering.listed)}
+								onclick={manageListingState}
+								disabled={Boolean(pendingManagementAction)}
+							>
 								{#if pendingManagementAction === `unlist` || pendingManagementAction === `list`}
 									<span class="loading loading-spinner loading-xs"></span>
 								{:else if offering.listed}
@@ -217,6 +224,8 @@
 							</a>
 						</div>
 					{/if}
+
+					<ShareButton title={offering.title} url={shareUrl} testId="offering-share" />
 				</div>
 
 				{#if offering.descriptionHtml?.trim()}
