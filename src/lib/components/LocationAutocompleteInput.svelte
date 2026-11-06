@@ -3,7 +3,6 @@
 	import { isTouchDevice } from '$lib/common';
 	import { portalToBody } from '$lib/attachments/portal';
 	import { resetGoogleMapsPlacesLoader } from '$lib/googleMapsLoader';
-	import { disambiguatedPlaceLabel } from '$lib/placeLabel';
 	import { reverseGeocodeCity } from '$lib/rpc/places.remote';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
@@ -290,7 +289,7 @@
 		usingCurrentLocation = false;
 		resolvedLat = args.latitude;
 		resolvedLng = args.longitude;
-		typedLocation = formatPlaceLabel?.(args) || disambiguatedPlaceLabel(args);
+		typedLocation = formatPlaceLabel?.(args) || args.displayName || args.formattedAddress;
 
 		try {
 			await notifySelect({

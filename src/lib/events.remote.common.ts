@@ -1,7 +1,6 @@
 import * as v from 'valibot';
 import { knownTagSlugs } from '$lib/eventCategories';
 import { galleryImageClaimsSchema, galleryImageOrderSchema } from '$lib/galleryImages';
-import { disambiguatedPlaceLabel } from '$lib/placeLabel';
 import { profileLocationFields, publicProfilePatchSchema } from '$lib/rpc/profile.common';
 
 export type ContactMethod = `none` | `email` | `phone` | `website` | `telegram` | `whatsapp`;
@@ -274,7 +273,18 @@ function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
  * // `Yoga Studio, Musterstraße 1, Berlin`
  */
 export function eventPlaceLabel(args: { displayName: string; formattedAddress: string }) {
-	return disambiguatedPlaceLabel(args);
+	const displayName = args.displayName.trim();
+	const formattedAddress = args.formattedAddress.trim();
+	if (!formattedAddress) return displayName;
+	if (!displayName || formattedAddressHasPlaceName({ formattedAddress, displayName })) return formattedAddress;
+	return `${displayName}, ${formattedAddress}`;
+}
+
+function formattedAddressHasPlaceName(args: { formattedAddress: string; displayName: string }) {
+	const name = args.displayName.trim().toLowerCase();
+	const formatted = args.formattedAddress.trim().toLowerCase();
+	if (formatted === name) return true;
+	return formatted.split(`,`).some((part) => part.trim() === name);
 }
 
 type EditEventSource = {

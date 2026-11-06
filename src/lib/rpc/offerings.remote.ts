@@ -101,8 +101,6 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 							includeOnline: filter.includeOnline,
 							profileLatitude: offering.profile.latitude,
 							profileLongitude: offering.profile.longitude,
-							profileLocationLabel: offering.profile.locationLabel,
-							searchLocation: filter.location,
 							filterCoords,
 							distanceKm,
 						});

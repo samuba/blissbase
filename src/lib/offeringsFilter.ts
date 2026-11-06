@@ -1,6 +1,5 @@
 import { matchesWholeWord, stripHtml, trimAllWhitespaces } from '$lib/common';
 import type { FilterCookieData } from '$lib/cookie-utils';
-import { sameDeclaredPlace } from '$lib/placeLabel';
 import type { OfferingFormat } from '$lib/rpc/offerings.common';
 import { hasValidCoordinates, isWithinDistanceKm, sanitizeLocationParams } from '$lib/locationFilter';
 
@@ -123,25 +122,16 @@ export function filterOfferingsBySearchTerm<T extends {
 	});
 }
 
-/**
- * In-person and hybrid offerings stay in a local search when the pin is inside
- * the radius, or when the place label names that search without a different region.
- * Pure online offerings still require includeOnline. `Hoi An, VN` matches `Hội An`;
- * `Hội An, An Giang` does not.
- */
 export function shouldIncludeOfferingInLocationFilter(args: {
 	format: OfferingFormat;
 	includeOnline: boolean;
 	profileLatitude: number | null | undefined;
 	profileLongitude: number | null | undefined;
-	profileLocationLabel?: string | null;
-	searchLocation?: string | null;
 	filterCoords: { lat: number; lng: number };
 	distanceKm: number;
 }) {
 	if (args.includeOnline && isOfferingAvailableOnline(args.format)) return true;
 	if (!isOfflineOffering(args.format)) return false;
-	if (sameDeclaredPlace({ label: args.profileLocationLabel, search: args.searchLocation })) return true;
 	if (!hasValidCoordinates({ lat: args.profileLatitude, lng: args.profileLongitude })) return false;
 
 	return isWithinDistanceKm({

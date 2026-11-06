@@ -164,13 +164,6 @@ describe(`eventPlaceLabel`, () => {
 			formattedAddress: `Musterstraße 1, Berlin`
 		})).toBe(`Musterstraße 1, Berlin`);
 	});
-
-	it(`keeps the province when the place name differs only by diacritics`, () => {
-		expect(eventPlaceLabel({
-			displayName: `Hoi An`,
-			formattedAddress: `Hội An, An Giang, Vietnam`
-		})).toBe(`Hội An, An Giang, Vietnam`);
-	});
 });
 
 /**

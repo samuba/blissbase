@@ -1,8 +1,5 @@
-import { COASTAL_HOI_AN, mentionsHoiAn, omitOtherHoiAnSuggestions, preferCoastalHoiAnPlace } from '$lib/placeLabel';
-
 const MIN_INPUT_LENGTH = 2;
 const DEBOUNCE_MS = 300;
-const COASTAL_HOI_AN_BIAS_METERS = 80_000;
 
 export type PlaceSuggestion = {
 	text: string;
@@ -35,7 +32,6 @@ export class PlacesAutocompleteController {
 
 	private pendingFetch: { input: string; biasLat?: number | null; biasLng?: number | null } | null =
 		null;
-	private query = ``;
 
 	prepare() {
 		return this.init();
@@ -134,8 +130,6 @@ export class PlacesAutocompleteController {
 		const currentRequestId = ++this.requestId;
 		this.isLoading = true;
 		this.hasSearched = false;
-		this.query = trimmed;
-		const coastalQuery = mentionsHoiAn(trimmed);
 
 		try {
 			const request: google.maps.places.AutocompleteRequest = {
@@ -143,14 +137,12 @@ export class PlacesAutocompleteController {
 				sessionToken: this.sessionToken ?? undefined
 			};
 
-			const biasLat = coastalQuery ? COASTAL_HOI_AN.lat : args.biasLat;
-			const biasLng = coastalQuery ? COASTAL_HOI_AN.lng : args.biasLng;
-			if (biasLat != null && biasLng != null) {
+			if (args.biasLat != null && args.biasLng != null) {
 				request.locationBias = {
-					center: { lat: biasLat, lng: biasLng },
-					radius: coastalQuery ? COASTAL_HOI_AN_BIAS_METERS : 50_000
+					center: { lat: args.biasLat, lng: args.biasLng },
+					radius: 50_000
 				};
-				request.origin = { lat: biasLat, lng: biasLng };
+				request.origin = { lat: args.biasLat, lng: args.biasLng };
 			}
 
 			const { suggestions } =
@@ -162,13 +154,14 @@ export class PlacesAutocompleteController {
 			for (const suggestion of suggestions) {
 				const prediction = suggestion.placePrediction;
 				if (!prediction?.placeId) continue;
+				if (isInlandHoiAnSuggestion(prediction)) continue;
 				if (nextSuggestions.some((item) => item.prediction.placeId === prediction.placeId)) continue;
 				nextSuggestions.push({
-					text: suggestionLabel(prediction),
+					text: prediction.text.toString(),
 					prediction
 				});
 			}
-			this.suggestions = omitOtherHoiAnSuggestions(nextSuggestions);
+			this.suggestions = nextSuggestions;
 
 			this.highlightedIndex = this.suggestions.length > 0 ? 0 : -1;
 			this.hasSearched = true;
@@ -198,23 +191,15 @@ export class PlacesAutocompleteController {
 			const longitude = location.lng();
 			const displayName = place.displayName ?? suggestion.text;
 			const formattedAddress = place.formattedAddress ?? suggestion.text;
-			const resolved = preferCoastalHoiAnPlace({
-				query: this.query,
-				suggestionText: suggestion.text,
-				displayName,
-				formattedAddress,
-				latitude,
-				longitude,
-			});
 
 			this.startNewSession();
 			this.close();
 
 			return {
-				displayName: resolved.displayName,
-				formattedAddress: resolved.formattedAddress,
-				latitude: resolved.latitude,
-				longitude: resolved.longitude,
+				displayName,
+				formattedAddress,
+				latitude,
+				longitude
 			};
 		} catch (error) {
 			console.error(`Failed to fetch place details:`, error);
@@ -269,9 +254,19 @@ export class PlacesAutocompleteController {
 	}
 }
 
-function suggestionLabel(prediction: google.maps.places.PlacePrediction) {
-	const main = prediction.mainText?.toString().trim() ?? ``;
-	const secondary = prediction.secondaryText?.toString().trim() ?? ``;
-	if (main && secondary) return `${main}, ${secondary}`;
-	return prediction.text.toString();
+function isInlandHoiAnSuggestion(prediction: google.maps.places.PlacePrediction) {
+	const text = foldPlaceText(
+		`${prediction.mainText?.toString() ?? ``} ${prediction.secondaryText?.toString() ?? ``} ${prediction.text.toString()}`,
+	);
+	const namesHoiAn = text.includes(`hoi an`) || text.includes(`hoian`) || text.includes(`hoyan`);
+	if (!namesHoiAn) return false;
+	return text.includes(`an giang`) || text.includes(`cho moi`);
+}
+
+function foldPlaceText(value: string) {
+	return value
+		.normalize(`NFD`)
+		.replace(/[\u0300-\u036f]/g, ``)
+		.replace(/đ/gi, `d`)
+		.toLowerCase();
 }

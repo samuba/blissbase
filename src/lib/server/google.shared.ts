@@ -1,5 +1,4 @@
 import { and, eq } from 'drizzle-orm';
-import { preferCoastalHoiAnCoordinates } from '$lib/placeLabel';
 import type { DB } from './db.shared';
 import { geocodeCache, reverseGeocodeCache } from './schema';
 
@@ -311,14 +310,7 @@ async function geocodeLocation(args: {
 	if (!response.ok) throw new Error(`Geocoding API request failed with status ${response.status}`);
 
 	const data = await response.json();
-	if (data.status === `OK` && data.results?.length) {
-		const location = data.results[0].geometry.location;
-		return preferCoastalHoiAnCoordinates({
-			query: args.location,
-			lat: location.lat,
-			lng: location.lng,
-		});
-	}
+	if (data.status === `OK` && data.results?.length) return data.results[0].geometry.location;
 	// Only a definitive "no match" may be cached as null; anything else is transient and must be retried next run.
 	if (data.status === `ZERO_RESULTS`) return null;
 	throw new Error(`Geocoding failed: ${data.status} ${data.error_message ?? ``}`.trim());
@@ -438,7 +430,24 @@ async function reverseGeocodeCity(lat: number, lng: number, apiKey: string): Pro
 		const data = await response.json();
 
 		if (data.status === `OK` && data.results?.length) {
-			return cityLabelFromAddressComponents(data.results[0].address_components ?? []);
+			const addressComponents = data.results[0].address_components;
+			const locality = addressComponents.find((component: { types: string[]; long_name: string }) =>
+				component.types.includes(`locality`)
+			);
+			const administrativeArea = addressComponents.find((component: { types: string[]; long_name: string }) =>
+				component.types.includes(`administrative_area_level_1`)
+			);
+
+			let result = ""
+			if (locality?.long_name) {
+				result = locality.long_name;
+				if (administrativeArea?.short_name && administrativeArea?.long_name !== result) {
+					result += `, ${administrativeArea.short_name}`;
+				}
+			} else {
+				return administrativeArea?.long_name ?? null;
+			}
+			return result;
 		}
 
 		console.error(`Reverse geocoding failed or no results:`, data.status, data.error_message);
@@ -447,62 +456,6 @@ async function reverseGeocodeCity(lat: number, lng: number, apiKey: string): Pro
 		console.error(`Error during reverse geocoding:`, error);
 		return null;
 	}
-}
-
-/**
- * Builds a city label from Google address components.
- * A country code is not used as the region, so Hội An in An Giang is not saved as `Hoi An, VN`.
- *
- * @example
- * cityLabelFromAddressComponents([{ long_name: `Hoi An`, short_name: `Hoi An`, types: [`locality`] }])
- */
-export function cityLabelFromAddressComponents(components: GeocodeAddressComponent[]) {
-	const component = (type: string) => components.find((item) => item.types.includes(type));
-	const locality = component(`locality`) ?? component(`postal_town`);
-	const admin1 = component(`administrative_area_level_1`);
-	const admin2 = component(`administrative_area_level_2`);
-	const country = component(`country`);
-	const place = locality?.long_name?.trim() || ``;
-	if (!place) return admin1?.long_name?.trim() || admin2?.long_name?.trim() || null;
-
-	const region = regionName({ place, admin1, admin2, country });
-	if (!region) return place;
-	return `${place}, ${region}`;
-}
-
-function regionName(args: {
-	place: string;
-	admin1?: GeocodeAddressComponent;
-	admin2?: GeocodeAddressComponent;
-	country?: GeocodeAddressComponent;
-}) {
-	const admin1IsCountry = isCountryComponent({ component: args.admin1, country: args.country });
-	const region = admin1IsCountry ? args.admin2 : args.admin1;
-	if (!region?.long_name?.trim()) return null;
-	if (foldComponentName(region.long_name) === foldComponentName(args.place)) return null;
-	if (isCountryComponent({ component: region, country: args.country })) return null;
-	if (admin1IsCountry) return region.long_name.trim();
-	return region.short_name?.trim() || region.long_name.trim();
-}
-
-function isCountryComponent(args: {
-	component?: GeocodeAddressComponent;
-	country?: GeocodeAddressComponent;
-}) {
-	if (!args.component || !args.country) return false;
-	const componentShort = args.component.short_name?.trim().toUpperCase();
-	const countryShort = args.country.short_name?.trim().toUpperCase();
-	if (componentShort && countryShort && componentShort === countryShort) return true;
-	return foldComponentName(args.component.long_name) === foldComponentName(args.country.long_name);
-}
-
-function foldComponentName(value: string) {
-	return value
-		.trim()
-		.normalize(`NFD`)
-		.replace(/[\u0300-\u036f]/g, ``)
-		.replace(/đ/gi, `d`)
-		.toLowerCase();
 }
 
 /**
@@ -526,12 +479,6 @@ function toCachedGeocodeResult(args: {
 		timezone: args.timezone
 	};
 }
-
-export type GeocodeAddressComponent = {
-	long_name: string;
-	short_name?: string;
-	types: string[];
-};
 
 export type GeocodeResult = {
 	lat: number;
