@@ -60,7 +60,7 @@
 							</a>
 						{/if}
 						{#if tab.id === `offerings`}
-							<OfferingsNavHintBubble placement="below" />
+							<OfferingsNavHintBubble side="bottom" />
 						{/if}
 					</li>
 				{/each}
