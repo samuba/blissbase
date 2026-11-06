@@ -1,4 +1,5 @@
 import { and, eq } from 'drizzle-orm';
+import { preferCoastalHoiAnCoordinates } from '$lib/placeLabel';
 import type { DB } from './db.shared';
 import { geocodeCache, reverseGeocodeCache } from './schema';
 
@@ -310,7 +311,14 @@ async function geocodeLocation(args: {
 	if (!response.ok) throw new Error(`Geocoding API request failed with status ${response.status}`);
 
 	const data = await response.json();
-	if (data.status === `OK` && data.results?.length) return data.results[0].geometry.location;
+	if (data.status === `OK` && data.results?.length) {
+		const location = data.results[0].geometry.location;
+		return preferCoastalHoiAnCoordinates({
+			query: args.location,
+			lat: location.lat,
+			lng: location.lng,
+		});
+	}
 	// Only a definitive "no match" may be cached as null; anything else is transient and must be retried next run.
 	if (data.status === `ZERO_RESULTS`) return null;
 	throw new Error(`Geocoding failed: ${data.status} ${data.error_message ?? ``}`.trim());
