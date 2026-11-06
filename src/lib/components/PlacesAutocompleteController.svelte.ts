@@ -254,6 +254,7 @@ export class PlacesAutocompleteController {
 	}
 }
 
+// People kept confusing coastal Hội An with the inland one. The inland commune has nothing going for it, so the suggestion is removed.
 function isInlandHoiAnSuggestion(prediction: google.maps.places.PlacePrediction) {
 	const text = foldPlaceText(
 		`${prediction.mainText?.toString() ?? ``} ${prediction.secondaryText?.toString() ?? ``} ${prediction.text.toString()}`,
