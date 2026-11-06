@@ -1,23 +1,31 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { Popover } from 'bits-ui';
+	import { browser } from "$app/environment";
+	import { Popover } from "bits-ui";
 
-	const { title, text, url, btnTextMobile, btnTextNonMobile }: { title?: string; text?: string; url?: string; btnTextMobile?: string; btnTextNonMobile?: string } = $props();
+	const {
+		title,
+		text,
+		url,
+		btnTextMobile,
+		btnTextNonMobile,
+		testId,
+	}: {
+		title?: string;
+		text?: string;
+		url?: string;
+		btnTextMobile?: string;
+		btnTextNonMobile?: string;
+		testId?: string;
+	} = $props();
 
 	const isAppleDevice = $derived(
-		browser
-			? navigator.userAgent.includes('Mac') ||
-					navigator.userAgent.includes('iPhone') ||
-					navigator.userAgent.includes('iPad')
-			: false
+		browser ? navigator.userAgent.includes(`Mac`) || navigator.userAgent.includes(`iPhone`) || navigator.userAgent.includes(`iPad`) : false,
 	);
 
 	let showCopiedNotice = $state(false);
 	let customAnchor = $state<HTMLButtonElement>();
 
-	const isTouchDevice = $derived(
-		typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
-	);
+	const isTouchDevice = $derived(typeof window !== `undefined` && window.matchMedia(`(pointer: coarse)`).matches);
 
 	async function share() {
 		if (!navigator.share) {
@@ -28,22 +36,24 @@
 		try {
 			await navigator.share({ url, title, text });
 		} catch (e) {
-			if (e instanceof Error && e.toString().includes('AbortError')) {
+			if (e instanceof Error && e.toString().includes(`AbortError`)) {
 				return; // share was aborted. no big deal.
 			}
-			console.error('Error sharing', e);
+			console.error(`Error sharing`, e);
 			await copyToClipboard();
 		}
 	}
 
 	async function copyToClipboard() {
-		await navigator.clipboard.writeText(url ?? '');
+		await navigator.clipboard.writeText(url ?? ``);
 		showCopiedNotice = true;
 		setTimeout(() => (showCopiedNotice = false), 2000);
 	}
 </script>
 
 <button
+	type="button"
+	data-testid={testId}
 	onclick={() => {
 		if (isTouchDevice) {
 			share();
@@ -55,11 +65,11 @@
 	class="btn flex items-center gap-1.5"
 >
 	{#if isTouchDevice && !!navigator.share}
-		<i class={['size-5', isAppleDevice ? 'icon-[lucide--share]' : 'icon-[ph--share-network]']}></i>
-		{btnTextMobile ?? 'Teilen'}
+		<i class={["size-5", isAppleDevice ? `icon-[lucide--share]` : `icon-[ph--share-network]`]} aria-hidden="true"></i>
+		{btnTextMobile ?? `Teilen`}
 	{:else}
-		<i class="icon-[ph--clipboard] size-5"></i>
-		{btnTextNonMobile ?? 'Link kopieren'}
+		<i class="icon-[ph--clipboard] size-5" aria-hidden="true"></i>
+		{btnTextNonMobile ?? `Link kopieren`}
 	{/if}
 </button>
 
@@ -67,19 +77,19 @@
 	<Popover.Content
 		{customAnchor}
 		class={[
-			'card bg-accent text-accent-content flex  flex-row gap-1.5 px-3 py-2 shadow-lg',
-			'data-[state=open]:animate-in',
-			'data-[state=open]:ease-out',
-			'data-[state=open]:fade-in',
-			'data-[state=open]:duration-300',
-			'data-[state=closed]:animate-out',
-			'data-[state=closed]:ease-in',
-			'data-[state=closed]:fade-out',
-			'data-[state=closed]:duration-150'
+			`card bg-accent text-accent-content flex flex-row gap-1.5 px-3 py-2 shadow-lg`,
+			`data-[state=open]:animate-in`,
+			`data-[state=open]:ease-out`,
+			`data-[state=open]:fade-in`,
+			`data-[state=open]:duration-300`,
+			`data-[state=closed]:animate-out`,
+			`data-[state=closed]:ease-in`,
+			`data-[state=closed]:fade-out`,
+			`data-[state=closed]:duration-150`,
 		]}
 	>
-		<i class="icon-[ph--check-circle] inline-block size-5"></i>
-		<span class="">Link kopiert</span>
+		<i class="icon-[ph--check-circle] inline-block size-5" aria-hidden="true"></i>
+		<span role="status" data-testid="share-copied">Link kopiert</span>
 		<Popover.Arrow />
 	</Popover.Content>
 </Popover.Root>
