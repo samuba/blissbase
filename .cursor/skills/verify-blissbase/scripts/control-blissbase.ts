@@ -89,7 +89,9 @@ Browser actions:
   expect-visible --testid NAME [--text TEXT] [--timeout MS]
   expect-visible --role ROLE --name NAME
   expect-count --testid NAME --count N [--text TEXT]
-  screenshot --path REL_OR_ABS
+  screenshot --path REL_OR_ABS [--viewport 1]
+  scroll [--y N] [--testid NAME --top N]
+  viewport --width N --height N
   snapshot --path REL_OR_ABS        Accessibility tree dump
   sign-in [--user-id UUID] [--email ADDR]
   hydrate                           Wait for data-app-hydrated=true
@@ -484,8 +486,26 @@ async function runBrowserAction(args: {
 		case `screenshot`: {
 			const out = resolveArtifactPath(state, requireFlag(flags, `path`));
 			mkdirSync(dirname(out), { recursive: true });
-			await page.screenshot({ path: out, fullPage: true });
+			await page.screenshot({ path: out, fullPage: flags.viewport !== `1` });
 			return { ok: true, path: out, url: page.url() };
+		}
+		case `scroll`: {
+			const top = Number(flags.top ?? flags.y ?? `0`);
+			if (flags.testid) {
+				await page.getByTestId(flags.testid).evaluate((node, scrollTop) => {
+					node.scrollTop = scrollTop;
+				}, top);
+				break;
+			}
+			await page.evaluate((y) => window.scrollTo(0, y), top);
+			break;
+		}
+		case `viewport`: {
+			await page.setViewportSize({
+				width: Number(requireFlag(flags, `width`)),
+				height: Number(requireFlag(flags, `height`)),
+			});
+			break;
 		}
 		case `snapshot`: {
 			const out = resolveArtifactPath(state, requireFlag(flags, `path`));
