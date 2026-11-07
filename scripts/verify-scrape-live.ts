@@ -130,6 +130,25 @@ export function compareReading(reading: LiveReading): PageVerdict {
 		gaps.push(`startAt`);
 	}
 
+	pushOptionalInstant({
+		field: `endAt`,
+		scraper: reading.scraper.endAt,
+		witness: reading.witness.endAt,
+		mismatches,
+	});
+	pushOptionalText({
+		field: `host`,
+		scraper: reading.scraper.host,
+		witness: reading.witness.host,
+		mismatches,
+	});
+	pushOptionalText({
+		field: `hostLink`,
+		scraper: reading.scraper.hostLink,
+		witness: reading.witness.hostLink,
+		mismatches,
+	});
+
 	if (mismatches.length) return { kind: `mismatch`, url: reading.url, fields: mismatches };
 	if (gaps.length) return { kind: `gap`, url: reading.url, fields: gaps };
 	return { kind: `match`, url: reading.url };
@@ -265,6 +284,44 @@ function formatStartWitness(witness: LiveReading[`witness`]): string {
 	return parts.join(`, `);
 }
 
+function pushOptionalText({
+	field,
+	scraper,
+	witness,
+	mismatches,
+}: {
+	field: OptionalField;
+	scraper: string | undefined;
+	witness: string | undefined;
+	mismatches: FieldMismatch[];
+}) {
+	const expected = superTrim(witness);
+	if (!expected) return;
+	const actual = superTrim(scraper);
+	if (actual === expected) return;
+	mismatches.push({ field, scraper: actual, witness: expected });
+}
+
+function pushOptionalInstant({
+	field,
+	scraper,
+	witness,
+	mismatches,
+}: {
+	field: OptionalField;
+	scraper: string | undefined;
+	witness: string | undefined;
+	mismatches: FieldMismatch[];
+}) {
+	const expected = witness?.trim() || undefined;
+	if (!expected) return;
+	const expectedMs = new Date(expected).getTime();
+	if (Number.isNaN(expectedMs)) return;
+	const actualMs = scraper ? new Date(scraper).getTime() : Number.NaN;
+	if (!Number.isNaN(actualMs) && actualMs === expectedMs) return;
+	mismatches.push({ field, scraper, witness: expected });
+}
+
 function formatPage(page: PageResult): string {
 	if (page.kind === `match`) return `OK   ${page.url}`;
 	if (page.kind === `gone`) return `GONE ${page.url} ${page.reason}`;
@@ -332,18 +389,35 @@ export type LiveTarget = { url: string };
 /**
  * `scraper` is the production parser on this body.
  * `witness` is a second reading that does not call that parser's preferred source.
+ * Optional witness fields are checked only when present.
  */
 export type LiveReading = {
 	url: string;
-	scraper: { name: string | undefined; startAt: string | undefined };
+	scraper: {
+		name: string | undefined;
+		startAt: string | undefined;
+		endAt?: string | undefined;
+		host?: string | undefined;
+		hostLink?: string | undefined;
+	};
 	witness: {
 		name: string | undefined;
 		/** `YYYY-MM-DD` from a clock the production start parser does not own. */
 		startDay: string | undefined;
 		/** Independent instant. Omitted when the page has no second clock. */
 		startAt: string | undefined;
+		/** Heading end clock only. Skip when the page has no end time. */
+		endAt?: string | undefined;
+		/** HTML Veranstalter only. Skip when absent. */
+		host?: string | undefined;
+		/** HTML Weiterführende Links href only. Skip when absent. */
+		hostLink?: string | undefined;
 	};
 };
+
+export type CheckedField = `name` | `startAt` | OptionalField;
+
+type OptionalField = `endAt` | `host` | `hostLink`;
 
 export type PageResult =
 	| { kind: `match`; url: string }
@@ -353,7 +427,7 @@ export type PageResult =
 	| { kind: `unreachable`; url: string; reason: string };
 
 export type FieldMismatch = {
-	field: `name` | `startAt`;
+	field: CheckedField;
 	scraper: string | undefined;
 	witness: string;
 };
