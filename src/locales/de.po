@@ -4359,3 +4359,6 @@ msgstr "Deine E-Mail-Adresse"
 #: src/lib/components/AutoLocationHintBubble.svelte
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn hier."
 msgstr "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn hier."
+
+#~ msgid "Okay"
+#~ msgstr "Okay"

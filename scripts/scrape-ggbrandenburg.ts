@@ -18,7 +18,7 @@ import {
 	sleep,
 	superTrim,
 } from './common.ts';
-import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
+import type { LiveProbe, LiveReading } from './verify-scrape-live.ts';
 
 const BASE_URL = `https://www.ganzheitlich-gesund-brandenburg.de`;
 const START_PATH = `/veranstaltungen/index.php`;
@@ -175,6 +175,7 @@ export async function mapGgbrandenburgEvent(args: {
 
 	if (address?.length) {
 		try {
+			const { geocodeAddressCached } = await import(`../src/lib/server/google.script.ts`);
 			const coordinates = await geocodeAddressCached({
 				addressLines: address,
 				apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
@@ -505,6 +506,73 @@ function parseHeadingEnd(html: string): string | undefined {
 function textValue(value: unknown): string | undefined {
 	return typeof value === `string` ? superTrim(value) || undefined : undefined;
 }
+
+export function readGgbrandenburgLive({ url, html }: { url: string; html: string }): LiveReading {
+	const $ = cheerio.load(html);
+	const day = url.match(/\/veranstaltungen\/\d+\/(\d{4})\/(\d{2})\/(\d{2})\//);
+	return {
+		url,
+		scraper: {
+			name: getName(html),
+			startAt: getStartAt(html),
+			endAt: getEndAt(html),
+			host: getHost(html),
+			hostLink: getHostLink(html),
+		},
+		witness: {
+			name: superTrim($(`h1`).first().text()),
+			startDay: day ? `${day[1]}-${day[2]}-${day[3]}` : undefined,
+			startAt: parseHeadingStart(html),
+			endAt: parseHeadingEnd(html),
+			host: readHostFromHtml(html),
+			hostLink: readHostLinkFromHtml(html),
+		},
+	};
+}
+
+function readHostFromHtml(html: string): string | undefined {
+	const $ = cheerio.load(html);
+	const organizerHeading = $(`h3`).filter((_i, el) => {
+		const text = ($(el).text() || ``).toLowerCase();
+		return text.includes(`veranstalter`) && !text.includes(`veranstaltungsort`);
+	});
+	if (organizerHeading.length > 0) {
+		const organizerName = superTrim(organizerHeading.first().nextAll(`h4, h5`).first().text());
+		if (organizerName) return organizerName;
+	}
+
+	const combinedHeading = $(`h3`).filter((_i, el) => {
+		const text = ($(el).text() || ``).toLowerCase();
+		return text.includes(`veranstalter`) && text.includes(`veranstaltungsort`);
+	});
+	if (combinedHeading.length > 0) {
+		const organizerName = superTrim(combinedHeading.first().nextAll(`h4, h5`).first().text());
+		if (organizerName) return organizerName;
+	}
+
+	return undefined;
+}
+
+function readHostLinkFromHtml(html: string): string | undefined {
+	const $ = cheerio.load(html);
+	const linksHeading = $(`h3`).filter((_i, el) =>
+		($(el).text() || ``).toLowerCase().includes(`weiterführende links`),
+	);
+	if (linksHeading.length === 0) return undefined;
+	const href = linksHeading.first().nextAll(`a`).first().attr(`href`);
+	return href || undefined;
+}
+
+export const liveProbe: LiveProbe = {
+	source: SOURCE,
+	async listTargets({ fetchText }) {
+		const html = await fetchText(`${BASE_URL}${START_PATH}`);
+		return extractEventUrls(html).map((url) => ({ url }));
+	},
+	read({ url, body }) {
+		return readGgbrandenburgLive({ url, html: body });
+	},
+};
 
 if (import.meta.main) {
 	const scraper = new WebsiteScraper();

@@ -14,8 +14,6 @@
 	let showInstallButton = $state(false);
 	let showIosInstallHowto = $state(false);
 	let videoFailed = $state(false);
-	let innerHeight = $state(700);
-	let explanationDiv: HTMLDivElement | null = $state(null);
 
 	const mode = $derived(browser ? detectIosDevice() : 'not-ios');
 	const iosBrowser = $derived(browser ? detectIosBrowser() : 'safari');
@@ -153,8 +151,6 @@
 	}
 </script>
 
-<svelte:window bind:innerHeight />
-
 {#if showInstallButton}
 	<button onclick={onInstallClick} class={['btn sm:btn-md btn-sm w-fit', className]}>
 		App installieren <i class="icon--ph-app-store"></i>
@@ -164,19 +160,19 @@
 <Dialog.Root bind:open={showIosInstallHowto}>
 	<Dialog.Portal>
 		<Dialog.OverlayAnimated class="bg-base-100" />
-		<Dialog.ContentAnimated class="fixed inset-0 z-50 flex flex-col items-center px-8 pb-2 outline-none bg-base-200">
-			<div bind:this={explanationDiv} class="flex flex-col justify-center items-center w-full h-12 my-3">
+		<Dialog.ContentAnimated class="fixed inset-0 z-50 flex flex-col items-center px-8 pb-4 outline-none bg-base-200">
+			<div class="my-3 flex h-12 w-full flex-col items-center justify-center">
 				<div class="flex w-full items-center justify-between">
 					<h3 class="text-center text-xl leading-tight">Installationsanleitung</h3>
-					<Dialog.Close class="btn btn-primary btn-circle absolute top-1 right-3">
+					<Dialog.Close class="btn btn-primary btn-circle absolute top-1 right-3" aria-label="Schließen" data-testid="ios-install-close">
 						<i class="icon-[ph--x] size-5"></i>
 					</Dialog.Close>
 				</div>
-				<span class="leading-tight text-sm w-full">So installierst du die App auf deinem iPhone</span>
+				<span class="w-full text-sm leading-tight">So installierst du die App auf deinem iPhone</span>
 			</div>
 
-			{#if iosBrowser === 'other'}
-				<div class="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+			{#if iosBrowser === `other`}
+				<div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
 					<i class="icon-[ph--arrow-square-out] size-12 text-primary"></i>
 					<p class="text-lg leading-snug">
 						Öffne diese Seite in Safari, um die App zu installieren.
@@ -186,7 +182,7 @@
 					</p>
 				</div>
 			{:else if videoFailed}
-				<div class="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+				<div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
 					<i class="icon-[ph--share-network] size-12 text-primary"></i>
 					<p class="text-lg leading-snug">
 						Tippe in Safari auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“.
@@ -194,7 +190,7 @@
 				</div>
 			{:else}
 				<video
-					src="/{iosVideoPrefix}-install-howto-{localeStore.locale}.mp4"
+					src={`/${iosVideoPrefix}-install-howto-${localeStore.locale}.mp4`}
 					poster="/blissbase-poster.png"
 					preload="auto"
 					autoplay
@@ -204,10 +200,13 @@
 					disablepictureinpicture
 					disableremoteplayback
 					onerror={() => (videoFailed = true)}
-					class="mx-auto flex-1 rounded-[3rem] object-contain"
-					style="height: {innerHeight - ((explanationDiv?.offsetHeight ?? 0) + 30)}px"
+					class="mx-auto min-h-0 w-full flex-1 rounded-[3rem] object-contain"
 				></video>
 			{/if}
+
+			<Dialog.Close type="button" class="btn btn-primary mt-2 w-full shrink-0" data-testid="ios-install-okay">
+				Okay
+			</Dialog.Close>
 		</Dialog.ContentAnimated>
 	</Dialog.Portal>
 </Dialog.Root>

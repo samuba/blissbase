@@ -10,6 +10,7 @@ import {
 	mapGgbrandenburgEvent,
 	resolveEmail,
 } from './scrape-ggbrandenburg.ts';
+import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
 vi.mock(`../src/lib/server/google.script.ts`, () => ({
 	geocodeAddressCached: vi.fn(async () => null),
@@ -134,10 +135,12 @@ describe(`field getters`, () => {
 
 describe(`mapGgbrandenburgEvent`, () => {
 	it(`maps the previously failing um-only page`, async () => {
+		vi.mocked(geocodeAddressCached).mockClear();
 		const event = await mapGgbrandenburgEvent({
 			html: umOnlyHtml,
 			url: `https://www.ganzheitlich-gesund-brandenburg.de/veranstaltungen/2976418/2027/09/29/life-energy-kundalini-aktivierung-inner-dance`,
 		});
+		expect(geocodeAddressCached).toHaveBeenCalledOnce();
 		expect(event?.name).toBe(`Life-Energy Kundalini Aktivierung (Inner Dance)`);
 		expect(event?.startAt).toBe(`2027-09-29T18:30:00+02:00`);
 		expect(event?.source).toBe(`ggbrandenburg`);
