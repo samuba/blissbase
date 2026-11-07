@@ -2,6 +2,9 @@ import type { Page, Locator } from "@playwright/test";
 import { expect, test } from "./helpers/fixtures";
 import { waitForClientHydration } from "./helpers/offering-test-utils";
 
+/** Mirrors HINT_COOLDOWN_MS in HintBubble.svelte */
+const HINT_COOLDOWN_MS = 4 * 60 * 1000;
+
 test.beforeEach(async ({ page }) => {
 	await page.addInitScript(() => {
 		if (sessionStorage.getItem(`keep-hint-dismissal`) === `1`) return;
@@ -159,13 +162,18 @@ test.describe(`hint bubble positioning`, () => {
 		await expectAttached(page, `page-hint`, `page-anchor`);
 	});
 
-	test(`shows one hint at a time`, async ({ page }) => {
+	test(`shows one hint at a time and waits before the next`, async ({ page }) => {
+		await page.clock.install();
 		await openHarness(page, `product`);
 		await page.getByTestId(`location-anchor`).scrollIntoViewIfNeeded();
 		const visible = page.locator(`[data-testid$="hint"]:visible`);
 		await expect(visible).toHaveCount(1);
 		const first = await visible.getAttribute(`data-testid`);
 		await page.locator(`[data-testid$="hint-close"]:visible`).click();
+		await page.getByTestId(`location-anchor`).scrollIntoViewIfNeeded();
+		await expect(visible).toHaveCount(0);
+
+		await page.clock.fastForward(HINT_COOLDOWN_MS);
 		await page.getByTestId(`location-anchor`).scrollIntoViewIfNeeded();
 		await expect(visible).toHaveCount(1);
 		const second = await visible.getAttribute(`data-testid`);
