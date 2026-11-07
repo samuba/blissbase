@@ -18,7 +18,7 @@ import {
 	sleep,
 	superTrim,
 } from './common.ts';
-import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
+import type { LiveProbe, LiveReading } from './verify-scrape-live.ts';
 
 const BASE_URL = `https://www.ganzheitlich-gesund-brandenburg.de`;
 const START_PATH = `/veranstaltungen/index.php`;
@@ -175,6 +175,7 @@ export async function mapGgbrandenburgEvent(args: {
 
 	if (address?.length) {
 		try {
+			const { geocodeAddressCached } = await import(`../src/lib/server/google.script.ts`);
 			const coordinates = await geocodeAddressCached({
 				addressLines: address,
 				apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
@@ -505,6 +506,34 @@ function parseHeadingEnd(html: string): string | undefined {
 function textValue(value: unknown): string | undefined {
 	return typeof value === `string` ? superTrim(value) || undefined : undefined;
 }
+
+export function readGgbrandenburgLive({ url, html }: { url: string; html: string }): LiveReading {
+	const $ = cheerio.load(html);
+	const day = url.match(/\/veranstaltungen\/\d+\/(\d{4})\/(\d{2})\/(\d{2})\//);
+	return {
+		url,
+		scraper: {
+			name: getName(html),
+			startAt: getStartAt(html),
+		},
+		witness: {
+			name: superTrim($(`h1`).first().text()),
+			startDay: day ? `${day[1]}-${day[2]}-${day[3]}` : undefined,
+			startAt: parseHeadingStart(html),
+		},
+	};
+}
+
+export const liveProbe: LiveProbe = {
+	source: SOURCE,
+	async listTargets({ fetchText }) {
+		const html = await fetchText(`${BASE_URL}${START_PATH}`);
+		return extractEventUrls(html).map((url) => ({ url }));
+	},
+	read({ url, body }) {
+		return readGgbrandenburgLive({ url, html: body });
+	},
+};
 
 if (import.meta.main) {
 	const scraper = new WebsiteScraper();
