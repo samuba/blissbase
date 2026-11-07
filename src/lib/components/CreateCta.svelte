@@ -129,12 +129,18 @@
 	};
 
 	// Parked above tab + peek footer; on mobile slides down with the footer via the same transform.
-	const fabClasses = $derived([
-		`btn max-sm:btn-lg btn-primary max-sm:btn-circle fixed right-4 z-40 shadow-lg`,
+	// Shell matches the card column; the button hangs beside it by its own width + gap when the
+	// viewport has room (clamped so it never leaves the screen).
+	const fabShellClasses = $derived([
+		`pointer-events-none fixed inset-x-0 z-40`,
 		`bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-11`,
 		`transition-transform duration-200 ease-out motion-reduce:transition-none`,
 		!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`
 	]);
+	const fabBtnClasses = [
+		`btn max-sm:btn-lg btn-primary max-sm:btn-circle pointer-events-auto shadow-lg`,
+		`translate-x-[min(calc(100%+0.75rem),max(0px,calc((100vw-64rem)/2+1rem)))]`,
+	];
 </script>
 
 <div
@@ -172,27 +178,26 @@
 	{/if}
 </div>
 
-{#if showFab && useLink}
-	<a
-		href={href}
-		data-testid={dataTestId}
-		class={fabClasses}
-		aria-label={buttonText}
-		transition:fly={{ y: 24, duration: 300 }}
-	>
-		<i class="icon-[ph--plus] size-6 sm:size-5"></i>
-		<span class="hidden sm:block">{buttonText}</span>
-	</a>
-{:else if showFab}
-	<button
-		type="button"
-		onclick={showLoginDialog}
-		data-testid={dataTestId}
-		class={fabClasses}
-		aria-label={buttonText}
-		transition:fly={{ y: 24, duration: 300 }}
-	>
-		<i class="icon-[ph--plus] size-6 sm:size-5"></i>
-		<span class="hidden sm:block">{buttonText}</span>
-	</button>
+{#if showFab}
+	<div class={fabShellClasses} transition:fly={{ y: 24, duration: 300 }}>
+		<div class="mx-auto flex max-w-5xl justify-end px-4">
+			{#if useLink}
+				<a href={href} data-testid={dataTestId} class={fabBtnClasses} aria-label={buttonText}>
+					<i class="icon-[ph--plus] size-6 sm:size-5"></i>
+					<span class="hidden sm:block">{buttonText}</span>
+				</a>
+			{:else}
+				<button
+					type="button"
+					onclick={showLoginDialog}
+					data-testid={dataTestId}
+					class={fabBtnClasses}
+					aria-label={buttonText}
+				>
+					<i class="icon-[ph--plus] size-6 sm:size-5"></i>
+					<span class="hidden sm:block">{buttonText}</span>
+				</button>
+			{/if}
+		</div>
+	</div>
 {/if}
