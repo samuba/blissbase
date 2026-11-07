@@ -1,7 +1,10 @@
 <script lang="ts" module>
+	import { startHintCooldown } from "$lib/components/HintBubble.svelte";
+
 	let dismissed = $state(false);
 
 	export function dismissAutoLocationHint() {
+		if (!dismissed) startHintCooldown();
 		dismissed = true;
 	}
 </script>
@@ -15,7 +18,7 @@
 	const show = $derived(Boolean(autoDetectedCity) && !dismissed);
 
 	function dismissWithCookie() {
-		dismissed = true;
+		dismissAutoLocationHint();
 		setLocationInteractedCookie();
 	}
 </script>

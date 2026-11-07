@@ -1,9 +1,13 @@
 <script lang="ts" module>
 	import { untrack } from "svelte";
 
+	export const HINT_COOLDOWN_MS = 4 * 60 * 1000;
+
 	class HintSlot {
 		holders = $state<number[]>([]);
+		coolingDown = $state(false);
 		#next = 0;
+		#timer: ReturnType<typeof setTimeout> | null = null;
 
 		createId() {
 			this.#next += 1;
@@ -21,11 +25,24 @@
 		}
 
 		shows(id: number) {
-			return this.holders[0] === id;
+			return !this.coolingDown && this.holders[0] === id;
+		}
+
+		startCooldown() {
+			this.coolingDown = true;
+			if (this.#timer) clearTimeout(this.#timer);
+			this.#timer = setTimeout(() => {
+				this.coolingDown = false;
+				this.#timer = null;
+			}, HINT_COOLDOWN_MS);
 		}
 	}
 
 	const hintSlot = new HintSlot();
+
+	export function startHintCooldown() {
+		hintSlot.startCooldown();
+	}
 </script>
 
 <script lang="ts">
@@ -84,6 +101,7 @@
 	function dismiss(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
+		hintSlot.startCooldown();
 		onDismiss();
 	}
 
