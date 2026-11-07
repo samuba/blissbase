@@ -1,9 +1,3 @@
-/**
- * Compare a scraper's name and start with a second reading of live detail pages.
- *
- * Usage:
- *   bun run scripts/verify-scrape-live.ts <source> [--limit n]
- */
 import { parseArgs } from "util";
 import { WEBSITE_SCRAPER_CONFIG, WEBSITE_SCRAPE_SOURCES, type WebsiteScrapeSourceName } from "../src/lib/commonWithScripts.ts";
 import { NotFoundError, REQUEST_DELAY_MS, customFetch, sleep, superTrim } from "./common.ts";
@@ -232,7 +226,6 @@ function berlinDay(iso: string): string {
 }
 
 function exitCodeFor(pages: PageResult[]): 0 | 1 | 2 {
-	// A gone page fails the check. An unreachable fetch stays in the report and does not change a passing run.
 	if (pages.some((page) => page.kind === `mismatch` || page.kind === `gone`)) return 1;
 	if (!pages.some((page) => page.kind === `match`) || pages.some((page) => page.kind === `gap`)) return 2;
 	return 0;
@@ -323,7 +316,6 @@ export type SampleLimit = number & { readonly __sampleLimit: `SampleLimit` };
 
 export type FetchText = (url: string) => Promise<string>;
 
-/** Site knowledge. Listing and witness rules stay in the scraper file. */
 export type LiveProbe = {
 	source: WebsiteScrapeSourceName;
 	/**

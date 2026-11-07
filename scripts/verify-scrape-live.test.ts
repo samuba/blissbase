@@ -332,7 +332,6 @@ function probeFor(urls: string[]): LiveProbe {
 	};
 }
 
-/** `um` heading, zero-width spaces, JSON-LD startDate. Same shape as the scraper fixture. */
 const umOnlyHtml = `<!doctype html>
 <html><head>
 <script type="application/ld+json">
@@ -347,7 +346,6 @@ const umOnlyHtml = `<!doctype html>
 <h2 class="legacy_h5">29.&#8203;09.&#8203;2027 um <time>18:30</time> Uhr</h2>
 </body></html>`;
 
-/** Same-day range still uses `von` and two times. */
 const vonRangeHtml = `<!doctype html>
 <html><head>
 <script type="application/ld+json">
