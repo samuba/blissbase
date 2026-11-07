@@ -134,13 +134,13 @@
 				data-testid={testId}
 				class={[`z-50 max-w-[calc(100vw-1.5rem)] outline-hidden`, className]}
 			>
-				<div class="hint-nudge bg-primary text-primary-content rounded-box relative flex items-start gap-1 py-2 pr-1 pl-3 text-xs leading-snug font-medium shadow-lg" transition:fly={{ y: side === `top` ? 8 : -8, duration: 250 }}>
+				<div class="hint-nudge bg-primary text-primary-content rounded-box relative py-2 pr-4 pl-3 text-xs leading-snug font-medium shadow-lg" transition:fly={{ y: side === `top` ? 8 : -8, duration: 250 }}>
 					<span class="pt-0.5">
 						{@render children()}
 					</span>
 					<button
 						type="button"
-						class="btn btn-ghost btn-circle btn-xs text-primary-content shrink-0"
+						class="btn btn-ghost btn-circle btn-xs text-primary-content absolute top-0.5 right-0.5"
 						aria-label="Hinweis schließen"
 						data-testid={closeTestId}
 						onclick={dismiss}

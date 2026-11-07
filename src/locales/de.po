@@ -531,8 +531,7 @@ msgstr "Sortieren nach Distanz macht nur für Vorort-Events Sinn"
 msgid "Ort <0/> nicht gefunden"
 msgstr "Ort <0/> nicht gefunden"
 
-#: src/lib/components/AutoLocationHintBubble.svelte
-#: src/lib/components/OfferingsNavHintBubble.svelte
+#: src/lib/components/HintBubble.svelte
 msgid "Hinweis schließen"
 msgstr "Hinweis schließen"
 

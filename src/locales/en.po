@@ -532,8 +532,7 @@ msgstr "Sorting by distance only makes sense for in-person events"
 msgid "Ort <0/> nicht gefunden"
 msgstr "Location <0/> not found"
 
-#: src/lib/components/AutoLocationHintBubble.svelte
-#: src/lib/components/OfferingsNavHintBubble.svelte
+#: src/lib/components/HintBubble.svelte
 msgid "Hinweis schließen"
 msgstr "Close notice"
 
