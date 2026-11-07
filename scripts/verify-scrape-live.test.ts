@@ -36,10 +36,38 @@ describe(`readGgbrandenburgLive`, () => {
 		expect(geocode.loaded).toBe(false);
 	});
 
-	it(`matches a von heading to the URL day`, () => {
-		expect(compareReading(readGgbrandenburgLive({ url: accessUrl, html: vonRangeHtml }))).toEqual({
+	it(`matches a von heading to the URL day and prefers HTML host over JSON-LD`, () => {
+		const reading = readGgbrandenburgLive({ url: accessUrl, html: vonRangeHtml });
+		expect(reading.scraper.endAt).toBe(`2026-11-07T19:00:00+01:00`);
+		expect(reading.witness.endAt).toBe(`2026-11-07T19:00:00+01:00`);
+		expect(reading.scraper.host).toBe(`Maria Waidacher, I feel so good`);
+		expect(reading.witness.host).toBe(`Maria Waidacher, I feel so good`);
+		expect(reading.scraper.hostLink).toBe(`https://i-feel-so-good.de`);
+		expect(reading.witness.hostLink).toBe(`https://i-feel-so-good.de`);
+		expect(compareReading(reading)).toEqual({
 			kind: `match`,
 			url: accessUrl,
+		});
+	});
+
+	it(`mismatches when JSON-LD endDate disagrees with the heading end`, () => {
+		const html = vonRangeHtml.replace(
+			`"endDate": "2026-11-07T19:00:00+0100"`,
+			`"endDate": "2026-11-07T21:00:00+0100"`,
+		);
+		const reading = readGgbrandenburgLive({ url: accessUrl, html });
+		expect(reading.scraper.endAt).toBe(`2026-11-07T21:00:00+01:00`);
+		expect(reading.witness.endAt).toBe(`2026-11-07T19:00:00+01:00`);
+		expect(compareReading(reading)).toEqual({
+			kind: `mismatch`,
+			url: accessUrl,
+			fields: [
+				{
+					field: `endAt`,
+					scraper: `2026-11-07T21:00:00+01:00`,
+					witness: `2026-11-07T19:00:00+01:00`,
+				},
+			],
 		});
 	});
 
@@ -123,6 +151,75 @@ describe(`compareReading`, () => {
 					name: `Life-Energy Kundalini Aktivierung (Inner Dance)`,
 					startDay: `2027-09-29`,
 					startAt: `2027-09-29T18:30:00+02:00`,
+				},
+			}).kind,
+		).toBe(`match`);
+	});
+
+	it(`checks optional endAt host and hostLink only when the witness has them`, () => {
+		expect(
+			compareReading({
+				url: accessUrl,
+				scraper: {
+					name: `Access Bars`,
+					startAt: `2026-11-07T11:00:00+01:00`,
+					endAt: `2026-11-07T19:00:00+01:00`,
+					host: `Maria Waidacher`,
+					hostLink: `https://i-feel-so-good.de`,
+				},
+				witness: {
+					name: `Access Bars`,
+					startDay: `2026-11-07`,
+					startAt: `2026-11-07T11:00:00+01:00`,
+					endAt: `2026-11-07T19:00:00+01:00`,
+					host: `Maria Waidacher`,
+					hostLink: `https://i-feel-so-good.de`,
+				},
+			}).kind,
+		).toBe(`match`);
+
+		expect(
+			compareReading({
+				url: accessUrl,
+				scraper: {
+					name: `Access Bars`,
+					startAt: `2026-11-07T11:00:00+01:00`,
+					endAt: `2026-11-07T18:00:00+01:00`,
+					host: `Wrong Host`,
+					hostLink: `https://wrong.example`,
+				},
+				witness: {
+					name: `Access Bars`,
+					startDay: `2026-11-07`,
+					startAt: `2026-11-07T11:00:00+01:00`,
+					endAt: `2026-11-07T19:00:00+01:00`,
+					host: `Maria Waidacher`,
+					hostLink: `https://i-feel-so-good.de`,
+				},
+			}),
+		).toEqual({
+			kind: `mismatch`,
+			url: accessUrl,
+			fields: [
+				{ field: `endAt`, scraper: `2026-11-07T18:00:00+01:00`, witness: `2026-11-07T19:00:00+01:00` },
+				{ field: `host`, scraper: `Wrong Host`, witness: `Maria Waidacher` },
+				{ field: `hostLink`, scraper: `https://wrong.example`, witness: `https://i-feel-so-good.de` },
+			],
+		});
+
+		expect(
+			compareReading({
+				url: accessUrl,
+				scraper: {
+					name: `Access Bars`,
+					startAt: `2026-11-07T11:00:00+01:00`,
+					endAt: `2026-11-07T19:00:00+01:00`,
+					host: `From JSON-LD Only`,
+				},
+				witness: {
+					name: `Access Bars`,
+					startDay: `2026-11-07`,
+					startAt: `2026-11-07T11:00:00+01:00`,
 				},
 			}).kind,
 		).toBe(`match`);
@@ -338,12 +435,15 @@ const umOnlyHtml = `<!doctype html>
 {
   "@type": "Event",
   "name": "Life-Energy Kundalini Aktivierung (Inner Dance)",
-  "startDate": "2027-09-29T18:30:00+0200"
+  "startDate": "2027-09-29T18:30:00+0200",
+  "organizer": { "@type": "Organization", "name": "Netzwerk Ganzheitlich Gesund", "url": "https://ld.example/org" }
 }
 </script>
 </head><body>
 <h1>Life-Energy Kundalini Aktivierung (Inner Dance)</h1>
 <h2 class="legacy_h5">29.&#8203;09.&#8203;2027 um <time>18:30</time> Uhr</h2>
+<h3>Veranstalter / Veranstaltungsort</h3>
+<h4 class="legacy_h5">Netzwerk Ganzheitlich Gesund</h4>
 </body></html>`;
 
 const vonRangeHtml = `<!doctype html>
@@ -352,12 +452,18 @@ const vonRangeHtml = `<!doctype html>
 {
   "@type": "Event",
   "name": "Access Bars® - Gehirnreset und pure Lebensfreude!",
-  "startDate": "2026-11-07T11:00:00+0100"
+  "startDate": "2026-11-07T11:00:00+0100",
+  "endDate": "2026-11-07T19:00:00+0100",
+  "organizer": { "@type": "Organization", "name": "LD Organizer", "url": "https://ld.example/wrong" }
 }
 </script>
 </head><body>
 <h1>Access Bars® - Gehirnreset und pure Lebensfreude!</h1>
 <h2 class="legacy_h5">07.&#8203;11.&#8203;2026 von <time>11:00</time> – <time>19:00</time> Uhr</h2>
+<h3>Veranstalter</h3>
+<h4 class="legacy_h5">Maria Waidacher, I feel so good</h4>
+<h3>Weiterführende Links</h3>
+<a href="https://i-feel-so-good.de">Website</a>
 </body></html>`;
 
 const listingHtml = `

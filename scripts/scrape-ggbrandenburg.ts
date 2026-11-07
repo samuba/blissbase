@@ -515,13 +515,52 @@ export function readGgbrandenburgLive({ url, html }: { url: string; html: string
 		scraper: {
 			name: getName(html),
 			startAt: getStartAt(html),
+			endAt: getEndAt(html),
+			host: getHost(html),
+			hostLink: getHostLink(html),
 		},
 		witness: {
 			name: superTrim($(`h1`).first().text()),
 			startDay: day ? `${day[1]}-${day[2]}-${day[3]}` : undefined,
 			startAt: parseHeadingStart(html),
+			endAt: parseHeadingEnd(html),
+			host: readHostFromHtml(html),
+			hostLink: readHostLinkFromHtml(html),
 		},
 	};
+}
+
+function readHostFromHtml(html: string): string | undefined {
+	const $ = cheerio.load(html);
+	const organizerHeading = $(`h3`).filter((_i, el) => {
+		const text = ($(el).text() || ``).toLowerCase();
+		return text.includes(`veranstalter`) && !text.includes(`veranstaltungsort`);
+	});
+	if (organizerHeading.length > 0) {
+		const organizerName = superTrim(organizerHeading.first().nextAll(`h4, h5`).first().text());
+		if (organizerName) return organizerName;
+	}
+
+	const combinedHeading = $(`h3`).filter((_i, el) => {
+		const text = ($(el).text() || ``).toLowerCase();
+		return text.includes(`veranstalter`) && text.includes(`veranstaltungsort`);
+	});
+	if (combinedHeading.length > 0) {
+		const organizerName = superTrim(combinedHeading.first().nextAll(`h4, h5`).first().text());
+		if (organizerName) return organizerName;
+	}
+
+	return undefined;
+}
+
+function readHostLinkFromHtml(html: string): string | undefined {
+	const $ = cheerio.load(html);
+	const linksHeading = $(`h3`).filter((_i, el) =>
+		($(el).text() || ``).toLowerCase().includes(`weiterführende links`),
+	);
+	if (linksHeading.length === 0) return undefined;
+	const href = linksHeading.first().nextAll(`a`).first().attr(`href`);
+	return href || undefined;
 }
 
 export const liveProbe: LiveProbe = {
