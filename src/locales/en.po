@@ -4521,3 +4521,7 @@ msgstr "Your email address"
 #, ai
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn hier."
 msgstr "Events are shown to you around <0/>. If that isn’t your location, change it here."
+
+#, ai
+#~ msgid "Okay"
+#~ msgstr "Okay"
