@@ -25,7 +25,7 @@
 	}
 
 	function closeEventDetailsDialog() {
-		dialog.close();
+		return dialog.close();
 	}
 </script>
 

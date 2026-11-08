@@ -42,6 +42,7 @@ export async function startWorkerServer(workerIndex: number): Promise<E2eServer>
 			S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || `test-bucket`,
 			CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID || `test-account`,
 			ADMIN_EMAILS: process.env.ADMIN_EMAILS || `test@admin.de`,
+			RESEND_API_KEY: process.env.RESEND_API_KEY || `test-resend-api-key`,
 		},
 		stdio: [`ignore`, `pipe`, `pipe`],
 	});

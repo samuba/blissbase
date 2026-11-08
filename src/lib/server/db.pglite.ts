@@ -27,10 +27,39 @@ export async function createPgliteDrizzle() {
 	await migratePglite(client);
 	console.log(`E2E test database migrated`);
 
+	// Kit's analyse/prerender workers call process.exit() right after posting results.
+	// PGlite's WASM aborts during that abrupt teardown (exit code 99) unless closed first.
+	installPgliteForkExitHook(client);
+
 	return pgliteDrizzle(client, {
 		schema,
 		casing,
 	});
+}
+
+function installPgliteForkExitHook(client: PGlite) {
+	if (process.env.SVELTEKIT_FORK !== `true`) return;
+
+	const originalExit = process.exit.bind(process);
+	let closing = false;
+
+	process.exit = ((code?: number) => {
+		if (closing) {
+			originalExit(code);
+			return;
+		}
+		closing = true;
+
+		const exitCode = code ?? 0;
+		const timeout = setTimeout(() => originalExit(exitCode), 2_000);
+		void client
+			.close()
+			.catch(() => {})
+			.finally(() => {
+				clearTimeout(timeout);
+				originalExit(exitCode);
+			});
+	}) as typeof process.exit;
 }
 
 /**

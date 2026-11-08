@@ -29,7 +29,7 @@
 	}
 
 	function closeOfferingDetailsDialog() {
-		dialog.close();
+		return dialog.close();
 	}
 
 	type OfferingDetailsDialogOffering = {

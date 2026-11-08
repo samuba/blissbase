@@ -10,16 +10,16 @@ export class ShallowDialog {
 
 	open({ href, state, replace = false }: { href: string; state: App.PageState; replace?: boolean }) {
 		if (sameDialogState(page.state, state)) return;
+		// Kit 3: shallow routing goes through async `goto` — callers that refresh after close must await.
 		if (replace || hasDialogState(page.state)) {
-			goto(href, { shallow: true, replace: true, state });
-			return;
+			return goto(href, { shallow: true, replace: true, state });
 		}
-		goto(href, { shallow: true, state });
+		return goto(href, { shallow: true, state });
 	}
 
 	close() {
 		if (!hasDialogState(page.state)) return;
-		goto(this.returnToPath, { shallow: true, replace: true });
+		return goto(this.returnToPath, { shallow: true, replace: true, state: {} });
 	}
 }
 
