@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Popover } from 'bits-ui';
-	import type { Snippet } from 'svelte';
+	import { Popover } from "bits-ui";
+	import type { Snippet } from "svelte";
 
 	/** Bits UI trigger props (handlers, aria, ref) — spread onto your root trigger element. */
 	type TriggerSnippetProps = { props: Record<string, unknown> };
@@ -19,7 +19,7 @@
 	let { trigger, content, contentClass, contentProps, triggerClass, open = $bindable(false), onOpenChange, arrowProps }: Props = $props();
 </script>
 
-<Popover.Root bind:open={open} onOpenChange={onOpenChange}>
+<Popover.Root bind:open {onOpenChange}>
 	<Popover.Trigger class={triggerClass}>
 		{#snippet child({ props })}
 			{@render trigger({ props })}
@@ -28,17 +28,17 @@
 	<Popover.Content
 		{...contentProps}
 		class={[
-			'card card-border z-10 shadow-lg',
-			'data-[state=open]:animate-in',
-			'data-[state=open]:ease-out',
-			'data-[state=open]:fade-in',
-			'data-[state=open]:duration-200',
-			'data-[state=closed]:animate-out',
-			'data-[state=closed]:ease-in',
-			'data-[state=closed]:fade-out',
-			'data-[state=closed]:duration-150',
+			"card card-border z-10 shadow-lg",
+			"data-[state=open]:animate-in",
+			"data-[state=open]:ease-out",
+			"data-[state=open]:fade-in",
+			"data-[state=open]:duration-200",
+			"data-[state=closed]:animate-out",
+			"data-[state=closed]:ease-in",
+			"data-[state=closed]:fade-out",
+			"data-[state=closed]:duration-150",
 			contentClass,
-			contentProps?.class
+			contentProps?.class,
 		]}
 	>
 		{@render content()}

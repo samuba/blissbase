@@ -1,6 +1,6 @@
-import { publicProfileFormSchema } from '$lib/rpc/profile.common';
-import { describe, expect, it } from 'vitest';
-import * as v from 'valibot';
+import { publicProfileFormSchema } from "#lib/rpc/profile.common.ts";
+import { describe, expect, it } from "vitest";
+import * as v from "valibot";
 
 describe(`publicProfileFormSchema`, () => {
 	it(`accepts social links as { type, value } rows`, () => {
@@ -10,10 +10,10 @@ describe(`publicProfileFormSchema`, () => {
 			bio: ``,
 			socialLinks: [
 				{ type: `website`, value: `blissbase.app` },
-				{ type: `telegram`, value: `@blissbase` }
+				{ type: `telegram`, value: `@blissbase` },
 			],
 			profileImageUrl: ``,
-			bannerImageUrl: ``
+			bannerImageUrl: ``,
 		});
 
 		expect(result.success).toBe(true);

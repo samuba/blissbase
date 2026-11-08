@@ -1,7 +1,7 @@
-import * as assets from "$lib/assets";
-import { dev } from "$app/environment";
-import { E2E_TEST } from "$env/static/private";
-import { eventAssetsCreds } from "$lib/events.remote.shared";
+import * as assets from "#lib/assets.ts";
+import { dev } from "$app/env";
+import { E2E_TEST } from "$app/env/private";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const PROFILE_IMAGE_CLAIM_TTL_MS = 1000 * 60 * 60;

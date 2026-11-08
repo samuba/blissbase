@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { Dialog } from 'bits-ui';
-	import OverlayAnimated from './DialogOverlayAnimated.svelte';
-	import ContentAnimated from './DialogContentAnimated.svelte';
-	import type { Snippet } from 'svelte';
+	import { Dialog } from "bits-ui";
+	import OverlayAnimated from "./DialogOverlayAnimated.svelte";
+	import ContentAnimated from "./DialogContentAnimated.svelte";
+	import type { Snippet } from "svelte";
 
 	let {
 		open,
 		onClose,
-		children
+		children,
 	}: {
 		open: boolean;
 		onClose: () => void;
@@ -26,7 +26,7 @@
 		<ContentAnimated
 			role="dialog"
 			data-testid="details-dialog"
-			class="bg-base-100 sm:rounded-box [scrollbar-width:thin] fixed top-[50%] left-[50%] z-60 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden sm:max-h-[calc(100%-2rem)] sm:max-w-3xl"
+			class="bg-base-100 sm:rounded-box fixed top-[50%] left-[50%] z-60 max-h-dvh w-full translate-x-[-50%] translate-y-[-50%] overflow-y-auto shadow-xl outline-hidden [scrollbar-width:thin] sm:max-h-[calc(100%-2rem)] sm:max-w-3xl"
 			onOpenAutoFocus={(e) => {
 				e.preventDefault();
 			}}

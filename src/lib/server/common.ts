@@ -1,6 +1,6 @@
 import { getRequestEvent } from "$app/server";
 import { error } from "@sveltejs/kit";
-import { buildPosthogPersonProperties } from "$lib/posthog";
+import { buildPosthogPersonProperties } from "#lib/posthog.ts";
 
 export function locals(): App.Locals {
 	return getRequestEvent().locals;

@@ -1,8 +1,8 @@
-import { expect, test } from './helpers/fixtures';
-import { createEvent, createEvents, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent } from './helpers/seed';
-import { setEventLocationFilterCookie, waitForClientHydration } from './helpers/offering-test-utils';
+import { expect, test } from "./helpers/fixtures";
+import { createEvent, createEvents, clearTestEvents, createMeditationEvent, createYogaEvent, createOnlineEvent } from "./helpers/seed";
+import { setEventLocationFilterCookie, waitForClientHydration } from "./helpers/offering-test-utils";
 
-test.describe('Homepage', () => {
+test.describe("Homepage", () => {
 	test.beforeEach(async ({ page }) => {
 		await clearTestEvents(page);
 		await createEvents(page, [
@@ -16,8 +16,8 @@ test.describe('Homepage', () => {
 				sourceUrl: `https://example.com/ecstatic-dance`,
 			}),
 		]);
-		await page.goto('/');
-		await page.getByTestId('event-card').first().waitFor({ timeout: 15000 });
+		await page.goto("/");
+		await page.getByTestId("event-card").first().waitFor({ timeout: 15000 });
 		await waitForClientHydration(page);
 	});
 
@@ -25,22 +25,22 @@ test.describe('Homepage', () => {
 		await clearTestEvents(page);
 	});
 
-	test('page loads with logo', async ({ page }) => {
-		await expect(page.getByTestId('hero-logo')).toBeVisible();
+	test("page loads with logo", async ({ page }) => {
+		await expect(page.getByTestId("hero-logo")).toBeVisible();
 	});
 
-	test('displays search and filter bar', async ({ page }) => {
-		await expect(page.getByTestId('event-search-input')).toBeVisible();
-		await expect(page.getByTestId('open-filter-dialog')).toBeVisible();
+	test("displays search and filter bar", async ({ page }) => {
+		await expect(page.getByTestId("event-search-input")).toBeVisible();
+		await expect(page.getByTestId("open-filter-dialog")).toBeVisible();
 	});
 
-	test('event cards display with required elements', async ({ page }) => {
-		const firstCard = page.getByTestId('event-card').first();
+	test("event cards display with required elements", async ({ page }) => {
+		const firstCard = page.getByTestId("event-card").first();
 		await expect(firstCard).toBeVisible();
-		await expect(firstCard.getByTestId('event-card-title')).toBeVisible();
+		await expect(firstCard.getByTestId("event-card-title")).toBeVisible();
 	});
 
-	test('clicking a category chip filters events', async ({ page }) => {
+	test("clicking a category chip filters events", async ({ page }) => {
 		await page.getByTestId(`category-chip-meditation`).click();
 
 		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toBeVisible({
@@ -50,7 +50,7 @@ test.describe('Homepage', () => {
 		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Ecstatic Dance Night` })).toHaveCount(0);
 	});
 
-	test('selecting a second category unions results', async ({ page }) => {
+	test("selecting a second category unions results", async ({ page }) => {
 		await page.getByTestId(`category-chip-meditation`).click();
 		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toBeVisible({
 			timeout: 15000,
@@ -64,7 +64,7 @@ test.describe('Homepage', () => {
 		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Yoga Flow Class` })).toHaveCount(0);
 	});
 
-	test('deselecting a category restores unfiltered results for that category', async ({ page }) => {
+	test("deselecting a category restores unfiltered results for that category", async ({ page }) => {
 		await page.getByTestId(`category-chip-meditation`).click();
 		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Yoga Flow Class` })).toHaveCount(0);
 
@@ -75,7 +75,7 @@ test.describe('Homepage', () => {
 		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toBeVisible();
 	});
 
-	test('text search still filters events', async ({ page }) => {
+	test("text search still filters events", async ({ page }) => {
 		const searchInput = page.getByTestId(`event-search-input`);
 		await searchInput.click();
 		await searchInput.fill(`Yoga`);
@@ -87,7 +87,7 @@ test.describe('Homepage', () => {
 		await expect(page.getByTestId(`event-card-title`).filter({ hasText: `Meditation Workshop` })).toHaveCount(0);
 	});
 
-	test('search by city filters events', async ({ page }) => {
+	test("search by city filters events", async ({ page }) => {
 		await page.getByTestId(`plzCityInput-header-summary`).click();
 		const searchInput = page.getByTestId(`plzCityInput-header`);
 		await expect(searchInput).toBeVisible();
@@ -96,17 +96,17 @@ test.describe('Homepage', () => {
 		await searchInput.press(`Enter`);
 		await page.waitForTimeout(1000);
 
-		const eventCount = await page.getByTestId('event-card').count();
+		const eventCount = await page.getByTestId("event-card").count();
 		expect(eventCount).toBeGreaterThanOrEqual(0);
 	});
 
-	test('event card click opens event details', async ({ page }) => {
-		const firstCard = page.getByTestId('event-card').first();
+	test("event card click opens event details", async ({ page }) => {
+		const firstCard = page.getByTestId("event-card").first();
 		await expect(firstCard).toBeVisible();
 
 		await firstCard.click();
-		await expect(page.getByTestId('details-dialog')).toBeVisible({ timeout: 15000 });
-		await expect(page.getByTestId('event-title')).toBeVisible();
+		await expect(page.getByTestId("details-dialog")).toBeVisible({ timeout: 15000 });
+		await expect(page.getByTestId("event-title")).toBeVisible();
 	});
 });
 
@@ -161,19 +161,21 @@ test.describe(`Homepage - listing dividers`, () => {
 		await waitForClientHydration(page);
 
 		const listing = page.locator(`[data-testid="event-card-title"], [data-testid="event-list-divider"]`);
-		await expect.poll(async () => (await listing.allTextContents()).map((text) => text.trim())).toEqual([
-			`Today Morning Circle`,
-			`Today Evening Circle`,
-			`Morgen`,
-			`Tomorrow Yoga`,
-			`Übermorgen`,
-			`Day After Yoga`,
-			...(laterThisWeekDays == null ? [] : [`Später diese Woche`, `Later This Week Jam`]),
-			`Nächste Woche`,
-			`Next Week Breathwork`,
-			`Später`,
-			`Later Retreat`,
-		]);
+		await expect
+			.poll(async () => (await listing.allTextContents()).map((text) => text.trim()))
+			.toEqual([
+				`Today Morning Circle`,
+				`Today Evening Circle`,
+				`Morgen`,
+				`Tomorrow Yoga`,
+				`Übermorgen`,
+				`Day After Yoga`,
+				...(laterThisWeekDays == null ? [] : [`Später diese Woche`, `Later This Week Jam`]),
+				`Nächste Woche`,
+				`Next Week Breathwork`,
+				`Später`,
+				`Later Retreat`,
+			]);
 	});
 });
 
@@ -197,18 +199,18 @@ test.describe(`Homepage - location prefill`, () => {
 	});
 });
 
-test.describe('Homepage - Loading States', () => {
+test.describe("Homepage - Loading States", () => {
 	test.beforeEach(async ({ page }) => {
 		await clearTestEvents(page);
 	});
 
-	test('shows loading indicator while fetching events', async ({ page }) => {
+	test("shows loading indicator while fetching events", async ({ page }) => {
 		await createEvent(page, createMeditationEvent());
-		await page.goto('/');
-		
-		await page.getByTestId('event-card').first().waitFor({ timeout: 15000 });
-		
-		const eventCount = await page.getByTestId('event-card').count();
+		await page.goto("/");
+
+		await page.getByTestId("event-card").first().waitFor({ timeout: 15000 });
+
+		const eventCount = await page.getByTestId("event-card").count();
 		expect(eventCount).toBeGreaterThan(0);
 	});
 });

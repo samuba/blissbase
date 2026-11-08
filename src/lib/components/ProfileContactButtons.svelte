@@ -1,16 +1,11 @@
 <script lang="ts">
-	import type { PublicProfileSocialLink } from '$lib/rpc/profile.common';
-	import {
-		socialIconClass,
-		socialIconColorClass,
-		socialLabel,
-		usernameUrlPrefix
-	} from '$lib/socialLinks';
+	import type { PublicProfileSocialLink } from "#lib/rpc/profile.common.ts";
+	import { socialIconClass, socialIconColorClass, socialLabel, usernameUrlPrefix } from "#lib/socialLinks.ts";
 
 	let {
 		socialLinks,
 		class: className,
-		class2: className2
+		class2: className2,
 	}: {
 		socialLinks: PublicProfileSocialLink[];
 		class?: string;
@@ -66,11 +61,7 @@
 </script>
 
 {#snippet socialLinkButton(link: PublicProfileSocialLink)}
-	<button
-		type="button"
-		class={[`btn btn-sm gap-1.5 hover:cursor-pointer`]}
-		onclick={() => openLink(link)}
-	>
+	<button type="button" class={[`btn btn-sm gap-1.5 hover:cursor-pointer`]} onclick={() => openLink(link)}>
 		<i class={[socialIconClass(link.type), socialIconColorClass(link.type), `size-5`]}></i>
 		{#if link.type === `website`}
 			{websiteLabel(link.value)}

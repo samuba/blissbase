@@ -1,29 +1,27 @@
 <script lang="ts">
-	import type { RemoteFormField } from '@sveltejs/kit';
-	import Cropper from 'svelte-easy-crop';
-	import type { CropArea } from 'svelte-easy-crop';
-	import { processImageDataToWebPFile } from '$lib/imageUpload';
-	import { toast } from 'svelte-sonner';
-	import { Dialog } from '$lib/components/dialog';
-	import { createProfileImageUploadUrl } from '$lib/rpc/profile.remote';
+	import type { RemoteFormField } from "$app/server";
+	import Cropper from "svelte-easy-crop";
+	import type { CropArea } from "svelte-easy-crop";
+	import { processImageDataToWebPFile } from "#lib/imageUpload.ts";
+	import { toast } from "svelte-sonner";
+	import { Dialog } from "#lib/components/dialog/index.ts";
+	import { createProfileImageUploadUrl } from "#lib/rpc/profile.remote.ts";
 
 	let {
 		kind,
 		field,
 		initialUrl = ``,
 		onBusyChange,
-		class: className
+		class: className,
 	}: {
-		kind: 'profile' | 'banner';
+		kind: "profile" | "banner";
 		field: RemoteFormField<string>;
 		initialUrl?: string;
 		onBusyChange?: (busy: boolean) => void;
 		class?: string;
 	} = $props();
 
-	const targetSize = $derived(
-		kind === `profile` ? { width: 265, height: 265 } : { width: 850, height: 300 }
-	);
+	const targetSize = $derived(kind === `profile` ? { width: 265, height: 265 } : { width: 850, height: 300 });
 	const aspect = $derived(targetSize.width / targetSize.height);
 	const cropShape = $derived(kind === `profile` ? `round` : `rect`);
 
@@ -100,7 +98,7 @@
 		try {
 			const file = await renderCroppedBlob({
 				image: originalImage,
-				pixels: croppedPixels
+				pixels: croppedPixels,
 			});
 
 			localPreviewUrl = URL.createObjectURL(file);
@@ -110,13 +108,13 @@
 
 			const { uploadUrl, publicUrl } = await createProfileImageUploadUrl({
 				type: kind,
-				contentType: file.type === `image/webp` ? `image/webp` : `image/jpeg`
+				contentType: file.type === `image/webp` ? `image/webp` : `image/jpeg`,
 			});
 
 			const response = await fetch(uploadUrl, {
 				method: `PUT`,
 				body: file,
-				headers: { 'Content-Type': file.type }
+				headers: { "Content-Type": file.type },
 			});
 			if (!response.ok) {
 				throw new Error(`Upload fehlgeschlagen (HTTP ${response.status})`);
@@ -154,13 +152,13 @@
 			0,
 			0,
 			targetSize.width,
-			targetSize.height
+			targetSize.height,
 		);
 
 		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		return await processImageDataToWebPFile({
 			imageData,
-			originalFileName: `${kind}.webp`
+			originalFileName: `${kind}.webp`,
 		});
 	}
 
@@ -212,7 +210,7 @@
 	<legend class="fieldset-legend">{kind === `profile` ? `Profilbild` : `Banner`}</legend>
 
 	{#if kind === `profile`}
-		<div class="relative size-22 transition-opacity ring-2 ring-base-500 rounded-full">
+		<div class="ring-base-500 relative size-22 rounded-full ring-2 transition-opacity">
 			{#if displayedUrl}
 				<button
 					type="button"
@@ -221,11 +219,7 @@
 					onclick={openPicker}
 					disabled={busy}
 				>
-					<img
-						src={displayedUrl}
-						alt=""
-						class="border-base-300 size-22 rounded-full border object-cover"
-					/>
+					<img src={displayedUrl} alt="" class="border-base-300 size-22 rounded-full border object-cover" />
 				</button>
 			{:else}
 				<button
@@ -241,7 +235,7 @@
 			{#if displayedUrl}
 				<button
 					type="button"
-					class="btn btn-circle btn-warning btn-xs absolute bottom-0 right-0"
+					class="btn btn-circle btn-warning btn-xs absolute right-0 bottom-0"
 					title="Bild entfernen"
 					onclick={removeImage}
 					disabled={busy}
@@ -250,41 +244,33 @@
 				</button>
 			{/if}
 			{#if uploading}
-				<div
-					class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50"
-				>
+				<div class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
 					<span class="loading loading-spinner loading-xl text-primary"></span>
 				</div>
 			{/if}
 		</div>
 	{:else}
-		<div
-			class="bg-base-200 relative h-22 w-full overflow-hidden ring-2 ring-base-500 rounded-2xl"
-		>
+		<div class="bg-base-200 ring-base-500 relative h-22 w-full overflow-hidden rounded-2xl ring-2">
 			{#if displayedUrl}
 				<button
 					type="button"
-					class={[`size-full cursor-pointer hover:opacity-80 transition-opacity`, uploading && `opacity-70`]}
+					class={[`size-full cursor-pointer transition-opacity hover:opacity-80`, uploading && `opacity-70`]}
 					title="Bild ändern"
 					onclick={openPicker}
 					disabled={busy}
 				>
-					<img
-						src={displayedUrl}
-						alt=""
-						class="size-full object-cover"
-					/>
+					<img src={displayedUrl} alt="" class="size-full object-cover" />
 				</button>
 			{:else}
 				<button
 					type="button"
-					class="text-primary-content flex gap-4 size-full cursor-pointer items-center justify-center hover:opacity-80"
+					class="text-primary-content flex size-full cursor-pointer items-center justify-center gap-4 hover:opacity-80"
 					title="Bild hochladen"
 					onclick={openPicker}
 					disabled={busy}
 				>
-					<i class="icon-[ph--image] size-12 text-primary"></i>
-					<div class="text-sm ">
+					<i class="icon-[ph--image] text-primary size-12"></i>
+					<div class="text-sm">
 						Bild auswählen
 						<p class="hidden sm:block">oder ablegen</p>
 					</div>
@@ -293,7 +279,7 @@
 			{#if displayedUrl}
 				<button
 					type="button"
-					class="btn btn-circle btn-warning btn-xs absolute bottom-1.5 right-1.5"
+					class="btn btn-circle btn-warning btn-xs absolute right-1.5 bottom-1.5"
 					title="Bild entfernen"
 					onclick={removeImage}
 					disabled={busy}
@@ -309,10 +295,7 @@
 		</div>
 	{/if}
 
-	<input
-		type="hidden"
-		{...field.as(`text`, initialUrl)}
-	/>
+	<input type="hidden" {...field.as(`text`, initialUrl)} />
 
 	<input
 		bind:this={fileInputEl}
@@ -327,7 +310,7 @@
 	{#if field.issues()?.length}
 		<div class="mt-2 flex flex-col gap-1">
 			{#each field.issues() as issue, i (`${issue.message}-${i}`)}
-				<div class="text-red-600 text-xs">{issue.message}</div>
+				<div class="text-xs text-red-600">{issue.message}</div>
 			{/each}
 		</div>
 	{/if}
@@ -379,9 +362,7 @@
 			{/if}
 
 			<div class="mt-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-				<Dialog.Close class="btn btn-ghost" type="button" disabled={busy}>
-					Abbrechen
-				</Dialog.Close>
+				<Dialog.Close class="btn btn-ghost" type="button" disabled={busy}>Abbrechen</Dialog.Close>
 				<button
 					type="button"
 					class="btn btn-primary"

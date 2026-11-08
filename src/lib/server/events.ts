@@ -1,33 +1,25 @@
-import { db, s } from '$lib/server/db';
+import { db, s } from "#lib/server/db.ts";
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, desc, eq, arrayOverlaps } from "drizzle-orm";
+import { today as getToday, parseDate, CalendarDate } from "@internationalized/date";
+import { reverseGeocodeCityCached } from "#lib/server/google.ts";
+import { resolveFilterCoordinates } from "#lib/server/locationDistance.ts";
+import { sanitizeLocationParams } from "#lib/locationFilter.ts";
+import type { InsertEvent } from "#lib/types.ts";
+import { escapeRegex, type Modify } from "#lib/common.ts";
+import * as v from "valibot";
 import {
-	asc,
-	count,
-	gte,
-	or,
-	and,
-	lt,
-	isNotNull,
-	lte,
-	gt,
-	sql,
-	desc,
-	eq,
-	arrayOverlaps
-} from 'drizzle-orm';
-import { today as getToday, parseDate, CalendarDate } from '@internationalized/date';
-import { reverseGeocodeCityCached } from '$lib/server/google';
-import { resolveFilterCoordinates } from '$lib/server/locationDistance';
-import { sanitizeLocationParams } from '$lib/locationFilter';
-import type { InsertEvent } from '$lib/types';
-import { escapeRegex, type Modify } from '$lib/common';
-import * as v from 'valibot';
-import { eventCategorySlugs, OTHERS_CATEGORY_SLUG, getTagSlugsForCategories, getAssignedTagSlugs, getTagSlugsMatchingSearch } from '$lib/eventCategories';
-import { attendanceModeEnum, type AttendanceMode } from './schema';
-import { upsertEvents as upsertEventsShared } from './events.shared';
-import { getPublicProfileBioExcerpt } from './profile';
+	eventCategorySlugs,
+	OTHERS_CATEGORY_SLUG,
+	getTagSlugsForCategories,
+	getAssignedTagSlugs,
+	getTagSlugsMatchingSearch,
+} from "#lib/eventCategories.ts";
+import { attendanceModeEnum, type AttendanceMode } from "./schema";
+import { upsertEvents as upsertEventsShared } from "./events.shared";
+import { getPublicProfileBioExcerpt } from "./profile";
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
-if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY is not set');
+if (!GOOGLE_MAPS_API_KEY) throw new Error("GOOGLE_MAPS_API_KEY is not set");
 
 export const eventWith = {
 	author: {
@@ -38,8 +30,8 @@ export const eventWith = {
 			profileImageUrl: true,
 			bio: true,
 			locale: true,
-		}
-	}
+		},
+	},
 } as const;
 
 /**
@@ -81,18 +73,15 @@ export async function fetchEvents(params: LoadEventsParams) {
 	const sanitizedParams = sanitizeLocationParams(params);
 	const { plzCity, distance, lat, lng, searchTerm, onlyOnlineEvents } = sanitizedParams;
 	const categorySlugs = uniqueCategorySlugs(params.categorySlugs);
-	const timeZone = 'Europe/Berlin';
+	const timeZone = "Europe/Berlin";
 	const today = getToday(timeZone);
-	const startCalDate = params.startDate
-		? parseDate(params.startDate)
-		: new CalendarDate(today.year, today.month, today.day);
+	const startCalDate = params.startDate ? parseDate(params.startDate) : new CalendarDate(today.year, today.month, today.day);
 	const endCalDate = params.endDate ? parseDate(params.endDate) : startCalDate.add({ years: 99 });
 	const limit = Math.min(params.limit ?? 10, 10);
 	const page = Math.max(params.page ?? 1, 1);
-	let sortBy = params.sortBy === 'distance' ? 'distance' : 'time';
-	const sortOrder = params.sortOrder === 'desc' ? 'desc' : 'asc';
-	const offset =
-		params.offset != null && Number.isFinite(params.offset) ? Math.max(0, Math.floor(params.offset)) : (page - 1) * limit;
+	let sortBy = params.sortBy === "distance" ? "distance" : "time";
+	const sortOrder = params.sortOrder === "desc" ? "desc" : "asc";
+	const offset = params.offset != null && Number.isFinite(params.offset) ? Math.max(0, Math.floor(params.offset)) : (page - 1) * limit;
 	const source = params.source?.trim() || null;
 
 	const relevanceAt = parseRelevanceAt(params.relevanceAt);
@@ -101,7 +90,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 	const endDate = new Date(endCalDate.toDate(timeZone).getTime() + 24 * 60 * 60 * 1000 - 1); // End of day
 
 	let attendanceMode: AttendanceMode | null = params.attendanceMode ?? null;
-	if (onlyOnlineEvents) attendanceMode = 'online'; // remove after some time
+	if (onlyOnlineEvents) attendanceMode = "online"; // remove after some time
 
 	// Check if the entire date range is in the past
 	const isHistoricalRange = endDate <= relevanceAt;
@@ -140,19 +129,17 @@ export async function fetchEvents(params: LoadEventsParams) {
 		allConditions.push(eq(s.events.source, source));
 	}
 
-	if (!attendanceMode || attendanceMode === 'offline+online') {
-		allConditions.push(or(
-            eq(s.events.attendanceMode, 'offline+online'), 
-            eq(s.events.attendanceMode, 'online'), 
-            eq(s.events.attendanceMode, 'offline'))
-        );
+	if (!attendanceMode || attendanceMode === "offline+online") {
+		allConditions.push(
+			or(eq(s.events.attendanceMode, "offline+online"), eq(s.events.attendanceMode, "online"), eq(s.events.attendanceMode, "offline")),
+		);
 	} else {
 		allConditions.push(eq(s.events.attendanceMode, attendanceMode));
 	}
 
-    let geocodedCoords: { lat: number; lng: number } | null = null;
+	let geocodedCoords: { lat: number; lng: number } | null = null;
 
-	if ((attendanceMode === 'offline' || attendanceMode === 'offline+online' || !attendanceMode) && distance) {
+	if ((attendanceMode === "offline" || attendanceMode === "offline+online" || !attendanceMode) && distance) {
 		geocodedCoords = await resolveFilterCoordinates({
 			plzCity,
 			lat,
@@ -160,46 +147,46 @@ export async function fetchEvents(params: LoadEventsParams) {
 			apiKey: GOOGLE_MAPS_API_KEY,
 		});
 
-        if (geocodedCoords) {
-            const distanceMeters = parseFloat(distance) * 1000;
-            const proximityCondition = sql`earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng})) <= ${distanceMeters} AND ${s.events.latitude} IS NOT NULL AND ${s.events.longitude} IS NOT NULL`;
-            allConditions.push(proximityCondition);
+		if (geocodedCoords) {
+			const distanceMeters = parseFloat(distance) * 1000;
+			const proximityCondition = sql`earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng})) <= ${distanceMeters} AND ${s.events.latitude} IS NOT NULL AND ${s.events.longitude} IS NOT NULL`;
+			allConditions.push(proximityCondition);
 		}
 	}
 
-	if (sortBy === 'distance' && !geocodedCoords) {
-		sortBy = 'time';
+	if (sortBy === "distance" && !geocodedCoords) {
+		sortBy = "time";
 	}
 
 	let orderByClause; // also sorting by event.id cuz if events have same startAt, svelte hydration can mix them up and we have mismatched images
-	if (sortBy === 'distance' && geocodedCoords) {
+	if (sortBy === "distance" && geocodedCoords) {
 		const distanceSortSql = sql`
             CASE
                 WHEN ${s.events.longitude} IS NOT NULL AND ${s.events.latitude} IS NOT NULL THEN
                     earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng}))
                 ELSE NULL
             END`;
-		if (sortOrder === 'asc') {
+		if (sortOrder === "asc") {
 			orderByClause = [sql`${distanceSortSql} ASC NULLS LAST`, asc(s.events.id)];
 		} else {
 			orderByClause = [sql`${distanceSortSql} DESC NULLS LAST`, asc(s.events.id)];
 		}
 	} else {
-		if (sortOrder === 'asc') {
+		if (sortOrder === "asc") {
 			orderByClause = [asc(s.events.startAt), asc(s.events.id)];
 		} else {
 			orderByClause = [desc(s.events.startAt), asc(s.events.id)];
 		}
 	}
 
-	if (searchTerm && searchTerm.trim() !== '') {
+	if (searchTerm && searchTerm.trim() !== "") {
 		// Split by spaces but keep quoted phrases together
 		const searchWords =
 			searchTerm
 				.trim()
 				.match(/(?:[^\s"]+|"[^"]*")+/g)
 				?.map(
-					(word) => word.replace(/^"|"$/g, '') // Remove surrounding quotes
+					(word) => word.replace(/^"|"$/g, ""), // Remove surrounding quotes
 				)
 				.filter(Boolean) || [];
 
@@ -236,8 +223,11 @@ export async function fetchEvents(params: LoadEventsParams) {
 			categoryConditions.push(
 				sql`EXISTS (
 					SELECT 1 FROM unnest(COALESCE(${s.events.tagSlugs}, ARRAY[]::text[])) AS t(slug)
-					WHERE t.slug NOT IN (${sql.join(assignedSlugs.map((slug) => sql`${slug}`), sql`, `)})
-				)`
+					WHERE t.slug NOT IN (${sql.join(
+						assignedSlugs.map((slug) => sql`${slug}`),
+						sql`, `,
+					)})
+				)`,
 			);
 			categoryConditions.push(sql`COALESCE(cardinality(${s.events.tagSlugs}), 0) = 0`);
 		}
@@ -261,9 +251,9 @@ export async function fetchEvents(params: LoadEventsParams) {
                     GREATEST(1, ROUND(earth_distance(ll_to_earth(${s.events.latitude}, ${s.events.longitude}), ll_to_earth(${geocodedCoords.lat}, ${geocodedCoords.lng})) / 1000))
                 ELSE NULL
             END
-        `.as('distance_km')
-				: sql<null>`NULL`.as('distance_km')
-		}
+        `.as("distance_km")
+				: sql<null>`NULL`.as("distance_km"),
+		},
 	});
 
 	const totalEventsQuery = db.select({ count: count() }).from(s.events).where(finalCondition);
@@ -305,8 +295,8 @@ export async function fetchEvents(params: LoadEventsParams) {
 			categorySlugs: categorySlugs.length ? categorySlugs : undefined,
 			attendanceMode,
 			source,
-			relevanceAt: relevanceAtIso
-		} satisfies LoadEventsParams & { totalEvents: number; totalPages: number }
+			relevanceAt: relevanceAtIso,
+		} satisfies LoadEventsParams & { totalEvents: number; totalPages: number },
 	};
 }
 
@@ -337,13 +327,10 @@ type TempFetchEventsResult = Awaited<ReturnType<typeof fetchEvents>>;
 type FetchEventsResult = Modify<
 	TempFetchEventsResult,
 	{
-		events: Modify<
-			TempFetchEventsResult['events'][number],
-			{ distanceKm?: number | null | undefined }
-		>[];
+		events: Modify<TempFetchEventsResult["events"][number], { distanceKm?: number | null | undefined }>[];
 	}
 >;
-type FetchEvent = FetchEventsResult['events'][number];
+type FetchEvent = FetchEventsResult["events"][number];
 
 // const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
 export function prepareEventsForUi(events: FetchEvent[]) {
@@ -359,16 +346,18 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 			// })
 			.map((event) => {
 				// hide that we took event from AIN channels. Stop when we have official cooperation with AIN.
-				if (event.host?.includes('Authentic Intimacy Network')) {
+				if (event.host?.includes("Authentic Intimacy Network")) {
 					event.host = null;
 				}
 				return {
 					...event,
 					hostSecret: undefined, // never leak this to the ui
-					author: event.author ? {
-						...event.author,
-						bio: getPublicProfileBioExcerpt({ bio: event.author?.bio })
-					} : undefined
+					author: event.author
+						? {
+								...event.author,
+								bio: getPublicProfileBioExcerpt({ bio: event.author?.bio }),
+							}
+						: undefined,
 				};
 			})
 	);
@@ -377,7 +366,7 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 export function prepareEventsResultForUi(result: FetchEventsResult) {
 	return {
 		...result,
-		events: prepareEventsForUi(result.events)
+		events: prepareEventsForUi(result.events),
 	};
 }
 
@@ -406,8 +395,8 @@ export const loadEventsParamsSchema = v.partial(
 		relevanceAt: v.nullable(v.pipe(v.string(), v.isoTimestamp())),
 		// these are not used as params but are returned in the pagination object
 		totalEvents: v.nullable(v.number()),
-		totalPages: v.nullable(v.number())
-	})
+		totalPages: v.nullable(v.number()),
+	}),
 );
 
 export type LoadEventsParams = v.InferInput<typeof loadEventsParamsSchema>;

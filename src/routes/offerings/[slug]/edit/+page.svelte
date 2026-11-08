@@ -1,17 +1,12 @@
 <script lang="ts">
-	import { goto, invalidateAll } from "$app/navigation";
+	import { goto, refreshAll } from "$app/navigation";
 	import { page } from "$app/state";
-	import OfferingForm from "$lib/components/OfferingForm.svelte";
-	import { showFlashToast } from "$lib/flashToast.svelte";
-	import type { OfferingFormat } from "$lib/rpc/offerings.common";
-	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "$lib/rpc/offerings.remote";
-	import {
-		parseOfferingDetailsSlugFromUrl,
-		routes,
-		safeReturnToPath,
-		takeOfferingSlugQuery,
-	} from "$lib/routes";
-	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
+	import OfferingForm from "#lib/components/OfferingForm.svelte";
+	import { showFlashToast } from "#lib/flashToast.svelte.ts";
+	import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
+	import { deleteOffering, listOffering, unlistOffering, updateOffering } from "#lib/rpc/offerings.remote.ts";
+	import { parseOfferingDetailsSlugFromUrl, routes, safeReturnToPath, takeOfferingSlugQuery } from "#lib/routes.ts";
+	import { UnsavedChangesGuard } from "#lib/unsavedChangesGuard.svelte.ts";
 	import { toast } from "svelte-sonner";
 	import type { PageProps } from "./$types";
 
@@ -27,9 +22,7 @@
 	let isChangingListing = $state(false);
 	let isSubmitting = $derived(updateOffering.pending > 0);
 	let actionsDisabled = $derived(isSubmitting || isDeletingOffering || isChangingListing || imageBusy || imageFailed);
-	const fallbackReturnHref = $derived(
-		offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList(),
-	);
+	const fallbackReturnHref = $derived(offering.slug ? routes.offeringDetails(offering.slug) : routes.offeringsList());
 	let returnHref = $derived(
 		safeReturnToPath({
 			returnTo: page.url.searchParams.get(`returnTo`),
@@ -51,11 +44,11 @@
 	async function handleSaveSuccess() {
 		unsaved.clear();
 		showFlashToast(`offeringUpdated`);
-		await goto(returnHref, { replaceState: true });
+		await goto(returnHref, { replace: true });
 	}
 
 	function handleCancel() {
-		void goto(returnHref, { replaceState: true });
+		void goto(returnHref, { replace: true });
 	}
 
 	async function handleDeleteOffering() {
@@ -65,7 +58,7 @@
 			isDeletingOffering = true;
 			await deleteOffering({ offeringId: offering.id });
 			unsaved.clear();
-			await goto(deleteReturnHref, { replaceState: true });
+			await goto(deleteReturnHref, { replace: true });
 		} catch (error) {
 			console.error(`Failed to delete offering:`, error);
 			toast.error(managementErrorMessage(`delete`));
@@ -99,7 +92,7 @@
 				await listOffering({ offeringId: offering.id });
 			}
 
-			await invalidateAll();
+			await refreshAll();
 		} catch (error) {
 			console.error(`Failed to update offering listing state:`, error);
 			toast.error(managementErrorMessage(action));
@@ -126,7 +119,7 @@
 <div class="mx-auto w-full max-w-3xl px-0 pb-6 sm:px-4">
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body gap-6 p-4 sm:p-6">
-			<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-edit-heading">Angebot bearbeiten</h1>
+			<h1 class="text-xl font-bold sm:text-2xl" data-testid="offering-edit-heading">Angebot bearbeiten</h1>
 
 			{#if initializedFormOfferingId === offering.id}
 				<OfferingForm
@@ -142,8 +135,14 @@
 			{/if}
 
 			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
-				<div class="flex flex-row items-center join w-full sm:w-auto ">
-					<button type="button" data-testid="offering-delete" onclick={handleDeleteOffering} disabled={actionsDisabled} class="btn join-item grow">
+				<div class="join flex w-full flex-row items-center sm:w-auto">
+					<button
+						type="button"
+						data-testid="offering-delete"
+						onclick={handleDeleteOffering}
+						disabled={actionsDisabled}
+						class="btn join-item grow"
+					>
 						{#if isDeletingOffering}
 							<span class="loading loading-spinner loading-sm"></span>
 							Lösche…
@@ -152,7 +151,14 @@
 							Löschen
 						{/if}
 					</button>
-					<button type="button" data-testid="offering-toggle-listing" data-listed={String(offering.listed)} onclick={handleToggleListing} disabled={actionsDisabled} class="btn join-item grow">
+					<button
+						type="button"
+						data-testid="offering-toggle-listing"
+						data-listed={String(offering.listed)}
+						onclick={handleToggleListing}
+						disabled={actionsDisabled}
+						class="btn join-item grow"
+					>
 						{#if isChangingListing}
 							<span class="loading loading-spinner loading-sm"></span>
 							{offering.listed ? `Deaktiviere…` : `Aktiviere…`}
@@ -168,9 +174,9 @@
 
 				<div class="grow"></div>
 
-				<button type="button" onclick={handleCancel} class="btn " disabled={actionsDisabled}>Abbrechen</button>
+				<button type="button" onclick={handleCancel} class="btn" disabled={actionsDisabled}>Abbrechen</button>
 
-				<button type="submit" form="offering-form" class="btn btn-primary " data-testid="offering-save" disabled={actionsDisabled}>
+				<button type="submit" form="offering-form" class="btn btn-primary" data-testid="offering-save" disabled={actionsDisabled}>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>
 						Speichere…

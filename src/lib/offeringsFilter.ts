@@ -1,7 +1,7 @@
-import { matchesWholeWord, stripHtml, trimAllWhitespaces } from '$lib/common';
-import type { FilterCookieData } from '$lib/cookie-utils';
-import type { OfferingFormat } from '$lib/rpc/offerings.common';
-import { hasValidCoordinates, isWithinDistanceKm, sanitizeLocationParams } from '$lib/locationFilter';
+import { matchesWholeWord, stripHtml, trimAllWhitespaces } from "#lib/common.ts";
+import type { FilterCookieData } from "#lib/cookie-utils.ts";
+import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
+import { hasValidCoordinates, isWithinDistanceKm, sanitizeLocationParams } from "#lib/locationFilter.ts";
 
 export type OfferingsFilter = {
 	location: string | null;
@@ -12,18 +12,9 @@ export type OfferingsFilter = {
 	includeOnline: boolean;
 };
 
-const OFFERINGS_FILTER_URL_KEYS = [
-	`location`,
-	`plzCity`,
-	`distance`,
-	`lat`,
-	`lng`,
-	`searchTerm`,
-	`includeOnline`,
-	`onlineOnly`,
-] as const;
+const OFFERINGS_FILTER_URL_KEYS = [`location`, `plzCity`, `distance`, `lat`, `lng`, `searchTerm`, `includeOnline`, `onlineOnly`] as const;
 
-export function parseOfferingsFilterFromUrl(url: URL): OfferingsFilter {
+export function parseOfferingsFilterFromUrl(url: { searchParams: URLSearchParams | { get(name: string): string | null } }): OfferingsFilter {
 	const latParam = url.searchParams.get(`lat`);
 	const lngParam = url.searchParams.get(`lng`);
 	const searchTerm = url.searchParams.get(`searchTerm`)?.trim() || null;
@@ -43,18 +34,12 @@ export function parseOfferingsFilterFromUrl(url: URL): OfferingsFilter {
 		lat: sanitized.lat ?? null,
 		lng: sanitized.lng ?? null,
 		searchTerm,
-		includeOnline: includeOnlineParam == null
-			? true
-			: includeOnlineParam === `1` || includeOnlineParam === `true`,
+		includeOnline: includeOnlineParam == null ? true : includeOnlineParam === `1` || includeOnlineParam === `true`,
 	};
 }
 
 export function hasOfferingsLocationParams(filter: OfferingsFilter) {
-	return Boolean(
-		filter.location?.trim() ||
-		filter.distance ||
-		(filter.lat != null && filter.lng != null),
-	);
+	return Boolean(filter.location?.trim() || filter.distance || (filter.lat != null && filter.lng != null));
 }
 
 export function hasOfferingsFilterParams(filter: OfferingsFilter) {
@@ -105,11 +90,13 @@ export function resolveOfferingsListQuery<T>(args: {
 	};
 }
 
-export function filterOfferingsBySearchTerm<T extends {
-	title: string;
-	descriptionHtml?: string | null;
-	profile: { displayName?: string | null };
-}>(args: { offerings: T[]; searchTerm: string | null }) {
+export function filterOfferingsBySearchTerm<
+	T extends {
+		title: string;
+		descriptionHtml?: string | null;
+		profile: { displayName?: string | null };
+	},
+>(args: { offerings: T[]; searchTerm: string | null }) {
 	const searchTerm = args.searchTerm?.trim();
 	if (!searchTerm) return args.offerings;
 
@@ -151,10 +138,7 @@ function isOfflineOffering(format: OfferingFormat) {
 	return format === `offline` || format === `offline+online`;
 }
 
-export function filterOfferingsByIncludeOnline<T extends { format: OfferingFormat }>(args: {
-	offerings: T[];
-	includeOnline: boolean;
-}) {
+export function filterOfferingsByIncludeOnline<T extends { format: OfferingFormat }>(args: { offerings: T[]; includeOnline: boolean }) {
 	if (args.includeOnline) return args.offerings;
 	return args.offerings.filter((offering) => offering.format !== `online`);
 }

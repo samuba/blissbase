@@ -1,4 +1,4 @@
-import { browser } from "$app/environment";
+import { browser } from "$app/env";
 
 /** Canvas burst, lazy-loaded so the library stays out of the initial bundle. */
 export async function fireConfetti() {

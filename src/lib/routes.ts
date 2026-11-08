@@ -1,226 +1,222 @@
 import { resolve } from "$app/paths";
-import type { OfferingsFilter } from "$lib/offeringsFilter";
-import { buildOfferingsFilterSearchParams } from "$lib/offeringsFilter";
+import type { OfferingsFilter } from "#lib/offeringsFilter.ts";
+import { buildOfferingsFilterSearchParams } from "#lib/offeringsFilter.ts";
 
 export const routes = {
-    root: () => resolve("/") ,
-    eventList: (args: { searchTerm?: string | null } = {}) => {
-        const url = new URL(resolve("/"), BASE_URL);
-        if (args.searchTerm) url.searchParams.set('searchTerm', args.searchTerm);
-        return relativeUrl(url);
-    },
-    eventDetails: (slug: string) => resolve("/[slug]", { slug }) ,
-    sources: () => resolve(`/sources`) ,
-    about: () => resolve(`/about`) ,
-    faq: () => resolve(`/faq`) ,
-    privacyPolicy: () => resolve(`/legal/privacy-policy`) ,
-    termsOfService: () => resolve(`/legal/terms-of-service`) ,
-    typeSpecimen: () => resolve(`/type-specimen`) ,
-    newEvent: () => resolve(`/events/new`) ,
-    offeringsList: (args: Partial<OfferingsFilter> = {}) => {
-        const url = new URL(resolve(`/offerings`), BASE_URL);
-        const params = buildOfferingsFilterSearchParams({
-            location: args.location ?? null,
-            distance: args.distance ?? null,
-            lat: args.lat ?? null,
-            lng: args.lng ?? null,
-            searchTerm: args.searchTerm ?? null,
-            includeOnline: args.includeOnline ?? true,
-        });
-        for (const [key, value] of params.entries()) {
-            url.searchParams.set(key, value);
-        }
-        return relativeUrl(url) ;
-    } ,
-    offeringsOg: (args: Partial<OfferingsFilter> = {}) => {
-        const url = new URL(resolve(`/offerings/og`), BASE_URL);
-        const params = buildOfferingsFilterSearchParams({
-            location: args.location ?? null,
-            distance: args.distance ?? null,
-            lat: args.lat ?? null,
-            lng: args.lng ?? null,
-            searchTerm: args.searchTerm ?? null,
-            includeOnline: args.includeOnline ?? true,
-        });
-        for (const [key, value] of params.entries()) {
-            url.searchParams.set(key, value);
-        }
-        return relativeUrl(url);
-    },
-    currentPath: (url: URL) => `${url.pathname}${url.search}${url.hash}` ,
-    newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/new`) , args.returnTo),
-    offeringDetails: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]`, { slug }) , args.returnTo),
-    editOffering: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]/edit`, { slug }) , args.returnTo),
-    login: (args: { next?: string | null } = {}) => withNext(resolve(`/auth/login`), args.next),
-    authCallback: (args: { next?: string | null } = {}) => withNext(resolve(`/auth/callback`), args.next),
-    profile: () => resolve(`/profile`) ,
-    myOfferings: () => resolve(`/profile/offerings`) ,
-    myEvents: () => resolve(`/profile/events`) ,
-    publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }) ,
-    editPublicProfile: () => resolve(`/profile/public`) ,
-    editEvent: (id: number, hostSecret?: string) => {
-        const url = new URL(resolve(`/edit/[id]`, { id: id.toString() }), BASE_URL);
-        if (hostSecret) {
-            url.searchParams.set('hostSecret', hostSecret);
-            url.searchParams.set('_ADMIN_LINK_NICHT_TEILEN', '');
-        }
-        return relativeUrl(url) ;
-    },
-    favorites: () => resolve(`/profile/favorites`) ,
-    admin: () => resolve(`/admin`) ,
-    adminTelegram: () => resolve(`/admin/telegram`) ,
-    adminTelegramResolve: () => resolve(`/admin/telegram/resolve`) ,
-    adminTelegramDialogs: () => resolve(`/admin/telegram/dialogs`) ,
-    adminWhatsapp: () => resolve(`/admin/whatsapp`) ,
-    breathworkEventSearch: () => resolve(`/api/embed/breathwork.global`) ,
-    breathworkEventSearchSnippet: () => `/embed/event-search-snippet.js` ,
-}
+	root: () => resolve("/"),
+	eventList: (args: { searchTerm?: string | null } = {}) => {
+		const url = new URL(resolve("/"), BASE_URL);
+		if (args.searchTerm) url.searchParams.set("searchTerm", args.searchTerm);
+		return relativeUrl(url);
+	},
+	eventDetails: (slug: string) => resolve("/[slug]", { slug }),
+	sources: () => resolve(`sources`),
+	about: () => resolve(`about`),
+	faq: () => resolve(`faq`),
+	privacyPolicy: () => resolve(`legal/privacy-policy`),
+	termsOfService: () => resolve(`legal/terms-of-service`),
+	typeSpecimen: () => resolve(`type-specimen`),
+	newEvent: () => resolve(`events/new`),
+	offeringsList: (args: Partial<OfferingsFilter> = {}) => {
+		const url = new URL(resolve(`offerings`), BASE_URL);
+		const params = buildOfferingsFilterSearchParams({
+			location: args.location ?? null,
+			distance: args.distance ?? null,
+			lat: args.lat ?? null,
+			lng: args.lng ?? null,
+			searchTerm: args.searchTerm ?? null,
+			includeOnline: args.includeOnline ?? true,
+		});
+		for (const [key, value] of params.entries()) {
+			url.searchParams.set(key, value);
+		}
+		return relativeUrl(url);
+	},
+	offeringsOg: (args: Partial<OfferingsFilter> = {}) => {
+		const url = new URL(resolve(`offerings/og`), BASE_URL);
+		const params = buildOfferingsFilterSearchParams({
+			location: args.location ?? null,
+			distance: args.distance ?? null,
+			lat: args.lat ?? null,
+			lng: args.lng ?? null,
+			searchTerm: args.searchTerm ?? null,
+			includeOnline: args.includeOnline ?? true,
+		});
+		for (const [key, value] of params.entries()) {
+			url.searchParams.set(key, value);
+		}
+		return relativeUrl(url);
+	},
+	currentPath: (url: Pick<URL, `pathname` | `search` | `hash`>) => `${url.pathname}${url.search}${url.hash}`,
+	newOffering: (args: ReturnToArgs = {}) => withReturnTo(resolve(`offerings/new`), args.returnTo),
+	offeringDetails: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]`, { slug }), args.returnTo),
+	editOffering: (slug: string, args: ReturnToArgs = {}) => withReturnTo(resolve(`/offerings/[slug]/edit`, { slug }), args.returnTo),
+	login: (args: { next?: string | null } = {}) => withNext(resolve(`auth/login`), args.next),
+	authCallback: (args: { next?: string | null } = {}) => withNext(resolve(`auth/callback`), args.next),
+	profile: () => resolve(`profile`),
+	myOfferings: () => resolve(`profile/offerings`),
+	myEvents: () => resolve(`profile/events`),
+	publicProfile: (slug: string) => resolve(`/@/[slug]`, { slug }),
+	editPublicProfile: () => resolve(`profile/public`),
+	editEvent: (id: number, hostSecret?: string) => {
+		const url = new URL(resolve(`/edit/[id]`, { id: id.toString() }), BASE_URL);
+		if (hostSecret) {
+			url.searchParams.set("hostSecret", hostSecret);
+			url.searchParams.set("_ADMIN_LINK_NICHT_TEILEN", "");
+		}
+		return relativeUrl(url);
+	},
+	favorites: () => resolve(`profile/favorites`),
+	admin: () => resolve(`admin`),
+	adminTelegram: () => resolve(`admin/telegram`),
+	adminTelegramResolve: () => resolve(`admin/telegram/resolve`),
+	adminTelegramDialogs: () => resolve(`admin/telegram/dialogs`),
+	adminWhatsapp: () => resolve(`admin/whatsapp`),
+	breathworkEventSearch: () => resolve(`api/embed/breathwork.global`),
+	breathworkEventSearchSnippet: () => `/embed/event-search-snippet.js`,
+};
 
-export const BASE_URL = "https://blissbase.app" as const
-export const AUTH_NEXT_QUERY = `next` as const
-export const OFFERING_SLUG_QUERY = `offeringSlug` as const
-export const EVENT_SLUG_QUERY = `eventSlug` as const
+export const BASE_URL = "https://blissbase.app" as const;
+export const AUTH_NEXT_QUERY = `next` as const;
+export const OFFERING_SLUG_QUERY = `offeringSlug` as const;
+export const EVENT_SLUG_QUERY = `eventSlug` as const;
 
 /** Absolute callback URL for Supabase `redirectTo` / `emailRedirectTo`. */
 export function authCallbackUrl(args: { origin: string; next?: string | null }) {
-    return new URL(routes.authCallback({ next: args.next }), args.origin).href;
+	return new URL(routes.authCallback({ next: args.next }), args.origin).href;
 }
 
 export function isAuthFlowPath(pathname: string, origin: string = BASE_URL) {
-    return (
-        pathname === routePathname(routes.login(), origin) ||
-        pathname === routePathname(routes.authCallback(), origin)
-    );
+	return pathname === routePathname(routes.login(), origin) || pathname === routePathname(routes.authCallback(), origin);
 }
 
 export function absoluteUrl(path: string) {
-    return new URL(path, BASE_URL).toString();
+	return new URL(path, BASE_URL).toString();
 }
 
 /** Absolute pathname for a `resolve()` result. During SSR, `resolve()` is relative (`./`). */
 export function routePathname(path: string, origin: string = BASE_URL) {
-    return new URL(path, origin).pathname;
+	return new URL(path, origin).pathname;
 }
 
 export function isEventOrOfferingListPath(args: { pathname: string; origin: string }) {
-    return (
-        args.pathname === routePathname(routes.root(), args.origin) ||
-        args.pathname === routePathname(routes.offeringsList(), args.origin)
-    );
+	return (
+		args.pathname === routePathname(routes.root(), args.origin) || args.pathname === routePathname(routes.offeringsList(), args.origin)
+	);
 }
 
 const RESERVED_OFFERING_DETAIL_SLUGS = new Set([`new`]);
 
 /** Returns the offering slug when the URL is `/offerings/{slug}` (not list, new, or nested edit). */
 export function parseOfferingDetailsSlugFromUrl(url: URL) {
-    const pathname = url.pathname.replace(/\/+$/, ``) || `/`;
-    const prefix = `/offerings/`;
-    if (!pathname.startsWith(prefix)) return null;
+	const pathname = url.pathname.replace(/\/+$/, ``) || `/`;
+	const prefix = `/offerings/`;
+	if (!pathname.startsWith(prefix)) return null;
 
-    const rest = pathname.slice(prefix.length);
-    if (!rest || rest.includes(`/`)) return null;
+	const rest = pathname.slice(prefix.length);
+	if (!rest || rest.includes(`/`)) return null;
 
-    const slug = decodeURIComponent(rest);
-    if (!slug || RESERVED_OFFERING_DETAIL_SLUGS.has(slug)) return null;
-    return slug;
+	const slug = decodeURIComponent(rest);
+	if (!slug || RESERVED_OFFERING_DETAIL_SLUGS.has(slug)) return null;
+	return slug;
 }
 
 /** Appends `offeringSlug` so host pages can reopen the offering dialog after navigation. */
 export function withOfferingSlug(args: { path: string; offeringSlug: string }) {
-    const path = normalizeReturnToPath(args.path, BASE_URL) ?? routes.offeringsList();
-    const url = new URL(path, BASE_URL);
-    url.searchParams.set(OFFERING_SLUG_QUERY, args.offeringSlug);
-    return relativeUrl(url);
+	const path = normalizeReturnToPath(args.path, BASE_URL) ?? routes.offeringsList();
+	const url = new URL(path, BASE_URL);
+	url.searchParams.set(OFFERING_SLUG_QUERY, args.offeringSlug);
+	return relativeUrl(url);
 }
 
 /** Reads and removes `offeringSlug` from `url` (mutates search params). */
 export function takeOfferingSlugQuery(url: URL) {
-    const offeringSlug = url.searchParams.get(OFFERING_SLUG_QUERY)?.trim();
-    if (!offeringSlug) return null;
+	const offeringSlug = url.searchParams.get(OFFERING_SLUG_QUERY)?.trim();
+	if (!offeringSlug) return null;
 
-    url.searchParams.delete(OFFERING_SLUG_QUERY);
-    return offeringSlug;
+	url.searchParams.delete(OFFERING_SLUG_QUERY);
+	return offeringSlug;
 }
 
 /** Home (or other host) URL that opens the event details dialog after load. */
 export function withEventSlug(args: { path?: string; eventSlug: string }) {
-    const path = normalizeReturnToPath(args.path ?? routes.root(), BASE_URL) ?? routes.root();
-    const url = new URL(path, BASE_URL);
-    url.searchParams.set(EVENT_SLUG_QUERY, args.eventSlug);
-    return relativeUrl(url);
+	const path = normalizeReturnToPath(args.path ?? routes.root(), BASE_URL) ?? routes.root();
+	const url = new URL(path, BASE_URL);
+	url.searchParams.set(EVENT_SLUG_QUERY, args.eventSlug);
+	return relativeUrl(url);
 }
 
 /** Reads and removes `eventSlug` from `url` (mutates search params). */
 export function takeEventSlugQuery(url: URL) {
-    const eventSlug = url.searchParams.get(EVENT_SLUG_QUERY)?.trim();
-    if (!eventSlug) return null;
+	const eventSlug = url.searchParams.get(EVENT_SLUG_QUERY)?.trim();
+	if (!eventSlug) return null;
 
-    url.searchParams.delete(EVENT_SLUG_QUERY);
-    return eventSlug;
+	url.searchParams.delete(EVENT_SLUG_QUERY);
+	return eventSlug;
 }
 
 export function safeReturnToPath(args: { returnTo?: string | null; fallback: string; origin?: string }) {
-    const returnTo = normalizeReturnToPath(args.returnTo, args.origin ?? BASE_URL);
-    return returnTo ?? args.fallback;
+	const returnTo = normalizeReturnToPath(args.returnTo, args.origin ?? BASE_URL);
+	return returnTo ?? args.fallback;
 }
 
 /** Same-origin `next` path after login; auth routes fall back so we never loop. */
 export function safeAuthNextPath(args: { next?: string | null; fallback: string; origin?: string }) {
-    const origin = args.origin ?? BASE_URL;
-    const path = safeReturnToPath({ returnTo: args.next, fallback: args.fallback, origin });
-    if (isAuthFlowPath(new URL(path, origin).pathname, origin)) return args.fallback;
-    return path;
+	const origin = args.origin ?? BASE_URL;
+	const path = safeReturnToPath({ returnTo: args.next, fallback: args.fallback, origin });
+	if (isAuthFlowPath(new URL(path, origin).pathname, origin)) return args.fallback;
+	return path;
 }
 
 /** Offerings list path from `returnTo`, keeping filter params and dropping dialog/detail targets. */
 export function offeringsListFromReturnTo(args: { returnTo?: string | null; origin?: string }) {
-    const origin = args.origin ?? BASE_URL;
-    const path = safeReturnToPath({
-        returnTo: args.returnTo,
-        fallback: routes.offeringsList(),
-        origin,
-    });
-    const url = new URL(path, origin);
-    takeOfferingSlugQuery(url);
-    const offeringsListPath = new URL(routes.offeringsList(), BASE_URL).pathname;
-    if (url.pathname === offeringsListPath) return routes.currentPath(url);
-    return routes.offeringsList();
+	const origin = args.origin ?? BASE_URL;
+	const path = safeReturnToPath({
+		returnTo: args.returnTo,
+		fallback: routes.offeringsList(),
+		origin,
+	});
+	const url = new URL(path, origin);
+	takeOfferingSlugQuery(url);
+	const offeringsListPath = new URL(routes.offeringsList(), BASE_URL).pathname;
+	if (url.pathname === offeringsListPath) return routes.currentPath(url);
+	return routes.offeringsList();
 }
 
 function relativeUrl(url: URL) {
-    return url.toString().replace(url.origin, '')
+	return url.toString().replace(url.origin, "");
 }
 
 function withReturnTo(path: ResolvedPathname, returnTo?: string | null) {
-    const returnToPath = normalizeReturnToPath(returnTo, BASE_URL);
-    if (!returnToPath) return path;
+	const returnToPath = normalizeReturnToPath(returnTo, BASE_URL);
+	if (!returnToPath) return path;
 
-    const url = new URL(path, BASE_URL);
-    url.searchParams.set(`returnTo`, returnToPath);
-    return relativeUrl(url) ;
+	const url = new URL(path, BASE_URL);
+	url.searchParams.set(`returnTo`, returnToPath);
+	return relativeUrl(url);
 }
 
 function withNext(path: ResolvedPathname, next?: string | null) {
-    const nextPath = normalizeReturnToPath(next, BASE_URL);
-    if (!nextPath || isAuthFlowPath(new URL(nextPath, BASE_URL).pathname)) return path;
+	const nextPath = normalizeReturnToPath(next, BASE_URL);
+	if (!nextPath || isAuthFlowPath(new URL(nextPath, BASE_URL).pathname)) return path;
 
-    const url = new URL(path, BASE_URL);
-    url.searchParams.set(AUTH_NEXT_QUERY, nextPath);
-    return relativeUrl(url);
+	const url = new URL(path, BASE_URL);
+	url.searchParams.set(AUTH_NEXT_QUERY, nextPath);
+	return relativeUrl(url);
 }
 
 function normalizeReturnToPath(value: string | null | undefined, origin: string) {
-    const trimmed = value?.trim();
-    if (!trimmed || trimmed.startsWith(`//`)) return null;
+	const trimmed = value?.trim();
+	if (!trimmed || trimmed.startsWith(`//`)) return null;
 
-    try {
-        const url = new URL(trimmed, origin);
-        if (url.origin !== origin) return null;
+	try {
+		const url = new URL(trimmed, origin);
+		if (url.origin !== origin) return null;
 
-        return `${url.pathname}${url.search}${url.hash}` ;
-    } catch {
-        return null;
-    }
+		return `${url.pathname}${url.search}${url.hash}`;
+	} catch {
+		return null;
+	}
 }
 
 type ReturnToArgs = { returnTo?: string | null };

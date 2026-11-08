@@ -1,5 +1,5 @@
-import type { Page } from '@playwright/test';
-import { e2eCookieDomain } from './origin';
+import type { Page } from "@playwright/test";
+import { e2eCookieDomain } from "./origin";
 
 /**
  * Sets E2E auth cookies consumed by hooks.server.ts.
@@ -22,7 +22,7 @@ export async function signInAsE2EUser(page: Page, args: SignInAsE2EUserArgs = {}
 			value: args.email ?? `e2e-user@example.com`,
 			domain,
 			path: `/`,
-		}
+		},
 	]);
 }
 

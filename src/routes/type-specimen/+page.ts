@@ -1,5 +1,5 @@
-import type { MetaTagsProps } from 'svelte-meta-tags';
-import type { PageLoad } from './$types';
+import type { MetaTagsProps } from "svelte-meta-tags";
+import type { PageLoad } from "./$types";
 
 export const load = (() => {
 	return {

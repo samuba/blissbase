@@ -1,5 +1,5 @@
-import { noindexPageMetaTags } from "$lib/common";
-import { getMyPublicProfile } from "$lib/rpc/profile.remote";
+import { noindexPageMetaTags } from "#lib/common.ts";
+import { getMyPublicProfile } from "#lib/rpc/profile.remote.ts";
 import type { PageLoad } from "./$types";
 
 export const load = (async ({ parent }) => {

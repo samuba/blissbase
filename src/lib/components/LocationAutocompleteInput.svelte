@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { RemoteFormField } from '@sveltejs/kit';
-	import { isTouchDevice } from '$lib/common';
-	import { portalToBody } from '$lib/attachments/portal';
-	import { resetGoogleMapsPlacesLoader } from '$lib/googleMapsLoader';
-	import { reverseGeocodeCity } from '$lib/rpc/places.remote';
-	import { fade } from 'svelte/transition';
-	import { onMount } from 'svelte';
-	import type { PlacesAutocompleteController } from './PlacesAutocompleteController.svelte';
+	import type { RemoteFormField } from "$app/server";
+	import { isTouchDevice } from "#lib/common.ts";
+	import { portalToBody } from "#lib/attachments/portal.ts";
+	import { resetGoogleMapsPlacesLoader } from "#lib/googleMapsLoader.ts";
+	import { reverseGeocodeCity } from "#lib/rpc/places.remote.ts";
+	import { fade } from "svelte/transition";
+	import { onMount } from "svelte";
+	import type { PlacesAutocompleteController } from "./PlacesAutocompleteController.svelte";
 
 	export interface LocationAutocompleteChangeEvent {
 		locationLabel: string | null;
@@ -112,14 +112,9 @@
 	let inputLocationText = $derived(usingCurrentLocation ? displayLocationText : typedLocation);
 	let useGoogleAutocomplete = $derived((autocomplete?.isAvailable ?? false) && !usingCurrentLocation);
 	let showAutocompletePanel = $derived(
-		isInputFocused &&
-			(autocomplete?.keepPanelOpen ?? false) &&
-			!usingCurrentLocation &&
-			!autocomplete?.loadFailed,
+		isInputFocused && (autocomplete?.keepPanelOpen ?? false) && !usingCurrentLocation && !autocomplete?.loadFailed,
 	);
-	let showGoogleLoadingHint = $derived(
-		showAutocompletePanel && !autocomplete?.isAvailable && !autocomplete?.loadFailed,
-	);
+	let showGoogleLoadingHint = $derived(showAutocompletePanel && !autocomplete?.isAvailable && !autocomplete?.loadFailed);
 	let showTypeForSuggestionsHint = $derived(
 		showAutocompletePanel &&
 			autocomplete?.isAvailable &&
@@ -280,12 +275,7 @@
 		await queued;
 	}
 
-	async function applySelectedPlace(args: {
-		displayName: string;
-		formattedAddress: string;
-		latitude: number;
-		longitude: number;
-	}) {
+	async function applySelectedPlace(args: { displayName: string; formattedAddress: string; latitude: number; longitude: number }) {
 		usingCurrentLocation = false;
 		resolvedLat = args.latitude;
 		resolvedLng = args.longitude;
@@ -353,9 +343,7 @@
 			usingCurrentLocation = false;
 			displayLocationText = ``;
 			isLoadingLocation = false;
-			alert(
-				`Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein.`,
-			);
+			alert(`Standort konnte nicht abgerufen werden. Bitte überprüfe deine Browsereinstellungen oder gib einen Ort manuell ein.`);
 			return;
 		}
 
@@ -511,9 +499,7 @@
 
 {#snippet googleAutocompleteError(retry: () => void)}
 	<div class="flex min-w-0 items-center gap-2" data-testid="google-autocomplete-error">
-		<span class="text-error truncate text-xs">
-			Google Maps Autocomplete konnte nicht geladen werden.
-		</span>
+		<span class="text-error truncate text-xs"> Google Maps Autocomplete konnte nicht geladen werden. </span>
 		<button type="button" onclick={retry} class="btn btn-xs text-error shrink-0">
 			<i class="icon-[ph--arrow-clockwise] size-4 shrink-0"></i>
 			Erneut laden
@@ -549,8 +535,8 @@
 						aria-activedescendant={!autocomplete?.loadFailed && autocomplete && autocomplete.highlightedIndex >= 0
 							? `${inputId}-option-${autocomplete.highlightedIndex}`
 							: undefined}
-						placeholder={placeholder}
-						class="min-w-0 w-full"
+						{placeholder}
+						class="w-full min-w-0"
 						value={inputLocationText}
 						disabled={inputDisabled}
 						{required}
@@ -569,7 +555,7 @@
 						id="{inputId}-listbox"
 						role="listbox"
 						data-testid="location-suggestions"
-						class="bg-base-100 border-base-300 fixed z-[200] max-h-64 overflow-y-auto rounded-box border shadow-lg"
+						class="bg-base-100 border-base-300 rounded-box fixed z-[200] max-h-64 overflow-y-auto border shadow-lg"
 						style:top="{dropdownPosition.top}px"
 						style:left="{dropdownPosition.left}px"
 						style:width="{dropdownPosition.width}px"
@@ -598,10 +584,7 @@
 										role="option"
 										data-testid="location-option"
 										aria-selected={controller.highlightedIndex === index}
-										class={[
-											`cursor-pointer px-3 py-2 text-sm border-base-300`,
-											controller.highlightedIndex === index && `bg-primary/20`,
-										]}
+										class={[`border-base-300 cursor-pointer px-3 py-2 text-sm`, controller.highlightedIndex === index && `bg-primary/20`]}
 										onmouseenter={() => {
 											controller.highlightedIndex = index;
 										}}
@@ -673,8 +656,8 @@
 					type="text"
 					id={inputId}
 					data-testid={inputId}
-					placeholder={placeholder}
-					class="min-w-0 w-full"
+					{placeholder}
+					class="w-full min-w-0"
 					value={inputLocationText}
 					{required}
 					oninput={(event) => handleInputChange(event.currentTarget.value)}

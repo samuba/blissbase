@@ -1,10 +1,6 @@
 <script lang="ts">
-	import EventCard from '$lib/components/EventCard.svelte';
-	import {
-		getFavoritePastEvents,
-		getFavoriteUpcomingEvents,
-		removeFavorite
-	} from '$lib/rpc/favorites.remote';
+	import EventCard from "#lib/components/EventCard.svelte";
+	import { getFavoritePastEvents, getFavoriteUpcomingEvents, removeFavorite } from "#lib/rpc/favorites.remote.ts";
 
 	let { data } = $props();
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
@@ -19,7 +15,7 @@
 		if (pastEventsStatus !== `idle`) return;
 
 		pastEventsStatus = `loading`;
-		pastEvents = await getFavoritePastEvents()
+		pastEvents = await getFavoritePastEvents();
 		pastEventsStatus = `loaded`;
 	}
 
@@ -33,9 +29,7 @@
 
 	function onRemoveFavorite(eventId: number) {
 		removeFavorite(eventId).updates(
-			upcomingEventsQuery.withOverride((current) =>
-				(current ?? data.upcomingEvents).filter((x) => x.id !== eventId)
-			)
+			upcomingEventsQuery.withOverride((current) => (current ?? data.upcomingEvents).filter((x) => x.id !== eventId)),
 		);
 		pastEvents = pastEvents.filter((x) => x.id !== eventId);
 	}
@@ -43,13 +37,8 @@
 
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:py-0 md:pb-10">
 	<div class="">
-		<div role="tablist" class="tabs tabs-box mt-3 bg-base-300 flex justify-center flex-row">
-			<button
-				role="tab"
-				class="tab grow"
-				class:tab-active={selectedTab === `upcoming`}
-				onclick={() => selectTab(`upcoming`)}
-			>
+		<div role="tablist" class="tabs tabs-box bg-base-300 mt-3 flex flex-row justify-center">
+			<button role="tab" class="tab grow" class:tab-active={selectedTab === `upcoming`} onclick={() => selectTab(`upcoming`)}>
 				Aktuelle Favoriten
 			</button>
 
@@ -74,9 +63,7 @@
 					{/each}
 				</div>
 			{:else}
-				<div class="mt-12 text-center text-base-content/60">
-					Keine aktuellen Events in deinen Favoriten.
-				</div>
+				<div class="text-base-content/60 mt-12 text-center">Keine aktuellen Events in deinen Favoriten.</div>
 			{/if}
 		</div>
 
@@ -92,9 +79,7 @@
 					{/each}
 				</div>
 			{:else}
-				<div class="mt-12 text-center text-base-content/60">
-					Keine vergangenen Events in deinen Favoriten.
-				</div>
+				<div class="text-base-content/60 mt-12 text-center">Keine vergangenen Events in deinen Favoriten.</div>
 			{/if}
 		</div>
 	</div>

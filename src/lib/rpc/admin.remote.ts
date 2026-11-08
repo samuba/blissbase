@@ -1,25 +1,18 @@
-import { command, getRequestEvent, query } from '$app/server';
-import { error } from '@sveltejs/kit';
-import { asc } from 'drizzle-orm';
-import * as v from 'valibot';
-import { ALL_EVENT_SOURCES_VALUE, loadFiltersFromCookie, saveFiltersToCookie } from '$lib/cookie-utils';
-import { parseOfferingsFilterFromUrl } from '$lib/offeringsFilter';
-import { isAdminSession } from '$lib/server/admin';
-import { aiPickEmojisForTitles } from '$lib/server/ai';
-import { db, s } from '$lib/server/db';
-import {
-	bustOfferingsOgImageCache,
-	loadVisibleListedOfferings,
-	scheduleOfferingsOgWarmForFilter,
-} from '$lib/server/og/offeringsOg';
+import { command, getRequestEvent, query } from "$app/server";
+import { error } from "@sveltejs/kit";
+import { asc } from "drizzle-orm";
+import * as v from "valibot";
+import { ALL_EVENT_SOURCES_VALUE, loadFiltersFromCookie, saveFiltersToCookie } from "#lib/cookie-utils.ts";
+import { parseOfferingsFilterFromUrl } from "#lib/offeringsFilter.ts";
+import { isAdminSession } from "#lib/server/admin.ts";
+import { aiPickEmojisForTitles } from "#lib/server/ai.ts";
+import { db, s } from "#lib/server/db.ts";
+import { bustOfferingsOgImageCache, loadVisibleListedOfferings, scheduleOfferingsOgWarmForFilter } from "#lib/server/og/offeringsOg.ts";
 
 export const getEventSources = query(async () => {
 	assertAdmin();
 
-	const rows = await db
-		.selectDistinct({ source: s.events.source })
-		.from(s.events)
-		.orderBy(asc(s.events.source));
+	const rows = await db.selectDistinct({ source: s.events.source }).from(s.events).orderBy(asc(s.events.source));
 
 	return rows.map((row) => row.source).filter((source) => source.trim());
 });
@@ -79,23 +72,14 @@ export const generateOfferingAnnouncement = command(
 			};
 		});
 
-		const titlesNeedingEmoji = prepared
-			.filter((item) => !item.existingEmoji)
-			.map((item) => item.title);
+		const titlesNeedingEmoji = prepared.filter((item) => !item.existingEmoji).map((item) => item.title);
 
-		const reservedEmojis = prepared
-			.map((item) => item.existingEmoji)
-			.filter((emoji): emoji is string => Boolean(emoji));
+		const reservedEmojis = prepared.map((item) => item.existingEmoji).filter((emoji): emoji is string => Boolean(emoji));
 
-		const pickedEmojis = titlesNeedingEmoji.length
-			? await aiPickEmojisForTitles({ titles: titlesNeedingEmoji, reservedEmojis })
-			: [];
+		const pickedEmojis = titlesNeedingEmoji.length ? await aiPickEmojisForTitles({ titles: titlesNeedingEmoji, reservedEmojis }) : [];
 
 		let pickedIndex = 0;
-		const location =
-			(filter.lat != null && filter.lng != null ? filter.location : null)?.trim() ||
-			filter.location?.trim() ||
-			`EVERYWHERE`;
+		const location = (filter.lat != null && filter.lng != null ? filter.location : null)?.trim() || filter.location?.trim() || `EVERYWHERE`;
 
 		const announcement = buildOfferingAnnouncement({
 			offerings: prepared.map((item) => ({
@@ -140,9 +124,7 @@ function shuffleItems<T>(items: T[]) {
 }
 
 function extractFirstEmoji(text: string) {
-	const match = text.match(
-		/\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*/u,
-	);
+	const match = text.match(/\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*/u);
 	return match?.[0] ?? null;
 }
 

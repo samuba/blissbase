@@ -1,15 +1,15 @@
-import { resolve } from '$app/paths';
-import { routes } from '$lib/routes';
+import { resolve } from "$app/paths";
+import { routes } from "#lib/routes.ts";
 
 export function getAppNavItems(): AppNavItem[] {
 	return [
 		{
 			id: `events`,
 			label: /* @wc-include */ `Events`,
-			href: resolve(`/#header-controls`),
+			href: resolve(`#header-controls`),
 			icon: `icon-[ph--calendar-dots]`,
 			iconActive: `icon-[ph--calendar-dots-fill]`,
-			requireLogin: false
+			requireLogin: false,
 		},
 		{
 			id: `offerings`,
@@ -17,34 +17,34 @@ export function getAppNavItems(): AppNavItem[] {
 			href: routes.offeringsList(),
 			icon: `icon-[ph--hand-heart]`,
 			iconActive: `icon-[ph--hand-heart-fill]`,
-			requireLogin: false
+			requireLogin: false,
 		},
 		{
 			id: `favorites`,
 			label: /* @wc-include */ `Favoriten`,
-			href: resolve(`/profile/favorites`),
+			href: resolve(`profile/favorites`),
 			icon: `icon-[ph--heart]`,
 			iconActive: `icon-[ph--heart-fill]`,
-			requireLogin: true
+			requireLogin: true,
 		},
 		{
 			id: `profile`,
 			label: /* @wc-include */ `Meins`,
-			href: resolve(`/profile`),
+			href: resolve(`profile`),
 			icon: `icon-[ph--user-circle]`,
 			iconActive: `icon-[ph--user-circle-fill]`,
-			requireLogin: true
-		}
+			requireLogin: true,
+		},
 	];
 }
 
 export function isActiveAppTab(pathname: string, href: string) {
-	if (href.startsWith('./')) {
+	if (href.startsWith("./")) {
 		// happens at SSR
 		href = href.slice(1);
 	}
-	if (href.includes('#')) {
-		const path = href.split('#')[0];
+	if (href.includes("#")) {
+		const path = href.split("#")[0];
 		return pathname === path || pathname === routes.newEvent();
 	}
 	if (href === routes.profile()) {

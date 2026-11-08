@@ -19,12 +19,7 @@ vi.mock("@typesafe-ai/sdk", async (importOriginal) => ({
 	},
 }));
 
-import {
-	interpretEventAttributes,
-	interpretJevAnswer,
-	messageTextForJev,
-	resolveMessengerAnalysis,
-} from "./messengerCheck";
+import { interpretEventAttributes, interpretJevAnswer, messageTextForJev, resolveMessengerAnalysis } from "./messengerCheck";
 
 const baseArgs = {
 	messageDate: new Date(`2026-09-01T12:00:00.000Z`),

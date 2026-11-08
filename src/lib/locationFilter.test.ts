@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
 	ALLOWED_DISTANCE_VALUES,
 	coarseLatLngForAnalytics,
@@ -7,8 +7,8 @@ import {
 	isValidDistance,
 	isValidLatitude,
 	isValidLongitude,
-	sanitizeLocationParams
-} from '$lib/locationFilter';
+	sanitizeLocationParams,
+} from "#lib/locationFilter.ts";
 
 describe(`isValidLatitude`, () => {
 	it(`accepts valid latitudes including 0`, () => {
@@ -69,21 +69,27 @@ describe(`hasValidCoordinates`, () => {
 
 describe(`coordinatesMatch`, () => {
 	it(`treats coordinates that round to the same five decimals as equal`, () => {
-		expect(coordinatesMatch({
-			a: { lat: 52.52, lng: 13.405 },
-			b: { lat: 52.520001, lng: 13.405002 },
-		})).toBe(true);
+		expect(
+			coordinatesMatch({
+				a: { lat: 52.52, lng: 13.405 },
+				b: { lat: 52.520001, lng: 13.405002 },
+			}),
+		).toBe(true);
 	});
 
 	it(`rejects a moved venue or missing coordinates`, () => {
-		expect(coordinatesMatch({
-			a: { lat: 52.52, lng: 13.405 },
-			b: { lat: 48.137, lng: 11.575 },
-		})).toBe(false);
-		expect(coordinatesMatch({
-			a: { lat: 52.52, lng: 13.405 },
-			b: { lat: null, lng: null },
-		})).toBe(false);
+		expect(
+			coordinatesMatch({
+				a: { lat: 52.52, lng: 13.405 },
+				b: { lat: 48.137, lng: 11.575 },
+			}),
+		).toBe(false);
+		expect(
+			coordinatesMatch({
+				a: { lat: 52.52, lng: 13.405 },
+				b: { lat: null, lng: null },
+			}),
+		).toBe(false);
 	});
 });
 
@@ -94,13 +100,13 @@ describe(`sanitizeLocationParams`, () => {
 				plzCity: `Berlin`,
 				distance: `50`,
 				lat: 52.5,
-				lng: 13.4
-			})
+				lng: 13.4,
+			}),
 		).toEqual({
 			plzCity: `Berlin`,
 			distance: `50`,
 			lat: 52.5,
-			lng: 13.4
+			lng: 13.4,
 		});
 	});
 
@@ -110,13 +116,13 @@ describe(`sanitizeLocationParams`, () => {
 				plzCity: `Berlin`,
 				distance: `25`,
 				lat: 0,
-				lng: 200
-			})
+				lng: 200,
+			}),
 		).toEqual({
 			plzCity: `Berlin`,
 			distance: null,
 			lat: null,
-			lng: null
+			lng: null,
 		});
 	});
 });
@@ -125,14 +131,14 @@ describe(`coarseLatLngForAnalytics`, () => {
 	it(`rounds coordinates to one decimal place`, () => {
 		expect(coarseLatLngForAnalytics({ lat: 52.56789, lng: 13.41234 })).toEqual({
 			lat: 52.6,
-			lng: 13.4
+			lng: 13.4,
 		});
 	});
 
 	it(`omits invalid coordinates`, () => {
 		expect(coarseLatLngForAnalytics({ lat: null, lng: 13 })).toEqual({
 			lat: undefined,
-			lng: undefined
+			lng: undefined,
 		});
 	});
 });

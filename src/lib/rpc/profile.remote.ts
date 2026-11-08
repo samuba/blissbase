@@ -1,25 +1,25 @@
 import { command, form, query } from "$app/server";
-import { dev } from "$app/environment";
-import { E2E_TEST } from "$env/static/private";
-import * as assets from "$lib/assets";
-import { randomString } from "$lib/common";
-import { eventAssetsCreds } from "$lib/events.remote.shared";
-import { publicProfileFormSchema } from "$lib/rpc/profile.common";
-import { routes } from "$lib/routes";
-import { ensureUserId, locals } from "$lib/server/common";
-import { db, s, and, eq, ne, sql } from "$lib/server/db";
-import { getE2EUserIdForEmail } from "$lib/server/e2eAuth";
+import { dev } from "$app/env";
+import { E2E_TEST } from "$app/env/private";
+import * as assets from "#lib/assets.ts";
+import { randomString } from "#lib/common.ts";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
+import { publicProfileFormSchema } from "#lib/rpc/profile.common.ts";
+import { routes } from "#lib/routes.ts";
+import { ensureUserId, locals } from "#lib/server/common.ts";
+import { db, s, and, eq, ne, sql } from "#lib/server/db.ts";
+import { getE2EUserIdForEmail } from "#lib/server/e2eAuth.ts";
 import {
 	createPublicProfileSlug,
 	getPublicProfileBySlug,
 	hasSocialLink,
 	isPublicProfile,
 	getUpcomingEventsForPublicProfile,
-} from "$lib/server/profile";
-import { resolveProfileImageUrl, signProfileImageClaim } from "$lib/server/profileImages";
-import { sweepProfileImagePrefix } from "$lib/server/savePublicProfile";
+} from "#lib/server/profile.ts";
+import { resolveProfileImageUrl, signProfileImageClaim } from "#lib/server/profileImages.ts";
+import { sweepProfileImagePrefix } from "#lib/server/savePublicProfile.ts";
 import { error, invalid, redirect } from "@sveltejs/kit";
-import type { Profile } from "$lib/server/schema";
+import type { Profile } from "#lib/server/schema.ts";
 import * as v from "valibot";
 
 const isE2eTestMode = E2E_TEST === `true` && dev;

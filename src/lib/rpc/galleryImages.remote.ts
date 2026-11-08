@@ -1,10 +1,7 @@
 import { command } from "$app/server";
-import {
-	createGalleryImageUpload,
-	discardGalleryImageUpload,
-} from "$lib/server/galleryImageClaims";
-import { GALLERY_IMAGE_CONTENT_TYPES, GALLERY_IMAGE_KINDS } from "$lib/galleryImages";
-import { IMAGE_UPLOAD_HASH_LENGTH } from "$lib/imageUpload.shared";
+import { createGalleryImageUpload, discardGalleryImageUpload } from "#lib/server/galleryImageClaims.ts";
+import { GALLERY_IMAGE_CONTENT_TYPES, GALLERY_IMAGE_KINDS } from "#lib/galleryImages.ts";
+import { IMAGE_UPLOAD_HASH_LENGTH } from "#lib/imageUpload.shared.ts";
 import * as v from "valibot";
 
 const galleryImageUploadSchema = v.object({

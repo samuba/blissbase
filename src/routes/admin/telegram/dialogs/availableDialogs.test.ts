@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from "vitest";
 import {
 	availableTelegramDialogFromDialog,
 	excludeExistingTelegramTargets,
 	parseTelegramDialogsResponse,
 	telegramAccountLabel,
-} from './availableDialogs'
+} from "./availableDialogs";
 
 describe(`availableTelegramDialogFromDialog`, () => {
 	it(`maps megagroups as groups with peer roomId and accountId`, () => {
@@ -22,7 +22,7 @@ describe(`availableTelegramDialogFromDialog`, () => {
 				},
 			},
 			`primary`,
-		)
+		);
 
 		expect(dialog).toMatchObject({
 			roomId: `-100123456789`,
@@ -30,9 +30,9 @@ describe(`availableTelegramDialogFromDialog`, () => {
 			kind: `group`,
 			username: `conscious_events`,
 			accountId: `primary`,
-		})
-		expect(dialog?.lastMessageTime?.toISOString()).toBe(new Date(1_700_000_000 * 1000).toISOString())
-	})
+		});
+		expect(dialog?.lastMessageTime?.toISOString()).toBe(new Date(1_700_000_000 * 1000).toISOString());
+	});
 
 	it(`maps broadcast channels as channels`, () => {
 		const dialog = availableTelegramDialogFromDialog(
@@ -47,7 +47,7 @@ describe(`availableTelegramDialogFromDialog`, () => {
 				},
 			},
 			`fallback`,
-		)
+		);
 
 		expect(dialog).toMatchObject({
 			roomId: `-10099`,
@@ -55,8 +55,8 @@ describe(`availableTelegramDialogFromDialog`, () => {
 			kind: `channel`,
 			username: null,
 			accountId: `fallback`,
-		})
-	})
+		});
+	});
 
 	it(`maps basic chats as groups`, () => {
 		const dialog = availableTelegramDialogFromDialog(
@@ -71,7 +71,7 @@ describe(`availableTelegramDialogFromDialog`, () => {
 				},
 			},
 			`primary`,
-		)
+		);
 
 		expect(dialog).toMatchObject({
 			roomId: `-42`,
@@ -79,8 +79,8 @@ describe(`availableTelegramDialogFromDialog`, () => {
 			kind: `group`,
 			username: null,
 			accountId: `primary`,
-		})
-	})
+		});
+	});
 
 	it(`skips users and forbidden chats`, () => {
 		expect(
@@ -95,7 +95,7 @@ describe(`availableTelegramDialogFromDialog`, () => {
 				},
 				`primary`,
 			),
-		).toBeNull()
+		).toBeNull();
 
 		expect(
 			availableTelegramDialogFromDialog(
@@ -109,9 +109,9 @@ describe(`availableTelegramDialogFromDialog`, () => {
 				},
 				`primary`,
 			),
-		).toBeNull()
-	})
-})
+		).toBeNull();
+	});
+});
 
 describe(`excludeExistingTelegramTargets`, () => {
 	it(`drops dialogs whose roomId is already a scraping target`, () => {
@@ -132,23 +132,23 @@ describe(`excludeExistingTelegramTargets`, () => {
 				accountId: `fallback` as const,
 				lastMessageTime: null,
 			},
-		]
+		];
 
 		expect(
 			excludeExistingTelegramTargets({
 				dialogs,
 				existingRoomIds: [`-1001`],
 			}),
-		).toEqual([dialogs[1]])
-	})
-})
+		).toEqual([dialogs[1]]);
+	});
+});
 
 describe(`telegramAccountLabel`, () => {
 	it(`labels primary and fallback for the admin picker`, () => {
-		expect(telegramAccountLabel(`primary`)).toBe(`Primär`)
-		expect(telegramAccountLabel(`fallback`)).toBe(`Sekundär`)
-	})
-})
+		expect(telegramAccountLabel(`primary`)).toBe(`Primär`);
+		expect(telegramAccountLabel(`fallback`)).toBe(`Sekundär`);
+	});
+});
 
 describe(`parseTelegramDialogsResponse`, () => {
 	const dialog = {
@@ -158,38 +158,40 @@ describe(`parseTelegramDialogsResponse`, () => {
 		username: null,
 		accountId: `primary`,
 		lastMessageTime: `2026-10-12T14:00:00.000Z`,
-	}
+	};
 
 	it(`parses dialogs and converts lastMessageTime to a Date`, () => {
 		const parsed = parseTelegramDialogsResponse({
 			accounts: [`primary`],
 			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
 			dialogs: [dialog],
-		})
+		});
 
-		expect(parsed?.accounts).toEqual([`primary`])
-		expect(parsed?.dialogs[0].lastMessageTime).toEqual(new Date(dialog.lastMessageTime))
-	})
+		expect(parsed?.accounts).toEqual([`primary`]);
+		expect(parsed?.dialogs[0].lastMessageTime).toEqual(new Date(dialog.lastMessageTime));
+	});
 
 	it(`keeps a null lastMessageTime`, () => {
 		const parsed = parseTelegramDialogsResponse({
 			accounts: [`primary`],
 			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
 			dialogs: [{ ...dialog, lastMessageTime: null }],
-		})
+		});
 
-		expect(parsed?.dialogs[0].lastMessageTime).toBeNull()
-	})
+		expect(parsed?.dialogs[0].lastMessageTime).toBeNull();
+	});
 
 	it(`rejects a response without accounts and accountStatuses`, () => {
-		expect(parseTelegramDialogsResponse({ dialogs: [] })).toBeNull()
-	})
+		expect(parseTelegramDialogsResponse({ dialogs: [] })).toBeNull();
+	});
 
 	it(`rejects a dialog whose lastMessageTime is not an ISO timestamp`, () => {
-		expect(parseTelegramDialogsResponse({
-			accounts: [`primary`],
-			accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
-			dialogs: [{ ...dialog, lastMessageTime: `not-a-date` }],
-		})).toBeNull()
-	})
-})
+		expect(
+			parseTelegramDialogsResponse({
+				accounts: [`primary`],
+				accountStatuses: [{ accountId: `primary`, listed: 1, error: null }],
+				dialogs: [{ ...dialog, lastMessageTime: `not-a-date` }],
+			}),
+		).toBeNull();
+	});
+});

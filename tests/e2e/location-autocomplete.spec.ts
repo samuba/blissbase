@@ -1,5 +1,5 @@
-import { expect, test } from './helpers/fixtures';
-import { createEvents, clearTestEvents, createMeditationEvent, createYogaEvent } from './helpers/seed';
+import { expect, test } from "./helpers/fixtures";
+import { createEvents, clearTestEvents, createMeditationEvent, createYogaEvent } from "./helpers/seed";
 import {
 	expectLocationValue,
 	expectSuggestionsOpen,
@@ -8,10 +8,10 @@ import {
 	openLocationEditor,
 	typeForSuggestions,
 	visibleLocationInput,
-} from './helpers/location-input';
-import { openFilterDialog } from './helpers/offering-test-utils';
+} from "./helpers/location-input";
+import { openFilterDialog } from "./helpers/offering-test-utils";
 
-async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Page) {
+async function mockGooglePlacesAutocomplete(page: import("@playwright/test").Page) {
 	await page.route(/maps\.(googleapis|gstatic)\.com/, (route) => route.abort());
 	await page.addInitScript(() => {
 		const predictions = [
@@ -24,9 +24,9 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 					formattedAddress: `Berlin, Germany`,
 					location: {
 						lat: () => 52.52,
-						lng: () => 13.405
-					}
-				})
+						lng: () => 13.405,
+					},
+				}),
 			},
 			{
 				placeId: `bern`,
@@ -37,9 +37,9 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 					formattedAddress: `Bern, Switzerland`,
 					location: {
 						lat: () => 46.948,
-						lng: () => 7.447
-					}
-				})
+						lng: () => 7.447,
+					},
+				}),
 			},
 			{
 				placeId: `berlin`,
@@ -50,9 +50,9 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 					formattedAddress: `Berlin, Germany`,
 					location: {
 						lat: () => 52.52,
-						lng: () => 13.405
-					}
-				})
+						lng: () => 13.405,
+					},
+				}),
 			},
 			{
 				placeId: `berlin-locality`,
@@ -63,10 +63,10 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 					formattedAddress: `Berlin, Germany`,
 					location: {
 						lat: () => 52.52,
-						lng: () => 13.405
-					}
-				})
-			}
+						lng: () => 13.405,
+					},
+				}),
+			},
 		];
 
 		const googleMock = {
@@ -78,27 +78,25 @@ async function mockGooglePlacesAutocomplete(page: import('@playwright/test').Pag
 						AutocompleteSuggestion: {
 							fetchAutocompleteSuggestions: async (request: { input: string }) => ({
 								suggestions: predictions
-									.filter((prediction) =>
-										prediction.text.toString().toLowerCase().includes(request.input.toLowerCase())
-									)
-									.map((placePrediction) => ({ placePrediction }))
-							})
-						}
+									.filter((prediction) => prediction.text.toString().toLowerCase().includes(request.input.toLowerCase()))
+									.map((placePrediction) => ({ placePrediction })),
+							}),
+						},
 					};
-				}
-			}
+				},
+			},
 		};
 
 		Object.defineProperty(window, `google`, { configurable: true, writable: true, value: googleMock });
 	});
 }
 
-test.describe('Location autocomplete', () => {
+test.describe("Location autocomplete", () => {
 	test.beforeEach(async ({ page }) => {
 		await clearTestEvents(page);
 		await createEvents(page, [
 			createMeditationEvent({ address: [`Berlin Center`, `Berlin`] }),
-			createYogaEvent({ address: [`Munich Studio`, `Munich`] })
+			createYogaEvent({ address: [`Munich Studio`, `Munich`] }),
 		]);
 	});
 
@@ -106,7 +104,7 @@ test.describe('Location autocomplete', () => {
 		await clearTestEvents(page);
 	});
 
-	test('typing opens suggestions when Google is available', async ({ page }) => {
+	test("typing opens suggestions when Google is available", async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
 		const headerInput = page.getByTestId(`plzCityInput-header`);
@@ -118,7 +116,7 @@ test.describe('Location autocomplete', () => {
 		await expect(options.nth(2)).toHaveText(`Berlin, Germany`);
 	});
 
-	test('keyboard selection applies coordinates and distance', async ({ page }) => {
+	test("keyboard selection applies coordinates and distance", async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
 		const headerInput = page.getByTestId(`plzCityInput-header`);
@@ -134,7 +132,7 @@ test.describe('Location autocomplete', () => {
 		await expectLocationValue(page, `plzCityInput-header-distance`, `50`);
 	});
 
-	test('mouse selection works', async ({ page }) => {
+	test("mouse selection works", async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
 		const headerInput = page.getByTestId(`plzCityInput-header`);
@@ -146,7 +144,7 @@ test.describe('Location autocomplete', () => {
 		await expectLocationValue(page, `plzCityInput-header-distance`, `50`);
 	});
 
-	test('escape closes the dropdown', async ({ page }) => {
+	test("escape closes the dropdown", async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
 		const headerInput = page.getByTestId(`plzCityInput-header`);
@@ -156,7 +154,7 @@ test.describe('Location autocomplete', () => {
 		await expect(page.getByTestId(`location-suggestions`)).toHaveCount(0);
 	});
 
-	test('clear resets location and distance', async ({ page }) => {
+	test("clear resets location and distance", async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
 		const headerInput = page.getByTestId(`plzCityInput-header`);
@@ -176,7 +174,7 @@ test.describe('Location autocomplete', () => {
 		await expect(page.getByTestId(`plzCityInput-header-distance`)).toHaveCount(0);
 	});
 
-	test('trigger reopens the editor after changing distance and clearing', async ({ page }) => {
+	test("trigger reopens the editor after changing distance and clearing", async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
 		const headerInput = page.getByTestId(`plzCityInput-header`);
@@ -197,7 +195,7 @@ test.describe('Location autocomplete', () => {
 		await expect(visibleLocationInput(page, `plzCityInput-header`)).toBeVisible();
 	});
 
-	test('manual Enter search works when Google is unavailable', async ({ page }) => {
+	test("manual Enter search works when Google is unavailable", async ({ page }) => {
 		await page.route(/maps\.(googleapis|gstatic)\.com/, (route) => route.abort());
 		await page.addInitScript(() => {
 			Object.defineProperty(window, `google`, { configurable: true, writable: true, value: undefined });
@@ -207,11 +205,7 @@ test.describe('Location autocomplete', () => {
 		await openLocationEditor(page, `plzCityInput-header`);
 		const headerInput = visibleLocationInput(page, `plzCityInput-header`);
 		await headerInput.click();
-		await expect(locationRoot(page, `plzCityInput-header`)).toHaveAttribute(
-			`data-autocomplete-status`,
-			`failed`,
-			{ timeout: 10000 }
-		);
+		await expect(locationRoot(page, `plzCityInput-header`)).toHaveAttribute(`data-autocomplete-status`, `failed`, { timeout: 10000 });
 		await headerInput.fill(`Berlin`);
 		await expect(headerInput).toHaveValue(`Berlin`);
 		await headerInput.focus();
@@ -221,7 +215,7 @@ test.describe('Location autocomplete', () => {
 		await expectLocationValue(page, `plzCityInput-header`, `Berlin`);
 	});
 
-	test('filter dialog input works with unique id', async ({ page }) => {
+	test("filter dialog input works with unique id", async ({ page }) => {
 		await mockGooglePlacesAutocomplete(page);
 		await gotoHomeAndWait(page);
 

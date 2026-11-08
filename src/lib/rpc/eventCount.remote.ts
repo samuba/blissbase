@@ -1,7 +1,7 @@
-import { prerender } from '$app/server';
-import { db, eq, s } from '$lib/server/db';
-import { and, isNotNull } from 'drizzle-orm';
-import { feature, iso1A2Code } from '@rapideditor/country-coder';
+import { prerender } from "$app/server";
+import { db, eq, s } from "#lib/server/db.ts";
+import { and, isNotNull } from "drizzle-orm";
+import { feature, iso1A2Code } from "@rapideditor/country-coder";
 
 /**
  * Returns the number of listed events for static UI copy.
@@ -26,12 +26,10 @@ export const getFaqCountryEventCounts = prerender(async () => {
 		.select({
 			latitude: s.events.latitude,
 			longitude: s.events.longitude,
-			startAt: s.events.startAt
+			startAt: s.events.startAt,
 		})
 		.from(s.events)
-		.where(
-			and(eq(s.events.listed, true), isNotNull(s.events.latitude), isNotNull(s.events.longitude))
-		);
+		.where(and(eq(s.events.listed, true), isNotNull(s.events.latitude), isNotNull(s.events.longitude)));
 
 	const byCountry = new Map<string, { count: number; upcomingCount: number }>();
 
@@ -52,7 +50,7 @@ export const getFaqCountryEventCounts = prerender(async () => {
 			key: code.toLowerCase(),
 			label: countryLabelDe(code),
 			count: stats.count,
-			upcomingCount: stats.upcomingCount
+			upcomingCount: stats.upcomingCount,
 		}))
 		.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, `de`));
 
@@ -134,5 +132,5 @@ const countryLabelsDe: Record<string, string> = {
 	PY: `Paraguay`,
 	IQ: `Irak`,
 	ET: `Äthiopien`,
-	TZ: `Tansania`
+	TZ: `Tansania`,
 };

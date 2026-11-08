@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { buildEventListingItems, getEventListingSection } from './eventListingSections';
+import { describe, expect, it } from "vitest";
+import { buildEventListingItems, getEventListingSection } from "./eventListingSections";
 
 function atLocal(args: { year: number; month: number; day: number; hour?: number }) {
 	return new Date(args.year, args.month, args.day, args.hour ?? 18, 0, 0);
@@ -78,9 +78,7 @@ describe(`buildEventListingItems`, () => {
 	it(`does not put a divider before the first event`, () => {
 		const events = [{ id: 1, startAt: atLocal({ year: 2025, month: 5, day: 5 }) }];
 
-		expect(buildEventListingItems({ events, now, showDividers: true })).toEqual([
-			{ kind: `event`, event: events[0] },
-		]);
+		expect(buildEventListingItems({ events, now, showDividers: true })).toEqual([{ kind: `event`, event: events[0] }]);
 	});
 
 	it(`returns only events when dividers are disabled`, () => {

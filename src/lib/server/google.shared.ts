@@ -1,6 +1,6 @@
-import { and, eq } from 'drizzle-orm';
-import type { DB } from './db.shared';
-import { geocodeCache, reverseGeocodeCache } from './schema';
+import { and, eq } from "drizzle-orm";
+import type { DB } from "./db.shared";
+import { geocodeCache, reverseGeocodeCache } from "./schema";
 
 /**
  * Creates geocoding helpers bound to a specific database client.
@@ -20,15 +20,15 @@ export function createGoogleCacheApi(db: DB) {
 		if (!addressString) return null;
 		const biasAddressString = normalizeBiasAddressString({
 			addressString,
-			biasAddressLines
+			biasAddressLines,
 		});
 		const cacheKey = getGeocodeCacheKey({
 			addressString,
-			biasAddressString
+			biasAddressString,
 		});
 		const geocodeLabel = getGeocodeLabel({
 			addressString,
-			biasAddressString
+			biasAddressString,
 		});
 
 		try {
@@ -39,10 +39,12 @@ export function createGoogleCacheApi(db: DB) {
 			let dbCachedResult: Awaited<ReturnType<typeof db.query.geocodeCache.findFirst>> = undefined;
 			try {
 				dbCachedResult = await db.query.geocodeCache.findFirst({
-					where: eq(geocodeCache.address, cacheKey)
+					where: eq(geocodeCache.address, cacheKey),
 				});
 			} catch (cacheReadError) {
-				console.error(`Geocode cache read failed for ${geocodeLabel}: ${cacheReadError instanceof Error ? cacheReadError.message : String(cacheReadError)}`);
+				console.error(
+					`Geocode cache read failed for ${geocodeLabel}: ${cacheReadError instanceof Error ? cacheReadError.message : String(cacheReadError)}`,
+				);
 			}
 
 			if (dbCachedResult) {
@@ -51,7 +53,7 @@ export function createGoogleCacheApi(db: DB) {
 				const cachedGeocodeResult = toCachedGeocodeResult({
 					latitude: dbCachedResult.latitude,
 					longitude: dbCachedResult.longitude,
-					timezone: dbCachedResult.timezone
+					timezone: dbCachedResult.timezone,
 				});
 				if (!cachedGeocodeResult) {
 					geocodeLocalCache.set(cacheKey, null);
@@ -66,18 +68,19 @@ export function createGoogleCacheApi(db: DB) {
 				const timezone = await getTimezoneForCoordinates({
 					lat: cachedGeocodeResult.lat,
 					lng: cachedGeocodeResult.lng,
-					apiKey
+					apiKey,
 				});
 				const geocodeResult = {
 					...cachedGeocodeResult,
-					timezone
+					timezone,
 				} satisfies GeocodeResult;
 
 				try {
-					await db.update(geocodeCache)
+					await db
+						.update(geocodeCache)
 						.set({
 							timezone,
-							cachedAt: new Date()
+							cachedAt: new Date(),
 						})
 						.where(eq(geocodeCache.address, cacheKey));
 				} catch (cacheError) {
@@ -91,43 +94,46 @@ export function createGoogleCacheApi(db: DB) {
 			const biasBounds = await getGeocodeBiasBounds({
 				biasAddressLines,
 				apiKey,
-				resolveCoords: geocodeAddressCached
+				resolveCoords: geocodeAddressCached,
 			});
 			const coordinates = await geocodeLocation({
 				location: addressString,
 				apiKey,
-				bounds: biasBounds
+				bounds: biasBounds,
 			});
 			const timezone = coordinates
 				? await getTimezoneForCoordinates({
-					lat: coordinates.lat,
-					lng: coordinates.lng,
-					apiKey
-				})
+						lat: coordinates.lat,
+						lng: coordinates.lng,
+						apiKey,
+					})
 				: null;
 			const geocodeResult = coordinates
-				? {
-					...coordinates,
-					timezone
-				} satisfies GeocodeResult
+				? ({
+						...coordinates,
+						timezone,
+					} satisfies GeocodeResult)
 				: null;
 
 			try {
-				await db.insert(geocodeCache).values({
-					address: cacheKey,
-					latitude: coordinates?.lat ?? null,
-					longitude: coordinates?.lng ?? null,
-					timezone,
-					cachedAt: new Date()
-				}).onConflictDoUpdate({
-					target: geocodeCache.address,
-					set: {
+				await db
+					.insert(geocodeCache)
+					.values({
+						address: cacheKey,
 						latitude: coordinates?.lat ?? null,
 						longitude: coordinates?.lng ?? null,
 						timezone,
-						cachedAt: new Date()
-					}
-				});
+						cachedAt: new Date(),
+					})
+					.onConflictDoUpdate({
+						target: geocodeCache.address,
+						set: {
+							latitude: coordinates?.lat ?? null,
+							longitude: coordinates?.lng ?? null,
+							timezone,
+							cachedAt: new Date(),
+						},
+					});
 
 				console.log(`Cached geocoding result for ${geocodeLabel}`);
 			} catch (cacheError) {
@@ -144,17 +150,15 @@ export function createGoogleCacheApi(db: DB) {
 
 	async function reverseGeocodeCityCached(lat: number, lng: number, apiKey: string): Promise<string | null> {
 		if (!apiKey) {
-			console.error('Google Maps API key is not set. Skipping reverse geocoding.');
+			console.error("Google Maps API key is not set. Skipping reverse geocoding.");
 			return null;
 		}
 
 		try {
-			const cachedResult = await db.select()
+			const cachedResult = await db
+				.select()
 				.from(reverseGeocodeCache)
-				.where(and(
-					eq(reverseGeocodeCache.latitude, lat),
-					eq(reverseGeocodeCache.longitude, lng)
-				))
+				.where(and(eq(reverseGeocodeCache.latitude, lat), eq(reverseGeocodeCache.longitude, lng)))
 				.limit(1);
 
 			if (cachedResult.length > 0 && cachedResult[0].cityName) {
@@ -165,17 +169,20 @@ export function createGoogleCacheApi(db: DB) {
 			const cityName = await reverseGeocodeCity(lat, lng, apiKey);
 
 			try {
-				await db.insert(reverseGeocodeCache).values({
-					latitude: lat,
-					longitude: lng,
-					cityName,
-					cachedAt: new Date()
-				}).onConflictDoUpdate({
-					target: [reverseGeocodeCache.latitude, reverseGeocodeCache.longitude],
-					set: {
-						cityName
-					}
-				});
+				await db
+					.insert(reverseGeocodeCache)
+					.values({
+						latitude: lat,
+						longitude: lng,
+						cityName,
+						cachedAt: new Date(),
+					})
+					.onConflictDoUpdate({
+						target: [reverseGeocodeCache.latitude, reverseGeocodeCache.longitude],
+						set: {
+							cityName,
+						},
+					});
 
 				console.log(`Cached reverse geocoding result for ${lat},${lng}`);
 			} catch (cacheError) {
@@ -195,11 +202,7 @@ export function createGoogleCacheApi(db: DB) {
 	 * @example
 	 * await getTimezoneForCoordinatesCached({ lat: 52.52, lng: 13.405, apiKey })
 	 */
-	async function getTimezoneForCoordinatesCached(args: {
-		lat: number;
-		lng: number;
-		apiKey: string;
-	}): Promise<string | null> {
+	async function getTimezoneForCoordinatesCached(args: { lat: number; lng: number; apiKey: string }): Promise<string | null> {
 		const cacheKey = timezoneCacheKey({ lat: args.lat, lng: args.lng });
 		if (timezoneLocalCache.has(cacheKey)) {
 			return timezoneLocalCache.get(cacheKey) ?? null;
@@ -207,7 +210,7 @@ export function createGoogleCacheApi(db: DB) {
 
 		try {
 			const dbCachedResult = await db.query.geocodeCache.findFirst({
-				where: eq(geocodeCache.address, cacheKey)
+				where: eq(geocodeCache.address, cacheKey),
 			});
 			if (dbCachedResult?.timezone) {
 				timezoneLocalCache.set(cacheKey, dbCachedResult.timezone);
@@ -217,21 +220,24 @@ export function createGoogleCacheApi(db: DB) {
 			const timezone = await getTimezoneForCoordinates(args);
 
 			try {
-				await db.insert(geocodeCache).values({
-					address: cacheKey,
-					latitude: args.lat,
-					longitude: args.lng,
-					timezone,
-					cachedAt: new Date()
-				}).onConflictDoUpdate({
-					target: geocodeCache.address,
-					set: {
+				await db
+					.insert(geocodeCache)
+					.values({
+						address: cacheKey,
 						latitude: args.lat,
 						longitude: args.lng,
 						timezone,
-						cachedAt: new Date()
-					}
-				});
+						cachedAt: new Date(),
+					})
+					.onConflictDoUpdate({
+						target: geocodeCache.address,
+						set: {
+							latitude: args.lat,
+							longitude: args.lng,
+							timezone,
+							cachedAt: new Date(),
+						},
+					});
 			} catch (cacheError) {
 				console.error(`Error caching timezone: ${cacheError instanceof Error ? cacheError.message : String(cacheError)}`);
 			}
@@ -247,7 +253,7 @@ export function createGoogleCacheApi(db: DB) {
 	return {
 		geocodeAddressCached,
 		reverseGeocodeCityCached,
-		getTimezoneForCoordinatesCached
+		getTimezoneForCoordinatesCached,
 	};
 }
 
@@ -268,7 +274,7 @@ export async function getTimezoneForCoordinates(args: { lat: number; lng: number
 
 		const timestamp = Math.floor(Date.now() / 1000);
 		const response = await fetch(
-			`https://maps.googleapis.com/maps/api/timezone/json?location=${args.lat},${args.lng}&timestamp=${timestamp}&key=${args.apiKey}`
+			`https://maps.googleapis.com/maps/api/timezone/json?location=${args.lat},${args.lng}&timestamp=${timestamp}&key=${args.apiKey}`,
 		);
 
 		if (!response.ok) {
@@ -289,11 +295,7 @@ export async function getTimezoneForCoordinates(args: { lat: number; lng: number
 	}
 }
 
-async function geocodeLocation(args: {
-	location: string;
-	apiKey: string;
-	bounds?: string;
-}): Promise<{ lat: number; lng: number } | null> {
+async function geocodeLocation(args: { location: string; apiKey: string; bounds?: string }): Promise<{ lat: number; lng: number } | null> {
 	if (!args.apiKey) throw new Error(`Google Maps API key is not set`);
 
 	console.log(`calling google geocode api with`, args.location, args.bounds ? `(biased)` : ``);
@@ -323,7 +325,10 @@ async function geocodeLocation(args: {
  * normalizeAddressLines([`Studio`, `Berlin`])
  */
 function normalizeAddressLines(addressLines: string[] | null | undefined) {
-	return addressLines?.filter((x) => x?.trim()).join(`, `).trim();
+	return addressLines
+		?.filter((x) => x?.trim())
+		.join(`, `)
+		.trim();
 }
 
 /**
@@ -342,10 +347,7 @@ export function timezoneCacheKey(args: { lat: number; lng: number }) {
  * @example
  * normalizeBiasAddressString({ addressString: `Studio, Berlin`, biasAddressLines: [`Berlin`] })
  */
-function normalizeBiasAddressString(args: {
-	addressString: string;
-	biasAddressLines: string[] | null | undefined;
-}) {
+function normalizeBiasAddressString(args: { addressString: string; biasAddressLines: string[] | null | undefined }) {
 	const biasAddressString = normalizeAddressLines(args.biasAddressLines);
 	if (!biasAddressString) return undefined;
 	if (biasAddressString === args.addressString) return undefined;
@@ -358,15 +360,12 @@ function normalizeBiasAddressString(args: {
  * @example
  * getGeocodeCacheKey({ addressString: `Studio`, biasAddressString: `Berlin` })
  */
-function getGeocodeCacheKey(args: {
-	addressString: string;
-	biasAddressString?: string;
-}) {
+function getGeocodeCacheKey(args: { addressString: string; biasAddressString?: string }) {
 	if (!args.biasAddressString) return args.addressString;
 
 	return JSON.stringify({
 		address: args.addressString,
-		biasAddress: args.biasAddressString
+		biasAddress: args.biasAddressString,
 	});
 }
 
@@ -376,10 +375,7 @@ function getGeocodeCacheKey(args: {
  * @example
  * getGeocodeLabel({ addressString: `Studio`, biasAddressString: `Berlin` })
  */
-function getGeocodeLabel(args: {
-	addressString: string;
-	biasAddressString?: string;
-}) {
+function getGeocodeLabel(args: { addressString: string; biasAddressString?: string }) {
 	if (!args.biasAddressString) return `"${args.addressString}"`;
 	return `"${args.addressString}" biased to "${args.biasAddressString}"`;
 }
@@ -399,7 +395,7 @@ async function getGeocodeBiasBounds(args: {
 
 	const biasCoords = await args.resolveCoords({
 		addressLines: args.biasAddressLines,
-		apiKey: args.apiKey
+		apiKey: args.apiKey,
 	});
 	if (!biasCoords) return undefined;
 
@@ -419,7 +415,7 @@ async function reverseGeocodeCity(lat: number, lng: number, apiKey: string): Pro
 		console.log(`calling google reverse geocode api with`, lat, lng);
 
 		const response = await fetch(
-			`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=de&region=DE`
+			`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=de&region=DE`,
 		);
 
 		if (!response.ok) {
@@ -431,14 +427,12 @@ async function reverseGeocodeCity(lat: number, lng: number, apiKey: string): Pro
 
 		if (data.status === `OK` && data.results?.length) {
 			const addressComponents = data.results[0].address_components;
-			const locality = addressComponents.find((component: { types: string[]; long_name: string }) =>
-				component.types.includes(`locality`)
-			);
+			const locality = addressComponents.find((component: { types: string[]; long_name: string }) => component.types.includes(`locality`));
 			const administrativeArea = addressComponents.find((component: { types: string[]; long_name: string }) =>
-				component.types.includes(`administrative_area_level_1`)
+				component.types.includes(`administrative_area_level_1`),
 			);
 
-			let result = ""
+			let result = "";
 			if (locality?.long_name) {
 				result = locality.long_name;
 				if (administrativeArea?.short_name && administrativeArea?.long_name !== result) {
@@ -464,11 +458,7 @@ async function reverseGeocodeCity(lat: number, lng: number, apiKey: string): Pro
  * @example
  * toCachedGeocodeResult({ latitude: 48.1, longitude: 11.5, timezone: `Europe/Berlin` })
  */
-function toCachedGeocodeResult(args: {
-	latitude: number | null;
-	longitude: number | null;
-	timezone: string | null;
-}): GeocodeResult | null {
+function toCachedGeocodeResult(args: { latitude: number | null; longitude: number | null; timezone: string | null }): GeocodeResult | null {
 	if (args.latitude === null || args.longitude === null) {
 		return null;
 	}
@@ -476,7 +466,7 @@ function toCachedGeocodeResult(args: {
 	return {
 		lat: Number(args.latitude),
 		lng: Number(args.longitude),
-		timezone: args.timezone
+		timezone: args.timezone,
 	};
 }
 

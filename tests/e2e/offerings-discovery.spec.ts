@@ -157,10 +157,7 @@ test.describe("Offering discovery and details", () => {
 
 	test("post-edit opens the offering in a dialog on the filtered list", async ({ page }) => {
 		await createProfile(page, createCompleteProfile());
-		const offering = await createOffering(
-			page,
-			createOfflineOffering({ title: `Edit Return Offering`, slug: `edit-return` }),
-		);
+		const offering = await createOffering(page, createOfflineOffering({ title: `Edit Return Offering`, slug: `edit-return` }));
 		await signInAsE2EUser(page);
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 		await page.goto(listUrl);

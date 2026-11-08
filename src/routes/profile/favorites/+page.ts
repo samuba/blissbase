@@ -1,4 +1,4 @@
-import { getFavoriteUpcomingEvents } from "$lib/rpc/favorites.remote";
+import { getFavoriteUpcomingEvents } from "#lib/rpc/favorites.remote.ts";
 import type { PageLoad } from "./$types";
 
 export const load = (async () => {

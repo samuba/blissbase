@@ -1,5 +1,5 @@
-import { getRequestEvent } from '$app/server';
-import { isAdminSession } from '$lib/server/admin';
+import { getRequestEvent } from "$app/server";
+import { isAdminSession } from "#lib/server/admin.ts";
 
 export async function refreshAuthLocalsFromSupabase() {
 	const { locals } = getRequestEvent();

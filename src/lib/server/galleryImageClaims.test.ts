@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock(`$app/environment`, () => ({
+vi.mock(`$app/env`, () => ({
 	browser: false,
 	building: false,
 	dev: false,
@@ -17,8 +17,8 @@ const { deleteObjects, finalizeGalleryTempImage, getObjectPrefix, getPresignedPu
 	getPresignedPutUrl: vi.fn(async () => `https://upload.example/put`),
 }));
 
-vi.mock(`$lib/assets`, async (importOriginal) => {
-	const actual = await importOriginal<typeof import("$lib/assets")>();
+vi.mock(`#lib/assets.ts`, async (importOriginal) => {
+	const actual = await importOriginal<typeof import("#lib/assets.ts")>();
 	return {
 		...actual,
 		deleteObjects,
@@ -28,14 +28,14 @@ vi.mock(`$lib/assets`, async (importOriginal) => {
 	};
 });
 
-import { eventAssetsCreds } from "$lib/events.remote.shared";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
 import {
 	createGalleryImageUpload,
 	discardGalleryImageUpload,
 	finalizeGalleryImageClaims,
 	signGalleryImageClaim,
 	verifyGalleryImageClaims,
-} from "$lib/server/galleryImageClaims";
+} from "#lib/server/galleryImageClaims.ts";
 
 describe(`verifyGalleryImageClaims`, () => {
 	it(`returns an empty list when no tokens are submitted`, () => {
@@ -300,13 +300,7 @@ describe(`discardGalleryImageUpload`, () => {
 	});
 });
 
-function signedClaim(claim: {
-	objectKey: string;
-	contentType: string;
-	kind: string;
-	hash?: string;
-	expiresAt: number;
-}) {
+function signedClaim(claim: { objectKey: string; contentType: string; kind: string; hash?: string; expiresAt: number }) {
 	const payload = Buffer.from(JSON.stringify(claim)).toString(`base64url`);
 	const signature = createHmac(`sha256`, eventAssetsCreds.secretKey).update(payload).digest(`base64url`);
 	return `${payload}.${signature}`;

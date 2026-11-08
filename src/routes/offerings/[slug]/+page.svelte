@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import OfferingDetails from "../OfferingDetails.svelte";
-	import { offeringsListFromReturnTo, routes, withOfferingSlug } from "$lib/routes";
+	import { offeringsListFromReturnTo, routes, withOfferingSlug } from "#lib/routes.ts";
 	import type { PageProps } from "./$types";
 
 	let { data }: PageProps = $props();
@@ -13,9 +13,7 @@
 		}),
 	);
 	const editReturnTo = $derived(
-		offering.slug
-			? withOfferingSlug({ path: offeringsListHref, offeringSlug: offering.slug })
-			: offeringsListHref,
+		offering.slug ? withOfferingSlug({ path: offeringsListHref, offeringSlug: offering.slug }) : offeringsListHref,
 	);
 </script>
 
@@ -26,7 +24,7 @@
 		{/key}
 	</div>
 
-	<div class="flex w-full justify-center py-6 bg-base-100 sm:bg-transparent">
+	<div class="bg-base-100 flex w-full justify-center py-6 sm:bg-transparent">
 		<a href={offeringsListHref} class="btn btn-sm" data-testid="all-offerings-link">
 			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 			Alle Angebote

@@ -7,11 +7,11 @@
 </script>
 
 <script lang="ts">
-	import { page } from '$app/state';
-	import { Dialog } from '$lib/components/dialog';
-	import { peekFooter } from '$lib/peekFooter.svelte';
-	import { sendContactMessage } from '$lib/rpc/contact.remote';
-	import { toast } from 'svelte-sonner';
+	import { page } from "$app/state";
+	import { Dialog } from "#lib/components/dialog/index.ts";
+	import { peekFooter } from "#lib/peekFooter.svelte.ts";
+	import { sendContactMessage } from "#lib/rpc/contact.remote.ts";
+	import { toast } from "svelte-sonner";
 
 	let email = $state(``);
 	let message = $state(``);
@@ -40,9 +40,7 @@
 			open = false;
 			resetForm();
 		} catch {
-			toast.error(
-				/* @wc-include */ `Nachricht konnte nicht gesendet werden. Versuch es bitte nochmal.`
-			);
+			toast.error(/* @wc-include */ `Nachricht konnte nicht gesendet werden. Versuch es bitte nochmal.`);
 		}
 	}
 </script>
@@ -53,7 +51,7 @@
 			`pointer-events-none fixed inset-x-0 z-40`,
 			`bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-11`,
 			`transition-transform duration-200 ease-out motion-reduce:transition-none`,
-			!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`
+			!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`,
 		]}
 	>
 		<div class="mx-auto flex max-w-5xl justify-start px-4">
@@ -82,15 +80,12 @@
 			data-testid="contact-dialog"
 		>
 			<Dialog.Title class="mb-2 pr-8 text-xl font-semibold">Schreib mir</Dialog.Title>
-			<p class="text-base-content/70 mb-5 text-sm">
-				Fragen, Feedback oder Ideen — ich freue mich über deine Nachricht.
-			</p>
+			<p class="text-base-content/70 mb-5 text-sm">Fragen, Feedback oder Ideen — ich freue mich über deine Nachricht.</p>
 
 			<form class="flex flex-col gap-2" onsubmit={onSubmit}>
-
 				<fieldset class="fieldset">
 					<textarea
-						class="textarea w-full min-h-28"
+						class="textarea min-h-28 w-full"
 						name="message"
 						required
 						maxlength={10_000}
@@ -117,12 +112,7 @@
 					<p class="label">Damit ich dir antworten kann.</p>
 				</fieldset>
 
-				<button
-					type="submit"
-					class="btn btn-primary w-full mt-2"
-					disabled={isPending}
-					data-testid="contact-submit"
-				>
+				<button type="submit" class="btn btn-primary mt-2 w-full" disabled={isPending} data-testid="contact-submit">
 					{#if isPending}
 						<span class="loading loading-spinner"></span>
 					{:else}

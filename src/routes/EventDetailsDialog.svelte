@@ -1,8 +1,8 @@
 <script lang="ts" module>
-	import type { UiEvent } from '$lib/server/events';
-	import { page } from '$app/state';
-	import { afterClientHydration, ShallowDialog } from '$lib/shallowDialog.svelte';
-	import { routes, takeEventSlugQuery } from '$lib/routes';
+	import type { UiEvent } from "#lib/server/events.ts";
+	import { page } from "$app/state";
+	import { afterClientHydration, ShallowDialog } from "#lib/shallowDialog.svelte.ts";
+	import { routes, takeEventSlugQuery } from "#lib/routes.ts";
 
 	let event = $state<UiEvent | undefined>(undefined);
 	const dialog = new ShallowDialog(routes.root());
@@ -30,11 +30,11 @@
 </script>
 
 <script lang="ts">
-	import { Dialog } from '$lib/components/dialog';
-	import EventDetails from './EventDetails.svelte';
-	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { getEventBySlug } from '$lib/rpc/events.remote';
-	import { untrack } from 'svelte';
+	import { Dialog } from "#lib/components/dialog/index.ts";
+	import EventDetails from "./EventDetails.svelte";
+	import { eventsStore } from "#lib/eventsStore.svelte.ts";
+	import { getEventBySlug } from "#lib/rpc/events.remote.ts";
+	import { untrack } from "svelte";
 
 	const isOpen = $derived(page.state.selectedEventId != null);
 	let openingEventSlug: string | undefined;

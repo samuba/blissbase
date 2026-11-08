@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { ensureAbsoluteHref, rewriteRelativeAnchorHrefs } from './common';
+import { describe, expect, it } from "vitest";
+import { ensureAbsoluteHref, rewriteRelativeAnchorHrefs } from "./common";
 
 describe(`ensureAbsoluteHref`, () => {
 	it(`prefixes https for bare host-like hrefs`, () => {
@@ -27,7 +27,7 @@ describe(`rewriteRelativeAnchorHrefs`, () => {
 	it(`rewrites only bare href attributes`, () => {
 		const input = `A <a href="example.com">a</a> B <a href="https://ok.test">b</a> C <a href="mailto:x@y.z">c</a>`;
 		expect(rewriteRelativeAnchorHrefs(input)).toBe(
-			`A <a href="https://example.com">a</a> B <a href="https://ok.test">b</a> C <a href="mailto:x@y.z">c</a>`
+			`A <a href="https://example.com">a</a> B <a href="https://ok.test">b</a> C <a href="mailto:x@y.z">c</a>`,
 		);
 	});
 });

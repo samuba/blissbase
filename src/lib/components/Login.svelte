@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
-	import { PinInput, REGEXP_ONLY_DIGITS } from 'bits-ui';
-	import { getSupabaseBrowserClient } from '$lib/supabase';
-	import { verifyEmailOtp } from '$lib/rpc/auth.remote';
-	import { localeStore } from '../../locales/localeStore.svelte';
-	import { ReactiveCountdown } from '$lib/reactiveCountdown.svelte';
-	import { toast } from 'svelte-sonner';
-	import { sleep } from '$lib/common';
-	import { authCallbackUrl, isAuthFlowPath, routes } from '$lib/routes';
-	import { mapOAuthError, startGoogleOAuth } from '$lib/oauthSignIn';
-	import GoogleSignInButton from '$lib/components/GoogleSignInButton.svelte';
+	import { refreshAll } from "$app/navigation";
+	import { page } from "$app/state";
+	import { PinInput, REGEXP_ONLY_DIGITS } from "bits-ui";
+	import { getSupabaseBrowserClient } from "#lib/supabase.ts";
+	import { verifyEmailOtp } from "#lib/rpc/auth.remote.ts";
+	import { localeStore } from "../../locales/localeStore.svelte";
+	import { ReactiveCountdown } from "#lib/reactiveCountdown.svelte.ts";
+	import { toast } from "svelte-sonner";
+	import { sleep } from "#lib/common.ts";
+	import { authCallbackUrl, isAuthFlowPath, routes } from "#lib/routes.ts";
+	import { mapOAuthError, startGoogleOAuth } from "#lib/oauthSignIn.ts";
+	import GoogleSignInButton from "#lib/components/GoogleSignInButton.svelte";
 
 	interface Props {
 		class?: string;
@@ -30,9 +30,7 @@
 	let resendCooldown = new ReactiveCountdown(60);
 	const isLoading = $derived(otpLoading || googleLoading);
 
-	const nextAfterAuth = $derived(
-		next ?? (isAuthFlowPath(page.url.pathname) ? routes.profile() : routes.currentPath(page.url)),
-	);
+	const nextAfterAuth = $derived(next ?? (isAuthFlowPath(page.url.pathname) ? routes.profile() : routes.currentPath(page.url)));
 
 	function callbackRedirectTo() {
 		return authCallbackUrl({ origin: window.location.origin, next: nextAfterAuth });
@@ -52,9 +50,9 @@
 				options: {
 					emailRedirectTo: callbackRedirectTo(),
 					data: {
-						locale: localeStore.locale
-					}
-				}
+						locale: localeStore.locale,
+					},
+				},
 			});
 
 			if (signInError) throw signInError;
@@ -86,9 +84,9 @@
 				options: {
 					emailRedirectTo: callbackRedirectTo(),
 					data: {
-						locale: localeStore.locale
-					}
-				}
+						locale: localeStore.locale,
+					},
+				},
 			});
 
 			if (signInError) throw signInError;
@@ -118,7 +116,7 @@
 				error = result.message;
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 			onAuthenticated?.();
 			toast.success(`Du bist jetzt angemeldet. Viel Spaß!`);
 		} catch (err: unknown) {
@@ -154,15 +152,19 @@
 
 <div class={[className]}>
 	{#if step === `email`}
-		<p class="text-base-content mb-6 text-sm">
-			Melde dich an um Favoriten zu speichern und eigene Events zu erstellen.
-		</p>
+		<p class="text-base-content mb-6 text-sm">Melde dich an um Favoriten zu speichern und eigene Events zu erstellen.</p>
 
 		<GoogleSignInButton busy={googleLoading} disabled={isLoading} onclick={signInWithGoogle} />
 
 		<div class="divider">oder</div>
 
-		<form onsubmit={(e) => { e.preventDefault(); sendOtp(); }} class="space-y-4 relative">
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				sendOtp();
+			}}
+			class="relative space-y-4"
+		>
 			<input
 				type="email"
 				id="email"
@@ -187,12 +189,17 @@
 			</button>
 		</form>
 	{:else}
-		<form onsubmit={(e) => { e.preventDefault(); verifyCode(); }} class="flex flex-col gap-4 relative">
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				verifyCode();
+			}}
+			class="relative flex flex-col gap-4"
+		>
 			<div class="alert alert-success bg-success/60">
 				<i class="icon-[ph--keyhole] size-7"></i>
 				<span class="text-base-content">
-					Wir haben dir einen Code an <b>{pendingEmail}</b> geschickt. 
-					Gib den Code hier ein um dich anzumelden.
+					Wir haben dir einen Code an <b>{pendingEmail}</b> geschickt. Gib den Code hier ein um dich anzumelden.
 				</span>
 			</div>
 
@@ -206,23 +213,23 @@
 				inputmode="numeric"
 				aria-label="Einmalcode"
 				pasteTransformer={(x) => x.replace(/\D/g, ``).slice(0, 6)}
-				onComplete={() => queueMicrotask(() => { void verifyCode() })}
-				class="max-w-[200px] mx-auto py-6"
+				onComplete={() =>
+					queueMicrotask(() => {
+						void verifyCode();
+					})}
+				class="mx-auto max-w-[200px] py-6"
 			>
 				{#snippet children({ cells })}
 					<div class="flex justify-center">
 						{#each cells as cell, i (i)}
 							<PinInput.Cell
 								{cell}
-								class="first:rounded-l-xl first:border-l-2 last:rounded-r-xl last:border-r-2 flex h-14 w-10 border-base-500  border-y-2 border-r  shrink items-center justify-center font-mono text-xl tabular-nums data-active:outline data-active:outline-primary data-active:bg-primary/15"
+								class="border-base-500 data-active:outline-primary data-active:bg-primary/15 flex h-14 w-10 shrink items-center  justify-center border-y-2  border-r font-mono text-xl tabular-nums first:rounded-l-xl first:border-l-2 last:rounded-r-xl last:border-r-2 data-active:outline"
 							>
 								{#if cell.char}
 									{cell.char}
 								{:else if cell.hasFakeCaret}
-									<span
-										class="bg-base-content/80 h-5 w-px animate-caret-blink"
-										aria-hidden="true"
-									></span>
+									<span class="bg-base-content/80 animate-caret-blink h-5 w-px" aria-hidden="true"></span>
 								{/if}
 							</PinInput.Cell>
 						{/each}
@@ -243,7 +250,7 @@
 			</button>
 		</form>
 
-		<div class="mt-4 flex gap-2 items-center w-full justify-center flex-wrap sm:flex-row-reverse">
+		<div class="mt-4 flex w-full flex-wrap items-center justify-center gap-2 sm:flex-row-reverse">
 			<button
 				type="button"
 				class="btn btn-ghost btn-sm"
@@ -251,18 +258,14 @@
 				title={resendCooldown.isActive ? `In etwa einer Minute erneut möglich` : ``}
 				onclick={resendOtp}
 			>
-				Code erneut senden 
+				Code erneut senden
 				{#if resendCooldown.isActive}
-					(in {resendCooldown.secondsLeft} Sekunden) 
+					(in {resendCooldown.secondsLeft} Sekunden)
 				{/if}
 			</button>
-			<button type="button" class="btn btn-ghost btn-sm" disabled={isLoading} onclick={useAnotherEmail}>
-				Andere E-Mail verwenden
-			</button>
+			<button type="button" class="btn btn-ghost btn-sm" disabled={isLoading} onclick={useAnotherEmail}> Andere E-Mail verwenden </button>
 		</div>
 	{/if}
-
-
 </div>
 
 {#snippet errorMsg()}

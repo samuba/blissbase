@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { goto, invalidateAll } from "$app/navigation";
-	import ImageDialog from "$lib/components/ImageDialog.svelte";
-	import ProfileContactButtons from "$lib/components/ProfileContactButtons.svelte";
-	import PublicProfileCard from "$lib/components/PublicProfileCard.svelte";
-	import ShareButton from "$lib/components/ShareButton.svelte";
-	import type { OfferingFormat } from "$lib/rpc/offerings.common";
-	import { deleteOffering, listOffering, unlistOffering } from "$lib/rpc/offerings.remote";
-	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-	import { absoluteUrl, routes } from "$lib/routes";
+	import { goto, refreshAll } from "$app/navigation";
+	import ImageDialog from "#lib/components/ImageDialog.svelte";
+	import ProfileContactButtons from "#lib/components/ProfileContactButtons.svelte";
+	import PublicProfileCard from "#lib/components/PublicProfileCard.svelte";
+	import ShareButton from "#lib/components/ShareButton.svelte";
+	import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
+	import { deleteOffering, listOffering, unlistOffering } from "#lib/rpc/offerings.remote.ts";
+	import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+	import { absoluteUrl, routes } from "#lib/routes.ts";
 	import { toast } from "svelte-sonner";
 
 	let {
@@ -57,7 +57,7 @@
 				return;
 			}
 
-			await invalidateAll();
+			await refreshAll();
 		} catch {
 			toast.error(managementErrorMessage(action));
 		} finally {

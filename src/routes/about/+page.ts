@@ -1,4 +1,4 @@
-import { estimateEventCount } from "$lib/rpc/eventCount.remote";
+import { estimateEventCount } from "#lib/rpc/eventCount.remote.ts";
 import type { PageLoad } from "./$types";
 
 export const load = (async () => {

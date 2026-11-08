@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ClassValue, HTMLAttributes } from 'svelte/elements';
+	import type { ClassValue, HTMLAttributes } from "svelte/elements";
 
 	let { class: className, ...restProps }: Props = $props();
 
@@ -7,18 +7,18 @@
 		{ inner: `0%`, outer: `6.3%` },
 		{ inner: `19.8%`, outer: `30%` },
 		{ inner: `43.5%`, outer: `56.4%` },
-		{ inner: `69.8%`, outer: `95.5%` }
+		{ inner: `69.8%`, outer: `95.5%` },
 	];
 
 	type Props = { class?: ClassValue } & HTMLAttributes<HTMLDivElement>;
 </script>
 
-<div role="img" class={['relative overflow-visible', className]} {...restProps}>
+<div role="img" class={["relative overflow-visible", className]} {...restProps}>
 	{#each rings as ring, i (ring.inner)}
 		<img
 			src="/logo-90x90.png"
 			alt=""
-			class={['ripple size-full object-contain', i !== 0 && `absolute inset-0`]}
+			class={["ripple size-full object-contain", i !== 0 && `absolute inset-0`]}
 			style:--inner={ring.inner}
 			style:--outer={ring.outer}
 			style:animation-delay={`${i * 0.28}s`}

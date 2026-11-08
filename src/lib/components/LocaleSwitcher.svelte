@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
-	import { page } from '$app/state';
-	import { localeStore } from '../../locales/localeStore.svelte';
+	import { DropdownMenu } from "bits-ui";
+	import { page } from "$app/state";
+	import { localeStore } from "../../locales/localeStore.svelte";
 
 	let { forceClose = false }: { forceClose?: boolean } = $props();
 

@@ -1,7 +1,7 @@
 <script lang="ts">
+	import type { RemoteFormField } from "$app/server";
 	import { onMount } from "svelte";
-	import type { RemoteFormField } from "@sveltejs/kit";
-	import { localeStore } from "$lib/../locales/localeStore.svelte";
+	import { localeStore } from "../../locales/localeStore.svelte.ts";
 	import {
 		$createParagraphNode as createParagraphNode,
 		$getRoot as getRoot,
@@ -18,7 +18,9 @@
 		createEditor,
 		type LexicalEditor,
 	} from "lexical";
+
 	import { $generateHtmlFromNodes as generateHtmlFromNodes, $generateNodesFromDOM as generateNodesFromDOM } from "@lexical/html";
+
 	import {
 		HeadingNode,
 		$createHeadingNode as createHeadingNode,
@@ -38,8 +40,8 @@
 	import { namedSignals } from "@lexical/extension";
 	import { createEmptyHistoryState, registerHistory } from "@lexical/history";
 	import { $setBlocksType as setBlocksType } from "@lexical/selection";
-	import { $findMatchingParent as findMatchingParent, $getNearestNodeOfType as getNearestNodeOfType, mergeRegister } from "@lexical/utils";
 
+	import { $findMatchingParent as findMatchingParent, $getNearestNodeOfType as getNearestNodeOfType, mergeRegister } from "@lexical/utils";
 	let {
 		field,
 		value,
@@ -550,11 +552,11 @@
 		{/if}
 		<div
 			bind:this={editorEl}
-			class="prose textarea lexical-editor py-1 min-h-32 w-full max-w-none rounded-t-none! border-t-0"
+			class="prose textarea lexical-editor min-h-32 w-full max-w-none rounded-t-none! border-t-0 py-1"
 			contenteditable="true"
 			aria-placeholder={placeholder}
-			onfocus={() => isEditorFocused = true}
-			onblur={() => isEditorFocused = false}
+			onfocus={() => (isEditorFocused = true)}
+			onblur={() => (isEditorFocused = false)}
 		></div>
 	</div>
 
@@ -565,7 +567,7 @@
 	@reference '../../app.css';
 
 	.toolbar-button {
-		@apply bg-base-100 rounded-none p-2 hover:bg-base-200 cursor-pointer flex items-center justify-center disabled:opacity-35 disabled:hover:bg-base-100 disabled:cursor-auto;
+		@apply bg-base-100 hover:bg-base-200 disabled:hover:bg-base-100 flex cursor-pointer items-center justify-center rounded-none p-2 disabled:cursor-auto disabled:opacity-35;
 	}
 
 	.toolbar-button-active {

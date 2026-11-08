@@ -1,20 +1,20 @@
 <script lang="ts">
-	import EventCard from '$lib/components/EventCard.svelte';
-	import CreateCta from '$lib/components/CreateCta.svelte';
-	import CrossPromoFooter from '$lib/components/CrossPromoFooter.svelte';
-	import EventsNoResults from '$lib/components/EventsNoResults.svelte';
-	import { routes } from '$lib/routes';
-	import { intersect } from '$lib/attachments/intersection';
-	import { eventsStore } from '$lib/eventsStore.svelte';
-	import HeaderControls from '$lib/components/HeaderControls.svelte';
-	import { browser } from '$app/environment';
-	import InstallButton from '$lib/components/install-button/InstallButton.svelte';
-	import { addHours } from '$lib/common';
-	import { now } from '$lib/now.svelte';
-	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';
-	import { buildEventListingItems, type EventListingDividerSection } from '$lib/eventListingSections';
-	import { offeringsNavHint } from '$lib/offeringsNavHint.svelte';
-	import { onDestroy, onMount } from 'svelte';
+	import EventCard from "#lib/components/EventCard.svelte";
+	import CreateCta from "#lib/components/CreateCta.svelte";
+	import CrossPromoFooter from "#lib/components/CrossPromoFooter.svelte";
+	import EventsNoResults from "#lib/components/EventsNoResults.svelte";
+	import { routes } from "#lib/routes.ts";
+	import { intersect } from "#lib/attachments/intersection.ts";
+	import { eventsStore } from "#lib/eventsStore.svelte.ts";
+	import HeaderControls from "#lib/components/HeaderControls.svelte";
+	import { browser } from "$app/env";
+	import InstallButton from "#lib/components/install-button/InstallButton.svelte";
+	import { addHours } from "#lib/common.ts";
+	import { now } from "#lib/now.svelte.ts";
+	import { heroMobile, heroTablet, heroDesktopUrl } from "#lib/assets/hero-images.ts";
+	import { buildEventListingItems, type EventListingDividerSection } from "#lib/eventListingSections.ts";
+	import { offeringsNavHint } from "#lib/offeringsNavHint.svelte.ts";
+	import { onDestroy, onMount } from "svelte";
 
 	const { data } = $props();
 
@@ -26,15 +26,9 @@
 	}
 
 	const visibleEvents = $derived(
-		(eventsStore.events ?? []).filter(
-			(event) => !isEventMostlyElapsed({ startAt: event.startAt, endAt: event.endAt }),
-		),
+		(eventsStore.events ?? []).filter((event) => !isEventMostlyElapsed({ startAt: event.startAt, endAt: event.endAt })),
 	);
-	const showListingDividers = $derived(
-		browser &&
-			eventsStore.pagination.sortBy === `time` &&
-			eventsStore.pagination.sortOrder === `asc`,
-	);
+	const showListingDividers = $derived(browser && eventsStore.pagination.sortBy === `time` && eventsStore.pagination.sortOrder === `asc`);
 	const listingItems = $derived(
 		buildEventListingItems({
 			events: visibleEvents,
@@ -56,32 +50,30 @@
 	// Always initialize from server data during SSR to prevent state pollution
 	// On client, only initialize if store is empty (preserves navigation state)
 	if (!browser || !eventsStore.events?.length) {
-		console.log('Initializing events store from server data');
+		console.log("Initializing events store from server data");
 		// svelte-ignore state_referenced_locally
-		const d = data
+		const d = data;
 		eventsStore.initialize({
 			events: d.events ?? [],
 			pagination: {
 				...d.pagination,
 				startDate: d.pagination?.startDate ?? null,
-				endDate: d.pagination?.endDate ?? null
-			}
+				endDate: d.pagination?.endDate ?? null,
+			},
 		});
 	}
 
 	$effect(() => {
 		if (eventsStore.isLoading && !eventsStore.isLoadingMore) {
-			document.getElementById('events-loading-spinner')?.scrollIntoView(true);
+			document.getElementById("events-loading-spinner")?.scrollIntoView(true);
 		}
 	});
 
 	onMount(() => offeringsNavHint.onHomeScroll(window.scrollY));
 	onDestroy(() => offeringsNavHint.leaveHome());
 
-	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`
-	const reachedEndOfList = $derived(
-		eventsStore.loadingState === `not-loading` && !eventsStore.loadMoreFailed && !eventsStore.canLoadMore,
-	);
+	const noResultsContainerClasses = `flex flex-col justify-center gap-3 py-20`;
+	const reachedEndOfList = $derived(eventsStore.loadingState === `not-loading` && !eventsStore.loadMoreFailed && !eventsStore.canLoadMore);
 	const offeringsPromoHref = $derived(
 		routes.offeringsList({
 			location: eventsStore.pagination.plzCity ?? null,
@@ -94,7 +86,6 @@
 
 <svelte:window onscroll={() => offeringsNavHint.onHomeScroll(window.scrollY)} />
 
-
 <div bind:this={contentBeforeMenu} class="grid w-full overflow-hidden" id="content-before-menu">
 	<!-- hero image layer -->
 	<div class="col-start-1 row-start-1">
@@ -104,7 +95,7 @@
 			{/each}
 			<source media="(min-width: 1100px)" srcset={heroDesktopUrl} type="image/{heroDesktopUrl.split('.').pop()}" />
 			{#each Object.entries(heroTablet.sources) as [format, srcset] (format)}
-			    <source {srcset} type={`image/${format}`} />
+				<source {srcset} type={`image/${format}`} />
 			{/each}
 			<img
 				src={heroTablet.img.src}
@@ -117,49 +108,44 @@
 	</div>
 
 	<!-- Content layer -->
-	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-4 sm:gap-8 items-center justify-center">
-		<div class="flex flex-col gap-4 w-full items-center justify-center px-4">
-			<div class="flex justify-center items-center gap-3">
-				<img src="/logo-90x90.png" alt="" class="size-12 md:size-16 lg:size-18 drop-shadow-xl" data-testid="hero-logo" />
-				<h1 class="md:text-5xl text-4xl text-base-100 font-brand" >
-					Blissbase
-				</h1>
+	<div class="z-10 col-start-1 row-start-1 container mx-auto flex flex-col items-center justify-center gap-4 sm:w-2xl sm:gap-8">
+		<div class="flex w-full flex-col items-center justify-center gap-4 px-4">
+			<div class="flex items-center justify-center gap-3">
+				<img src="/logo-90x90.png" alt="" class="size-12 drop-shadow-xl md:size-16 lg:size-18" data-testid="hero-logo" />
+
+				<h1 class="text-base-100 font-brand text-4xl md:text-5xl">Blissbase</h1>
 			</div>
 
-			<div class="pt-6 pb-5 sm:py-2 block sm:hidden">
-				<InstallButton class=""  />
-			</div>
+			<div class="block pt-6 pb-5 sm:hidden sm:py-2"><InstallButton class="" /></div>
 
-			<h2 class="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand">
-				<span class="text-yellow-400">✨</span> 
-				Achtsame Events in deiner Nähe 
+			<h2
+				class="from-base-100 to-base-100 font-brand bg-gradient-to-r bg-clip-text text-center text-lg text-transparent sm:text-xl md:text-2xl"
+			>
+				<span class="text-yellow-400">✨</span>
+				Achtsame Events in deiner Nähe
 				<span class="text-yellow-400">✨</span>
 			</h2>
 
-			<div class="pt-6 pb-5 sm:py-2 hidden sm:block">
-				<InstallButton class=""  />
+			<div class="hidden pt-6 pb-5 sm:block sm:py-2">
+				<InstallButton class="" />
 			</div>
 		</div>
 	</div>
 </div>
-	
+
 <div class="flex w-full flex-col items-center justify-center pb-4">
-	<HeaderControls
-		eventSources={data.eventSources}
-		eventSourceFilter={data.eventSourceFilter}
-	/>
+	<HeaderControls eventSources={data.eventSources} eventSourceFilter={data.eventSourceFilter} />
 
 	<svelte:boundary>
 		<div class="mx-auto mb-2 w-full max-w-5xl px-4 pt-4 sm:mb-4">
 			{#if eventsStore.isLoading}
 				{@render loading(true)}
-			{:else if (eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat)}
-				<div class="grid gap-4 min-[920px]:grid-cols-2">
-					{@render createEventCta()}
-				</div>
+			{:else if eventsStore.pagination.plzCity?.trim() && !eventsStore.pagination.lat}
+				<div class="grid gap-4 min-[920px]:grid-cols-2">{@render createEventCta()}</div>
+
 				<div class={noResultsContainerClasses}>
-					<div class="text-center text-gray-500 flex flex-col justify-center items-center gap-3">
-						<i class="icon-[ph--map-pin] size-10  block"></i>
+					<div class="flex flex-col items-center justify-center gap-3 text-center text-gray-500">
+						<i class="icon-[ph--map-pin] block size-10"></i>
 						<span>
 							Ort <b>"{eventsStore.pagination.plzCity}"</b> nicht gefunden
 						</span>
@@ -172,7 +158,7 @@
 						{#each listingItems as item (item.kind === `event` ? item.event.id : item.section)}
 							{#if item.kind === `divider`}
 								<h2
-									class="divider col-span-full my-3 text-md font-normal! text-base-content/40"
+									class="divider text-md text-base-content/40 col-span-full my-3 font-normal!"
 									role="separator"
 									data-testid="event-list-divider"
 									data-section={item.section}
@@ -201,12 +187,7 @@
 					{:else if eventsStore.loadMoreFailed}
 						<div role="alert" class="flex flex-col items-center gap-3 py-10 text-center" data-testid="events-load-more-error">
 							<p class="text-base-content/70">Fehler beim laden weiterer Events.</p>
-							<button
-								type="button"
-								class="btn"
-								onclick={() => eventsStore.loadMoreEvents()}
-								data-testid="events-load-more-retry"
-							>
+							<button type="button" class="btn" onclick={() => eventsStore.loadMoreEvents()} data-testid="events-load-more-retry">
 								<i class="icon-[ph--arrow-clockwise] size-5"></i>
 								Erneut versuchen
 							</button>
@@ -237,7 +218,12 @@
 		{#snippet failed(error)}
 			<div role="alert" class="alert alert-error">
 				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+					></path>
 				</svg>
 				<b>Fehler beim Laden der Events:</b>
 				{error instanceof Error ? error.message : String(error)}
@@ -247,14 +233,10 @@
 </div>
 
 {#snippet createEventCta()}
-	<CreateCta
-		buttonText="Event hinzufügen"
-		href={routes.newEvent()}
-		data-testid="create-event"
-	>
+	<CreateCta buttonText="Event hinzufügen" href={routes.newEvent()} data-testid="create-event">
 		{#snippet title()}
-		<i class="icon-[ph--signpost] size-6 shrink-0 mr-1"></i>
-		Dein Event gehört hierher.
+			<i class="icon-[ph--signpost] mr-1 size-6 shrink-0"></i>
+			Dein Event gehört hierher.
 		{/snippet}
 		{#snippet description()}
 			Ob Workshop, Treffen oder Ecstatic Dance – trag es kostenlos ein und erreiche Menschen die danach suchen.
@@ -263,12 +245,13 @@
 {/snippet}
 
 {#snippet loading(reserveVerticalSpace: boolean)}
-	<div class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? 'h-dvh' : 'h-15']}
+	<div
+		class={["mb-6 flex flex-col items-center justify-center gap-2", reserveVerticalSpace ? "h-dvh" : "h-15"]}
 		id="events-loading-spinner"
 		role="status"
 		data-testid="events-loading"
 	>
-	<span class="loading loading-spinner loading-xl"></span>
+		<span class="loading loading-spinner loading-xl"></span>
 		<p class="">Lade...</p>
 	</div>
 {/snippet}

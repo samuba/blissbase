@@ -1,4 +1,4 @@
-import { bmvbhash } from 'blockhash-core';
+import { bmvbhash } from "blockhash-core";
 
 export const IMAGE_UPLOAD_MAX_DIMENSION = 850;
 export const IMAGE_UPLOAD_OUTPUT_MIME_TYPE = `image/webp`;
@@ -99,7 +99,10 @@ export function stripFileExtension(fileName: string) {
  * sanitizeFileBaseName(`My cover image!`);
  */
 export function sanitizeFileBaseName(fileName: string) {
-	return fileName.trim().replace(/[^a-zA-Z0-9._-]+/g, `-`).replace(/^-+|-+$/g, ``);
+	return fileName
+		.trim()
+		.replace(/[^a-zA-Z0-9._-]+/g, `-`)
+		.replace(/^-+|-+$/g, ``);
 }
 
 /**

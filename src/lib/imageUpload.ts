@@ -1,4 +1,4 @@
-import imageCompression from 'browser-image-compression';
+import imageCompression from "browser-image-compression";
 import {
 	IMAGE_UPLOAD_MAX_DIMENSION,
 	IMAGE_UPLOAD_MAX_SIZE_MB,
@@ -6,14 +6,14 @@ import {
 	IMAGE_UPLOAD_OUTPUT_QUALITY,
 	getPerceptualHash,
 	getProcessedImageFileName,
-} from '$lib/imageUpload.shared';
+} from "#lib/imageUpload.shared.ts";
 
 const WEBP_MAGIC_BYTES = [0x52, 0x49, 0x46, 0x46];
 const JPEG_MAGIC_BYTES = [0xff, 0xd8, 0xff];
 const JPEG_FALLBACK_MIME = `image/jpeg`;
 
 let cachedCanvasWebPEncodeSupport: boolean | undefined;
-let wasmWebPEncodePromise: Promise<typeof import('@jsquash/webp/encode')> | undefined;
+let wasmWebPEncodePromise: Promise<typeof import("@jsquash/webp/encode")> | undefined;
 
 /**
  * Returns whether this browser can encode WebP via canvas (Safari cannot).
@@ -43,10 +43,7 @@ export async function canEncodeWebPViaCanvas() {
  * @example
  * const file = await processImageUploadFile({ file, onProgress });
  */
-export async function processImageUploadFile(args: {
-	file: File;
-	onProgress?: (progress: number) => void;
-}) {
+export async function processImageUploadFile(args: { file: File; onProgress?: (progress: number) => void }) {
 	args.onProgress?.(10);
 
 	if (await canEncodeWebPViaCanvas()) {
@@ -106,10 +103,7 @@ export async function processImageDataToWebPFile(args: {
 	}
 }
 
-async function processWithNativeWebP(args: {
-	file: File;
-	onProgress?: (progress: number) => void;
-}) {
+async function processWithNativeWebP(args: { file: File; onProgress?: (progress: number) => void }) {
 	const compressedFile = await imageCompression(args.file, {
 		maxSizeMB: IMAGE_UPLOAD_MAX_SIZE_MB,
 		maxWidthOrHeight: IMAGE_UPLOAD_MAX_DIMENSION,
@@ -141,10 +135,7 @@ async function processWithNativeWebP(args: {
  * Resize/orient with a JPEG intermediate, then encode WebP via lazily loaded WASM.
  * Safari cannot encode WebP through canvas; @jsquash/webp is only fetched on this path.
  */
-async function processWithWasmWebP(args: {
-	file: File;
-	onProgress?: (progress: number) => void;
-}) {
+async function processWithWasmWebP(args: { file: File; onProgress?: (progress: number) => void }) {
 	const resizedFile = await imageCompression(args.file, {
 		// Intermediate only — final size is enforced by the WebP encoder.
 		maxSizeMB: 5,
@@ -185,12 +176,7 @@ async function processWithWasmWebP(args: {
 	}
 }
 
-async function encodeImageDataAsJpegFile(args: {
-	imageData: ImageData;
-	originalFileName: string;
-	lastModified: number;
-	quality: number;
-}) {
+async function encodeImageDataAsJpegFile(args: { imageData: ImageData; originalFileName: string; lastModified: number; quality: number }) {
 	const canvas = document.createElement(`canvas`);
 	canvas.width = args.imageData.width;
 	canvas.height = args.imageData.height;
@@ -198,9 +184,7 @@ async function encodeImageDataAsJpegFile(args: {
 	if (!ctx) throw new Error(`Canvas Kontext konnte nicht erstellt werden`);
 	ctx.putImageData(args.imageData, 0, 0);
 
-	const blob = await new Promise<Blob | null>((resolve) =>
-		canvas.toBlob(resolve, JPEG_FALLBACK_MIME, args.quality)
-	);
+	const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, JPEG_FALLBACK_MIME, args.quality));
 	if (!blob) throw new Error(`JPEG-Fallback-Kodierung fehlgeschlagen`);
 
 	return toProcessedImageUploadFile({
@@ -234,9 +218,7 @@ async function encodeImageDataWithNativeWebP(args: {
 
 	for (let attempt = 0; attempt < 8; attempt++) {
 		args.onProgress?.(40 + attempt * 7);
-		const blob = await new Promise<Blob | null>((resolve) =>
-			canvas.toBlob(resolve, IMAGE_UPLOAD_OUTPUT_MIME_TYPE, quality)
-		);
+		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, IMAGE_UPLOAD_OUTPUT_MIME_TYPE, quality));
 		if (blob?.type === IMAGE_UPLOAD_OUTPUT_MIME_TYPE) {
 			webpBlob = blob;
 			if (blob.size <= args.maxSizeBytes || quality <= 0.4) break;
@@ -287,10 +269,7 @@ async function encodeWebPWithWasm(args: {
 		hash,
 		originalFileName: args.originalFileName,
 	});
-	const webpBuffer = webpBytes.buffer.slice(
-		webpBytes.byteOffset,
-		webpBytes.byteOffset + webpBytes.byteLength
-	) as ArrayBuffer;
+	const webpBuffer = webpBytes.buffer.slice(webpBytes.byteOffset, webpBytes.byteOffset + webpBytes.byteLength) as ArrayBuffer;
 	return new File([webpBuffer], fileName, {
 		type: IMAGE_UPLOAD_OUTPUT_MIME_TYPE,
 		lastModified: args.lastModified,
@@ -323,12 +302,7 @@ function trimWebPBytes(buffer: ArrayBuffer) {
 	return bytes.slice(0, totalSize);
 }
 
-function toProcessedImageUploadFile(args: {
-	outputFile: File;
-	imageData: ImageData;
-	originalFileName: string;
-	lastModified: number;
-}) {
+function toProcessedImageUploadFile(args: { outputFile: File; imageData: ImageData; originalFileName: string; lastModified: number }) {
 	const hash = getPerceptualHash({ imageData: args.imageData });
 	const extension = args.outputFile.type === JPEG_FALLBACK_MIME ? `jpg` : undefined;
 	const fileName = getProcessedImageFileName({
@@ -373,9 +347,7 @@ async function ensureCompressedFormat(args: { file: File }) {
 		if (!ctx) throw new Error(`Canvas Kontext konnte nicht erstellt werden`);
 		ctx.drawImage(image, 0, 0, size.width, size.height);
 
-		const blob = await new Promise<Blob | null>((resolve) =>
-			canvas.toBlob(resolve, JPEG_FALLBACK_MIME, IMAGE_UPLOAD_OUTPUT_QUALITY)
-		);
+		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, JPEG_FALLBACK_MIME, IMAGE_UPLOAD_OUTPUT_QUALITY));
 		if (!blob) throw new Error(`JPEG-Fallback-Kodierung fehlgeschlagen`);
 
 		return new File([blob], args.file.name.replace(/\.\w+$/, `.jpg`), {

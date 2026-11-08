@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Combobox } from 'bits-ui';
-	import { tick } from 'svelte';
-	import type { RemoteFormField } from '@sveltejs/kit';
-	import { broadestTags } from '$lib/eventCategories';
+	import type { RemoteFormField } from "$app/server";
+	import { Combobox } from "bits-ui";
+	import { tick } from "svelte";
+	import { broadestTags } from "#lib/eventCategories.ts";
 
 	let {
 		field = $bindable(),
@@ -10,10 +10,9 @@
 		field: RemoteFormField<string[]>;
 	} = $props();
 
-	const sortedTags = broadestTags
-		.filter((tag) => tag != null)
-		.sort((a, b) => a.label.localeCompare(b.label));
-	const tagsBySlug = new Map(sortedTags.map((tag) => [tag.slug, tag]));
+	const sortedTags = broadestTags.filter((tag) => tag != null).sort((a, b) => a.label.localeCompare(b.label));
+	type TagSlug = (typeof sortedTags)[number]["slug"];
+	const tagsBySlug = new Map<string, (typeof sortedTags)[number]>(sortedTags.map((tag) => [tag.slug, tag]));
 
 	let searchValue = $state(``);
 	let open = $state(false);
@@ -46,21 +45,11 @@
 		const unselected = sortedTags.filter((tag) => !selectedSlugSet.has(tag.slug));
 		if (searchValue === ``) return unselected;
 		const search = searchValue.trim().toLowerCase();
-		return unselected.filter((tag) =>
-			tag.slug.toLowerCase().includes(search)
-			|| tag.label.toLowerCase().includes(search)
-			|| tag.synonyms?.some((synonym) => synonym.toLowerCase().includes(search)),
-		);
+		return unselected.filter((tag) => tag.slug.toLowerCase().includes(search) || tag.label.toLowerCase().includes(search));
 	});
 </script>
 
-<Combobox.Root
-	type="multiple"
-	inputValue={searchValue}
-	value={selectedSlugs}
-	onValueChange={onSelectedSlugsChange}
-	bind:open
->
+<Combobox.Root type="multiple" inputValue={searchValue} value={selectedSlugs} onValueChange={onSelectedSlugsChange} bind:open>
 	<div class="relative">
 		<Combobox.Input
 			bind:ref={inputRef}
@@ -69,7 +58,7 @@
 			onkeydown={(e) => {
 				if ((e.key === `ArrowDown` || e.key === `ArrowUp`) && !open) open = true;
 			}}
-			class="w-full input"
+			class="input w-full"
 			placeholder="z.B. Meditation, Atemarbeit"
 			aria-label="Suche nach Tags"
 		/>
@@ -85,7 +74,7 @@
 			<Combobox.Viewport class="p-1">
 				{#each filteredTags as tag (tag.slug)}
 					<Combobox.Item
-						class="rounded-lg data-highlighted:bg-base-200 flex h-10 w-full items-center py-5 pr-1.5 pl-5 text-sm capitalize outline-hidden select-none data-selected:font-bold"
+						class="data-highlighted:bg-base-200 flex h-10 w-full items-center rounded-lg py-5 pr-1.5 pl-5 text-sm capitalize outline-hidden select-none data-selected:font-bold"
 						value={tag.slug}
 						label={tag.label}
 					>
@@ -95,7 +84,7 @@
 					<div class="flex items-center justify-center h-full">Keine Tags gefunden</div>
 				{/each}
 			</Combobox.Viewport>
-			<Combobox.ScrollDownButton class="flex w-full items-center justify-center pb-1 pt-2">
+			<Combobox.ScrollDownButton class="flex w-full items-center justify-center pt-2 pb-1">
 				<i class="icon-[ph--caret-double-down] size-4"></i>
 			</Combobox.ScrollDownButton>
 		</Combobox.Content>
@@ -103,14 +92,14 @@
 </Combobox.Root>
 
 {#if selectedSlugs.length > 0}
-	<div class="flex flex-wrap gap-2 mt-1">
+	<div class="mt-1 flex flex-wrap gap-2">
 		{#each selectedSlugs as slug (slug)}
-			<input {...field.as('checkbox', slug)} checked class="hidden" />
-			<div class="badge badge-ghost break-keep pr-0 gap-1">
+			<input {...field.as("checkbox", slug as TagSlug)} checked class="hidden" />
+			<div class="badge badge-ghost gap-1 pr-0 break-keep">
 				{tagsBySlug.get(slug)?.label ?? slug}
 				<button
 					type="button"
-					class="cursor-pointer mx-0 pr-1.5 flex items-center justify-center"
+					class="mx-0 flex cursor-pointer items-center justify-center pr-1.5"
 					aria-label="Entfernen"
 					onclick={() => removeTag(slug)}
 				>

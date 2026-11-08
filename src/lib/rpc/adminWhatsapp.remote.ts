@@ -1,15 +1,18 @@
-import { command, form, query, requested } from '$app/server';
-import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { error, invalid } from '@sveltejs/kit';
-import { asc, desc, notInArray } from 'drizzle-orm';
-import * as v from 'valibot';
-import { isAdminSession } from '$lib/server/admin';
-import { db, eq, s } from '$lib/server/db';
-import { geocodeAddressCached } from '$lib/server/google';
+import { command, form, query, requested } from "$app/server";
+import { GOOGLE_MAPS_API_KEY } from "$app/env/private";
+import { error, invalid } from "@sveltejs/kit";
+import { asc, desc, notInArray } from "drizzle-orm";
+import * as v from "valibot";
+import { isAdminSession } from "#lib/server/admin.ts";
+import { db, eq, s } from "#lib/server/db.ts";
+import { geocodeAddressCached } from "#lib/server/google.ts";
 
 function toAddressLines(address: string) {
 	if (!address.trim()) return [];
-	return address.split(/,|\n/).map((x) => x.trim()).filter((x) => x);
+	return address
+		.split(/,|\n/)
+		.map((x) => x.trim())
+		.filter((x) => x);
 }
 
 const saveWhatsappScrapingTargetSchema = v.object({
@@ -20,10 +23,7 @@ const saveWhatsappScrapingTargetSchema = v.object({
 		v.string(),
 		v.transform((value): string[] => toAddressLines(value)),
 	),
-	defaultTimezone: v.optional(
-		v.pipe(v.string(), v.trim(), v.nonEmpty(`defaultTimezone ist erforderlich`)),
-		`germany`,
-	),
+	defaultTimezone: v.optional(v.pipe(v.string(), v.trim(), v.nonEmpty(`defaultTimezone ist erforderlich`)), `germany`),
 	hasOnlyConsciousEvents: v.optional(v.boolean(), false),
 });
 
@@ -48,11 +48,7 @@ export const getAvailableWhatsappChats = query(async () => {
 	});
 	const targetJids = targets.map((target) => target.chatJid);
 
-	const orderBy = [
-		desc(s.whatsappChats.createdAt),
-		asc(s.whatsappChats.name),
-		asc(s.whatsappChats.chatJid),
-	];
+	const orderBy = [desc(s.whatsappChats.createdAt), asc(s.whatsappChats.name), asc(s.whatsappChats.chatJid)];
 
 	if (!targetJids.length) {
 		return db.query.whatsappChats.findMany({ orderBy });
@@ -123,7 +119,8 @@ export const saveWhatsappScrapingTarget = form(saveWhatsappScrapingTargetSchema,
 			}
 		}
 
-		await db.update(s.whatsappScrapingTargets)
+		await db
+			.update(s.whatsappScrapingTargets)
 			.set({
 				chatJid: data.chatJid,
 				name,

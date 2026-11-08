@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { validateFilterData } from '$lib/cookie-utils';
+import { describe, expect, it } from "vitest";
+import { validateFilterData } from "#lib/cookie-utils.ts";
 
 describe(`cookie filter validation`, () => {
 	it(`sanitizes invalid distance and keeps valid zero coordinates`, () => {
@@ -8,8 +8,8 @@ describe(`cookie filter validation`, () => {
 				plzCity: `Berlin`,
 				distance: `25`,
 				lat: 0,
-				lng: 0
-			})
+				lng: 0,
+			}),
 		).toEqual({
 			startDate: null,
 			endDate: null,
@@ -24,7 +24,7 @@ describe(`cookie filter validation`, () => {
 			sortOrder: null,
 			categorySlugs: null,
 			attendanceMode: null,
-			source: null
+			source: null,
 		});
 	});
 
@@ -37,7 +37,7 @@ describe(`cookie filter validation`, () => {
 				lng: 13.4,
 				offeringsSearchTerm: `yoga`,
 				includeOnline: true,
-			})
+			}),
 		).toMatchObject({
 			plzCity: `Berlin`,
 			offeringsSearchTerm: `yoga`,
@@ -51,8 +51,8 @@ describe(`cookie filter validation`, () => {
 				plzCity: `Berlin`,
 				distance: `50`,
 				lat: `not-a-number`,
-				lng: 13
-			})
+				lng: 13,
+			}),
 		).toBeNull();
 	});
 
@@ -60,7 +60,7 @@ describe(`cookie filter validation`, () => {
 		expect(
 			validateFilterData({
 				categorySlugs: [`dance`, `not-a-category`, `meditation`],
-			})
+			}),
 		).toMatchObject({
 			categorySlugs: [`dance`, `meditation`],
 		});

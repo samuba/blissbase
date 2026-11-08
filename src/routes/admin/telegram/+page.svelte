@@ -1,33 +1,26 @@
 <script lang="ts">
 	/* @wc-ignore-file */
-	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
-	import { Dialog } from '$lib/components/dialog';
-	import { routes } from '$lib/routes';
+	import FormFieldIssues from "#lib/components/FormFieldIssues.svelte";
+	import { Dialog } from "#lib/components/dialog/index.ts";
+	import { routes } from "#lib/routes.ts";
 	import {
 		deleteTelegramScrapingTarget,
 		getAvailableTelegramDialogs,
 		getTelegramScrapingTargets,
 		lookupTimezoneFromAddress,
 		saveTelegramScrapingTarget,
-	} from './adminTelegram.remote';
-	import {
-		telegramAccountLabel,
-		type TelegramDialogAccountId,
-	} from './dialogs/availableDialogs';
-	import { TableStickyScroll } from '$lib/tableStickyScroll.svelte';
-	import { toast } from 'svelte-sonner';
+	} from "./adminTelegram.remote";
+	import { telegramAccountLabel, type TelegramDialogAccountId } from "./dialogs/availableDialogs";
+	import { TableStickyScroll } from "#lib/tableStickyScroll.svelte.ts";
+	import { toast } from "svelte-sonner";
 
 	let { data } = $props();
 	const targetsQuery = getTelegramScrapingTargets();
 	// Lazy: teleproto listing is slow — only start when the add dialog opens.
 	// raw: RemoteQuery must not be deeply proxied by $state.
-	let availableDialogsQuery = $state.raw<ReturnType<typeof getAvailableTelegramDialogs> | null>(
-		null,
-	);
+	let availableDialogsQuery = $state.raw<ReturnType<typeof getAvailableTelegramDialogs> | null>(null);
 	const targets = $derived(targetsQuery.current ?? data.targets);
-	const availableDialogsPayload = $derived(
-		availableDialogsQuery?.current ?? { accounts: [], accountStatuses: [], dialogs: [] },
-	);
+	const availableDialogsPayload = $derived(availableDialogsQuery?.current ?? { accounts: [], accountStatuses: [], dialogs: [] });
 	const availableDialogs = $derived(availableDialogsPayload.dialogs);
 	const scrapeAccounts = $derived(availableDialogsPayload.accounts);
 	const accountStatuses = $derived(availableDialogsPayload.accountStatuses);
@@ -81,9 +74,7 @@
 		return scrapeAccounts[0] ?? `primary`;
 	});
 
-	const selectedAccountStatus = $derived(
-		accountStatuses.find((status) => status.accountId === selectedDialogAccount) ?? null,
-	);
+	const selectedAccountStatus = $derived(accountStatuses.find((status) => status.accountId === selectedDialogAccount) ?? null);
 
 	const filteredAvailableDialogs = $derived.by(() => {
 		const query = dialogFilter.trim().toLowerCase();
@@ -261,10 +252,7 @@
 		isDeleting = true;
 		try {
 			await deleteTelegramScrapingTarget({ roomId: selectedTarget.roomId });
-			await Promise.all([
-				getTelegramScrapingTargets().refresh(),
-				getAvailableTelegramDialogs().refresh(),
-			]);
+			await Promise.all([getTelegramScrapingTargets().refresh(), getAvailableTelegramDialogs().refresh()]);
 			toast.success(`Target „${label}“ gelöscht`);
 			onEditDialogOpenChange(false);
 		} catch (err) {
@@ -390,17 +378,10 @@
 				<i class="icon-[ph--telegram-logo] size-6 text-[#26A5E4]" aria-hidden="true"></i>
 				Telegram Scraping Targets
 			</h1>
-			<p class="text-base-content/80 text-sm leading-relaxed">
-				Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten.
-			</p>
+			<p class="text-base-content/80 text-sm leading-relaxed">Target hinzufügen oder eine Zeile auswählen, um sie zu bearbeiten.</p>
 		</div>
 		<div class="flex flex-wrap items-center gap-2">
-			<button
-				type="button"
-				class="btn btn-primary btn-sm"
-				data-testid="telegram-add-target-button"
-				onclick={openAddDialog}
-			>
+			<button type="button" class="btn btn-primary btn-sm" data-testid="telegram-add-target-button" onclick={openAddDialog}>
 				<i class="icon-[ph--plus] size-4"></i>
 				Hinzufügen
 			</button>
@@ -430,18 +411,11 @@
 					class="targets-table-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto"
 					onscroll={tableScroll.syncStickyFromTable}
 				>
-					<table class="table table-pin-rows table-sm w-full">
+					<table class="table-pin-rows table-sm table w-full">
 						<thead>
 							<tr>
 								{#each sortColumns as column (column.key)}
-									<th
-										class="bg-base-100"
-										aria-sort={sortKey === column.key
-											? sortDir === `asc`
-												? `ascending`
-												: `descending`
-											: `none`}
-									>
+									<th class="bg-base-100" aria-sort={sortKey === column.key ? (sortDir === `asc` ? `ascending` : `descending`) : `none`}>
 										<button
 											type="button"
 											class="hover:text-primary inline-flex items-center gap-1 font-semibold whitespace-nowrap"
@@ -458,10 +432,7 @@
 							{#each sortedTargets as target (target.roomId)}
 								{@const openUrl = telegramRoomUrl(target.roomId)}
 								<tr
-									class={[
-										`hover:bg-base-200 cursor-pointer`,
-										selectedRoomId === target.roomId && `bg-primary/10`,
-									]}
+									class={[`hover:bg-base-200 cursor-pointer`, selectedRoomId === target.roomId && `bg-primary/10`]}
 									data-testid="telegram-target-row"
 									onclick={() => selectTarget(target)}
 								>
@@ -501,8 +472,8 @@
 										{/if}
 									</td>
 									<td>{target.scrapedEvents}</td>
-									<td class="whitespace-nowrap text-xs">{formatDate(target.lastEventCreatedAt)}</td>
-									<td class="whitespace-nowrap text-xs">{formatDate(target.lastRunFinishedAt)}</td>
+									<td class="text-xs whitespace-nowrap">{formatDate(target.lastEventCreatedAt)}</td>
+									<td class="text-xs whitespace-nowrap">{formatDate(target.lastRunFinishedAt)}</td>
 									<td class="text-error max-w-48 truncate text-xs" title={target.lastError ?? ``}>
 										{target.lastError ?? `—`}
 									</td>
@@ -514,7 +485,7 @@
 
 				<div
 					{@attach tableScroll.stickyScrollAttach}
-					class="bg-base-100 sticky bottom-0 z-10 shrink-0 overflow-x-auto border-t border-base-300"
+					class="bg-base-100 border-base-300 sticky bottom-0 z-10 shrink-0 overflow-x-auto border-t"
 					onscroll={tableScroll.syncTableFromSticky}
 					aria-hidden="true"
 				>
@@ -532,16 +503,12 @@
 			class="bg-base-100 fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg shadow-xl"
 			data-testid="telegram-add-dialog"
 		>
-			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">
-				Target hinzufügen
-			</Dialog.Title>
+			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">Target hinzufügen</Dialog.Title>
 
 			{#if isAddDialogOpen}
 				{#if !selectedDialogForAdd}
 					<div class="flex flex-col gap-3 px-6 py-4">
-						<p class="text-base-content/70 text-sm">
-							Wähle eine Gruppe oder einen Kanal aus, der noch kein Scraping-Target ist.
-						</p>
+						<p class="text-base-content/70 text-sm">Wähle eine Gruppe oder einen Kanal aus, der noch kein Scraping-Target ist.</p>
 						<div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
 							{#if dialogAccountOptions.length}
 								<select
@@ -577,10 +544,7 @@
 							/>
 						</div>
 						{#if availableDialogsLoading && !availableDialogs.length}
-							<div
-								class="flex flex-col items-center justify-center gap-2 py-10"
-								data-testid="telegram-dialogs-loading"
-							>
+							<div class="flex flex-col items-center justify-center gap-2 py-10" data-testid="telegram-dialogs-loading">
 								<span class="loading loading-spinner loading-md"></span>
 								<p class="text-base-content/70 text-sm">Telegram-Dialoge werden geladen…</p>
 								<p class="text-base-content/50 text-xs">Das kann einige Sekunden dauern.</p>
@@ -597,10 +561,7 @@
 							</p>
 						{:else if !availableDialogsLoading && !filteredAvailableDialogs.length}
 							<p
-								class={[
-									`text-sm`,
-									selectedAccountStatus?.error ? `text-error` : `text-base-content/70`,
-								]}
+								class={[`text-sm`, selectedAccountStatus?.error ? `text-error` : `text-base-content/70`]}
 								data-testid="telegram-dialogs-empty"
 							>
 								{selectedAccountEmptyMessage}
@@ -612,7 +573,7 @@
 										<li class="w-full min-w-0">
 											<button
 												type="button"
-												class="card card-border bg-base-200 flex w-full min-w-0 flex-col items-start gap-0.5 rounded-box px-2.5 py-1.5 text-start"
+												class="card card-border bg-base-200 rounded-box flex w-full min-w-0 flex-col items-start gap-0.5 px-2.5 py-1.5 text-start"
 												data-testid="telegram-dialog-option"
 												onclick={() => selectDialogForAdd(dialog)}
 											>
@@ -628,7 +589,7 @@
 												{#if dialog.username}
 													<span class="w-full truncate text-xs opacity-70">@{dialog.username}</span>
 												{/if}
-												<span class="w-full break-all font-mono text-xs opacity-70">{dialog.roomId}</span>
+												<span class="w-full font-mono text-xs break-all opacity-70">{dialog.roomId}</span>
 												<span class="text-xs opacity-60">
 													Letzte Nachricht: {formatDate(dialog.lastMessageTime)}
 												</span>
@@ -644,25 +605,20 @@
 						<input type="hidden" {...addTargetForm.fields.originalRoomId.as(`text`)} />
 						<input type="hidden" {...addTargetForm.fields.roomId.as(`text`)} />
 
-						<div class="bg-base-200 flex items-start justify-between gap-2 rounded-box p-3">
+						<div class="bg-base-200 rounded-box flex items-start justify-between gap-2 p-3">
 							<div class="min-w-0 space-y-0.5">
 								<p class="truncate font-medium">{selectedDialogForAdd.name}</p>
-								<p class="font-mono text-xs opacity-70 break-all">{selectedDialogForAdd.roomId}</p>
+								<p class="font-mono text-xs break-all opacity-70">{selectedDialogForAdd.roomId}</p>
 							</div>
-							<button type="button" class="btn btn-ghost btn-sm shrink-0" onclick={clearSelectedDialogForAdd}>
-								Ändern
-							</button>
+							<button type="button" class="btn btn-ghost btn-sm shrink-0" onclick={clearSelectedDialogForAdd}> Ändern </button>
 						</div>
 
 						<fieldset class="fieldset">
 							<label class="label cursor-pointer justify-start gap-2">
-								<input
-									class="checkbox"
-									{...addTargetForm.fields.hasOnlyConsciousEvents.as(`checkbox`)}
-								/>
-								<span class="font-bold text-base-content">
+								<input class="checkbox" {...addTargetForm.fields.hasOnlyConsciousEvents.as(`checkbox`)} />
+								<span class="text-base-content font-bold">
 									hasOnlyConsciousEvents
-									<span class="block text-xs text-base-content/65 font-normal">
+									<span class="text-base-content/65 block text-xs font-normal">
 										Wenn aktiv, wird der Consciousness-Check übersprungen.
 									</span>
 								</span>
@@ -673,7 +629,7 @@
 						<fieldset class="fieldset">
 							<legend class="fieldset-legend">defaultAddress</legend>
 							<textarea
-								class="textarea min-h-20 w-full peer"
+								class="textarea peer min-h-20 w-full"
 								{...addTargetForm.fields.defaultAddress.as(`text`)}
 								placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 								onblur={(event) => void fillTimezoneFromAddress({ address: event.currentTarget.value, targetForm: addTargetForm })}
@@ -684,11 +640,7 @@
 
 						<fieldset class="fieldset">
 							<legend class="fieldset-legend">topicIds</legend>
-							<input
-								class="input w-full peer font-mono"
-								{...addTargetForm.fields.topicIds.as(`text`)}
-								placeholder="z.B. 1, 2 oder -1"
-							/>
+							<input class="input peer w-full font-mono" {...addTargetForm.fields.topicIds.as(`text`)} placeholder="z.B. 1, 2 oder -1" />
 							<p class="label">Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics.</p>
 							<FormFieldIssues field={addTargetForm.fields.topicIds} />
 						</fieldset>
@@ -700,11 +652,7 @@
 									<span class="loading loading-spinner loading-xs"></span>
 								{/if}
 							</legend>
-							<input
-								class="input w-full peer"
-								{...addTargetForm.fields.defaultTimezone.as(`text`)}
-								required
-							/>
+							<input class="input peer w-full" {...addTargetForm.fields.defaultTimezone.as(`text`)} required />
 							<FormFieldIssues field={addTargetForm.fields.defaultTimezone} />
 						</fieldset>
 
@@ -717,11 +665,7 @@
 						{/if}
 
 						<div class="flex flex-wrap gap-2 pt-2">
-							<button
-								type="submit"
-								class="btn btn-primary"
-								disabled={addTargetForm.pending > 0 || lookupTimezoneFromAddress.pending > 0}
-							>
+							<button type="submit" class="btn btn-primary" disabled={addTargetForm.pending > 0 || lookupTimezoneFromAddress.pending > 0}>
 								{#if addTargetForm.pending > 0}
 									<span class="loading loading-spinner loading-sm"></span>
 									Wird gespeichert...
@@ -751,9 +695,7 @@
 			class="bg-base-100 fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg shadow-xl"
 			data-testid="telegram-edit-dialog"
 		>
-			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">
-				Target bearbeiten
-			</Dialog.Title>
+			<Dialog.Title class="shrink-0 px-6 pt-6 text-lg font-semibold">Target bearbeiten</Dialog.Title>
 
 			{#if isEditDialogOpen}
 				<form {...editFormProps} class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
@@ -762,7 +704,7 @@
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">roomId *</legend>
 						<input
-							class="input w-full peer"
+							class="input peer w-full"
 							{...editTargetForm.fields.roomId.as(`text`)}
 							required
 							placeholder="t.me/…, -100123…, @channel oder resolveName:Chat Name"
@@ -772,15 +714,10 @@
 
 					<fieldset class="fieldset">
 						<label class="label cursor-pointer justify-start gap-2">
-							<input
-								class="checkbox"
-								{...editTargetForm.fields.hasOnlyConsciousEvents.as(`checkbox`)}
-							/>
-							<span class="font-bold text-base-content">
+							<input class="checkbox" {...editTargetForm.fields.hasOnlyConsciousEvents.as(`checkbox`)} />
+							<span class="text-base-content font-bold">
 								hasOnlyConsciousEvents
-								<span class="block text-xs text-base-content/65 font-normal">
-									Wenn aktiv, wird der Consciousness-Check übersprungen.
-								</span>
+								<span class="text-base-content/65 block text-xs font-normal"> Wenn aktiv, wird der Consciousness-Check übersprungen. </span>
 							</span>
 						</label>
 						<FormFieldIssues field={editTargetForm.fields.hasOnlyConsciousEvents} />
@@ -789,7 +726,7 @@
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">defaultAddress</legend>
 						<textarea
-							class="textarea min-h-20 w-full peer"
+							class="textarea peer min-h-20 w-full"
 							{...editTargetForm.fields.defaultAddress.as(`text`)}
 							placeholder="Optional. Eine oder mehrere Zeilen, z.B. Studio Name, Straße, Stadt"
 							onblur={(event) => void fillTimezoneFromAddress({ address: event.currentTarget.value, targetForm: editTargetForm })}
@@ -800,11 +737,7 @@
 
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">topicIds</legend>
-						<input
-							class="input w-full peer font-mono"
-							{...editTargetForm.fields.topicIds.as(`text`)}
-							placeholder="z.B. 1, 2 oder -1"
-						/>
+						<input class="input peer w-full font-mono" {...editTargetForm.fields.topicIds.as(`text`)} placeholder="z.B. 1, 2 oder -1" />
 						<p class="label">Kommagetrennte Zahlen. Leer = keine Topics, -1 = alle Topics.</p>
 						<FormFieldIssues field={editTargetForm.fields.topicIds} />
 					</fieldset>
@@ -816,11 +749,7 @@
 								<span class="loading loading-spinner loading-xs"></span>
 							{/if}
 						</legend>
-						<input
-							class="input w-full peer"
-							{...editTargetForm.fields.defaultTimezone.as(`text`)}
-							required
-						/>
+						<input class="input peer w-full" {...editTargetForm.fields.defaultTimezone.as(`text`)} required />
 						<FormFieldIssues field={editTargetForm.fields.defaultTimezone} />
 					</fieldset>
 

@@ -1,12 +1,16 @@
-import { PROFILE_SOCIAL_TYPES, type ProfileSocialType } from '$lib/socialLinks';
-import { hasValidCoordinates, isValidLatitude, isValidLongitude } from '$lib/locationFilter';
-import * as v from 'valibot';
-
-
+import { PROFILE_SOCIAL_TYPES, type ProfileSocialType } from "#lib/socialLinks.ts";
+import { hasValidCoordinates, isValidLatitude, isValidLongitude } from "#lib/locationFilter.ts";
+import * as v from "valibot";
 
 /** Converts empty form strings into `undefined` */
 function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
-	return v.union([v.pipe(v.literal(``), v.transform(() => undefined)), schema]);
+	return v.union([
+		v.pipe(
+			v.literal(``),
+			v.transform(() => undefined),
+		),
+		schema,
+	]);
 }
 
 export const profileLocationFields = {
@@ -31,19 +35,14 @@ export const profileLocationFields = {
 	),
 } satisfies v.ObjectEntries;
 
-export function isValidProfileLocation(data: {
-	locationLabel?: string;
-	latitude?: number | null;
-	longitude?: number | null;
-}) {
+export function isValidProfileLocation(data: { locationLabel?: string; latitude?: number | null; longitude?: number | null }) {
 	const hasLabel = Boolean(data.locationLabel?.trim());
 	const hasCoords = hasValidCoordinates({ lat: data.latitude, lng: data.longitude });
 	if (!hasLabel && !hasCoords) return true;
 	return hasLabel && hasCoords;
 }
 
-export const profileLocationCheckMessage =
-	`Please select a location from the suggestions or use your current location.`;
+export const profileLocationCheckMessage = `Please select a location from the suggestions or use your current location.`;
 
 export const profileLocationFormSchema = v.pipe(
 	v.object(profileLocationFields),
@@ -58,30 +57,29 @@ export const publicProfileFields = {
 				v.string(),
 				v.trim(),
 				v.maxLength(80, `Profile URL is too long`),
-				v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, `Profile URL may only contain lowercase letters, numbers, and hyphens`)
-			)
-		)
+				v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, `Profile URL may only contain lowercase letters, numbers, and hyphens`),
+			),
+		),
 	),
 	bio: v.optional(v.pipe(v.string(), v.maxLength(100_000, `Bio is too long`)), ``),
-	profileImageUrl: v.optional(
-		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profile image URL is invalid`))),
-		``
-	),
-	bannerImageUrl: v.optional(
-		emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Banner image URL is invalid`))),
-		``
-	),
-	socialLinks: v.pipe(v.optional(v.array(v.object({
-		type: v.picklist(PROFILE_SOCIAL_TYPES, `Link type is invalid`),
-		value: v.pipe(v.string(), v.trim(), v.maxLength(1000, `Link is too long`),
-	)
-	})), []),
+	profileImageUrl: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Profile image URL is invalid`))), ``),
+	bannerImageUrl: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim(), v.url(`Banner image URL is invalid`))), ``),
+	socialLinks: v.pipe(
+		v.optional(
+			v.array(
+				v.object({
+					type: v.picklist(PROFILE_SOCIAL_TYPES, `Link type is invalid`),
+					value: v.pipe(v.string(), v.trim(), v.maxLength(1000, `Link is too long`)),
+				}),
+			),
+			[],
+		),
 		v.filterItems((link) => Boolean(link.value?.trim())),
 		v.mapItems((link) => {
 			if (link.type === `telegram`) {
 				link.value = link.value.replace(`@`, ``);
 			}
-			return link
+			return link;
 		}),
 		v.checkItems((link) => {
 			if (link.type === `email`) return !!link.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -97,8 +95,8 @@ export const publicProfileFields = {
 		}, `WhatsApp number is invalid`),
 		v.checkItems((link) => {
 			if (link.type === `telegram`) {
-				const value = link.value
-				if (value.length < 3 || value.length > 32 ) {
+				const value = link.value;
+				if (value.length < 3 || value.length > 32) {
 					return false;
 				}
 				// Only Latin letters, numbers and underscores, 5-32 chars
@@ -122,8 +120,8 @@ export const publicProfileFields = {
 					value.length < 3 ||
 					value.length > 30 ||
 					!/^[A-Za-z0-9._\-·]+$/.test(value) ||
-					/^[._\-·]/.test(value) ||    // starts with special
-					/[._\-·]$/.test(value)       // ends with special
+					/^[._\-·]/.test(value) || // starts with special
+					/[._\-·]$/.test(value) // ends with special
 				) {
 					return false;
 				}
@@ -142,7 +140,7 @@ export const publicProfileFields = {
 					!/^[A-Za-z0-9._]+$/.test(value) ||
 					/[\s@&+]/.test(value) || // forbidden chars
 					/\.\.|__|_\./.test(value) || // consecutive . or _
-					value[0] === '.' // can't start with .
+					value[0] === "." // can't start with .
 				) {
 					return false;
 				}
@@ -154,10 +152,7 @@ export const publicProfileFields = {
 			if (link.type === `facebook`) {
 				const value = link.value.trim();
 				// Facebook usernames: at least 5 chars, alphanum and periods only
-				if (
-					value.length < 5 ||
-					!/^[A-Za-z0-9.]+$/i.test(value)
-				) {
+				if (value.length < 5 || !/^[A-Za-z0-9.]+$/i.test(value)) {
 					return false;
 				}
 				return true;
@@ -168,11 +163,7 @@ export const publicProfileFields = {
 			if (link.type === `tiktok`) {
 				const value = link.value.trim();
 				// TikTok usernames: max 24 chars, letters, numbers, _ and .
-				if (
-					value.length === 0 ||
-					value.length > 24 ||
-					!/^[A-Za-z0-9._]+$/.test(value)
-				) {
+				if (value.length === 0 || value.length > 24 || !/^[A-Za-z0-9._]+$/.test(value)) {
 					return false;
 				}
 				return true;
@@ -182,18 +173,18 @@ export const publicProfileFields = {
 		v.checkItems((link) => {
 			if (link.type === `website`) {
 				if (!link.value.startsWith("https://")) {
-					link.value = "https://" + link.value
-				} 
+					link.value = "https://" + link.value;
+				}
 				try {
-					const url = new URL(link.value)
+					const url = new URL(link.value);
 					// Check if the hostname contains at least one dot for a TLD
-					return !!url.hostname && url.hostname.includes(`.`)
+					return !!url.hostname && url.hostname.includes(`.`);
 				} catch {
 					return false;
 				}
 			}
 			return true;
-		}, `Website is not a valid URL`)
+		}, `Website is not a valid URL`),
 	),
 } satisfies v.ObjectEntries;
 

@@ -1,7 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
-import type { PostHog } from 'posthog-node';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { PostHog } from "posthog-node";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 declare global {
 	namespace App {
@@ -13,7 +13,7 @@ declare global {
 			jwtClaims: BlissabaseClaims | undefined;
 			isAdminSession: boolean;
 			userId: string | undefined;
-			locale: 'en' | 'de';
+			locale: "en" | "de";
 			requestInfo: {
 				ip: string | null;
 				continent: string | null;
@@ -30,7 +30,7 @@ declare global {
 			userId?: string;
 			jwtClaims?: BlissabaseClaims;
 			supabase?: SupabaseClient;
-			locale?: 'en' | 'de';
+			locale?: "en" | "de";
 			autoDetectedCity?: string | null;
 		}
 		interface PageState {
@@ -48,50 +48,50 @@ declare global {
 	// make specific properties required. Usage: WithRequired<PartialEvent, 'id' | 'slug'>
 	type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
-	type PartialWithRequired<T, K extends keyof T> = WithRequired<Partial<T> , K>;
+	type PartialWithRequired<T, K extends keyof T> = WithRequired<Partial<T>, K>;
 
-	type BlissabaseClaims =  {
-		iss: string
-		sub: string
-		aud: string
-		exp: number
-		iat: number
-		email: string
-		phone: string
+	type BlissabaseClaims = {
+		iss: string;
+		sub: string;
+		aud: string;
+		exp: number;
+		iat: number;
+		email: string;
+		phone: string;
 		app_metadata: {
-		  provider: string
-		  providers: Array<string>
-		}
+			provider: string;
+			providers: Array<string>;
+		};
 		user_metadata: {
-		  email: string
-		  email_verified: boolean
-		  phone_verified: boolean
-		  sub: string
-		  display_name?: string
-		  locale?: string
-		}
-		role: string
-		aal: string
+			email: string;
+			email_verified: boolean;
+			phone_verified: boolean;
+			sub: string;
+			display_name?: string;
+			locale?: string;
+		};
+		role: string;
+		aal: string;
 		amr: Array<{
-		  method: string
-		  timestamp: number
-		}>
-		session_id: string
-		is_anonymous: boolean
-	  }
+			method: string;
+			timestamp: number;
+		}>;
+		session_id: string;
+		is_anonymous: boolean;
+	};
 }
 
-declare module '*.png?inline' {
+declare module "*.png?inline" {
 	const src: string;
 	export default src;
 }
 
-declare module '*.jpg?inline' {
+declare module "*.jpg?inline" {
 	const src: string;
 	export default src;
 }
 
-declare module '*.ttf?inline' {
+declare module "*.ttf?inline" {
 	const src: string;
 	export default src;
 }

@@ -1,6 +1,6 @@
 <script lang="ts" module>
-	import type { RemoteFormField } from "@sveltejs/kit";
-	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+	import type { RemoteFormField } from "$app/server";
+	import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
 
 	export type CreateFlowLoadedProfile = {
 		displayName?: string | null;
@@ -24,10 +24,10 @@
 </script>
 
 <script lang="ts">
-	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
-	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
-	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
-	import PublicProfileSocialLinksEditor from "$lib/components/PublicProfileSocialLinksEditor.svelte";
+	import LexicalEditor from "#lib/components/LexicalEditor.svelte";
+	import FormFieldIssues from "#lib/components/FormFieldIssues.svelte";
+	import ProfileImageCropInput from "#lib/components/ProfileImageCropInput.svelte";
+	import PublicProfileSocialLinksEditor from "#lib/components/PublicProfileSocialLinksEditor.svelte";
 	import type { ComponentProps } from "svelte";
 
 	let {
@@ -103,12 +103,7 @@
 	</div>
 
 	<fieldset class={[`fieldset`, !missingBio && `hidden`]} data-testid="profile-bio-editor">
-		<LexicalEditor
-			field={fields.bio}
-			value={profile?.bio ?? ``}
-			placeholder="Erzähl etwas über dich…"
-			{onDirty}
-		/>
+		<LexicalEditor field={fields.bio} value={profile?.bio ?? ``} placeholder="Erzähl etwas über dich…" {onDirty} />
 		<legend class="fieldset-legend peer-aria-invalid:text-red-600">Profilbeschreibung</legend>
 		<FormFieldIssues field={fields.bio} />
 	</fieldset>

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { sortOfferingsForDailyList } from '$lib/rpc/offerings.common';
+import { describe, expect, it } from "vitest";
+import { sortOfferingsForDailyList } from "#lib/rpc/offerings.common.ts";
 
 const mondayNoonUtc = new Date(`2026-08-17T10:00:00.000Z`);
 const tuesdayNoonUtc = new Date(`2026-08-18T10:00:00.000Z`);
@@ -14,9 +14,7 @@ describe(`sortOfferingsForDailyList`, () => {
 			offering({ id: 5, createdAt: `2026-08-14T08:00:00.000Z` }),
 		];
 
-		expect(ids(sortOfferingsForDailyList(offerings, mondayNoonUtc))).toEqual(
-			ids(sortOfferingsForDailyList(offerings, mondayNoonUtc)),
-		);
+		expect(ids(sortOfferingsForDailyList(offerings, mondayNoonUtc))).toEqual(ids(sortOfferingsForDailyList(offerings, mondayNoonUtc)));
 		expect(ids(sortOfferingsForDailyList(offerings, mondayNoonUtc))).toEqual(
 			ids(sortOfferingsForDailyList([...offerings].reverse(), mondayNoonUtc)),
 		);
@@ -31,9 +29,7 @@ describe(`sortOfferingsForDailyList`, () => {
 			offering({ id: 5, createdAt: `2026-08-14T08:00:00.000Z` }),
 		];
 
-		expect(ids(sortOfferingsForDailyList(offerings, mondayNoonUtc))).not.toEqual(
-			ids(sortOfferingsForDailyList(offerings, tuesdayNoonUtc)),
-		);
+		expect(ids(sortOfferingsForDailyList(offerings, mondayNoonUtc))).not.toEqual(ids(sortOfferingsForDailyList(offerings, tuesdayNoonUtc)));
 	});
 
 	it(`puts offerings created today first, newest first`, () => {
@@ -41,9 +37,7 @@ describe(`sortOfferingsForDailyList`, () => {
 		const createdThisMorning = offering({ id: 2, createdAt: `2026-08-17T07:00:00.000Z` });
 		const createdThisAfternoon = offering({ id: 3, createdAt: `2026-08-17T12:00:00.000Z` });
 
-		expect(ids(sortOfferingsForDailyList([older, createdThisMorning, createdThisAfternoon], mondayNoonUtc))).toEqual([
-			3, 2, 1,
-		]);
+		expect(ids(sortOfferingsForDailyList([older, createdThisMorning, createdThisAfternoon], mondayNoonUtc))).toEqual([3, 2, 1]);
 	});
 
 	it(`treats yesterday's creations as part of the daily shuffle`, () => {
@@ -65,9 +59,7 @@ describe(`sortOfferingsForDailyList`, () => {
 		const justBeforeBerlinMidnight = offering({ id: 1, createdAt: `2026-08-16T21:59:00.000Z` });
 		const atBerlinMidnight = offering({ id: 2, createdAt: `2026-08-16T22:00:00.000Z` });
 
-		expect(ids(sortOfferingsForDailyList([justBeforeBerlinMidnight, atBerlinMidnight], mondayNoonUtc))).toEqual([
-			2, 1,
-		]);
+		expect(ids(sortOfferingsForDailyList([justBeforeBerlinMidnight, atBerlinMidnight], mondayNoonUtc))).toEqual([2, 1]);
 	});
 
 	it(`returns an empty array when there are no offerings`, () => {

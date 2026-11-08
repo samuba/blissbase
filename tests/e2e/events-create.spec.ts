@@ -343,7 +343,7 @@ test.describe("Event creation", () => {
 			Storage.prototype.setItem = function setItem(key, value) {
 				originalSetItem.call(this, key, value);
 				if (key === `blissbase:create-draft:event`) {
-					const capture = window[`e2eCaptureEventDraft`];
+					const capture = (window as Window & { e2eCaptureEventDraft?: (value: string) => void }).e2eCaptureEventDraft;
 					if (typeof capture === `function`) capture(value);
 				}
 			};

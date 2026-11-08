@@ -1,14 +1,14 @@
-import { loadFiltersFromCookie } from "$lib/cookie-utils";
+import { loadFiltersFromCookie } from "#lib/cookie-utils.ts";
 import {
 	hasOfferingsFilterParams,
 	hasOfferingsFilterUrlParams,
 	offeringsFilterFromCookie,
 	parseOfferingsFilterFromUrl,
-} from "$lib/offeringsFilter";
-import { absoluteUrl, OFFERING_SLUG_QUERY, routes, withOfferingSlug } from "$lib/routes";
+} from "#lib/offeringsFilter.ts";
+import { absoluteUrl, OFFERING_SLUG_QUERY, routes, withOfferingSlug } from "#lib/routes.ts";
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getPageMetaTags } from "$lib/common";
+import { getPageMetaTags } from "#lib/common.ts";
 
 export const load = (async ({ url, cookies }) => {
 	// URL filters win; never write the cookie from a URL visit.
@@ -31,13 +31,10 @@ export const load = (async ({ url, cookies }) => {
 		description,
 		imageUrl,
 		url,
+		imageWidth: 1200,
+		imageHeight: 630,
+		imageType: new URL(imageUrl).pathname.toLowerCase().endsWith(`.png`) ? `image/png` : `image/jpeg`,
 	});
-	const ogImage = pageMetaTags.openGraph.images?.[0];
-	if (ogImage) {
-		ogImage.width = 1200;
-		ogImage.height = 630;
-		ogImage.type = new URL(imageUrl).pathname.toLowerCase().endsWith(`.png`) ? `image/png` : `image/jpeg`;
-	}
 
 	return {
 		pageMetaTags,

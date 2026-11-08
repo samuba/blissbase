@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { resetGoogleMapsPlacesLoader } from "$lib/googleMapsLoader";
+	import { resetGoogleMapsPlacesLoader } from "#lib/googleMapsLoader.ts";
 	import { Popover } from "bits-ui";
 	import { onMount, tick, untrack } from "svelte";
 	import type { PlacesAutocompleteController } from "./PlacesAutocompleteController.svelte";
-	import { ALLOWED_DISTANCE_VALUES } from "$lib/locationFilter";
+	import { ALLOWED_DISTANCE_VALUES } from "#lib/locationFilter.ts";
 
 	export interface LocationChangeEvent {
 		location: string | null;
@@ -672,21 +672,22 @@
 				</div>
 
 				{#if autocomplete?.isOpen && useGoogleAutocomplete}
+					{@const openAutocomplete = autocomplete}
 					<ul
 						id="{inputId}-listbox"
 						role="listbox"
 						data-testid="location-suggestions"
 						class="border-base-300 bg-base-100 rounded-b-box max-h-64 overflow-y-auto border-t"
 					>
-						{#each autocomplete.suggestions as suggestion, index (suggestion.prediction.placeId)}
+						{#each openAutocomplete.suggestions as suggestion, index (suggestion.prediction.placeId)}
 							<li
 								id="{inputId}-option-{index}"
 								role="option"
 								data-testid="location-option"
-								aria-selected={autocomplete.highlightedIndex === index}
-								class={[`cursor-pointer px-3 py-2 text-sm`, autocomplete.highlightedIndex === index && `bg-primary/20`]}
+								aria-selected={openAutocomplete.highlightedIndex === index}
+								class={[`cursor-pointer px-3 py-2 text-sm`, openAutocomplete.highlightedIndex === index && `bg-primary/20`]}
 								onmouseenter={() => {
-									autocomplete.highlightedIndex = index;
+									openAutocomplete.highlightedIndex = index;
 								}}
 								onpointerdown={(event) => {
 									event.preventDefault();

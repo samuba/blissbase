@@ -1,7 +1,7 @@
-import { command } from '$app/server';
-import { error } from '@sveltejs/kit';
-import { sendContactEmail } from '$lib/server/email';
-import * as v from 'valibot';
+import { command } from "$app/server";
+import { error } from "@sveltejs/kit";
+import { sendContactEmail } from "#lib/server/email.ts";
+import * as v from "valibot";
 
 const sendContactMessageSchema = v.object({
 	email: v.pipe(v.string(), v.trim(), v.email(`Bitte gib eine gültige E-Mail-Adresse ein`)),
@@ -9,7 +9,7 @@ const sendContactMessageSchema = v.object({
 		v.string(),
 		v.trim(),
 		v.nonEmpty(`Bitte schreib eine Nachricht`),
-		v.maxLength(10_000, `Nachricht ist zu lang (max. 5000 Zeichen)`)
+		v.maxLength(10_000, `Nachricht ist zu lang (max. 5000 Zeichen)`),
 	),
 });
 

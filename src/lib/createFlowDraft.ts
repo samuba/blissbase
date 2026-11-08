@@ -1,5 +1,5 @@
-import type { OfferingFormat } from "$lib/rpc/offerings.common";
-import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
+import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
 
 export const OFFERING_CREATE_DRAFT_KEY = `blissbase:create-draft:offering`;
 export const EVENT_CREATE_DRAFT_KEY = `blissbase:create-draft:event`;
@@ -28,9 +28,7 @@ export function readCreateFlowFormCheckedValues(args: { formId: string; testId: 
 	const form = document.getElementById(args.formId);
 	if (!(form instanceof HTMLFormElement)) return [];
 	return selectedCreateFlowInputValues(
-		[...form.querySelectorAll(`[data-testid="${args.testId}"]`)].filter(
-			(el): el is HTMLInputElement => el instanceof HTMLInputElement,
-		),
+		[...form.querySelectorAll(`[data-testid="${args.testId}"]`)].filter((el): el is HTMLInputElement => el instanceof HTMLInputElement),
 	);
 }
 
@@ -73,11 +71,7 @@ export function saveCreateFlowDraft(args: { key: string; draft: CreateFlowDraft;
 	else storage.removeItem(draftIdKey(args.key));
 }
 
-export function peekCreateFlowDraft<T extends CreateFlowDraft>(args: {
-	key: string;
-	storage?: DraftStorage;
-	now?: number;
-}): T | null {
+export function peekCreateFlowDraft<T extends CreateFlowDraft>(args: { key: string; storage?: DraftStorage; now?: number }): T | null {
 	const storage = args.storage ?? browserSessionStorage();
 	if (!storage) return null;
 	const raw = storage.getItem(args.key);

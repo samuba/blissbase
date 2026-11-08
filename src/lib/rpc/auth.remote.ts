@@ -1,11 +1,11 @@
 import { command, getRequestEvent, query } from "$app/server";
-import { dev } from "$app/environment";
-import { E2E_TEST } from "$env/static/private";
-import { resolveSupportedLocale } from "$lib/common";
-import { refreshAuthLocalsFromSupabase } from "$lib/server/authLocals";
-import { db, s } from "$lib/server/db";
-import { E2E_OTP_CODE, getE2EUserIdForEmail } from "$lib/server/e2eAuth";
-import { signSubmitAuthToken } from "$lib/server/submitAuth";
+import { dev } from "$app/env";
+import { E2E_TEST } from "$app/env/private";
+import { resolveSupportedLocale } from "#lib/common.ts";
+import { refreshAuthLocalsFromSupabase } from "#lib/server/authLocals.ts";
+import { db, s } from "#lib/server/db.ts";
+import { E2E_OTP_CODE, getE2EUserIdForEmail } from "#lib/server/e2eAuth.ts";
+import { signSubmitAuthToken } from "#lib/server/submitAuth.ts";
 import * as v from "valibot";
 
 export const getUserSession = query(async () => {

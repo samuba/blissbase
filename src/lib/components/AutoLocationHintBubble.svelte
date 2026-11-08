@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { startHintCooldown } from "$lib/components/HintBubble.svelte";
+	import { startHintCooldown } from "#lib/components/HintBubble.svelte";
 
 	let dismissed = $state(false);
 
@@ -11,8 +11,8 @@
 
 <script lang="ts">
 	import { page } from "$app/state";
-	import HintBubble from "$lib/components/HintBubble.svelte";
-	import { setLocationInteractedCookie } from "$lib/cookie-utils";
+	import HintBubble from "#lib/components/HintBubble.svelte";
+	import { setLocationInteractedCookie } from "#lib/cookie-utils.ts";
 
 	const { autoDetectedCity } = $derived(page.data);
 	const show = $derived(Boolean(autoDetectedCity) && !dismissed);

@@ -201,7 +201,7 @@ function normalizeMsgAnalysisAnswer(answer: Partial<RawMsgAnalysisAnswer>): MsgA
 	if (answer.address != null) {
 		result.address = ensureAddressIncludesCity({
 			address: answer.address,
-			city: answer.city,
+			city: answer.city ?? null,
 		});
 	}
 	if (answer.attendanceMode != null) result.attendanceMode = answer.attendanceMode;

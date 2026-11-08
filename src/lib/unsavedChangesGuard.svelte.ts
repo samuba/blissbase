@@ -10,7 +10,8 @@ export class UnsavedChangesGuard {
 
 	constructor(args: { armDelayMs?: number; confirmMessage?: string } = {}) {
 		const armDelayMs = args.armDelayMs ?? DEFAULT_ARM_DELAY_MS;
-		const confirmMessage = args.confirmMessage ?? /* wc-include */ `Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?`;
+		const confirmMessage =
+			args.confirmMessage ?? /* wc-include */ `Du hast ungespeicherte Änderungen. Möchtest du diese Seite wirklich verlassen?`;
 
 		onMount(() => {
 			const timeout = setTimeout(() => {
@@ -20,6 +21,7 @@ export class UnsavedChangesGuard {
 		});
 
 		beforeNavigate((navigation) => {
+			if (navigation.shallow && navigation.type === "goto") return;
 			if (!this.isDirty) return;
 			if (navigation.willUnload) return; // handled by `handleBeforeUnload` / svelte:window
 			if (!confirm(confirmMessage)) navigation.cancel();

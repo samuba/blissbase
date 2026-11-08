@@ -14,16 +14,16 @@ import {
 	primaryKey,
 	pgEnum,
 } from "drizzle-orm/pg-core";
-import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-import { eventStructureSlugs } from "$lib/eventCategories";
-import { OFFERING_FORMATS } from "$lib/rpc/offerings.common";
+import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+import { eventStructureSlugs } from "#lib/eventCategories.ts";
+import { OFFERING_FORMATS } from "#lib/rpc/offerings.common.ts";
 
 export const eventAttendanceModeEnum = pgEnum("attendance_mode", ["online", "offline", "offline+online"]);
 export type AttendanceMode = (typeof eventAttendanceModeEnum.enumValues)[number];
 export const attendanceModeEnum = eventAttendanceModeEnum.enumValues;
 export const offeringFormatEnum = pgEnum("offering_format", OFFERING_FORMATS);
 export type OfferingFormat = (typeof offeringFormatEnum.enumValues)[number];
-export const eventStructureEnum = pgEnum("event_structure", eventStructureSlugs);
+export const eventStructureEnum = pgEnum("event_structure", eventStructureSlugs as [string, ...string[]]);
 export type EventStructure = (typeof eventStructureEnum.enumValues)[number];
 
 export const events = pgTable("events", {
@@ -90,7 +90,9 @@ export const geocodeCache = pgTable("geocode_cache", {
 	cachedAt: timestamp().notNull().defaultNow(),
 });
 
-export const reverseGeocodeCache = pgTable("reverse_geocode_cache", {
+export const reverseGeocodeCache = pgTable(
+	"reverse_geocode_cache",
+	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		latitude: real().notNull(),
 		longitude: real().notNull(),
@@ -181,21 +183,20 @@ export const places = pgTable("places", {
 export type Place = typeof places.$inferSelect;
 
 export const profiles = pgTable("profiles", {
-		id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
-		slug: text().unique(),
-		displayName: text(),
-		bio: text(),
-		locale: text().notNull().default("en"),
-		profileImageUrl: text(),
-		bannerImageUrl: text(),
-		socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),
-		locationLabel: text(),
-		latitude: real(),
-		longitude: real(),
-		createdAt: timestamp().notNull().defaultNow(),
-		updatedAt: timestamp().notNull().defaultNow(),
-	},
-);
+	id: uuid().primaryKey(), // references auth.users.id from Supabase Auth
+	slug: text().unique(),
+	displayName: text(),
+	bio: text(),
+	locale: text().notNull().default("en"),
+	profileImageUrl: text(),
+	bannerImageUrl: text(),
+	socialLinks: jsonb().$type<PublicProfileSocialLinks>().notNull().default([]),
+	locationLabel: text(),
+	latitude: real(),
+	longitude: real(),
+	createdAt: timestamp().notNull().defaultNow(),
+	updatedAt: timestamp().notNull().defaultNow(),
+});
 
 export type Profile = typeof profiles.$inferSelect;
 
@@ -205,9 +206,13 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
 	offerings: many(offerings),
 }));
 
-export const offerings = pgTable("offerings", {
+export const offerings = pgTable(
+	"offerings",
+	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
-		profileId: uuid().notNull().references(() => profiles.id, { onDelete: "cascade" }),
+		profileId: uuid()
+			.notNull()
+			.references(() => profiles.id, { onDelete: "cascade" }),
 		slug: text().notNull().unique(),
 		title: text().notNull(),
 		descriptionHtml: text(),
@@ -229,9 +234,15 @@ export const offeringsRelations = relations(offerings, ({ one }) => ({
 	}),
 }));
 
-export const favorites = pgTable("favorites", {
-		userId: uuid().notNull().references(() => profiles.id, { onDelete: "cascade" }),
-		eventId: integer().notNull().references(() => events.id, { onDelete: "cascade" }),
+export const favorites = pgTable(
+	"favorites",
+	{
+		userId: uuid()
+			.notNull()
+			.references(() => profiles.id, { onDelete: "cascade" }),
+		eventId: integer()
+			.notNull()
+			.references(() => events.id, { onDelete: "cascade" }),
 		createdAt: timestamp().notNull().defaultNow(),
 	},
 	(t) => [primaryKey({ columns: [t.userId, t.eventId] })],
@@ -240,7 +251,9 @@ export const favorites = pgTable("favorites", {
 export const eventDeletedOutboxStatusEnum = pgEnum("event_deleted_outbox_status", ["pending", "done", "failed"]);
 
 // Filled by the `event_deleted_outbox` trigger below with the full deleted events row (snake_case keys).
-export const eventDeletedOutbox = pgTable("event_deleted_outbox", {
+export const eventDeletedOutbox = pgTable(
+	"event_deleted_outbox",
+	{
 		id: integer().primaryKey().generatedAlwaysAsIdentity(),
 		event: jsonb().$type<DeletedEventRow>().notNull(),
 		status: eventDeletedOutboxStatusEnum().notNull().default("pending"),

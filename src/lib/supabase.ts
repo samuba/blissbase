@@ -1,8 +1,8 @@
-import { createBrowserClient } from '@supabase/ssr';
-import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { browser } from '$app/environment';
-import { shouldSkipRecipient } from '$lib/common';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from "@supabase/ssr";
+import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$app/env/public";
+import { browser } from "$app/env";
+import { shouldSkipRecipient } from "#lib/common.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export function getSupabaseBrowserClient() {
 	if (!browser) {
@@ -22,12 +22,12 @@ export function getSupabaseBrowserClient() {
 		return signInWithOtp(credentials);
 	};
 	globalThis.__supabaseClient = client;
-	
+
 	return client;
 }
 
 // Type augmentation for the global supabase client
 declare global {
 	// eslint-disable-next-line no-var
-	var __supabaseClient:  SupabaseClient<any, "public", "public", any, any> | undefined;
+	var __supabaseClient: SupabaseClient<any, "public", "public", any, any> | undefined;
 }

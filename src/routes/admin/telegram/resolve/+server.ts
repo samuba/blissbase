@@ -1,7 +1,7 @@
-import { error, json } from '@sveltejs/kit';
-import type { Config } from '@sveltejs/adapter-vercel';
-import type { RequestHandler } from './$types';
-import { resolveTelegramScrapingTarget } from '$lib/server/telegramClient';
+import { error } from "@sveltejs/kit";
+import type { Config } from "@sveltejs/adapter-vercel";
+import type { RequestHandler } from "./$types";
+import { resolveTelegramScrapingTarget } from "#lib/server/telegramClient.ts";
 
 export const config: Config = {
 	// teleproto is heavy — keep it out of the shared remotes/catchall function
@@ -21,11 +21,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	try {
 		const resolved = await resolveTelegramScrapingTarget({ roomId });
-		return json(resolved);
+		return Response.json(resolved);
 	} catch (err) {
 		console.error(`Failed to resolve Telegram room:`, err);
 		const message = err instanceof Error ? err.message : `Telegram-Raum konnte nicht verifiziert werden`;
 		// Always JSON so the remote's internal fetch (which may forward Accept: text/html) can read `message`.
-		return json({ message }, { status: 400 });
+		return Response.json({ message }, { status: 400 });
 	}
 };

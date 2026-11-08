@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import type { AiImageInput } from "$lib/server/ai";
+import type { AiImageInput } from "#lib/server/ai.ts";
 
 export const imageTranscriptCases = [
 	{
@@ -391,10 +391,15 @@ export const imageTranscriptCases = [
 ] satisfies readonly TranscriptCase[];
 
 export async function readFixtureImages(fileNames: readonly string[]) {
-	return Promise.all(fileNames.map(async (fileName) => ({
-		image: await readFile(new URL(fileName, import.meta.url)),
-		mediaType: mediaTypeFor(fileName),
-	}) satisfies AiImageInput));
+	return Promise.all(
+		fileNames.map(
+			async (fileName) =>
+				({
+					image: await readFile(new URL(fileName, import.meta.url)),
+					mediaType: mediaTypeFor(fileName),
+				}) satisfies AiImageInput,
+		),
+	);
 }
 
 function mediaTypeFor(fileName: string) {

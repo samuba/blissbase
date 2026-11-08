@@ -1,5 +1,5 @@
-import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
-import { getOfferings } from "$lib/rpc/offerings.remote";
+import { parseOfferingsFilterFromUrl } from "#lib/offeringsFilter.ts";
+import { getOfferings } from "#lib/rpc/offerings.remote.ts";
 import type { PageLoad } from "./$types";
 
 export const load = (async ({ url, data }) => {

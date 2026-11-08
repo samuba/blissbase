@@ -9,9 +9,7 @@
  * 	}
  * })
  */
-export function extractLatLngBounds(
-	geometry: GoogleGeocodeGeometry | null | undefined
-): LatLngBounds | null {
+export function extractLatLngBounds(geometry: GoogleGeocodeGeometry | null | undefined): LatLngBounds | null {
 	if (!geometry) return null;
 
 	const bounds = geometry.bounds ?? geometry.viewport;
@@ -21,7 +19,7 @@ export function extractLatLngBounds(
 		southWestLat: bounds.southwest.lat,
 		southWestLng: bounds.southwest.lng,
 		northEastLat: bounds.northeast.lat,
-		northEastLng: bounds.northeast.lng
+		northEastLng: bounds.northeast.lng,
 	};
 }
 
@@ -45,7 +43,7 @@ export function mergeLatLngBounds(boundsList: LatLngBounds[]): LatLngBounds | nu
 			southWestLat: Math.min(mergedBounds.southWestLat, bounds.southWestLat),
 			southWestLng: Math.min(mergedBounds.southWestLng, bounds.southWestLng),
 			northEastLat: Math.max(mergedBounds.northEastLat, bounds.northEastLat),
-			northEastLng: Math.max(mergedBounds.northEastLng, bounds.northEastLng)
+			northEastLng: Math.max(mergedBounds.northEastLng, bounds.northEastLng),
 		};
 	}
 

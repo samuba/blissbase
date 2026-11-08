@@ -1,9 +1,9 @@
-import { error, json, type RequestHandler } from "@sveltejs/kit";
-import { env } from "$env/dynamic/private";
-import * as assets from "$lib/assets";
-import { eventAssetsCreds } from "$lib/events.remote.shared";
-import { and, arrayOverlaps, asc, db, eq, inArray, lt, s, sql } from "$lib/server/db";
-import type { DeletedEventRow } from "$lib/server/schema";
+import { error, type RequestHandler } from "@sveltejs/kit";
+import { CRON_SECRET } from "$app/env/private";
+import * as assets from "#lib/assets.ts";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
+import { and, arrayOverlaps, asc, db, eq, inArray, lt, s, sql } from "#lib/server/db.ts";
+import type { DeletedEventRow } from "#lib/server/schema.ts";
 
 // cron job: cleanupDeletedEvents
 
@@ -14,7 +14,7 @@ const MIN_AGE_MS = 60 * 60 * 1000;
 const DONE_RETENTION_MS = 60 * 24 * 60 * 60 * 1000;
 
 export const GET: RequestHandler = async ({ request }) => {
-	if (!env.CRON_SECRET || request.headers.get(`authorization`) !== `Bearer ${env.CRON_SECRET}`) {
+	if (!CRON_SECRET || request.headers.get(`authorization`) !== `Bearer ${CRON_SECRET}`) {
 		return error(401, `Unauthorized`);
 	}
 
@@ -26,10 +26,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		const rows = await db
 			.select()
 			.from(s.eventDeletedOutbox)
-			.where(and(
-				eq(s.eventDeletedOutbox.status, `pending`),
-				lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))
-			))
+			.where(and(eq(s.eventDeletedOutbox.status, `pending`), lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - MIN_AGE_MS))))
 			.orderBy(asc(s.eventDeletedOutbox.createdAt))
 			.limit(BATCH_SIZE);
 
@@ -48,7 +45,7 @@ export const GET: RequestHandler = async ({ request }) => {
 					status: `done`,
 					attempts: sql`${s.eventDeletedOutbox.attempts} + 1`,
 					lastError: null,
-					processedAt: new Date()
+					processedAt: new Date(),
 				})
 				.where(inArray(s.eventDeletedOutbox.id, rowIds));
 			doneCount += rows.length;
@@ -64,7 +61,7 @@ export const GET: RequestHandler = async ({ request }) => {
 					.set({
 						status: attempts >= MAX_ATTEMPTS ? `failed` : `pending`,
 						attempts,
-						lastError
+						lastError,
 					})
 					.where(eq(s.eventDeletedOutbox.id, row.id));
 			}
@@ -77,15 +74,12 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const purged = await db
 		.delete(s.eventDeletedOutbox)
-		.where(and(
-			eq(s.eventDeletedOutbox.status, `done`),
-			lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - DONE_RETENTION_MS))
-		))
+		.where(and(eq(s.eventDeletedOutbox.status, `done`), lt(s.eventDeletedOutbox.createdAt, new Date(Date.now() - DONE_RETENTION_MS))))
 		.returning({ id: s.eventDeletedOutbox.id });
 
 	const result = { processedCount, doneCount, failedCount, purgedOutboxEntriesCount: purged.length };
 	console.log(`Cleaned up deleted events:`, result);
-	return json(result);
+	return Response.json(result);
 };
 
 /**

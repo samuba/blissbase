@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { getSupabaseBrowserClient } from '$lib/supabase';
-	import { routes } from '$lib/routes';
-	import { user } from '$lib/user.svelte';
-	import { resetPosthogIdentity } from '$lib/posthog';
+	import { getSupabaseBrowserClient } from "#lib/supabase.ts";
+	import { routes } from "#lib/routes.ts";
+	import { user } from "#lib/user.svelte.ts";
+	import { resetPosthogIdentity } from "#lib/posthog.ts";
 
 	let { data } = $props();
 	const myPublic = $derived(data.myPublic);
@@ -25,7 +25,6 @@
 		}
 	}
 </script>
-
 
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:py-0 md:pb-10">
 	<div class="card bg-base-100 overflow-hidden shadow">
@@ -50,9 +49,7 @@
 								</a>
 							</p>
 						{:else}
-							<p class="text-base-content/80 text-sm leading-relaxed">
-								Erstelle dein öffentliches Profil.
-							</p>
+							<p class="text-base-content/80 text-sm leading-relaxed">Erstelle dein öffentliches Profil.</p>
 						{/if}
 					</div>
 					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
@@ -65,9 +62,7 @@
 					</div>
 					<div class="list-col-grow">
 						<h3 class="text-lg font-semibold">Meine Events</h3>
-						<p class="text-base-content/80 text-sm leading-relaxed">
-							Verwalte deine erstellten Events.
-						</p>
+						<p class="text-base-content/80 text-sm leading-relaxed">Verwalte deine erstellten Events.</p>
 					</div>
 					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
 				</a>
@@ -79,9 +74,7 @@
 					</div>
 					<div class="list-col-grow">
 						<h3 class="text-lg font-semibold">Meine Angebote</h3>
-						<p class="text-base-content/80 text-sm leading-relaxed">
-							Verwalte deine Angebote und aktiviere oder deaktiviere sie.
-						</p>
+						<p class="text-base-content/80 text-sm leading-relaxed">Verwalte deine Angebote und aktiviere oder deaktiviere sie.</p>
 					</div>
 					<i class="icon-[ph--caret-right] text-base-content/40 size-5 self-center"></i>
 				</a>
@@ -94,7 +87,7 @@
 			<li>
 				<div class="list-row">
 					<div class="list-col-grow flex flex-col gap-3">
-						<span class="text-base">Du bist eingeloggt als <strong class="text-sm text-base-content">{data.session.email}</strong></span>
+						<span class="text-base">Du bist eingeloggt als <strong class="text-base-content text-sm">{data.session.email}</strong></span>
 						<button class="btn w-fit" onclick={handleLogout} disabled={isLoggingOut}>
 							{#if isLoggingOut}
 								<span class="loading loading-spinner loading-sm"></span>

@@ -1,9 +1,9 @@
-import { onDestroy } from 'svelte';
-import DuplicateEventToastLink from '$lib/components/DuplicateEventToastLink.svelte';
-import { debounce } from '$lib/common';
-import { getExistingEventForDraft } from '$lib/rpc/eventMutations.remote';
-import { routes } from '$lib/routes';
-import { toast } from 'svelte-sonner';
+import { onDestroy } from "svelte";
+import DuplicateEventToastLink from "#lib/components/DuplicateEventToastLink.svelte";
+import { debounce } from "#lib/common.ts";
+import { getExistingEventForDraft } from "#lib/rpc/eventMutations.remote.ts";
+import { routes } from "#lib/routes.ts";
+import { toast } from "svelte-sonner";
 
 const DUPLICATE_SLUG_TOAST_ID = `event-draft-duplicate-slug`;
 const duplicateEventWarning = /* @wc-include */ `Ein Event mit diesem Namen sowie Start- und Endzeit existiert bereits.`;
@@ -27,7 +27,7 @@ export function useDuplicateEventDraftToast(getRemoteForm: () => CreateEventForm
 				name: args.name,
 				startAt: args.startAt,
 				endAt: args.endAt || undefined,
-				timeZone: args.timeZone
+				timeZone: args.timeZone,
 			});
 			if (args.generation !== duplicateCheckGeneration) return;
 			if (result.slug) {
@@ -35,7 +35,7 @@ export function useDuplicateEventDraftToast(getRemoteForm: () => CreateEventForm
 					id: DUPLICATE_SLUG_TOAST_ID,
 					duration: Number.POSITIVE_INFINITY,
 					description: DuplicateEventToastLink,
-					componentProps: { href: routes.eventDetails(result.slug) }
+					componentProps: { href: routes.eventDetails(result.slug) },
 				});
 			} else {
 				toast.dismiss(DUPLICATE_SLUG_TOAST_ID);
@@ -68,7 +68,7 @@ export function useDuplicateEventDraftToast(getRemoteForm: () => CreateEventForm
 	});
 }
 
-type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
+type CreateEventForm = typeof import("#lib/rpc/eventMutations.remote.ts").createEvent;
 
 type DuplicateCheckArgs = {
 	name: string;

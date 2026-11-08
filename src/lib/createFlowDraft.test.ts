@@ -13,7 +13,7 @@ import {
 	createFlowResumeStep,
 	readCreateFlowFormCheckedValues,
 	selectedCreateFlowInputValues,
-} from "$lib/createFlowDraft";
+} from "#lib/createFlowDraft.ts";
 
 class MemoryStorage {
 	#map = new Map<string, string>();

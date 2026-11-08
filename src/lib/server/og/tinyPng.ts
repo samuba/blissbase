@@ -11,7 +11,7 @@ export async function compressPngWithTinyPng({ png, apiKey }: { png: Buffer; api
 	const shrink = await fetch(`https://api.tinify.com/shrink`, {
 		method: `POST`,
 		headers: { Authorization: authorization },
-		body: png,
+		body: new Uint8Array(png),
 	});
 	if (!shrink.ok) {
 		throw new Error(`TinyPNG shrink failed: ${shrink.status} ${await shrink.text()}`);

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Dialog } from 'bits-ui';
-	import { fly } from 'svelte/transition';
+	import { Dialog } from "bits-ui";
+	import { fly } from "svelte/transition";
 
 	let {
 		ref = $bindable(null),
@@ -41,4 +41,3 @@
 		{/if}
 	{/snippet}
 </Dialog.Content>
-

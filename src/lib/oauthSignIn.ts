@@ -1,5 +1,5 @@
-import { getSupabaseBrowserClient } from "$lib/supabase";
-import { authCallbackUrl } from "$lib/routes";
+import { getSupabaseBrowserClient } from "#lib/supabase.ts";
+import { authCallbackUrl } from "#lib/routes.ts";
 
 /**
  * Starts Google OAuth and leaves the page. Callers should persist any form draft first.

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import EventCard from '$lib/components/EventCard.svelte';
-	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
-	import { routes } from '$lib/routes';
+	import EventCard from "#lib/components/EventCard.svelte";
+	import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from "#lib/rpc/events.remote.ts";
+	import { routes } from "#lib/routes.ts";
 
 	let { data } = $props();
 	let selectedTab = $state<`upcoming` | `past`>(`upcoming`);
@@ -45,12 +45,8 @@
 		</a>
 	</div>
 
-	<div role="tablist" class="tabs tabs-box mt-3 bg-base-300 flex justify-center flex-row">
-		<button
-			role="tab"
-			class={[`tab grow`, selectedTab === `upcoming` && `tab-active`]}
-			onclick={() => selectTab(`upcoming`)}
-		>
+	<div role="tablist" class="tabs tabs-box bg-base-300 mt-3 flex flex-row justify-center">
+		<button role="tab" class={[`tab grow`, selectedTab === `upcoming` && `tab-active`]} onclick={() => selectTab(`upcoming`)}>
 			Aktuelle Events
 		</button>
 
@@ -93,9 +89,7 @@
 				{/each}
 			</div>
 		{:else}
-			<div class="mt-12 text-center text-base-content/60">
-				Du hast noch keine vergangenen Events.
-			</div>
+			<div class="text-base-content/60 mt-12 text-center">Du hast noch keine vergangenen Events.</div>
 		{/if}
 	</div>
 </div>

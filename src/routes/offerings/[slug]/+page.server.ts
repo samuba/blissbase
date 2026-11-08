@@ -1,5 +1,5 @@
-import { getPageMetaTags } from "$lib/common";
-import { and, db, eq, or, s } from "$lib/server/db";
+import { getPageMetaTags } from "#lib/common.ts";
+import { and, db, eq, or, s } from "#lib/server/db.ts";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 

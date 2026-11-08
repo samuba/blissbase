@@ -4,9 +4,7 @@ export type EventListingSection = `today` | `tomorrow` | `dayAfterTomorrow` | `r
 
 export type EventListingDividerSection = Exclude<EventListingSection, `today`>;
 
-export type EventListingItem<T> =
-	| { kind: `event`; event: T }
-	| { kind: `divider`; section: EventListingDividerSection };
+export type EventListingItem<T> = { kind: `event`; event: T } | { kind: `divider`; section: EventListingDividerSection };
 
 const DIVIDER_SECTIONS = new Set<EventListingSection>([`tomorrow`, `dayAfterTomorrow`, `restOfWeek`, `nextWeek`, `later`]);
 

@@ -2,25 +2,23 @@ import { readFileSync } from "node:fs";
 import { today } from "@internationalized/date";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { routes } from "$lib/routes";
-import { db, s } from "$lib/server/db";
-import { upsertEvents } from "$lib/server/events";
+import { routes } from "#lib/routes.ts";
+import { db, s } from "#lib/server/db.ts";
+import { upsertEvents } from "#lib/server/events.ts";
 import { OPTIONS, POST } from "./+server";
-import {
-	breathworkEmbedCities,
-	resolveBreathworkEmbedCity,
-	searchBreathworkEmbedEvents,
-	toBreathworkEmbedEvent,
-} from "./breathworkEmbed";
+import { breathworkEmbedCities, resolveBreathworkEmbedCity, searchBreathworkEmbedEvents, toBreathworkEmbedEvent } from "./breathworkEmbed";
 
 vi.mock(`$app/paths`, () => ({
 	resolve: (path: string, params?: Record<string, string>) => {
-		if (!params) return path;
-		let resolved = path;
-		for (const [key, value] of Object.entries(params)) {
-			resolved = resolved.replace(`[${key}]`, value);
+		// Mirror Kit 3: route IDs start with `/`; pathnames do not and get a `/` prefix.
+		if (path.startsWith(`/`)) {
+			let resolved = path;
+			for (const [key, value] of Object.entries(params ?? {})) {
+				resolved = resolved.replace(`[${key}]`, value);
+			}
+			return resolved;
 		}
-		return resolved;
+		return `/${path}`;
 	},
 }));
 
@@ -48,7 +46,6 @@ describe(`breathwork embed search`, () => {
 			start: start.toString(),
 			end: start.add({ days: 40 }).toString(),
 			limit: 1,
-			searchTerm: `breathwork`,
 		});
 
 		expect(page.results.map((item) => item.name)).toEqual([`Atemkreis Berlin`]);
@@ -155,8 +152,10 @@ function absoluteEventUrl(slug?: string) {
 function event(args: { name: string; daysAhead: number; lat: number; lng: number; tagSlugs: string[] }) {
 	const startAt = today(zone).add({ days: args.daysAhead }).toDate(zone);
 	startAt.setTime(startAt.getTime() + 18 * 60 * 60 * 1000);
+	const slug = args.name.toLowerCase().replace(/\s+/g, `-`);
 	return {
 		name: args.name,
+		slug,
 		startAt,
 		endAt: new Date(startAt.getTime() + 2 * 60 * 60 * 1000),
 		source,

@@ -1,23 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { getAppNavItems, isActiveAppTab } from '$lib/components/tabsNav';
-	import OfferingsNavHintBubble from '$lib/components/OfferingsNavHintBubble.svelte';
-	import { offeringsNavHint } from '$lib/offeringsNavHint.svelte';
-	import { onMount } from 'svelte';
-	import { showLoginDialog } from './LoginDialog.svelte';
+	import { page } from "$app/state";
+	import { getAppNavItems, isActiveAppTab } from "#lib/components/tabsNav.ts";
+	import OfferingsNavHintBubble from "#lib/components/OfferingsNavHintBubble.svelte";
+	import { offeringsNavHint } from "#lib/offeringsNavHint.svelte.ts";
+	import { onMount } from "svelte";
+	import { showLoginDialog } from "./LoginDialog.svelte";
 
-	const NON_TEXT_INPUT_TYPES = new Set([
-		`button`,
-		`checkbox`,
-		`color`,
-		`file`,
-		`hidden`,
-		`image`,
-		`radio`,
-		`range`,
-		`reset`,
-		`submit`
-	]);
+	const NON_TEXT_INPUT_TYPES = new Set([`button`, `checkbox`, `color`, `file`, `hidden`, `image`, `radio`, `range`, `reset`, `submit`]);
 
 	const userId = $derived(page.data.userId);
 	const pathname = $derived(page.url.pathname);
@@ -61,10 +50,7 @@
 		const syncKeyboardInset = () => {
 			// `scale` normalizes pinch-zoom, where the visual viewport shrinks without a keyboard.
 			const visibleHeight = visualViewport.height * visualViewport.scale;
-			keyboardInset = Math.max(
-				0,
-				window.innerHeight - visibleHeight - visualViewport.offsetTop
-			);
+			keyboardInset = Math.max(0, window.innerHeight - visibleHeight - visualViewport.offsetTop);
 		};
 
 		visualViewport.addEventListener(`resize`, syncKeyboardInset);
@@ -78,16 +64,13 @@
 	});
 </script>
 
-<svelte:document
-	onfocusin={handleFocusIn}
-	onfocusout={() => (isTextEntryFocused = false)}
-/>
+<svelte:document onfocusin={handleFocusIn} onfocusout={() => (isTextEntryFocused = false)} />
 
 <nav
 	aria-label="Hauptnavigation mobil"
 	class={[
-		`fixed inset-x-0 bottom-0 z-50 border-t border-base-300/80 bg-base-100 shadow-[0_-12px_30px_rgba(0,0,0,0.08)] md:hidden`,
-		keyboardOpen && `invisible pointer-events-none`
+		`border-base-300/80 bg-base-100 fixed inset-x-0 bottom-0 z-50 border-t shadow-[0_-12px_30px_rgba(0,0,0,0.08)] md:hidden`,
+		keyboardOpen && `pointer-events-none invisible`,
 	]}
 >
 	<ul class="grid grid-cols-4 px-2 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
@@ -101,7 +84,7 @@
 						onclick={showLoginDialog}
 						class={[
 							`flex min-h-10 w-full flex-col items-center justify-center rounded-2xl transition-colors`,
-							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`
+							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`,
 						]}
 					>
 						<i class={[icon, `size-6`]}></i>
@@ -115,7 +98,7 @@
 						aria-current={isActive ? `page` : undefined}
 						class={[
 							`flex min-h-10 w-full flex-col items-center justify-center rounded-2xl transition-colors`,
-							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`
+							isActive ? `text-primary-btn-border font-bold` : `text-base-content/65`,
 						]}
 					>
 						<i class={[icon, `size-6`]}></i>

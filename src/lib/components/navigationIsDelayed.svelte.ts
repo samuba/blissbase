@@ -1,11 +1,25 @@
+import { navigating } from "$app/state";
 
-import { derived, type Readable } from "svelte/store";
-import { navigating } from "$app/stores";
+class NavigationIsDelayedStore {
+	#timer: ReturnType<typeof setTimeout> | undefined;
+	delayed = $state(false);
 
-let timer: NodeJS.Timeout;
+	constructor() {
+		$effect.root(() => {
+			$effect(() => {
+				const current = navigating;
+				if (this.#timer) clearTimeout(this.#timer);
+				if (current) {
+					this.delayed = false;
+					this.#timer = setTimeout(() => {
+						this.delayed = true;
+					}, 500);
+					return;
+				}
+				this.delayed = false;
+			});
+		});
+	}
+}
 
-export const navigationIsDelayed = derived(navigating, (newValue, set: (value: boolean) => void) => {
-    if (timer) clearTimeout(timer);
-    if (newValue) timer = setTimeout(() => set(true), 500);
-    set(false);
-});
+export const navigationIsDelayed = new NavigationIsDelayedStore();

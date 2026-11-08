@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { PinInput, REGEXP_ONLY_DIGITS } from "bits-ui";
-	import GoogleSignInButton from "$lib/components/GoogleSignInButton.svelte";
+	import GoogleSignInButton from "#lib/components/GoogleSignInButton.svelte";
 
 	let {
 		email = $bindable(),
@@ -88,22 +88,20 @@
 		{/if}
 
 		<div class="flex flex-wrap items-center justify-between gap-3">
-			<button type="button" class="btn btn-ghost btn-sm" disabled={authBusy} onclick={onUseAnotherEmail}>
-				Andere E-Mail verwenden
-			</button>
+			<button type="button" class="btn btn-ghost btn-sm" disabled={authBusy} onclick={onUseAnotherEmail}> Andere E-Mail verwenden </button>
 			<button type="button" class="btn btn-ghost btn-sm" disabled={authBusy} onclick={() => void onResendCode()}>
 				Code erneut senden
 			</button>
 		</div>
 	{:else}
-		<div class="flex justify-center items-center flex-col">
+		<div class="flex flex-col items-center justify-center">
 			<div class="w-full sm:max-w-sm">
-				<GoogleSignInButton busy={authBusy} disabled={authBusy} onclick={() => void onGoogleSignIn()}  />
+				<GoogleSignInButton busy={authBusy} disabled={authBusy} onclick={() => void onGoogleSignIn()} />
 			</div>
-	
+
 			<div class="divider mt-7">oder</div>
-	
-			<fieldset class="fieldset  w-full sm:max-w-sm">
+
+			<fieldset class="fieldset w-full sm:max-w-sm">
 				<input
 					class="input peer w-full"
 					data-testid={emailTestId}

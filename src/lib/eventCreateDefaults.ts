@@ -1,4 +1,4 @@
-import { formatDateForLocalInput } from '$lib/events.remote.common';
+import { formatDateForLocalInput } from "#lib/eventForm.common.ts";
 
 /**
  * Baseline field values for the create-event form before AI prefill or user edits.

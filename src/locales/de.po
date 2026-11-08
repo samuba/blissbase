@@ -168,6 +168,7 @@ msgstr "<0/> Email"
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/dialog/DetailsDialog.svelte
+#: src/lib/components/install-button/InstallButton.svelte
 msgid "Schließen"
 msgstr "Schließen"
 
@@ -4360,5 +4361,54 @@ msgstr "Deine E-Mail-Adresse"
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn hier."
 msgstr "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn hier."
 
-#~ msgid "Okay"
-#~ msgstr "Okay"
+#: src/lib/components/install-button/InstallButton.svelte
+msgid "Okay"
+msgstr "Okay"
+
+#: src/routes/dev/hint-position/+page.server.ts
+msgid "Not found"
+msgstr "Not found"
+
+#: src/routes/dev/hint-position/+page.server.ts
+msgid "Berlin, DE"
+msgstr "Berlin, DE"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "Hinweis-Position"
+msgstr "Hinweis-Position"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "Oben am Rand"
+msgstr "Oben am Rand"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "Oberer Anker"
+msgstr "Oberer Anker"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "Unten am Rand"
+msgstr "Unten am Rand"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "Unterer Anker"
+msgstr "Unterer Anker"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "<0>Im Scrollbereich</0> Scroll-Anker"
+msgstr "<0>Im Scrollbereich</0> Scroll-Anker"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "<0>Unten im Scrollbereich</0> Unterer Scroll-Anker"
+msgstr "<0>Unten im Scrollbereich</0> Unterer Scroll-Anker"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "Berlin"
+msgstr "Berlin"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "Außerhalb"
+msgstr "Außerhalb"
+
+#: src/routes/dev/hint-position/+page.svelte
+msgid "<0>Folgt der Seite</0> Seiten-Anker"
+msgstr "<0>Folgt der Seite</0> Seiten-Anker"

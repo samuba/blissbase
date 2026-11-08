@@ -1,7 +1,7 @@
-import { browser } from "$app/environment";
+import { browser } from "$app/env";
 import { page } from "$app/state";
-import { fireConfetti } from "$lib/confetti";
-import { FLASH_COOKIE_NAME, FLASH_KEYS, type FlashKey } from "$lib/flash";
+import { fireConfetti } from "#lib/confetti.ts";
+import { FLASH_COOKIE_NAME, FLASH_KEYS, type FlashKey } from "#lib/flash.ts";
 import { toast } from "svelte-sonner";
 
 const offeringCreatedMessage = /* @wc-include */ `Angebot erstellt!`;

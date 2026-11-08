@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { getAppNavItems, isActiveAppTab } from '$lib/components/tabsNav';
-	import OfferingsNavHintBubble from '$lib/components/OfferingsNavHintBubble.svelte';
-	import { offeringsNavHint } from '$lib/offeringsNavHint.svelte';
-	import { showLoginDialog } from './LoginDialog.svelte';
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
+	import { getAppNavItems, isActiveAppTab } from "#lib/components/tabsNav.ts";
+	import OfferingsNavHintBubble from "#lib/components/OfferingsNavHintBubble.svelte";
+	import { offeringsNavHint } from "#lib/offeringsNavHint.svelte.ts";
+	import { showLoginDialog } from "./LoginDialog.svelte";
 
 	let { ...rest } = $props();
 	const userId = $derived(page.data.userId);
@@ -14,11 +14,11 @@
 
 <!-- when changing height of the nav we need to also change sticky-top position in LexicalEditor.svelte for non-mobile -->
 <svelte:boundary>
-	<nav class={['hidden md:flex justify-center md:shrink-0 bg-base-200', rest.class]} aria-label="Hauptnavigation">
-		<div class="flex w-2xl ">
-			<a class="flex items-center gap-3" href={resolve('/')} data-testid="nav-home">
+	<nav class={["bg-base-200 hidden justify-center md:flex md:shrink-0", rest.class]} aria-label="Hauptnavigation">
+		<div class="flex w-2xl">
+			<a class="flex items-center gap-3" href={resolve("/")} data-testid="nav-home">
 				<img src="/logo-90x90.png" alt="" class="size-10" data-testid="nav-logo" />
-				<h2 class="text-xl font-brand text-primary-content">Blissbase</h2>
+				<h2 class="font-brand text-primary-content text-xl">Blissbase</h2>
 			</a>
 			<div class="grow"></div>
 
@@ -33,10 +33,8 @@
 								onclick={showLoginDialog}
 								data-testid={`nav-${tab.id}`}
 								class={[
-									`flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors justify-start`,
-									isActive
-										? `bg-primary/20 text-primary-content `
-										: `hover:text-primary-content hover:bg-primary/5 text-base-content/75`
+									`flex items-center justify-start gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors`,
+									isActive ? `bg-primary/20 text-primary-content ` : `hover:text-primary-content hover:bg-primary/5 text-base-content/75`,
 								]}
 							>
 								<i class={[icon, `size-5 shrink-0`]}></i>
@@ -49,10 +47,8 @@
 								onclick={() => tab.id === `offerings` && offeringsNavHint.dismiss()}
 								aria-current={isActive ? `page` : undefined}
 								class={[
-									`flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors justify-start`,
-									isActive
-										? `bg-primary/20 text-primary-content `
-										: `hover:text-primary-content hover:bg-primary/5 text-base-content/75`
+									`flex items-center justify-start gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-colors`,
+									isActive ? `bg-primary/20 text-primary-content ` : `hover:text-primary-content hover:bg-primary/5 text-base-content/75`,
 								]}
 							>
 								<i class={[icon, `size-5 shrink-0`]}></i>
@@ -69,11 +65,11 @@
 	</nav>
 
 	{#snippet failed(error, reset)}
-		<nav class={['hidden md:block md:shrink-0 bg-base-200', rest.class]} aria-label="Hauptnavigation">
+		<nav class={["bg-base-200 hidden md:block md:shrink-0", rest.class]} aria-label="Hauptnavigation">
 			<div class="flex w-3xl items-center gap-3">
-				<a class="flex items-center gap-3" href={resolve('/')}>
+				<a class="flex items-center gap-3" href={resolve("/")}>
 					<img src="/logo-90x90.png" alt="" class="size-10" data-testid="nav-logo" />
-					<h2 class="text-xl font-brand text-primary-content">Blissbase</h2>
+					<h2 class="font-brand text-primary-content text-xl">Blissbase</h2>
 				</a>
 				<div class="grow"></div>
 				<button

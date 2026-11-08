@@ -1,19 +1,20 @@
 import { createHash } from "node:crypto";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
-import { deleteObjects, exists, listObjectKeysByPrefix, loadCreds, publicUrl, uploadImageAtObjectKey } from "$lib/assets";
-import { sanitizeLocationParams } from "$lib/locationFilter";
+import { deleteObjects, exists, listObjectKeysByPrefix, loadCreds, publicUrl, uploadImageAtObjectKey } from "#lib/assets.ts";
+import { sanitizeLocationParams } from "#lib/locationFilter.ts";
 import {
 	filterOfferingsByIncludeOnline,
 	filterOfferingsBySearchTerm,
 	shouldIncludeOfferingInLocationFilter,
 	type OfferingsFilter,
-} from "$lib/offeringsFilter";
-import { absoluteUrl } from "$lib/routes";
-import { db, s } from "$lib/server/db";
-import { resolveOfferingsFilterCoordinates } from "$lib/server/offeringsFilter";
-import { hasSocialLink, isPublicProfile } from "$lib/server/profile";
-import { CLOUDFLARE_ACCOUNT_ID, S3_ACCESS_KEY_ID, S3_BUCKET_NAME, S3_SECRET_ACCESS_KEY } from "$env/static/private";
+} from "#lib/offeringsFilter.ts";
+import { absoluteUrl } from "#lib/routes.ts";
+import { db, s } from "#lib/server/db.ts";
+import { resolveOfferingsFilterCoordinates } from "#lib/server/offeringsFilter.ts";
+import { hasSocialLink, isPublicProfile } from "#lib/server/profile.ts";
+
+import { CLOUDFLARE_ACCOUNT_ID, S3_ACCESS_KEY_ID, S3_BUCKET_NAME, S3_SECRET_ACCESS_KEY } from "$app/env/private";
 
 const creds = loadCreds({
 	S3_ACCESS_KEY_ID,

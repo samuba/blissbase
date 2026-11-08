@@ -3,12 +3,12 @@
 	import LocationDistanceInput from "./LocationDistanceInput.svelte";
 	import type { LocationChangeEvent } from "./LocationDistanceInput.svelte";
 	import { parseDate } from "@internationalized/date";
-	import { eventsStore } from "$lib/eventsStore.svelte";
+	import { eventsStore } from "#lib/eventsStore.svelte.ts";
 	import CategorySelection from "./CategorySelection.svelte";
-	import { Dialog } from "$lib/components/dialog";
+	import { Dialog } from "#lib/components/dialog/index.ts";
 	import ToggleButton from "./ToggleButton.svelte";
 	import TabsNavDesktop from "./TabsNavDesktop.svelte";
-	import { user } from "$lib/user.svelte";
+	import { user } from "#lib/user.svelte.ts";
 	import AdminEventSourceFilter from "./AdminEventSourceFilter.svelte";
 	import AutoLocationHintBubble, { dismissAutoLocationHint } from "./AutoLocationHintBubble.svelte";
 
@@ -86,11 +86,7 @@
 
 <svelte:window bind:scrollY />
 
-<header
-	bind:this={headerElement}
-	class="bg-base-200 sticky top-0 z-10 w-full pt-4 pb-1"
-	id="header-controls"
->
+<header bind:this={headerElement} class="bg-base-200 sticky top-0 z-10 w-full pt-4 pb-1" id="header-controls">
 	<!-- shadow -->
 	{#if showShadow}
 		<div
@@ -151,10 +147,7 @@
 					<i class="icon-[ph--arrow-u-up-left] size-4"></i>
 					Alle Filter zurücksetzen
 				</Dialog.Close>
-				<Dialog.Close
-					class="btn btn-ghost btn-circle btn-sm shrink-0"
-					aria-label="Schließen"
-				>
+				<Dialog.Close class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Schließen">
 					<i class="icon-[ph--x] size-5"></i>
 				</Dialog.Close>
 			</div>

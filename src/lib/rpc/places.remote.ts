@@ -1,8 +1,8 @@
-import { prerender, query } from '$app/server';
-import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { db } from '$lib/server/db';
-import { reverseGeocodeCityCached } from '$lib/server/google';
-import * as v from 'valibot';
+import { prerender, query } from "$app/server";
+import { GOOGLE_MAPS_API_KEY } from "$app/env/private";
+import { db } from "#lib/server/db.ts";
+import { reverseGeocodeCityCached } from "#lib/server/google.ts";
+import * as v from "valibot";
 
 /**
  * Returns the public place list used by place pages and profile dropdowns.
@@ -13,9 +13,9 @@ export const getPlaces = prerender(async () => {
 			id: true,
 			name: true,
 			slug: true,
-			defaultRadius: true
+			defaultRadius: true,
 		},
-		orderBy: (places, { asc }) => [asc(places.name)]
+		orderBy: (places, { asc }) => [asc(places.name)],
 	});
 });
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	/* @wc-ignore-file */
-	import { routes } from '$lib/routes';
+	import { routes } from "#lib/routes.ts";
 </script>
 
 <div class="mx-auto w-full max-w-2xl px-4 py-4 md:py-0 md:pb-10">
@@ -12,9 +12,7 @@
 				</div>
 				<div class="min-w-0 flex-1 space-y-2">
 					<h1 class="text-lg font-semibold">Admin</h1>
-					<p class="text-base-content/80 text-sm leading-relaxed">
-						Event-Quellenfilter findest du im Filter-Dialog auf der Startseite.
-					</p>
+					<p class="text-base-content/80 text-sm leading-relaxed">Event-Quellenfilter findest du im Filter-Dialog auf der Startseite.</p>
 				</div>
 			</div>
 		</div>

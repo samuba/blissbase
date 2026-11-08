@@ -2,7 +2,7 @@ import opentype from "opentype.js";
 import sharp from "sharp";
 import backgroundDataUrl from "./og-poster-bg.jpg?inline";
 import goldLogoDataUrl from "../../../../static/logo-gold.png?inline";
-import brandFontDataUrl from "$lib/fonts/Baloo2-Medium.ttf?inline";
+import brandFontDataUrl from "#lib/fonts/Baloo2-Medium.ttf?inline";
 import { composeOgPoster } from "./ogPoster";
 
 const OG_WIDTH = 1200;

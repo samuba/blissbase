@@ -1,4 +1,4 @@
-import { PostHog } from 'posthog-node';
+import { PostHog } from "posthog-node";
 
 export const posthogApiKey = `phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ`;
 

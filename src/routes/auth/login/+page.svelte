@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-	import Login from '$lib/components/Login.svelte';
-	import { AUTH_NEXT_QUERY, routes, safeAuthNextPath } from '$lib/routes';
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import Login from "#lib/components/Login.svelte";
+	import { AUTH_NEXT_QUERY, routes, safeAuthNextPath } from "#lib/routes.ts";
 
 	const nextPath = $derived(
 		safeAuthNextPath({

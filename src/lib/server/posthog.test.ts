@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createServerPosthog } from './posthog';
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createServerPosthog } from "./posthog";
 
 describe(`createServerPosthog`, () => {
 	afterEach(() => {

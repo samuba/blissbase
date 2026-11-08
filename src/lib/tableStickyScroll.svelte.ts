@@ -1,4 +1,4 @@
-import { untrack } from 'svelte';
+import { untrack } from "svelte";
 
 /**
  * Sticky horizontal scrollbar for wide admin tables.

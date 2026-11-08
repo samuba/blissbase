@@ -1,7 +1,7 @@
-import { shouldSkipRecipient } from '$lib/common';
-import { absoluteUrl, routes } from '$lib/routes';
-import { posthogCaptureException } from './common';
-import {RESEND_API_KEY} from '$env/static/private';
+import { shouldSkipRecipient } from "#lib/common.ts";
+import { absoluteUrl, routes } from "#lib/routes.ts";
+import { posthogCaptureException } from "./common";
+import { RESEND_API_KEY } from "$app/env/private";
 
 const from = `Blissbase <hi@blissbase.app>`;
 
@@ -31,7 +31,7 @@ ${args.eventName}
 
 ${eventUrl}`.trim();
 
-	return await sendEmail({from, to: [args.to], subject, text});
+	return await sendEmail({ from, to: [args.to], subject, text });
 }
 
 export async function sendContactEmail(args: SendContactEmailArgs) {
@@ -57,9 +57,9 @@ async function sendEmail(payload: SendEmailPayload) {
 			method: `POST`,
 			headers: {
 				Authorization: `Bearer ${RESEND_API_KEY}`,
-				'Content-Type': `application/json`
+				"Content-Type": `application/json`,
 			},
-			body: JSON.stringify({ ...payload, to })
+			body: JSON.stringify({ ...payload, to }),
 		});
 		if (!res.ok) throw new Error(`Resend returned unexpected status: ${res.status} ${res.statusText} ${await res.text()}`);
 		return true;

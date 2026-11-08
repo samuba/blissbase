@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { isTouchDevice } from '$lib/common';
-	import { tick } from 'svelte';
-	import { MediaQuery } from 'svelte/reactivity';
+	import { isTouchDevice } from "#lib/common.ts";
+	import { tick } from "svelte";
+	import { MediaQuery } from "svelte/reactivity";
 
 	let {
 		id,
-		query = $bindable(''),
+		query = $bindable(""),
 		searched = $bindable(false),
-		variant = 'full',
-		wrapperClass = '',
+		variant = "full",
+		wrapperClass = "",
 		onSearch,
 		onClose,
 	}: {
 		id?: string;
 		query?: string;
 		searched?: boolean;
-		variant?: 'compact' | 'full';
+		variant?: "compact" | "full";
 		wrapperClass?: string | string[];
 		onSearch?: (value: string) => void;
 		onClose?: () => void;
@@ -103,14 +103,7 @@
 	}
 </script>
 
-<div
-	bind:this={wrapperEl}
-	class={[
-		`shrink-0`,
-		variant === `full` ? [`join`, `w-full`] : [`flex`, `items-center`],
-		wrapperClass,
-	]}
->
+<div bind:this={wrapperEl} class={[`shrink-0`, variant === `full` ? [`join`, `w-full`] : [`flex`, `items-center`], wrapperClass]}>
 	{#if showField}
 		<label
 			class={[
@@ -124,12 +117,7 @@
 				{id}
 				bind:this={searchInput}
 				data-testid="event-search-input"
-				class={[
-					`min-w-0`,
-					searchExpanded && `w-25`,
-					variant === `compact` && `w-15`,
-					variant === `full` && `w-full`,
-				]}
+				class={[`min-w-0`, searchExpanded && `w-25`, variant === `compact` && `w-15`, variant === `full` && `w-full`]}
 				bind:value={query}
 				onfocus={openSearch}
 				oninput={(e) => handleSearchInput(e.currentTarget.value)}

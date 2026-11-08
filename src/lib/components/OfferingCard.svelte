@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { OfferingFormat } from "$lib/rpc/offerings.common";
-	import { routes } from "$lib/routes";
+	import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
+	import { routes } from "#lib/routes.ts";
 
 	let {
 		offering,

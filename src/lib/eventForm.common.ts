@@ -1,7 +1,7 @@
-import * as v from 'valibot';
-import { knownTagSlugs } from '$lib/eventCategories';
-import { galleryImageClaimsSchema, galleryImageOrderSchema } from '$lib/galleryImages';
-import { profileLocationFields, publicProfilePatchSchema } from '$lib/rpc/profile.common';
+import * as v from "valibot";
+import { knownTagSlugs } from "#lib/eventCategories.ts";
+import { galleryImageClaimsSchema, galleryImageOrderSchema } from "#lib/galleryImages.ts";
+import { profileLocationFields, publicProfilePatchSchema } from "#lib/rpc/profile.common.ts";
 
 export type ContactMethod = `none` | `email` | `phone` | `website` | `telegram` | `whatsapp`;
 
@@ -72,18 +72,13 @@ export function storedContactUriToFormFields(args: { storedContactUri: string })
 
 const eventSchemaEntries = {
 	name: v.pipe(v.string(), v.trim(), v.nonEmpty(`Event name is required`)),
-	description: v.pipe(
-		v.string(),
-		v.trim(),
-		v.nonEmpty(`Description is required`),
-		v.maxLength(100_000, `Description is too long`)
-	),
+	description: v.pipe(v.string(), v.trim(), v.nonEmpty(`Description is required`), v.maxLength(100_000, `Description is too long`)),
 	tagSlugs: v.optional(
 		v.pipe(
 			v.array(v.string()),
-			v.transform((slugs) => knownTagSlugs(slugs))
+			v.transform((slugs) => knownTagSlugs(slugs)),
 		),
-		[]
+		[],
 	),
 	price: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
 	address: v.optional(emptyStringIsUndefined(v.pipe(v.string(), v.trim()))),
@@ -97,7 +92,7 @@ const eventSchemaEntries = {
 	isNotListed: v.optional(v.boolean(), false),
 	contact: v.optional(v.string()),
 	contactMethod: v.optional(v.string()),
-	imageClaims: galleryImageClaimsSchema
+	imageClaims: galleryImageClaimsSchema,
 } satisfies v.ObjectEntries;
 
 function isStartAtInTheFuture(input: { startAt: string }) {
@@ -133,20 +128,20 @@ export const createEventSchema = v.pipe(
 	}),
 	v.forward(
 		v.partialCheck([[`startAt`]], (input) => isStartAtInTheFuture(input), `Start date must be in the future`),
-		[`startAt`]
+		[`startAt`],
 	),
 	v.forward(
 		v.partialCheck([[`startAt`], [`endAt`]], (input) => isEndAtAfterStartAt(input), `End date must be after the start date`),
-		[`endAt`]
+		[`endAt`],
 	),
 	v.forward(
 		v.partialCheck([[`isOnline`], [`address`]], (input) => hasAddressWhenOffline(input), `Address is required`),
-		[`address`]
+		[`address`],
 	),
 	v.forward(
 		v.partialCheck([[`contactMethod`], [`contact`]], (input) => isContactMethodValid(input), `Contact method is invalid`),
-		[`contact`]
-	)
+		[`contact`],
+	),
 );
 
 export const updateEventSchema = v.pipe(
@@ -159,16 +154,16 @@ export const updateEventSchema = v.pipe(
 	}),
 	v.forward(
 		v.partialCheck([[`startAt`], [`endAt`]], (input) => isEndAtAfterStartAt(input), `End date must be after the start date`),
-		[`endAt`]
+		[`endAt`],
 	),
 	v.forward(
 		v.partialCheck([[`isOnline`], [`address`]], (input) => hasAddressWhenOffline(input), `Address is required`),
-		[`address`]
+		[`address`],
 	),
 	v.forward(
 		v.partialCheck([[`contactMethod`], [`contact`]], (input) => isContactMethodValid(input), `Contact method is invalid`),
-		[`contact`]
-	)
+		[`contact`],
+	),
 );
 
 /**
@@ -193,16 +188,14 @@ export function getEditEventInitialValues(event: EditEventSource) {
 		latitude: event.latitude == null ? `` : String(event.latitude),
 		longitude: event.longitude == null ? `` : String(event.longitude),
 		startAt: formatDateForLocalInputInTimeZone(event.startAt, event.timezone ?? DEFAULT_EVENT_FORM_TIME_ZONE),
-		endAt: event.endAt
-			? formatDateForLocalInputInTimeZone(event.endAt, event.timezone ?? DEFAULT_EVENT_FORM_TIME_ZONE)
-			: ``,
+		endAt: event.endAt ? formatDateForLocalInputInTimeZone(event.endAt, event.timezone ?? DEFAULT_EVENT_FORM_TIME_ZONE) : ``,
 		isOnline: event.attendanceMode === `online`,
 		isNotListed: !event.listed,
 		contact,
 		contactMethod,
 		existingImageUrls: event.imageUrls ?? [],
 		imageOrder: event.imageUrls ?? [],
-		imageClaims: []
+		imageClaims: [],
 	};
 }
 
@@ -219,7 +212,7 @@ const DEFAULT_EVENT_FORM_TIME_ZONE = `Europe/Berlin`;
  * }); // CEST → `2026-06-15T14:00`
  */
 export function formatDateForLocalInputInTimeZone(date: Date, timeZone: string): string {
-	console.log({date, timeZone});
+	console.log({ date, timeZone });
 	const formatter = new Intl.DateTimeFormat(`en-CA`, {
 		timeZone: timeZone,
 		year: `numeric`,
@@ -227,7 +220,7 @@ export function formatDateForLocalInputInTimeZone(date: Date, timeZone: string):
 		day: `2-digit`,
 		hour: `2-digit`,
 		minute: `2-digit`,
-		hour12: false
+		hour12: false,
 	});
 	const parts = formatter.formatToParts(date);
 	const get = (type: string) => parts.find((p) => p.type === type)?.value ?? `0`;
@@ -260,8 +253,11 @@ export function formatDateForLocalInput(date: Date): string {
  */
 function emptyStringIsUndefined(schema: v.GenericSchema<string, string>) {
 	return v.union([
-		v.pipe(v.literal(``), v.transform(() => undefined)),
-		schema
+		v.pipe(
+			v.literal(``),
+			v.transform(() => undefined),
+		),
+		schema,
 	]);
 }
 

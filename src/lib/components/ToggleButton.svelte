@@ -1,14 +1,14 @@
 <script lang="ts">
-    import type { Snippet } from "svelte";
+	import type { Snippet } from "svelte";
 
 	let {
 		checked = $bindable(false),
-        children,
-        class: className,
-        name,
+		children,
+		class: className,
+		name,
 		onchange,
 		tooltip,
-        ...restProps
+		...restProps
 	}: {
 		checked: boolean;
 		children: Snippet;
@@ -23,14 +23,7 @@
 	}
 </script>
 
-<button 
-	class={['btn', className, 
-		checked && 'active', 
-		tooltip && 'tooltip'
-	]} 
-	onclick={handleChange} 
-	data-tip={tooltip}
-	{...restProps}>
-    {@render children()}
+<button class={["btn", className, checked && "active", tooltip && "tooltip"]} onclick={handleChange} data-tip={tooltip} {...restProps}>
+	{@render children()}
 </button>
-<input type="checkbox" class="sr-only" name={name} />
+<input type="checkbox" class="sr-only" {name} />

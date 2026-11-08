@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @plugin "@iconify/tailwind4";
 @plugin "@tailwindcss/typography";
 
@@ -36,12 +36,10 @@
 		cupcake --default,
 		cupcake;
 	/* Unused daisyUI parts */
-	exclude: aura, avatar, breadcrumbs, calendar, carousel, chat, collapse,
-		countdown, diff, dock, drawer, dropdown, fab, fileinput, filter,
-		footer, glass, hero, hover3d, hovergallery, indicator, kbd, mask,
-		megamenu, menu, mockup, modal, navbar, otp, progress, radialprogress, radio,
-		rating, rootscrollgutter, skeleton, stack, stat, status, steps, swap,
-		textrotate, timeline, toast;
+	exclude:
+		aura, avatar, breadcrumbs, calendar, carousel, chat, collapse, countdown, diff, dock, drawer, dropdown, fab, fileinput, filter, footer,
+		glass, hero, hover3d, hovergallery, indicator, kbd, mask, megamenu, menu, mockup, modal, navbar, otp, progress, radialprogress, radio,
+		rating, rootscrollgutter, skeleton, stack, stat, status, steps, swap, textrotate, timeline, toast;
 }
 
 @plugin "daisyui/theme" {
@@ -78,33 +76,40 @@
 /* disabled selects look ugly */
 .select,
 select {
-	@apply disabled:border-base-300! disabled:border-2!; 
+	@apply disabled:border-base-300! disabled:border-2!;
 }
 
 /* bigger daisyUI select chevron, more inset from the right.
    appearance: none keeps the CSS chevron from doubling with the native base-select arrow. */
 .select {
 	appearance: none;
-	background-size: 6px 6px, 6px 6px;
-	background-position: calc(100% - 23.9px) calc(1px + 50%), calc(100% - 18px) calc(1px + 50%);
+	background-size:
+		6px 6px,
+		6px 6px;
+	background-position:
+		calc(100% - 23.9px) calc(1px + 50%),
+		calc(100% - 18px) calc(1px + 50%);
 	padding-inline-end: 2rem;
 }
 
 /* get rid of ring around inputs */
-.input, .textarea, .select, select {
-	@apply focus:outline-0! focus-within:outline-0!;
+.input,
+.textarea,
+.select,
+select {
+	@apply focus-within:outline-0! focus:outline-0!;
 }
 
 @font-face {
-	font-family: 'Baloo-2';
+	font-family: "Baloo-2";
 	font-style: normal;
 	font-weight: 500;
 	font-display: swap;
-	src: url('$lib/fonts/Baloo2-Medium.woff2') format('woff2');
+	src: url("$lib/fonts/Baloo2-Medium.woff2") format("woff2");
 }
 
 .font-brand {
-	font-family: 'Baloo-2', 'Arial';
+	font-family: "Baloo-2", "Arial";
 	font-weight: 500;
 }
 
@@ -120,7 +125,7 @@ h6,
 	@apply font-semibold;
 }
 
-@import 'tw-animate-css';
+@import "tw-animate-css";
 
 img {
 	/* Prevent haptic touch (long press to expand the image) and prevent the user from dragging out images on WebKit derived browsers (Chrome & Safari). */
@@ -133,5 +138,5 @@ body {
 }
 
 .active {
-	@apply border-primary-btn-border bg-primary/15 ;
+	@apply border-primary-btn-border bg-primary/15;
 }

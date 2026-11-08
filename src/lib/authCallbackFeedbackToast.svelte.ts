@@ -1,12 +1,8 @@
-import { replaceState } from '$app/navigation';
-import { page } from '$app/state';
-import {
-	EVENT_CREATE_DRAFT_KEY,
-	hasPendingCreateFlowDraft,
-	OFFERING_CREATE_DRAFT_KEY,
-} from '$lib/createFlowDraft';
-import { afterClientHydration } from '$lib/shallowDialog.svelte';
-import { toast } from 'svelte-sonner';
+import { goto } from "$app/navigation";
+import { page } from "$app/state";
+import { EVENT_CREATE_DRAFT_KEY, hasPendingCreateFlowDraft, OFFERING_CREATE_DRAFT_KEY } from "#lib/createFlowDraft.ts";
+import { afterClientHydration } from "#lib/shallowDialog.svelte.ts";
+import { toast } from "svelte-sonner";
 
 const AUTH_FEEDBACK_TOAST_ID = `auth-callback-feedback`;
 const otpExpiredTitle = /* @wc-include */ `Der Login-Link ist abgelaufen.`;
@@ -22,7 +18,7 @@ const authSuccessTitle = /* @wc-include */ `Du bist jetzt angemeldet. Viel Spaß
  *
  * @example
  * ```svelte
- * import { registerAuthCallbackFeedbackToast } from '$lib/authCallbackFeedbackToast.svelte';
+ * import { registerAuthCallbackFeedbackToast } from '#lib/authCallbackFeedbackToast.svelte.ts';
  * registerAuthCallbackFeedbackToast();
  * ```
  */
@@ -42,22 +38,22 @@ export function registerAuthCallbackFeedbackToast() {
 				id: AUTH_FEEDBACK_TOAST_ID,
 				duration: 60_000,
 				closeButton: true,
-				classes: { description: `whitespace-pre-line`}
+				classes: { description: `whitespace-pre-line` },
 			};
 			if (errorCode === `otp_expired`) {
 				toast.error(otpExpiredTitle, {
 					description: otpExpiredDescription,
-					...errorPros
+					...errorPros,
 				});
 			} else if (errorCode === `pkce_code_verifier_not_found`) {
 				toast.error(pkceMismatchTitle, {
 					description: pkceMismatchDescription,
-					...errorPros
+					...errorPros,
 				});
 			} else {
 				toast.error(authFailedTitle, {
 					description: authError,
-					...errorPros
+					...errorPros,
 				});
 			}
 		} else if (!shouldSkipAuthSuccessToast()) {
@@ -71,18 +67,13 @@ export function registerAuthCallbackFeedbackToast() {
 function shouldSkipAuthSuccessToast() {
 	const path = page.url.pathname;
 	if (path === `/events/new` || path === `/offerings/new`) return true;
-	return (
-		hasPendingCreateFlowDraft({ key: EVENT_CREATE_DRAFT_KEY }) ||
-		hasPendingCreateFlowDraft({ key: OFFERING_CREATE_DRAFT_KEY })
-	);
+
+	return hasPendingCreateFlowDraft({ key: EVENT_CREATE_DRAFT_KEY }) || hasPendingCreateFlowDraft({ key: OFFERING_CREATE_DRAFT_KEY });
 }
 
 async function stripAuthFeedbackFromUrl() {
 	await afterClientHydration();
-	if (
-		page.url.searchParams.get(`auth_error`) === null &&
-		page.url.searchParams.get(`auth_success`) === null
-	) {
+	if (page.url.searchParams.get(`auth_error`) === null && page.url.searchParams.get(`auth_success`) === null) {
 		return;
 	}
 
@@ -91,5 +82,5 @@ async function stripAuthFeedbackFromUrl() {
 	nextUrl.searchParams.delete(`auth_error`);
 	nextUrl.searchParams.delete(`error_code`);
 	nextUrl.hash = ``;
-	replaceState(`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`, page.state);
+	goto(`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`, { shallow: true, replace: true, state: page.state });
 }

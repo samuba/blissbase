@@ -1,15 +1,4 @@
-export const ALLOWED_DISTANCE_VALUES = [
-	`5`,
-	`10`,
-	`15`,
-	`30`,
-	`50`,
-	`100`,
-	`150`,
-	`300`,
-	`500`,
-	`9000`
-] as const;
+export const ALLOWED_DISTANCE_VALUES = [`5`, `10`, `15`, `30`, `50`, `100`, `150`, `300`, `500`, `9000`] as const;
 
 export type AllowedDistance = (typeof ALLOWED_DISTANCE_VALUES)[number];
 
@@ -28,10 +17,7 @@ export function isValidDistance(distance: string | null | undefined) {
 	return ALLOWED_DISTANCE_VALUES.includes(distance as AllowedDistance);
 }
 
-export function hasValidCoordinates(args: {
-	lat: number | null | undefined;
-	lng: number | null | undefined;
-}) {
+export function hasValidCoordinates(args: { lat: number | null | undefined; lng: number | null | undefined }) {
 	return isValidLatitude(args.lat) && isValidLongitude(args.lng);
 }
 
@@ -47,16 +33,10 @@ export function coordinatesMatch(args: {
 }) {
 	if (!hasValidCoordinates({ lat: args.a.lat, lng: args.a.lng })) return false;
 	if (!hasValidCoordinates({ lat: args.b.lat, lng: args.b.lng })) return false;
-	return args.a.lat!.toFixed(5) === Number(args.b.lat).toFixed(5)
-		&& args.a.lng!.toFixed(5) === Number(args.b.lng).toFixed(5);
+	return args.a.lat!.toFixed(5) === Number(args.b.lat).toFixed(5) && args.a.lng!.toFixed(5) === Number(args.b.lng).toFixed(5);
 }
 
-export function getDistanceInKm(args: {
-	fromLat: number;
-	fromLng: number;
-	toLat: number;
-	toLng: number;
-}) {
+export function getDistanceInKm(args: { fromLat: number; fromLng: number; toLat: number; toLng: number }) {
 	const earthRadiusKm = 6371;
 	const deltaLat = toRadians(args.toLat - args.fromLat);
 	const deltaLng = toRadians(args.toLng - args.fromLng);
@@ -68,13 +48,7 @@ export function getDistanceInKm(args: {
 	return earthRadiusKm * c;
 }
 
-export function isWithinDistanceKm(args: {
-	fromLat: number;
-	fromLng: number;
-	toLat: number;
-	toLng: number;
-	distanceKm: number;
-}) {
+export function isWithinDistanceKm(args: { fromLat: number; fromLng: number; toLat: number; toLng: number; distanceKm: number }) {
 	return getDistanceInKm(args) <= args.distanceKm;
 }
 
@@ -82,13 +56,15 @@ function toRadians(value: number) {
 	return value * (Math.PI / 180);
 }
 
-export function sanitizeLocationParams<T extends {
-	location?: string | null;
-	plzCity?: string | null;
-	distance?: string | null;
-	lat?: number | null;
-	lng?: number | null;
-}>(params: T): T {
+export function sanitizeLocationParams<
+	T extends {
+		location?: string | null;
+		plzCity?: string | null;
+		distance?: string | null;
+		lat?: number | null;
+		lng?: number | null;
+	},
+>(params: T): T {
 	const sanitized = { ...params };
 
 	if (!isValidDistance(sanitized.distance)) {
@@ -110,16 +86,13 @@ export function sanitizeLocationParams<T extends {
 }
 
 /** Coarsen coordinates for analytics (~11 km precision at equator). */
-export function coarseLatLngForAnalytics(args: {
-	lat?: number | null;
-	lng?: number | null;
-}) {
+export function coarseLatLngForAnalytics(args: { lat?: number | null; lng?: number | null }) {
 	if (!hasValidCoordinates({ lat: args.lat, lng: args.lng })) {
 		return { lat: undefined, lng: undefined };
 	}
 
 	return {
 		lat: Math.round(args.lat! * 10) / 10,
-		lng: Math.round(args.lng! * 10) / 10
+		lng: Math.round(args.lng! * 10) / 10,
 	};
 }

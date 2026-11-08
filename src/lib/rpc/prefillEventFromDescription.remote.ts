@@ -1,29 +1,23 @@
-import * as v from 'valibot';
-import { command } from '$app/server';
-import { aiExtractEventData } from '../server/ai';
-import { mapAiAnswerToCreateEventPrefill } from '$lib/server/mapAiAnswerToCreateEventPrefill';
+import * as v from "valibot";
+import { command } from "$app/server";
+import { aiExtractEventData } from "../server/ai";
+import { mapAiAnswerToCreateEventPrefill } from "#lib/server/mapAiAnswerToCreateEventPrefill.ts";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = [`image/jpeg`, `image/png`, `image/webp`, `image/gif`] as const;
 
 const prefillImageSchema = v.object({
 	base64: v.pipe(v.string(), v.nonEmpty()),
-	mediaType: v.picklist(ALLOWED_IMAGE_TYPES)
+	mediaType: v.picklist(ALLOWED_IMAGE_TYPES),
 });
 
 const prefillSchema = v.pipe(
 	v.object({
 		text: v.optional(v.pipe(v.string(), v.maxLength(200_000)), ``),
 		timeZone: v.pipe(v.string(), v.nonEmpty()),
-		images: v.optional(
-			v.pipe(v.array(prefillImageSchema), v.maxLength(3, `Maximal 3 Bilder erlaubt`)),
-			[]
-		)
+		images: v.optional(v.pipe(v.array(prefillImageSchema), v.maxLength(3, `Maximal 3 Bilder erlaubt`)), []),
 	}),
-	v.check(
-		(input) => Boolean(input.text?.trim()) || Boolean(input.images?.length),
-		`Text oder Bild erforderlich`
-	)
+	v.check((input) => Boolean(input.text?.trim()) || Boolean(input.images?.length), `Text oder Bild erforderlich`),
 );
 
 /**
@@ -38,7 +32,6 @@ const prefillSchema = v.pipe(
  * });
  */
 export const prefillEventFromDescription = command(prefillSchema, async ({ text, timeZone, images }) => {
-
 	const trimmed = text?.trim() ?? ``;
 	const imageInputs = [];
 	for (const image of images ?? []) {
@@ -49,7 +42,7 @@ export const prefillEventFromDescription = command(prefillSchema, async ({ text,
 		}
 		imageInputs.push({
 			image: bytes,
-			mediaType: image.mediaType
+			mediaType: image.mediaType,
 		});
 	}
 
@@ -62,7 +55,7 @@ export const prefillEventFromDescription = command(prefillSchema, async ({ text,
 		messageDate: new Date(),
 		timezone: timeZone,
 		imageInputs,
-		eventIsDefinitelyConscious: true
+		eventIsDefinitelyConscious: true,
 	});
 	const fields = mapAiAnswerToCreateEventPrefill(analysis);
 	return { kind: `ok` as const, fields };

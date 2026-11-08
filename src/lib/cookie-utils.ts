@@ -1,37 +1,37 @@
-import type { Cookies } from '@sveltejs/kit';
-import { sanitizeLocationParams } from '$lib/locationFilter';
-import { eventCategorySlugs } from '$lib/eventCategories';
-import type { AttendanceMode } from './server/schema';
+import type { Cookies } from "@sveltejs/kit";
+import { sanitizeLocationParams } from "#lib/locationFilter.ts";
+import { eventCategorySlugs } from "#lib/eventCategories.ts";
+import type { AttendanceMode } from "./server/schema";
 
-const COOKIE_NAME = 'blissbase_filters';
-export const LOCATION_INTERACTED_COOKIE_NAME = 'blissbase_location_set';
+const COOKIE_NAME = "blissbase_filters";
+export const LOCATION_INTERACTED_COOKIE_NAME = "blissbase_location_set";
 export const ALL_EVENT_SOURCES_VALUE = `all`;
 const COOKIE_OPTIONS = {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    httpOnly: false,
-    secure: false,
-    sameSite: 'lax' as const
+	path: "/",
+	maxAge: 60 * 60 * 24 * 365, // 1 year
+	httpOnly: false,
+	secure: false,
+	sameSite: "lax" as const,
 };
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
 export type FilterCookieData = {
-    startDate?: string | null;
-    endDate?: string | null;
-    plzCity?: string | null;
-    distance?: string | null;
-    lat?: number | null;
-    lng?: number | null;
-    searchTerm?: string | null;
-    /** Offerings list search — kept separate from events `searchTerm`. */
-    offeringsSearchTerm?: string | null;
-    includeOnline?: boolean | null;
-    sortBy?: string | null;
-    sortOrder?: string | null;
-    categorySlugs?: string[] | null;
-    attendanceMode?: AttendanceMode | null;
-    /** Admin-only: filter events list by `events.source`. `null` means all sources. */
-    source?: string | null;
+	startDate?: string | null;
+	endDate?: string | null;
+	plzCity?: string | null;
+	distance?: string | null;
+	lat?: number | null;
+	lng?: number | null;
+	searchTerm?: string | null;
+	/** Offerings list search — kept separate from events `searchTerm`. */
+	offeringsSearchTerm?: string | null;
+	includeOnline?: boolean | null;
+	sortBy?: string | null;
+	sortOrder?: string | null;
+	categorySlugs?: string[] | null;
+	attendanceMode?: AttendanceMode | null;
+	/** Admin-only: filter events list by `events.source`. `null` means all sources. */
+	source?: string | null;
 };
 
 /**
@@ -40,44 +40,44 @@ export type FilterCookieData = {
  * @returns Validated filter data or null if invalid
  */
 export function validateFilterData(data: unknown): FilterCookieData | null {
-    if (!data || typeof data !== 'object') return null;
+	if (!data || typeof data !== "object") return null;
 
-    const filterData = data as Record<string, unknown>;
+	const filterData = data as Record<string, unknown>;
 
-    const categorySlugs = Array.isArray(filterData.categorySlugs)
-        ? filterData.categorySlugs.filter((slug): slug is string => typeof slug === 'string' && eventCategorySlugs.has(slug))
-        : null;
+	const categorySlugs = Array.isArray(filterData.categorySlugs)
+		? filterData.categorySlugs.filter((slug): slug is string => typeof slug === "string" && eventCategorySlugs.has(slug))
+		: null;
 
-    const location = sanitizeLocationParams({
-        plzCity: typeof filterData.plzCity === 'string' ? filterData.plzCity : null,
-        distance: typeof filterData.distance === 'string' ? filterData.distance : null,
-        lat: filterData.lat !== undefined && filterData.lat !== null ? Number(filterData.lat) : null,
-        lng: filterData.lng !== undefined && filterData.lng !== null ? Number(filterData.lng) : null
-    });
+	const location = sanitizeLocationParams({
+		plzCity: typeof filterData.plzCity === "string" ? filterData.plzCity : null,
+		distance: typeof filterData.distance === "string" ? filterData.distance : null,
+		lat: filterData.lat !== undefined && filterData.lat !== null ? Number(filterData.lat) : null,
+		lng: filterData.lng !== undefined && filterData.lng !== null ? Number(filterData.lng) : null,
+	});
 
-    if (
-        (filterData.lat !== undefined && filterData.lat !== null && isNaN(Number(filterData.lat))) ||
-        (filterData.lng !== undefined && filterData.lng !== null && isNaN(Number(filterData.lng)))
-    ) {
-        return null;
-    }
+	if (
+		(filterData.lat !== undefined && filterData.lat !== null && isNaN(Number(filterData.lat))) ||
+		(filterData.lng !== undefined && filterData.lng !== null && isNaN(Number(filterData.lng)))
+	) {
+		return null;
+	}
 
-    return {
-        startDate: typeof filterData.startDate === 'string' ? filterData.startDate : null,
-        endDate: typeof filterData.endDate === 'string' ? filterData.endDate : null,
-        plzCity: location.plzCity,
-        distance: location.distance,
-        lat: location.lat,
-        lng: location.lng,
-        searchTerm: typeof filterData.searchTerm === 'string' ? filterData.searchTerm : null,
-        offeringsSearchTerm: typeof filterData.offeringsSearchTerm === 'string' ? filterData.offeringsSearchTerm : null,
-        includeOnline: typeof filterData.includeOnline === 'boolean' ? filterData.includeOnline : null,
-        sortBy: typeof filterData.sortBy === 'string' ? filterData.sortBy : null,
-        sortOrder: typeof filterData.sortOrder === 'string' ? filterData.sortOrder : null,
-        categorySlugs: categorySlugs?.length ? categorySlugs : null,
-        attendanceMode: typeof filterData.attendanceMode === 'string' ? filterData.attendanceMode as AttendanceMode : null,
-        source: typeof filterData.source === 'string' && filterData.source.trim() ? filterData.source.trim() : null,
-    };
+	return {
+		startDate: typeof filterData.startDate === "string" ? filterData.startDate : null,
+		endDate: typeof filterData.endDate === "string" ? filterData.endDate : null,
+		plzCity: location.plzCity,
+		distance: location.distance,
+		lat: location.lat,
+		lng: location.lng,
+		searchTerm: typeof filterData.searchTerm === "string" ? filterData.searchTerm : null,
+		offeringsSearchTerm: typeof filterData.offeringsSearchTerm === "string" ? filterData.offeringsSearchTerm : null,
+		includeOnline: typeof filterData.includeOnline === "boolean" ? filterData.includeOnline : null,
+		sortBy: typeof filterData.sortBy === "string" ? filterData.sortBy : null,
+		sortOrder: typeof filterData.sortOrder === "string" ? filterData.sortOrder : null,
+		categorySlugs: categorySlugs?.length ? categorySlugs : null,
+		attendanceMode: typeof filterData.attendanceMode === "string" ? (filterData.attendanceMode as AttendanceMode) : null,
+		source: typeof filterData.source === "string" && filterData.source.trim() ? filterData.source.trim() : null,
+	};
 }
 
 /**
@@ -86,12 +86,12 @@ export function validateFilterData(data: unknown): FilterCookieData | null {
  * @param filters - Filter data to save
  */
 export function saveFiltersToCookie(cookies: Cookies, filters: FilterCookieData) {
-    try {
-        const cookieData = JSON.stringify(filters);
-        cookies.set(COOKIE_NAME, cookieData, COOKIE_OPTIONS);
-    } catch (error) {
-        console.error('Failed to save filters to cookie:', error);
-    }
+	try {
+		const cookieData = JSON.stringify(filters);
+		cookies.set(COOKIE_NAME, cookieData, COOKIE_OPTIONS);
+	} catch (error) {
+		console.error("Failed to save filters to cookie:", error);
+	}
 }
 
 /**
@@ -100,16 +100,16 @@ export function saveFiltersToCookie(cookies: Cookies, filters: FilterCookieData)
  * @returns Filter data or null if not found/invalid
  */
 export function loadFiltersFromCookie(cookies: Cookies): FilterCookieData | null {
-    try {
-        const cookieValue = cookies.get(COOKIE_NAME);
-        if (!cookieValue) return null;
+	try {
+		const cookieValue = cookies.get(COOKIE_NAME);
+		if (!cookieValue) return null;
 
-        const parsed = JSON.parse(cookieValue);
-        return validateFilterData(parsed);
-    } catch (error) {
-        console.error('Failed to load filters from cookie:', error);
-        return null;
-    }
+		const parsed = JSON.parse(cookieValue);
+		return validateFilterData(parsed);
+	} catch (error) {
+		console.error("Failed to load filters from cookie:", error);
+		return null;
+	}
 }
 
 /**
@@ -117,7 +117,7 @@ export function loadFiltersFromCookie(cookies: Cookies): FilterCookieData | null
  * @param cookies - SvelteKit cookies object
  */
 export function clearFiltersCookie(cookies: Cookies) {
-    cookies.delete(COOKIE_NAME, { path: '/' });
+	cookies.delete(COOKIE_NAME, { path: "/" });
 }
 
 /**
@@ -125,42 +125,42 @@ export function clearFiltersCookie(cookies: Cookies) {
  * Once set, server-side auto-location detection should not run again.
  */
 export function setLocationInteractedCookie() {
-    if (typeof document === 'undefined') return;
-    document.cookie = `${LOCATION_INTERACTED_COOKIE_NAME}=1; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
+	if (typeof document === "undefined") return;
+	document.cookie = `${LOCATION_INTERACTED_COOKIE_NAME}=1; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
 }
 
 export function loadFiltersFromBrowserCookie(): FilterCookieData | null {
-    if (typeof document === 'undefined') return null;
+	if (typeof document === "undefined") return null;
 
-    const cookiePrefix = `${COOKIE_NAME}=`;
-    const rawCookie = document.cookie
-        .split(`;`)
-        .map((part) => part.trim())
-        .find((part) => part.startsWith(cookiePrefix));
-    if (!rawCookie) return null;
+	const cookiePrefix = `${COOKIE_NAME}=`;
+	const rawCookie = document.cookie
+		.split(`;`)
+		.map((part) => part.trim())
+		.find((part) => part.startsWith(cookiePrefix));
+	if (!rawCookie) return null;
 
-    try {
-        const value = decodeURIComponent(rawCookie.slice(cookiePrefix.length));
-        return validateFilterData(JSON.parse(value));
-    } catch {
-        return null;
-    }
+	try {
+		const value = decodeURIComponent(rawCookie.slice(cookiePrefix.length));
+		return validateFilterData(JSON.parse(value));
+	} catch {
+		return null;
+	}
 }
 
-export function saveLocationFiltersToBrowserCookie(filters: Pick<FilterCookieData, 'plzCity' | 'distance' | 'lat' | 'lng'>) {
-    saveOfferingsFiltersToBrowserCookie(filters);
+export function saveLocationFiltersToBrowserCookie(filters: Pick<FilterCookieData, "plzCity" | "distance" | "lat" | "lng">) {
+	saveOfferingsFiltersToBrowserCookie(filters);
 }
 
 /** Persists offerings filters after a manual change. Merges into the shared filters cookie. */
 export function saveOfferingsFiltersToBrowserCookie(
-    filters: Pick<FilterCookieData, 'plzCity' | 'distance' | 'lat' | 'lng' | 'offeringsSearchTerm' | 'includeOnline'>,
+	filters: Pick<FilterCookieData, "plzCity" | "distance" | "lat" | "lng" | "offeringsSearchTerm" | "includeOnline">,
 ) {
-    if (typeof document === 'undefined') return;
+	if (typeof document === "undefined") return;
 
-    const next = {
-        ...(loadFiltersFromBrowserCookie() ?? {}),
-        ...filters,
-    };
+	const next = {
+		...(loadFiltersFromBrowserCookie() ?? {}),
+		...filters,
+	};
 
-    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(next))}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
+	document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(next))}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; samesite=lax`;
 }

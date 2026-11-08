@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { slugify } from "$lib/common";
-	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
-	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
-	import ProfileImageCropInput from "$lib/components/ProfileImageCropInput.svelte";
-	import PublicProfileSocialLinksEditor from "$lib/components/PublicProfileSocialLinksEditor.svelte";
-	import { publicProfileFormSchema } from "$lib/rpc/profile.common";
-	import { checkSlugAvailability, upsertPublicProfile } from "$lib/rpc/profile.remote";
-	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
+	import { slugify } from "#lib/common.ts";
+	import LexicalEditor from "#lib/components/LexicalEditor.svelte";
+	import FormFieldIssues from "#lib/components/FormFieldIssues.svelte";
+	import ProfileImageCropInput from "#lib/components/ProfileImageCropInput.svelte";
+	import PublicProfileSocialLinksEditor from "#lib/components/PublicProfileSocialLinksEditor.svelte";
+	import { publicProfileFormSchema } from "#lib/rpc/profile.common.ts";
+	import { checkSlugAvailability, upsertPublicProfile } from "#lib/rpc/profile.remote.ts";
+	import { UnsavedChangesGuard } from "#lib/unsavedChangesGuard.svelte.ts";
 	import { resolve } from "$app/paths";
 
 	let { data } = $props();
@@ -75,7 +75,7 @@
 		onchange={unsaved.markDirty}
 		onsubmit={unsaved.clear}
 	>
-		<h1 class="text-xl sm:text-2xl font-bold">Öffentliches Profil</h1>
+		<h1 class="text-xl font-bold sm:text-2xl">Öffentliches Profil</h1>
 
 		{#if currentSlug}
 			<a href={resolve(`/@/[slug]`, { slug: currentSlug })} class="btn btn-ghost btn-sm absolute top-3 right-4 sm:top-4 sm:right-6">

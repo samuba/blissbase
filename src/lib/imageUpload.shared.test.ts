@@ -1,9 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import {
-	getProcessedImageHashFromFileName,
-	getProcessedImageHashFromUrl,
-	isProcessedImageHash,
-} from './imageUpload.shared';
+import { describe, expect, it } from "vitest";
+import { getProcessedImageHashFromFileName, getProcessedImageHashFromUrl, isProcessedImageHash } from "./imageUpload.shared";
 
 describe(`isProcessedImageHash`, () => {
 	it(`accepts compact URL-safe hashes and rejects gallery timestamp suffixes`, () => {

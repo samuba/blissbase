@@ -1,8 +1,8 @@
-import { dev } from "$app/environment";
-import { E2E_TEST } from "$env/static/private";
-import * as assets from "$lib/assets";
-import { randomString } from "$lib/common";
-import { eventAssetsCreds } from "$lib/events.remote.shared";
+import { dev } from "$app/env";
+import { E2E_TEST } from "$app/env/private";
+import * as assets from "#lib/assets.ts";
+import { randomString } from "#lib/common.ts";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
 import {
 	assertGalleryImageObject,
 	GALLERY_IMAGE_CLAIM_TTL_MS,
@@ -11,17 +11,13 @@ import {
 	uniqueGalleryImageClaimTokens,
 	type GalleryImageContentType,
 	type GalleryImageKind,
-} from "$lib/galleryImages";
-import { isProcessedImageHash } from "$lib/imageUpload.shared";
+} from "#lib/galleryImages.ts";
+import { isProcessedImageHash } from "#lib/imageUpload.shared.ts";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const isGalleryImageE2eMode = E2E_TEST === `true` && dev;
 
-export async function createGalleryImageUpload(args: {
-	kind: GalleryImageKind;
-	contentType: GalleryImageContentType;
-	hash: string;
-}) {
+export async function createGalleryImageUpload(args: { kind: GalleryImageKind; contentType: GalleryImageContentType; hash: string }) {
 	if (!isProcessedImageHash(args.hash)) throw new Error(`Bild-Upload ist ungültig`);
 
 	const objectKey = assets.galleryTempImageObjectKey({

@@ -14,7 +14,16 @@ import {
 	getOfferingById,
 	getProfileById,
 } from "./helpers/seed";
-import { acceptNextBrowserConfirm, chooseLocation, mockGooglePlacesAutocomplete, newAnonymousContext, offeringCardById, openOfferingDetailsFromCard, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
+import {
+	acceptNextBrowserConfirm,
+	chooseLocation,
+	mockGooglePlacesAutocomplete,
+	newAnonymousContext,
+	offeringCardById,
+	openOfferingDetailsFromCard,
+	setGermanLocale,
+	waitForClientHydration,
+} from "./helpers/offering-test-utils";
 
 const profileIds = [E2E_DEFAULT_USER_ID, E2E_OTHER_USER_ID];
 
@@ -162,10 +171,7 @@ test.describe("Offering lifecycle and access control", () => {
 	});
 
 	test("activating and deactivating from the details dialog restores the host URL", async ({ page }) => {
-		const offering = await createOffering(
-			page,
-			createOfflineOffering({ title: `Dialog Listing Offering`, slug: `dialog-listing` }),
-		);
+		const offering = await createOffering(page, createOfflineOffering({ title: `Dialog Listing Offering`, slug: `dialog-listing` }));
 		await signInAsE2EUser(page);
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 		await page.goto(listUrl);
@@ -187,10 +193,7 @@ test.describe("Offering lifecycle and access control", () => {
 	});
 
 	test("deleting from the details dialog restores the host URL", async ({ page }) => {
-		const offering = await createOffering(
-			page,
-			createOfflineOffering({ title: `Dialog Delete Offering`, slug: `dialog-delete` }),
-		);
+		const offering = await createOffering(page, createOfflineOffering({ title: `Dialog Delete Offering`, slug: `dialog-delete` }));
 		await signInAsE2EUser(page);
 		const listUrl = `/offerings?location=Berlin&distance=50&lat=52.52&lng=13.405`;
 		await page.goto(listUrl);
@@ -335,10 +338,7 @@ test.describe("Offering lifecycle and access control", () => {
 		await page.goto(`/offerings/${offering.slug}/edit`);
 		await expect(page.getByTestId(`offering-image-input`)).toBeAttached();
 		page.once(`dialog`, (dialog) => void dialog.accept());
-		await Promise.all([
-			page.waitForURL((url) => url.pathname === `/offerings`),
-			page.getByTestId(`offering-delete`).click(),
-		]);
+		await Promise.all([page.waitForURL((url) => url.pathname === `/offerings`), page.getByTestId(`offering-delete`).click()]);
 
 		await expect.poll(async () => await getOfferingById(page, offering.id)).toBeUndefined();
 		await expect(offeringCardById(page, offering.id)).toHaveCount(0);

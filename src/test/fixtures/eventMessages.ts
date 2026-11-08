@@ -1,6 +1,6 @@
-import { expect } from 'vitest';
-import { broadestTagSlugs, eventStructureSlugs } from '$lib/eventCategories';
-import type { AiExtractEventDataArgs, MsgAnalysisAnswer } from '$lib/server/ai';
+import { expect } from "vitest";
+import { broadestTagSlugs, eventStructureSlugs } from "#lib/eventCategories.ts";
+import type { AiExtractEventDataArgs, MsgAnalysisAnswer } from "#lib/server/ai.ts";
 
 const broadestTags = new Set<string>(broadestTagSlugs);
 const structureSlugs = new Set<string>(eventStructureSlugs);
@@ -362,7 +362,10 @@ export function expectJudgment(result: MsgAnalysisAnswer, judgment: ExpectedJudg
 	expect(result.language, `language`).toBe(judgment.language);
 	expectCatalogTags(result.tags);
 	const tagsLabel = `tags: expected one of ${judgment.tags.join(`, `)}, got ${result.tags?.join(`, `) || `none`}`;
-	expect(judgment.tags.some((tag) => result.tags?.includes(tag)), tagsLabel).toBe(true);
+	expect(
+		judgment.tags.some((tag) => result.tags?.includes(tag)),
+		tagsLabel,
+	).toBe(true);
 	if (result.structure) expect(structureSlugs.has(result.structure)).toBe(true);
 }
 
@@ -370,8 +373,14 @@ export function expectCatalogTags(tags: string[] | undefined) {
 	const label = `tags ${tags?.join(`, `) || `none`}`;
 	expect(tags?.length, label).toBeGreaterThan(0);
 	expect(tags?.length, label).toBeLessThanOrEqual(4);
-	expect(tags?.every((tag) => broadestTags.has(tag)), label).toBe(true);
-	expect(tags?.some((tag) => structureSlugs.has(tag)), label).toBe(false);
+	expect(
+		tags?.every((tag) => broadestTags.has(tag)),
+		label,
+	).toBe(true);
+	expect(
+		tags?.some((tag) => structureSlugs.has(tag)),
+		label,
+	).toBe(false);
 }
 
 type EventMessage = { name: string; message: string; messageDate: Date };
