@@ -3,8 +3,7 @@
 	"compilerOptions": {
 		"sourceMap": true,
 		"strict": true,
-		"types": ["$app/types", "vite-plugin-pwa/info", "vite-plugin-pwa/pwa-assets", "google.maps"]
+		"types": ["$app/types", "@unplugin-pwa/core/info", "@unplugin-pwa/core/pwa-assets", "google.maps"]
 	},
-	"include": ["src", "vite.config.ts", "drizzle.config.ts", "playwright.config.ts", "tests"],
-	"exclude": ["src/service-worker"]
+	"include": ["src", "vite.config.ts", "drizzle.config.ts", "playwright.config.ts", "tests"]
 }

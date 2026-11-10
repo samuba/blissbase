@@ -65,7 +65,7 @@ const pwaOptions = {
 		includeVersionFile: true,
 	},
 	// Kit 3 remote `prerender()` writes extensionless payloads under prerendered/data — not html/json pages.
-	workbox: {
+	generateSW: {
 		globStrict: false,
 	},
 	devOptions: {
