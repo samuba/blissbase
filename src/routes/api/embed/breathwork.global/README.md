@@ -5,12 +5,7 @@ Pages on breathwork.global can embed this search and list Blissbase breathwork e
 ## Embed
 
 ```html
-<script
-  src="https://www.blissbase.app/embed/event-search-snippet.js"
-  location-id="196"
-  initial-limit="2"
-  async
-></script>
+<script src="https://www.blissbase.app/embed/event-search-snippet.js" location-id="196" initial-limit="2" async></script>
 <div id="app"></div>
 ```
 
@@ -20,20 +15,20 @@ The script renders into `#app`. If that element is missing, it creates one next 
 
 `location-id` fixes the city and hides the city select. Leave it off and the visitor picks a city. The ids match the previous snippet:
 
-| id | city |
-| --- | --- |
-| 195 | Berlin |
-| 196 | Hamburg |
-| 197 | München |
-| 198 | Köln |
-| 199 | Frankfurt |
-| 200 | Hannover |
-| 201 | Stuttgart |
+| id  | city       |
+| --- | ---------- |
+| 195 | Berlin     |
+| 196 | Hamburg    |
+| 197 | München    |
+| 198 | Köln       |
+| 199 | Frankfurt  |
+| 200 | Hannover   |
+| 201 | Stuttgart  |
 | 202 | Düsseldorf |
-| 203 | Wien |
-| 204 | Graz |
-| 206 | Zürich |
-| 205 | Bern |
+| 203 | Wien       |
+| 204 | Graz       |
+| 206 | Zürich     |
+| 205 | Bern       |
 
 `initial-limit` loads that many events as soon as the widget is ready. “Mehr Events anzeigen” then loads the next page, and further pages load on scroll. Without `initial-limit`, events load when the visitor picks a city or finishes a date range. The date range starts as today through 40 days later, and each search asks for 8 events.
 
@@ -47,12 +42,12 @@ The script `POST`s JSON to `https://www.blissbase.app/api/embed/breathwork.globa
 
 ```json
 {
-  "locationId": 196,
-  "limit": 8,
-  "start": "2026-10-04",
-  "end": "2026-11-13",
-  "searchTerm": "breathwork",
-  "cursor": null
+	"locationId": 196,
+	"limit": 8,
+	"start": "2026-10-04",
+	"end": "2026-11-13",
+	"searchTerm": "breathwork",
+	"cursor": null
 }
 ```
 
@@ -60,18 +55,18 @@ The script `POST`s JSON to `https://www.blissbase.app/api/embed/breathwork.globa
 
 ```json
 {
-  "results": [
-    {
-      "id": 1,
-      "name": "Atemkreis",
-      "startDate": "2026-10-07",
-      "endDate": "2026-10-07",
-      "url": "https://blissbase.app/atemkreis",
-      "imageUrl": "https://example.com/image.jpg",
-      "venue": "Beispielstraße 1, 20457 Hamburg"
-    }
-  ],
-  "nextCursor": "8"
+	"results": [
+		{
+			"id": 1,
+			"name": "Atemkreis",
+			"startDate": "2026-10-07",
+			"endDate": "2026-10-07",
+			"url": "https://blissbase.app/atemkreis",
+			"imageUrl": "https://example.com/image.jpg",
+			"venue": "Beispielstraße 1, 20457 Hamburg"
+		}
+	],
+	"nextCursor": "8"
 }
 ```
 

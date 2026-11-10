@@ -8,11 +8,7 @@ import {
 	visibleLocationInput,
 	gotoHomeAndWait,
 } from "./helpers/location-input";
-import {
-	mockGooglePlacesAutocomplete,
-	setEventLocationFilterCookie,
-	setGermanLocale,
-} from "./helpers/offering-test-utils";
+import { mockGooglePlacesAutocomplete, setEventLocationFilterCookie, setGermanLocale } from "./helpers/offering-test-utils";
 import { clearTestEvents, createEvents, createMeditationEvent, createYogaEvent } from "./helpers/seed";
 
 const berlin = { lat: 52.52, lng: 13.405 };

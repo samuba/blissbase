@@ -1,20 +1,20 @@
-import { error, redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { saveFiltersToCookie } from '$lib/cookie-utils';
-import { getPlaces } from '$lib/rpc/places.remote';
+import { error, redirect } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
+import { saveFiltersToCookie } from "#lib/cookie-utils.ts";
+import { getPlaces } from "#lib/rpc/places.remote.ts";
 
 export const load = (async ({ params: { slug }, cookies }) => {
-    const place = (await getPlaces()).find((place) => place.slug === slug);
-    if (!place) {
-        error(404, 'Place "' + slug + '" not found');
-    }
+	const place = (await getPlaces()).find((place) => place.slug === slug);
+	if (!place) {
+		error(404, 'Place "' + slug + '" not found');
+	}
 
-    saveFiltersToCookie(cookies, {
-        plzCity: place.name,
-        distance: place.defaultRadius.toString(),
-        lat: null,
-        lng: null
-    });
+	saveFiltersToCookie(cookies, {
+		plzCity: place.name,
+		distance: place.defaultRadius.toString(),
+		lat: null,
+		lng: null,
+	});
 
-    redirect(302, `/`);
+	redirect(302, `/`);
 }) satisfies PageServerLoad;

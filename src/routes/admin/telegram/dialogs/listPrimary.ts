@@ -1,17 +1,16 @@
-import { env } from '$env/dynamic/private';
 import {
-	missingTelegramSessionConfigMessage,
-	parseTelegramAccountSessions,
-	type TelegramAccountId,
-} from '$lib/server/telegramAccounts';
-import { TelegramClient } from 'teleproto';
-import { LogLevel } from 'teleproto/extensions/Logger';
-import { StringSession } from 'teleproto/sessions';
-import {
-	availableTelegramDialogFromDialog,
-	type AvailableTelegramDialog,
-	type TelegramDialogAccountId,
-} from './availableDialogs';
+	TELEGRAM_APP_ID,
+	TELEGRAM_APP_HASH,
+	TELEGRAM_APP_SESSION_PRIMARY,
+	TELEGRAM_APP_SESSION_FALLBACK,
+	TELEGRAM_APP_SESSION,
+} from "$app/env/private";
+
+import { missingTelegramSessionConfigMessage, parseTelegramAccountSessions, type TelegramAccountId } from "#lib/server/telegramAccounts.ts";
+import { TelegramClient } from "teleproto";
+import { LogLevel } from "teleproto/extensions/Logger";
+import { StringSession } from "teleproto/sessions";
+import { availableTelegramDialogFromDialog, type AvailableTelegramDialog, type TelegramDialogAccountId } from "./availableDialogs";
 
 /**
  * Lists groups/channels per configured scrape account (PRIMARY, then FALLBACK/legacy).
@@ -19,16 +18,16 @@ import {
  * Accounts are listed in parallel — sequential connects made the picker feel stuck.
  */
 export async function listPrimaryTelegramGroupDialogs(): Promise<{
-	accounts: TelegramAccountId[]
-	dialogs: AvailableTelegramDialog[]
-	accountStatuses: AccountDialogStatus[]
+	accounts: TelegramAccountId[];
+	dialogs: AvailableTelegramDialog[];
+	accountStatuses: AccountDialogStatus[];
 }> {
-	const apiId = Number(env.TELEGRAM_APP_ID);
-	const apiHash = env.TELEGRAM_APP_HASH?.trim();
+	const apiId = Number(TELEGRAM_APP_ID);
+	const apiHash = TELEGRAM_APP_HASH?.trim();
 	const accounts = parseTelegramAccountSessions({
-		TELEGRAM_APP_SESSION_PRIMARY: env.TELEGRAM_APP_SESSION_PRIMARY,
-		TELEGRAM_APP_SESSION_FALLBACK: env.TELEGRAM_APP_SESSION_FALLBACK,
-		TELEGRAM_APP_SESSION: env.TELEGRAM_APP_SESSION,
+		TELEGRAM_APP_SESSION_PRIMARY,
+		TELEGRAM_APP_SESSION_FALLBACK,
+		TELEGRAM_APP_SESSION,
 	});
 
 	if (!apiId || !apiHash || !accounts.length) {
@@ -60,9 +59,7 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<{
 		listed: result.dialogs.length,
 		error: result.error,
 	}));
-	const accountErrors = accountStatuses
-		.filter((status) => status.error)
-		.map((status) => `${status.accountId}: ${status.error}`);
+	const accountErrors = accountStatuses.filter((status) => status.error).map((status) => `${status.accountId}: ${status.error}`);
 
 	if (!available.length && accountErrors.length) {
 		throw new Error(accountErrors.join(`; `));
@@ -71,11 +68,7 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<{
 	console.info(
 		`Telegram dialog listing:`,
 		accountStatuses
-			.map((status) =>
-				status.error
-					? `${status.accountId}=error(${status.error})`
-					: `${status.accountId}=${status.listed}`,
-			)
+			.map((status) => (status.error ? `${status.accountId}=error(${status.error})` : `${status.accountId}=${status.listed}`))
 			.join(`, `),
 	);
 
@@ -91,12 +84,7 @@ export async function listPrimaryTelegramGroupDialogs(): Promise<{
 	return { accounts: accountIds, dialogs: available, accountStatuses };
 }
 
-async function listDialogsForSession(args: {
-	apiId: number
-	apiHash: string
-	session: string
-	accountId: TelegramAccountId
-}) {
+async function listDialogsForSession(args: { apiId: number; apiHash: string; session: string; accountId: TelegramAccountId }) {
 	const client = new TelegramClient(new StringSession(args.session), args.apiId, args.apiHash, {
 		connectionRetries: 5,
 	});
@@ -130,7 +118,7 @@ async function listDialogsForSession(args: {
 }
 
 type AccountDialogStatus = {
-	accountId: TelegramDialogAccountId
-	listed: number
-	error: string | null
-}
+	accountId: TelegramDialogAccountId;
+	listed: number;
+	error: string | null;
+};

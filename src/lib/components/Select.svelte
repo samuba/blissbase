@@ -1,16 +1,8 @@
 <script lang="ts">
-	import type { RemoteFormField } from '@sveltejs/kit';
-	import { Select as BitsSelect, type WithoutChildren } from 'bits-ui';
+	import type { RemoteFormField } from "$app/server";
+	import { Select as BitsSelect, type WithoutChildren } from "bits-ui";
 
-	let {
-		value = $bindable(),
-		options,
-		placeholder,
-		contentProps,
-		triggerProps,
-		remoteFunctionField,
-		...restProps
-	}: Props = $props();
+	let { value = $bindable(), options, placeholder, contentProps, triggerProps, remoteFunctionField, ...restProps }: Props = $props();
 
 	const selectedOption = $derived(options.find((option) => option.value === value));
 
@@ -21,7 +13,10 @@
 	 * getOptionLabel({ option: { value: `email`, html: `<i></i><span>Email</span>` } }) // `Email`
 	 */
 	function getOptionLabel(args: { option: SelectOption }) {
-		const label = args.option.html.replace(/<[^>]*>/g, ` `).replace(/\s+/g, ` `).trim();
+		const label = args.option.html
+			.replace(/<[^>]*>/g, ` `)
+			.replace(/\s+/g, ` `)
+			.trim();
 		if (label) return label;
 		return args.option.value;
 	}
@@ -34,7 +29,7 @@
 		placeholder?: string;
 		contentProps?: WithoutChildren<BitsSelect.ContentProps>;
 		triggerProps?: WithoutChildren<BitsSelect.TriggerProps>;
-		remoteFunctionField?: RemoteFormField<SelectOption['value']>;
+		remoteFunctionField?: RemoteFormField<SelectOption["value"]>;
 	};
 
 	type SelectOption = {
@@ -45,7 +40,7 @@
 </script>
 
 <BitsSelect.Root bind:value type="single" {...restProps}>
-	<BitsSelect.Trigger {...triggerProps} class={[`select appearance-none! justify-start gap-2 pr-8`, triggerProps?.class]} >
+	<BitsSelect.Trigger {...triggerProps} class={[`select appearance-none! justify-start gap-2 pr-8`, triggerProps?.class]}>
 		{#if selectedOption}
 			{@html selectedOption.html}
 		{:else if placeholder}
@@ -56,10 +51,10 @@
 		<BitsSelect.Content
 			{...contentProps}
 			class={[
-				`focus-override card card-border bg-base-100 rounded-xl px-1 py-1 shadow-xl outline-hidden select-none z-50`,
-				`data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2` ,
-				`max-h-(--bits-select-content-available-height) min-w-(--bits-select-anchor-width) data-[side=bottom]:-translate-y-2 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:translate-y-1`, 
-				contentProps?.class
+				`focus-override card card-border bg-base-100 z-50 rounded-xl px-1 py-1 shadow-xl outline-hidden select-none`,
+				`data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2`,
+				`max-h-(--bits-select-content-available-height) min-w-(--bits-select-anchor-width) data-[side=bottom]:-translate-y-2 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:translate-y-1`,
+				contentProps?.class,
 			]}
 			sideOffset={10}
 		>
@@ -72,7 +67,7 @@
 						value={option.value}
 						label={getOptionLabel({ option })}
 						disabled={option.disabled}
-						class="rounded-lg data-highlighted:bg-base-200 flex h-10 w-full items-center gap-2 py-5 pl-3 pr-5 text-sm outline-hidden select-none data-disabled:opacity-55 data-selected:font-bold"
+						class="data-highlighted:bg-base-200 flex h-10 w-full items-center gap-2 rounded-lg py-5 pr-5 pl-3 text-sm outline-hidden select-none data-disabled:opacity-55 data-selected:font-bold"
 					>
 						{#snippet children({ selected })}
 							{@html option.html}
@@ -83,14 +78,14 @@
 					</BitsSelect.Item>
 				{/each}
 			</BitsSelect.Viewport>
-			<BitsSelect.ScrollDownButton class="flex w-full items-center justify-center pb-1 pt-2">
+			<BitsSelect.ScrollDownButton class="flex w-full items-center justify-center pt-2 pb-1">
 				<i class="icon-[ph--caret-double-down] size-4"></i>
 			</BitsSelect.ScrollDownButton>
 		</BitsSelect.Content>
 	</BitsSelect.Portal>
 </BitsSelect.Root>
 
-<select class="hidden" {...remoteFunctionField?.as('select')} bind:value={value}>
+<select class="hidden" {...remoteFunctionField?.as("select")} bind:value>
 	{#each options as option (option.value)}
 		<option value={option.value}></option>
 	{/each}

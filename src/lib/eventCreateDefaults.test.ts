@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { applyCreateEventLocationPrefill } from './eventCreateDefaults';
+import { describe, expect, it } from "vitest";
+import { applyCreateEventLocationPrefill } from "./eventCreateDefaults";
 
 describe(`applyCreateEventLocationPrefill`, () => {
 	const base = {
@@ -10,17 +10,21 @@ describe(`applyCreateEventLocationPrefill`, () => {
 	};
 
 	it(`keeps the pin and note when the prefill address is unchanged`, () => {
-		expect(applyCreateEventLocationPrefill({
-			base,
-			prefillAddress: `Berlin, Germany`,
-		})).toEqual(base);
+		expect(
+			applyCreateEventLocationPrefill({
+				base,
+				prefillAddress: `Berlin, Germany`,
+			}),
+		).toEqual(base);
 	});
 
 	it(`clears the pin and note when the prefill address changes`, () => {
-		expect(applyCreateEventLocationPrefill({
-			base,
-			prefillAddress: `Munich, Germany`,
-		})).toEqual({
+		expect(
+			applyCreateEventLocationPrefill({
+				base,
+				prefillAddress: `Munich, Germany`,
+			}),
+		).toEqual({
 			address: `Munich, Germany`,
 			addressNote: ``,
 			latitude: ``,

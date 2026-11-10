@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Dialog } from '$lib/components/dialog';
-	import type { DialogTriggerProps } from 'bits-ui';
-	import type { Snippet } from 'svelte';
+	import { Dialog } from "#lib/components/dialog/index.ts";
+	import type { DialogTriggerProps } from "bits-ui";
+	import type { Snippet } from "svelte";
 
 	const VIEWPORT_NO_ZOOM = `width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no`;
 	const VIEWPORT_ALLOW_ZOOM = `width=device-width, initial-scale=1, viewport-fit=cover`;
@@ -11,7 +11,7 @@
 		alt,
 		children,
 		triggerProps,
-		currentIndex = $bindable()
+		currentIndex = $bindable(),
 	}: {
 		imageUrls?: string[];
 		alt: string;
@@ -132,7 +132,7 @@
 		if (!open) return;
 
 		// @wc-ignore
-		switch (event.key)  {
+		switch (event.key) {
 			case `ArrowLeft`:
 				event.preventDefault();
 				goToPrevious();
@@ -183,18 +183,9 @@
 						type="button"
 						class="block max-h-full max-w-full cursor-pointer border-none bg-transparent p-0"
 						onclick={handleImageClick}
-						aria-label={
-							imageUrls.length > 1
-								? `Image ${currentIndex + 1} of ${imageUrls.length}`
-								: `Close image`
-						}
+						aria-label={imageUrls.length > 1 ? `Image ${currentIndex + 1} of ${imageUrls.length}` : `Close image`}
 					>
-						<img
-							src={imageUrls[currentIndex]}
-							{alt}
-							class="max-h-[100vh] max-w-full object-contain select-none"
-							draggable="false"
-						/>
+						<img src={imageUrls[currentIndex]} {alt} class="max-h-[100vh] max-w-full object-contain select-none" draggable="false" />
 					</button>
 				{/if}
 

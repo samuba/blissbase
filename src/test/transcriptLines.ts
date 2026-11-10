@@ -14,7 +14,10 @@ export function expectLines(transcript: string, expectedLines: readonly string[]
 
 // Letters and numbers have to match. Punctuation and symbols such as · and • do not.
 export function withoutSymbols(text: string) {
-	return text.replace(/[^\p{L}\p{N}]+/gu, ` `).replace(/ +/g, ` `).trim();
+	return text
+		.replace(/[^\p{L}\p{N}]+/gu, ` `)
+		.replace(/ +/g, ` `)
+		.trim();
 }
 
 function describeMissingLine(line: string, transcript: string) {
@@ -134,5 +137,7 @@ function levenshtein(left: string, right: string) {
 }
 
 function words(text: string) {
-	return withoutSymbols(text).split(` `).filter((word) => word.length);
+	return withoutSymbols(text)
+		.split(` `)
+		.filter((word) => word.length);
 }

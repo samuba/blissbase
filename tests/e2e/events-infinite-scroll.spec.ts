@@ -104,9 +104,7 @@ test.describe(`events infinite scroll`, () => {
 		await expect(cards).toHaveCount(8);
 
 		const heldCategoryRequest = holdEventsRequest({ page, bodyIncludes: `meditation` });
-		const clearSearchRequestFinished = page.waitForEvent(`requestfinished`, (request) =>
-			isEventsRequest(request.url()),
-		);
+		const clearSearchRequestFinished = page.waitForEvent(`requestfinished`, (request) => isEventsRequest(request.url()));
 		// Selecting a category clears the text search first, so this fires two overlapping requests.
 		await page.getByTestId(`category-chip-meditation`).click();
 		await clearSearchRequestFinished;

@@ -1,12 +1,12 @@
-import { getPageMetaTags } from '$lib/common';
+import { getPageMetaTags } from "#lib/common.ts";
 import {
 	getOfferingsForPublicProfile,
 	getPublicProfileBioExcerpt,
 	getPublicProfileBySlug,
-	getUpcomingEventsForPublicProfile
-} from '$lib/server/profile';
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+	getUpcomingEventsForPublicProfile,
+} from "#lib/server/profile.ts";
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 export const load = (async ({ params, url }) => {
 	const profile = await getPublicProfileBySlug({ slug: params.slug });
@@ -16,7 +16,7 @@ export const load = (async ({ params, url }) => {
 
 	const [upcomingEvents, publicOfferings] = await Promise.all([
 		getUpcomingEventsForPublicProfile({ authorId: profile.id }),
-		getOfferingsForPublicProfile({ profile })
+		getOfferingsForPublicProfile({ profile }),
 	]);
 	const profileDisplayName = profile.displayName ?? `Blissbase`;
 
@@ -28,7 +28,7 @@ export const load = (async ({ params, url }) => {
 			name: profileDisplayName,
 			description: getPublicProfileBioExcerpt({ bio: profile.bio }),
 			imageUrl: profile.profileImageUrl ?? profile.bannerImageUrl,
-			url
-		})
+			url,
+		}),
 	};
 }) satisfies PageServerLoad;

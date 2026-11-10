@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Select from '$lib/components/Select.svelte';
-	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
-	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { ALL_EVENT_SOURCES_VALUE } from '$lib/cookie-utils';
-	import { setEventSourceFilter } from '$lib/rpc/admin.remote';
+	import Select from "#lib/components/Select.svelte";
+	import { WEBSITE_SCRAPER_CONFIG } from "#lib/commonWithScripts.ts";
+	import { eventsStore } from "#lib/eventsStore.svelte.ts";
+	import { ALL_EVENT_SOURCES_VALUE } from "#lib/cookie-utils.ts";
+	import { setEventSourceFilter } from "#lib/rpc/admin.remote.ts";
 
 	let {
 		sources,
@@ -58,7 +58,7 @@
 	}
 </script>
 
-<div class="bg-warning text-warning-content flex w-full flex-col items-start gap-3 rounded-box p-4">
+<div class="bg-warning text-warning-content rounded-box flex w-full flex-col items-start gap-3 p-4">
 	<h3 class="flex items-center gap-2">
 		<i class="icon-[ph--shield-star] size-5"></i>
 		Admin Zeug

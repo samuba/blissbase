@@ -1,13 +1,13 @@
-import { invalidateAll } from "$app/navigation";
+import { refreshAll } from "$app/navigation";
 import { tick } from "svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { localeStore } from "../locales/localeStore.svelte";
-import { verifyEmailOtp } from "$lib/rpc/auth.remote";
-import { checkEmailProfileComplete } from "$lib/rpc/profile.remote";
-import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-import { getSupabaseBrowserClient } from "$lib/supabase";
-import { authCallbackUrl, routes } from "$lib/routes";
-import { mapOAuthError, startGoogleOAuth } from "$lib/oauthSignIn";
+import { verifyEmailOtp } from "#lib/rpc/auth.remote.ts";
+import { checkEmailProfileComplete } from "#lib/rpc/profile.remote.ts";
+import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+import { getSupabaseBrowserClient } from "#lib/supabase.ts";
+import { authCallbackUrl, routes } from "#lib/routes.ts";
+import { mapOAuthError, startGoogleOAuth } from "#lib/oauthSignIn.ts";
 
 const EMAIL_CHECK_DEBOUNCE_MS = 500;
 
@@ -170,7 +170,7 @@ export class CreateFlowAuth {
 				return false;
 			}
 			this.#setSubmitAuthToken(result.submitAuthToken);
-			await invalidateAll();
+			await refreshAll();
 			if (!this.submitAuthToken) {
 				this.authError = authConfirmFailedMessage;
 				return false;
@@ -274,10 +274,7 @@ export class CreateFlowAuth {
 	}
 }
 
-export async function submitCreateFlowForm(args: {
-	formId: string;
-	beforeSubmit?: (form: HTMLFormElement) => boolean;
-}) {
+export async function submitCreateFlowForm(args: { formId: string; beforeSubmit?: (form: HTMLFormElement) => boolean }) {
 	const deadline = Date.now() + (args.beforeSubmit ? 4000 : 2000);
 	while (Date.now() < deadline) {
 		const form = document.getElementById(args.formId);
@@ -326,10 +323,7 @@ export function assignCreateFlowImageClaims(args: { tokens: string[]; form: HTML
 	return args.tokens.every((token) => present.some((el) => el.value === token && (el.type === `hidden` || el.checked)));
 }
 
-export async function waitForCreateFlowSubmit(args: {
-	isPending: () => boolean;
-	startTimeoutMs?: number;
-}): Promise<`started` | `idle`> {
+export async function waitForCreateFlowSubmit(args: { isPending: () => boolean; startTimeoutMs?: number }): Promise<`started` | `idle`> {
 	const startDeadline = Date.now() + (args.startTimeoutMs ?? 4000);
 	while (!args.isPending() && Date.now() < startDeadline) {
 		await tick();

@@ -2,10 +2,10 @@
 	import { afterNavigate } from "$app/navigation";
 	import { page } from "$app/state";
 	import { onMount } from "svelte";
-	import { isEventOrOfferingListPath, routes } from "$lib/routes";
-	import { peekFooter } from "$lib/peekFooter.svelte";
-	import { user } from "$lib/user.svelte";
-	import LocaleSwitcher from "$lib/components/LocaleSwitcher.svelte";
+	import { isEventOrOfferingListPath, routes } from "#lib/routes.ts";
+	import { peekFooter } from "#lib/peekFooter.svelte.ts";
+	import { user } from "#lib/user.svelte.ts";
+	import LocaleSwitcher from "#lib/components/LocaleSwitcher.svelte";
 
 	const SCROLL_THRESHOLD = 8;
 	const TOP_REVEAL_Y = 24;
@@ -25,7 +25,9 @@
 		peekFooter.shown = !hidden;
 	});
 
-	afterNavigate(({ to }) => {
+	afterNavigate(({ to, shallow, type }) => {
+		if (shallow && type === "goto") return;
+
 		lastScrollY = window.scrollY;
 		if (!to) return;
 		if (isEventOrOfferingListPath({ pathname: to.url.pathname, origin: to.url.origin })) return;
@@ -96,6 +98,7 @@
 </script>
 
 <svelte:window onscroll={handleScroll} />
+
 <svelte:document onfocusin={handleFocusIn} onfocusout={() => (textEntryFocused = false)} />
 
 <footer
@@ -107,9 +110,7 @@
 		hidden && `pointer-events-none translate-y-full md:pointer-events-auto md:translate-y-0`,
 	]}
 >
-	<nav
-		class="mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1"
-	>
+	<nav class="mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1">
 		<LocaleSwitcher forceClose={hidden} />
 		<span class="text-base-content/30" aria-hidden="true">·</span>
 		{#each links as link, index (link.href)}

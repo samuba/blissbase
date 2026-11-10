@@ -48,9 +48,9 @@
 		"@iconify/tailwind4": "^1.2.3",
 		"@playwright/test": "^1.59.1",
 		"@posthog/rollup-plugin": "^1.4.7",
-		"@sveltejs/adapter-vercel": "^6.3.4",
-		"@sveltejs/enhanced-img": "^0.11.0",
-		"@sveltejs/kit": "^2.70.3",
+		"@sveltejs/adapter-vercel": "^7.0.0",
+		"@sveltejs/enhanced-img": "^1.0.0",
+		"@sveltejs/kit": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.3.0",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.2.2",
@@ -66,8 +66,8 @@
 		"@varlock/keepass-plugin": "^2.0.4",
 		"@varlock/vite-integration": "^1.5.5",
 		"@vercel/functions": "^3.4.3",
-		"@vite-pwa/sveltekit": "^1.1.0",
-		"@wuchale/svelte": "^0.21.3",
+		"@vite-pwa/sveltekit": "^2.0.0",
+		"@wuchale/svelte": "^0.21.4",
 		"ai": "7.0.107",
 		"bits-ui": "^2.18.1",
 		"calendar-link": "^2.11.0",
@@ -78,6 +78,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.17.0",
 		"globals": "^17.5.0",
+		"magicast": "^0.5.5",
 		"postgres": "^3.4.9",
 		"posthog-node": "^5.46.1",
 		"prettier": "^3.8.3",
@@ -85,8 +86,8 @@
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"rollup": "^4.60.1",
 		"sharp": "^0.34.5",
-		"svelte": "^5.57.0",
-		"svelte-check": "^4.7.4",
+		"svelte": "^5.57.2",
+		"svelte-check": "^4.7.5",
 		"svelte-meta-tags": "^4.6.0",
 		"tailwindcss": "^4.2.2",
 		"telegraf": "^4.16.3",
@@ -100,7 +101,7 @@
 		"vite-plugin-pwa": "^1.2.0",
 		"vitest": "^4.1.9",
 		"wreq-js": "^2.3.1",
-		"wuchale": "^0.26.6"
+		"wuchale": "^0.26.7"
 	},
 	"dependencies": {
 		"@bradenmacdonald/s3-lite-client": "npm:@jsr/bradenmacdonald__s3-lite-client@^0.9.6",
@@ -130,5 +131,9 @@
 		"svelte-easy-crop": "^5.0.1",
 		"svelte-sonner": "^1.1.0",
 		"ws": "^8.20.0"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	}
 }

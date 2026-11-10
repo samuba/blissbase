@@ -1,8 +1,7 @@
 import adapter from "@sveltejs/adapter-vercel";
 import { enhancedImages } from "@sveltejs/enhanced-img";
-import { sveltekit } from "@sveltejs/kit/vite";
+import { withPwa } from "@vite-pwa/sveltekit";
 import tailwindcss from "@tailwindcss/vite";
-import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import posthog from "@posthog/rollup-plugin";
 import { varlockVitePlugin } from "@varlock/vite-integration";
@@ -17,7 +16,7 @@ export const svelteKitConfig = {
 		experimental: {
 			async: true,
 		},
-		warningFilter: (warning) => {
+		warningFilter: (warning: { code: string }) => {
 			if (
 				warning.code === `a11y_no_noninteractive_element_interactions` ||
 				warning.code === `a11y_click_events_have_key_events` ||
@@ -46,7 +45,69 @@ export const svelteKitConfig = {
 		forkPreloads: false,
 	},
 	inspector: true,
-} satisfies NonNullable<Parameters<typeof sveltekit>[0]>;
+};
+
+const pwaOptions = {
+	includeAssets: [
+		"favicon.ico",
+		"favicon.svg",
+		"favicon.png",
+		"apple-touch-icon.png",
+		"pwa-192x192.png",
+		"pwa-512x512.png",
+		"pwa-512-maskable.png",
+		"pwa-192-maskable.png",
+		"logo.svg",
+	],
+	registerType: "autoUpdate" as const,
+	injectRegister: false as const,
+	kit: {
+		includeVersionFile: true,
+	},
+	// Kit 3 remote `prerender()` writes extensionless payloads under prerendered/data — not html/json pages.
+	workbox: {
+		globStrict: false,
+	},
+	devOptions: {
+		enabled: !isE2e,
+	},
+	manifest: {
+		name: "Blissbase",
+		short_name: "Blissbase",
+		description: "Find conscious events near you.",
+		theme_color: "#efeae7",
+		background_color: "#efeae7",
+		start_url: "/",
+		scope: "/",
+		display_override: ["window-controls-overlay" as const],
+		icons: [
+			{
+				src: "/pwa-192x192.png",
+				sizes: "192x192",
+				type: "image/png",
+				purpose: "any" as const,
+			},
+			{
+				src: "/pwa-512x512.png",
+				sizes: "512x512",
+				type: "image/png",
+				purpose: "any" as const,
+			},
+			{
+				src: "/pwa-192-maskable.png",
+				sizes: "192x192",
+				type: "image/png",
+				purpose: "maskable" as const,
+			},
+			{
+				src: "/pwa-512-maskable.png",
+				sizes: "512x512",
+				type: "image/png",
+				purpose: "maskable" as const,
+			},
+		],
+	},
+};
 
 export default defineConfig(() => ({
 	plugins: [
@@ -55,7 +116,7 @@ export default defineConfig(() => ({
 		tailwindcss(),
 		wuchale(),
 		enhancedImages(),
-		sveltekit(svelteKitConfig),
+		withPwa(svelteKitConfig, pwaOptions),
 		process.env.VERCEL
 			? posthog({
 					personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY!, // Personal API Key
@@ -67,53 +128,6 @@ export default defineConfig(() => ({
 					},
 				})
 			: undefined,
-		SvelteKitPWA({
-			includeAssets: ["favicon.ico", "favicon.svg", "favicon.png", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png", "pwa-512-maskable.png", "pwa-192-maskable.png", "logo.svg"],
-			registerType: "autoUpdate",
-			injectRegister: false,
-			kit: {
-				includeVersionFile: true,
-			},
-			devOptions: {
-				enabled: !isE2e,
-			},
-			manifest: {
-				name: "Blissbase",
-				short_name: "Blissbase",
-				description: "Find conscious events near you.",
-				theme_color: "#efeae7",
-				background_color: "#efeae7",
-				start_url: "/",
-				scope: "/",
-				display_override: ["window-controls-overlay"],
-				icons: [
-					{
-						src: "/pwa-192x192.png",
-						sizes: "192x192",
-						type: "image/png",
-						purpose: "any",
-					},
-					{
-						src: "/pwa-512x512.png",
-						sizes: "512x512",
-						type: "image/png",
-						purpose: "any",
-					},
-					{
-						src: "/pwa-192-maskable.png",
-						sizes: "192x192",
-						type: "image/png",
-						purpose: "maskable",
-					},
-					{
-						src: "/pwa-512-maskable.png",
-						sizes: "512x512",
-						type: "image/png",
-						purpose: "maskable",
-					},
-				],
-			},
-		}),
 	],
 	...(process.env.VITE_CACHE_DIR ? { cacheDir: process.env.VITE_CACHE_DIR } : {}),
 	server: {

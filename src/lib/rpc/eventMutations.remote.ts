@@ -1,27 +1,27 @@
-import { form, getRequestEvent, query } from '$app/server';
-import { E2E_TEST, GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import * as assets from '$lib/assets';
-import { deduplicateItems, generateSlug, randomString, toAddressLines } from '$lib/common';
-import { getNextGalleryImageUrls, uniqueGalleryImageClaimTokens } from '$lib/galleryImages';
-import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from '$lib/events.remote.common';
-import { coordinatesMatch, hasValidCoordinates } from '$lib/locationFilter';
-import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from '$lib/events.remote.shared';
-import { routes, withEventSlug } from '$lib/routes';
-import { finalizeGalleryImageClaims, isGalleryImageE2eMode, verifyGalleryImageClaims } from '$lib/server/galleryImageClaims';
-import { db, eq, s, sql } from '$lib/server/db';
-import { sendEventCreatedEmail } from '$lib/server/email';
-import { geocodeAddressCached, getTimezoneForCoordinatesCached } from '$lib/server/google';
-import { isPublicProfile } from '$lib/server/profile';
-import { hasPublicProfileChanges, mergeProfileFromForm, savePublicProfile } from '$lib/server/savePublicProfile';
-import { verifySubmitAuthToken } from '$lib/server/submitAuth';
-import { getMyPublicProfile } from '$lib/rpc/profile.remote';
-import { setFlash } from '$lib/server/flash';
-import type { InsertEvent } from '$lib/types';
-import { error, invalid, redirect } from '@sveltejs/kit';
-import * as v from 'valibot';
+import { form, getRequestEvent, query } from "$app/server";
+import { E2E_TEST, GOOGLE_MAPS_API_KEY } from "$app/env/private";
+import * as assets from "#lib/assets.ts";
+import { deduplicateItems, generateSlug, randomString, toAddressLines } from "#lib/common.ts";
+import { getNextGalleryImageUrls, uniqueGalleryImageClaimTokens } from "#lib/galleryImages.ts";
+import { createEventSchema, updateEventSchema, type ContactMethod, type CreateEventData } from "#lib/eventForm.common.ts";
+import { coordinatesMatch, hasValidCoordinates } from "#lib/locationFilter.ts";
+import { assertUserIsAllowedToEditEvent, eventAssetsCreds } from "#lib/eventForm.shared.ts";
+import { routes, withEventSlug } from "#lib/routes.ts";
+import { finalizeGalleryImageClaims, isGalleryImageE2eMode, verifyGalleryImageClaims } from "#lib/server/galleryImageClaims.ts";
+import { db, eq, s, sql } from "#lib/server/db.ts";
+import { sendEventCreatedEmail } from "#lib/server/email.ts";
+import { geocodeAddressCached, getTimezoneForCoordinatesCached } from "#lib/server/google.ts";
+import { isPublicProfile } from "#lib/server/profile.ts";
+import { hasPublicProfileChanges, mergeProfileFromForm, savePublicProfile } from "#lib/server/savePublicProfile.ts";
+import { verifySubmitAuthToken } from "#lib/server/submitAuth.ts";
+import { getMyPublicProfile } from "#lib/rpc/profile.remote.ts";
+import { setFlash } from "#lib/server/flash.ts";
+import type { InsertEvent } from "#lib/types.ts";
+import { error, invalid, redirect } from "@sveltejs/kit";
+import * as v from "valibot";
 
 export const updateEvent = form(updateEventSchema, async (data, issue) => {
-	console.time('updateEvent');
+	console.time("updateEvent");
 	const eventFromDb = await assertUserIsAllowedToEditEvent(data.eventId, data.hostSecret);
 	const imageClaims = verifyGalleryImageClaims({ claimTokens: data.imageClaims, kind: `event` });
 	if (imageClaims instanceof Error) {
@@ -54,7 +54,7 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 			previousTimezone: eventFromDb.timezone,
 			formTimeZone: data.timeZone,
 		}),
-		address
+		address,
 	});
 
 	const imageUrls = getNextGalleryImageUrls({
@@ -66,25 +66,28 @@ export const updateEvent = form(updateEventSchema, async (data, issue) => {
 	});
 	const deletedImageUrls = (eventFromDb.imageUrls ?? []).filter((url) => !imageUrls.includes(url));
 
-	await db.update(s.events).set({
-		...formData,
-		latitude: coords?.lat,
-		longitude: coords?.lng,
-		imageUrls: deduplicateItems(imageUrls),
-		updatedAt: sql`now()`,
-	}).where(eq(s.events.id, eventFromDb.id));
+	await db
+		.update(s.events)
+		.set({
+			...formData,
+			latitude: coords?.lat,
+			longitude: coords?.lng,
+			imageUrls: deduplicateItems(imageUrls),
+			updatedAt: sql`now()`,
+		})
+		.where(eq(s.events.id, eventFromDb.id));
 
 	if (deletedImageUrls?.length && !isGalleryImageE2eMode) {
 		await assets.deleteObjects(deletedImageUrls, eventAssetsCreds);
 	}
 
-	console.timeEnd('updateEvent');
+	console.timeEnd("updateEvent");
 	setFlash(`eventUpdated`);
 	redirect(303, routes.eventDetails(eventFromDb.slug));
 });
 
 export const createEvent = form(createEventSchema, async (data, issue) => {
-	console.time('createEvent');
+	console.time("createEvent");
 	const { locals } = getRequestEvent();
 	const sessionUserId = locals.userId;
 	const userId = sessionUserId ? sessionUserId : verifySubmitAuthToken(data.authToken);
@@ -131,7 +134,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		name: event.name,
 		startAt: data.startAt,
 		endAt: data.endAt,
-		timezone
+		timezone,
 	});
 
 	const existingEvent = await db.query.events.findFirst({ where: eq(s.events.slug, slug), columns: { slug: true } });
@@ -145,16 +148,19 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		ownerId: slug,
 	});
 
-	const [createdEvent] = await db.insert(s.events).values({
-		...event,
-		source: `website-form`,
-		slug,
-		imageUrls: deduplicateItems(imageUrls),
-		latitude: coords?.lat,
-		longitude: coords?.lng,
-		authorId: userId,
-		hostSecret: randomString(16),
-	} satisfies InsertEvent).returning();
+	const [createdEvent] = await db
+		.insert(s.events)
+		.values({
+			...event,
+			source: `website-form`,
+			slug,
+			imageUrls: deduplicateItems(imageUrls),
+			latitude: coords?.lat,
+			longitude: coords?.lng,
+			authorId: userId,
+			hostSecret: randomString(16),
+		} satisfies InsertEvent)
+		.returning();
 	if (!createdEvent) throw error(500, `Failed to create event`);
 
 	if (E2E_TEST !== `true`) {
@@ -168,30 +174,33 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		});
 	}
 
-	console.timeEnd('createEvent');
+	console.timeEnd("createEvent");
 	setFlash(`eventCreated`);
 	redirect(303, withEventSlug({ eventSlug: createdEvent.slug }));
 });
 
-export const getExistingEventForDraft = query(v.object({
-	name: v.pipe(v.string(), v.trim(), v.nonEmpty()),
-	startAt: v.pipe(v.string(), v.isoDateTime()),
-	endAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
-	timeZone: v.pipe(v.string(), v.trim(), v.nonEmpty())
-}), async (draft) => {
-	const slug = getEventSlugForDraft({
-		name: draft.name,
-		startAt: draft.startAt,
-		endAt: draft.endAt,
-		timezone: draft.timeZone
-	});
-	const existingEvent = await db.query.events.findFirst({
-		where: eq(s.events.slug, slug),
-		columns: { slug: true }
-	});
+export const getExistingEventForDraft = query(
+	v.object({
+		name: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+		startAt: v.pipe(v.string(), v.isoDateTime()),
+		endAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
+		timeZone: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+	}),
+	async (draft) => {
+		const slug = getEventSlugForDraft({
+			name: draft.name,
+			startAt: draft.startAt,
+			endAt: draft.endAt,
+			timezone: draft.timeZone,
+		});
+		const existingEvent = await db.query.events.findFirst({
+			where: eq(s.events.slug, slug),
+			columns: { slug: true },
+		});
 
-	return { slug: existingEvent?.slug };
-});
+		return { slug: existingEvent?.slug };
+	},
+);
 
 /**
  * Computes the canonical event slug from draft form values before persisting.
@@ -199,12 +208,7 @@ export const getExistingEventForDraft = query(v.object({
  * @example
  * getEventSlugForDraft({ name: `Ecstatic Dance`, startAt: `2026-03-12T19:00`, endAt: `2026-03-12T22:00`, timeZone: `Europe/Berlin` })
  */
-function getEventSlugForDraft(args: {
-	name: string;
-	startAt: string;
-	endAt?: string;
-	timezone: string;
-}) {
+function getEventSlugForDraft(args: { name: string; startAt: string; endAt?: string; timezone: string }) {
 	const startAt = utcDate(args.startAt, args.timezone);
 	const endAt = args.endAt ? utcDate(args.endAt, args.timezone) : undefined;
 	return generateSlug({ name: args.name, startAt, endAt });
@@ -222,7 +226,7 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 	const endAt = args.data.endAt ? utcDate(args.data.endAt, args.timezone) : undefined;
 	const attendanceMode = args.data.isOnline ? `online` : `offline`;
 	const listed = !args.data.isNotListed;
-	let contact: string[] = []
+	let contact: string[] = [];
 	const contactMethod = args.data.contactMethod as ContactMethod;
 	if (contactMethod === `email`) {
 		contact = [`mailto:${args.data.contact}`];
@@ -272,7 +276,7 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 		addressNote: args.data.addressNote?.trim() || null,
 		attendanceMode,
 		contact,
-	} satisfies Omit<InsertEvent, 'source' | 'slug'>;
+	} satisfies Omit<InsertEvent, "source" | "slug">;
 }
 
 /**
@@ -296,10 +300,12 @@ function resolveUpdateTimezone(args: {
 }) {
 	if (args.coords?.timezone) return args.coords.timezone;
 
-	const venueMoved = Boolean(args.coords) && !coordinatesMatch({
-		a: { lat: args.coords?.lat, lng: args.coords?.lng },
-		b: { lat: args.previousLat, lng: args.previousLng },
-	});
+	const venueMoved =
+		Boolean(args.coords) &&
+		!coordinatesMatch({
+			a: { lat: args.coords?.lat, lng: args.coords?.lng },
+			b: { lat: args.previousLat, lng: args.previousLng },
+		});
 	if (venueMoved) return args.formTimeZone ?? args.previousTimezone ?? `Europe/Berlin`;
 	return args.previousTimezone ?? args.formTimeZone ?? `Europe/Berlin`;
 }
@@ -310,11 +316,7 @@ function resolveUpdateTimezone(args: {
  * @example
  * await resolveEventCoordinates({ address: `Berlin`, latitude: 52.52, longitude: 13.405 })
  */
-async function resolveEventCoordinates(args: {
-	address?: string;
-	latitude?: number | null;
-	longitude?: number | null;
-}) {
+async function resolveEventCoordinates(args: { address?: string; latitude?: number | null; longitude?: number | null }) {
 	if (hasValidCoordinates({ lat: args.latitude, lng: args.longitude })) {
 		const lat = args.latitude as number;
 		const lng = args.longitude as number;

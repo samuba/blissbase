@@ -1,8 +1,9 @@
 <script lang="ts">
-	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
-	import Select from "$lib/components/Select.svelte";
-	import { Dialog } from "$lib/components/dialog";
-	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+	import type { RemoteFormField, RemoteFormIssue } from "$app/server";
+	import FormFieldIssues from "#lib/components/FormFieldIssues.svelte";
+	import Select from "#lib/components/Select.svelte";
+	import { Dialog } from "#lib/components/dialog/index.ts";
+	import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
 	import {
 		PROFILE_SOCIAL_TYPES,
 		socialIconClass,
@@ -10,8 +11,8 @@
 		socialLabel,
 		usernameUrlPrefix,
 		type ProfileSocialType,
-	} from "$lib/socialLinks";
-	import type { RemoteFormField, RemoteFormIssue } from "@sveltejs/kit";
+	} from "#lib/socialLinks.ts";
+
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 
@@ -132,7 +133,7 @@
 			type: RemoteFormField<ProfileSocialType>;
 			value: RemoteFormField<string>;
 		};
-		set: (value: PublicProfileSocialLinks) => PublicProfileSocialLinks;
+		set: (value: PublicProfileSocialLinks) => unknown;
 		issues?: () => RemoteFormIssue[] | undefined;
 		allIssues?: () => RemoteFormIssue[] | undefined;
 	};
@@ -277,7 +278,15 @@
 
 			<div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<Dialog.Close class="btn btn-ghost" type="button">Abbrechen</Dialog.Close>
-				<button type="button" onclick={confirmAddLink} form="add-social-link-form" class="btn btn-primary" data-testid="add-social-link-submit"> Hinzufügen </button>
+				<button
+					type="button"
+					onclick={confirmAddLink}
+					form="add-social-link-form"
+					class="btn btn-primary"
+					data-testid="add-social-link-submit"
+				>
+					Hinzufügen
+				</button>
 			</div>
 
 			<Dialog.Close

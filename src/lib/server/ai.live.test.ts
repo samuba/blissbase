@@ -1,9 +1,9 @@
-import 'varlock/auto-load';
-import { describe, expect, it } from 'vitest';
-import { eventMessages, expectEventFields, uncachedArgs } from '../../test/fixtures/eventMessages';
-import { imageTranscriptCases, readFixtureImages } from '../../test/fixtures/image-transcripts/cases';
-import { expectLines } from '../../test/transcriptLines';
-import { aiExtractEventData, aiTranscribeImage } from './ai';
+import "varlock/auto-load";
+import { describe, expect, it } from "vitest";
+import { eventMessages, expectEventFields, uncachedArgs } from "../../test/fixtures/eventMessages";
+import { imageTranscriptCases, readFixtureImages } from "../../test/fixtures/image-transcripts/cases";
+import { expectLines } from "../../test/transcriptLines";
+import { aiExtractEventData, aiTranscribeImage } from "./ai";
 
 describe(`aiExtractEventData`, () => {
 	for (const eventMessage of eventMessages) {

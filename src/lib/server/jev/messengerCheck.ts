@@ -26,7 +26,7 @@ export async function resolveMessengerAnalysis(args: ResolveMessengerAnalysisArg
 	const existingSource = getExistingSource(args.message);
 	if (existingSource) return { hasEventData: false, existingSource };
 
-	const imageInputs = args.imageInputs?.filter((input) => !!input) as AiImageInput[] ?? [];
+	const imageInputs = (args.imageInputs?.filter((input) => !!input) as AiImageInput[]) ?? [];
 	if (imageInputs.length) return resolveImageAnalysis({ args, imageInputs });
 
 	const text = messageTextForJev(args.message);
@@ -57,12 +57,7 @@ async function resolveImageAnalysis({ args, imageInputs }: { args: ResolveMessen
 	return judgeThenExtract({ args, text, msgForLlm, ignoreImages: true });
 }
 
-async function judgeThenExtract(args: {
-	args: ResolveMessengerAnalysisArgs;
-	text: string;
-	msgForLlm: string;
-	ignoreImages?: boolean;
-}) {
+async function judgeThenExtract(args: { args: ResolveMessengerAnalysisArgs; text: string; msgForLlm: string; ignoreImages?: boolean }) {
 	let judgment: MessengerJudgment;
 	try {
 		const { answers } = await askJev(args.text);
@@ -98,7 +93,6 @@ async function judgeThenExtract(args: {
 	aiAnswer.hasEventData = true;
 	aiAnswer.existingSource = undefined;
 	return aiAnswer;
-
 }
 
 async function extractOnlyWithLlm(args: ResolveMessengerAnalysisArgs) {
@@ -118,10 +112,7 @@ export function messageTextForJev(message: string) {
 	return stripHtml(withBreaks)?.replaceAll(`\u00a0`, ` `).trim() ?? ``;
 }
 
-export function interpretJevAnswer(args: {
-	answers: JevAnswers;
-	eventIsDefinitelyConscious: boolean;
-}) {
+export function interpretJevAnswer(args: { answers: JevAnswers; eventIsDefinitelyConscious: boolean }) {
 	const { is_event, has_start_date, is_conscious, attendance, contact_author } = args.answers;
 
 	if (isFalse(is_event)) return { skipReason: `not an event announcement` };
@@ -130,9 +121,7 @@ export function interpretJevAnswer(args: {
 	const isConscious = args.eventIsDefinitelyConscious || attributes.isConscious;
 	if (!isConscious) return { skipReason: `not a conscious event` };
 
-	const attendanceMode = attendance.confidence >= 0.5 && attendance.choice !== `unknown`
-		? attendance.choice
-		: `offline`;
+	const attendanceMode = attendance.confidence >= 0.5 && attendance.choice !== `unknown` ? attendance.choice : `offline`;
 	const contactAuthorForMore = isTrue(contact_author);
 
 	return {
@@ -195,7 +184,7 @@ export async function askJev(text: string) {
 	});
 	console.log(`[jev] ${result.model} (${result.usage?.input_tokens ?? 0} input tokens)`);
 	//console.debug(`[jev] result ${JSON.stringify(result, null, 2)}`);
-	return result
+	return result;
 }
 
 function eventAttributeQuestions() {
@@ -244,15 +233,15 @@ function chosenEventLanguage(answer: { choice: string; confidence: number }): Ev
 }
 
 function isTrue(answer: NoulResponse) {
-	return answer.noul >= NOUL_YES
+	return answer.noul >= NOUL_YES;
 }
 
 function isFalse(answer: NoulResponse) {
-	return answer.noul < NOUL_YES
+	return answer.noul < NOUL_YES;
 }
 
-type JevAnswers = Awaited<ReturnType<typeof askJev>>['answers'];
-type EventAttributeAnswers = Awaited<ReturnType<typeof askJevEventAttributes>>['answers'];
+type JevAnswers = Awaited<ReturnType<typeof askJev>>["answers"];
+type EventAttributeAnswers = Awaited<ReturnType<typeof askJevEventAttributes>>["answers"];
 
 type ResolveMessengerAnalysisArgs = AiExtractEventDataArgs & {
 	beforeLlmExtract?: () => Promise<unknown> | unknown;

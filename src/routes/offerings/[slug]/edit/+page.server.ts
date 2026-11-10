@@ -1,5 +1,5 @@
-import { noindexPageMetaTags } from "$lib/common";
-import { db, eq, s } from "$lib/server/db";
+import { noindexPageMetaTags } from "#lib/common.ts";
+import { db, eq, s } from "#lib/server/db.ts";
 import { error } from "@sveltejs/kit";
 
 export async function load({ locals, params: { slug } }) {

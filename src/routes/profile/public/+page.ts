@@ -1,4 +1,4 @@
-import { getMyPublicProfile } from "$lib/rpc/profile.remote";
+import { getMyPublicProfile } from "#lib/rpc/profile.remote.ts";
 import type { PageLoad } from "./$types";
 
 export const load = (async () => {

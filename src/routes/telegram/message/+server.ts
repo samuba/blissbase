@@ -1,29 +1,29 @@
-import type { RequestHandler } from '@sveltejs/kit';
-import { handleMessage } from './bot';
-import { type TelegramCloudflareBody, msgFilters } from '$lib/telegramCommon';
-import { TELEGRAM_BOT_TOKEN } from '$env/static/private';
-import { Telegraf } from 'telegraf';
-import type { Config } from '@sveltejs/adapter-vercel';
+import type { RequestHandler } from "@sveltejs/kit";
+import { handleMessage } from "./bot";
+import { type TelegramCloudflareBody, msgFilters } from "#lib/telegramCommon.ts";
+import { TELEGRAM_BOT_TOKEN } from "$app/env/private";
+import { Telegraf } from "telegraf";
+import type { Config } from "@sveltejs/adapter-vercel";
 
 export const config: Config = {
-    split: true // this route can get very chunky cuz of sharp dependency
-}
+	split: true, // this route can get very chunky cuz of sharp dependency
+};
 
 export const POST: RequestHandler = async ({ request }) => {
-    try {
-        const data = await request.json() as TelegramCloudflareBody;
-        console.log("telegram message from cloudflare", data);
+	try {
+		const data = (await request.json()) as TelegramCloudflareBody;
+		console.log("telegram message from cloudflare", data);
 
-        const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
+		const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-        bot.on(msgFilters, async (ctx) => {
-            return await handleMessage(ctx, data)
-        });
+		bot.on(msgFilters, async (ctx) => {
+			return await handleMessage(ctx, data);
+		});
 
-        await bot.handleUpdate(data.telegramPayload)
-    } catch (error) {
-        console.error(error);
-    }
+		await bot.handleUpdate(data.telegramPayload);
+	} catch (error) {
+		console.error(error);
+	}
 
-    return new Response('OK', { status: 200 });
+	return new Response("OK", { status: 200 });
 };

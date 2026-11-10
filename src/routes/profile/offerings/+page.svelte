@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
-	import OfferingCard from "$lib/components/OfferingCard.svelte";
-	import { getMyOfferings, updateProfileLocation } from "$lib/rpc/offerings.remote";
-	import { routes } from "$lib/routes";
+	import LocationAutocompleteInput from "#lib/components/LocationAutocompleteInput.svelte";
+	import OfferingCard from "#lib/components/OfferingCard.svelte";
+	import { getMyOfferings, updateProfileLocation } from "#lib/rpc/offerings.remote.ts";
+	import { routes } from "#lib/routes.ts";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
 
 	let { data } = $props();
@@ -18,11 +18,7 @@
 		return routes.newOffering({ returnTo: routes.currentPath(page.url) });
 	}
 
-	async function handleLocationSelect(event: {
-		locationLabel: string | null;
-		latitude: number | null;
-		longitude: number | null;
-	}) {
+	async function handleLocationSelect(event: { locationLabel: string | null; latitude: number | null; longitude: number | null }) {
 		await updateProfileLocation({
 			locationLabel: event.locationLabel ?? ``,
 			latitude: event.latitude == null ? `` : String(event.latitude),
@@ -68,7 +64,7 @@
 				</span>
 			{/if}
 		</div>
-		<p class="text-sm label whitespace-normal">
+		<p class="label text-sm whitespace-normal">
 			Deine Angebote werden in der Nähe dieses Orts angezeigt. Ohne Standort sind nur Online-Angebote auffindbar.
 		</p>
 	</fieldset>
@@ -83,11 +79,7 @@
 	{#if activeOfferings.length}
 		<div class="mt-4 flex w-full flex-col gap-4">
 			{#each activeOfferings as offering (offering.id)}
-				<OfferingCard
-					{offering}
-					showAuthor={false}
-					onclick={() => showOfferingDetailsDialog(offering.slug)}
-				/>
+				<OfferingCard {offering} showAuthor={false} onclick={() => showOfferingDetailsDialog(offering.slug)} />
 			{/each}
 		</div>
 	{:else}
@@ -101,15 +93,10 @@
 		<h2 class="mt-10 text-lg font-semibold" data-testid="inactive-offerings-heading">Deaktivierte Angebote</h2>
 		<div class="mt-3 flex w-full flex-col gap-4">
 			{#each inactiveOfferings as offering (offering.id)}
-				<OfferingCard
-					{offering}
-					showAuthor={false}
-					onclick={() => showOfferingDetailsDialog(offering.slug)}
-				/>
+				<OfferingCard {offering} showAuthor={false} onclick={() => showOfferingDetailsDialog(offering.slug)} />
 			{/each}
 		</div>
 	{/if}
 </div>
 
 <OfferingDetailsDialog {offerings} />
-

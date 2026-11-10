@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { isBlissbaseUrl, normalizeSourceUrl } from './events.shared';
+import { describe, expect, it } from "vitest";
+import { isBlissbaseUrl, normalizeSourceUrl } from "./events.shared";
 
 describe(`normalizeSourceUrl`, () => {
 	it(`removes Blissbase app links`, () => {

@@ -1,5 +1,5 @@
-import type { PGlite } from '@electric-sql/pglite';
-import * as schema from './schema';
+import type { PGlite } from "@electric-sql/pglite";
+import * as schema from "./schema";
 
 const casing = `snake_case`;
 
@@ -10,27 +10,56 @@ const casing = `snake_case`;
  * await createPgliteDrizzle()
  */
 export async function createPgliteDrizzle() {
-	const { PGlite } = await import('@electric-sql/pglite');
-	const { drizzle: pgliteDrizzle } = await import('drizzle-orm/pglite');
-	const { cube } = await import('@electric-sql/pglite/contrib/cube');
-	const { earthdistance } = await import('@electric-sql/pglite/contrib/earthdistance');
-	const { pg_trgm } = await import('@electric-sql/pglite/contrib/pg_trgm');
+	const { PGlite } = await import("@electric-sql/pglite");
+	const { drizzle: pgliteDrizzle } = await import("drizzle-orm/pglite");
+	const { cube } = await import("@electric-sql/pglite/contrib/cube");
+	const { earthdistance } = await import("@electric-sql/pglite/contrib/earthdistance");
+	const { pg_trgm } = await import("@electric-sql/pglite/contrib/pg_trgm");
 
 	const client = new PGlite({
-		extensions: { cube, earthdistance, pg_trgm }
+		extensions: { cube, earthdistance, pg_trgm },
 	});
 
-    await client.exec('CREATE EXTENSION IF NOT EXISTS cube;')
-    await client.exec('CREATE EXTENSION IF NOT EXISTS earthdistance;')
-    await client.exec('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
+	await client.exec("CREATE EXTENSION IF NOT EXISTS cube;");
+	await client.exec("CREATE EXTENSION IF NOT EXISTS earthdistance;");
+	await client.exec("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
 
 	await migratePglite(client);
 	console.log(`E2E test database migrated`);
 
+	// Kit's analyse/prerender workers call process.exit() right after posting results.
+	// PGlite's WASM aborts during that abrupt teardown (exit code 99) unless closed first.
+	installPgliteForkExitHook(client);
+
 	return pgliteDrizzle(client, {
 		schema,
-		casing
+		casing,
 	});
+}
+
+function installPgliteForkExitHook(client: PGlite) {
+	if (process.env.SVELTEKIT_FORK !== `true`) return;
+
+	const originalExit = process.exit.bind(process);
+	let closing = false;
+
+	process.exit = ((code?: number) => {
+		if (closing) {
+			originalExit(code);
+			return;
+		}
+		closing = true;
+
+		const exitCode = code ?? 0;
+		const timeout = setTimeout(() => originalExit(exitCode), 2_000);
+		void client
+			.close()
+			.catch(() => {})
+			.finally(() => {
+				clearTimeout(timeout);
+				originalExit(exitCode);
+			});
+	}) as typeof process.exit;
 }
 
 /**
@@ -40,9 +69,9 @@ export async function createPgliteDrizzle() {
  * await migratePglite(client)
  */
 async function migratePglite(client: PGlite) {
-	const { createRequire } = await import('node:module');
+	const { createRequire } = await import("node:module");
 	const require = createRequire(import.meta.url);
-	const { generateDrizzleJson, generateMigration } = require('drizzle-kit/api') as typeof import('drizzle-kit/api');
+	const { generateDrizzleJson, generateMigration } = require("drizzle-kit/api") as typeof import("drizzle-kit/api");
 
 	const prevJson = generateDrizzleJson({});
 	const curJson = generateDrizzleJson(schema, prevJson.id, undefined, `snake_case`);

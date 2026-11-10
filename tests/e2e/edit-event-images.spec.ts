@@ -1,7 +1,7 @@
-import { expect, test } from './helpers/fixtures';
-import { clearTestEvents, createEvent, getEventById } from './helpers/seed';
+import { expect, test } from "./helpers/fixtures";
+import { clearTestEvents, createEvent, getEventById } from "./helpers/seed";
 
-test.describe('Edit event images', () => {
+test.describe("Edit event images", () => {
 	test.beforeEach(async ({ page }) => {
 		await clearTestEvents(page);
 	});
@@ -10,18 +10,18 @@ test.describe('Edit event images', () => {
 		await clearTestEvents(page);
 	});
 
-	test('can remove, add, and persist edited images', async ({ page }) => {
+	test("can remove, add, and persist edited images", async ({ page }) => {
 		const existingImageUrls = [
 			`https://assets.blissbase.app/e2e-existing/cover-1.webp`,
 			`https://assets.blissbase.app/e2e-existing/cover-2.webp`,
-			`https://assets.blissbase.app/e2e-existing/cover-3.webp`
+			`https://assets.blissbase.app/e2e-existing/cover-3.webp`,
 		];
 		const { event } = await createEvent(page, {
 			name: `Editable image event`,
 			attendanceMode: `online`,
 			address: [],
 			imageUrls: existingImageUrls,
-			hostSecret: `test-secret`
+			hostSecret: `test-secret`,
 		});
 
 		await page.goto(`/edit/${event.id}?hostSecret=${event.hostSecret}`);
@@ -34,11 +34,11 @@ test.describe('Edit event images', () => {
 		await page.getByTestId(`image-input`).setInputFiles({
 			name: `added-image.png`,
 			mimeType: `image/png`,
-			buffer: createTinyPngBuffer()
+			buffer: createTinyPngBuffer(),
 		});
 		await expect(page.getByTestId(`image-preview-item`)).toHaveCount(3);
 		await expect(page.getByTestId(`image-preview-item`).nth(2)).toHaveAttribute(`data-upload-state`, `ready`, {
-			timeout: 30000
+			timeout: 30000,
 		});
 		await expect(page.getByTestId(`image-preview-item`).nth(2)).not.toContainText(`added-image.png`);
 
@@ -80,7 +80,7 @@ test.describe(`Edit past event`, () => {
 			attendanceMode: `online`,
 			address: [],
 			startAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-			hostSecret: `test-secret`
+			hostSecret: `test-secret`,
 		});
 
 		await page.goto(`/edit/${event.id}?hostSecret=${event.hostSecret}`);
@@ -101,8 +101,5 @@ test.describe(`Edit past event`, () => {
 });
 
 function createTinyPngBuffer() {
-	return Buffer.from(
-		`iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9pGdb9sAAAAASUVORK5CYII=`,
-		`base64`
-	);
+	return Buffer.from(`iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9pGdb9sAAAAASUVORK5CYII=`, `base64`);
 }

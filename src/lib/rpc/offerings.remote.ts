@@ -1,26 +1,31 @@
 import { command, form, getRequestEvent, query, requested } from "$app/server";
-import * as assets from "$lib/assets";
-import { randomString, slugify } from "$lib/common";
-import { offeringFormSchema, offeringNeedsLocation, sortOfferingsForDailyList, updateOfferingFormSchema } from "$lib/rpc/offerings.common";
-import { getNextGalleryImageUrls, uniqueGalleryImageClaimTokens } from "$lib/galleryImages";
-import { finalizeGalleryImageClaims, isGalleryImageE2eMode, verifyGalleryImageClaims } from "$lib/server/galleryImageClaims";
-import { profileLocationFormSchema } from "$lib/rpc/profile.common";
-import { parseOfferingsFilterFromUrl } from "$lib/offeringsFilter";
-import { getMyPublicProfile } from "$lib/rpc/profile.remote";
-import { BASE_URL, routes, safeReturnToPath, withOfferingSlug } from "$lib/routes";
-import { eventAssetsCreds } from "$lib/events.remote.shared";
-import { ensureUserId } from "$lib/server/common";
-import { and, db, eq, or, s, sql } from "$lib/server/db";
-import { verifySubmitAuthToken } from "$lib/server/submitAuth";
-import { hasSocialLink, isPublicProfile } from "$lib/server/profile";
-import { mergeProfileFromForm, savePublicProfile } from "$lib/server/savePublicProfile";
+import * as assets from "#lib/assets.ts";
+import { randomString, slugify } from "#lib/common.ts";
+import {
+	offeringFormSchema,
+	offeringNeedsLocation,
+	sortOfferingsForDailyList,
+	updateOfferingFormSchema,
+} from "#lib/rpc/offerings.common.ts";
+import { getNextGalleryImageUrls, uniqueGalleryImageClaimTokens } from "#lib/galleryImages.ts";
+import { finalizeGalleryImageClaims, isGalleryImageE2eMode, verifyGalleryImageClaims } from "#lib/server/galleryImageClaims.ts";
+import { profileLocationFormSchema } from "#lib/rpc/profile.common.ts";
+import { parseOfferingsFilterFromUrl } from "#lib/offeringsFilter.ts";
+import { getMyPublicProfile } from "#lib/rpc/profile.remote.ts";
+import { BASE_URL, routes, safeReturnToPath, withOfferingSlug } from "#lib/routes.ts";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
+import { ensureUserId } from "#lib/server/common.ts";
+import { and, db, eq, or, s, sql } from "#lib/server/db.ts";
+import { verifySubmitAuthToken } from "#lib/server/submitAuth.ts";
+import { hasSocialLink, isPublicProfile } from "#lib/server/profile.ts";
+import { mergeProfileFromForm, savePublicProfile } from "#lib/server/savePublicProfile.ts";
 import { error, invalid, redirect } from "@sveltejs/kit";
 import * as v from "valibot";
-import { setFlash } from "$lib/server/flash";
-import type { OfferingsFilter } from "$lib/offeringsFilter";
-import { filterOfferingsByIncludeOnline, shouldIncludeOfferingInLocationFilter } from "$lib/offeringsFilter";
-import { sanitizeLocationParams, hasValidCoordinates } from "$lib/locationFilter";
-import { resolveOfferingsFilterCoordinates } from "$lib/server/offeringsFilter";
+import { setFlash } from "#lib/server/flash.ts";
+import type { OfferingsFilter } from "#lib/offeringsFilter.ts";
+import { filterOfferingsByIncludeOnline, shouldIncludeOfferingInLocationFilter } from "#lib/offeringsFilter.ts";
+import { sanitizeLocationParams, hasValidCoordinates } from "#lib/locationFilter.ts";
+import { resolveOfferingsFilterCoordinates } from "#lib/server/offeringsFilter.ts";
 
 const offeringsFilterSchema = v.object({
 	location: v.nullable(v.string()),
@@ -55,9 +60,7 @@ export const getOfferings = query(offeringsFilterSchema, async (args) => {
 	const distanceKm = filter.distance ? parseFloat(filter.distance) : null;
 
 	const offerings = await db.query.offerings.findMany({
-		where: userId
-			? or(eq(s.offerings.listed, true), eq(s.offerings.profileId, userId))
-			: eq(s.offerings.listed, true),
+		where: userId ? or(eq(s.offerings.listed, true), eq(s.offerings.profileId, userId)) : eq(s.offerings.listed, true),
 		columns: {
 			id: true,
 			slug: true,

@@ -1,22 +1,32 @@
 <script lang="ts">
-	import { calendarLocation, formatAddress, getLongLocale, getContactMethod, getWebsiteDomainLabel, googleMapsSearchUrl, type SupportedLocale, resolveSupportedLocale, formatDatesStr, formatTimesStr } from '$lib/common';
-	import PopOver from '$lib/components/PopOver.svelte';
-	import AddToCalendarButton from '$lib/components/AddToCalendarButton.svelte';
-	import type { UiEvent } from '$lib/server/events';
-	import RandomPlaceholderImg from '$lib/components/RandomPlaceholderImg.svelte';
-	import ShareButton from '$lib/components/ShareButton.svelte';
-	import ImageDialog from '$lib/components/ImageDialog.svelte';
-	import EventAdminSection from '$lib/components/EventAdminSection.svelte';
-	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
-	import { localeStore } from '../locales/localeStore.svelte';
-	import { WEBSITE_SCRAPER_CONFIG } from '$lib/commonWithScripts';
-	import { user } from '$lib/user.svelte';
-	import { resolve } from '$app/paths';
-	import PublicProfileCard from '$lib/components/PublicProfileCard.svelte';
-	import { labelsForTagSlugs } from '$lib/eventCategories';
+	import {
+		calendarLocation,
+		formatAddress,
+		getLongLocale,
+		getContactMethod,
+		getWebsiteDomainLabel,
+		googleMapsSearchUrl,
+		type SupportedLocale,
+		resolveSupportedLocale,
+		formatDatesStr,
+		formatTimesStr,
+	} from "#lib/common.ts";
+	import PopOver from "#lib/components/PopOver.svelte";
+	import AddToCalendarButton from "#lib/components/AddToCalendarButton.svelte";
+	import type { UiEvent } from "#lib/server/events.ts";
+	import RandomPlaceholderImg from "#lib/components/RandomPlaceholderImg.svelte";
+	import ShareButton from "#lib/components/ShareButton.svelte";
+	import ImageDialog from "#lib/components/ImageDialog.svelte";
+	import EventAdminSection from "#lib/components/EventAdminSection.svelte";
+	import FavoriteButton from "#lib/components/FavoriteButton.svelte";
+	import { localeStore } from "../locales/localeStore.svelte";
+	import { WEBSITE_SCRAPER_CONFIG } from "#lib/commonWithScripts.ts";
+	import { user } from "#lib/user.svelte.ts";
+	import { resolve } from "$app/paths";
+	import PublicProfileCard from "#lib/components/PublicProfileCard.svelte";
+	import { labelsForTagSlugs } from "#lib/eventCategories.ts";
 
-	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } =
-		$props();
+	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } = $props();
 
 	const isAuthor = $derived(user.id && event.authorId && user.id === event.authorId);
 
@@ -28,14 +38,12 @@
 		event.contact?.length === 1
 			? {
 					method: getContactMethod(event.contact?.[0]) as ReturnType<typeof getContactMethod>,
-					url: getContactUrl(event.contact?.[0])
+					url: getContactUrl(event.contact?.[0]),
 				}
-			: undefined
+			: undefined,
 	);
 
-	const websiteContactCount = $derived(
-		event.contact?.filter((c) => getContactMethod(c) === `Website`).length ?? 0
-	);
+	const websiteContactCount = $derived(event.contact?.filter((c) => getContactMethod(c) === `Website`).length ?? 0);
 
 	function websiteButtonLabel(url: string) {
 		if (websiteContactCount <= 1) return `Website`;
@@ -44,20 +52,24 @@
 
 	const tags = $derived(labelsForTagSlugs(event.tagSlugs));
 
-	const mapsUrl = $derived(googleMapsSearchUrl({
-		latitude: event.latitude,
-		longitude: event.longitude,
-		query: event.address?.length ? event.address.join(`, `) : null,
-	}));
-	const eventCalendarLocation = $derived(calendarLocation({
-		address: event.address,
-		addressNote: event.addressNote,
-	}));
+	const mapsUrl = $derived(
+		googleMapsSearchUrl({
+			latitude: event.latitude,
+			longitude: event.longitude,
+			query: event.address?.length ? event.address.join(`, `) : null,
+		}),
+	);
+	const eventCalendarLocation = $derived(
+		calendarLocation({
+			address: event.address,
+			addressNote: event.addressNote,
+		}),
+	);
 
 	function getContactUrl(str: string | undefined) {
 		let contact = str ?? event.hostLink;
 		const authorLocale = resolveSupportedLocale(event.author?.locale);
-		const eventDate = event.startAt.toLocaleDateString(getLongLocale(authorLocale), { month: 'short', day: 'numeric', year: 'numeric' });
+		const eventDate = event.startAt.toLocaleDateString(getLongLocale(authorLocale), { month: "short", day: "numeric", year: "numeric" });
 		const contactMessageText = /* @wc-include */ `Hallo, ich habe deinen Event '${event.name}' am ${eventDate} auf Blissbase.app gefunden und möchte gerne teilnehmen.`;
 		const contactMessage = encodeURIComponent(contactMessageText);
 		// using tg:// instead of https://t.me/ because t.me does not work properly with special characters like ( ' " etc. tg:// does but does not support umlaute...
@@ -65,23 +77,23 @@
 		const contactSubject = encodeURIComponent(/* @wc-include */ `Anmeldung für ${event.name} (${eventDate})`);
 
 		if (contact && /^\+?\d[\d\s\-\(\)]+\d$/.test(contact)) {
-			contact = `tel:${contact.replace(/\s/g, '')}`;
+			contact = `tel:${contact.replace(/\s/g, "")}`;
 		}
 
-		if (contact?.startsWith('https://t.me/')) {
-			contact = contact.replace('https://t.me/', 'tg://resolve?domain=');
+		if (contact?.startsWith("https://t.me/")) {
+			contact = contact.replace("https://t.me/", "tg://resolve?domain=");
 		}
-		if (contact?.startsWith('tg://')) {
+		if (contact?.startsWith("tg://")) {
 			contact += `&text=${telegramContactMessage}&parse_mode=HTML`;
 		}
 
-		if (contact?.startsWith('https://wa.me/')) {
+		if (contact?.startsWith("https://wa.me/")) {
 			contact += `?text=${contactMessage}`;
 		}
 
-		if (contact?.startsWith('mailto:')) {
+		if (contact?.startsWith("mailto:")) {
 			contact += `?subject=${contactSubject}&body=${contactMessage}`;
-		} else if (getContactMethod(str) === 'Email') {
+		} else if (getContactMethod(str) === "Email") {
 			// email without mailto: prefix
 			contact = `mailto:${contact}?subject=${contactSubject}&body=${contactMessage}`;
 		}
@@ -90,40 +102,39 @@
 	}
 
 	let showQuelleInsteadOfAnmelden = $derived(
-		['heilnetz', 'heilnetzowl', 'ggbrandenburg', 'kuschelraum'].includes(event.source) ||
-			event.sourceUrl?.includes('ciglobalcalendar.net')
+		["heilnetz", "heilnetzowl", "ggbrandenburg", "kuschelraum"].includes(event.source) || event.sourceUrl?.includes("ciglobalcalendar.net"),
 	);
 
-	let hideSource = $derived(['theubudian', 'soulwise', 'megatix_indonesia', "telegram", "whatsapp", "website-form"].includes(event.source));
+	let hideSource = $derived(["theubudian", "soulwise", "megatix_indonesia", "telegram", "whatsapp", "website-form"].includes(event.source));
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
-		if (!event.sourceUrl?.startsWith('http')) return `https://${event.sourceUrl}`;
+		if (!event.sourceUrl?.startsWith("http")) return `https://${event.sourceUrl}`;
 		return event.sourceUrl;
 	});
 
 	const hostNamesToHide = ["todo.today"];
-	const shouldShowHost = $derived(event.host && hostNamesToHide.every(x => !event.host?.toLowerCase().includes(x)));
+	const shouldShowHost = $derived(event.host && hostNamesToHide.every((x) => !event.host?.toLowerCase().includes(x)));
 
 	function fixTelegramUnsupportedChars(text: string) {
 		return text
 			.replace(/'/g, '"')
-			.replace(/ä/g, 'ae')
-			.replace(/ö/g, 'oe')
-			.replace(/ü/g, 'ue')
-			.replace(/ß/g, 'ss')
-			.replace(/Ä/g, 'Ae')
-			.replace(/Ö/g, 'Oe')
-			.replace(/Ü/g, 'Ue')
-			.replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Remove emojis
-			.replace(/[\^\\|]/g, '') // remove special chars known to break in telegram links. These work fine: !@#$%&*()_+-=[]{};":,.<>/?
+			.replace(/ä/g, "ae")
+			.replace(/ö/g, "oe")
+			.replace(/ü/g, "ue")
+			.replace(/ß/g, "ss")
+			.replace(/Ä/g, "Ae")
+			.replace(/Ö/g, "Oe")
+			.replace(/Ü/g, "Ue")
+			.replace(/[\u{1F300}-\u{1F9FF}]/gu, "") // Remove emojis
+			.replace(/[\^\\|]/g, "") // remove special chars known to break in telegram links. These work fine: !@#$%&*()_+-=[]{};":,.<>/?
 			.trim();
 	}
 
 	let imageLoadError = $state(false);
 	const imageUrl = $derived.by(() => {
-		const rawUrl = event.imageUrls?.[selectedImageIndex] ?? '';
-		return imageLoadError ? (rawUrl?.split('https:')?.[2] ?? '') : rawUrl;
+		const rawUrl = event.imageUrls?.[selectedImageIndex] ?? "";
+		return imageLoadError ? (rawUrl?.split("https:")?.[2] ?? "") : rawUrl;
 	});
 
 	function selectImage(index: number) {
@@ -132,7 +143,7 @@
 	}
 
 	function openLink(url: string) {
-		window.open(url, '_blank', 'noopener,noreferrer');
+		window.open(url, "_blank", "noopener,noreferrer");
 	}
 </script>
 
@@ -141,7 +152,7 @@
 		<ImageDialog
 			imageUrls={event.imageUrls ?? []}
 			alt={event.name}
-			triggerProps={{ class: 'w-full' }}
+			triggerProps={{ class: "w-full" }}
 			bind:currentIndex={selectedImageIndex}
 		>
 			<div class="bg-cover bg-center" style="background-image: url({imageUrl})">
@@ -163,17 +174,13 @@
 					<button
 						type="button"
 						class={[
-							'border-base-300 focus:ring-primary cursor-pointer rounded-md transition-all focus:ring-2 focus:outline-none',
-							i === selectedImageIndex ? 'ring-primary ring-2' : ''
+							"border-base-300 focus:ring-primary cursor-pointer rounded-md transition-all focus:ring-2 focus:outline-none",
+							i === selectedImageIndex ? "ring-primary ring-2" : "",
 						]}
 						title={`Bild ${i + 1}`}
 						onclick={() => selectImage(i)}
 					>
-						<img
-							src={thumbUrl}
-							alt={`thumbnail ${i + 1}`}
-							class="size-18 rounded-md object-cover"
-						/>
+						<img src={thumbUrl} alt={`thumbnail ${i + 1}`} class="size-18 rounded-md object-cover" />
 					</button>
 				{/each}
 			</div>
@@ -185,30 +192,29 @@
 	{/if}
 
 	<div class="card-body text-base-content/90 w-full space-y-4 md:px-10">
-
 		<!-- head -->
 		<div class="flex flex-col gap-6">
 			<div class="relative">
-				<h1 class="card-title block w-full text-center text-2xl font-semibold mb-0" data-testid="event-title">
+				<h1 class="card-title mb-0 block w-full text-center text-2xl font-semibold" data-testid="event-title">
 					{event.name}
 				</h1>
 			</div>
-			
+
 			{#if event.soldOut}
-				<div class="flex justify-center -mt-1">
+				<div class="-mt-1 flex justify-center">
 					<span class="badge badge-accent badge-xl">Ausgebucht</span>
 				</div>
 			{/if}
-	
+
 			<section class="flex w-full items-center justify-center">
-				<div class="max-w-[400px] grid grid-cols-[2.5rem_1fr] gap-y-6 gap-x-5 place-items-center justify-items-start">
+				<div class="grid max-w-[400px] grid-cols-[2.5rem_1fr] place-items-center justify-items-start gap-x-5 gap-y-6">
 					<AddToCalendarButton
 						event={{
 							title: event.name,
 							description: event.description ?? undefined,
 							start: event.startAt.toISOString(),
 							end: event.endAt?.toISOString(),
-							location: eventCalendarLocation
+							location: eventCalendarLocation,
 						}}
 					>
 						{#snippet children({ props })}
@@ -217,9 +223,9 @@
 								type="button"
 								title="Zum Kalender hinzufügen"
 								aria-label="Zum Kalender hinzufügen"
-								class={[`bg-base-200/60 rounded-lg flex items-center justify-center size-11`,props.class ]}
+								class={[`bg-base-200/60 flex size-11 items-center justify-center rounded-lg`, props.class]}
 							>
-								<i class="icon-[ph--clock] size-7 inset-0"></i>
+								<i class="icon-[ph--clock] inset-0 size-7"></i>
 							</button>
 						{/snippet}
 					</AddToCalendarButton>
@@ -230,7 +236,7 @@
 							description: event.description ?? undefined,
 							start: event.startAt.toISOString(),
 							end: event.endAt?.toISOString(),
-							location: eventCalendarLocation
+							location: eventCalendarLocation,
 						}}
 					>
 						{#snippet children({ props })}
@@ -239,59 +245,61 @@
 								type="button"
 								title="Zum Kalender hinzufügen"
 								aria-label="Zum Kalender hinzufügen"
-								class={[
-									`flex cursor-pointer gap-1.5 hover:underline items-center`,
-									props.class
-								]}
+								class={[`flex cursor-pointer items-center gap-1.5 hover:underline`, props.class]}
 							>
-								<div class="text-md font-medium flex flex-col items-start">
+								<div class="text-md flex flex-col items-start font-medium">
 									<div class="flex items-center gap-2">
-										{formatDatesStr(event.startAt, event.endAt, localeStore.locale)}  
+										{formatDatesStr(event.startAt, event.endAt, localeStore.locale)}
 										<i class="icon-[ph--calendar-plus] size-5"></i>
 									</div>
 									<div class="font-normal">
 										{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
 									</div>
 								</div>
-								
 							</button>
 						{/snippet}
 					</AddToCalendarButton>
-					
-					{#if event.attendanceMode === 'online'}
-						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+
+					{#if event.attendanceMode === "online"}
+						<div class="bg-base-200/60 flex size-11 items-center justify-center rounded-lg">
 							<i class="icon-[ph--globe] size-7 shrink-0"></i>
 						</div>
 						<p class="font-medium">Online</p>
 					{:else if event.address?.length}
-						<a href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Öffne Karte" class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+						<a
+							href={mapsUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Öffne Karte"
+							class="bg-base-200/60 flex size-11 items-center justify-center rounded-lg"
+						>
 							<i class="icon-[ph--map-pin] size-7 shrink-0"></i>
 						</a>
-						<div class="flex min-w-0 w-full flex-col items-start">
+						<div class="flex w-full min-w-0 flex-col items-start">
 							<a
 								href={mapsUrl}
 								target="_blank"
 								rel="noopener noreferrer"
 								data-testid="event-address-link"
-								class={[ `hover:underline block w-full min-w-0 cursor-pointer text-left font-medium` ]}
+								class={[`block w-full min-w-0 cursor-pointer text-left font-medium hover:underline`]}
 							>
-								<span class={[ `line-clamp-3 min-w-0 wrap-break-word leading-`]}>
+								<span class={[`leading- line-clamp-3 min-w-0 wrap-break-word`]}>
 									{formatAddress(event.address)}
-									<i class="icon-[ph--arrow-square-out] ml-0.75 inline-block size-4.5 shrink-0 align-middle mb-1" aria-hidden="true"></i>
+									<i class="icon-[ph--arrow-square-out] mb-1 ml-0.75 inline-block size-4.5 shrink-0 align-middle" aria-hidden="true"></i>
 								</span>
 							</a>
 							{#if event.addressNote}
-								<p class="text-base-content/70 w-full min-w-0 wrap-break-word text-sm whitespace-pre-line" data-testid="event-address-note">
+								<p class="text-base-content/70 w-full min-w-0 text-sm wrap-break-word whitespace-pre-line" data-testid="event-address-note">
 									{event.addressNote}
 								</p>
 							{/if}
 						</div>
 					{/if}
-	
+
 					{#if event.price && !event.priceIsHtml}
-						<div class="bg-base-200/60 rounded-lg flex items-center justify-center size-11">
+						<div class="bg-base-200/60 flex size-11 items-center justify-center rounded-lg">
 							<i class="icon-[ph--coins] size-7 shrink-0"></i>
-						</div>	
+						</div>
 						<p class="font-medium">{event.price}</p>
 					{/if}
 				</div>
@@ -299,25 +307,32 @@
 
 			<div class="flex w-full flex-wrap justify-center gap-4 pt-1">
 				{#if isAuthor}
-					<a href={resolve(`/edit/${event.id}`)} class="btn">
+					<a href={resolve(`edit/${event.id}`)} class="btn">
 						<i class="icon-[ph--pencil] mr-1 size-4"></i>
 						Bearbeiten
 					</a>
 				{/if}
 
 				<ShareButton title={event.name} url={`https://blissbase.app/${event.slug}`} />
-	
+
 				{#if showQuelleInsteadOfAnmelden}
 					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn" data-testid="event-source-link">
 						Quelle
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
 				{:else if sourceUrl && !sourceUrl.includes("todo.today")}
-					<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn" title="Jetzt Buchen" data-testid="event-register-link">
+					<a
+						href={sourceUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn-primary btn"
+						title="Jetzt Buchen"
+						data-testid="event-register-link"
+					>
 						Jetzt Buchen
 						<i class="icon-[ph--arrow-square-out] size-5"></i>
 					</a>
-				{:else if singleContact?.method === 'Website'}
+				{:else if singleContact?.method === "Website"}
 					<a
 						href={singleContact.url}
 						target="_blank"
@@ -332,7 +347,7 @@
 				{:else if event.contact?.length}
 					<PopOver contentClass="bg-base-100 p-5 w-xs z-60">
 						{#snippet trigger({ props })}
-							<button {...props} class={[`btn btn-primary`, props.class]} title="Jetzt Buchen" data-testid="event-register-link"> 
+							<button {...props} class={[`btn btn-primary`, props.class]} title="Jetzt Buchen" data-testid="event-register-link">
 								Jetzt Buchen
 							</button>
 						{/snippet}
@@ -341,8 +356,8 @@
 								<span class="word-wrap">
 									Anmeldung per <b> {singleContact.method}</b>.
 								</span>
-	
-								<div class="mt-3 flex flex-col gap-3 justify-center">
+
+								<div class="mt-3 flex flex-col justify-center gap-3">
 									{@render contactButton(singleContact.method, singleContact.url!)}
 								</div>
 							{:else if event.contact?.length}
@@ -357,7 +372,6 @@
 				{/if}
 			</div>
 		</div>
-
 
 		{#if event.description}
 			<div class="event-description prose max-w-none">
@@ -386,9 +400,7 @@
 		{#if event.author?.slug && event.author?.displayName}
 			<PublicProfileCard profile={event.author} />
 		{:else if shouldShowHost}
-			<div
-				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
-			>
+			<div class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium">
 				<i class="icon-[ph--user-circle] size-6"></i>
 				{#if event.hostLink}
 					<button onclick={() => openLink(event.hostLink!)} class="cursor-pointer underline">
@@ -405,13 +417,9 @@
 				<h2 class="mb-2 text-lg font-semibold">Tags</h2>
 				<div class="flex flex-wrap items-center gap-2">
 					{#each tags as tag (tag)}
-						<button
-							class="badge badge-ghost"
-							type="button"
-							title="Filter nach Tag"
-							// onclick={() => onShowEventForTag(tag)}
-						>
-							{tag}
+						<button class="badge badge-ghost" type="button" title="Filter nach Tag">
+							{// onclick={() => onShowEventForTag(tag)}
+							tag}
 						</button>
 					{/each}
 				</div>
@@ -424,12 +432,7 @@
 				data-testid="event-source-label"
 			>
 				Quelle:
-				<a
-					href={event.sourceUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="cursor-pointer underline"
-				>
+				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="cursor-pointer underline">
 					{WEBSITE_SCRAPER_CONFIG[event.source as keyof typeof WEBSITE_SCRAPER_CONFIG]?.label}
 				</a>
 			</div>
@@ -448,42 +451,38 @@
 {:else}
 	<div class="py-10 text-center">
 		<p class="mb-4 text-2xl font-semibold">Event Not Found</p>
-		<p class="text-base-content/70 mb-6">
-			The event you are looking for does not exist or may have been moved.
-		</p>
+		<p class="text-base-content/70 mb-6">The event you are looking for does not exist or may have been moved.</p>
 		<a href="/" class="btn btn-primary">Go to Homepage</a>
 	</div>
 {/if}
 
 {#snippet contactButton(method: ReturnType<typeof getContactMethod>, url: string)}
-	{#if method === 'Telegram'}
+	{#if method === "Telegram"}
 		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
 			<i class="icon-[ph--telegram-logo] size-5"></i>
 			Nachricht senden
 		</button>
 		<span class="word-wrap">
 			Eventuell musst du
-			<a href="https://telegram.org" target="_blank" rel="noopener noreferrer" class="underline">
-				Telegram Messenger
-			</a>
+			<a href="https://telegram.org" target="_blank" rel="noopener noreferrer" class="underline"> Telegram Messenger </a>
 			erst installieren.
 		</span>
-	{:else if method === 'WhatsApp'}
+	{:else if method === "WhatsApp"}
 		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
 			<i class="icon-[ph--whatsapp-logo] size-5"></i>
 			Nachricht senden
 		</button>
-	{:else if method === 'Telefon'}
+	{:else if method === "Telefon"}
 		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
 			<i class="icon-[ph--phone] size-5"></i>
 			Anrufen
 		</button>
-	{:else if method === 'Email'}
+	{:else if method === "Email"}
 		<button type="button" onclick={() => openLink(url)} class="btn btn-primary">
 			<i class="icon-[ph--envelope] size-6"></i>
 			Email
 		</button>
-	{:else if method === 'Website'}
+	{:else if method === "Website"}
 		<a href={url} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
 			<i class="icon-[ph--globe] size-5"></i>
 			{websiteButtonLabel(url)}

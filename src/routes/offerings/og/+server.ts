@@ -1,9 +1,6 @@
-import { parseOfferingsFilterFromUrl } from '$lib/offeringsFilter';
-import {
-	FALLBACK_OFFERINGS_OG_IMAGE,
-	resolveOfferingsOgImageUrl,
-} from '$lib/server/og/offeringsOg';
-import type { RequestHandler } from './$types';
+import { parseOfferingsFilterFromUrl } from "#lib/offeringsFilter.ts";
+import { FALLBACK_OFFERINGS_OG_IMAGE, resolveOfferingsOgImageUrl } from "#lib/server/og/offeringsOg.ts";
+import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ url }) => {
 	const filter = parseOfferingsFilterFromUrl(url);
@@ -24,7 +21,7 @@ function redirectToImage(imageUrl: string) {
 			Location: imageUrl,
 			// Short cache on the resolver so a miss→fallback doesn't stick for a day
 			// after background warm finishes.
-			'Cache-Control': `public, max-age=60`,
+			"Cache-Control": `public, max-age=60`,
 		},
 	});
 }

@@ -1,5 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { aiExtractEventData, aiTranscribeImage, ensureAddressIncludesCity, getExistingSource, keptExtractionFields, normalizeDescription } from './ai';
+import { describe, expect, it } from "vitest";
+import {
+	aiExtractEventData,
+	aiTranscribeImage,
+	ensureAddressIncludesCity,
+	getExistingSource,
+	keptExtractionFields,
+	normalizeDescription,
+} from "./ai";
 
 describe(`normalizeDescription`, () => {
 	it(`removes a normalized leading event name`, () => {
@@ -7,7 +14,7 @@ describe(`normalizeDescription`, () => {
 			description: `𝐄𝐦𝐛𝐨𝐝𝐢𝐞𝐝 Consent Lab
 
 Join us for a WhatsApp-only event.`,
-			name: `Embodied Consent Lab`
+			name: `Embodied Consent Lab`,
 		});
 
 		expect(result).toBe(`Join us for a WhatsApp-only event.`);
@@ -18,7 +25,7 @@ Join us for a WhatsApp-only event.`,
 
 		const result = normalizeDescription({
 			description,
-			name: `Embodied Consent Lab`
+			name: `Embodied Consent Lab`,
 		});
 
 		expect(result).toBe(description);
@@ -27,34 +34,30 @@ Join us for a WhatsApp-only event.`,
 	it(`escapes generated links for html rendering`, () => {
 		const result = normalizeDescription({
 			description: `More: https://example.com/?q="bad"&x=1`,
-			name: null
+			name: null,
 		});
 
-		expect(result).toBe(
-			`More: <a href="https://example.com/?q=&quot;bad&quot;&amp;x=1">https://example.com/?q="bad"&amp;x=1</a>`
-		);
+		expect(result).toBe(`More: <a href="https://example.com/?q=&quot;bad&quot;&amp;x=1">https://example.com/?q="bad"&amp;x=1</a>`);
 	});
 
 	it(`leaves existing anchor tags untouched while linkifying bare urls`, () => {
 		const result = normalizeDescription({
 			description: `Already <a href="https://example.com">https://example.com</a>\nMore: https://else.test.`,
-			name: null
+			name: null,
 		});
 
 		expect(result).toBe(
-			`Already <a href="https://example.com">https://example.com</a><br>More: <a href="https://else.test">https://else.test</a>.`
+			`Already <a href="https://example.com">https://example.com</a><br>More: <a href="https://else.test">https://else.test</a>.`,
 		);
 	});
 
 	it(`prefixes https on anchor hrefs that lack a scheme`, () => {
 		const result = normalizeDescription({
 			description: `See <a href="example.com/path">example.com/path</a> or <a href='www.x.test'>x</a>`,
-			name: null
+			name: null,
 		});
 
-		expect(result).toBe(
-			`See <a href="https://example.com/path">example.com/path</a> or <a href='https://www.x.test'>x</a>`
-		);
+		expect(result).toBe(`See <a href="https://example.com/path">example.com/path</a> or <a href='https://www.x.test'>x</a>`);
 	});
 
 	it(`keeps mailto, tel, and already-schemed hrefs as-is`, () => {
@@ -65,7 +68,7 @@ Join us for a WhatsApp-only event.`,
 	it(`converts plain-text line breaks to br tags`, () => {
 		const result = normalizeDescription({
 			description: `Line 1\nLine 2\n\n\nLine 3`,
-			name: null
+			name: null,
 		});
 
 		expect(result).toBe(`Line 1<br>Line 2<br><br>Line 3`);
@@ -74,30 +77,30 @@ Join us for a WhatsApp-only event.`,
 	it(`preserves already encoded entities and strips broader trailing punctuation`, () => {
 		const result = normalizeDescription({
 			description: `See https://example.com/?a=1&amp;b=2; or https://x.test/path].`,
-			name: null
+			name: null,
 		});
 
 		expect(result).toBe(
-			`See <a href="https://example.com/?a=1&amp;b=2">https://example.com/?a=1&amp;b=2</a>; or <a href="https://x.test/path">https://x.test/path</a>].`
+			`See <a href="https://example.com/?a=1&amp;b=2">https://example.com/?a=1&amp;b=2</a>; or <a href="https://x.test/path">https://x.test/path</a>].`,
 		);
 	});
 
 	it(`removes leading event name when followed by an em-dash, en-dash, or period`, () => {
 		const emDashResult = normalizeDescription({
 			description: `Embodied Consent Lab — Join us tonight.`,
-			name: `Embodied Consent Lab`
+			name: `Embodied Consent Lab`,
 		});
 		expect(emDashResult).toBe(`Join us tonight.`);
 
 		const enDashResult = normalizeDescription({
 			description: `Embodied Consent Lab – Join us tonight.`,
-			name: `Embodied Consent Lab`
+			name: `Embodied Consent Lab`,
 		});
 		expect(enDashResult).toBe(`Join us tonight.`);
 
 		const periodResult = normalizeDescription({
 			description: `Embodied Consent Lab. Join us tonight.`,
-			name: `Embodied Consent Lab`
+			name: `Embodied Consent Lab`,
 		});
 		expect(periodResult).toBe(`Join us tonight.`);
 	});
@@ -108,8 +111,8 @@ describe(`ensureAddressIncludesCity`, () => {
 		expect(
 			ensureAddressIncludesCity({
 				address: `Schönhauser Allee 10`,
-				city: `Berlin`
-			})
+				city: `Berlin`,
+			}),
 		).toBe(`Schönhauser Allee 10, Berlin`);
 	});
 
@@ -117,20 +120,16 @@ describe(`ensureAddressIncludesCity`, () => {
 		expect(
 			ensureAddressIncludesCity({
 				address: `Schönhauser Allee 10, Berlin`,
-				city: `Berlin`
-			})
+				city: `Berlin`,
+			}),
 		).toBe(`Schönhauser Allee 10, Berlin`);
 	});
 });
 
 describe(`getExistingSource`, () => {
 	it(`detects configured source links from message text`, () => {
-		expect(getExistingSource(`Sharing https://sei.jetzt/event/ecstatic-dance-berlin`)).toBe(
-			`sei.jetzt`
-		);
-		expect(getExistingSource(`See https://www.heilnetz-owl.de/termine/demo`)).toBe(
-			`heilnetz-owl.de`
-		);
+		expect(getExistingSource(`Sharing https://sei.jetzt/event/ecstatic-dance-berlin`)).toBe(`sei.jetzt`);
+		expect(getExistingSource(`See https://www.heilnetz-owl.de/termine/demo`)).toBe(`heilnetz-owl.de`);
 		expect(getExistingSource(`Wrapped (https://sei.jetzt).`)).toBe(`sei.jetzt`);
 	});
 
@@ -156,27 +155,24 @@ describe(`keptExtractionFields`, () => {
 });
 
 describe(`aiExtractEventData`, () => {
-	it(
-		`detects an existing source link and skips event extraction`,
-		async () => {
-			const existingSourceResult = await aiExtractEventData({
-				message: `Sharing this here:
+	it(`detects an existing source link and skips event extraction`, async () => {
+		const existingSourceResult = await aiExtractEventData({
+			message: `Sharing this here:
 https://sei.jetzt/event/ecstatic-dance-berlin
 
 Looks nice for anyone interested.`,
-				messageDate: new Date(`2026-04-29T06:00:00.000Z`),
-				timezone: `Europe/Berlin`,
-				eventIsDefinitelyConscious: false
-			});
+			messageDate: new Date(`2026-04-29T06:00:00.000Z`),
+			timezone: `Europe/Berlin`,
+			eventIsDefinitelyConscious: false,
+		});
 
-			expect(existingSourceResult).toMatchObject({
-				hasEventData: false,
-				existingSource: expect.stringContaining(`sei.jetzt`)
-			});
-			expect(existingSourceResult.name).toBeUndefined();
-			expect(existingSourceResult.description).toBeUndefined();
-		}
-	);
+		expect(existingSourceResult).toMatchObject({
+			hasEventData: false,
+			existingSource: expect.stringContaining(`sei.jetzt`),
+		});
+		expect(existingSourceResult.name).toBeUndefined();
+		expect(existingSourceResult.description).toBeUndefined();
+	});
 });
 
 describe(`aiTranscribeImage`, () => {

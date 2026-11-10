@@ -1,19 +1,19 @@
 <script lang="ts">
-	import type { RemoteFormField } from "@sveltejs/kit";
+	import type { RemoteFormField } from "$app/server";
 	import { flip } from "svelte/animate";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import { dragHandle, dragHandleZone } from "svelte-dnd-action";
 	import { fade } from "svelte/transition";
-	import { processImageUploadFile } from "$lib/imageUpload";
-	import { getProcessedImageHashFromFileName } from "$lib/imageUpload.shared";
+	import { processImageUploadFile } from "#lib/imageUpload.ts";
+	import { getProcessedImageHashFromFileName } from "#lib/imageUpload.shared.ts";
 	import {
 		GALLERY_IMAGE_MAX_COUNT,
 		getOrderedGalleryPreviewEntries,
 		publicUrlFromImageClaim,
 		type GalleryImageKind,
-	} from "$lib/galleryImages";
-	import { createGalleryImageUploadUrl, discardGalleryImage } from "$lib/rpc/galleryImages.remote";
+	} from "#lib/galleryImages.ts";
+	import { createGalleryImageUploadUrl, discardGalleryImage } from "#lib/rpc/galleryImages.remote.ts";
 
 	let {
 		kind,
@@ -539,7 +539,6 @@
 				data-testid={testId(`preview-item`)}
 				data-upload-state={preview.uploadState}
 				animate:flip={{ duration: previewFlipDurationMs }}
-				
 				class="bg-base-200 group card border-base-300/60 overflow-hidden border"
 				role="listitem"
 				aria-label={itemName}

@@ -1,7 +1,7 @@
-import { inferContactMethod } from '$lib/events.remote.common';
-import { knownTagSlugs } from '$lib/eventCategories';
-import { addressLinesFromAnalysis } from '$lib/common';
-import type { MsgAnalysisAnswer } from './ai';
+import { inferContactMethod } from "#lib/eventForm.common.ts";
+import { knownTagSlugs } from "#lib/eventCategories.ts";
+import { addressLinesFromAnalysis } from "#lib/common.ts";
+import type { MsgAnalysisAnswer } from "./ai";
 
 /**
  * Maps AI extraction output to values for the website create-event form (plus ISO dates for client-side local formatting).
@@ -9,9 +9,7 @@ import type { MsgAnalysisAnswer } from './ai';
  * @example
  * mapAiAnswerToCreateEventPrefill({ hasEventData: true, contact: [], tags: [], name: `Yoga` });
  */
-export function mapAiAnswerToCreateEventPrefill(
-	analysis: MsgAnalysisAnswer
-): CreateEventPrefillFields {
+export function mapAiAnswerToCreateEventPrefill(analysis: MsgAnalysisAnswer): CreateEventPrefillFields {
 	const tagSlugs = knownTagSlugs(analysis.tags);
 
 	const addressLines = addressLinesFromAnalysis({
@@ -51,7 +49,7 @@ export function mapAiAnswerToCreateEventPrefill(
 		contact,
 		contactMethod,
 		isNotListed: false,
-		...(notice ? { notice, ...(existingSource ? { existingSource } : {}) } : {})
+		...(notice ? { notice, ...(existingSource ? { existingSource } : {}) } : {}),
 	};
 }
 

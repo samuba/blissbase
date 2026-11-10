@@ -1,15 +1,10 @@
 <script lang="ts" module>
-	import { replaceState } from '$app/navigation';
-	import { page } from '$app/state';
-	import type { OfferingFormat } from '$lib/rpc/offerings.common';
-	import type { PublicProfileSocialLinks } from '$lib/rpc/profile.common';
-	import { afterClientHydration, ShallowDialog } from '$lib/shallowDialog.svelte';
-	import {
-		parseOfferingDetailsSlugFromUrl,
-		routes,
-		takeOfferingSlugQuery,
-		withOfferingSlug,
-	} from '$lib/routes';
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
+	import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+	import { afterClientHydration, ShallowDialog } from "#lib/shallowDialog.svelte.ts";
+	import { parseOfferingDetailsSlugFromUrl, routes, takeOfferingSlugQuery, withOfferingSlug } from "#lib/routes.ts";
 
 	let editReturnTo = $state<string | undefined>(undefined);
 	const dialog = new ShallowDialog(routes.offeringsList());
@@ -34,7 +29,7 @@
 	}
 
 	function closeOfferingDetailsDialog() {
-		dialog.close();
+		return dialog.close();
 	}
 
 	type OfferingDetailsDialogOffering = {
@@ -63,10 +58,10 @@
 </script>
 
 <script lang="ts">
-	import { Dialog } from '$lib/components/dialog';
-	import { getOfferingBySlug } from '$lib/rpc/offerings.remote';
-	import OfferingDetails from './OfferingDetails.svelte';
-	import { untrack } from 'svelte';
+	import { Dialog } from "#lib/components/dialog/index.ts";
+	import { getOfferingBySlug } from "#lib/rpc/offerings.remote.ts";
+	import OfferingDetails from "./OfferingDetails.svelte";
+	import { untrack } from "svelte";
 
 	let { offerings }: { offerings: OfferingDetailsDialogOffering[] } = $props();
 
@@ -103,13 +98,10 @@
 		try {
 			await afterClientHydration();
 			if (page.url.href !== queryHref) return;
-			replaceState(hostPath, {});
+			await goto(hostPath, { shallow: true, replace: true, state: {} });
 			await ensureOfferingLoaded(offeringSlug);
 			if (page.state.selectedOfferingSlug) return;
-			if (
-				fetchedOffering?.slug !== offeringSlug &&
-				!offerings.some((item) => item.slug === offeringSlug)
-			) {
+			if (fetchedOffering?.slug !== offeringSlug && !offerings.some((item) => item.slug === offeringSlug)) {
 				return;
 			}
 

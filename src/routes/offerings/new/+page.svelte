@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { onDestroy, onMount } from "svelte";
-	import OfferingForm from "$lib/components/OfferingForm.svelte";
-	import CreateFlowProfileFields, { type CreateFlowProfileRemoteFields } from "$lib/components/CreateFlowProfileFields.svelte";
-	import OtpStep from "$lib/components/OtpStep.svelte";
-	import { assignCreateFlowImageClaims, CreateFlowAuth, fieldHasIssues, submitCreateFlowForm, waitForCreateFlowSubmit } from "$lib/createFlowAuth.svelte";
+	import OfferingForm from "#lib/components/OfferingForm.svelte";
+	import CreateFlowProfileFields, { type CreateFlowProfileRemoteFields } from "#lib/components/CreateFlowProfileFields.svelte";
+	import OtpStep from "#lib/components/OtpStep.svelte";
+	import {
+		assignCreateFlowImageClaims,
+		CreateFlowAuth,
+		fieldHasIssues,
+		submitCreateFlowForm,
+		waitForCreateFlowSubmit,
+	} from "#lib/createFlowAuth.svelte.ts";
 	import {
 		clearCreateFlowDraft,
 		loadCreateFlowResume,
@@ -15,14 +21,14 @@
 		createFlowResumeStep,
 		readCreateFlowFormCheckedValues,
 		type OfferingCreateDraft,
-	} from "$lib/createFlowDraft";
-	import { offeringNeedsLocation, type OfferingFormat } from "$lib/rpc/offerings.common";
-	import { createOffering } from "$lib/rpc/offerings.remote";
-	import { profileLocationCheckMessage, type PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-	import { hasValidCoordinates } from "$lib/locationFilter";
-	import { routes, safeReturnToPath } from "$lib/routes";
-	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
-	import { loadFiltersFromBrowserCookie } from "$lib/cookie-utils";
+	} from "#lib/createFlowDraft.ts";
+	import { offeringNeedsLocation, type OfferingFormat } from "#lib/rpc/offerings.common.ts";
+	import { createOffering } from "#lib/rpc/offerings.remote.ts";
+	import { profileLocationCheckMessage, type PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+	import { hasValidCoordinates } from "#lib/locationFilter.ts";
+	import { routes, safeReturnToPath } from "#lib/routes.ts";
+	import { UnsavedChangesGuard } from "#lib/unsavedChangesGuard.svelte.ts";
+	import { loadFiltersFromBrowserCookie } from "#lib/cookie-utils.ts";
 
 	type WizardStep = `offering` | `profile` | `otp`;
 	type WizardStepItem = {
@@ -182,7 +188,7 @@
 		profileSocialLinkError = ``;
 
 		createOffering.fields.profile.socialLinks.set(socialLinks);
-		await createOffering.validate({ includeUntouched: true, preflightOnly: true });
+		await createOffering.validate({ all: true, preflightOnly: true });
 		return !hasProfileFieldIssues();
 	}
 
@@ -504,147 +510,148 @@
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body relative gap-6 p-4 sm:p-6">
 			<div class={["flex flex-col gap-6", hideWizardWhilePublishing && `invisible`]}>
-			<div class="flex flex-col gap-2">
-				{#if currentStep === `profile`}
-					<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-wizard-heading" data-step="profile">Fülle dein Profil aus</h1>
-					<p class="text-base-content/70 text-sm">
-						Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen.
-						Dein Profil wird unter jedem deiner Angebote angezeigt.
-					</p>
-				{:else if currentStep === `otp`}
-					<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-wizard-heading" data-step="otp">Anmelden</h1>
-					<p class="text-base-content/70 text-sm">
-						{#if awaitingOtpCode}
-							Dein Angebot geht erst live, wenn die Anmeldung abgeschlossen ist.
-						{:else}
-							Melde dich mit Google an oder lass dir einen Code per E-Mail schicken. Dein Angebot geht erst live, wenn die
-							Anmeldung abgeschlossen ist.
-						{/if}
-					</p>
-				{:else}
-					<h1 class="text-xl sm:text-2xl font-bold" data-testid="offering-wizard-heading" data-step="offering">Angebot hinzufügen</h1>
-					<p class="text-base-content/70 text-sm">
-						Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst.
-						Jeder kann es in deinem Profil und auf der Angebote-Seite sehen.
-					</p>
-				{/if}
-			</div>
-
-			{#if showCreateForm}
-				<OfferingForm
-					remoteForm={createOffering}
-					returnTo={returnHref}
-					bind:format
-					{fieldsHidden}
-					initialLocationLabel={initialLocation?.label}
-					initialLocationLat={initialLocation?.lat}
-					initialLocationLng={initialLocation?.lng}
-					{locationError}
-					onDirty={markCreateDirty}
-					onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
-					onImageFailedChange={(failed) => (offeringImagesFailed = failed)}
-					onsubmit={onSubmit}
-				>
-					<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={auth.submitAuthToken} />
-					{#if !isSignedIn}
-						<input type="hidden" {...createOffering.fields.email.as(`text`)} value={auth.email} />
-					{/if}
-
-					{#if renderProfileFields}
-						<CreateFlowProfileFields
-							fields={createOffering.fields.profile as CreateFlowProfileRemoteFields}
-							profile={wizardProfile}
-							bind:socialLinks={
-								() => socialLinks,
-								(next) => setSocialLinks(next)
-							}
-							{profileSocialLinkError}
-							hidden={profileFieldsHidden}
-							onDirty={markCreateDirty}
-							onProfileImageBusyChange={(busy) => (profileImageBusy = busy)}
-							onBannerImageBusyChange={(busy) => (bannerImageBusy = busy)}
-							revalidate={() => createOffering.validate({ preflightOnly: true })}
-						/>
-					{:else if isSignedIn && currentStep === `offering`}
-						<div class="alert">
-							Möchtest du dein Profil bearbeiten?
-							<a href={routes.editPublicProfile()} class="btn">
-								<i class="icon-[ph--arrow-right] size-4"></i>
-								Profil bearbeiten
-							</a>
-						</div>
-					{/if}
-
-					{#if showOtpStep}
-						<OtpStep
-							bind:email={
-								() => auth.email,
-								(value) => (auth.email = value)
-							}
-							bind:otpCode={
-								() => auth.otpCode,
-								(value) => (auth.otpCode = value)
-							}
-							pendingEmail={auth.pendingEmail}
-							authBusy={auth.authBusy}
-							authError={auth.authError}
-							emailCheckError={auth.emailCheckError}
-							emailTestId="offering-email-input"
-							onVerify={verifyCodeAndContinue}
-							onUseAnotherEmail={useAnotherEmail}
-							onResendCode={() => auth.resendCode()}
-							onGoogleSignIn={startGoogleSignIn}
-							onEmailInput={(event) => auth.onEmailInput(event)}
-							onEmailBlur={() => auth.onEmailBlur()}
-						/>
-					{/if}
-
-					{#if submitError}
-						<div class="alert alert-error bg-error/60">
-							<i class="icon-[ph--warning] size-6"></i>
-							<span>{submitError}</span>
-						</div>
-					{/if}
-				</OfferingForm>
-			{:else}
-				<div class="flex min-h-48 items-center justify-center" role="status" aria-busy="true">
-					<span class="loading loading-spinner loading-lg"></span>
-				</div>
-			{/if}
-
-			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-				{#if isFirstStep}
-					<a href={returnHref} class="btn btn-ghost">Abbrechen</a>
-				{:else}
-					<button type="button" class="btn btn-ghost" disabled={primaryBusy} onclick={goBack}>Zurück</button>
-				{/if}
-				<button type="button" class="btn btn-primary" data-testid="wizard-primary" disabled={!showCreateForm || primaryBusy} onclick={goNext}>
-					{#if anyImageUploadInFlight}
-						<span class="loading loading-spinner loading-sm"></span>
-						Bilder werden hochgeladen…
-					{:else if auth.emailCheckBusy}
-						<span class="loading loading-spinner loading-sm"></span>
-						E-Mail wird geprüft…
-					{:else if auth.authBusy}
-						<span class="loading loading-spinner loading-sm"></span>
-						Wird geprüft…
-					{:else if createOffering.pending > 0}
-						<span class="loading loading-spinner loading-sm"></span>
-						Wird gespeichert…
-					{:else if showOtpStep && !awaitingOtpCode}
-						Code senden
-					{:else if showOtpStep}
-						Anmelden
-					{:else if isLastStep}
-						Angebot erstellen
+				<div class="flex flex-col gap-2">
+					{#if currentStep === `profile`}
+						<h1 class="text-xl font-bold sm:text-2xl" data-testid="offering-wizard-heading" data-step="profile">Fülle dein Profil aus</h1>
+						<p class="text-base-content/70 text-sm">
+							Ein vollständiges Profil hilft das dir Kunden mehr vertrauen und dich besser einschätzen. Dein Profil wird unter jedem deiner
+							Angebote angezeigt.
+						</p>
+					{:else if currentStep === `otp`}
+						<h1 class="text-xl font-bold sm:text-2xl" data-testid="offering-wizard-heading" data-step="otp">Anmelden</h1>
+						<p class="text-base-content/70 text-sm">
+							{#if awaitingOtpCode}
+								Dein Angebot geht erst live, wenn die Anmeldung abgeschlossen ist.
+							{:else}
+								Melde dich mit Google an oder lass dir einen Code per E-Mail schicken. Dein Angebot geht erst live, wenn die Anmeldung
+								abgeschlossen ist.
+							{/if}
+						</p>
 					{:else}
-						Weiter
+						<h1 class="text-xl font-bold sm:text-2xl" data-testid="offering-wizard-heading" data-step="offering">Angebot hinzufügen</h1>
+						<p class="text-base-content/70 text-sm">
+							Ein Angebot ist ein Dienst den du auf Anfrage bereitstellst. Jeder kann es in deinem Profil und auf der Angebote-Seite sehen.
+						</p>
 					{/if}
-				</button>
-			</div>
+				</div>
+
+				{#if showCreateForm}
+					<OfferingForm
+						remoteForm={createOffering}
+						returnTo={returnHref}
+						bind:format
+						{fieldsHidden}
+						initialLocationLabel={initialLocation?.label}
+						initialLocationLat={initialLocation?.lat}
+						initialLocationLng={initialLocation?.lng}
+						{locationError}
+						onDirty={markCreateDirty}
+						onImageBusyChange={(busy) => (offeringImagesBusy = busy)}
+						onImageFailedChange={(failed) => (offeringImagesFailed = failed)}
+						onsubmit={onSubmit}
+					>
+						<input type="hidden" {...createOffering.fields.authToken.as(`text`)} value={auth.submitAuthToken} />
+						{#if !isSignedIn}
+							<input type="hidden" {...createOffering.fields.email.as(`text`)} value={auth.email} />
+						{/if}
+
+						{#if renderProfileFields}
+							<CreateFlowProfileFields
+								fields={createOffering.fields.profile as CreateFlowProfileRemoteFields}
+								profile={wizardProfile}
+								bind:socialLinks={() => socialLinks, (next) => setSocialLinks(next)}
+								{profileSocialLinkError}
+								hidden={profileFieldsHidden}
+								onDirty={markCreateDirty}
+								onProfileImageBusyChange={(busy) => (profileImageBusy = busy)}
+								onBannerImageBusyChange={(busy) => (bannerImageBusy = busy)}
+								revalidate={() => createOffering.validate({ preflightOnly: true })}
+							/>
+						{:else if isSignedIn && currentStep === `offering`}
+							<div class="alert">
+								Möchtest du dein Profil bearbeiten?
+								<a href={routes.editPublicProfile()} class="btn">
+									<i class="icon-[ph--arrow-right] size-4"></i>
+									Profil bearbeiten
+								</a>
+							</div>
+						{/if}
+
+						{#if showOtpStep}
+							<OtpStep
+								bind:email={() => auth.email, (value) => (auth.email = value)}
+								bind:otpCode={() => auth.otpCode, (value) => (auth.otpCode = value)}
+								pendingEmail={auth.pendingEmail}
+								authBusy={auth.authBusy}
+								authError={auth.authError}
+								emailCheckError={auth.emailCheckError}
+								emailTestId="offering-email-input"
+								onVerify={verifyCodeAndContinue}
+								onUseAnotherEmail={useAnotherEmail}
+								onResendCode={() => auth.resendCode()}
+								onGoogleSignIn={startGoogleSignIn}
+								onEmailInput={(event) => auth.onEmailInput(event)}
+								onEmailBlur={() => auth.onEmailBlur()}
+							/>
+						{/if}
+
+						{#if submitError}
+							<div class="alert alert-error bg-error/60">
+								<i class="icon-[ph--warning] size-6"></i>
+								<span>{submitError}</span>
+							</div>
+						{/if}
+					</OfferingForm>
+				{:else}
+					<div class="flex min-h-48 items-center justify-center" role="status" aria-busy="true">
+						<span class="loading loading-spinner loading-lg"></span>
+					</div>
+				{/if}
+
+				<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+					{#if isFirstStep}
+						<a href={returnHref} class="btn btn-ghost">Abbrechen</a>
+					{:else}
+						<button type="button" class="btn btn-ghost" disabled={primaryBusy} onclick={goBack}>Zurück</button>
+					{/if}
+					<button
+						type="button"
+						class="btn btn-primary"
+						data-testid="wizard-primary"
+						disabled={!showCreateForm || primaryBusy}
+						onclick={goNext}
+					>
+						{#if anyImageUploadInFlight}
+							<span class="loading loading-spinner loading-sm"></span>
+							Bilder werden hochgeladen…
+						{:else if auth.emailCheckBusy}
+							<span class="loading loading-spinner loading-sm"></span>
+							E-Mail wird geprüft…
+						{:else if auth.authBusy}
+							<span class="loading loading-spinner loading-sm"></span>
+							Wird geprüft…
+						{:else if createOffering.pending > 0}
+							<span class="loading loading-spinner loading-sm"></span>
+							Wird gespeichert…
+						{:else if showOtpStep && !awaitingOtpCode}
+							Code senden
+						{:else if showOtpStep}
+							Anmelden
+						{:else if isLastStep}
+							Angebot erstellen
+						{:else}
+							Weiter
+						{/if}
+					</button>
+				</div>
 			</div>
 			{#if hideWizardWhilePublishing}
-				<div class="bg-base-100 absolute inset-0 z-50 flex items-center justify-center" role="status" aria-busy="true" data-testid="create-flow-publishing">
+				<div
+					class="bg-base-100 absolute inset-0 z-50 flex items-center justify-center"
+					role="status"
+					aria-busy="true"
+					data-testid="create-flow-publishing"
+				>
 					<div class="flex flex-col items-center gap-3">
 						<span class="loading loading-spinner loading-lg"></span>
 						<p class="text-base-content/70">Angebot wird erstellt…</p>

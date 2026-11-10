@@ -1,7 +1,7 @@
 import { parseDate } from "@internationalized/date";
-import { formatAddress } from "$lib/common";
-import { absoluteUrl, routes } from "$lib/routes";
-import { fetchEvents, prepareEventsForUi } from "$lib/server/events";
+import { formatAddress } from "#lib/common.ts";
+import { absoluteUrl, routes } from "#lib/routes.ts";
+import { fetchEvents, prepareEventsForUi } from "#lib/server/events.ts";
 
 /** Same city ids the Soulspots snippet used, so existing `location-id` attributes keep working. */
 export const breathworkEmbedCities = [

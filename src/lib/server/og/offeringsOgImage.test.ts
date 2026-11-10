@@ -26,7 +26,7 @@ describe(`createOfferingsOgImage`, () => {
 
 		const originalFetch = globalThis.fetch;
 		globalThis.fetch = (async () =>
-			new Response(tile, {
+			new Response(new Uint8Array(tile), {
 				status: 200,
 				headers: { "Content-Type": `image/png` },
 			})) as typeof fetch;

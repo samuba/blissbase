@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { matchesBlackListWords, matchesWhiteListWords } from './whitelistWords';
+import { describe, expect, it } from "vitest";
+import { matchesBlackListWords, matchesWhiteListWords } from "./whitelistWords";
 
 describe(`matchesBlackListWords`, () => {
 	it(`filters ordinary yoga class titles`, () => {

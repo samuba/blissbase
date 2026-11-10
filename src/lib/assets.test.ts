@@ -38,7 +38,7 @@ import {
 	uploadEventImage,
 	uploadProfileBannerImage,
 	uploadProfileImage,
-} from "$lib/assets";
+} from "#lib/assets.ts";
 
 function getS3ClientMock() {
 	return S3Client as unknown as {
@@ -238,7 +238,10 @@ describe(`temporary image finalization`, () => {
 		});
 
 		const instance = getS3InstanceMock();
-		expect(instance.copyObject).toHaveBeenCalledWith({ sourceKey: `profiles/temp/profile-abc123.jpg` }, `profiles/user-123/profile-abc123.jpg`);
+		expect(instance.copyObject).toHaveBeenCalledWith(
+			{ sourceKey: `profiles/temp/profile-abc123.jpg` },
+			`profiles/user-123/profile-abc123.jpg`,
+		);
 		expect(instance.deleteObject).toHaveBeenCalledWith(`profiles/temp/profile-abc123.jpg`);
 		expect(instance.copyObject.mock.invocationCallOrder[0]).toBeLessThan(instance.deleteObject.mock.invocationCallOrder[0]);
 		expect(url).toBe(`https://assets.blissbase.app/profiles/user-123/profile-abc123.jpg`);

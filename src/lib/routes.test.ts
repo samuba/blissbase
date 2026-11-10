@@ -1,10 +1,22 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock(`$app/paths`, () => ({
-	resolve: (path: string) => path,
+	resolve: (path: string, params?: Record<string, string>) => {
+		// Mirror Kit 3: route IDs start with `/`; pathnames do not and get a `/` prefix.
+		if (path.startsWith(`/`)) {
+			let resolved = path;
+			for (const [key, value] of Object.entries(params ?? {})) {
+				resolved = resolved.replace(`[${key}]`, value);
+			}
+			return resolved;
+		}
+		return `/${path}`;
+	},
 }));
 
-const { AUTH_NEXT_QUERY, BASE_URL, isAuthFlowPath, isEventOrOfferingListPath, routePathname, routes, safeAuthNextPath } = await import(`$lib/routes`);
+const { AUTH_NEXT_QUERY, BASE_URL, isAuthFlowPath, isEventOrOfferingListPath, routePathname, routes, safeAuthNextPath } = await import(
+	`#lib/routes.ts`
+);
 
 describe(`routePathname`, () => {
 	it(`turns relative SSR resolve() results into absolute pathnames`, () => {

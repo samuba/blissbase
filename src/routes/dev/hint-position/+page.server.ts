@@ -1,5 +1,5 @@
-import { dev } from "$app/environment";
-import { E2E_TEST } from "$env/static/private";
+import { dev } from "$app/env";
+import { E2E_TEST } from "$app/env/private";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 

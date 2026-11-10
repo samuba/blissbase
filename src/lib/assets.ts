@@ -51,11 +51,7 @@ export function publicProfileImageObjectKey(profileId: string, type: "profile" |
  * @example
  * profileTempImageObjectKey({ type: `profile`, suffix: `crop` });
  */
-export function profileTempImageObjectKey(args: {
-	type: "profile" | "banner";
-	suffix: string;
-	contentType?: string;
-}) {
+export function profileTempImageObjectKey(args: { type: "profile" | "banner"; suffix: string; contentType?: string }) {
 	assertSafeObjectKeyPart(args.suffix, `Profile image suffix`);
 	const ext = getImageObjectExtensionFromMimeType(args.contentType ?? `image/webp`);
 	return `profiles/temp/${args.type}-${args.suffix}.${ext}`;
@@ -410,12 +406,7 @@ export function isTempProfileImageObjectKey(objectKey: string) {
 	return /^profiles\/temp\/(profile|banner)-[a-zA-Z0-9_-]+\.(webp|jpg)$/.test(objectKey);
 }
 
-async function moveTemporaryImage(args: {
-	tempObjectKey: string;
-	finalObjectKey: string;
-	creds: S3Creds;
-	label: string;
-}) {
+async function moveTemporaryImage(args: { tempObjectKey: string; finalObjectKey: string; creds: S3Creds; label: string }) {
 	try {
 		const s3 = new S3Client(args.creds);
 		await s3.copyObject({ sourceKey: args.tempObjectKey }, args.finalObjectKey);

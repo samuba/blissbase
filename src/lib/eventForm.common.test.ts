@@ -4,10 +4,10 @@ import {
 	formatDateForLocalInputInTimeZone,
 	inferContactMethod,
 	storedContactUriToFormFields,
-	updateEventSchema
-} from '$lib/events.remote.common';
-import { describe, expect, it } from 'vitest';
-import * as v from 'valibot';
+	updateEventSchema,
+} from "#lib/eventForm.common.ts";
+import { describe, expect, it } from "vitest";
+import * as v from "valibot";
 
 describe(`inferContactMethod`, () => {
 	it(`detects WhatsApp wa.me links`, () => {
@@ -18,8 +18,8 @@ describe(`inferContactMethod`, () => {
 	it(`detects api.whatsapp.com links`, () => {
 		expect(
 			inferContactMethod({
-				contact: `https://api.whatsapp.com/send?phone=491234`
-			})
+				contact: `https://api.whatsapp.com/send?phone=491234`,
+			}),
 		).toBe(`whatsapp`);
 	});
 });
@@ -28,21 +28,21 @@ describe(`storedContactUriToFormFields`, () => {
 	it(`strips mailto and sets email method`, () => {
 		expect(storedContactUriToFormFields({ storedContactUri: `mailto:hi@example.com` })).toEqual({
 			contactMethod: `email`,
-			contact: `hi@example.com`
+			contact: `hi@example.com`,
 		});
 	});
 
 	it(`parses tg://resolve?domain= into @handle`, () => {
 		expect(storedContactUriToFormFields({ storedContactUri: `tg://resolve?domain=mygroup` })).toEqual({
 			contactMethod: `telegram`,
-			contact: `@mygroup`
+			contact: `@mygroup`,
 		});
 	});
 
 	it(`strips tel: and sets phone method`, () => {
 		expect(storedContactUriToFormFields({ storedContactUri: `tel:+234` })).toEqual({
 			contactMethod: `phone`,
-			contact: `+234`
+			contact: `+234`,
 		});
 	});
 });
@@ -56,23 +56,29 @@ describe(`formatDateForLocalInputInTimeZone`, () => {
 
 describe(`event schemas`, () => {
 	it(`requires a future start date when creating an event`, () => {
-		const result = v.safeParse(createEventSchema, createEventPayload({
-			startAt: `2024-01-15T18:00`
-		}));
+		const result = v.safeParse(
+			createEventSchema,
+			createEventPayload({
+				startAt: `2024-01-15T18:00`,
+			}),
+		);
 
 		expect(result.success).toBe(false);
 		expect(result.issues?.some((issue) => issue.message === `Start date must be in the future`)).toBe(true);
 	});
 
 	it(`accepts optional create-flow auth fields`, () => {
-		const result = v.safeParse(createEventSchema, createEventPayload({
-			email: `host@example.com`,
-			authToken: `token`,
-			profile: {
-				displayName: `Host`,
-				bio: `Host bio`,
-			},
-		}));
+		const result = v.safeParse(
+			createEventSchema,
+			createEventPayload({
+				email: `host@example.com`,
+				authToken: `token`,
+				profile: {
+					displayName: `Host`,
+					bio: `Host bio`,
+				},
+			}),
+		);
 
 		expect(result.success).toBe(true);
 	});
@@ -81,21 +87,24 @@ describe(`event schemas`, () => {
 		const result = v.safeParse(updateEventSchema, {
 			...createEventPayload({
 				startAt: `2024-01-15T18:00`,
-				description: `Aktualisierte Beschreibung`
+				description: `Aktualisierte Beschreibung`,
 			}),
 			eventId: 42,
 			hostSecret: ``,
-			existingImageUrls: []
+			existingImageUrls: [],
 		});
 
 		expect(result.success).toBe(true);
 	});
 
 	it(`allows an offline event with an address and no coordinates`, () => {
-		const result = v.safeParse(createEventSchema, createEventPayload({
-			latitude: ``,
-			longitude: ``
-		}));
+		const result = v.safeParse(
+			createEventSchema,
+			createEventPayload({
+				latitude: ``,
+				longitude: ``,
+			}),
+		);
 
 		expect(result.success).toBe(true);
 	});
@@ -104,31 +113,37 @@ describe(`event schemas`, () => {
 		const result = v.safeParse(updateEventSchema, {
 			...createEventPayload({
 				latitude: ``,
-				longitude: ``
+				longitude: ``,
 			}),
 			eventId: 42,
 			hostSecret: ``,
-			existingImageUrls: []
+			existingImageUrls: [],
 		});
 
 		expect(result.success).toBe(true);
 	});
 
 	it(`does not require a location for online events`, () => {
-		const result = v.safeParse(createEventSchema, createEventPayload({
-			isOnline: true,
-			address: ``,
-			latitude: ``,
-			longitude: ``
-		}));
+		const result = v.safeParse(
+			createEventSchema,
+			createEventPayload({
+				isOnline: true,
+				address: ``,
+				latitude: ``,
+				longitude: ``,
+			}),
+		);
 
 		expect(result.success).toBe(true);
 	});
 
 	it(`keeps known tag slugs and drops unknown ones`, () => {
-		const result = v.safeParse(createEventSchema, createEventPayload({
-			tagSlugs: [`yoga`, `not-a-real-tag`, `meditation`]
-		}));
+		const result = v.safeParse(
+			createEventSchema,
+			createEventPayload({
+				tagSlugs: [`yoga`, `not-a-real-tag`, `meditation`],
+			}),
+		);
 
 		expect(result.success).toBe(true);
 		if (!result.success) return;
@@ -138,31 +153,39 @@ describe(`event schemas`, () => {
 
 describe(`eventPlaceLabel`, () => {
 	it(`prefixes the formatted address with the place name when it adds information`, () => {
-		expect(eventPlaceLabel({
-			displayName: `Yoga Studio`,
-			formattedAddress: `Musterstraße 1, Berlin`
-		})).toBe(`Yoga Studio, Musterstraße 1, Berlin`);
+		expect(
+			eventPlaceLabel({
+				displayName: `Yoga Studio`,
+				formattedAddress: `Musterstraße 1, Berlin`,
+			}),
+		).toBe(`Yoga Studio, Musterstraße 1, Berlin`);
 	});
 
 	it(`uses the formatted address when it already contains the name`, () => {
-		expect(eventPlaceLabel({
-			displayName: `Berlin`,
-			formattedAddress: `Berlin, Germany`
-		})).toBe(`Berlin, Germany`);
+		expect(
+			eventPlaceLabel({
+				displayName: `Berlin`,
+				formattedAddress: `Berlin, Germany`,
+			}),
+		).toBe(`Berlin, Germany`);
 	});
 
 	it(`prefixes when the name is only a substring of a street`, () => {
-		expect(eventPlaceLabel({
-			displayName: `Berlin`,
-			formattedAddress: `Berliner Straße 12, München`
-		})).toBe(`Berlin, Berliner Straße 12, München`);
+		expect(
+			eventPlaceLabel({
+				displayName: `Berlin`,
+				formattedAddress: `Berliner Straße 12, München`,
+			}),
+		).toBe(`Berlin, Berliner Straße 12, München`);
 	});
 
 	it(`uses the formatted address when a later part equals the name`, () => {
-		expect(eventPlaceLabel({
-			displayName: `Berlin`,
-			formattedAddress: `Musterstraße 1, Berlin`
-		})).toBe(`Musterstraße 1, Berlin`);
+		expect(
+			eventPlaceLabel({
+				displayName: `Berlin`,
+				formattedAddress: `Musterstraße 1, Berlin`,
+			}),
+		).toBe(`Musterstraße 1, Berlin`);
 	});
 });
 
@@ -189,7 +212,7 @@ function createEventPayload(overrides: Partial<CreateEventPayload> = {}): Create
 		contact: `test@example.com`,
 		contactMethod: `email`,
 		imageClaims: [],
-		...overrides
+		...overrides,
 	};
 }
 

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { resolve } from '$app/paths';
-	import EventDetails from '../EventDetails.svelte';
+	import { goto } from "$app/navigation";
+	import { eventsStore } from "#lib/eventsStore.svelte.ts";
+	import { resolve } from "$app/paths";
+	import EventDetails from "../EventDetails.svelte";
 
 	let { data } = $props();
 	const { event } = $derived(data);
@@ -14,13 +14,13 @@
 			{event}
 			onShowEventForTag={(tag) => {
 				eventsStore.handleSearchTermChange(tag);
-				goto(resolve('/#header-controls'));
+				goto(resolve("#header-controls"));
 			}}
 		/>
 	</div>
 
 	<div class="flex w-full justify-center gap-6 py-5 md:py-3">
-		<a href={resolve('/')} class="btn btn-sm" data-testid="all-events-link">
+		<a href={resolve("/")} class="btn btn-sm" data-testid="all-events-link">
 			<i class="icon-[ph--arrow-left] mr-1 size-5"></i>
 			Alle Events
 		</a>

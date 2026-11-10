@@ -1,4 +1,4 @@
-declare module 'browser-image-compression' {
+declare module "browser-image-compression" {
 	export interface Options {
 		maxSizeMB?: number;
 		maxWidthOrHeight?: number;

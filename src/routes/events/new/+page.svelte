@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { onDestroy, onMount } from "svelte";
-	import EventForm from "$lib/components/EventForm.svelte";
-	import CreateFlowProfileFields, { type CreateFlowProfileRemoteFields } from "$lib/components/CreateFlowProfileFields.svelte";
-	import OtpStep from "$lib/components/OtpStep.svelte";
-	import { assignCreateFlowImageClaims, CreateFlowAuth, fieldHasIssues, submitCreateFlowForm, waitForCreateFlowSubmit } from "$lib/createFlowAuth.svelte";
+	import EventForm from "#lib/components/EventForm.svelte";
+	import CreateFlowProfileFields, { type CreateFlowProfileRemoteFields } from "#lib/components/CreateFlowProfileFields.svelte";
+	import OtpStep from "#lib/components/OtpStep.svelte";
+	import {
+		assignCreateFlowImageClaims,
+		CreateFlowAuth,
+		fieldHasIssues,
+		submitCreateFlowForm,
+		waitForCreateFlowSubmit,
+	} from "#lib/createFlowAuth.svelte.ts";
 	import {
 		clearCreateFlowDraft,
 		EVENT_CREATE_DRAFT_KEY,
@@ -15,13 +21,13 @@
 		createFlowResumeStep,
 		readCreateFlowFormCheckedValues,
 		type EventCreateDraft,
-	} from "$lib/createFlowDraft";
-	import { getDefaultCreateEventFieldBase } from "$lib/eventCreateDefaults";
-	import { useDuplicateEventDraftToast } from "$lib/eventDuplicateDraftToast.svelte";
-	import { createEvent } from "$lib/rpc/eventMutations.remote";
-	import { routes } from "$lib/routes";
-	import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-	import { UnsavedChangesGuard } from "$lib/unsavedChangesGuard.svelte";
+	} from "#lib/createFlowDraft.ts";
+	import { getDefaultCreateEventFieldBase } from "#lib/eventCreateDefaults.ts";
+	import { useDuplicateEventDraftToast } from "#lib/eventDuplicateDraftToast.svelte.ts";
+	import { createEvent } from "#lib/rpc/eventMutations.remote.ts";
+	import { routes } from "#lib/routes.ts";
+	import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+	import { UnsavedChangesGuard } from "#lib/unsavedChangesGuard.svelte.ts";
 
 	type WizardStep = `event` | `profile` | `otp`;
 	type WizardStepItem = {
@@ -58,7 +64,7 @@
 
 	const anyImageUploadInFlight = $derived(eventImagesBusy || profileImageBusy || bannerImageBusy);
 	const profileFieldIssues = $derived(hasProfileFieldIssues());
-	const profileIncomplete = $derived(!((profile ?? auth.emailLoadedProfile)?.displayName?.trim()));
+	const profileIncomplete = $derived(!(profile ?? auth.emailLoadedProfile)?.displayName?.trim());
 	const profileStepApplies = $derived(isAuthenticated ? profileIncomplete || profileFieldIssues : false);
 	const currentStep = $derived.by<WizardStep>(() => {
 		if (profileFieldIssues && profileStepApplies) return `profile`;
@@ -142,7 +148,7 @@
 	async function validateProfileStep() {
 		profileSocialLinkError = ``;
 		createEvent.fields.profile.socialLinks.set(socialLinks);
-		await createEvent.validate({ includeUntouched: true, preflightOnly: true });
+		await createEvent.validate({ all: true, preflightOnly: true });
 		return !hasProfileFieldIssues();
 	}
 
@@ -451,150 +457,152 @@
 	<div class="card bg-base-100 sm:rounded-box w-full rounded-none shadow">
 		<div class="card-body relative gap-6 p-4 sm:p-6">
 			<div class={["flex flex-col gap-6", hideWizardWhilePublishing && `invisible`]}>
-			<div class="flex flex-col gap-2">
-				{#if currentStep === `profile`}
-					<h1 class="text-xl sm:text-2xl font-bold" data-testid="create-event-heading" data-step="profile">Fülle dein Profil aus</h1>
-					<p class="text-base-content/70 text-sm">
-						Ein vollständiges Profil hilft, dass dir Menschen mehr vertrauen. Dein Profil wird bei deinen Events angezeigt.
-					</p>
-				{:else if currentStep === `otp`}
-					<h1 class="text-xl sm:text-2xl font-bold" data-testid="create-event-heading" data-step="otp">Anmelden</h1>
-					<p class="text-base-content/70 text-sm">
-						{#if awaitingOtpCode}
-							Dein Event geht erst live, wenn die Anmeldung abgeschlossen ist.
-						{:else}
-							Melde dich mit Google an oder lass dir einen Code per E-Mail schicken. Dein Event geht erst live, wenn die
-							Anmeldung abgeschlossen ist.
-						{/if}
-					</p>
-				{:else}
-					<div class="flex flex-wrap items-start justify-between gap-3">
-						<div>
-							<h1 class="text-xl sm:text-2xl font-bold" data-testid="create-event-heading" data-step="event">Event erstellen</h1>
-						</div>
-						<a href={routes.root()} class="btn btn-ghost btn-sm">
-							<i class="icon-[ph--arrow-left] size-4"></i>
-							Zurück
-						</a>
-					</div>
-				{/if}
-			</div>
-
-			{#if showCreateForm}
-				<EventForm
-					mode="create"
-					remoteForm={createEvent}
-					showAutofillControl
-					{fieldsHidden}
-					initialLocationLabel={restoredLocation?.label}
-					initialLocationLat={restoredLocation?.lat}
-					initialLocationLng={restoredLocation?.lng}
-					onDirty={markCreateDirty}
-					onsubmit={onSubmit}
-					onImageBusyChange={(busy) => (eventImagesBusy = busy)}
-					onImageFailedChange={(failed) => (eventImagesFailed = failed)}
-				>
-					<input {...createEvent.fields.authToken.as(`text`)} type="hidden" value={auth.submitAuthToken} />
-					{#if !isSignedIn}
-						<input {...createEvent.fields.email.as(`text`)} type="hidden" value={auth.email} />
-					{/if}
-
-					{#if renderProfileFields}
-						<CreateFlowProfileFields
-							fields={createEvent.fields.profile as CreateFlowProfileRemoteFields}
-							profile={wizardProfile}
-							bind:socialLinks={
-								() => socialLinks,
-								(next) => setSocialLinks(next)
-							}
-							{profileSocialLinkError}
-							requireSocialLink={false}
-							hidden={profileFieldsHidden}
-							onDirty={markCreateDirty}
-							onProfileImageBusyChange={(busy) => (profileImageBusy = busy)}
-							onBannerImageBusyChange={(busy) => (bannerImageBusy = busy)}
-							revalidate={() => createEvent.validate({ preflightOnly: true })}
-						/>
-					{:else if isSignedIn && currentStep === `event`}
-						<div class="alert">
-							Möchtest du dein Profil bearbeiten?
-							<a href={routes.editPublicProfile()} class="btn">
-								<i class="icon-[ph--arrow-right] size-4"></i>
-								Profil bearbeiten
+				<div class="flex flex-col gap-2">
+					{#if currentStep === `profile`}
+						<h1 class="text-xl font-bold sm:text-2xl" data-testid="create-event-heading" data-step="profile">Fülle dein Profil aus</h1>
+						<p class="text-base-content/70 text-sm">
+							Ein vollständiges Profil hilft, dass dir Menschen mehr vertrauen. Dein Profil wird bei deinen Events angezeigt.
+						</p>
+					{:else if currentStep === `otp`}
+						<h1 class="text-xl font-bold sm:text-2xl" data-testid="create-event-heading" data-step="otp">Anmelden</h1>
+						<p class="text-base-content/70 text-sm">
+							{#if awaitingOtpCode}
+								Dein Event geht erst live, wenn die Anmeldung abgeschlossen ist.
+							{:else}
+								Melde dich mit Google an oder lass dir einen Code per E-Mail schicken. Dein Event geht erst live, wenn die Anmeldung
+								abgeschlossen ist.
+							{/if}
+						</p>
+					{:else}
+						<div class="flex flex-wrap items-start justify-between gap-3">
+							<div>
+								<h1 class="text-xl font-bold sm:text-2xl" data-testid="create-event-heading" data-step="event">Event erstellen</h1>
+							</div>
+							<a href={routes.root()} class="btn btn-ghost btn-sm">
+								<i class="icon-[ph--arrow-left] size-4"></i>
+								Zurück
 							</a>
 						</div>
 					{/if}
-
-					{#if showOtpStep}
-						<OtpStep
-							bind:email={
-								() => auth.email,
-								(value) => (auth.email = value)
-							}
-							bind:otpCode={
-								() => auth.otpCode,
-								(value) => (auth.otpCode = value)
-							}
-							pendingEmail={auth.pendingEmail}
-							authBusy={auth.authBusy}
-							authError={auth.authError}
-							emailCheckError={auth.emailCheckError}
-							emailTestId="event-email-input"
-							onVerify={verifyCodeAndContinue}
-							onUseAnotherEmail={useAnotherEmail}
-							onResendCode={() => auth.resendCode()}
-							onGoogleSignIn={startGoogleSignIn}
-							onEmailInput={(event) => auth.onEmailInput(event)}
-							onEmailBlur={() => auth.onEmailBlur()}
-						/>
-					{/if}
-
-					{#if submitError}
-						<div class="alert alert-error bg-error/60">
-							<i class="icon-[ph--warning] size-6"></i>
-							<span>{submitError}</span>
-						</div>
-					{/if}
-				</EventForm>
-			{:else}
-				<div class="flex min-h-48 items-center justify-center" role="status" aria-busy="true">
-					<span class="loading loading-spinner loading-lg"></span>
 				</div>
-			{/if}
 
-			<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-				{#if isFirstStep}
-					<a href={routes.root()} class="btn btn-ghost">Abbrechen</a>
+				{#if showCreateForm}
+					<EventForm
+						mode="create"
+						remoteForm={createEvent}
+						showAutofillControl
+						{fieldsHidden}
+						initialLocationLabel={restoredLocation?.label}
+						initialLocationLat={restoredLocation?.lat}
+						initialLocationLng={restoredLocation?.lng}
+						onDirty={markCreateDirty}
+						onsubmit={onSubmit}
+						onImageBusyChange={(busy) => (eventImagesBusy = busy)}
+						onImageFailedChange={(failed) => (eventImagesFailed = failed)}
+					>
+						<input {...createEvent.fields.authToken.as(`text`)} type="hidden" value={auth.submitAuthToken} />
+						{#if !isSignedIn}
+							<input {...createEvent.fields.email.as(`text`)} type="hidden" value={auth.email} />
+						{/if}
+
+						{#if renderProfileFields}
+							<CreateFlowProfileFields
+								fields={createEvent.fields.profile as CreateFlowProfileRemoteFields}
+								profile={wizardProfile}
+								bind:socialLinks={() => socialLinks, (next) => setSocialLinks(next)}
+								{profileSocialLinkError}
+								requireSocialLink={false}
+								hidden={profileFieldsHidden}
+								onDirty={markCreateDirty}
+								onProfileImageBusyChange={(busy) => (profileImageBusy = busy)}
+								onBannerImageBusyChange={(busy) => (bannerImageBusy = busy)}
+								revalidate={() => createEvent.validate({ preflightOnly: true })}
+							/>
+						{:else if isSignedIn && currentStep === `event`}
+							<div class="alert">
+								Möchtest du dein Profil bearbeiten?
+								<a href={routes.editPublicProfile()} class="btn">
+									<i class="icon-[ph--arrow-right] size-4"></i>
+									Profil bearbeiten
+								</a>
+							</div>
+						{/if}
+
+						{#if showOtpStep}
+							<OtpStep
+								bind:email={() => auth.email, (value) => (auth.email = value)}
+								bind:otpCode={() => auth.otpCode, (value) => (auth.otpCode = value)}
+								pendingEmail={auth.pendingEmail}
+								authBusy={auth.authBusy}
+								authError={auth.authError}
+								emailCheckError={auth.emailCheckError}
+								emailTestId="event-email-input"
+								onVerify={verifyCodeAndContinue}
+								onUseAnotherEmail={useAnotherEmail}
+								onResendCode={() => auth.resendCode()}
+								onGoogleSignIn={startGoogleSignIn}
+								onEmailInput={(event) => auth.onEmailInput(event)}
+								onEmailBlur={() => auth.onEmailBlur()}
+							/>
+						{/if}
+
+						{#if submitError}
+							<div class="alert alert-error bg-error/60">
+								<i class="icon-[ph--warning] size-6"></i>
+								<span>{submitError}</span>
+							</div>
+						{/if}
+					</EventForm>
 				{:else}
-					<button type="button" class="btn btn-ghost" disabled={primaryBusy} onclick={goBack}>Zurück</button>
+					<div class="flex min-h-48 items-center justify-center" role="status" aria-busy="true">
+						<span class="loading loading-spinner loading-lg"></span>
+					</div>
 				{/if}
-				<button type="button" class="btn btn-primary" data-testid="wizard-primary" disabled={!showCreateForm || primaryBusy} onclick={goNext}>
-					{#if anyImageUploadInFlight}
-						<span class="loading loading-spinner loading-sm"></span>
-						Bilder werden hochgeladen…
-					{:else if auth.emailCheckBusy}
-						<span class="loading loading-spinner loading-sm"></span>
-						E-Mail wird geprüft…
-					{:else if auth.authBusy}
-						<span class="loading loading-spinner loading-sm"></span>
-						Wird geprüft…
-					{:else if createEvent.pending > 0}
-						<span class="loading loading-spinner loading-sm"></span>
-						Speichere...
-					{:else if showOtpStep && !awaitingOtpCode}
-						Code senden
-					{:else if showOtpStep}
-						Anmelden
-					{:else if isLastStep}
-						Event erstellen
+
+				<div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+					{#if isFirstStep}
+						<a href={routes.root()} class="btn btn-ghost">Abbrechen</a>
 					{:else}
-						Weiter
+						<button type="button" class="btn btn-ghost" disabled={primaryBusy} onclick={goBack}>Zurück</button>
 					{/if}
-				</button>
-			</div>
+					<button
+						type="button"
+						class="btn btn-primary"
+						data-testid="wizard-primary"
+						disabled={!showCreateForm || primaryBusy}
+						onclick={goNext}
+					>
+						{#if anyImageUploadInFlight}
+							<span class="loading loading-spinner loading-sm"></span>
+							Bilder werden hochgeladen…
+						{:else if auth.emailCheckBusy}
+							<span class="loading loading-spinner loading-sm"></span>
+							E-Mail wird geprüft…
+						{:else if auth.authBusy}
+							<span class="loading loading-spinner loading-sm"></span>
+							Wird geprüft…
+						{:else if createEvent.pending > 0}
+							<span class="loading loading-spinner loading-sm"></span>
+							Speichere...
+						{:else if showOtpStep && !awaitingOtpCode}
+							Code senden
+						{:else if showOtpStep}
+							Anmelden
+						{:else if isLastStep}
+							Event erstellen
+						{:else}
+							Weiter
+						{/if}
+					</button>
+				</div>
 			</div>
 			{#if hideWizardWhilePublishing}
-				<div class="bg-base-100 absolute inset-0 z-50 flex items-center justify-center" role="status" aria-busy="true" data-testid="create-flow-publishing">
+				<div
+					class="bg-base-100 absolute inset-0 z-50 flex items-center justify-center"
+					role="status"
+					aria-busy="true"
+					data-testid="create-flow-publishing"
+				>
 					<div class="flex flex-col items-center gap-3">
 						<span class="loading loading-spinner loading-lg"></span>
 						<p class="text-base-content/70">Event wird erstellt…</p>

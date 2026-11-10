@@ -1,5 +1,5 @@
-import { browser } from '$app/environment';
-import { PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY } from '$env/static/public';
+import { browser } from "$app/env";
+import { PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY } from "$app/env/public";
 
 let placesLibraryPromise: Promise<google.maps.PlacesLibrary | null> | null = null;
 

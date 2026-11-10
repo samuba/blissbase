@@ -53,7 +53,8 @@ test.describe(`Admin Telegram targets`, () => {
 		});
 
 		const editDialog = page.getByTestId(`telegram-edit-dialog`);
-		await expect(editDialog.locator(`input[name="roomId"]`)).toHaveValue(target.roomId);
+		// Kit 3 remote forms encode names as `b:roomId/<hash>/<form>`; match by legend + value.
+		await expect(editDialog.getByRole(`group`, { name: `roomId *` }).locator(`input`)).toHaveValue(target.roomId);
 		expect(pageErrors).toEqual([]);
 
 		await editDialog.getByRole(`button`, { name: `Schließen` }).click();

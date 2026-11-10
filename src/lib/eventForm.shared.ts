@@ -1,14 +1,15 @@
-import { getRequestEvent } from '$app/server';
-import { error } from '@sveltejs/kit';
-import * as assets from '$lib/assets';
-import { db, eq, s } from '$lib/server/db';
-import { CLOUDFLARE_ACCOUNT_ID, S3_ACCESS_KEY_ID, S3_BUCKET_NAME, S3_SECRET_ACCESS_KEY } from '$env/static/private';
+import { getRequestEvent } from "$app/server";
+import { error } from "@sveltejs/kit";
+import * as assets from "#lib/assets.ts";
+import { db, eq, s } from "#lib/server/db.ts";
+
+import { CLOUDFLARE_ACCOUNT_ID, S3_ACCESS_KEY_ID, S3_BUCKET_NAME, S3_SECRET_ACCESS_KEY } from "$app/env/private";
 
 export const eventAssetsCreds = assets.loadCreds({
 	S3_ACCESS_KEY_ID,
 	S3_SECRET_ACCESS_KEY,
 	S3_BUCKET_NAME,
-	CLOUDFLARE_ACCOUNT_ID
+	CLOUDFLARE_ACCOUNT_ID,
 });
 
 /**
@@ -19,7 +20,7 @@ export const eventAssetsCreds = assets.loadCreds({
  */
 export async function assertUserIsAllowedToEditEvent(eventId: number, hostSecret: string) {
 	const {
-		locals: { userId, isAdminSession }
+		locals: { userId, isAdminSession },
 	} = getRequestEvent();
 
 	const event = await db.query.events.findFirst({ where: eq(s.events.id, eventId) });

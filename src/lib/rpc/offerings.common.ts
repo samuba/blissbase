@@ -1,25 +1,20 @@
-import { publicProfilePatchSchema } from '$lib/rpc/profile.common';
-import { galleryImageClaimsSchema, galleryImageOrderSchema } from '$lib/galleryImages';
-import * as v from 'valibot';
+import { publicProfilePatchSchema } from "#lib/rpc/profile.common.ts";
+import { galleryImageClaimsSchema, galleryImageOrderSchema } from "#lib/galleryImages.ts";
+import * as v from "valibot";
 
-export const OFFERING_FORMATS = ['offline', 'online', 'offline+online'] as const;
+export const OFFERING_FORMATS = ["offline", "online", "offline+online"] as const;
 
 export const offeringProfileFormSchema = publicProfilePatchSchema;
 
 const offeringFormEntries = {
-	title: v.pipe(
-		v.string(),
-		v.trim(),
-		v.nonEmpty(`Title is required`),
-		v.maxLength(160, `Title is too long`)
-	),
+	title: v.pipe(v.string(), v.trim(), v.nonEmpty(`Title is required`), v.maxLength(160, `Title is too long`)),
 	descriptionHtml: v.pipe(v.string(), v.trim(), v.maxLength(50_000, `Description is too long`)),
 	format: v.picklist(OFFERING_FORMATS, `Offering format is invalid`),
 	profile: v.optional(offeringProfileFormSchema),
 	imageClaims: galleryImageClaimsSchema,
 	email: v.optional(v.pipe(v.string(), v.trim(), v.email(`Email is invalid`))),
 	authToken: v.optional(v.pipe(v.string(), v.trim()), ``),
-	returnTo: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(2_000)), ``)
+	returnTo: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(2_000)), ``),
 } satisfies v.ObjectEntries;
 
 export const offeringFormSchema = v.object(offeringFormEntries);
@@ -28,7 +23,7 @@ export const updateOfferingFormSchema = v.object({
 	...offeringFormEntries,
 	offeringId: v.pipe(v.number(), v.integer(), v.minValue(1)),
 	existingImageUrls: v.optional(v.array(v.pipe(v.string(), v.trim(), v.url(`Image URL is invalid`))), []),
-	imageOrder: galleryImageOrderSchema
+	imageOrder: galleryImageOrderSchema,
 });
 
 export type OfferingForm = v.InferOutput<typeof offeringFormSchema>;
@@ -43,10 +38,7 @@ export function offeringNeedsLocation(format: OfferingFormat) {
  * Stable per-day offering order: same-day creations stay on top (newest first),
  * everything else is a deterministic shuffle for that Berlin calendar day.
  */
-export function sortOfferingsForDailyList<T extends { id: number; createdAt: Date }>(
-	offerings: T[],
-	now = new Date(),
-) {
+export function sortOfferingsForDailyList<T extends { id: number; createdAt: Date }>(offerings: T[], now = new Date()) {
 	if (!offerings?.length) return [];
 
 	const todayKey = berlinDayKey(now);

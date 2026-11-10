@@ -1,7 +1,7 @@
-import { error } from '@sveltejs/kit';
-import { noindexPageMetaTags } from '$lib/common';
-import type { Config } from '@sveltejs/adapter-vercel';
-import type { LayoutServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import { noindexPageMetaTags } from "#lib/common.ts";
+import type { Config } from "@sveltejs/adapter-vercel";
+import type { LayoutServerLoad } from "./$types";
 
 export const config: Config = {
 	// Keep admin SSR/deps out of the shared catchall function

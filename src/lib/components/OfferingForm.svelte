@@ -1,21 +1,21 @@
 <script lang="ts">
-	import type { RemoteFormFields } from "@sveltejs/kit";
+	import type { RemoteFormFields } from "$app/server";
 	import type { Snippet } from "svelte";
 	import * as v from "valibot";
-	import LexicalEditor from "$lib/components/LexicalEditor.svelte";
-	import FormFieldIssues from "$lib/components/FormFieldIssues.svelte";
-	import LocationAutocompleteInput from "$lib/components/LocationAutocompleteInput.svelte";
-	import ImageGalleryInput from "$lib/components/ImageGalleryInput.svelte";
+	import LexicalEditor from "#lib/components/LexicalEditor.svelte";
+	import FormFieldIssues from "#lib/components/FormFieldIssues.svelte";
+	import LocationAutocompleteInput from "#lib/components/LocationAutocompleteInput.svelte";
+	import ImageGalleryInput from "#lib/components/ImageGalleryInput.svelte";
 	import {
 		OFFERING_FORMATS,
 		offeringFormSchema,
 		offeringNeedsLocation,
 		updateOfferingFormSchema,
 		type OfferingFormat,
-	} from "$lib/rpc/offerings.common";
+	} from "#lib/rpc/offerings.common.ts";
 
-	type CreateOfferingForm = typeof import("$lib/rpc/offerings.remote").createOffering;
-	type UpdateOfferingForm = typeof import("$lib/rpc/offerings.remote").updateOffering;
+	type CreateOfferingForm = typeof import("#lib/rpc/offerings.remote.ts").createOffering;
+	type UpdateOfferingForm = typeof import("#lib/rpc/offerings.remote.ts").updateOffering;
 	type OfferingRemoteForm = CreateOfferingForm | UpdateOfferingForm;
 	type UpdateOnlyFields = Pick<
 		RemoteFormFields<v.InferInput<typeof updateOfferingFormSchema>>,
@@ -91,15 +91,9 @@
 		});
 	});
 	const updateFields = $derived(remoteForm.fields as Partial<UpdateOnlyFields>);
-	const resolvedLocationLabel = $derived(
-		initialLocationLabel ?? remoteForm.fields.profile.locationLabel.value() ?? null,
-	);
-	const resolvedLocationLat = $derived(
-		initialLocationLat ?? numericFieldValue(remoteForm.fields.profile.latitude.value()),
-	);
-	const resolvedLocationLng = $derived(
-		initialLocationLng ?? numericFieldValue(remoteForm.fields.profile.longitude.value()),
-	);
+	const resolvedLocationLabel = $derived(initialLocationLabel ?? remoteForm.fields.profile.locationLabel.value() ?? null);
+	const resolvedLocationLat = $derived(initialLocationLat ?? numericFieldValue(remoteForm.fields.profile.latitude.value()));
+	const resolvedLocationLng = $derived(initialLocationLng ?? numericFieldValue(remoteForm.fields.profile.longitude.value()));
 
 	function numericFieldValue(value: string | null | undefined) {
 		if (!value) return null;
@@ -138,17 +132,19 @@
 		/>
 
 		<fieldset class="fieldset">
-			<input class="input peer w-full" data-testid="offering-title-input" {...remoteForm.fields.title.as(`text`)} required placeholder="z.B. Private Coaching Session" />
+			<input
+				class="input peer w-full"
+				data-testid="offering-title-input"
+				{...remoteForm.fields.title.as(`text`)}
+				required
+				placeholder="z.B. Private Coaching Session"
+			/>
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Titel *</legend>
 			<FormFieldIssues field={remoteForm.fields.title} />
 		</fieldset>
 
 		<fieldset class="fieldset">
-			<LexicalEditor
-				field={remoteForm.fields.descriptionHtml}
-				placeholder="Beschreibe dein Angebot"
-				{onDirty}
-			/>
+			<LexicalEditor field={remoteForm.fields.descriptionHtml} placeholder="Beschreibe dein Angebot" {onDirty} />
 			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung</legend>
 			<FormFieldIssues field={remoteForm.fields.descriptionHtml} />
 		</fieldset>
@@ -161,7 +157,7 @@
 						data-testid={`offering-format-${option}`}
 						class={[
 							`card card-border bg-base-100 relative cursor-pointer border-2 transition-colors`,
-							`border-base-500 hover:border-dashed hover:border-primary has-checked:border-solid has-checked:border-primary outline-0`,
+							`border-base-500 hover:border-primary has-checked:border-primary outline-0 hover:border-dashed has-checked:border-solid`,
 						]}
 					>
 						<input class="peer sr-only" {...remoteForm.fields.format.as(`radio`, option)} bind:group={format} />
@@ -217,7 +213,7 @@
 		<input class="hidden" readonly {...updateFields.offeringId.as(`number`)} />
 	{/if}
 	<input type="hidden" {...remoteForm.fields.returnTo.as(`text`)} value={returnTo} />
-	
+
 	{@render children?.()}
 
 	{#if remoteForm.fields.allIssues()?.length}

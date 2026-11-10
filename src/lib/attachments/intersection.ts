@@ -14,38 +14,38 @@ const triggerOnlyOnceElements = new WeakSet<Element>();
 const intersectionObservers = new WeakMap<IntersectionObserverInit, IntersectionObserver>();
 
 function createObserver(init: IntersectionObserverInit) {
-    const observer = new IntersectionObserver(entries => {
-        for (const entry of entries) {
-            const callback = intersectionCallbacks.get(entry.target);
-            if (callback) {
-                callback(entry);
-            }
+	const observer = new IntersectionObserver((entries) => {
+		for (const entry of entries) {
+			const callback = intersectionCallbacks.get(entry.target);
+			if (callback) {
+				callback(entry);
+			}
 
-            // Call onIntersecting callback if element is intersecting
-            if (entry.isIntersecting) {
-                const onIntersectingCallback = onIntersectingCallbacks.get(entry.target);
-                if (onIntersectingCallback) {
-                    onIntersectingCallback(entry);
-                }
-            }
+			// Call onIntersecting callback if element is intersecting
+			if (entry.isIntersecting) {
+				const onIntersectingCallback = onIntersectingCallbacks.get(entry.target);
+				if (onIntersectingCallback) {
+					onIntersectingCallback(entry);
+				}
+			}
 
-            // If this element should trigger only once and is intersecting, clean it up
-            if (triggerOnlyOnceElements.has(entry.target) && entry.isIntersecting) {
-                observer.unobserve(entry.target);
-                intersectionCallbacks.delete(entry.target);
-                onIntersectingCallbacks.delete(entry.target);
-                triggerOnlyOnceElements.delete(entry.target);
-            }
-        }
-    }, init);
-    intersectionObservers.set(init, observer);
-    return observer;
+			// If this element should trigger only once and is intersecting, clean it up
+			if (triggerOnlyOnceElements.has(entry.target) && entry.isIntersecting) {
+				observer.unobserve(entry.target);
+				intersectionCallbacks.delete(entry.target);
+				onIntersectingCallbacks.delete(entry.target);
+				triggerOnlyOnceElements.delete(entry.target);
+			}
+		}
+	}, init);
+	intersectionObservers.set(init, observer);
+	return observer;
 }
 
 /**
  * Creates an intersection observer attachment that monitors when an element intersects with its parent
  * or viewport based on the provided options.
- * 
+ *
  * This function is a Svelte attachment factory. Use it like:
  * `<div {@attach intersect({ callback: (entry) => console.log(entry), threshold: 0.5 })}></div>`
  *
@@ -58,40 +58,42 @@ function createObserver(init: IntersectionObserverInit) {
  * @param options.threshold - Single number or array of intersection thresholds (default: 0)
  * @returns A Svelte attachment function that sets up the intersection observer
  */
-export function intersect(options: IntersectionObserverInit & {
-    callback?: IntersectionCallback;
-    onIntersecting?: (entry: IntersectionObserverEntry) => void;
-    triggerOnlyOnce?: boolean;
-}): Attachment {
-    // This is the Svelte attachment function
-    return (element) => {
-        if (!(element instanceof Element)) {
-            throw new Error('Element must be an Element');
-        }
+export function intersect(
+	options: IntersectionObserverInit & {
+		callback?: IntersectionCallback;
+		onIntersecting?: (entry: IntersectionObserverEntry) => void;
+		triggerOnlyOnce?: boolean;
+	},
+): Attachment {
+	// This is the Svelte attachment function
+	return (element) => {
+		if (!(element instanceof Element)) {
+			throw new Error("Element must be an Element");
+		}
 
-        const observer = intersectionObservers.get(options) || createObserver(options);
-        if (options.callback) {
-            intersectionCallbacks.set(element, options.callback);
-        }
+		const observer = intersectionObservers.get(options) || createObserver(options);
+		if (options.callback) {
+			intersectionCallbacks.set(element, options.callback);
+		}
 
-        // Store onIntersecting callback if provided
-        if (options.onIntersecting) {
-            onIntersectingCallbacks.set(element, options.onIntersecting);
-        }
+		// Store onIntersecting callback if provided
+		if (options.onIntersecting) {
+			onIntersectingCallbacks.set(element, options.onIntersecting);
+		}
 
-        // Track if this element should trigger only once
-        if (options.triggerOnlyOnce) {
-            triggerOnlyOnceElements.add(element);
-        }
+		// Track if this element should trigger only once
+		if (options.triggerOnlyOnce) {
+			triggerOnlyOnceElements.add(element);
+		}
 
-        observer.observe(element);
+		observer.observe(element);
 
-        // Return the cleanup function
-        return () => {
-            observer.unobserve(element);
-            intersectionCallbacks.delete(element);
-            onIntersectingCallbacks.delete(element);
-            triggerOnlyOnceElements.delete(element);
-        };
-    };
-} 
+		// Return the cleanup function
+		return () => {
+			observer.unobserve(element);
+			intersectionCallbacks.delete(element);
+			onIntersectingCallbacks.delete(element);
+			triggerOnlyOnceElements.delete(element);
+		};
+	};
+}

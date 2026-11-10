@@ -1,4 +1,4 @@
-import { resolveFilterCoordinates } from '$lib/server/locationDistance';
+import { resolveFilterCoordinates } from "#lib/server/locationDistance.ts";
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 

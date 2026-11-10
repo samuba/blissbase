@@ -9,7 +9,7 @@ import {
 	getOrderedGalleryPreviewEntries,
 	publicUrlFromImageClaim,
 	uniqueGalleryImageClaimTokens,
-} from "$lib/galleryImages";
+} from "#lib/galleryImages.ts";
 
 const a = `https://assets.blissbase.app/a.webp`;
 const b = `https://assets.blissbase.app/b.webp`;

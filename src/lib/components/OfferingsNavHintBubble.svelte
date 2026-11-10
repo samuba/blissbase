@@ -1,6 +1,6 @@
 <script lang="ts">
-	import HintBubble from "$lib/components/HintBubble.svelte";
-	import { offeringsNavHint } from "$lib/offeringsNavHint.svelte";
+	import HintBubble from "#lib/components/HintBubble.svelte";
+	import { offeringsNavHint } from "#lib/offeringsNavHint.svelte.ts";
 
 	let { side }: { side: `top` | `bottom` } = $props();
 </script>

@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { db, eq, s } from '$lib/server/db';
-import { createGoogleCacheApi, timezoneCacheKey } from './google.shared';
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { db, eq, s } from "#lib/server/db.ts";
+import { createGoogleCacheApi, timezoneCacheKey } from "./google.shared";
 
 describe(`timezoneCacheKey`, () => {
 	it(`rounds coordinates to five decimals`, () => {
@@ -28,22 +28,26 @@ describe(`getTimezoneForCoordinatesCached`, () => {
 	it(`reuses the db cache across API instances for the same rounded coordinates`, async () => {
 		const fetchMock = mockTimezoneFetch(`Europe/Berlin`);
 		const first = createGoogleCacheApi(db);
-		expect(await first.getTimezoneForCoordinatesCached({
-			lat: 52.52,
-			lng: 13.405,
-			apiKey: `test-key`
-		})).toBe(`Europe/Berlin`);
+		expect(
+			await first.getTimezoneForCoordinatesCached({
+				lat: 52.52,
+				lng: 13.405,
+				apiKey: `test-key`,
+			}),
+		).toBe(`Europe/Berlin`);
 
 		const second = createGoogleCacheApi(db);
-		expect(await second.getTimezoneForCoordinatesCached({
-			lat: 52.520001,
-			lng: 13.405002,
-			apiKey: `test-key`
-		})).toBe(`Europe/Berlin`);
+		expect(
+			await second.getTimezoneForCoordinatesCached({
+				lat: 52.520001,
+				lng: 13.405002,
+				apiKey: `test-key`,
+			}),
+		).toBe(`Europe/Berlin`);
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 
 		const cached = await db.query.geocodeCache.findFirst({
-			where: eq(s.geocodeCache.address, timezoneCacheKey({ lat: 52.52, lng: 13.405 }))
+			where: eq(s.geocodeCache.address, timezoneCacheKey({ lat: 52.52, lng: 13.405 })),
 		});
 		expect(cached?.timezone).toBe(`Europe/Berlin`);
 	});
@@ -77,8 +81,16 @@ describe(`geocodeAddressCached`, () => {
 		expect(await createGoogleCacheApi(db).geocodeAddressCached({ addressLines: [`Studio 1`], apiKey: `test-key` })).toBeNull();
 		expect(await db.query.geocodeCache.findFirst({ where: eq(s.geocodeCache.address, `Studio 1`) })).toBeUndefined();
 
-		vi.stubGlobal(`fetch`, vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: `OK`, results: [{ geometry: { location: { lat: 1, lng: 2 } } }] }) }));
-		expect(await createGoogleCacheApi(db).geocodeAddressCached({ addressLines: [`Studio 1`], apiKey: `test-key` })).toMatchObject({ lat: 1, lng: 2 });
+		vi.stubGlobal(
+			`fetch`,
+			vi
+				.fn()
+				.mockResolvedValue({ ok: true, json: async () => ({ status: `OK`, results: [{ geometry: { location: { lat: 1, lng: 2 } } }] }) }),
+		);
+		expect(await createGoogleCacheApi(db).geocodeAddressCached({ addressLines: [`Studio 1`], apiKey: `test-key` })).toMatchObject({
+			lat: 1,
+			lng: 2,
+		});
 	});
 
 	it(`does not cache when the API key is missing`, async () => {
@@ -93,7 +105,7 @@ describe(`geocodeAddressCached`, () => {
 function mockTimezoneFetch(timeZoneId: string) {
 	const fetchMock = vi.fn().mockResolvedValue({
 		ok: true,
-		json: async () => ({ status: `OK`, timeZoneId })
+		json: async () => ({ status: `OK`, timeZoneId }),
 	});
 	vi.stubGlobal(`fetch`, fetchMock);
 	return fetchMock;

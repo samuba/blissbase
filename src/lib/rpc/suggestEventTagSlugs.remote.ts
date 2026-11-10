@@ -1,9 +1,9 @@
-import { dev } from '$app/environment';
-import { command } from '$app/server';
-import { E2E_TEST } from '$env/static/private';
-import { knownTagSlugs } from '$lib/eventCategories';
-import { aiSuggestTagSlugs } from '$lib/server/ai';
-import * as v from 'valibot';
+import { dev } from "$app/env";
+import { command } from "$app/server";
+import { E2E_TEST } from "$app/env/private";
+import { knownTagSlugs } from "#lib/eventCategories.ts";
+import { aiSuggestTagSlugs } from "#lib/server/ai.ts";
+import * as v from "valibot";
 
 const suggestEventTagSlugsSchema = v.object({
 	name: v.pipe(v.string(), v.maxLength(10_000)),

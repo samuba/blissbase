@@ -13,10 +13,7 @@ export async function setGermanLocale(page: Page) {
 	]);
 }
 
-export async function setEventLocationFilterCookie(
-	page: Page,
-	args: { plzCity: string; distance: string; lat: number; lng: number },
-) {
+export async function setEventLocationFilterCookie(page: Page, args: { plzCity: string; distance: string; lat: number; lng: number }) {
 	const domain = e2eCookieDomain();
 	await page.context().addCookies([
 		{
@@ -58,11 +55,7 @@ export async function newAnonymousContext(browser: Browser) {
 }
 
 export async function waitForClientHydration(page: Page) {
-	await page.waitForFunction(
-		() => document.documentElement.getAttribute(`data-app-hydrated`) === `true`,
-		undefined,
-		{ timeout: 15000 },
-	);
+	await page.waitForFunction(() => document.documentElement.getAttribute(`data-app-hydrated`) === `true`, undefined, { timeout: 15000 });
 }
 
 export async function mockSupabaseOtpRequest(page: Page) {

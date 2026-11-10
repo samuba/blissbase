@@ -1,10 +1,10 @@
-import { command } from '$app/server';
-import { error } from '@sveltejs/kit';
-import * as v from 'valibot';
-import { db, eq, s } from '$lib/server/db';
-import { assertUserIsAllowedToEditEvent } from '$lib/events.remote.shared';
-import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from '$lib/rpc/events.remote';
-import { setFlash } from '$lib/server/flash';
+import { command } from "$app/server";
+import { error } from "@sveltejs/kit";
+import * as v from "valibot";
+import { db, eq, s } from "#lib/server/db.ts";
+import { assertUserIsAllowedToEditEvent } from "#lib/eventForm.shared.ts";
+import { getMyAuthoredPastEvents, getMyAuthoredUpcomingEvents } from "#lib/rpc/events.remote.ts";
+import { setFlash } from "#lib/server/flash.ts";
 
 const deleteEventSchema = v.object({
 	eventId: v.number(),
@@ -26,7 +26,7 @@ export const deleteEvent = command(deleteEventSchema, async ({ eventId, hostSecr
 		return {
 			success: true,
 			deletedEvent: result[0],
-			message: `Event ${result[0].id} has been deleted successfully`
+			message: `Event ${result[0].id} has been deleted successfully`,
 		};
 	} catch (err) {
 		console.error(`Failed to delete event:`, err);

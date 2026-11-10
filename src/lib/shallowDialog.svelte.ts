@@ -1,5 +1,5 @@
-import { pushState, replaceState } from '$app/navigation';
-import { page } from '$app/state';
+import { goto } from "$app/navigation";
+import { page } from "$app/state";
 
 export class ShallowDialog {
 	returnToPath: string;
@@ -10,16 +10,16 @@ export class ShallowDialog {
 
 	open({ href, state, replace = false }: { href: string; state: App.PageState; replace?: boolean }) {
 		if (sameDialogState(page.state, state)) return;
+		// Kit 3: shallow routing goes through async `goto` — callers that refresh after close must await.
 		if (replace || hasDialogState(page.state)) {
-			replaceState(href, state);
-			return;
+			return goto(href, { shallow: true, replace: true, state });
 		}
-		pushState(href, state);
+		return goto(href, { shallow: true, state });
 	}
 
 	close() {
 		if (!hasDialogState(page.state)) return;
-		replaceState(this.returnToPath, {});
+		return goto(this.returnToPath, { shallow: true, replace: true, state: {} });
 	}
 }
 
@@ -46,8 +46,5 @@ function hasDialogState(state: App.PageState) {
 }
 
 function sameDialogState(current: App.PageState, next: App.PageState) {
-	return (
-		current.selectedEventId === next.selectedEventId &&
-		current.selectedOfferingSlug === next.selectedOfferingSlug
-	);
+	return current.selectedEventId === next.selectedEventId && current.selectedOfferingSlug === next.selectedOfferingSlug;
 }

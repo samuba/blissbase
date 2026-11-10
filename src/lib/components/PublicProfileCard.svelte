@@ -1,11 +1,18 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
-	import { stripHtml, trimAllWhitespaces } from "$lib/common";
-	import type { Profile } from "$lib/server/schema";
+	import { stripHtml, trimAllWhitespaces } from "#lib/common.ts";
+	import type { Profile } from "#lib/server/schema.ts";
 	import type { Snippet } from "svelte";
 
-	let { profile, children, class: className }: { profile: Simplify<Pick<Profile, "slug" | "displayName" | "bio" | "profileImageUrl">>; children?: Snippet; class?: string } =
-		$props();
+	let {
+		profile,
+		children,
+		class: className,
+	}: {
+		profile: Simplify<Pick<Profile, "slug" | "displayName" | "bio" | "profileImageUrl">>;
+		children?: Snippet;
+		class?: string;
+	} = $props();
 
 	const bioPreview = $derived(profile.bio ? trimAllWhitespaces(stripHtml(profile.bio)) : undefined);
 </script>
@@ -31,7 +38,7 @@
 			<p class="text-base-content text-lg leading-tight font-semibold">{profile.displayName}</p>
 			{#if bioPreview}
 				<div class="relative mt-0.5">
-					<p class={[`text-base-content/70 line-clamp-3 sm:line-clamp-2 text-sm leading-snug`]}>
+					<p class={[`text-base-content/70 line-clamp-3 text-sm leading-snug sm:line-clamp-2`]}>
 						{bioPreview}
 					</p>
 				</div>

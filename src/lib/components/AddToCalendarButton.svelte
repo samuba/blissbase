@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { google, outlook, yahoo, ics, type CalendarEvent } from 'calendar-link';
-	import type { Snippet } from 'svelte';
-	import PopOver from './PopOver.svelte';
+	import { google, outlook, yahoo, ics, type CalendarEvent } from "calendar-link";
+	import type { Snippet } from "svelte";
+	import PopOver from "./PopOver.svelte";
 
 	type TriggerSnippetProps = { props: Record<string, unknown> };
 
 	let {
 		event,
-		children
+		children,
 	}: {
 		event: CalendarEvent;
 		children?: Snippet<[TriggerSnippetProps]>;
@@ -16,18 +16,18 @@
 	/* @wc-ignore */
 	const calendarProviders = [
 		{
-			name: 'Google',
-			icon: 'icon-[logos--google-calendar]',
-			getUrl: (event: CalendarEvent) => google(event)
+			name: "Google",
+			icon: "icon-[logos--google-calendar]",
+			getUrl: (event: CalendarEvent) => google(event),
 		},
 		{
-			name: 'Apple',
-			icon: 'icon-[logos--apple]',
-			getUrl: (event: CalendarEvent) => ics(event)
+			name: "Apple",
+			icon: "icon-[logos--apple]",
+			getUrl: (event: CalendarEvent) => ics(event),
 		},
 		{
-			name: 'Outlook Online',
-			icon: '',
+			name: "Outlook Online",
+			icon: "",
 			svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-.12979373 0 33.25199672 32">
   <path fill="#0364b8" d="M28.596 2H11.404A1.404 1.404 0 0 0 10 3.404V5l9.69 3L30 5V3.404A1.404 1.404 0 0 0 28.596 2z"/>
   <path fill="#0a2767" d="M31.65 17.405A11.341 11.341 0 0 0 32 16a.666.666 0 0 0-.333-.576l-.013-.008-.004-.002L20.812 9.24a1.499 1.499 0 0 0-.145-.083 1.5 1.5 0 0 0-1.334 0 1.49 1.49 0 0 0-.145.082L8.35 15.415l-.004.002-.012.007A.666.666 0 0 0 8 16a11.344 11.344 0 0 0 .35 1.405l11.492 8.405z"/>
@@ -53,32 +53,27 @@
   <path fill="none" d="M0 0h32v32H0z"/>
 </svg>
 `,
-			getUrl: (event: CalendarEvent) => outlook(event)
+			getUrl: (event: CalendarEvent) => outlook(event),
 		},
 		{
-			name: 'Yahoo',
-			icon: 'icon-[mdi--yahoo] text-purple-600',
-			getUrl: (event: CalendarEvent) => yahoo(event)
+			name: "Yahoo",
+			icon: "icon-[mdi--yahoo] text-purple-600",
+			getUrl: (event: CalendarEvent) => yahoo(event),
 		},
 		{
-			name: 'iCal Datei',
-			icon: 'icon-[ph--calendar-blank]',
-			getUrl: (event: CalendarEvent) => ics(event)
-		}
+			name: "iCal Datei",
+			icon: "icon-[ph--calendar-blank]",
+			getUrl: (event: CalendarEvent) => ics(event),
+		},
 	];
 </script>
 
-<PopOver contentClass="bg-base-100 shadow-lg" contentProps={{ align: 'center' }}>
+<PopOver contentClass="bg-base-100 shadow-lg" contentProps={{ align: "center" }}>
 	{#snippet trigger({ props })}
 		{#if children}
 			{@render children({ props })}
 		{:else}
-			<button
-				{...props}
-				class={['', props.class]}
-				title="Zum Kalender hinzufügen"
-				aria-label="Zum Kalender hinzufügen"
-			>
+			<button {...props} class={["", props.class]} title="Zum Kalender hinzufügen" aria-label="Zum Kalender hinzufügen">
 				<i class="icon-[ph--calendar-plus] size-5"></i>
 			</button>
 		{/if}
@@ -86,10 +81,8 @@
 
 	{#snippet content()}
 		<div class="z-50 flex flex-col">
-			<div class="bg-base-200 p-2 px-4 text-xs font-semibold rounded-t-xl text-center">
-				Zum Kalender hinzufügen
-			</div>
-			<div class="flex flex-col p-2 gap-2"> 
+			<div class="bg-base-200 rounded-t-xl p-2 px-4 text-center text-xs font-semibold">Zum Kalender hinzufügen</div>
+			<div class="flex flex-col gap-2 p-2">
 				{#each calendarProviders as provider (provider.name)}
 					<a
 						href={provider.getUrl(event)}
@@ -99,9 +92,7 @@
 						onclick={() => {
 							// Close the popover after a short delay to allow the link to open
 							setTimeout(() => {
-								const closeButton = document.querySelector(
-									'[data-bits-floating-content-wrapper] [data-popover-close]'
-								);
+								const closeButton = document.querySelector("[data-bits-floating-content-wrapper] [data-popover-close]");
 								if (closeButton instanceof HTMLElement) {
 									closeButton.click();
 								}
@@ -109,11 +100,7 @@
 						}}
 					>
 						{#if provider.svg}
-							<img
-								src={`data:image/svg+xml;utf8,${encodeURIComponent(provider.svg)}`}
-								alt=""
-								class="size-6"
-							/>
+							<img src={`data:image/svg+xml;utf8,${encodeURIComponent(provider.svg)}`} alt="" class="size-6" />
 						{:else}
 							<!-- @wc-ignore -->
 							<i class="{provider.icon} size-6"></i>

@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	connectTelegramAccounts,
 	isTelegramAccessError,
 	parseTelegramAccountSessions,
 	withFirstAccessibleAccount,
-} from './telegramAccounts';
+} from "./telegramAccounts";
 
 const teleproto = vi.hoisted(() => ({
 	authorizedBySession: new Map<string, boolean | Error | `hang`>(),
@@ -131,15 +131,11 @@ describe(`parseTelegramAccountSessions`, () => {
 describe(`isTelegramAccessError`, () => {
 	it(`detects membership / private channel failures`, () => {
 		expect(
-			isTelegramAccessError(
-				new Error(`Could not find Telegram entity for "-1001". The scraper account must be a member of the chat.`),
-			),
+			isTelegramAccessError(new Error(`Could not find Telegram entity for "-1001". The scraper account must be a member of the chat.`)),
 		).toBe(true);
 		expect(isTelegramAccessError(new Error(`CHANNEL_PRIVATE`))).toBe(true);
 		expect(isTelegramAccessError({ errorMessage: `USER_NOT_PARTICIPANT` })).toBe(true);
-		expect(isTelegramAccessError(new Error(`No chat found for name "Foo". Is the scraper account a member?`))).toBe(
-			true,
-		);
+		expect(isTelegramAccessError(new Error(`No chat found for name "Foo". Is the scraper account a member?`))).toBe(true);
 	});
 
 	it(`does not treat fatal or unrelated errors as access misses`, () => {
@@ -182,12 +178,8 @@ describe(`withFirstAccessibleAccount`, () => {
 			},
 		});
 		expect(result).toBe(`fallback`);
-		expect(log).toHaveBeenCalledWith(
-			`Telegram "primary" account cannot access -1001 (not a member / no access). Switching to "fallback".`,
-		);
-		expect(log).toHaveBeenCalledWith(
-			`Using Telegram "fallback" for -1001 — switched after primary could not access it`,
-		);
+		expect(log).toHaveBeenCalledWith(`Telegram "primary" account cannot access -1001 (not a member / no access). Switching to "fallback".`);
+		expect(log).toHaveBeenCalledWith(`Using Telegram "fallback" for -1001 — switched after primary could not access it`);
 		log.mockRestore();
 	});
 

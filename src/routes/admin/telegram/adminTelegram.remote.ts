@@ -1,27 +1,30 @@
-import { command, form, getRequestEvent, query, requested } from '$app/server';
-import { GOOGLE_MAPS_API_KEY } from '$env/static/private';
-import { error, invalid } from '@sveltejs/kit';
-import { asc } from 'drizzle-orm';
-import * as v from 'valibot';
-import { isAdminSession } from '$lib/server/admin';
-import { db, eq, s } from '$lib/server/db';
-import { geocodeAddressCached } from '$lib/server/google';
-import { routes } from '$lib/routes';
-import {
-	excludeExistingTelegramTargets,
-	parseTelegramDialogsResponse,
-} from './dialogs/availableDialogs';
+import { command, form, getRequestEvent, query, requested } from "$app/server";
+import { GOOGLE_MAPS_API_KEY } from "$app/env/private";
+import { error, invalid } from "@sveltejs/kit";
+import { asc } from "drizzle-orm";
+import * as v from "valibot";
+import { isAdminSession } from "#lib/server/admin.ts";
+import { db, eq, s } from "#lib/server/db.ts";
+import { geocodeAddressCached } from "#lib/server/google.ts";
+import { routes } from "#lib/routes.ts";
+import { excludeExistingTelegramTargets, parseTelegramDialogsResponse } from "./dialogs/availableDialogs";
 
 function toAddressLines(address: string) {
 	if (!address.trim()) return [];
-	return address.split(/,|\n/).map((x) => x.trim()).filter((x) => x);
+	return address
+		.split(/,|\n/)
+		.map((x) => x.trim())
+		.filter((x) => x);
 }
 
 function parseTopicIds(value: string) {
 	const trimmed = value.trim();
 	if (!trimmed) return [];
 
-	const parts = trimmed.split(`,`).map((part) => part.trim()).filter((part) => part);
+	const parts = trimmed
+		.split(`,`)
+		.map((part) => part.trim())
+		.filter((part) => part);
 	if (!parts.every((part) => /^-?\d+$/.test(part))) return null;
 	return parts.map((part) => BigInt(part));
 }
@@ -38,10 +41,7 @@ const saveTelegramScrapingTargetSchema = v.object({
 		v.check((value) => parseTopicIds(value) !== null, `topicIds muss eine kommagetrennte Zahlenliste sein, z.B. 1, 2`),
 		v.transform((value): bigint[] => parseTopicIds(value) ?? []),
 	),
-	defaultTimezone: v.optional(
-		v.pipe(v.string(), v.trim(), v.nonEmpty(`defaultTimezone ist erforderlich`)),
-		`germany`,
-	),
+	defaultTimezone: v.optional(v.pipe(v.string(), v.trim(), v.nonEmpty(`defaultTimezone ist erforderlich`)), `germany`),
 	hasOnlyConsciousEvents: v.optional(v.boolean(), false),
 });
 
@@ -92,8 +92,7 @@ export const getAvailableTelegramDialogs = query(async () => {
 		accounts,
 		accountStatuses: accountStatuses.map((status) => ({
 			...status,
-			available: availableDialogs.filter((dialog) => dialog.accountId === status.accountId)
-				.length,
+			available: availableDialogs.filter((dialog) => dialog.accountId === status.accountId).length,
 		})),
 		dialogs: availableDialogs,
 	};
@@ -132,7 +131,8 @@ export const saveTelegramScrapingTarget = form(saveTelegramScrapingTargetSchema,
 			}
 		}
 
-		await db.update(s.telegramScrapingTargets)
+		await db
+			.update(s.telegramScrapingTargets)
 			.set({
 				roomId: resolved.roomId,
 				name: resolved.name,
@@ -203,13 +203,10 @@ const deleteTelegramScrapingTargetSchema = v.object({
 export const deleteTelegramScrapingTarget = command(deleteTelegramScrapingTargetSchema, async ({ roomId }) => {
 	assertAdmin();
 
-	const [deleted] = await db
-		.delete(s.telegramScrapingTargets)
-		.where(eq(s.telegramScrapingTargets.roomId, roomId))
-		.returning({
-			roomId: s.telegramScrapingTargets.roomId,
-			name: s.telegramScrapingTargets.name,
-		});
+	const [deleted] = await db.delete(s.telegramScrapingTargets).where(eq(s.telegramScrapingTargets.roomId, roomId)).returning({
+		roomId: s.telegramScrapingTargets.roomId,
+		name: s.telegramScrapingTargets.name,
+	});
 
 	if (!deleted) {
 		error(404, `Target wurde nicht gefunden`);
@@ -236,7 +233,7 @@ async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 	const res = await fetch(new URL(routes.adminTelegramResolve(), url.origin), {
 		method: `POST`,
 		headers: {
-			'content-type': `application/json`,
+			"content-type": `application/json`,
 			accept: `application/json`,
 		},
 		body: JSON.stringify({ roomId }),
@@ -246,10 +243,12 @@ async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 		return (await res.json()) as { roomId: string; name: string };
 	}
 
-	throw new Error(await readSplitRouteError({
-		res,
-		fallback: `Telegram-Raum konnte nicht verifiziert werden`,
-	}));
+	throw new Error(
+		await readSplitRouteError({
+			res,
+			fallback: `Telegram-Raum konnte nicht verifiziert werden`,
+		}),
+	);
 }
 
 async function fetchPrimaryTelegramDialogs() {
@@ -260,10 +259,13 @@ async function fetchPrimaryTelegramDialogs() {
 
 	if (!res.ok) {
 		const status = res.status >= 400 && res.status <= 599 ? res.status : 502;
-		error(status, await readSplitRouteError({
-			res,
-			fallback: `Telegram-Dialoge konnten nicht geladen werden`,
-		}));
+		error(
+			status,
+			await readSplitRouteError({
+				res,
+				fallback: `Telegram-Dialoge konnten nicht geladen werden`,
+			}),
+		);
 	}
 
 	// A plain Error is rewritten to "Internal Error" before it reaches the admin UI.
@@ -285,7 +287,7 @@ async function fetchPrimaryTelegramDialogs() {
 }
 
 async function readSplitRouteError(args: { res: Response; fallback: string }) {
-	const body = await args.res.json().catch(() => null) as { message?: string } | null;
+	const body = (await args.res.json().catch(() => null)) as { message?: string } | null;
 	const message = body?.message?.trim();
 	if (message) return message;
 	return `${args.fallback} (HTTP ${args.res.status})`;

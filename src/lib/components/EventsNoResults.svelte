@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { eventCategories } from '$lib/eventCategories';
-	import { ALLOWED_DISTANCE_VALUES } from '$lib/locationFilter';
-	import type { AttendanceMode } from '$lib/server/schema';
+	import { eventsStore } from "#lib/eventsStore.svelte.ts";
+	import { eventCategories } from "#lib/eventCategories.ts";
+	import { ALLOWED_DISTANCE_VALUES } from "#lib/locationFilter.ts";
+	import type { AttendanceMode } from "#lib/server/schema.ts";
 
 	let { foundSomeResultsBefore }: { foundSomeResultsBefore: boolean } = $props();
 
@@ -16,32 +16,22 @@
 	const dateLabel = $derived.by(() => {
 		const { start, end } = eventsStore.dateFilter;
 		if (!start && !end) return ``;
-		const format = (value: string) =>
-			new Date(value).toLocaleDateString(`de-DE`, { dateStyle: `medium` });
+		const format = (value: string) => new Date(value).toLocaleDateString(`de-DE`, { dateStyle: `medium` });
 		if (start && end) return `${format(start)} – ${format(end)}`;
 		if (start) return format(start);
 		return format(end!);
 	});
 
 	const attendanceLabel = $derived(attendanceModeLabel(eventsStore.pagination.attendanceMode));
-	const locationLabel = $derived(
-		eventsStore.locationFilter.plzCity?.trim() || (eventsStore.hasLocationFilter ? `Standort` : ``),
-	);
+	const locationLabel = $derived(eventsStore.locationFilter.plzCity?.trim() || (eventsStore.hasLocationFilter ? `Standort` : ``));
 	const selectedDistance = $derived(eventsStore.pagination.distance ?? ``);
 
 	const hasChips = $derived(
-		Boolean(
-			eventsStore.hasSearchFilter ||
-				selectedCategories.length ||
-				eventsStore.hasDateFilter ||
-				eventsStore.hasAttendanceModeFilter,
-		),
+		Boolean(eventsStore.hasSearchFilter || selectedCategories.length || eventsStore.hasDateFilter || eventsStore.hasAttendanceModeFilter),
 	);
 
 	function removeCategory(slug: string) {
-		eventsStore.handleCategoryChange(
-			(eventsStore.pagination.categorySlugs ?? []).filter((selected) => selected !== slug),
-		);
+		eventsStore.handleCategoryChange((eventsStore.pagination.categorySlugs ?? []).filter((selected) => selected !== slug));
 	}
 
 	function onRadiusChange(event: Event) {
@@ -57,12 +47,8 @@
 	}
 </script>
 
-<div
-	class="flex flex-col items-center justify-center gap-3 py-12"
-	role="status"
-	data-testid="events-no-results"
->
-	<p class="text-center text-base-content/60">
+<div class="flex flex-col items-center justify-center gap-3 py-12" role="status" data-testid="events-no-results">
+	<p class="text-base-content/60 text-center">
 		{#if foundSomeResultsBefore}
 			Keine weiteren Events gefunden
 		{:else}
@@ -75,7 +61,7 @@
 			{#if eventsStore.hasSearchFilter}
 				<button
 					type="button"
-					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+					class="btn active min-w-fit shrink-0 gap-2 tracking-tight whitespace-nowrap sm:tracking-normal"
 					data-testid="events-no-results-chip-search"
 					aria-label="Entfernen"
 					onclick={() => eventsStore.handleSearchTermChange(``)}
@@ -88,7 +74,7 @@
 			{#each selectedCategories as category (category.slug)}
 				<button
 					type="button"
-					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+					class="btn active min-w-fit shrink-0 gap-2 tracking-tight whitespace-nowrap sm:tracking-normal"
 					data-testid={`events-no-results-chip-category-${category.slug}`}
 					aria-label="Entfernen"
 					onclick={() => removeCategory(category.slug)}
@@ -101,7 +87,7 @@
 			{#if eventsStore.hasDateFilter && dateLabel}
 				<button
 					type="button"
-					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+					class="btn active min-w-fit shrink-0 gap-2 tracking-tight whitespace-nowrap sm:tracking-normal"
 					data-testid="events-no-results-chip-date"
 					aria-label="Entfernen"
 					onclick={() => eventsStore.clearDateFilter()}
@@ -114,7 +100,7 @@
 			{#if eventsStore.hasAttendanceModeFilter && attendanceLabel}
 				<button
 					type="button"
-					class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+					class="btn active min-w-fit shrink-0 gap-2 tracking-tight whitespace-nowrap sm:tracking-normal"
 					data-testid="events-no-results-chip-attendance"
 					aria-label="Entfernen"
 					onclick={() => eventsStore.handleAttendanceModeChange(null)}
@@ -128,19 +114,14 @@
 
 	{#if eventsStore.hasLocationFilter}
 		<div class="flex flex-col items-center gap-2" data-testid="events-no-results-radius">
-			<p class="text-center text-sm text-base-content/60">Möchtest du den Radius erweitern?</p>
+			<p class="text-base-content/60 text-center text-sm">Möchtest du den Radius erweitern?</p>
 			<div class="flex flex-wrap items-center justify-center gap-2">
 				{#if locationLabel}
-					<span class="text-sm text-base-content/60" data-testid="events-no-results-location">
+					<span class="text-base-content/60 text-sm" data-testid="events-no-results-location">
 						{locationLabel}
 					</span>
 				{/if}
-				<select
-					class="select w-fit"
-					data-testid="events-no-results-radius-select"
-					value={selectedDistance}
-					onchange={onRadiusChange}
-				>
+				<select class="select w-fit" data-testid="events-no-results-radius-select" value={selectedDistance} onchange={onRadiusChange}>
 					<option value="">Überall</option>
 					{#each ALLOWED_DISTANCE_VALUES as value (value)}
 						<option {value}>{value} km Radius</option>

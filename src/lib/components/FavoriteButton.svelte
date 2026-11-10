@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { addFavorite, getFavoriteEventIds, removeFavorite } from '$lib/rpc/favorites.remote';
-	import { user } from '$lib/user.svelte';
-	import { onMount } from 'svelte';
-	import { showLoginDialog } from './LoginDialog.svelte';
+	import { addFavorite, getFavoriteEventIds, removeFavorite } from "#lib/rpc/favorites.remote.ts";
+	import { user } from "#lib/user.svelte.ts";
+	import { onMount } from "svelte";
+	import { showLoginDialog } from "./LoginDialog.svelte";
 
 	let {
 		class: className,
 		eventId,
 		onAddFavorite,
-		onRemoveFavorite
+		onRemoveFavorite,
 	}: {
 		class?: string;
 		eventId: number;
@@ -40,12 +40,10 @@
 		animate = true;
 		if ((event.target as HTMLInputElement).checked) {
 			if (onAddFavorite) onAddFavorite(eventId);
-			addFavorite(eventId).updates(favoriteIdsQuery.withOverride((current) => [...current, eventId]))
+			addFavorite(eventId).updates(favoriteIdsQuery.withOverride((current) => [...current, eventId]));
 		} else {
-			if (onRemoveFavorite) onRemoveFavorite(eventId)
-			else removeFavorite(eventId).updates(
-				favoriteIdsQuery.withOverride((current) => current.filter((id) => id !== eventId)), 
-			)
+			if (onRemoveFavorite) onRemoveFavorite(eventId);
+			else removeFavorite(eventId).updates(favoriteIdsQuery.withOverride((current) => current.filter((id) => id !== eventId)));
 		}
 	}
 
@@ -54,17 +52,8 @@
 	}
 </script>
 
-<div
-	class="btn hover:bg-base-200 btn-circle bg-base-100/80 btn-ghost backdrop-blur-sm transition-all hover:scale-110 {className}"
->
-	<input
-		type="checkbox"
-		id={name}
-		{name}
-		checked={isFavorite}
-		onchange={handleChange}
-		onclick={handleClick}
-	/>
+<div class="btn hover:bg-base-200 btn-circle bg-base-100/80 btn-ghost backdrop-blur-sm transition-all hover:scale-110 {className}">
+	<input type="checkbox" id={name} {name} checked={isFavorite} onchange={handleChange} onclick={handleClick} />
 	<label for={name} onclick={handleClick} title="Favorit hinzufügen">
 		<svg viewBox="467 392 58 57" xmlns="http://www.w3.org/2000/svg" class:animate>
 			<g id="Group" fill="none" fill-rule="evenodd" transform="translate(467 392)">

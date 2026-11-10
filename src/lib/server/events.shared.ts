@@ -1,7 +1,7 @@
-import { getTableColumns, sql } from 'drizzle-orm';
-import { deduplicateItems, generateSlug } from '../common';
-import type { InsertEvent } from '../types';
-import { buildConflictUpdateColumns, type DB, s } from './db.shared';
+import { getTableColumns, sql } from "drizzle-orm";
+import { deduplicateItems, generateSlug } from "../common";
+import type { InsertEvent } from "../types";
+import { buildConflictUpdateColumns, type DB, s } from "./db.shared";
 
 export const FORM_CREATED_EVENT_SOURCE = `website-form`;
 
@@ -21,10 +21,7 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		type EventKey = keyof InsertEvent;
 
 		for (const key in event) {
-			if (
-				Object.prototype.hasOwnProperty.call(event, key) &&
-				typeof event[key as EventKey] === `string`
-			) {
+			if (Object.prototype.hasOwnProperty.call(event, key) && typeof event[key as EventKey] === `string`) {
 				(event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
 			}
 		}
@@ -38,7 +35,7 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		event.slug = generateSlug({
 			name: event.name,
 			startAt: event.startAt,
-			endAt: event.endAt ?? undefined
+			endAt: event.endAt ?? undefined,
 		});
 
 		if (event.latitude !== undefined && event.latitude !== null) {
@@ -132,12 +129,12 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 							from unnest(${s.events.sourceChatIdsWhatsapp} || excluded.source_chat_ids_whatsapp) as merged_chat_ids(chat_id)
 						)
 					end
-				`
-			}
+				`,
+			},
 		})
 		.returning({
 			...getTableColumns(s.events),
-			wasInserted: sql<boolean>`(xmax = 0)::boolean`
+			wasInserted: sql<boolean>`(xmax = 0)::boolean`,
 		});
 }
 

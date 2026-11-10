@@ -1,13 +1,13 @@
-import { dev } from "$app/environment";
-import { E2E_TEST } from "$env/static/private";
-import * as assets from "$lib/assets";
-import { randomString } from "$lib/common";
-import { eventAssetsCreds } from "$lib/events.remote.shared";
-import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-import { db, s, and, eq, ne, sql } from "$lib/server/db";
-import { createPublicProfileSlug } from "$lib/server/profile";
-import { resolveProfileImageUrl } from "$lib/server/profileImages";
-import type { Profile } from "$lib/server/schema";
+import { dev } from "$app/env";
+import { E2E_TEST } from "$app/env/private";
+import * as assets from "#lib/assets.ts";
+import { randomString } from "#lib/common.ts";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
+import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+import { db, s, and, eq, ne, sql } from "#lib/server/db.ts";
+import { createPublicProfileSlug } from "#lib/server/profile.ts";
+import { resolveProfileImageUrl } from "#lib/server/profileImages.ts";
+import type { Profile } from "#lib/server/schema.ts";
 import { error, invalid } from "@sveltejs/kit";
 
 const isE2eTestMode = E2E_TEST === `true` && dev;
@@ -21,6 +21,7 @@ const isE2eTestMode = E2E_TEST === `true` && dev;
 export async function mergeProfileFromForm(args: MergeProfileFromFormArgs) {
 	const currentSlug = args.currentProfile.slug?.trim();
 	const displayName = args.data.displayName?.trim() ?? args.currentProfile.displayName;
+
 	const slug =
 		currentSlug ||
 		(await createAvailableProfileSlug({
@@ -62,8 +63,11 @@ export async function mergeProfileFromForm(args: MergeProfileFromFormArgs) {
 		displayName,
 		slug,
 		bio: `bio` in args.data ? args.data.bio?.trim() || null : args.currentProfile.bio,
+
 		locationLabel: hasSubmittedLocation ? submittedLocationLabel || null : args.currentProfile.locationLabel,
+
 		latitude: hasSubmittedLocation ? (args.data.latitude ?? null) : args.currentProfile.latitude,
+
 		longitude: hasSubmittedLocation ? (args.data.longitude ?? null) : args.currentProfile.longitude,
 		socialLinks: args.data.socialLinks ?? args.currentProfile.socialLinks,
 		profileImageUrl: nextProfileImageUrl,

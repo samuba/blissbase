@@ -1,12 +1,12 @@
 <script lang="ts">
-	import EventCard from '$lib/components/EventCard.svelte';
-	import OfferingCard from '$lib/components/OfferingCard.svelte';
-	import ProfileContactButtons from '$lib/components/ProfileContactButtons.svelte';
-	import { hasValidCoordinates } from '$lib/locationFilter';
-	import { routes } from '$lib/routes';
-	import { resolve } from '$app/paths';
-	import OfferingDetailsDialog, { showOfferingDetailsDialog } from '../../offerings/OfferingDetailsDialog.svelte';
-	import { fade } from 'svelte/transition';
+	import EventCard from "#lib/components/EventCard.svelte";
+	import OfferingCard from "#lib/components/OfferingCard.svelte";
+	import ProfileContactButtons from "#lib/components/ProfileContactButtons.svelte";
+	import { hasValidCoordinates } from "#lib/locationFilter.ts";
+	import { routes } from "#lib/routes.ts";
+	import { resolve } from "$app/paths";
+	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "../../offerings/OfferingDetailsDialog.svelte";
+	import { fade } from "svelte/transition";
 
 	let { data } = $props();
 	const { profile, upcomingEvents, publicOfferings, userId } = $derived(data);
@@ -43,14 +43,12 @@
 				</div>
 			{/if}
 
-			<div
-				class={[
-					`flex flex-col items-center gap-6 px-4 pb-6`,
-					profile.bannerImageUrl ? `-mt-17` : `pt-8`
-				]}
-			>
+			<div class={[`flex flex-col items-center gap-6 px-4 pb-6`, profile.bannerImageUrl ? `-mt-17` : `pt-8`]}>
 				<div
-					class={["relative flex w-full max-w-sm flex-row items-center justify-center sm:w-fit sm:max-w-none", profile.bannerImageUrl && "drop-shadow" ]}
+					class={[
+						"relative flex w-full max-w-sm flex-row items-center justify-center sm:w-fit sm:max-w-none",
+						profile.bannerImageUrl && "drop-shadow",
+					]}
 				>
 					{#if profile.profileImageUrl}
 						<img
@@ -58,13 +56,13 @@
 							alt=""
 							class={[
 								`border-base-100 bg-base-100 z-10 size-32 shrink-0 rounded-full border-4 object-cover`,
-								profile.bannerImageUrl ? `` : `mt-0`
+								profile.bannerImageUrl ? `` : `mt-0`,
 							]}
 						/>
 					{:else}
 						<div
 							class={[
-								`border-base-100 bg-primary/15 text-primary z-10 flex size-28 shrink-0 items-center justify-center rounded-full border-4 sm:size-32`
+								`border-base-100 bg-primary/15 text-primary z-10 flex size-28 shrink-0 items-center justify-center rounded-full border-4 sm:size-32`,
 							]}
 						>
 							<i class="icon-[ph--user-circle] size-14"></i>
@@ -72,13 +70,11 @@
 					{/if}
 
 					<div
-						class="bg-base-100 rounded-box relative -ml-16 flex min-w-0 max-w-[calc(100%-4rem)] flex-1 flex-col items-start justify-center gap-3 rounded-l-none px-5 py-4 pl-19 text-left sm:w-fit sm:max-w-md sm:flex-none"
+						class="bg-base-100 rounded-box relative -ml-16 flex max-w-[calc(100%-4rem)] min-w-0 flex-1 flex-col items-start justify-center gap-3 rounded-l-none px-5 py-4 pl-19 text-left sm:w-fit sm:max-w-md sm:flex-none"
 					>
 						<div class="flex w-full items-start justify-between gap-2">
 							<div class="flex min-w-0 flex-col items-start gap-1">
-								<h1
-									class="relative inline-block max-w-full text-left text-xl font-bold tracking-tight wrap-break-word"
-								>
+								<h1 class="relative inline-block max-w-full text-left text-xl font-bold tracking-tight wrap-break-word">
 									{profile.displayName}
 								</h1>
 
@@ -95,11 +91,7 @@
 								{/if}
 							</div>
 							{#if isOwnProfile}
-								<a
-									href={resolve(`/profile/public`)}
-									class="btn btn-circle btn-sm"
-									title="Profil bearbeiten"
-								>
+								<a href={resolve(`profile/public`)} class="btn btn-circle btn-sm" title="Profil bearbeiten">
 									<i class="icon-[ph--pencil] size-4"></i>
 								</a>
 							{/if}
@@ -111,7 +103,7 @@
 
 				<div class=" gap-6 pt-0 sm:mx-4">
 					{#if profile.bio?.trim()}
-						<div class={['prose max-w-none', profile.bio.length < 180 && `text-center`]}>
+						<div class={["prose max-w-none", profile.bio.length < 180 && `text-center`]}>
 							<!-- eslint-disable-next-line svelte/no-at-html-tags -- public profile bio is stored from the trusted Lexical form. -->
 							{@html profile.bio}
 						</div>
@@ -125,21 +117,21 @@
 		<div role="tablist" class="tabs tabs-box bg-base-300 flex flex-row justify-center">
 			<button
 				role="tab"
-				class={[`tab grow`, selectedTab === `events` ? `tab-active` : 'text-base-content/60 hover:text-base-content']}
+				class={[`tab grow`, selectedTab === `events` ? `tab-active` : "text-base-content/60 hover:text-base-content"]}
 				data-testid="public-profile-events-tab"
 				onclick={() => selectTab(`events`)}
 			>
-				<i class="icon-[ph--calendar] size-5 mr-2"></i>
+				<i class="icon-[ph--calendar] mr-2 size-5"></i>
 				Events
 			</button>
 
 			<button
 				role="tab"
-				class={[`tab grow `, selectedTab === `offerings` ? `tab-active` : 'text-base-content/60 hover:text-base-content']}
+				class={[`tab grow `, selectedTab === `offerings` ? `tab-active` : "text-base-content/60 hover:text-base-content"]}
 				data-testid="public-profile-offerings-tab"
 				onclick={() => selectTab(`offerings`)}
 			>
-				<i class="icon-[ph--hand-heart] size-5 mr-2"></i>
+				<i class="icon-[ph--hand-heart] mr-2 size-5"></i>
 				Angebote
 			</button>
 		</div>
@@ -157,27 +149,23 @@
 				{/if}
 			</div>
 		{/if}
-			
+
 		{#if selectedTab === `offerings`}
-		<div transition:fade={{ duration: 200 }}>
-			{#if publicOfferings?.length}
-				<div class="mt-4 flex w-full flex-col gap-4">
-					{#each publicOfferings as offering (offering.id)}
-						<OfferingCard
-							{offering}
-							showAuthor={false}
-							onclick={() => showOfferingDetailsDialog(offering.slug)}
-						/>
-					{/each}
-				</div>
-			{:else}
-				<p class="text-base-content/60 mt-4 text-sm">Aktuell keine Angebote.</p>
-			{/if}
-		</div>
+			<div transition:fade={{ duration: 200 }}>
+				{#if publicOfferings?.length}
+					<div class="mt-4 flex w-full flex-col gap-4">
+						{#each publicOfferings as offering (offering.id)}
+							<OfferingCard {offering} showAuthor={false} onclick={() => showOfferingDetailsDialog(offering.slug)} />
+						{/each}
+					</div>
+				{:else}
+					<p class="text-base-content/60 mt-4 text-sm">Aktuell keine Angebote.</p>
+				{/if}
+			</div>
 		{/if}
 	</div>
 
-	<div class="flex w-full justify-center gap-6 my-6">
+	<div class="my-6 flex w-full justify-center gap-6">
 		{#if selectedTab === `events`}
 			<a href={routes.eventList()} class="btn btn-sm">
 				<i class="icon-[ph--arrow-left] mr-1 size-5"></i>

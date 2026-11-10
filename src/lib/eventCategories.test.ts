@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
 	eventCategories,
 	eventMatchesOthersCategory,
@@ -8,10 +8,9 @@ import {
 	OTHERS_CATEGORY_SLUG,
 	knownTagSlugs,
 	slugsForTagInput,
-} from './eventCategories';
+} from "./eventCategories";
 
 describe(`eventCategories`, () => {
-
 	it(`maps ecstatic dance to dance and yoga to personal growth`, () => {
 		const dance = eventCategories.find((category) => category.slug === `dance`);
 		const personalGrowth = eventCategories.find((category) => category.slug === `personal-growth`);
@@ -33,7 +32,17 @@ describe(`eventCategories`, () => {
 		for (const slug of [`ecstatic-dance`, `free-dance`, `somatic-dance`]) {
 			expect(slugsByCategory.dance.has(slug)).toBe(true);
 		}
-		for (const slug of [`authentic-movement`, `somatic-movement`, `qigong`, `tai-chi`, `mobility`, `pilates`, `martial-arts`, `fitness`, `flow-arts`]) {
+		for (const slug of [
+			`authentic-movement`,
+			`somatic-movement`,
+			`qigong`,
+			`tai-chi`,
+			`mobility`,
+			`pilates`,
+			`martial-arts`,
+			`fitness`,
+			`flow-arts`,
+		]) {
 			expect(slugsByCategory.movement.has(slug)).toBe(true);
 		}
 		for (const slug of [`conscious-connected-breathwork`, `pranayama`, `breath-circle`]) {
@@ -95,10 +104,7 @@ describe(`eventCategories`, () => {
 	});
 
 	it(`expands a category to matching tag slugs`, () => {
-		expect(getTagSlugsForCategories([`dance`])).toEqual(expect.arrayContaining([
-			`ecstatic-dance`,
-			`contact-improvisation`,
-		]));
+		expect(getTagSlugsForCategories([`dance`])).toEqual(expect.arrayContaining([`ecstatic-dance`, `contact-improvisation`]));
 		expect(getTagSlugsForCategories([`dance`])).not.toContain(`yoga`);
 		expect(getTagSlugsForCategories([OTHERS_CATEGORY_SLUG])).toEqual([]);
 	});
@@ -121,9 +127,7 @@ describe(`eventCategories`, () => {
 	});
 
 	it(`resolves synonyms and retired slugs to canonical tags`, () => {
-		const breathwork = eventCategories
-			.find((category) => category.slug === `breathwork`)
-			?.tags.find((tag) => tag.slug === `breathwork`);
+		const breathwork = eventCategories.find((category) => category.slug === `breathwork`)?.tags.find((tag) => tag.slug === `breathwork`);
 		expect(breathwork?.synonyms).toEqual(expect.arrayContaining([`Atemarbeit`, `Atemtechniken`, `Atemübungen`]));
 		expect(slugsForTagInput(`Atemarbeit`)).toEqual([`breathwork`]);
 		expect(slugsForTagInput(`Hexen`)).toEqual([`witchcraft`]);

@@ -1,7 +1,7 @@
-import { error, json } from '@sveltejs/kit';
-import type { Config } from '@sveltejs/adapter-vercel';
-import type { RequestHandler } from './$types';
-import { listPrimaryTelegramGroupDialogs } from './listPrimary';
+import { error } from "@sveltejs/kit";
+import type { Config } from "@sveltejs/adapter-vercel";
+import type { RequestHandler } from "./$types";
+import { listPrimaryTelegramGroupDialogs } from "./listPrimary";
 
 export const config: Config = {
 	// teleproto is heavy — keep it out of the shared remotes/catchall function
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 	try {
 		const { accounts, dialogs, accountStatuses } = await listPrimaryTelegramGroupDialogs();
-		return json({
+		return Response.json({
 			accounts,
 			accountStatuses,
 			dialogs: dialogs.map((dialog) => ({
@@ -27,9 +27,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		});
 	} catch (err) {
 		console.error(`Failed to list Telegram dialogs:`, err);
-		const message =
-			err instanceof Error ? err.message : `Telegram-Dialoge konnten nicht geladen werden`;
+		const message = err instanceof Error ? err.message : `Telegram-Dialoge konnten nicht geladen werden`;
 		// Always JSON so the remote's internal fetch (which may forward Accept: text/html) can read `message`.
-		return json({ message }, { status: 400 });
+		return Response.json({ message }, { status: 400 });
 	}
 };

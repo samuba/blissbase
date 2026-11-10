@@ -1,8 +1,8 @@
-import { redirect } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-import { db, s, sql } from '$lib/server/db';
-import { resolveSupportedLocale } from '$lib/common';
-import { AUTH_NEXT_QUERY, routePathname, routes, safeAuthNextPath } from '$lib/routes';
+import { redirect } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
+import { db, s, sql } from "#lib/server/db.ts";
+import { resolveSupportedLocale } from "#lib/common.ts";
+import { AUTH_NEXT_QUERY, routePathname, routes, safeAuthNextPath } from "#lib/routes.ts";
 
 /**
  * Builds a same-origin redirect path with auth feedback query params for the client toast.
@@ -61,8 +61,8 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 				nextPath,
 				fallback,
 				authError: msg,
-				errorCode: oauthErrorCode
-			})
+				errorCode: oauthErrorCode,
+			}),
 		);
 	}
 
@@ -74,16 +74,14 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 				origin,
 				nextPath,
 				fallback,
-				authError: `Anmeldung fehlgeschlagen: Kein gültiger Link. Bitte fordere einen neuen Login-Link an.`
-			})
+				authError: `Anmeldung fehlgeschlagen: Kein gültiger Link. Bitte fordere einen neuen Login-Link an.`,
+			}),
 		);
 	}
 
 	const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 	if (error || !data?.user) {
-		const msg =
-			error?.message ??
-			`Anmeldung fehlgeschlagen. Bitte versuche es erneut oder fordere einen neuen Login-Link an.`;
+		const msg = error?.message ?? `Anmeldung fehlgeschlagen. Bitte versuche es erneut oder fordere einen neuen Login-Link an.`;
 		return redirect(
 			303,
 			redirectWithAuthFeedback({
@@ -91,30 +89,30 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 				nextPath,
 				fallback,
 				authError: msg,
-				errorCode: error?.code ?? null
-			})
+				errorCode: error?.code ?? null,
+			}),
 		);
 	}
 
 	const locale = resolveSupportedLocale(
-		(typeof data.user.user_metadata?.locale === `string` ? data.user.user_metadata.locale : null) ??
-			cookies.get(`locale`),
+		(typeof data.user.user_metadata?.locale === `string` ? data.user.user_metadata.locale : null) ?? cookies.get(`locale`),
 	);
 	const displayName = googleDisplayName(data.user.user_metadata);
 
-	await db.insert(s.profiles).values({
-		id: data.user.id,
-		locale,
-		...(displayName ? { displayName } : {}),
-	}).onConflictDoUpdate({
-		target: s.profiles.id,
-		set: {
+	await db
+		.insert(s.profiles)
+		.values({
+			id: data.user.id,
 			locale,
-			...(displayName
-				? { displayName: sql`coalesce(${s.profiles.displayName}, ${displayName})` }
-				: {}),
-		},
-	});
+			...(displayName ? { displayName } : {}),
+		})
+		.onConflictDoUpdate({
+			target: s.profiles.id,
+			set: {
+				locale,
+				...(displayName ? { displayName: sql`coalesce(${s.profiles.displayName}, ${displayName})` } : {}),
+			},
+		});
 
 	redirect(303, redirectWithAuthFeedback({ origin, nextPath, fallback, authSuccess: true }));
 };

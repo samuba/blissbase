@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import AutoLocationHintBubble from "$lib/components/AutoLocationHintBubble.svelte";
-	import HintBubble from "$lib/components/HintBubble.svelte";
-	import { offeringsNavHint } from "$lib/offeringsNavHint.svelte";
+	import AutoLocationHintBubble from "#lib/components/AutoLocationHintBubble.svelte";
+	import HintBubble from "#lib/components/HintBubble.svelte";
+	import { offeringsNavHint } from "#lib/offeringsNavHint.svelte.ts";
 	import { onMount } from "svelte";
 
 	const only = $derived(page.url.searchParams.get(`only`));
@@ -30,7 +30,14 @@
 </svelte:head>
 
 <div class="fixed top-2 left-4 z-60 w-40" data-testid="top-anchor">
-	<HintBubble open={topOpen && shown(`top`)} side="top" testId="top-hint" closeTestId="top-hint-close" class="w-44" onDismiss={() => (topOpen = false)}>
+	<HintBubble
+		open={topOpen && shown(`top`)}
+		side="top"
+		testId="top-hint"
+		closeTestId="top-hint-close"
+		class="w-44"
+		onDismiss={() => (topOpen = false)}
+	>
 		Oben am Rand
 	</HintBubble>
 	<div class="bg-base-100 rounded-box border-base-300 border px-3 py-2 text-sm">Oberer Anker</div>

@@ -1,10 +1,6 @@
 import { expect, test } from "./helpers/fixtures";
 import { clearTestEvents, createEvents, createMeditationEvent } from "./helpers/seed";
-import {
-	setEventLocationFilterCookie,
-	setGermanLocale,
-	waitForClientHydration,
-} from "./helpers/offering-test-utils";
+import { setEventLocationFilterCookie, setGermanLocale, waitForClientHydration } from "./helpers/offering-test-utils";
 
 const berlin = { lat: 52.52, lng: 13.405 };
 
@@ -18,9 +14,7 @@ test.describe(`events no-results filter controls`, () => {
 		await clearTestEvents(page);
 	});
 
-	test(`shows removable chips and radius select when a filtered search has no results`, async ({
-		page,
-	}) => {
+	test(`shows removable chips and radius select when a filtered search has no results`, async ({ page }) => {
 		await setEventLocationFilterCookie(page, {
 			plzCity: `Berlin`,
 			distance: `50`,
@@ -34,9 +28,7 @@ test.describe(`events no-results filter controls`, () => {
 		await expect(empty).toContainText(`Keine Events gefunden`);
 		await expect(page.getByTestId(`events-no-results-location`)).toContainText(`Berlin`);
 		await expect(page.getByTestId(`events-no-results-chip-location`)).toHaveCount(0);
-		await expect(page.getByTestId(`events-no-results-radius`)).toContainText(
-			`Möchtest du den Radius erweitern?`,
-		);
+		await expect(page.getByTestId(`events-no-results-radius`)).toContainText(`Möchtest du den Radius erweitern?`);
 		await expect(page.getByTestId(`events-no-results-radius-select`)).toHaveValue(`50`);
 
 		await page.getByTestId(`category-chip-meditation`).click();
@@ -55,9 +47,7 @@ test.describe(`events no-results filter controls`, () => {
 		await expect(page.getByTestId(`events-no-results-radius`)).toBeVisible();
 	});
 
-	test(`end-of-list state keeps radius controls after scrolling through filtered results`, async ({
-		page,
-	}) => {
+	test(`end-of-list state keeps radius controls after scrolling through filtered results`, async ({ page }) => {
 		await createEvents(page, [
 			createMeditationEvent({
 				name: `Berlin End List`,
@@ -77,9 +67,7 @@ test.describe(`events no-results filter controls`, () => {
 		await waitForClientHydration(page);
 
 		await expect(page.getByTestId(`event-card`)).toHaveCount(1);
-		await expect(page.getByTestId(`events-no-results`)).toContainText(
-			`Keine weiteren Events gefunden`,
-		);
+		await expect(page.getByTestId(`events-no-results`)).toContainText(`Keine weiteren Events gefunden`);
 		await expect(page.getByTestId(`events-no-results-radius-select`)).toHaveValue(`50`);
 		await expect(page.getByTestId(`events-no-results-location`)).toContainText(`Berlin`);
 		await expect(page.getByTestId(`events-no-results-chip-location`)).toHaveCount(0);

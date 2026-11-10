@@ -168,6 +168,7 @@ msgstr "<0/> Email"
 #: src/lib/components/LoginDialog.svelte
 #: src/lib/components/PublicProfileSocialLinksEditor.svelte
 #: src/lib/components/dialog/DetailsDialog.svelte
+#: src/lib/components/install-button/InstallButton.svelte
 msgid "Schließen"
 msgstr "Close"
 
@@ -4522,6 +4523,67 @@ msgstr "Your email address"
 msgid "Dir werden Events um <0/> angezeigt. Wenn das nicht dein Standort ist, ändere ihn hier."
 msgstr "Events are shown to you around <0/>. If that isn’t your location, change it here."
 
+#: src/lib/components/install-button/InstallButton.svelte
 #, ai
-#~ msgid "Okay"
-#~ msgstr "Okay"
+msgid "Okay"
+msgstr "Okay"
+
+#: src/routes/dev/hint-position/+page.server.ts
+#, ai
+msgid "Not found"
+msgstr "Not found"
+
+#: src/routes/dev/hint-position/+page.server.ts
+#, ai
+msgid "Berlin, DE"
+msgstr "Berlin, DE"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "Hinweis-Position"
+msgstr "Hint Position"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "Oben am Rand"
+msgstr "At the top edge"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "Oberer Anker"
+msgstr "Top anchor"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "Unten am Rand"
+msgstr "At the bottom edge"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "Unterer Anker"
+msgstr "Bottom anchor"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "<0>Im Scrollbereich</0> Scroll-Anker"
+msgstr "<0>In the scroll area</0> Scroll anchor"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "<0>Unten im Scrollbereich</0> Unterer Scroll-Anker"
+msgstr "<0>At the bottom of the scroll area</0> Bottom scroll anchor"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "Berlin"
+msgstr "Berlin"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "Außerhalb"
+msgstr "Outside"
+
+#: src/routes/dev/hint-position/+page.svelte
+#, ai
+msgid "<0>Folgt der Seite</0> Seiten-Anker"
+msgstr "<0>Follows the page</0> Page anchor"

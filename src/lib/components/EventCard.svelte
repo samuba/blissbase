@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { UiEvent } from "$lib/server/events";
-	import { addHours, formatAddress, formatDatesStr, formatTimesStr } from "$lib/common";
+	import type { UiEvent } from "#lib/server/events.ts";
+	import { addHours, formatAddress, formatDatesStr, formatTimesStr } from "#lib/common.ts";
 	import { resolve } from "$app/paths";
 	import RandomPlaceholderImg from "./RandomPlaceholderImg.svelte";
 	import FavoriteButton from "./FavoriteButton.svelte";
-	import { now } from "$lib/now.svelte";
+	import { now } from "#lib/now.svelte.ts";
 	import { localeStore } from "../../locales/localeStore.svelte";
 	import { showEventDetailsDialog } from "../../routes/EventDetailsDialog.svelte";
-	import { labelsForTagSlugs } from "$lib/eventCategories";
+	import { labelsForTagSlugs } from "#lib/eventCategories.ts";
 
 	const {
 		event,
@@ -134,7 +134,7 @@
 						{formatDatesStr(event.startAt, event.endAt, localeStore.locale, true)}
 					</span>
 					{#if formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
-						<i class="inline-block icon-[ph--clock] size-4 min-w-4 ml-2"></i>
+						<i class="icon-[ph--clock] ml-2 inline-block size-4 min-w-4"></i>
 						<span>
 							{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
 						</span>
@@ -178,11 +178,7 @@
 				{/if}
 
 				{#if tags.length}
-					<div
-						class="mt-1 flex max-h-11 flex-wrap gap-1 overflow-hidden text-xs"
-						title={tags.join(`, `)}
-						{@attach trackTagsOverflow(tags)}
-					>
+					<div class="mt-1 flex max-h-11 flex-wrap gap-1 overflow-hidden text-xs" title={tags.join(`, `)} {@attach trackTagsOverflow(tags)}>
 						{#each tags as tag (tag)}
 							<span class="badge badge-sm badge-ghost">{tag}</span>
 						{/each}

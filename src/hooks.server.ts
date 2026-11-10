@@ -1,161 +1,162 @@
-import { redirect, type Handle } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
-import type { HandleServerError } from '@sveltejs/kit';
-import { dev } from '$app/environment';
-import { waitUntil } from '@vercel/functions';
-import { createSupabaseServerClient } from '$lib/server/supabase';
-import { refreshAuthLocalsFromSupabase, setAuthLocalsFromClaims } from '$lib/server/authLocals';
-import { posthogDistinctId } from '$lib/server/common';
-import { createServerPosthog, posthogApiKey } from '$lib/server/posthog';
-import * as main from './locales/main.loader.server.svelte.js'
-import * as js from './locales/js.loader.server.js'
-import { runWithLocale, loadLocales } from 'wuchale/load-utils/server';
-import { locales } from './locales/data.js'
-import { localeStore } from './locales/localeStore.svelte.js';
-import { resolveLocale } from './locales/resolveLocale';
-import { E2E_TEST } from '$env/static/private';
-import { routes } from '$lib/routes';
+import { redirect } from "@sveltejs/kit";
+import { sequence, type Handle, type HandleServerError } from "@sveltejs/kit/hooks";
+import { dev } from "$app/env";
+import { waitUntil } from "@vercel/functions";
+import { createSupabaseServerClient } from "#lib/server/supabase.ts";
+import { refreshAuthLocalsFromSupabase, setAuthLocalsFromClaims } from "#lib/server/authLocals.ts";
+import { posthogDistinctId } from "#lib/server/common.ts";
+import { createServerPosthog, posthogApiKey } from "#lib/server/posthog.ts";
+import * as main from "./locales/main.loader.server.svelte.js";
+import * as js from "./locales/js.loader.server.js";
+import { runWithLocale, loadLocales } from "wuchale/load-utils/server";
+import { locales } from "./locales/data.js";
+import { localeStore } from "./locales/localeStore.svelte.js";
+import { resolveLocale } from "./locales/resolveLocale";
+import { E2E_TEST } from "$app/env/private";
+import { routes } from "#lib/routes.ts";
 
 // load at server startup
-loadLocales(main.key, main.loadCount, main.loadCatalog, locales)
-loadLocales(js.key, js.loadCount, js.loadCatalog, locales)
+loadLocales(main.key, main.loadCount, main.loadCatalog, locales);
+loadLocales(js.key, js.loadCount, js.loadCatalog, locales);
 const wuchaleLocalization: Handle = async ({ event, resolve }) => {
-    const browserLang = (event.request.headers.get('accept-language') ?? '')
-        .split(',')[0]
-        ?.split('-')[0]
-        ?.trim();
-    const locale = resolveLocale({
-        cookieLocale: event.cookies.get('locale'),
-        browserLang,
-    });
-    // Must be readable/writable from the client language switcher (document.cookie).
-    event.cookies.set('locale', locale, {
-        path: '/',
-        httpOnly: false,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 365,
-    });
-    // Prefer locals/page.data for request-scoped UI; keep store in sync for legacy callers.
-    event.locals.locale = locale;
-    localeStore.locale = locale;
-    return await runWithLocale(locale, () => resolve(event))
+	const browserLang = (event.request.headers.get("accept-language") ?? "").split(",")[0]?.split("-")[0]?.trim();
+	const locale = resolveLocale({
+		cookieLocale: event.cookies.get("locale"),
+		browserLang,
+	});
+	// Must be readable/writable from the client language switcher (document.cookie).
+	event.cookies.set("locale", locale, {
+		path: "/",
+		httpOnly: false,
+		sameSite: "lax",
+		maxAge: 60 * 60 * 24 * 365,
+	});
+	// Prefer locals/page.data for request-scoped UI; keep store in sync for legacy callers.
+	event.locals.locale = locale;
+	localeStore.locale = locale;
+	return await runWithLocale(locale, () => resolve(event));
 };
 
 const extractVercelHeader: Handle = async ({ event, resolve }) => {
-    if (dev) return resolve(event);
-    
-    const latitude = event.request.headers.get('x-vercel-ip-latitude')
-    const longitude = event.request.headers.get('x-vercel-ip-longitude')
+	if (dev) return resolve(event);
 
-    event.locals.requestInfo = {
-        ip: event.request.headers.get('x-vercel-ip-address'),
-        continent: event.request.headers.get('x-vercel-ip-continent'),
-        country: event.request.headers.get('x-vercel-ip-country'),
-        region: event.request.headers.get('x-vercel-ip-country-region'),
-        city: event.request.headers.get('x-vercel-ip-city'),
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
-        timezone: event.request.headers.get('x-vercel-ip-timezone'),
-        postalCode: event.request.headers.get('x-vercel-ip-postal-code'),
-    }
-    console.debug('requestInfo', event.locals.requestInfo);
-    return resolve(event);
-}
+	const latitude = event.request.headers.get("x-vercel-ip-latitude");
+	const longitude = event.request.headers.get("x-vercel-ip-longitude");
 
-const posthog = createServerPosthog({ dev })
+	event.locals.requestInfo = {
+		ip: event.request.headers.get("x-vercel-ip-address"),
+		continent: event.request.headers.get("x-vercel-ip-continent"),
+		country: event.request.headers.get("x-vercel-ip-country"),
+		region: event.request.headers.get("x-vercel-ip-country-region"),
+		city: event.request.headers.get("x-vercel-ip-city"),
+		latitude: latitude ? parseFloat(latitude) : null,
+		longitude: longitude ? parseFloat(longitude) : null,
+		timezone: event.request.headers.get("x-vercel-ip-timezone"),
+		postalCode: event.request.headers.get("x-vercel-ip-postal-code"),
+	};
+	console.debug("requestInfo", event.locals.requestInfo);
+	return resolve(event);
+};
+
+const posthog = createServerPosthog({ dev });
 const insertPosthog: Handle = async ({ event, resolve }) => {
-    event.locals.posthog = posthog
-    const cookieStr = event.cookies.get(`ph_${posthogApiKey}_posthog`)
-    if (cookieStr) {
-        try {
-            event.locals.posthogDistinctId = JSON.parse(cookieStr).distinct_id
-        } catch (error) {
-            console.error(`Failed to parse posthog. cookieStr: ${cookieStr}`, error);
-        }
-    }
-    return resolve(event);
-}
+	event.locals.posthog = posthog;
+	const cookieStr = event.cookies.get(`ph_${posthogApiKey}_posthog`);
+	if (cookieStr) {
+		try {
+			event.locals.posthogDistinctId = JSON.parse(cookieStr).distinct_id;
+		} catch (error) {
+			console.error(`Failed to parse posthog. cookieStr: ${cookieStr}`, error);
+		}
+	}
+	return resolve(event);
+};
 
 const clearStaleFilters: Handle = async ({ event, resolve }) => {
-    const lastDelete = event.cookies.get('blissbase_filters_last_delete');
-    if (lastDelete) {
-        return resolve(event);
-    }
-    
-    event.cookies.delete('blissbase_filters', { path: '/' });
-    event.cookies.set('blissbase_filters_last_delete', String(Math.floor(Date.now() / 1000)), {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-        httpOnly: false
-    });
-    
-    return resolve(event);
+	const lastDelete = event.cookies.get("blissbase_filters_last_delete");
+	if (lastDelete) {
+		return resolve(event);
+	}
+
+	event.cookies.delete("blissbase_filters", { path: "/" });
+	event.cookies.set("blissbase_filters_last_delete", String(Math.floor(Date.now() / 1000)), {
+		path: "/",
+		maxAge: 60 * 60 * 24 * 365, // 1 year
+		httpOnly: false,
+	});
+
+	return resolve(event);
 };
 
 const supabaseAuth: Handle = async ({ event, resolve }) => {
-    event.locals.supabase = createSupabaseServerClient();
+	event.locals.supabase = createSupabaseServerClient();
 
-    await refreshAuthLocalsFromSupabase();
+	await refreshAuthLocalsFromSupabase();
 
-    if (E2E_TEST === `true` && dev) {
-        const e2eUserId = event.cookies.get(`e2e_user_id`);
-        const e2eUserEmail = event.cookies.get(`e2e_user_email`);
-        if (e2eUserId && e2eUserEmail) {
-            setAuthLocalsFromClaims(buildE2EClaims({
-                userId: e2eUserId,
-                email: e2eUserEmail
-            }));
-        }
-    }
+	if (E2E_TEST === `true` && dev) {
+		const e2eUserId = event.cookies.get(`e2e_user_id`);
+		const e2eUserEmail = event.cookies.get(`e2e_user_email`);
+		if (e2eUserId && e2eUserEmail) {
+			setAuthLocalsFromClaims(
+				buildE2EClaims({
+					userId: e2eUserId,
+					email: e2eUserEmail,
+				}),
+			);
+		}
+	}
 
-    return resolve(event, {
-        filterSerializedResponseHeaders(name) {
-            /**
-             * Supabase libraries use the `content-range` and `x-supabase-api-version`
-             * headers, so we need to tell SvelteKit to pass it through.
-             */
-            return name === 'content-range' || name === 'x-supabase-api-version';
-        },
-    });
+	return resolve(event, {
+		filterSerializedResponseHeaders(name) {
+			/**
+			 * Supabase libraries use the `content-range` and `x-supabase-api-version`
+			 * headers, so we need to tell SvelteKit to pass it through.
+			 */
+			return name === "content-range" || name === "x-supabase-api-version";
+		},
+	});
 };
 
 const guardRoutesWithLogin: Handle = async ({ event, resolve }) => {
-    const { userId } = event.locals, { pathname } = event.url;
-    if (pathname.startsWith("/_app/remote/")) return resolve(event); // never guard remote functions
-    if (userId) return resolve(event);
-    if (pathname.startsWith("/profile")) {
-        redirect(302, routes.login({ next: routes.currentPath(event.url) }));
-    }
-    if (pathname.startsWith("/events") && pathname !== "/events/new") {
-        redirect(302, routes.login({ next: routes.currentPath(event.url) }));
-    }
-    return resolve(event);
-}
+	const { userId } = event.locals,
+		{ pathname } = event.url;
+	if (pathname.startsWith("/_app/remote/")) return resolve(event); // never guard remote functions
+	if (userId) return resolve(event);
+	if (pathname.startsWith("/profile")) {
+		redirect(302, routes.login({ next: routes.currentPath(event.url) }));
+	}
+	if (pathname.startsWith("/events") && pathname !== "/events/new") {
+		redirect(302, routes.login({ next: routes.currentPath(event.url) }));
+	}
+	return resolve(event);
+};
 
-export const handleError: HandleServerError = async ({ error, status, event: { locals } }) => {
-    if (status === 404) return; // ignore 404 errors
-    console.error(error);
+export const handleError: HandleServerError = async ({ kind, error, event: { locals } }) => {
+	// Kit 3 routes expected app/framework/validation errors through handleError — only report unknowns.
+	if (kind !== `unknown`) return;
 
-    if (!dev) {
-        posthog.captureException(error, posthogDistinctId({ locals }));
-        await posthog.shutdown();
-    }
+	console.error(error);
+
+	if (!dev) {
+		posthog.captureException(error, posthogDistinctId({ locals }));
+		await posthog.shutdown();
+	}
 };
 
 export const handle: Handle = async ({ event, resolve }) => {
-    try {
-        return await sequence(
-            clearStaleFilters,
-            wuchaleLocalization,
-            extractVercelHeader,
-            insertPosthog,
-            supabaseAuth,
-            guardRoutesWithLogin,
-        )({ event, resolve });
-    } finally {
-        if (!dev) waitUntil(posthog.shutdown())
-    }
-}
+	try {
+		return await sequence(
+			clearStaleFilters,
+			wuchaleLocalization,
+			extractVercelHeader,
+			insertPosthog,
+			supabaseAuth,
+			guardRoutesWithLogin,
+		)({ event, resolve });
+	} finally {
+		if (!dev) waitUntil(posthog.shutdown());
+	}
+};
 
 /**
  * Creates a minimal JWT claims object for E2E auth bypass.
@@ -164,29 +165,29 @@ export const handle: Handle = async ({ event, resolve }) => {
  * buildE2EClaims({ userId: `e2e-user`, email: `e2e@example.com` })
  */
 function buildE2EClaims(args: { userId: string; email: string }): BlissabaseClaims {
-    const nowSeconds = Math.floor(Date.now() / 1000);
-    return {
-        iss: `https://e2e.local`,
-        sub: args.userId,
-        aud: `authenticated`,
-        exp: nowSeconds + 60 * 60,
-        iat: nowSeconds,
-        email: args.email,
-        phone: ``,
-        app_metadata: {
-            provider: `email`,
-            providers: [`email`]
-        },
-        user_metadata: {
-            email: args.email,
-            email_verified: true,
-            phone_verified: false,
-            sub: args.userId
-        },
-        role: `authenticated`,
-        aal: `aal1`,
-        amr: [{ method: `email`, timestamp: nowSeconds }],
-        session_id: `e2e-session`,
-        is_anonymous: false
-    };
+	const nowSeconds = Math.floor(Date.now() / 1000);
+	return {
+		iss: `https://e2e.local`,
+		sub: args.userId,
+		aud: `authenticated`,
+		exp: nowSeconds + 60 * 60,
+		iat: nowSeconds,
+		email: args.email,
+		phone: ``,
+		app_metadata: {
+			provider: `email`,
+			providers: [`email`],
+		},
+		user_metadata: {
+			email: args.email,
+			email_verified: true,
+			phone_verified: false,
+			sub: args.userId,
+		},
+		role: `authenticated`,
+		aal: `aal1`,
+		amr: [{ method: `email`, timestamp: nowSeconds }],
+		session_id: `e2e-session`,
+		is_anonymous: false,
+	};
 }

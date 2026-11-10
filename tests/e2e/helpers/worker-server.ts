@@ -19,36 +19,33 @@ export async function startWorkerServer(workerIndex: number): Promise<E2eServer>
 	const outDir = `.svelte-kit/e2e-w${workerIndex}`;
 	const cacheDir = `node_modules/.vite-e2e-w${workerIndex}`;
 
-	const child = spawn(
-		bunBin(),
-		[`run`, `dev`, `--`, `--host`, `127.0.0.1`, `--port`, String(port), `--strictPort`],
-		{
-			cwd: process.cwd(),
-			detached: true,
-			env: {
-				...process.env,
-				PATH: `${homedir()}/.bun/bin:${process.env.PATH ?? ``}`,
-				E2E_TEST: `true`,
-				E2E_WORKER_INDEX: String(workerIndex),
-				PLAYWRIGHT_DEV_PORT: String(port),
-				PLAYWRIGHT_BASE_URL: baseURL,
-				SVELTEKIT_OUTDIR: outDir,
-				VITE_CACHE_DIR: cacheDir,
-				GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || `test-api-key`,
-				PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY: process.env.PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY || `test-browser-api-key`,
-				PUBLIC_SUPABASE_URL: process.env.PUBLIC_SUPABASE_URL || `http://localhost:54321`,
-				PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY || `test-key`,
-				PUBLIC_ADMIN_USER_ID: process.env.PUBLIC_ADMIN_USER_ID || `test-admin`,
-				TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || `test-token`,
-				S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID || `test-s3-key`,
-				S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || `test-s3-secret`,
-				S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || `test-bucket`,
-				CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID || `test-account`,
-				ADMIN_EMAILS: process.env.ADMIN_EMAILS || `test@admin.de`,
-			},
-			stdio: [`ignore`, `pipe`, `pipe`],
+	const child = spawn(bunBin(), [`run`, `dev`, `--`, `--host`, `127.0.0.1`, `--port`, String(port), `--strictPort`], {
+		cwd: process.cwd(),
+		detached: true,
+		env: {
+			...process.env,
+			PATH: `${homedir()}/.bun/bin:${process.env.PATH ?? ``}`,
+			E2E_TEST: `true`,
+			E2E_WORKER_INDEX: String(workerIndex),
+			PLAYWRIGHT_DEV_PORT: String(port),
+			PLAYWRIGHT_BASE_URL: baseURL,
+			SVELTEKIT_OUTDIR: outDir,
+			VITE_CACHE_DIR: cacheDir,
+			GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || `test-api-key`,
+			PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY: process.env.PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY || `test-browser-api-key`,
+			PUBLIC_SUPABASE_URL: process.env.PUBLIC_SUPABASE_URL || `http://localhost:54321`,
+			PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY || `test-key`,
+			PUBLIC_ADMIN_USER_ID: process.env.PUBLIC_ADMIN_USER_ID || `test-admin`,
+			TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || `test-token`,
+			S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID || `test-s3-key`,
+			S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || `test-s3-secret`,
+			S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || `test-bucket`,
+			CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID || `test-account`,
+			ADMIN_EMAILS: process.env.ADMIN_EMAILS || `test@admin.de`,
+			RESEND_API_KEY: process.env.RESEND_API_KEY || `test-resend-api-key`,
 		},
-	);
+		stdio: [`ignore`, `pipe`, `pipe`],
+	});
 
 	let output = ``;
 	const append = (chunk: Buffer) => {

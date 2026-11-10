@@ -1,4 +1,4 @@
-import * as v from 'valibot'
+import * as v from "valibot";
 
 /**
  * Maps a scrape-account dialog to an admin picker candidate.
@@ -7,38 +7,35 @@ import * as v from 'valibot'
  */
 export function availableTelegramDialogFromDialog(
 	dialog: {
-		isUser: boolean
-		isGroup: boolean
-		isChannel: boolean
-		id?: { toString(): string } | null
-		name?: string | null
-		title?: string | null
-		date?: number
-		entity?: { className?: string; username?: string | null } | null
+		isUser: boolean;
+		isGroup: boolean;
+		isChannel: boolean;
+		id?: { toString(): string } | null;
+		name?: string | null;
+		title?: string | null;
+		date?: number;
+		entity?: { className?: string; username?: string | null } | null;
 	},
 	accountId: TelegramDialogAccountId,
 ): AvailableTelegramDialog | null {
-	if (dialog.isUser) return null
-	if (!dialog.isGroup && !dialog.isChannel) return null
+	if (dialog.isUser) return null;
+	if (!dialog.isGroup && !dialog.isChannel) return null;
 
-	const entity = dialog.entity
-	if (!entity) return null
+	const entity = dialog.entity;
+	if (!entity) return null;
 	if (entity.className === `ChatForbidden` || entity.className === `ChannelForbidden`) {
-		return null
+		return null;
 	}
 
-	const roomId = dialog.id?.toString()
-	if (!roomId) return null
+	const roomId = dialog.id?.toString();
+	if (!roomId) return null;
 
-	const kind: AvailableTelegramDialog[`kind`] =
-		dialog.isChannel && !dialog.isGroup ? `channel` : `group`
+	const kind: AvailableTelegramDialog[`kind`] = dialog.isChannel && !dialog.isGroup ? `channel` : `group`;
 
 	const username =
-		entity.className === `Channel` && typeof entity.username === `string` && entity.username.trim()
-			? entity.username.trim()
-			: null
+		entity.className === `Channel` && typeof entity.username === `string` && entity.username.trim() ? entity.username.trim() : null;
 
-	const name = (dialog.name ?? dialog.title)?.trim() || username || roomId
+	const name = (dialog.name ?? dialog.title)?.trim() || username || roomId;
 
 	return {
 		roomId,
@@ -47,17 +44,14 @@ export function availableTelegramDialogFromDialog(
 		username,
 		accountId,
 		lastMessageTime: dialog.date ? new Date(dialog.date * 1000) : null,
-	}
+	};
 }
 
-export function excludeExistingTelegramTargets(args: {
-	dialogs: AvailableTelegramDialog[]
-	existingRoomIds: string[]
-}) {
-	if (!args.existingRoomIds.length) return args.dialogs
+export function excludeExistingTelegramTargets(args: { dialogs: AvailableTelegramDialog[]; existingRoomIds: string[] }) {
+	if (!args.existingRoomIds.length) return args.dialogs;
 
-	const existing = new Set(args.existingRoomIds)
-	return args.dialogs.filter((dialog) => !existing.has(dialog.roomId))
+	const existing = new Set(args.existingRoomIds);
+	return args.dialogs.filter((dialog) => !existing.has(dialog.roomId));
 }
 
 /**
@@ -65,15 +59,15 @@ export function excludeExistingTelegramTargets(args: {
  * the split function and the remote run different deployments.
  */
 export function parseTelegramDialogsResponse(body: unknown) {
-	const result = v.safeParse(telegramDialogsResponseSchema, body)
-	return result.success ? result.output : null
+	const result = v.safeParse(telegramDialogsResponseSchema, body);
+	return result.success ? result.output : null;
 }
 
 export function telegramAccountLabel(accountId: TelegramDialogAccountId) {
-	return accountId === `primary` ? `Primär` : `Sekundär`
+	return accountId === `primary` ? `Primär` : `Sekundär`;
 }
 
-const accountIdSchema = v.picklist([`primary`, `fallback`])
+const accountIdSchema = v.picklist([`primary`, `fallback`]);
 
 const telegramDialogsResponseSchema = v.object({
 	accounts: v.array(accountIdSchema),
@@ -100,15 +94,15 @@ const telegramDialogsResponseSchema = v.object({
 			),
 		}),
 	),
-})
+});
 
-export type TelegramDialogAccountId = v.InferOutput<typeof accountIdSchema>
+export type TelegramDialogAccountId = v.InferOutput<typeof accountIdSchema>;
 
 export type AvailableTelegramDialog = {
-	roomId: string
-	name: string
-	kind: `group` | `channel`
-	username: string | null
-	accountId: TelegramDialogAccountId
-	lastMessageTime: Date | null
-}
+	roomId: string;
+	name: string;
+	kind: `group` | `channel`;
+	username: string | null;
+	accountId: TelegramDialogAccountId;
+	lastMessageTime: Date | null;
+};

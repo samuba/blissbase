@@ -1,32 +1,33 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { slide } from 'svelte/transition';
-	import { cubicInOut } from 'svelte/easing';
-	import * as v from 'valibot';
-	import ImageGalleryInput from './ImageGalleryInput.svelte';
-	import EventAutofill from './EventAutofill.svelte';
+	import type { RemoteFormFields } from "$app/server";
+	import { onMount } from "svelte";
+	import { slide } from "svelte/transition";
+	import { cubicInOut } from "svelte/easing";
+	import * as v from "valibot";
+	import ImageGalleryInput from "./ImageGalleryInput.svelte";
+	import EventAutofill from "./EventAutofill.svelte";
 	import {
 		createEventSchema,
 		eventPlaceLabel,
 		formatDateForLocalInput,
 		updateEventSchema,
 		type UpdateEventSchema,
-		type ContactMethod
-	} from '$lib/events.remote.common';
-	import TagsInput from '$lib/components/TagsInput.svelte';
-	import LexicalEditor from '$lib/components/LexicalEditor.svelte';
-	import Select from '$lib/components/Select.svelte';
-	import FormFieldIssues from '$lib/components/FormFieldIssues.svelte';
-	import LocationAutocompleteInput from '$lib/components/LocationAutocompleteInput.svelte';
-	import { suggestEventTagSlugs } from '$lib/rpc/suggestEventTagSlugs.remote';
-	import type { RemoteFormFields } from '@sveltejs/kit';
-	import type { Snippet } from 'svelte';
+		type ContactMethod,
+	} from "#lib/eventForm.common.ts";
+	import TagsInput from "#lib/components/TagsInput.svelte";
+	import LexicalEditor from "#lib/components/LexicalEditor.svelte";
+	import Select from "#lib/components/Select.svelte";
+	import FormFieldIssues from "#lib/components/FormFieldIssues.svelte";
+	import LocationAutocompleteInput from "#lib/components/LocationAutocompleteInput.svelte";
+	import { suggestEventTagSlugs } from "#lib/rpc/suggestEventTagSlugs.remote.ts";
+	import type { Snippet } from "svelte";
 
-	type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
-	type UpdateEventForm = typeof import('$lib/rpc/eventMutations.remote').updateEvent;
+	type CreateEventForm = typeof import("#lib/rpc/eventMutations.remote.ts").createEvent;
+	type UpdateEventForm = typeof import("#lib/rpc/eventMutations.remote.ts").updateEvent;
 	type EventFormRemoteForm = CreateEventForm | UpdateEventForm;
-	type UpdateOnlyFields = Pick<RemoteFormFields<v.InferInput<UpdateEventSchema>>,
-		'existingImageUrls' | 'imageOrder' | 'eventId' | 'hostSecret'
+	type UpdateOnlyFields = Pick<
+		RemoteFormFields<v.InferInput<UpdateEventSchema>>,
+		"existingImageUrls" | "imageOrder" | "eventId" | "hostSecret"
 	>;
 
 	let {
@@ -62,9 +63,10 @@
 	} = $props();
 
 	let formProps = $derived.by(() => {
-		const form = mode === `update`
-			? (remoteForm as UpdateEventForm).preflight(updateEventSchema)
-			: (remoteForm as CreateEventForm).preflight(createEventSchema);
+		const form =
+			mode === `update`
+				? (remoteForm as UpdateEventForm).preflight(updateEventSchema)
+				: (remoteForm as CreateEventForm).preflight(createEventSchema);
 		if (!onSuccess) return form;
 
 		return form.enhance(async ({ submit }) => {
@@ -74,9 +76,7 @@
 		});
 	});
 	let updateFields = $derived(remoteForm.fields as Partial<UpdateOnlyFields>);
-	let selectedContactMethod = $derived(
-		(remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ?? `none`
-	);
+	let selectedContactMethod = $derived((remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ?? `none`);
 
 	function numericFieldValue(value: string | number | null | undefined) {
 		if (value == null || value === ``) return null;
@@ -90,11 +90,13 @@
 		lat: number | null;
 		lng: number | null;
 	} | null>(null);
-	const resolvedLocation = $derived(prefillLocation ?? {
-		label: initialLocationLabel,
-		lat: numericFieldValue(initialLocationLat),
-		lng: numericFieldValue(initialLocationLng),
-	});
+	const resolvedLocation = $derived(
+		prefillLocation ?? {
+			label: initialLocationLabel,
+			lat: numericFieldValue(initialLocationLat),
+			lng: numericFieldValue(initialLocationLng),
+		},
+	);
 
 	function applyLocationPrefill() {
 		prefillLocation = {
@@ -121,7 +123,10 @@
 	}
 
 	function descriptionHasText(html: string) {
-		const text = html.replace(/<[^>]*>/g, ``).replace(/&nbsp;/gi, ` `).trim();
+		const text = html
+			.replace(/<[^>]*>/g, ``)
+			.replace(/&nbsp;/gi, ` `)
+			.trim();
 		return Boolean(text);
 	}
 
@@ -169,234 +174,223 @@
 			`Familienaufstellung mit Playmobil`,
 			`Feuerlauf über die Fußbodenheizung`,
 			`Kristallheilung mit Swarovski`,
-		]
+		];
 		return namePlaceholders[Math.floor(Math.random() * namePlaceholders.length)];
 	}
-	
 </script>
 
-<form
-	{...formProps}
-	{onsubmit}
-	class="flex flex-col gap-5"
-	id="event-form"
-	oninput={() => onDirty?.()}
-	onchange={() => onDirty?.()}
->
+<form {...formProps} {onsubmit} class="flex flex-col gap-5" id="event-form" oninput={() => onDirty?.()} onchange={() => onDirty?.()}>
 	<section class={[`flex flex-col gap-5`, fieldsHidden && `hidden`]} data-wizard-step="event">
-	{#if showAutofillControl && mode === `create`}
-		<EventAutofill remoteForm={remoteForm as CreateEventForm} onPrefill={applyLocationPrefill} />
-	{/if}
+		{#if showAutofillControl && mode === `create`}
+			<EventAutofill remoteForm={remoteForm as CreateEventForm} onPrefill={applyLocationPrefill} />
+		{/if}
 
-	<ImageGalleryInput
-		kind="event"
-		field={remoteForm.fields.imageClaims}
-		existingImageUrlsField={updateFields.existingImageUrls}
-		imageOrderField={updateFields.imageOrder}
-		initialExistingImageUrls={initialExistingImageUrls}
-		hint="Lade Bilder hoch, die deinen Event illustrieren. Das erste Bild wird als Cover verwendet."
-		testIdPrefix="image"
-		onBusyChange={onImageBusyChange}
-		onFailedChange={onImageFailedChange}
-		{onDirty}
-	/>
-
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-		<fieldset class="fieldset md:col-span-2">
-			<input class="input w-full peer user-invalid:validator" placeholder="z.B. {getRandomNamePlaceholder()}" data-testid="event-name-input" {...remoteForm.fields.name.as('text')} required />
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Event Name *</legend>
-			<FormFieldIssues field={remoteForm.fields.name} />
-		</fieldset>
-
-		<fieldset class="fieldset">
-			<input
-				class="input w-full peer"
-				{...remoteForm.fields.startAt.as('datetime-local')}
-				data-testid="event-start-at-input"
-				min={createStartAtMin || undefined}
-				required
-			/>
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Startzeit *</legend>
-			<FormFieldIssues field={remoteForm.fields.startAt} />
-		</fieldset>
-
-		<fieldset class="fieldset">
-			<input
-				class="input w-full peer"
-				{...remoteForm.fields.endAt.as('datetime-local')}
-				min={remoteForm.fields.startAt.value()}
-			/>
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Endzeit</legend>
-			<FormFieldIssues field={remoteForm.fields.endAt} />
-		</fieldset>
-	</div>
-
-	<fieldset class="fieldset md:col-span-2" data-testid="event-description-editor" onfocusout={onDescriptionFocusOut}>
-		<LexicalEditor
-			field={remoteForm.fields.description}
-			placeholder="Beschreibe deinen Event"
+		<ImageGalleryInput
+			kind="event"
+			field={remoteForm.fields.imageClaims}
+			existingImageUrlsField={updateFields.existingImageUrls}
+			imageOrderField={updateFields.imageOrder}
+			{initialExistingImageUrls}
+			hint="Lade Bilder hoch, die deinen Event illustrieren. Das erste Bild wird als Cover verwendet."
+			testIdPrefix="image"
+			onBusyChange={onImageBusyChange}
+			onFailedChange={onImageFailedChange}
 			{onDirty}
 		/>
-		<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung *</legend>
-		<FormFieldIssues field={remoteForm.fields.description} />
-	</fieldset>
 
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-		<fieldset class="fieldset min-w-0">
-			<label class="fieldset-label items-start">
-				<input class="checkbox shrink-0" data-testid="event-online-checkbox" {...remoteForm.fields.isOnline.as('checkbox')} />
-				<span class="font-bold text-base-content text-wrap">Online Event
-					<p class="text-xs text-base-content/65 font-normal">Event wird über Video-Call angeboten (Zoom etc.)</p>
-				</span>
-			</label>
-			<FormFieldIssues field={remoteForm.fields.isOnline} />
-		</fieldset>
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+			<fieldset class="fieldset md:col-span-2">
+				<input
+					class="input peer user-invalid:validator w-full"
+					placeholder="z.B. {getRandomNamePlaceholder()}"
+					data-testid="event-name-input"
+					{...remoteForm.fields.name.as("text")}
+					required
+				/>
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">Event Name *</legend>
+				<FormFieldIssues field={remoteForm.fields.name} />
+			</fieldset>
 
-		<fieldset class="fieldset min-w-0">
-			<label class="fieldset-label items-start">
-				<input class="checkbox shrink-0" {...remoteForm.fields.isNotListed.as('checkbox')} />
-				<span class="font-bold text-base-content text-wrap">Event <span class="underline">nicht</span> in Suche anzeigen
-					<p class="text-xs text-base-content/65 font-normal">Privater Event. Nur sichtbar für Leute denen du den Link gibst.</p>
-				</span>
-			</label>
-			<FormFieldIssues field={remoteForm.fields.isNotListed} />
-		</fieldset>
-	</div>
+			<fieldset class="fieldset">
+				<input
+					class="input peer w-full"
+					{...remoteForm.fields.startAt.as("datetime-local")}
+					data-testid="event-start-at-input"
+					min={createStartAtMin || undefined}
+					required
+				/>
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">Startzeit *</legend>
+				<FormFieldIssues field={remoteForm.fields.startAt} />
+			</fieldset>
 
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-		<fieldset class="fieldset">
-			<input class="input w-full peer" {...remoteForm.fields.price.as('text')} placeholder="z.B. 25 EUR" />
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Preis</legend>
-			<FormFieldIssues field={remoteForm.fields.price} />
-		</fieldset>
-
-		<fieldset class="fieldset" aria-busy={suggestEventTagSlugs.pending > 0}>
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">
-				<span class="inline-flex items-center gap-1">
-					Tags
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs btn-square"
-						data-testid="event-suggest-tags-button"
-						aria-label="Tags neu vorschlagen"
-						title="Tags neu vorschlagen"
-						disabled={!remoteForm.fields.name.value()?.trim() && !descriptionHasText(remoteForm.fields.description.value() ?? ``)}
-						onclick={() => void suggestTags({ replace: true })}
-					>
-						{#if suggestEventTagSlugs.pending > 0}
-							<span class="loading loading-spinner loading-xs" role="status" aria-label="Tags werden vorgeschlagen"></span>
-						{:else}
-							<i class="icon-[ph--sparkle] size-3.5"></i>
-						{/if}
-					</button>
-				</span>
-			</legend>
-			<TagsInput field={remoteForm.fields.tagSlugs} />
-			<FormFieldIssues field={remoteForm.fields.tagSlugs} />
-		</fieldset>
-	</div>
-
-	{#if !remoteForm.fields.isOnline.value()}
-		<fieldset class="fieldset" transition:slide={{ duration: 350, easing: cubicInOut }}>
-			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Adresse *</legend>
-			<LocationAutocompleteInput
-				inputId="event-location"
-				placeholder="Adresse oder Ort suchen"
-				required
-				initialLabel={resolvedLocation.label}
-				initialLat={resolvedLocation.lat}
-				initialLng={resolvedLocation.lng}
-				locationLabelField={remoteForm.fields.address}
-				latitudeField={remoteForm.fields.latitude}
-				longitudeField={remoteForm.fields.longitude}
-				formatPlaceLabel={eventPlaceLabel}
-				showCurrentLocation={false}
-				onChange={() => onDirty?.()}
-			/>
-			<input
-				class="input peer w-full min-w-0"
-				data-testid="event-address-note-input"
-				aria-label="Adresshinweis"
-				{...remoteForm.fields.addressNote.as(`text`)}
-				placeholder="Hinweis (optional) z.B. Eingang 2, Stock 3"
-			/>
-			<FormFieldIssues field={remoteForm.fields.address} />
-			<FormFieldIssues field={remoteForm.fields.latitude} />
-			<FormFieldIssues field={remoteForm.fields.longitude} />
-			<FormFieldIssues field={remoteForm.fields.addressNote} />
-		</fieldset>
-	{/if}
-
-	<fieldset class="fieldset">
-		<legend class="fieldset-legend peer-aria-invalid:text-red-600">Anmeldung / Tickets über </legend>
-		<div class="join">
-			<Select
-				bind:value={() => remoteForm.fields.contactMethod.value(), (v) => remoteForm.fields.contactMethod.set(v)}
-				placeholder="Anmeldemethode auswählen"
-				onValueChange={() => {
-					remoteForm.fields.contact.set('');
-					onDirty?.();
-				}}
-				remoteFunctionField={remoteForm.fields.contactMethod}
-				triggerProps={{ class: `rounded-l-full ${!selectedContactMethod || selectedContactMethod === 'none' ? 'rounded-r-full' : ''} ` }}
-				options={[
-					{
-						value: `none`,
-						html: `<i class="icon-[ph--x] size-5 text-base-content/50"></i><span>Keine Anmeldung nötig</span>`
-					},
-					{
-						value: `website`,
-						html: `<i class="icon-[ph--link] size-5 text-base-content/50"></i><span>Link</span>`
-					},
-					{
-						value: `whatsapp`,
-						html: `<i class="icon-[ph--whatsapp-logo] size-5 text-base-content/50"></i><span>WhatsApp</span>`
-					},
-					{
-						value: `telegram`,
-						html: `<i class="icon-[ph--telegram-logo] size-5 text-base-content/50"></i><span>Telegram</span>`
-					},
-					{
-						value: `email`,
-						html: `<i class="icon-[ph--envelope] size-5 text-base-content/50"></i><span>Email</span>`
-					},
-					{
-						value: `phone`,
-						html: `<i class="icon-[ph--phone] size-5 text-base-content/50"></i><span>Telefon</span>`
-					}
-				] satisfies { value: ContactMethod; html: string }[]}
-			/>
-			{#if selectedContactMethod && selectedContactMethod !== 'none'}
-				<div>
-					<label class="input has-user-invalid:validator join-item">
-						{#if selectedContactMethod === `email`}
-							<input class="w-full peer" {...remoteForm.fields.contact.as('email')} placeholder="tina@example.com" />
-						{:else if selectedContactMethod === `phone`}
-							<input class="w-full peer" {...remoteForm.fields.contact.as('tel')} placeholder="+49123456789" />
-						{:else if selectedContactMethod === `website`}
-							<input class="w-full peer" {...remoteForm.fields.contact.as('url')} placeholder="https://www.example.com" />
-						{:else if selectedContactMethod === `whatsapp`}
-							<input class="w-full peer" {...remoteForm.fields.contact.as('tel')} placeholder="+49123456789" />
-						{:else if selectedContactMethod === `telegram`}
-							<input class="w-full peer" {...remoteForm.fields.contact.as('text')} placeholder="@username" />
-						{/if}
-					</label>
-				</div>
-			{/if}
+			<fieldset class="fieldset">
+				<input class="input peer w-full" {...remoteForm.fields.endAt.as("datetime-local")} min={remoteForm.fields.startAt.value()} />
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">Endzeit</legend>
+				<FormFieldIssues field={remoteForm.fields.endAt} />
+			</fieldset>
 		</div>
-		<p class="label whitespace-pre-line">
-			Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Telegram, etc.
-		</p>
-		<FormFieldIssues field={remoteForm.fields.contact} />
-	</fieldset>
 
+		<fieldset class="fieldset md:col-span-2" data-testid="event-description-editor" onfocusout={onDescriptionFocusOut}>
+			<LexicalEditor field={remoteForm.fields.description} placeholder="Beschreibe deinen Event" {onDirty} />
+			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Beschreibung *</legend>
+			<FormFieldIssues field={remoteForm.fields.description} />
+		</fieldset>
+
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+			<fieldset class="fieldset min-w-0">
+				<label class="fieldset-label items-start">
+					<input class="checkbox shrink-0" data-testid="event-online-checkbox" {...remoteForm.fields.isOnline.as("checkbox")} />
+					<span class="text-base-content font-bold text-wrap"
+						>Online Event
+						<p class="text-base-content/65 text-xs font-normal">Event wird über Video-Call angeboten (Zoom etc.)</p>
+					</span>
+				</label>
+				<FormFieldIssues field={remoteForm.fields.isOnline} />
+			</fieldset>
+
+			<fieldset class="fieldset min-w-0">
+				<label class="fieldset-label items-start">
+					<input class="checkbox shrink-0" {...remoteForm.fields.isNotListed.as("checkbox")} />
+					<span class="text-base-content font-bold text-wrap"
+						>Event <span class="underline">nicht</span> in Suche anzeigen
+						<p class="text-base-content/65 text-xs font-normal">Privater Event. Nur sichtbar für Leute denen du den Link gibst.</p>
+					</span>
+				</label>
+				<FormFieldIssues field={remoteForm.fields.isNotListed} />
+			</fieldset>
+		</div>
+
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+			<fieldset class="fieldset">
+				<input class="input peer w-full" {...remoteForm.fields.price.as("text")} placeholder="z.B. 25 EUR" />
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">Preis</legend>
+				<FormFieldIssues field={remoteForm.fields.price} />
+			</fieldset>
+
+			<fieldset class="fieldset" aria-busy={suggestEventTagSlugs.pending > 0}>
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">
+					<span class="inline-flex items-center gap-1">
+						Tags
+						<button
+							type="button"
+							class="btn btn-ghost btn-xs btn-square"
+							data-testid="event-suggest-tags-button"
+							aria-label="Tags neu vorschlagen"
+							title="Tags neu vorschlagen"
+							disabled={!remoteForm.fields.name.value()?.trim() && !descriptionHasText(remoteForm.fields.description.value() ?? ``)}
+							onclick={() => void suggestTags({ replace: true })}
+						>
+							{#if suggestEventTagSlugs.pending > 0}
+								<span class="loading loading-spinner loading-xs" role="status" aria-label="Tags werden vorgeschlagen"></span>
+							{:else}
+								<i class="icon-[ph--sparkle] size-3.5"></i>
+							{/if}
+						</button>
+					</span>
+				</legend>
+				<TagsInput field={remoteForm.fields.tagSlugs} />
+				<FormFieldIssues field={remoteForm.fields.tagSlugs} />
+			</fieldset>
+		</div>
+
+		{#if !remoteForm.fields.isOnline.value()}
+			<fieldset class="fieldset" transition:slide={{ duration: 350, easing: cubicInOut }}>
+				<legend class="fieldset-legend peer-aria-invalid:text-red-600">Adresse *</legend>
+				<LocationAutocompleteInput
+					inputId="event-location"
+					placeholder="Adresse oder Ort suchen"
+					required
+					initialLabel={resolvedLocation.label}
+					initialLat={resolvedLocation.lat}
+					initialLng={resolvedLocation.lng}
+					locationLabelField={remoteForm.fields.address}
+					latitudeField={remoteForm.fields.latitude}
+					longitudeField={remoteForm.fields.longitude}
+					formatPlaceLabel={eventPlaceLabel}
+					showCurrentLocation={false}
+					onChange={() => onDirty?.()}
+				/>
+				<input
+					class="input peer w-full min-w-0"
+					data-testid="event-address-note-input"
+					aria-label="Adresshinweis"
+					{...remoteForm.fields.addressNote.as(`text`)}
+					placeholder="Hinweis (optional) z.B. Eingang 2, Stock 3"
+				/>
+				<FormFieldIssues field={remoteForm.fields.address} />
+				<FormFieldIssues field={remoteForm.fields.latitude} />
+				<FormFieldIssues field={remoteForm.fields.longitude} />
+				<FormFieldIssues field={remoteForm.fields.addressNote} />
+			</fieldset>
+		{/if}
+
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend peer-aria-invalid:text-red-600">Anmeldung / Tickets über </legend>
+			<div class="join">
+				<Select
+					bind:value={() => remoteForm.fields.contactMethod.value(), (v) => remoteForm.fields.contactMethod.set(v)}
+					placeholder="Anmeldemethode auswählen"
+					onValueChange={() => {
+						remoteForm.fields.contact.set("");
+						onDirty?.();
+					}}
+					remoteFunctionField={remoteForm.fields.contactMethod}
+					triggerProps={{ class: `rounded-l-full ${!selectedContactMethod || selectedContactMethod === "none" ? "rounded-r-full" : ""} ` }}
+					options={[
+						{
+							value: `none`,
+							html: `<i class="icon-[ph--x] size-5 text-base-content/50"></i><span>Keine Anmeldung nötig</span>`,
+						},
+						{
+							value: `website`,
+							html: `<i class="icon-[ph--link] size-5 text-base-content/50"></i><span>Link</span>`,
+						},
+						{
+							value: `whatsapp`,
+							html: `<i class="icon-[ph--whatsapp-logo] size-5 text-base-content/50"></i><span>WhatsApp</span>`,
+						},
+						{
+							value: `telegram`,
+							html: `<i class="icon-[ph--telegram-logo] size-5 text-base-content/50"></i><span>Telegram</span>`,
+						},
+						{
+							value: `email`,
+							html: `<i class="icon-[ph--envelope] size-5 text-base-content/50"></i><span>Email</span>`,
+						},
+						{
+							value: `phone`,
+							html: `<i class="icon-[ph--phone] size-5 text-base-content/50"></i><span>Telefon</span>`,
+						},
+					] satisfies { value: ContactMethod; html: string }[]}
+				/>
+				{#if selectedContactMethod && selectedContactMethod !== "none"}
+					<div>
+						<label class="input has-user-invalid:validator join-item">
+							{#if selectedContactMethod === `email`}
+								<input class="peer w-full" {...remoteForm.fields.contact.as("email")} placeholder="tina@example.com" />
+							{:else if selectedContactMethod === `phone`}
+								<input class="peer w-full" {...remoteForm.fields.contact.as("tel")} placeholder="+49123456789" />
+							{:else if selectedContactMethod === `website`}
+								<input class="peer w-full" {...remoteForm.fields.contact.as("url")} placeholder="https://www.example.com" />
+							{:else if selectedContactMethod === `whatsapp`}
+								<input class="peer w-full" {...remoteForm.fields.contact.as("tel")} placeholder="+49123456789" />
+							{:else if selectedContactMethod === `telegram`}
+								<input class="peer w-full" {...remoteForm.fields.contact.as("text")} placeholder="@username" />
+							{/if}
+						</label>
+					</div>
+				{/if}
+			</div>
+			<p class="label whitespace-pre-line">Gib eine Kontakt-Methode ein, z.B. Email, Telefon, Website, WhatsApp, Telegram, etc.</p>
+			<FormFieldIssues field={remoteForm.fields.contact} />
+		</fieldset>
 	</section>
 
 	<div class="hidden">
-		<input readonly {...remoteForm.fields.timeZone.as('text')} />
+		<input readonly {...remoteForm.fields.timeZone.as("text")} />
 		{#if mode === `update`}
-			<input readonly {...updateFields.eventId?.as('number')} />
-			<input readonly {...updateFields.hostSecret?.as('text')} />
+			<input readonly {...updateFields.eventId?.as("number")} />
+			<input readonly {...updateFields.hostSecret?.as("text")} />
 		{/if}
 	</div>
 

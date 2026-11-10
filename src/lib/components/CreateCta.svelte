@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { beforeNavigate } from '$app/navigation';
-	import { page } from '$app/state';
-	import { showLoginDialog } from '$lib/components/LoginDialog.svelte';
-	import { peekFooter } from '$lib/peekFooter.svelte';
-	import type { Attachment } from 'svelte/attachments';
-	import { fly } from 'svelte/transition';
-	import type { Snippet } from 'svelte';
+	import { beforeNavigate } from "$app/navigation";
+	import { page } from "$app/state";
+	import { showLoginDialog } from "#lib/components/LoginDialog.svelte";
+	import { peekFooter } from "#lib/peekFooter.svelte.ts";
+	import type { Attachment } from "svelte/attachments";
+	import { fly } from "svelte/transition";
+	import type { Snippet } from "svelte";
 
 	let {
 		title,
@@ -13,14 +13,14 @@
 		buttonText,
 		href,
 		requireLogin = false,
-		'data-testid': dataTestId,
+		"data-testid": dataTestId,
 	}: {
 		title: Snippet;
 		description: Snippet;
 		buttonText: string;
 		href: string;
 		requireLogin?: boolean;
-		'data-testid': string;
+		"data-testid": string;
 	} = $props();
 
 	const userId = $derived(page.data.userId);
@@ -31,7 +31,8 @@
 	let ctaElement: HTMLElement | undefined;
 
 	// Drop the fixed FAB instantly on leave so it can't linger on the next route.
-	beforeNavigate(({ from, to }) => {
+	beforeNavigate(({ from, to, shallow, type }) => {
+		if (shallow && type === "goto") return;
 		if (!from || !to) return;
 		if (from.url.pathname === to.url.pathname) return;
 
@@ -50,8 +51,7 @@
 	function syncFabFromGeometry(element = ctaElement) {
 		if (!element) return;
 
-		const headerHeight =
-			document.getElementById(`header-controls`)?.getBoundingClientRect().height ?? 0;
+		const headerHeight = document.getElementById(`header-controls`)?.getBoundingClientRect().height ?? 0;
 		setShowFab(element.getBoundingClientRect().top < headerHeight);
 	}
 
@@ -90,8 +90,7 @@
 		};
 
 		const connectObserver = () => {
-			const headerHeight =
-				document.getElementById(`header-controls`)?.getBoundingClientRect().height ?? 0;
+			const headerHeight = document.getElementById(`header-controls`)?.getBoundingClientRect().height ?? 0;
 
 			intersectionObserver?.disconnect();
 			intersectionObserver = new IntersectionObserver(scheduleSync, {
@@ -135,7 +134,7 @@
 		`pointer-events-none fixed inset-x-0 z-40`,
 		`bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-11`,
 		`transition-transform duration-200 ease-out motion-reduce:transition-none`,
-		!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`
+		!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`,
 	]);
 	const fabBtnClasses = [
 		`btn max-sm:btn-lg btn-primary max-sm:btn-circle pointer-events-auto shadow-lg`,
@@ -144,22 +143,16 @@
 </script>
 
 <div
-	class="border-primary rounded-box bg-primary/20 flex flex-wrap sm:flex-col items-center sm:items-start sm:justify-center justify-between gap-2 border-2 border-dashed p-4"
+	class="border-primary rounded-box bg-primary/20 flex flex-wrap items-center justify-between gap-2 border-2 border-dashed p-4 sm:flex-col sm:items-start sm:justify-center"
 >
-	<span class="sm:card-title flex items-center gap-1.5 font-semibold text-primary-content whitespace-nowrap">
+	<span class="sm:card-title text-primary-content flex items-center gap-1.5 font-semibold whitespace-nowrap">
 		{@render title()}
 	</span>
 	<p class="text-primary-content/80 hidden sm:block">
 		{@render description()}
 	</p>
 	{#if useLink}
-		<a
-			{@attach observeCtaForFab}
-			href={href}
-			data-testid={dataTestId}
-			class={[`btn btn-primary w-fit`, showFab && `invisible`]}
-			inert={showFab}
-		>
+		<a {@attach observeCtaForFab} {href} data-testid={dataTestId} class={[`btn btn-primary w-fit`, showFab && `invisible`]} inert={showFab}>
 			<i class="icon-[ph--plus] size-5"></i>
 			{buttonText}
 		</a>
@@ -182,18 +175,12 @@
 	<div class={fabShellClasses} transition:fly={{ y: 24, duration: 300 }}>
 		<div class="mx-auto flex max-w-5xl justify-end px-4">
 			{#if useLink}
-				<a href={href} data-testid={dataTestId} class={fabBtnClasses} aria-label={buttonText}>
+				<a {href} data-testid={dataTestId} class={fabBtnClasses} aria-label={buttonText}>
 					<i class="icon-[ph--plus] size-6 sm:size-5"></i>
 					<span class="hidden sm:block">{buttonText}</span>
 				</a>
 			{:else}
-				<button
-					type="button"
-					onclick={showLoginDialog}
-					data-testid={dataTestId}
-					class={fabBtnClasses}
-					aria-label={buttonText}
-				>
+				<button type="button" onclick={showLoginDialog} data-testid={dataTestId} class={fabBtnClasses} aria-label={buttonText}>
 					<i class="icon-[ph--plus] size-6 sm:size-5"></i>
 					<span class="hidden sm:block">{buttonText}</span>
 				</button>

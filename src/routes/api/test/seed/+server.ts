@@ -1,16 +1,16 @@
-import { json } from "@sveltejs/kit";
-import { db, eq, s } from "$lib/server/db";
+
+import { db, eq, s } from "#lib/server/db.ts";
 import { inArray, sql } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
-import { E2E_TEST } from "$env/static/private";
-import { dev } from "$app/environment";
-import { deduplicateItems, slugify } from "$lib/common";
-import { knownTagSlugs } from "$lib/eventCategories";
-import type { PublicProfileSocialLinks } from "$lib/rpc/profile.common";
+import { E2E_TEST } from "$app/env/private";
+import { dev } from "$app/env";
+import { deduplicateItems, slugify } from "#lib/common.ts";
+import { knownTagSlugs } from "#lib/eventCategories.ts";
+import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
 
 export const POST: RequestHandler = async ({ request }) => {
 	if (E2E_TEST !== "true" || !dev) {
-		return json({ error: "Only available in E2E mode" }, { status: 403 });
+		return Response.json({ error: "Only available in E2E mode" }, { status: 403 });
 	}
 
 	const { action, data } = await request.json();
@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						contact: data.contact || [],
 						latitude: data.latitude || null,
 						longitude: data.longitude || null,
-						tagSlugs: data.tagSlugs ?? knownTagSlugs((data.tags as string[] | undefined || [`Meditation`]).map((tag) => slugify(tag))),
+						tagSlugs: data.tagSlugs ?? knownTagSlugs(((data.tags as string[] | undefined) || [`Meditation`]).map((tag) => slugify(tag))),
 						source: data.source || "tribehaus",
 						sourceUrl: data.sourceUrl || "https://example.com",
 						slug: data.slug || `e2e-${Date.now()}`,
@@ -46,7 +46,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						updatedAt: new Date(),
 					})
 					.returning();
-				return json({ success: true, event });
+				return Response.json({ success: true, event });
 			}
 
 			case "clearEvents": {
@@ -56,12 +56,12 @@ export const POST: RequestHandler = async ({ request }) => {
 				} else {
 					await db.delete(s.events);
 				}
-				return json({ success: true });
+				return Response.json({ success: true });
 			}
 
 			case "clearAllEvents":
 				await db.delete(s.events);
-				return json({ success: true });
+				return Response.json({ success: true });
 
 			case "resetDatabase":
 				await db.delete(s.favorites);
@@ -69,28 +69,28 @@ export const POST: RequestHandler = async ({ request }) => {
 				await db.delete(s.events);
 				await db.delete(s.profiles);
 				await db.delete(s.telegramScrapingTargets);
-				return json({ success: true });
+				return Response.json({ success: true });
 
 			case "createTelegramScrapingTarget": {
 				const [target] = await db
 					.insert(s.telegramScrapingTargets)
 					.values({ roomId: data.roomId, name: data.name ?? null })
 					.returning({ roomId: s.telegramScrapingTargets.roomId });
-				return json({ success: true, target });
+				return Response.json({ success: true, target });
 			}
 
 			case "getEventById": {
 				const event = await db.query.events.findFirst({
 					where: eq(s.events.id, data.id),
 				});
-				return json({ success: true, event });
+				return Response.json({ success: true, event });
 			}
 
 			case "getEventBySlug": {
 				const event = await db.query.events.findFirst({
 					where: eq(s.events.slug, data.slug),
 				});
-				return json({ success: true, event });
+				return Response.json({ success: true, event });
 			}
 
 			case "createProfile": {
@@ -125,14 +125,14 @@ export const POST: RequestHandler = async ({ request }) => {
 						},
 					})
 					.returning();
-				return json({ success: true, profile });
+				return Response.json({ success: true, profile });
 			}
 
 			case "getProfileById": {
 				const profile = await db.query.profiles.findFirst({
 					where: eq(s.profiles.id, data.id),
 				});
-				return json({ success: true, profile });
+				return Response.json({ success: true, profile });
 			}
 
 			case "createOffering": {
@@ -148,7 +148,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						listed: data.listed ?? true,
 					})
 					.returning();
-				return json({ success: true, offering });
+				return Response.json({ success: true, offering });
 			}
 
 			case "clearOfferings": {
@@ -158,7 +158,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				} else {
 					await db.delete(s.offerings);
 				}
-				return json({ success: true });
+				return Response.json({ success: true });
 			}
 
 			case "clearProfiles": {
@@ -166,28 +166,28 @@ export const POST: RequestHandler = async ({ request }) => {
 				if (profileIds?.length) {
 					await db.delete(s.profiles).where(inArray(s.profiles.id, profileIds));
 				}
-				return json({ success: true });
+				return Response.json({ success: true });
 			}
 
 			case "getOfferingById": {
 				const offering = await db.query.offerings.findFirst({
 					where: eq(s.offerings.id, data.id),
 				});
-				return json({ success: true, offering });
+				return Response.json({ success: true, offering });
 			}
 
 			case "getOfferingBySlug": {
 				const offering = await db.query.offerings.findFirst({
 					where: eq(s.offerings.slug, data.slug),
 				});
-				return json({ success: true, offering });
+				return Response.json({ success: true, offering });
 			}
 
 			default:
-				return json({ error: "Unknown action" }, { status: 400 });
+				return Response.json({ error: "Unknown action" }, { status: 400 });
 		}
 	} catch (error) {
 		console.error("Seed error:", error);
-		return json({ error: String(error) }, { status: 500 });
+		return Response.json({ error: String(error) }, { status: 500 });
 	}
 };

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { UiEvent } from '$lib/server/events';
-	import { deleteEvent } from '$lib/rpc/eventDelete.remote';
-	import { resolve } from '$app/paths';
-	import { user } from '$lib/user.svelte';
+	import type { UiEvent } from "#lib/server/events.ts";
+	import { deleteEvent } from "#lib/rpc/eventDelete.remote.ts";
+	import { resolve } from "$app/paths";
+	import { user } from "#lib/user.svelte.ts";
 
 	let { event }: { event: UiEvent } = $props();
 
@@ -18,19 +18,24 @@
 		<div class="">
 			<div class="flex flex-wrap justify-between gap-4">
 				<div class="join">
-					<button class="btn join-item" onclick={async () => {
-						if (confirm('Are you sure you want to delete this event?')) {
-							const res = await deleteEvent({
-								eventId: event.id,
-								hostSecret: 'admin does not need host secret'
-							});
-							if (res.success) {
-								history.back();
+					<button
+						class="btn join-item"
+						onclick={async () => {
+							if (confirm("Are you sure you want to delete this event?")) {
+								const res = await deleteEvent({
+									eventId: event.id,
+									hostSecret: "admin does not need host secret",
+								});
+								if (res.success) {
+									history.back();
+								}
 							}
-						}
-					}}>Delete</button>
+						}}>Delete</button
+					>
+
 					<button class="btn join-item" onclick={() => (showJson = !showJson)}>Show JSON</button>
-					<a href={resolve(`/edit/${event.id ?? 'UNDEFINED'}`)} class="btn join-item">
+
+					<a href={resolve(`edit/${event.id ?? "UNDEFINED"}`)} class="btn join-item">
 						<i class="icon-[ph--pencil] mr-1 size-4"></i>
 						Edit Event
 					</a>

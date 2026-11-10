@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { deleteEvent } from '$lib/rpc/eventDelete.remote';
-	import { updateEvent } from '$lib/rpc/eventMutations.remote';
-	import EventForm from '$lib/components/EventForm.svelte';
-	import type { PageProps } from './$types';
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
+	import { deleteEvent } from "#lib/rpc/eventDelete.remote.ts";
+	import { updateEvent } from "#lib/rpc/eventMutations.remote.ts";
+	import EventForm from "#lib/components/EventForm.svelte";
+	import type { PageProps } from "./$types";
 
 	let { data }: PageProps = $props();
 	let event = $derived(data.event);
@@ -26,15 +26,11 @@
 	});
 
 	function handleCancel() {
-		goto(resolve('/[slug]', { slug: event.slug }));
+		goto(resolve("/[slug]", { slug: event.slug }));
 	}
 
 	async function handleDeleteEvent() {
-		if (
-			!confirm(
-				`Willst du den Event "${event.name}" wirklich löschen?\nDie Aktion kann nicht rückgängig gemacht werden.`
-			)
-		) {
+		if (!confirm(`Willst du den Event "${event.name}" wirklich löschen?\nDie Aktion kann nicht rückgängig gemacht werden.`)) {
 			return;
 		}
 
@@ -42,9 +38,9 @@
 			isDeletingEvent = true;
 			await deleteEvent({
 				eventId: event.id,
-				hostSecret: page.url.searchParams.get('hostSecret') ?? ''
+				hostSecret: page.url.searchParams.get("hostSecret") ?? "",
 			});
-			goto(resolve('/'));
+			goto(resolve("/"));
 		} catch (error) {
 			console.error(`Failed to delete event:`, error);
 			alert(`Failed to delete event. Please try again.`);
@@ -52,7 +48,6 @@
 			isDeletingEvent = false;
 		}
 	}
-
 </script>
 
 <div class="container mx-auto max-w-4xl md:pb-6">
@@ -73,15 +68,9 @@
 				/>
 			{/if}
 
-			<div class="flex flex-col-reverse sm:flex-row gap-6">
-
-				<div class="flex flex-row sm:flex-row gap-6 w-full">
-					<button
-						onclick={handleDeleteEvent}
-						disabled={actionsDisabled}
-						type="button"
-						class="btn"
-					>
+			<div class="flex flex-col-reverse gap-6 sm:flex-row">
+				<div class="flex w-full flex-row gap-6 sm:flex-row">
+					<button onclick={handleDeleteEvent} disabled={actionsDisabled} type="button" class="btn">
 						{#if isDeletingEvent}
 							<span class="loading loading-spinner loading-sm"></span>
 							<span class="">Lösche...</span>

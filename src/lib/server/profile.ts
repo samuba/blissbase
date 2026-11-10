@@ -1,10 +1,10 @@
 import { getRequestEvent } from "$app/server";
-import { slugify, stripHtml, trimAllWhitespaces, type Modify } from "$lib/common";
-import { type PublicProfileSocialLinks } from "$lib/rpc/profile.common";
-import { db, s, and, asc, desc, eq, gte, sql } from "$lib/server/db";
-import { eventWith, prepareEventsForUi, type UiEvent } from "$lib/server/events";
-import type { Profile } from "$lib/server/schema";
-import { type ProfileSocialType } from "$lib/socialLinks";
+import { slugify, stripHtml, trimAllWhitespaces, type Modify } from "#lib/common.ts";
+import { type PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
+import { db, s, and, asc, desc, eq, gte, sql } from "#lib/server/db.ts";
+import { eventWith, prepareEventsForUi, type UiEvent } from "#lib/server/events.ts";
+import type { Profile } from "#lib/server/schema.ts";
+import { type ProfileSocialType } from "#lib/socialLinks.ts";
 
 /**
  * @example
@@ -60,10 +60,7 @@ export async function getUpcomingEventsForPublicProfile(args: { authorId: string
  * await getOfferingsForPublicProfile({ profile });
  */
 export async function getOfferingsForPublicProfile(args: {
-	profile: Pick<
-		Profile,
-		"id" | "slug" | "displayName" | "bio" | "profileImageUrl" | "bannerImageUrl" | "socialLinks" | "locationLabel"
-	>;
+	profile: Pick<Profile, "id" | "slug" | "displayName" | "bio" | "profileImageUrl" | "bannerImageUrl" | "socialLinks" | "locationLabel">;
 }) {
 	const currentUserId = getRequestEvent().locals.userId;
 	const offerings = await db.query.offerings.findMany({

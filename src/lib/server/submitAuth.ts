@@ -1,4 +1,4 @@
-import { eventAssetsCreds } from "$lib/events.remote.shared";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const SUBMIT_AUTH_TTL_MS = 1000 * 60 * 10;

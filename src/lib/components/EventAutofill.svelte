@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { slide } from 'svelte/transition';
-	import { cubicInOut } from 'svelte/easing';
-	import {
-		formatDateForLocalInput,
-		type ContactMethod
-	} from '$lib/events.remote.common';
-	import { applyCreateEventLocationPrefill, getDefaultCreateEventFieldBase } from '$lib/eventCreateDefaults';
-	import { prefillEventFromDescription } from '$lib/rpc/prefillEventFromDescription.remote';
-	import type { CreateEventPrefillFields } from '$lib/server/mapAiAnswerToCreateEventPrefill';
+	import { onMount } from "svelte";
+	import { slide } from "svelte/transition";
+	import { cubicInOut } from "svelte/easing";
+	import { formatDateForLocalInput, type ContactMethod } from "#lib/eventForm.common.ts";
+	import { applyCreateEventLocationPrefill, getDefaultCreateEventFieldBase } from "#lib/eventCreateDefaults.ts";
+	import { prefillEventFromDescription } from "#lib/rpc/prefillEventFromDescription.remote.ts";
+	import type { CreateEventPrefillFields } from "#lib/server/mapAiAnswerToCreateEventPrefill.ts";
 
-	type CreateEventForm = typeof import('$lib/rpc/eventMutations.remote').createEvent;
+	type CreateEventForm = typeof import("#lib/rpc/eventMutations.remote.ts").createEvent;
 
 	let { remoteForm, onPrefill }: { remoteForm: CreateEventForm; onPrefill?: () => void } = $props();
 
@@ -43,9 +40,7 @@
 			...defaults,
 			name: remoteForm.fields.name.value() || defaults.name,
 			description: remoteForm.fields.description.value() || defaults.description,
-			tagSlugs: (remoteForm.fields.tagSlugs.value() ?? defaults.tagSlugs).filter(
-				(slug): slug is string => !!slug
-			),
+			tagSlugs: (remoteForm.fields.tagSlugs.value() ?? defaults.tagSlugs).filter((slug): slug is string => !!slug),
 			price: remoteForm.fields.price.value() || defaults.price,
 			address: remoteForm.fields.address.value() || defaults.address,
 			addressNote: remoteForm.fields.addressNote.value() || defaults.addressNote,
@@ -57,19 +52,12 @@
 			isOnline: remoteForm.fields.isOnline.value() ?? defaults.isOnline,
 			isNotListed: remoteForm.fields.isNotListed.value() ?? defaults.isNotListed,
 			contact: remoteForm.fields.contact.value() || defaults.contact,
-			contactMethod:
-				(remoteForm.fields.contactMethod.value() as ContactMethod | undefined) ||
-				defaults.contactMethod,
-			imageClaims: (remoteForm.fields.imageClaims.value() ?? defaults.imageClaims).filter(
-				(token): token is string => !!token
-			)
+			contactMethod: (remoteForm.fields.contactMethod.value() as ContactMethod | undefined) || defaults.contactMethod,
+			imageClaims: (remoteForm.fields.imageClaims.value() ?? defaults.imageClaims).filter((token): token is string => !!token),
 		};
 	}
 
-	function mergePrefill(
-		base: ReturnType<typeof getDefaultCreateFields>,
-		prefill: CreateEventPrefillFields
-	) {
+	function mergePrefill(base: ReturnType<typeof getDefaultCreateFields>, prefill: CreateEventPrefillFields) {
 		return {
 			...base,
 			name: prefill.name || base.name,
@@ -80,14 +68,12 @@
 				base,
 				prefillAddress: prefill.address,
 			}),
-			startAt: prefill.startAtIso
-				? formatDateForLocalInput(new Date(prefill.startAtIso))
-				: base.startAt,
+			startAt: prefill.startAtIso ? formatDateForLocalInput(new Date(prefill.startAtIso)) : base.startAt,
 			endAt: prefill.endAtIso ? formatDateForLocalInput(new Date(prefill.endAtIso)) : base.endAt,
 			isOnline: prefill.isOnline,
 			isNotListed: prefill.isNotListed,
 			contact: prefill.contact || base.contact,
-			contactMethod: prefill.contactMethod || base.contactMethod
+			contactMethod: prefill.contactMethod || base.contactMethod,
 		};
 	}
 
@@ -96,27 +82,26 @@
 
 		banner = null;
 		isPrefilling = true;
-		const timeZone =
-			remoteForm.fields.timeZone.value() || Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const timeZone = remoteForm.fields.timeZone.value() || Intl.DateTimeFormat().resolvedOptions().timeZone;
 		const currentFields = getCurrentCreateFields({ timeZone });
 
 		try {
 			const imagePayload = await Promise.all(
 				images.map(async (item) => ({
 					base64: await fileToBase64(item.file),
-					mediaType: item.file.type as AutofillImageMediaType
-				}))
+					mediaType: item.file.type as AutofillImageMediaType,
+				})),
 			);
 			const result = await prefillEventFromDescription({
 				text: text.trim(),
 				timeZone,
-				images: imagePayload
+				images: imagePayload,
 			});
 			if (result.kind === `empty`) return;
 			if (result.fields.notice === `existingSource` && result.fields.existingSource) {
 				banner = {
 					kind: `source`,
-					text: `Die Eingabe scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von ${result.fields.existingSource}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein.`
+					text: `Die Eingabe scheint von einer bestehenden Quelle zu stammen. Wir importieren regelmäßig Events von ${result.fields.existingSource}. Der Event ist also schon bei uns gelistet oder wird es in Kürze sein.`,
 				};
 				return;
 			}
@@ -125,7 +110,7 @@
 			if (result.fields.notice === `noEventData`) {
 				banner = {
 					kind: `noEvent`,
-					text: `Es wurde kein klarer Event erkannt. Du kannst das Formular trotzdem ausfüllen.`
+					text: `Es wurde kein klarer Event erkannt. Du kannst das Formular trotzdem ausfüllen.`,
 				};
 				return;
 			}
@@ -136,7 +121,7 @@
 			console.error(e);
 			banner = {
 				kind: `error`,
-				text: `Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen.`
+				text: `Fehler beim automatischen Ausfüllen. Du kannst das Formular trotzdem ausfüllen.`,
 			};
 		} finally {
 			isPrefilling = false;
@@ -154,7 +139,7 @@
 		if (!remainingSlots) {
 			banner = {
 				kind: `error`,
-				text: `Maximal 3 Bilder erlaubt.`
+				text: `Maximal 3 Bilder erlaubt.`,
 			};
 			return;
 		}
@@ -164,21 +149,21 @@
 			if (!ALLOWED_IMAGE_TYPES.includes(file.type as AutofillImageMediaType)) {
 				banner = {
 					kind: `error`,
-					text: `Nur JPEG, PNG, WebP oder GIF sind erlaubt.`
+					text: `Nur JPEG, PNG, WebP oder GIF sind erlaubt.`,
 				};
 				continue;
 			}
 			if (file.size > MAX_IMAGE_BYTES) {
 				banner = {
 					kind: `error`,
-					text: `Bilder dürfen maximal 10MB groß sein.`
+					text: `Bilder dürfen maximal 10MB groß sein.`,
 				};
 				continue;
 			}
 			nextImages.push({
 				id: crypto.randomUUID(),
 				file,
-				previewUrl: URL.createObjectURL(file)
+				previewUrl: URL.createObjectURL(file),
 			});
 		}
 		if (!nextImages.length) return;
@@ -227,8 +212,8 @@
 <fieldset class="fieldset w-full min-w-0 gap-3">
 	<div
 		class={[
-			`flex w-full flex-col rounded-xl border-2 border-dashed border-primary text-primary-content sm:bg-primary/10`,
-			banner?.kind === `error` ? `bg-error/10 text-error` : `bg-primary/5`
+			`border-primary text-primary-content sm:bg-primary/10 flex w-full flex-col rounded-xl border-2 border-dashed`,
+			banner?.kind === `error` ? `bg-error/10 text-error` : `bg-primary/5`,
 		]}
 	>
 		<button
@@ -239,17 +224,10 @@
 		>
 			<i class="icon-[ph--magic-wand] size-7 shrink-0"></i>
 			<span class="flex min-w-0 flex-col items-start">
-				<span class="font-semibold text-sm">Automatisch ausfüllen</span>
-				<span class="text-base-content/70 text-xs font-normal">
-					Text oder Flyer-Bild aus WhatsApp, Telegram & Co. nutzen
-				</span>
+				<span class="text-sm font-semibold">Automatisch ausfüllen</span>
+				<span class="text-base-content/70 text-xs font-normal"> Text oder Flyer-Bild aus WhatsApp, Telegram & Co. nutzen </span>
 			</span>
-			<i
-				class={[
-					`icon-[ph--caret-down] ml-auto size-5 shrink-0 transition-transform`,
-					isOpen ? `rotate-180` : ``
-				]}
-			></i>
+			<i class={[`icon-[ph--caret-down] ml-auto size-5 shrink-0 transition-transform`, isOpen ? `rotate-180` : ``]}></i>
 		</button>
 
 		{#if isOpen}
@@ -272,11 +250,7 @@
 				/>
 
 				<div class="flex flex-wrap items-center gap-2">
-					<label
-						for={fileInputId}
-						class={[`btn btn-sm`, !canAddImages && `btn-disabled`]}
-						aria-disabled={!canAddImages}
-					>
+					<label for={fileInputId} class={[`btn btn-sm`, !canAddImages && `btn-disabled`]} aria-disabled={!canAddImages}>
 						<i class="icon-[ph--images] size-4"></i>
 						Bilder aussuchen
 					</label>
@@ -303,14 +277,7 @@
 				{/if}
 
 				<div class="flex flex-row justify-end gap-3">
-					<button
-						type="button"
-						class="btn"
-						onclick={() => (isOpen = false)}
-						disabled={isPrefilling}
-					>
-						Schließen
-					</button>
+					<button type="button" class="btn" onclick={() => (isOpen = false)} disabled={isPrefilling}> Schließen </button>
 					<button
 						type="button"
 						onclick={prefillFromInput}
@@ -331,11 +298,7 @@
 					<div
 						class={[
 							`alert alert-soft`,
-							banner.kind === `error`
-								? `alert-error`
-								: banner.kind === `source`
-									? `alert-warning`
-									: `alert-info`
+							banner.kind === `error` ? `alert-error` : banner.kind === `source` ? `alert-warning` : `alert-info`,
 						]}
 						role={banner.kind === `error` ? `alert` : `status`}
 					>

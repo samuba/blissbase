@@ -1,26 +1,34 @@
-import { env } from '$env/dynamic/private';
-import { extractTelegramRoomIdFromInput, telegramEntityLookupCandidates } from '$lib/telegramCommon';
-import { TelegramClient, utils } from 'teleproto';
-import { LogLevel } from 'teleproto/extensions/Logger';
-import { StringSession } from 'teleproto/sessions';
+import {
+	TELEGRAM_APP_ID,
+	TELEGRAM_APP_HASH,
+	TELEGRAM_APP_SESSION_PRIMARY,
+	TELEGRAM_APP_SESSION_FALLBACK,
+	TELEGRAM_APP_SESSION,
+} from "$app/env/private";
+
+import { extractTelegramRoomIdFromInput, telegramEntityLookupCandidates } from "#lib/telegramCommon.ts";
+
+import { TelegramClient, utils } from "teleproto";
+import { LogLevel } from "teleproto/extensions/Logger";
+import { StringSession } from "teleproto/sessions";
 import {
 	missingTelegramSessionConfigMessage,
 	parseTelegramAccountSessions,
 	withFirstAccessibleAccount,
 	type TelegramAccountId,
-} from './telegramAccounts';
+} from "./telegramAccounts";
 
 /**
  * Confirms a Telegram room/channel exists for a scraper session and returns its display name.
  * Tries PRIMARY then FALLBACK (legacy TELEGRAM_APP_SESSION maps to FALLBACK when unset).
  */
 export async function resolveTelegramScrapingTarget({ roomId }: { roomId: string }) {
-	const apiId = Number(env.TELEGRAM_APP_ID);
-	const apiHash = env.TELEGRAM_APP_HASH?.trim();
+	const apiId = Number(TELEGRAM_APP_ID);
+	const apiHash = TELEGRAM_APP_HASH?.trim();
 	const accounts = parseTelegramAccountSessions({
-		TELEGRAM_APP_SESSION_PRIMARY: env.TELEGRAM_APP_SESSION_PRIMARY,
-		TELEGRAM_APP_SESSION_FALLBACK: env.TELEGRAM_APP_SESSION_FALLBACK,
-		TELEGRAM_APP_SESSION: env.TELEGRAM_APP_SESSION,
+		TELEGRAM_APP_SESSION_PRIMARY,
+		TELEGRAM_APP_SESSION_FALLBACK,
+		TELEGRAM_APP_SESSION,
 	});
 
 	if (!apiId || !apiHash || !accounts.length) {
@@ -42,13 +50,7 @@ export async function resolveTelegramScrapingTarget({ roomId }: { roomId: string
 	});
 }
 
-async function resolveWithSession(args: {
-	apiId: number
-	apiHash: string
-	session: string
-	accountId: TelegramAccountId
-	roomId: string
-}) {
+async function resolveWithSession(args: { apiId: number; apiHash: string; session: string; accountId: TelegramAccountId; roomId: string }) {
 	const client = new TelegramClient(new StringSession(args.session), args.apiId, args.apiHash, {
 		connectionRetries: 5,
 	});
@@ -91,11 +93,7 @@ async function resolveWithSession(args: {
 	}
 }
 
-async function resolveEntity(args: {
-	client: TelegramClient;
-	dialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>;
-	roomId: string;
-}) {
+async function resolveEntity(args: { client: TelegramClient; dialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>; roomId: string }) {
 	const { client, dialogs, roomId } = args;
 
 	const fromDialogs = findDialogEntity({ dialogs, roomId });
@@ -121,13 +119,8 @@ async function resolveEntity(args: {
 	);
 }
 
-function findDialogEntity(args: {
-	dialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>;
-	roomId: string;
-}) {
-	const wanted = new Set(
-		telegramEntityLookupCandidates(args.roomId).map((candidate) => candidate.toString()),
-	);
+function findDialogEntity(args: { dialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>; roomId: string }) {
+	const wanted = new Set(telegramEntityLookupCandidates(args.roomId).map((candidate) => candidate.toString()));
 
 	for (const dialog of args.dialogs) {
 		const dialogId = dialog.id?.toString();
@@ -136,10 +129,7 @@ function findDialogEntity(args: {
 	}
 }
 
-function findDialogIdByName(args: {
-	dialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>;
-	name: string;
-}) {
+function findDialogIdByName(args: { dialogs: Awaited<ReturnType<TelegramClient[`getDialogs`]>>; name: string }) {
 	for (const dialog of args.dialogs) {
 		if (dialog.name !== args.name) continue;
 		return dialog.id?.toString();

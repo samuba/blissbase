@@ -1,4 +1,4 @@
-import { IMAGE_UPLOAD_MAX_SIZE_MB } from "$lib/imageUpload.shared";
+import { IMAGE_UPLOAD_MAX_SIZE_MB } from "#lib/imageUpload.shared.ts";
 import * as v from "valibot";
 
 export const GALLERY_IMAGE_MAX_COUNT = 12;
@@ -57,11 +57,7 @@ export function uniqueGalleryImageClaimTokens(claimTokens: string[]) {
 	return [...new Set(claimTokens ?? [])].slice(0, GALLERY_IMAGE_MAX_COUNT);
 }
 
-export function getOrderedGalleryPreviewEntries(args: {
-	existingUrls: string[];
-	claimTokens: string[];
-	imageOrder?: string[];
-}) {
+export function getOrderedGalleryPreviewEntries(args: { existingUrls: string[]; claimTokens: string[]; imageOrder?: string[] }) {
 	const existingUrls = [...new Set((args.existingUrls ?? []).filter(Boolean))];
 	const claimTokens = uniqueGalleryImageClaimTokens(args.claimTokens ?? []);
 	const existingSet = new Set(existingUrls);

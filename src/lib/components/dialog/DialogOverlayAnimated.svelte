@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Dialog, type WithoutChildrenOrChild } from 'bits-ui';
-	import { fade } from 'svelte/transition';
-	import type { Snippet } from 'svelte';
-	import type { ClassValue } from 'svelte/elements';
+	import { Dialog, type WithoutChildrenOrChild } from "bits-ui";
+	import { fade } from "svelte/transition";
+	import type { Snippet } from "svelte";
+	import type { ClassValue } from "svelte/elements";
 
 	let {
 		ref = $bindable(null),
@@ -25,7 +25,7 @@
 			<div
 				{...props}
 				data-dialog-overlay
-				class={['fixed inset-0 z-50 backdrop-blur-sm bg-stone-800/65', className]}
+				class={["fixed inset-0 z-50 bg-stone-800/65 backdrop-blur-sm", className]}
 				in:fade={{ duration: inDuration }}
 				out:fade={{ duration: outDuration }}
 				onoutrostart={(event) => {
@@ -37,4 +37,3 @@
 		{/if}
 	{/snippet}
 </Dialog.Overlay>
-

@@ -152,7 +152,10 @@
 				data-testid={testId}
 				class={[`z-50 max-w-[calc(100vw-1.5rem)] outline-hidden`, className]}
 			>
-				<div class="hint-nudge bg-primary text-primary-content rounded-box relative py-2 pr-4 pl-3 text-xs leading-snug font-medium shadow-lg" transition:fly={{ y: side === `top` ? 8 : -8, duration: 250 }}>
+				<div
+					class="hint-nudge bg-primary text-primary-content rounded-box relative py-2 pr-4 pl-3 text-xs leading-snug font-medium shadow-lg"
+					transition:fly={{ y: side === `top` ? 8 : -8, duration: 250 }}
+				>
 					<span class="pt-0.5">
 						{@render children()}
 					</span>

@@ -1,9 +1,9 @@
 <script lang="ts">
 	/* @wc-ignore-file */
-	import { replaceState } from '$app/navigation';
-	import { page } from '$app/state';
-	import { heroMobile, heroTablet, heroDesktopUrl } from '$lib/assets/hero-images';
-	import { routes } from '$lib/routes';
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import { heroMobile, heroTablet, heroDesktopUrl } from "#lib/assets/hero-images.ts";
+	import { routes } from "#lib/routes.ts";
 
 	const fonts = [
 		{
@@ -215,24 +215,16 @@
 		};
 
 		writeUrl = (id: string) => {
-			const url = new URL(page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.set(id, String(this.selected[id]));
 			url.hash = id;
-			replaceState(`${routes.typeSpecimen()}${url.search}${url.hash}`, page.state);
+			goto(`${routes.typeSpecimen()}${url.search}${url.hash}`, { shallow: true, replace: true, state: page.state });
 		};
 	}
 
 	const specimen = new SpecimenWeights();
 
-	function weightFromParam({
-		weights,
-		fallback,
-		raw,
-	}: {
-		weights: readonly number[];
-		fallback: number;
-		raw: string | null;
-	}) {
+	function weightFromParam({ weights, fallback, raw }: { weights: readonly number[]; fallback: number; raw: string | null }) {
 		const parsed = Number(raw);
 		if (weights.some((weight) => weight === parsed)) return parsed;
 		return fallback;
@@ -240,14 +232,16 @@
 
 	function weightIndex(font: (typeof fonts)[number]) {
 		const current = specimen.selected[font.id] ?? font.defaultWeight;
-		const index = font.weights.indexOf(current);
+		const index = (font.weights as readonly number[]).indexOf(current);
 		return index === -1 ? 0 : index;
 	}
 </script>
 
 <svelte:head>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
+
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+
 	<link
 		href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&family=Anek+Latin:wght@100..800&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Commissioner:wght@100..900&family=Epilogue:wght@100..900&family=Familjen+Grotesk:wght@400..700&family=Figtree:wght@300..900&family=Gabarito:wght@400..900&family=Geologica:wght@100..900&family=Grandstander:wght@100..900&family=Hanken+Grotesk:wght@100..900&family=Inclusive+Sans:wght@300..700&family=Karla:wght@200..800&family=Livvic:wght@100;200;300;400;500;600;700;900&family=Nunito:wght@200..900&family=Onest:wght@100..900&family=Quattrocento+Sans:wght@400;700&family=Red+Hat+Display:wght@300..900&family=Spline+Sans:wght@300..700&family=Syne:wght@400..800&display=swap"
 		rel="stylesheet"
@@ -258,14 +252,10 @@
 	/>
 </svelte:head>
 
-<div class="sticky top-0 z-50 bg-base-200 px-4 py-2">
+<div class="bg-base-200 sticky top-0 z-50 px-4 py-2">
 	<div class="flex flex-wrap gap-1">
 		{#each fonts as font (font.id)}
-			<a
-				href={`#${font.id}`}
-				class="btn btn-xs"
-				onclick={() => specimen.shareFont(font.id)}
-			>
+			<a href={`#${font.id}`} class="btn btn-xs" onclick={() => specimen.shareFont(font.id)}>
 				{font.name}
 				{#if font.id === `baloo-2`}
 					<span class="badge badge-xs">current</span>
@@ -279,22 +269,16 @@
 	{#each fonts as font (font.id)}
 		<section id={font.id} class="scroll-mt-20">
 			<div class="bg-base-200 px-4 py-4">
-				<div
-					class="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2"
-				>
+				<div class="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">
 					<div class="flex items-center gap-2">
-						<p
-							class="text-lg"
-							style:font-family={font.family}
-							style:font-weight={specimen.selected[font.id]}
-						>
+						<p class="text-lg" style:font-family={font.family} style:font-weight={specimen.selected[font.id]}>
 							{font.name}
 						</p>
 						{#if font.id === `baloo-2`}
 							<span class="badge badge-sm">current</span>
 						{/if}
 					</div>
-					<p class="text-sm text-base-content/70 sm:max-w-md">
+					<p class="text-base-content/70 text-sm sm:max-w-md">
 						{font.why}
 					</p>
 					{#if font.weights.length > 1}
@@ -315,12 +299,12 @@
 										})
 								}
 							/>
-							<div class="mt-2 flex justify-between px-2.5 text-xs text-base-content/50">
+							<div class="text-base-content/50 mt-2 flex justify-between px-2.5 text-xs">
 								{#each font.weights as weight (weight)}
 									<span>|</span>
 								{/each}
 							</div>
-							<div class="mt-1 flex justify-between px-2.5 text-[10px] tabular-nums text-base-content/70">
+							<div class="text-base-content/70 mt-1 flex justify-between px-2.5 text-[10px] tabular-nums">
 								{#each font.weights as weight (weight)}
 									<span>{weight}</span>
 								{/each}
@@ -336,11 +320,7 @@
 						{#each Object.entries(heroMobile.sources) as [format, srcset] (format)}
 							<source media="(max-width: 499px)" {srcset} type={`image/${format}`} />
 						{/each}
-						<source
-							media="(min-width: 1100px)"
-							srcset={heroDesktopUrl}
-							type="image/{heroDesktopUrl.split('.').pop()}"
-						/>
+						<source media="(min-width: 1100px)" srcset={heroDesktopUrl} type="image/{heroDesktopUrl.split('.').pop()}" />
 						{#each Object.entries(heroTablet.sources) as [format, srcset] (`${font.id}-${format}`)}
 							<source {srcset} type={`image/${format}`} />
 						{/each}
@@ -354,31 +334,22 @@
 					</picture>
 				</div>
 
-				<div
-					class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-4 sm:gap-8 items-center justify-center"
-				>
-					<div class="flex flex-col gap-4 w-full items-center justify-center px-4">
-						<div class="flex justify-center items-center gap-3">
-							<img
-								src="/logo-90x90.png"
-								alt=""
-								class="size-12 md:size-16 lg:size-18 drop-shadow-xl"
-							/>
-							<h1
-								class="md:text-5xl text-4xl text-base-100"
-								style:font-family={font.family}
-								style:font-weight={specimen.selected[font.id]}
-							>
+				<div class="z-10 col-start-1 row-start-1 container mx-auto flex flex-col items-center justify-center gap-4 sm:w-2xl sm:gap-8">
+					<div class="flex w-full flex-col items-center justify-center gap-4 px-4">
+						<div class="flex items-center justify-center gap-3">
+							<img src="/logo-90x90.png" alt="" class="size-12 drop-shadow-xl md:size-16 lg:size-18" />
+							<h1 class="text-base-100 text-4xl md:text-5xl" style:font-family={font.family} style:font-weight={specimen.selected[font.id]}>
 								Blissbase
 							</h1>
 						</div>
 
 						<h2
-							class="text-lg sm:text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center"
+							class="from-base-100 to-base-100 bg-gradient-to-r bg-clip-text text-center text-lg text-transparent sm:text-xl md:text-2xl"
 							style:font-family={font.family}
 							style:font-weight={specimen.selected[font.id]}
 						>
-							<span class="text-yellow-400">✨</span> Achtsame Events in deiner Nähe
+							<span class="text-yellow-400">✨</span>
+							Achtsame Events in deiner Nähe
 							<span class="text-yellow-400">✨</span>
 						</h2>
 					</div>

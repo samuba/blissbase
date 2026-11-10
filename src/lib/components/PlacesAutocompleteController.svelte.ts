@@ -30,8 +30,7 @@ export class PlacesAutocompleteController {
 	private AutocompleteSessionToken: typeof google.maps.places.AutocompleteSessionToken | null = null;
 	private initPromise: Promise<void> | null = null;
 
-	private pendingFetch: { input: string; biasLat?: number | null; biasLng?: number | null } | null =
-		null;
+	private pendingFetch: { input: string; biasLat?: number | null; biasLng?: number | null } | null = null;
 
 	prepare() {
 		return this.init();
@@ -52,7 +51,7 @@ export class PlacesAutocompleteController {
 	private async loadLibrary() {
 		this.loadFailed = false;
 
-		const { loadGoogleMapsPlaces } = await import(`$lib/googleMapsLoader`);
+		const { loadGoogleMapsPlaces } = await import(`#lib/googleMapsLoader.ts`);
 		const places = await loadGoogleMapsPlaces();
 		if (!places) {
 			this.loadFailed = true;
@@ -134,19 +133,18 @@ export class PlacesAutocompleteController {
 		try {
 			const request: google.maps.places.AutocompleteRequest = {
 				input: trimmed,
-				sessionToken: this.sessionToken ?? undefined
+				sessionToken: this.sessionToken ?? undefined,
 			};
 
 			if (args.biasLat != null && args.biasLng != null) {
 				request.locationBias = {
 					center: { lat: args.biasLat, lng: args.biasLng },
-					radius: 50_000
+					radius: 50_000,
 				};
 				request.origin = { lat: args.biasLat, lng: args.biasLng };
 			}
 
-			const { suggestions } =
-				await this.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+			const { suggestions } = await this.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
 			if (currentRequestId !== this.requestId) return;
 
@@ -158,7 +156,7 @@ export class PlacesAutocompleteController {
 				if (nextSuggestions.some((item) => item.prediction.placeId === prediction.placeId)) continue;
 				nextSuggestions.push({
 					text: prediction.text.toString(),
-					prediction
+					prediction,
 				});
 			}
 			this.suggestions = nextSuggestions;
@@ -181,7 +179,7 @@ export class PlacesAutocompleteController {
 		try {
 			const place = suggestion.prediction.toPlace();
 			await place.fetchFields({
-				fields: [`displayName`, `formattedAddress`, `location`]
+				fields: [`displayName`, `formattedAddress`, `location`],
 			});
 
 			const location = place.location;
@@ -199,7 +197,7 @@ export class PlacesAutocompleteController {
 				displayName,
 				formattedAddress,
 				latitude,
-				longitude
+				longitude,
 			};
 		} catch (error) {
 			console.error(`Failed to fetch place details:`, error);
@@ -211,13 +209,11 @@ export class PlacesAutocompleteController {
 		if (!this.suggestions.length) return;
 
 		if (direction === `down`) {
-			this.highlightedIndex =
-				this.highlightedIndex < this.suggestions.length - 1 ? this.highlightedIndex + 1 : 0;
+			this.highlightedIndex = this.highlightedIndex < this.suggestions.length - 1 ? this.highlightedIndex + 1 : 0;
 			return;
 		}
 
-		this.highlightedIndex =
-			this.highlightedIndex > 0 ? this.highlightedIndex - 1 : this.suggestions.length - 1;
+		this.highlightedIndex = this.highlightedIndex > 0 ? this.highlightedIndex - 1 : this.suggestions.length - 1;
 	}
 
 	getHighlightedSuggestion() {

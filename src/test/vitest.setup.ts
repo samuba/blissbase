@@ -8,74 +8,71 @@
 import { vi } from "vitest";
 
 // Set environment variables for testing
-process.env.NODE_ENV = 'test';
-process.env.VITEST = 'true';
+process.env.NODE_ENV = "test";
+process.env.VITEST = "true";
 
 // Mock environment variables that might be required
 if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+	process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/test";
 }
 
 if (!process.env.GOOGLE_MAPS_API_KEY) {
-    process.env.GOOGLE_MAPS_API_KEY = 'test-google-maps-api-key';
+	process.env.GOOGLE_MAPS_API_KEY = "test-google-maps-api-key";
 }
 
-vi.mock("$lib/server/db", async (importOriginal) => {
-    console.log('mocking db...')
-    const { s: schema, db: _db, ...rest } = await importOriginal<typeof import("../lib/server/db")>()
+vi.mock("#lib/server/db.ts", async (importOriginal) => {
+	console.log("mocking db...");
+	const { s: schema, db: _db, ...rest } = await importOriginal<typeof import("../lib/server/db")>();
 
-    const { PGlite } = await vi.importActual<typeof import("@electric-sql/pglite")>("@electric-sql/pglite")
-    const { drizzle } = await vi.importActual<typeof import("drizzle-orm/pglite")>("drizzle-orm/pglite")
-    const { cube } = await vi.importActual<typeof import("@electric-sql/pglite/contrib/cube")>("@electric-sql/pglite/contrib/cube");
-    const { earthdistance } = await vi.importActual<typeof import("@electric-sql/pglite/contrib/earthdistance")>("@electric-sql/pglite/contrib/earthdistance");
-    const { pg_trgm } = await vi.importActual<typeof import("@electric-sql/pglite/contrib/pg_trgm")>("@electric-sql/pglite/contrib/pg_trgm");
+	const { PGlite } = await vi.importActual<typeof import("@electric-sql/pglite")>("@electric-sql/pglite");
+	const { drizzle } = await vi.importActual<typeof import("drizzle-orm/pglite")>("drizzle-orm/pglite");
+	const { cube } = await vi.importActual<typeof import("@electric-sql/pglite/contrib/cube")>("@electric-sql/pglite/contrib/cube");
+	const { earthdistance } = await vi.importActual<typeof import("@electric-sql/pglite/contrib/earthdistance")>(
+		"@electric-sql/pglite/contrib/earthdistance",
+	);
+	const { pg_trgm } = await vi.importActual<typeof import("@electric-sql/pglite/contrib/pg_trgm")>("@electric-sql/pglite/contrib/pg_trgm");
 
-    // const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
+	// const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
 
-    const client = new PGlite({
-        extensions: { cube, earthdistance, pg_trgm },
-        // Set debug mode to false to reduce noise in CI environments
-        debug: process.env.CI ? 0 : undefined
-    })
-    const db = drizzle(client, { schema, casing: 'snake_case' })
+	const client = new PGlite({
+		extensions: { cube, earthdistance, pg_trgm },
+		// Set debug mode to false to reduce noise in CI environments
+		debug: process.env.CI ? 0 : undefined,
+	});
+	const db = drizzle(client, { schema, casing: "snake_case" });
 
-    // PGlite 0.4 defaults to the host's local timezone; force UTC so timestamp (without time zone) columns behave the same as in production where the DB runs in UTC.
-    await client.exec("SET TIME ZONE 'UTC';")
+	// PGlite 0.4 defaults to the host's local timezone; force UTC so timestamp (without time zone) columns behave the same as in production where the DB runs in UTC.
+	await client.exec("SET TIME ZONE 'UTC';");
 
-    // Explicitly create the extensions (cube must come before earthdistance)
-    await client.exec('CREATE EXTENSION IF NOT EXISTS cube;')
-    await client.exec('CREATE EXTENSION IF NOT EXISTS earthdistance;')
-    await client.exec('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
+	// Explicitly create the extensions (cube must come before earthdistance)
+	await client.exec("CREATE EXTENSION IF NOT EXISTS cube;");
+	await client.exec("CREATE EXTENSION IF NOT EXISTS earthdistance;");
+	await client.exec("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
 
-    console.log('pushing schema to pglite instance...')
-    await pushSchema(db, schema)
+	console.log("pushing schema to pglite instance...");
+	await pushSchema(db, schema);
 
-    // seed test data
-    // await db
-    //     .insert(User)
-    //     .values({ email: "email@email.email", externalId: "external" })
+	// seed test data
+	// await db
+	//     .insert(User)
+	//     .values({ email: "email@email.email", externalId: "external" })
 
-    return { db, s: schema, ...rest }
-})
+	return { db, s: schema, ...rest };
+});
 
 // needed cuz pushSchema does not respect casing https://github.com/drizzle-team/drizzle-orm/issues/3913
 async function pushSchema(db: any, schema: any) {
-    // use require to defeat dynamic require error (https://github.com/drizzle-team/drizzle-orm/issues/2853#issuecomment-2668459509)
-    const { createRequire } = await vi.importActual<typeof import("node:module")>("node:module")
-    const require = createRequire(import.meta.url)
-    const { generateDrizzleJson, generateMigration } = require('drizzle-kit/api') as typeof import('drizzle-kit/api')
+	// use require to defeat dynamic require error (https://github.com/drizzle-team/drizzle-orm/issues/2853#issuecomment-2668459509)
+	const { createRequire } = await vi.importActual<typeof import("node:module")>("node:module");
+	const require = createRequire(import.meta.url);
+	const { generateDrizzleJson, generateMigration } = require("drizzle-kit/api") as typeof import("drizzle-kit/api");
 
-    const prevJson = generateDrizzleJson({})
-    const curJson = generateDrizzleJson(
-        schema,
-        prevJson.id,
-        undefined,
-        'snake_case'
-    )
+	const prevJson = generateDrizzleJson({});
+	const curJson = generateDrizzleJson(schema, prevJson.id, undefined, "snake_case");
 
-    const statements = await generateMigration(prevJson, curJson)
+	const statements = await generateMigration(prevJson, curJson);
 
-    for (const statement of statements) {
-        await db.execute(statement)
-    }
+	for (const statement of statements) {
+		await db.execute(statement);
+	}
 }

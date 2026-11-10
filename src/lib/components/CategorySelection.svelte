@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { eventCategories } from '$lib/eventCategories';
-	import { eventsStore } from '$lib/eventsStore.svelte';
-	import { fade } from 'svelte/transition';
-	import { flip } from 'svelte/animate';
-	import TextSearchInput from '$lib/components/TextSearchInput.svelte';
+	import { eventCategories } from "#lib/eventCategories.ts";
+	import { eventsStore } from "#lib/eventsStore.svelte.ts";
+	import { fade } from "svelte/transition";
+	import { flip } from "svelte/animate";
+	import TextSearchInput from "#lib/components/TextSearchInput.svelte";
 
 	let { layout = `rail` }: { layout?: `rail` | `wrap` } = $props();
 
@@ -21,9 +21,7 @@
 
 	let selectedSlugs = $derived(eventsStore.pagination.categorySlugs ?? []);
 	let selectedCategories = $derived(
-		selectedSlugs
-			.map((slug) => eventCategories.find((category) => category.slug === slug))
-			.filter((category) => category != null),
+		selectedSlugs.map((slug) => eventCategories.find((category) => category.slug === slug)).filter((category) => category != null),
 	);
 	let railCategories = $derived(eventCategories.filter((category) => !selectedSlugs.includes(category.slug)));
 
@@ -118,7 +116,7 @@
 			<button
 				type="button"
 				class={[
-					`btn min-w-fit shrink-0 whitespace-nowrap tracking-tight sm:tracking-normal`,
+					`btn min-w-fit shrink-0 tracking-tight whitespace-nowrap sm:tracking-normal`,
 					selectedSlugs.includes(category.slug) ? `active` : `bg-base-100 font-normal`,
 				]}
 				data-testid={`category-chip-${category.slug}`}
@@ -143,7 +141,7 @@
 			<div class={[`flex-no-wrap flex gap-2`, selectedCategories.length === 0 && `hidden`]}>
 				{#each selectedCategories as category (category.slug)}
 					<button
-						class="btn active min-w-fit shrink-0 gap-2 whitespace-nowrap tracking-tight sm:tracking-normal"
+						class="btn active min-w-fit shrink-0 gap-2 tracking-tight whitespace-nowrap sm:tracking-normal"
 						data-testid={`category-chip-${category.slug}`}
 						onclick={() => removeCategory(category.slug)}
 						in:fade={{ duration: 280 }}
@@ -165,7 +163,7 @@
 					<div class="flex w-max flex-nowrap items-center gap-2">
 						{#each railCategories as category (category.slug)}
 							<button
-								class="btn bg-base-100 min-w-fit shrink-0 font-normal whitespace-nowrap tracking-tight sm:tracking-normal"
+								class="btn bg-base-100 min-w-fit shrink-0 font-normal tracking-tight whitespace-nowrap sm:tracking-normal"
 								data-testid={`category-chip-${category.slug}`}
 								onclick={() => selectCategory(category.slug)}
 							>
@@ -184,10 +182,7 @@
 				>
 					<button
 						type="button"
-						class={[
-							`btn btn-circle btn-ghost btn-sm`,
-							showLeftShadow ? `pointer-events-auto` : `pointer-events-none`,
-						]}
+						class={[`btn btn-circle btn-ghost btn-sm`, showLeftShadow ? `pointer-events-auto` : `pointer-events-none`]}
 						aria-label="Kategorien nach links scrollen"
 						tabindex={showLeftShadow ? 0 : -1}
 						onclick={() => scrollCategoryRail(`left`)}
@@ -206,10 +201,7 @@
 				>
 					<button
 						type="button"
-						class={[
-							`btn btn-circle btn-ghost btn-sm`,
-							showRightShadow ? `pointer-events-auto` : `pointer-events-none`,
-						]}
+						class={[`btn btn-circle btn-ghost btn-sm`, showRightShadow ? `pointer-events-auto` : `pointer-events-none`]}
 						aria-label="Kategorien nach rechts scrollen"
 						tabindex={showRightShadow ? 0 : -1}
 						onclick={() => scrollCategoryRail(`right`)}

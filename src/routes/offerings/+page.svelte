@@ -1,30 +1,31 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import CreateCta from "$lib/components/CreateCta.svelte";
-	import CrossPromoFooter from "$lib/components/CrossPromoFooter.svelte";
-	import OfferingCard from "$lib/components/OfferingCard.svelte";
-	import LocationDistanceInput from "$lib/components/LocationDistanceInput.svelte";
-	import type { LocationChangeEvent } from "$lib/components/LocationDistanceInput.svelte";
-	import TabsNavDesktop from "$lib/components/TabsNavDesktop.svelte";
-	import TextSearchInput from "$lib/components/TextSearchInput.svelte";
-	import { filterOfferingsBySearchTerm, parseOfferingsFilterFromUrl, resolveOfferingsListQuery, type OfferingsFilter } from "$lib/offeringsFilter";
-	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "$lib/cookie-utils";
-	import { bustOfferingsOgCache, generateOfferingAnnouncement } from "$lib/rpc/admin.remote";
-	import { getOfferings } from "$lib/rpc/offerings.remote";
-	import { routes } from "$lib/routes";
-	import { user } from "$lib/user.svelte";
+	import CreateCta from "#lib/components/CreateCta.svelte";
+	import CrossPromoFooter from "#lib/components/CrossPromoFooter.svelte";
+	import OfferingCard from "#lib/components/OfferingCard.svelte";
+	import LocationDistanceInput from "#lib/components/LocationDistanceInput.svelte";
+	import type { LocationChangeEvent } from "#lib/components/LocationDistanceInput.svelte";
+	import TabsNavDesktop from "#lib/components/TabsNavDesktop.svelte";
+	import TextSearchInput from "#lib/components/TextSearchInput.svelte";
+	import {
+		filterOfferingsBySearchTerm,
+		parseOfferingsFilterFromUrl,
+		resolveOfferingsListQuery,
+		type OfferingsFilter,
+	} from "#lib/offeringsFilter.ts";
+	import { saveOfferingsFiltersToBrowserCookie, setLocationInteractedCookie } from "#lib/cookie-utils.ts";
+	import { bustOfferingsOgCache, generateOfferingAnnouncement } from "#lib/rpc/admin.remote.ts";
+	import { getOfferings } from "#lib/rpc/offerings.remote.ts";
+	import { routes } from "#lib/routes.ts";
+	import { user } from "#lib/user.svelte.ts";
 	import OfferingDetailsDialog, { showOfferingDetailsDialog } from "./OfferingDetailsDialog.svelte";
 	import { DropdownMenu } from "bits-ui";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 	import { toast } from "svelte-sonner";
-	import {
-		offeringHeroDesktop,
-		offeringHeroMobile,
-		offeringHeroTablet,
-	} from "$lib/assets/offering-hero-images";
-	import { offeringsNavHint } from "$lib/offeringsNavHint.svelte";
+	import { offeringHeroDesktop, offeringHeroMobile, offeringHeroTablet } from "#lib/assets/offering-hero-images.ts";
+	import { offeringsNavHint } from "#lib/offeringsNavHint.svelte.ts";
 	import { onMount } from "svelte";
 
 	let { data } = $props();
@@ -32,11 +33,13 @@
 	onMount(() => offeringsNavHint.dismiss());
 	const filterFromUrl = $derived(parseOfferingsFilterFromUrl(page.url));
 	const offeringsQuery = $derived(getOfferings(filterFromUrl));
-	const offeringsList = $derived(resolveOfferingsListQuery({
-		queryCurrent: offeringsQuery.current,
-		loadResult: data.offeringsResult,
-		filterFromUrl,
-	}));
+	const offeringsList = $derived(
+		resolveOfferingsListQuery({
+			queryCurrent: offeringsQuery.current,
+			loadResult: data.offeringsResult,
+			filterFromUrl,
+		}),
+	);
 	let loading = $state(false);
 	const filter = $derived(offeringsList.filter);
 	const offerings = $derived(offeringsList.offerings);
@@ -54,17 +57,12 @@
 	let contentBeforeMenuHeight = $state(0);
 	const showShadow = $derived(scrollY > (headerElement?.offsetHeight ?? 50) + contentBeforeMenuHeight - 100);
 
-	const resolvedCityName = $derived(
-		filter.lat != null && filter.lng != null ? filter.location : null,
-	);
+	const resolvedCityName = $derived(filter.lat != null && filter.lng != null ? filter.location : null);
 	const initialLocation = $derived(
-		filter.location ||
-		(filter.lat != null && filter.lng != null ? `coords:${filter.lat},${filter.lng}` : null),
+		filter.location || (filter.lat != null && filter.lng != null ? `coords:${filter.lat},${filter.lng}` : null),
 	);
 
-	const ctaHref = $derived(
-		filter.location ? routes.eventList({ searchTerm: filter.location }) : routes.eventList(),
-	);
+	const ctaHref = $derived(filter.location ? routes.eventList({ searchTerm: filter.location }) : routes.eventList());
 	const normalizedSearchTerm = $derived(filter.searchTerm?.trim() ?? ``);
 
 	$effect(() => {
@@ -74,21 +72,18 @@
 	async function navigateWithFilter(nextFilter: Partial<OfferingsFilter>) {
 		loading = true;
 		const nextOfferingsFilter = {
-			location: `location` in nextFilter ? nextFilter.location ?? null : filter.location,
-			distance: `distance` in nextFilter ? nextFilter.distance ?? null : filter.distance,
-			lat: `lat` in nextFilter ? nextFilter.lat ?? null : filter.lat,
-			lng: `lng` in nextFilter ? nextFilter.lng ?? null : filter.lng,
-			searchTerm: `searchTerm` in nextFilter ? nextFilter.searchTerm ?? null : filter.searchTerm,
-			includeOnline: `includeOnline` in nextFilter ? nextFilter.includeOnline ?? true : filter.includeOnline,
+			location: `location` in nextFilter ? (nextFilter.location ?? null) : filter.location,
+			distance: `distance` in nextFilter ? (nextFilter.distance ?? null) : filter.distance,
+			lat: `lat` in nextFilter ? (nextFilter.lat ?? null) : filter.lat,
+			lng: `lng` in nextFilter ? (nextFilter.lng ?? null) : filter.lng,
+			searchTerm: `searchTerm` in nextFilter ? (nextFilter.searchTerm ?? null) : filter.searchTerm,
+			includeOnline: `includeOnline` in nextFilter ? (nextFilter.includeOnline ?? true) : filter.includeOnline,
 		};
 
 		persistOfferingsFilters(nextOfferingsFilter);
 
 		try {
-			await goto(
-				routes.offeringsList(nextOfferingsFilter),
-				{ keepFocus: true, noScroll: true },
-			);
+			await goto(routes.offeringsList(nextOfferingsFilter), { reset: false });
 		} finally {
 			loading = false;
 		}
@@ -165,9 +160,7 @@
 		try {
 			const { deletedCount } = await bustOfferingsOgCache({ url: page.url.href });
 			toast.success(
-				deletedCount
-					? `OG cache busted (${deletedCount} deleted); warming new image…`
-					: `OG cache was empty; warming new image…`,
+				deletedCount ? `OG cache busted (${deletedCount} deleted); warming new image…` : `OG cache was empty; warming new image…`,
 				{ id: toastId },
 			);
 		} catch (error) {
@@ -203,26 +196,21 @@
 	</div>
 
 	<!-- Content layer -->
-	<div class="col-start-1 row-start-1 z-10 container mx-auto sm:w-2xl flex flex-col gap-3 sm:gap-8 items-center justify-center">
-		<div class="flex flex-col gap-3 w-full items-center justify-center px-4">
-			<h1 class="md:text-5xl text-4xl text-base-100 font-brand drop-shadow-lg">Angebote</h1>
+	<div class="z-10 col-start-1 row-start-1 container mx-auto flex flex-col items-center justify-center gap-3 sm:w-2xl sm:gap-8">
+		<div class="flex w-full flex-col items-center justify-center gap-3 px-4">
+			<h1 class="text-base-100 font-brand text-4xl drop-shadow-lg md:text-5xl">Angebote</h1>
 		</div>
 
-		<h2 class="text-xl md:text-2xl bg-gradient-to-r from-base-100 to-base-100 bg-clip-text text-transparent text-center font-brand drop-shadow-md">
-			<span class="text-yellow-400">✨</span>  1:1 Sessions & Services aus der Community <span class="text-primary">✨</span> 
+		<h2
+			class="from-base-100 to-base-100 font-brand bg-gradient-to-r bg-clip-text text-center text-xl text-transparent drop-shadow-md md:text-2xl"
+		>
+			<span class="text-yellow-400">✨</span> 1:1 Sessions & Services aus der Community <span class="text-primary">✨</span>
 		</h2>
 	</div>
 </div>
 
 <div class="flex w-full flex-col items-center justify-center pb-4">
-	<header
-		bind:this={headerElement}
-		class={[
-			`z-10 w-full bg-base-200 sticky top-0 pt-4 flex justify-center`,
-			`pb-3`
-		]}
-		id="header-controls"
-	>
+	<header bind:this={headerElement} class={[`bg-base-200 sticky top-0 z-10 flex w-full justify-center pt-4`, `pb-3`]} id="header-controls">
 		{#if showShadow}
 			<div
 				class="pointer-events-none absolute right-0 left-0 z-20 h-6"
@@ -230,16 +218,16 @@
 			></div>
 		{/if}
 
-		<div class=" flex w-full max-w-2xl flex-col justify-center gap-3 mx-4">
+		<div class=" mx-4 flex w-full max-w-2xl flex-col justify-center gap-3">
 			<TabsNavDesktop />
 
 			<div class="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
 				<div class="flex w-full flex-col gap-1.5">
 					<LocationDistanceInput
 						inputId="plzCityInput-offerings"
-						initialLocation={initialLocation}
+						{initialLocation}
 						initialDistance={filter.distance}
-						resolvedCityName={resolvedCityName}
+						{resolvedCityName}
 						locationBiasLat={filter.lat}
 						locationBiasLng={filter.lng}
 						onChange={handleLocationDistanceChange}
@@ -333,11 +321,7 @@
 					{@render createOfferingCta()}
 					{#each filteredOfferings as offering (offering.id)}
 						<div class="h-full min-w-0" animate:flip={{ duration: 200 }} out:fade={{ duration: 200 }} in:fade={{ duration: 200 }}>
-							<OfferingCard
-								{offering}
-								returnTo={routes.currentPath(page.url)}
-								onclick={() => openOfferingDetails(offering)}
-							/>
+							<OfferingCard {offering} returnTo={routes.currentPath(page.url)} onclick={() => openOfferingDetails(offering)} />
 						</div>
 					{/each}
 				</div>
@@ -363,7 +347,7 @@
 				<div class="grid gap-4 min-[920px]:grid-cols-2">
 					{@render createOfferingCta()}
 				</div>
-				<section class="card bg-base-100 shadow-sm mt-4">
+				<section class="card bg-base-100 mt-4 shadow-sm">
 					<div class="card-body items-center py-12 text-center">
 						<div class="bg-primary/15 text-primary flex size-16 items-center justify-center rounded-full">
 							<i class="icon-[ph--hand-heart] size-8"></i>
@@ -387,13 +371,9 @@
 </div>
 
 {#snippet createOfferingCta()}
-	<CreateCta
-		buttonText="Angebot hinzufügen"
-		href={newOfferingHref()}
-		data-testid="create-offering"
-	>
+	<CreateCta buttonText="Angebot hinzufügen" href={newOfferingHref()} data-testid="create-offering">
 		{#snippet title()}
-			<i class="icon-[ph--hand-heart] size-6 shrink-0 mr-1"></i>
+			<i class="icon-[ph--hand-heart] mr-1 size-6 shrink-0"></i>
 			Was hast du zu geben?
 		{/snippet}
 		{#snippet description()}

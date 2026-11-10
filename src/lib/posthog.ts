@@ -1,13 +1,9 @@
 import posthog from "posthog-js";
 import type { CaptureResult } from "posthog-js";
-import { browser, dev } from "$app/environment";
+import { browser, dev } from "$app/env";
 
 /** Browser/extension injections that look like app errors (Firefox iOS, Chrome iOS, wallets). */
-const BROWSER_NOISE_SUBSTRINGS = [
-	`__firefox__`,
-	`__gCrWeb`,
-	`window.ethereum`,
-] as const;
+const BROWSER_NOISE_SUBSTRINGS = [`__firefox__`, `__gCrWeb`, `window.ethereum`] as const;
 
 export function isBrowserNoiseExceptionMessage(message: string | undefined) {
 	if (!message) return false;

@@ -1,5 +1,5 @@
-import { hasValidCoordinates } from '$lib/locationFilter';
-import { geocodeAddressCached } from '$lib/server/google';
+import { hasValidCoordinates } from "#lib/locationFilter.ts";
+import { geocodeAddressCached } from "#lib/server/google.ts";
 
 export async function resolveFilterCoordinates(args: {
 	plzCity?: string | null;

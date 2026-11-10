@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { eventAssetsCreds } from "$lib/events.remote.shared";
-import { signSubmitAuthToken, verifySubmitAuthToken } from "$lib/server/submitAuth";
+import { eventAssetsCreds } from "#lib/eventForm.shared.ts";
+import { signSubmitAuthToken, verifySubmitAuthToken } from "#lib/server/submitAuth.ts";
 
 describe(`submitAuth`, () => {
 	it(`round-trips a signed user id`, () => {

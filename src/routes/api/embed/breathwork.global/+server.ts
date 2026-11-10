@@ -1,4 +1,4 @@
-import { json, type RequestHandler } from "@sveltejs/kit";
+import { type RequestHandler } from "@sveltejs/kit";
 import { breathworkEmbedQueryFromBody, searchBreathworkEmbedEvents } from "./breathworkEmbed";
 
 const ALLOWED_HOSTS = new Set([`breathwork.global`, `www.breathwork.global`]);
@@ -12,10 +12,10 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
 		const result = await searchBreathworkEmbedEvents(breathworkEmbedQueryFromBody(body));
-		return json(result, { headers });
+		return Response.json(result, { headers });
 	} catch (error) {
 		console.error(`breathwork embed request failed`, error);
-		return json({ results: [], nextCursor: null }, { headers });
+		return Response.json({ results: [], nextCursor: null }, { headers });
 	}
 };
 
