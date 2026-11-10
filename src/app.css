@@ -105,7 +105,7 @@ select {
 	font-style: normal;
 	font-weight: 500;
 	font-display: swap;
-	src: url("$lib/fonts/Baloo2-Medium.woff2") format("woff2");
+	src: url("./lib/fonts/Baloo2-Medium.woff2") format("woff2");
 }
 
 .font-brand {
