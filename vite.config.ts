@@ -48,25 +48,17 @@ export const svelteKitConfig = {
 };
 
 const pwaOptions = {
-	includeAssets: [
-		"favicon.ico",
-		"favicon.svg",
-		"favicon.png",
-		"apple-touch-icon.png",
-		"pwa-192x192.png",
-		"pwa-512x512.png",
-		"pwa-512-maskable.png",
-		"pwa-192-maskable.png",
-		"logo.svg",
-	],
 	registerType: "autoUpdate" as const,
 	injectRegister: false as const,
 	kit: {
 		includeVersionFile: true,
 	},
 	// Kit 3 remote `prerender()` writes extensionless payloads under prerendered/data — not html/json pages.
+	// Default client glob already precaches static icons; includeAssets double-hashed binaries and broke /sw.js.
+	// Explicit null disables Kit's default navigateFallback ("./"), which isn't in the precache.
 	generateSW: {
 		globStrict: false,
+		navigateFallback: null,
 	},
 	devOptions: {
 		enabled: !isE2e,
