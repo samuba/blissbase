@@ -28,7 +28,6 @@ const initialMessagesPerChat = 50
 const maxMessageAgeMonths = 8
 const sqliteDownloadTimeoutMs = 20_000
 const sqliteDownloadRetryCount = 3
-const lastErrorMaxLength = 2000
 
 function getMessageAgeCutoffUnix() {
     const cutoff = new Date()
@@ -1124,18 +1123,6 @@ async function processMessages(args: {
 }
 
 /**
- * Postgres text rejects NUL bytes, and Drizzle puts the failing row into `error.message`.
- * Keep the cause (the short Postgres error) ahead of that query dump, then cap the length.
- * @example
- * lastErrorForStorage(new Error(`invalid byte sequence`))
- */
-function lastErrorForStorage(error: Error) {
-    const cause = error.cause instanceof Error ? error.cause.message : ``
-    const message = cause && !error.message.includes(cause) ? `${cause}\n${error.message}` : error.message
-    return stripDisallowedControls(message).slice(0, lastErrorMaxLength)
-}
-
-/**
  * Processes one configured WhatsApp scraping target and persists state.
  * @example
  * const result = await processScrapingTarget({ target, sqliteDb, s3 })
@@ -1195,16 +1182,12 @@ async function processScrapingTarget(args: {
         const err = error instanceof Error ? error : new Error(String(error))
         console.error(`[whatsapp] Error processing target ${target.chatJid}:`, err)
 
-        try {
-            await db.update(s.whatsappScrapingTargets)
-                .set({
-                    lastError: lastErrorForStorage(err),
-                    lastRunFinishedAt: new Date()
-                })
-                .where(eq(s.whatsappScrapingTargets.chatJid, target.chatJid))
-        } catch (persistError) {
-            console.error(`[whatsapp] Could not store lastError for ${target.chatJid}:`, persistError)
-        }
+        await db.update(s.whatsappScrapingTargets)
+            .set({
+                lastError: err.message,
+                lastRunFinishedAt: new Date()
+            })
+            .where(eq(s.whatsappScrapingTargets.chatJid, target.chatJid))
 
         return { success: false, error: err, target }
     }
