@@ -15,7 +15,6 @@ on:
 jobs:
   scrape-whatsapp:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     environment: production
     concurrency:
       group: whatsapp-scrape
@@ -30,7 +29,7 @@ jobs:
         run: bun install
 
       - name: Install ffmpeg
-        run: sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update && sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: scrape
         env:
