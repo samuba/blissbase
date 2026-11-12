@@ -13,6 +13,7 @@ import { geocodeAddressCached } from "../src/lib/server/google.script.ts"
 import { resizeCoverImage } from "../src/lib/imageProcessing"
 import type { WhatsappScrapingTarget } from "../src/lib/server/schema" 
 import * as assets from "../src/lib/assets"
+import { stripDisallowedControls } from "./common.ts"
 import { extractVideoFrame } from "./extractVideoFrame"
 import { resolveEventImageUrls } from "./ogImageFallback"
 import { knownTagSlugs } from "../src/lib/eventCategories"
@@ -1391,7 +1392,7 @@ function compareTextIds(a: string, b: string) {
 export function normalizeWhatsappHtmlText(value: string | null | undefined) {
     if (!value?.trim()) return ``
 
-    return value
+    return stripDisallowedControls(value)
         // Normalize Windows and old-Mac line endings to plain `\n`.
         .replace(/\r\n?/g, `\n`)
         // Canonicalize all `<br>` tag variants to lowercase `<br>`.

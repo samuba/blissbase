@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { linkify, markdownToHtml } from './common';
+import { cleanProseHtml, linkify, markdownToHtml, stripDisallowedControls, superTrim } from './common';
 
 describe('linkify', () => {
     it('should convert plain URLs to clickable links', () => {
@@ -188,5 +188,36 @@ describe(`markdownToHtml`, () => {
 		const html = markdownToHtml(`Hi <b>there</b> and **bold**`);
 		expect(html).toContain(`<strong>bold</strong>`);
 		expect(html).not.toContain(`<b>there</b>`);
+	});
+});
+
+describe(`stripDisallowedControls`, () => {
+	it(`turns a mangled non-breaking space into a normal space`, () => {
+		expect(stripDisallowedControls(`about\u0000a0being`)).toBe(`about being`);
+		expect(stripDisallowedControls(`Delights\u0000A0is`)).toBe(`Delights is`);
+		expect(stripDisallowedControls(`let yourself\u0000a0express\u0000a0it`)).toBe(`let yourself express it`);
+		expect(stripDisallowedControls(`🍑\u0000a0WHAT`)).toBe(`🍑 WHAT`);
+	});
+
+	it(`drops other NUL bytes and control characters, and keeps tabs and newlines`, () => {
+		expect(stripDisallowedControls(`a\u0000b`)).toBe(`ab`);
+		expect(stripDisallowedControls(`price \u0000a1`)).toBe(`price a1`);
+		expect(stripDisallowedControls(`line\n\tnext\r\n`)).toBe(`line\n\tnext\r\n`);
+		expect(stripDisallowedControls(`a\u0001b\u0008c\u000Bd\u007Fe\u0085f`)).toBe(`abcdef`);
+		expect(stripDisallowedControls(`about\u00A0being`)).toBe(`about\u00A0being`);
+	});
+});
+
+describe(`superTrim`, () => {
+	it(`collapses whitespace after removing a mangled non-breaking space`, () => {
+		expect(superTrim(`about\u0000a0being`)).toBe(`about being`);
+		expect(superTrim(`  line\n\tnext  `)).toBe(`line next`);
+		expect(superTrim(``)).toBeUndefined();
+	});
+});
+
+describe(`cleanProseHtml`, () => {
+	it(`removes a mangled non-breaking space from html`, () => {
+		expect(cleanProseHtml(`<p>about\u0000a0being</p>`)).toBe(`<p>about being</p>`);
 	});
 }); 

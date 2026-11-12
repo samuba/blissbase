@@ -1,5 +1,8 @@
 import type { ScrapedEvent } from "../src/lib/types.ts";
+import { stripDisallowedControls } from "../src/lib/common.ts";
 import * as cheerio from 'cheerio';
+
+export { stripDisallowedControls };
 
 /** Error thrown when a resource is not found (404). This error should not be retried. */
 export class NotFoundError extends Error {
@@ -296,7 +299,7 @@ export function parseGermanDateTime(dateStr: string, timeStr?: string) {
 
 export function superTrim(str: string | undefined | null) {
     if (!str) return undefined;
-    return str.trim().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+    return stripDisallowedControls(str).trim().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
 }
 
 /**
@@ -305,7 +308,7 @@ export function superTrim(str: string | undefined | null) {
 export function cleanProseHtml<T extends string | undefined | null>(html: T): T {
     if (!html) return html;
 
-    const $ = cheerio.load(html);
+    const $ = cheerio.load(stripDisallowedControls(html));
     // Remove styling attributes from all elements
     $('*').removeAttr('style class align id dir');
 

@@ -2,7 +2,7 @@ import { generateText, jsonSchema, NoObjectGeneratedError, NoOutputGeneratedErro
 import { allTagSlugs, type EventStructure } from "../eventCategories";
 import { suggestTagsWithJev } from "./jev/tagQuestions";
 import { WEBSITE_SCRAPE_SOURCE_URLS } from "../commonWithScripts";
-import { rewriteRelativeAnchorHrefs, stripHtml, trimAllWhitespaces } from "../common";
+import { rewriteRelativeAnchorHrefs, stripDisallowedControls, stripHtml, trimAllWhitespaces } from "../common";
 
 const TAG_SLUGS_AI_DESCRIPTION = `Maximum 4 Tags (most relevant first) that describe the event. Only use these exact catalog tags: ${Array.from(allTagSlugs).join(`, `)}.`;
 
@@ -292,7 +292,7 @@ export function normalizeDescription(args: { description: string; name: string |
  * Converts plain-text line breaks to `<br>` but not more than 2 consecutive <br> tags.
  */
 export function lineBreaksToBr(text: string): string {
-	return text
+	return stripDisallowedControls(text)
 		.replace(/\r\n?/g, `\n`)
 		.replaceAll(`\n`, `<br>`)
 		.replace(/<br>(\s*<br>){2,}/g, `<br><br>`);
