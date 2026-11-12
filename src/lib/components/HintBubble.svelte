@@ -79,7 +79,7 @@
 		const sync = () => {
 			const next = node.parentElement;
 			anchor = next;
-			anchorVisible = !!next && next.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+			anchorVisible = !!next && isElementVisible(next);
 		};
 		sync();
 		const desktop = window.matchMedia(`(min-width: 768px)`);
@@ -103,6 +103,21 @@
 		event.stopPropagation();
 		hintSlot.startCooldown();
 		onDismiss();
+	}
+
+	function isElementVisible(el: HTMLElement) {
+		if (typeof el.checkVisibility === `function`) {
+			return el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+		}
+
+		let current: HTMLElement | null = el;
+		while (current) {
+			if (current.hasAttribute(`hidden`)) return false;
+			const style = getComputedStyle(current);
+			if (style.display === `none` || style.visibility === `hidden` || style.opacity === `0`) return false;
+			current = current.parentElement;
+		}
+		return true;
 	}
 
 	function clippingAncestors(node: HTMLElement) {
