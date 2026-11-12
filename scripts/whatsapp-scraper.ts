@@ -5,7 +5,6 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import 'varlock/auto-load'
 import { and, db, eq, s, upsertEvents } from "../src/lib/server/db.script.ts"
-import { sanitizeTextForPostgres } from "../src/lib/server/events.shared.ts"
 import type { InsertEvent } from "../src/lib/types"
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai"
 import { resolveMessengerAnalysis } from "../src/lib/server/jev/messengerCheck"
@@ -14,6 +13,7 @@ import { geocodeAddressCached } from "../src/lib/server/google.script.ts"
 import { resizeCoverImage } from "../src/lib/imageProcessing"
 import type { WhatsappScrapingTarget } from "../src/lib/server/schema" 
 import * as assets from "../src/lib/assets"
+import { stripDisallowedControls } from "./common.ts"
 import { extractVideoFrame } from "./extractVideoFrame"
 import { resolveEventImageUrls } from "./ogImageFallback"
 import { knownTagSlugs } from "../src/lib/eventCategories"
@@ -1132,7 +1132,7 @@ async function processMessages(args: {
 function lastErrorForStorage(error: Error) {
     const cause = error.cause instanceof Error ? error.cause.message : ``
     const message = cause && !error.message.includes(cause) ? `${cause}\n${error.message}` : error.message
-    return sanitizeTextForPostgres(message).slice(0, lastErrorMaxLength)
+    return stripDisallowedControls(message).slice(0, lastErrorMaxLength)
 }
 
 /**
@@ -1409,7 +1409,7 @@ function compareTextIds(a: string, b: string) {
 export function normalizeWhatsappHtmlText(value: string | null | undefined) {
     if (!value?.trim()) return ``
 
-    return value
+    return stripDisallowedControls(value)
         // Normalize Windows and old-Mac line endings to plain `\n`.
         .replace(/\r\n?/g, `\n`)
         // Canonicalize all `<br>` tag variants to lowercase `<br>`.

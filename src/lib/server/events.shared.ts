@@ -21,17 +21,8 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		type EventKey = keyof InsertEvent;
 
 		for (const key in event) {
-			if (!Object.prototype.hasOwnProperty.call(event, key)) continue;
-			const value = event[key as EventKey];
-			if (typeof value === `string`) {
-				(event[key as EventKey] as string) = sanitizeTextForPostgres(value).trim();
-				continue;
-			}
-			if (!Array.isArray(value)) continue;
-			for (let index = 0; index < value.length; index++) {
-				const item = value[index];
-				if (typeof item !== `string`) continue;
-				value[index] = sanitizeTextForPostgres(item).trim();
+			if (Object.prototype.hasOwnProperty.call(event, key) && typeof event[key as EventKey] === `string`) {
+				(event[key as EventKey] as string) = (event[key as EventKey] as string).trim();
 			}
 		}
 
@@ -145,39 +136,6 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 			...getTableColumns(s.events),
 			wasInserted: sql<boolean>`(xmax = 0)::boolean`,
 		});
-}
-
-/**
- * Makes text safe for Postgres `text` / `text[]`.
- * A NUL followed by the letters `a0` is a mangled non-breaking space (U+00A0) and becomes a normal space.
- * Any other NUL is dropped. Other C0/C1 controls are dropped too; tab and newlines stay.
- *
- * @example
- * sanitizeTextForPostgres(`about\u0000a0being`)
- */
-export function sanitizeTextForPostgres(value: string) {
-	let sanitized = ``;
-	for (let index = 0; index < value.length; index++) {
-		const code = value.charCodeAt(index);
-		if (code === 0) {
-			const hexDigit = value[index + 1];
-			const zero = value[index + 2];
-			if ((hexDigit === `a` || hexDigit === `A`) && zero === `0`) {
-				sanitized += ` `;
-				index += 2;
-			}
-			continue;
-		}
-		if (isDisallowedPostgresControl(code)) continue;
-		sanitized += value[index];
-	}
-	return sanitized;
-}
-
-function isDisallowedPostgresControl(code: number) {
-	if (code === 9 || code === 10 || code === 13) return false;
-	if (code < 32) return true;
-	return code >= 127 && code <= 159;
 }
 
 /**
