@@ -112,7 +112,7 @@
 
 		let current: HTMLElement | null = el;
 		while (current) {
-			if (current.hasAttribute(`hidden`)) return false;
+			if (current.hidden) return false;
 			const style = getComputedStyle(current);
 			if (style.display === `none` || style.visibility === `hidden` || style.opacity === `0`) return false;
 			current = current.parentElement;
