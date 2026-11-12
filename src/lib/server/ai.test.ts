@@ -5,6 +5,7 @@ import {
 	ensureAddressIncludesCity,
 	getExistingSource,
 	keptExtractionFields,
+	lineBreaksToBr,
 	normalizeDescription,
 } from "./ai";
 
@@ -72,6 +73,11 @@ Join us for a WhatsApp-only event.`,
 		});
 
 		expect(result).toBe(`Line 1<br>Line 2<br><br>Line 3`);
+	});
+
+	it(`turns a mangled non-breaking space into a space before converting line breaks`, () => {
+		expect(lineBreaksToBr(`about\u0000a0being\nstill here`)).toBe(`about being<br>still here`);
+		expect(lineBreaksToBr(`a\u0000b`)).toBe(`ab`);
 	});
 
 	it(`preserves already encoded entities and strips broader trailing punctuation`, () => {

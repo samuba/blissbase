@@ -1,5 +1,8 @@
 import type { ScrapedEvent } from "../src/lib/types.ts";
+import { stripDisallowedControls } from "../src/lib/common.ts";
 import * as cheerio from 'cheerio';
+
+export { stripDisallowedControls };
 
 /** Error thrown when a resource is not found (404). This error should not be retried. */
 export class NotFoundError extends Error {
@@ -292,30 +295,6 @@ export function parseGermanDateTime(dateStr: string, timeStr?: string) {
         console.error(`Error generating ISO string from ${dateStr} ${timeStr}:`, error);
         return undefined;
     }
-}
-
-/**
- * Drops characters Postgres text cannot store, without collapsing normal whitespace.
- * A NUL followed by the letters `a0` is a mangled non-breaking space and becomes a normal space.
- * Tabs and newlines stay. `superTrim` and the HTML prep functions run this first.
- */
-export function stripDisallowedControls(value: string) {
-    let sanitized = ``;
-    for (let index = 0; index < value.length; index++) {
-        const code = value.charCodeAt(index);
-        if (code === 0) {
-            const hexDigit = value[index + 1];
-            const zero = value[index + 2];
-            if ((hexDigit === `a` || hexDigit === `A`) && zero === `0`) {
-                sanitized += ` `;
-                index += 2;
-            }
-            continue;
-        }
-        if (code !== 9 && code !== 10 && code !== 13 && (code < 32 || (code >= 127 && code <= 159))) continue;
-        sanitized += value[index];
-    }
-    return sanitized;
 }
 
 export function superTrim(str: string | undefined | null) {

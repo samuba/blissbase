@@ -336,6 +336,33 @@ export function stripHtml(html: string | undefined) {
 }
 
 /**
+ * Drops characters Postgres text cannot store, without collapsing normal whitespace.
+ * A NUL followed by the letters `a0` is a mangled non-breaking space and becomes a normal space.
+ * Tabs and newlines stay.
+ *
+ * @example
+ * stripDisallowedControls(`about\u0000a0being`)
+ */
+export function stripDisallowedControls(value: string) {
+	let sanitized = ``;
+	for (let index = 0; index < value.length; index++) {
+		const code = value.charCodeAt(index);
+		if (code === 0) {
+			const hexDigit = value[index + 1];
+			const zero = value[index + 2];
+			if ((hexDigit === `a` || hexDigit === `A`) && zero === `0`) {
+				sanitized += ` `;
+				index += 2;
+			}
+			continue;
+		}
+		if (code !== 9 && code !== 10 && code !== 13 && (code < 32 || (code >= 127 && code <= 159))) continue;
+		sanitized += value[index];
+	}
+	return sanitized;
+}
+
+/**
  * Ensures an href is absolute. Bare host-like values get `https://`.
  * Leaves mailto:, tel:, tg://, http(s)://, and site-relative `/` `#` `?` alone.
  *
