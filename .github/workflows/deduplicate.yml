@@ -1,6 +1,11 @@
 name: Deduplicate
 
 on:
+  schedule:
+    # 05:00 UTC = 06:00 Europe/Rome in winter, 07:00 in summer.
+    # Website/Telegram/WhatsApp scrapes start at 00:00, 08:00, 12:00 and 16:00 UTC.
+    # Old-unlisted cleanup is 01:00 UTC. This stays out of those windows.
+    - cron: '0 5 * * *'
   workflow_dispatch: # Allows manual triggering
     inputs:
       params:
@@ -12,7 +17,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    environment: Production
+    environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -28,4 +33,8 @@ jobs:
       - name: Remove duplicates
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
         run: bun run scripts/remove-duplicates.ts ${{ github.event.inputs.params }}

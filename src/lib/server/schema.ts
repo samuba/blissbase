@@ -26,42 +26,55 @@ export type OfferingFormat = (typeof offeringFormatEnum.enumValues)[number];
 export const eventStructureEnum = pgEnum("event_structure", eventStructureSlugs as [string, ...string[]]);
 export type EventStructure = (typeof eventStructureEnum.enumValues)[number];
 
-export const events = pgTable("events", {
-	id: integer().primaryKey().generatedAlwaysAsIdentity(),
-	name: text().notNull(),
-	startAt: timestamp().notNull(),
-	endAt: timestamp(),
-	timezone: text(),
-	address: text().notNull().array(),
-	addressNote: text(),
-	price: text(),
-	priceIsHtml: boolean().notNull().default(false),
-	description: text(),
-	descriptionOriginal: text(),
-	imageUrls: text().notNull().array(),
-	host: text(),
-	hostLink: text(),
-	sourceUrl: text(),
-	contact: text().array().default([]).notNull(),
-	latitude: real(),
-	longitude: real(),
-	tagSlugs: text().array().notNull().default([]),
-	source: text().notNull(),
-	createdAt: timestamp().notNull().defaultNow(),
-	updatedAt: timestamp().notNull().defaultNow(),
-	messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
-	slug: text().notNull().unique(),
-	soldOut: boolean().notNull().default(false),
-	listed: boolean().notNull().default(true),
-	sourceChatIdsTelegram: text().array(),
-	sourceChatIdsWhatsapp: text().array(),
-	hostSecret: text(),
-	attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
-	structure: eventStructureEnum(),
-	language: text(),
-	authorId: uuid().references(() => profiles.id, { onDelete: "cascade" }),
-	spotlight: text(),
-});
+export const events = pgTable(
+	"events",
+	{
+		id: integer().primaryKey().generatedAlwaysAsIdentity(),
+		name: text().notNull(),
+		startAt: timestamp().notNull(),
+		endAt: timestamp(),
+		timezone: text(),
+		address: text().notNull().array(),
+		addressNote: text(),
+		price: text(),
+		priceIsHtml: boolean().notNull().default(false),
+		description: text(),
+		descriptionOriginal: text(),
+		imageUrls: text().notNull().array(),
+		host: text(),
+		hostLink: text(),
+		sourceUrl: text(),
+		contact: text().array().default([]).notNull(),
+		latitude: real(),
+		longitude: real(),
+		tagSlugs: text().array().notNull().default([]),
+		source: text().notNull(),
+		createdAt: timestamp().notNull().defaultNow(),
+		updatedAt: timestamp().notNull().defaultNow(),
+		messageSenderId: text(), // messenger id of the user that sent this event via messenger, eg telegram.
+		slug: text().notNull().unique(),
+		soldOut: boolean().notNull().default(false),
+		listed: boolean().notNull().default(true),
+		sourceChatIdsTelegram: text().array(),
+		sourceChatIdsWhatsapp: text().array(),
+		hostSecret: text(),
+		attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
+		structure: eventStructureEnum(),
+		language: text(),
+		authorId: uuid().references(() => profiles.id, { onDelete: "cascade" }),
+		spotlight: text(),
+	},
+	(t) => [
+		// fetchEvents always equality-filters listed, then ranges on start_at or end_at.
+		// Btree uses columns after a range poorly, so the equality column stays first.
+		index("events_listed_start_at_idx").on(t.listed, t.startAt),
+		index("events_listed_end_at_idx")
+			.on(t.listed, t.endAt)
+			.where(sql`${t.endAt} is not null`),
+		index("events_source_idx").on(t.source),
+		index("events_author_id_idx").on(t.authorId),
+	],
+);
 
 export type SelectEvent = typeof events.$inferSelect;
 
@@ -245,7 +258,7 @@ export const favorites = pgTable(
 			.references(() => events.id, { onDelete: "cascade" }),
 		createdAt: timestamp().notNull().defaultNow(),
 	},
-	(t) => [primaryKey({ columns: [t.userId, t.eventId] })],
+	(t) => [primaryKey({ columns: [t.userId, t.eventId] }), index("favorites_event_id_idx").on(t.eventId)],
 );
 
 export const eventDeletedOutboxStatusEnum = pgEnum("event_deleted_outbox_status", ["pending", "done", "failed"]);

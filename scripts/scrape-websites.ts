@@ -38,6 +38,7 @@ import { evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type Scr
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
+import { imageCacheMapKey, loadImageCacheByKeys, lookupImageCacheRows } from './imageCacheLookup.ts';
 
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
 const errorsLoggedByStream = new WeakMap<WriteStream, number>();
@@ -362,18 +363,6 @@ async function main() {
         const IMAGE_CACHE_CONCURRENCY = 5;
         console.log('Starting image caching...');
         const startTime = Date.now();
-        const alreadyCachedImages = await db
-            .select({
-                originalUrl: s.imageCacheMap.originalUrl,
-                eventSlug: s.imageCacheMap.eventSlug,
-                url: s.imageCacheMap.url,
-            })
-            .from(s.imageCacheMap);
-        console.log("images in imageCacheMap table", alreadyCachedImages.length);
-
-        const cacheByKey = new Map(
-            alreadyCachedImages.map((entry) => [`${entry.eventSlug}\0${entry.originalUrl}`, entry.url] as const),
-        );
         const assetCreds = assets.loadCreds();
         const totalImageCount = events.reduce((sum, event) => sum + (event.imageUrls?.length ?? 0), 0);
         let processedImageCount = 0;
@@ -393,6 +382,12 @@ async function main() {
             }
         }
 
+        const cacheByKey = await loadImageCacheByKeys({
+            keys: jobs.map((job) => ({ originalUrl: job.originalUrl, eventSlug: job.event.slug })),
+            lookup: (keys) => lookupImageCacheRows({ db, keys }),
+        });
+        console.log("image cache key lookups", jobs.length, "hits", cacheByKey.size);
+
         // slot results back into each event while preserving original order
         const resultsByEvent = new Map<(typeof events)[number], (string | undefined)[]>();
         for (const event of events) {
@@ -405,7 +400,7 @@ async function main() {
             const eventResults = resultsByEvent.get(job.event);
             if (!eventResults) return;
 
-            const cacheKey = `${job.event.slug}\0${job.originalUrl}`;
+            const cacheKey = imageCacheMapKey({ eventSlug: job.event.slug, originalUrl: job.originalUrl });
             const cachedUrl = cacheByKey.get(cacheKey);
             if (cachedUrl) {
                 eventResults[job.index] = cachedUrl;
