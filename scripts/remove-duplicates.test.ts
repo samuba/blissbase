@@ -1,5 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
-import { findImageHashDuplicatePairs, getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
+import { db, s } from '#lib/server/db.ts';
+import { findImageHashDuplicatePairs, getDuplicateEventsByTextSimilarity, getFormCreatedDeduplicationPlan, getMergedSourceUrl, preparePreferredSourceEventUpdate, processDuplicates } from './remove-duplicates.ts';
 
 describe(`processDuplicates`, () => {
     it(`skips stale duplicate pairs and keeps the latest survivor state`, async () => {
@@ -179,6 +181,75 @@ describe(`findImageHashDuplicatePairs`, () => {
         warnSpy.mockRestore();
     });
 });
+
+describe(`getDuplicateEventsByTextSimilarity`, () => {
+    const source = `dedupe-text-test`;
+
+    beforeEach(async () => {
+        await db.delete(s.events).where(eq(s.events.source, source));
+    });
+
+    it(`compares descriptions only for events that share a start time inside the lookback`, async () => {
+        const upcomingStart = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+        const recentStart = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+        const oldStart = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
+        const otherUpcomingStart = new Date(upcomingStart.getTime() + 60 * 60 * 1000);
+        const sameDescription = `Morning breathwork and cacao ceremony by the lake with live music`;
+
+        const inserted = await db.insert(s.events).values([
+            textSimilarityEvent({ source, slug: `dedupe-upcoming-a`, startAt: upcomingStart, description: sameDescription }),
+            textSimilarityEvent({ source, slug: `dedupe-upcoming-b`, startAt: upcomingStart, description: sameDescription }),
+            textSimilarityEvent({ source, slug: `dedupe-upcoming-other`, startAt: otherUpcomingStart, description: sameDescription }),
+            textSimilarityEvent({ source, slug: `dedupe-upcoming-unlike`, startAt: upcomingStart, description: `Quarterly spreadsheet training for invoice reconciliation` }),
+            textSimilarityEvent({ source, slug: `dedupe-recent-a`, startAt: recentStart, description: sameDescription }),
+            textSimilarityEvent({ source, slug: `dedupe-recent-b`, startAt: recentStart, description: sameDescription }),
+            textSimilarityEvent({ source, slug: `dedupe-old-a`, startAt: oldStart, description: sameDescription }),
+            textSimilarityEvent({ source, slug: `dedupe-old-b`, startAt: oldStart, description: sameDescription }),
+            textSimilarityEvent({ source, slug: `dedupe-upcoming-blank`, startAt: upcomingStart, description: null }),
+        ]).returning({ id: s.events.id, slug: s.events.slug });
+
+        const idBySlug = new Map(inserted.map((row) => [row.slug, row.id]));
+        const duplicates = await getDuplicateEventsByTextSimilarity({
+            descriptionSimilarityThreshold: 0.5,
+            database: db,
+        });
+        const ownIds = new Set(inserted.map((row) => row.id));
+        const ownPairs = duplicates.filter((duplicate) => ownIds.has(duplicate.eventAId) && ownIds.has(duplicate.eventBId));
+        const pairKeys = ownPairs.map((duplicate) => [duplicate.eventAId, duplicate.eventBId].sort((a, b) => a - b).join(`:`));
+
+        expect(pairKeys).toEqual(expect.arrayContaining([
+            pairKey(idBySlug, `dedupe-upcoming-a`, `dedupe-upcoming-b`),
+            pairKey(idBySlug, `dedupe-recent-a`, `dedupe-recent-b`),
+        ]));
+        expect(pairKeys).toHaveLength(2);
+        expect(ownPairs.every((duplicate) => duplicate.dist >= 0.5)).toBe(true);
+        expect(ownPairs[0]?.dist).toBeGreaterThanOrEqual(ownPairs[1]?.dist ?? 0);
+    });
+});
+
+function textSimilarityEvent(args: {
+    source: string,
+    slug: string,
+    startAt: Date,
+    description: string | null,
+}) {
+    return {
+        name: `Dedupe text test`,
+        startAt: args.startAt,
+        address: [`Berlin`],
+        imageUrls: [`https://example.com/${args.slug}.webp`],
+        source: args.source,
+        slug: args.slug,
+        description: args.description,
+    };
+}
+
+function pairKey(idBySlug: Map<string, number>, slugA: string, slugB: string) {
+    const idA = idBySlug.get(slugA);
+    const idB = idBySlug.get(slugB);
+    if (idA == null || idB == null) throw new Error(`missing inserted event`);
+    return [idA, idB].sort((a, b) => a - b).join(`:`);
+}
 
 type TestEvent = {
     id: number,

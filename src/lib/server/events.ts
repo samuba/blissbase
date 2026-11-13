@@ -123,7 +123,10 @@ export async function fetchEvents(params: LoadEventsParams) {
 		isHistoricalRange ? undefined : stillRelevantCondition,
 	);
 	const dateCondition = or(startsInRange, endsInRange, spansRange);
-	const allConditions = [and(s.events.listed), dateCondition];
+	// Already implied by stillRelevantCondition (maxElapsed caps at 32h). Repeated outside the OR so Postgres can bound
+	// the (listed, start_at) index scan; otherwise ORDER BY start_at LIMIT walks every past listed event first.
+	const relevantStartBound = isHistoricalRange ? undefined : gte(s.events.startAt, new Date(relevanceAt.getTime() - 32 * 60 * 60 * 1000));
+	const allConditions = [and(s.events.listed), dateCondition, relevantStartBound];
 
 	if (source) {
 		allConditions.push(eq(s.events.source, source));

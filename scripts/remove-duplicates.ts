@@ -1,8 +1,10 @@
 import { alias } from 'drizzle-orm/pg-core';
 import {
     db, s, sql, and, lt, eq, isNotNull, gte,
-    inArray
+    inArray,
+    type SQL,
 } from '../src/lib/server/db.script.ts';
+import type { DB } from '../src/lib/server/db.shared.ts';
 import { deduplicateItems } from '../src/lib/common';
 import { WEBSITE_SCRAPE_SOURCES, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts';
 import { calculateHammingDistance } from '../src/lib/imageProcessing';
@@ -18,7 +20,7 @@ export async function main() {
         mergeDuplicateEvents: mergeEvents,
     });
 
-    const textDuplicates = await getDuplicateEventsByTextSimilarity(0.5);
+    const textDuplicates = await getDuplicateEventsByTextSimilarity({ descriptionSimilarityThreshold: 0.5 });
     deletedCount += await processDuplicates({
         duplicates: textDuplicates,
         eventsWithSameStart,
@@ -351,15 +353,21 @@ export function getMergedSourceUrl(args: {
 }
 
 /**
- * Returns all events grouped by startAt, only including groups with more than one event.
- * Each group is an object: { startAt: Date, events: Event[] }
+ * Returns events grouped by startAt, only including groups with more than one event.
+ * Pass startAtOnOrAfter to ignore older rows (text similarity). Image-hash dedupe does not.
  */
-async function getEventsGroupedByStartAtWithDuplicates() {
-    // Get all events, grouped by startAt, where there is more than one event per startAt
+async function getEventsGroupedByStartAtWithDuplicates(args?: {
+    database?: DB,
+    startAtOnOrAfter?: SQL,
+}) {
+    const database = args?.database ?? db;
+    const windowFilter = args?.startAtOnOrAfter ? gte(s.events.startAt, args.startAtOnOrAfter) : undefined;
+
     // 1. Find all startAt values with more than one event
-    const duplicateStartAts = await db
+    const duplicateStartAtsQuery = database
         .select({ startAt: s.events.startAt })
-        .from(s.events)
+        .from(s.events);
+    const duplicateStartAts = await (windowFilter ? duplicateStartAtsQuery.where(windowFilter) : duplicateStartAtsQuery)
         .groupBy(s.events.startAt)
         .having(sql`count(*) > 1`);
 
@@ -368,11 +376,10 @@ async function getEventsGroupedByStartAtWithDuplicates() {
     // 2. For each duplicate startAt, fetch all events with that startAt
     const startAtValues = duplicateStartAts.map(row => row.startAt);
 
-    // Fetch all events with those startAt values
-    const events = await db
-        .select()
-        .from(s.events)
-        .where(inArray(s.events.startAt, startAtValues));
+    const eventsQuery = database.select().from(s.events);
+    const events = await (windowFilter
+        ? eventsQuery.where(and(inArray(s.events.startAt, startAtValues), windowFilter))
+        : eventsQuery.where(inArray(s.events.startAt, startAtValues)));
 
     // Group events by startAt
     const grouped: Record<string, typeof events> = {};
@@ -389,7 +396,30 @@ async function getEventsGroupedByStartAtWithDuplicates() {
     }));
 }
 
-async function getDuplicateEventsByTextSimilarity(descriptionSimilarityThreshold): Promise<Awaited<ReturnType<typeof getDuplicateEventsByImageHash>>['duplicates']> {
+/** Upcoming events plus this much recent history. Older rows are not text-compared. */
+export const textSimilarityLookback = `7 days`;
+
+function textSimilarityStartAtCutoff() {
+    return sql`now() - interval '${sql.raw(textSimilarityLookback)}'`;
+}
+
+/**
+ * Description similarity only among events that share a startAt inside the lookback window.
+ * Same threshold, pair direction (lower id first), and similarity() as before.
+ * Historical rows outside the window are left alone.
+ */
+export async function getDuplicateEventsByTextSimilarity(args: {
+    descriptionSimilarityThreshold: number,
+    database?: DB,
+}): Promise<Awaited<ReturnType<typeof getDuplicateEventsByImageHash>>['duplicates']> {
+    const database = args.database ?? db;
+    const groups = await getEventsGroupedByStartAtWithDuplicates({
+        database,
+        startAtOnOrAfter: textSimilarityStartAtCutoff(),
+    });
+    const eventIds = groups.flatMap((group) => group.events.map((event) => event.id));
+    if (eventIds.length < 2) return [];
+
     const event_b = alias(s.events, 'b');
     const description_coal = sql<string>`coalesce(${s.events.description}, '')`;
     // const slug_coal = sql`coalesce(${s.events.slug}, '')`;
@@ -397,7 +427,7 @@ async function getDuplicateEventsByTextSimilarity(descriptionSimilarityThreshold
     // const event_b_slug_coal = sql`coalesce(${event_b.slug}, '')`;
     // const slug_similarity = sql<number>`similarity(${slug_coal}, ${event_b_slug_coal}) * 0.5`; // nerf slug, cuz its not as important as description
     const desc_similarity = sql<number>`similarity(${description_coal}, ${event_b_description_coal})`//.as('desc_similarity');
-    const duplicates = await db
+    const duplicates = await database
         .select({
             id_a: s.events.id,
             url_a: sql`'https://blissbase.app/' || ${s.events.slug}`,
@@ -417,14 +447,18 @@ async function getDuplicateEventsByTextSimilarity(descriptionSimilarityThreshold
         .innerJoin(event_b,
             and(
                 lt(s.events.id, event_b.id),
-                eq(s.events.startAt, event_b.startAt)
+                eq(s.events.startAt, event_b.startAt),
+                inArray(s.events.id, eventIds),
+                inArray(event_b.id, eventIds),
             )
         )
         .where(
             and(
+                gte(s.events.startAt, textSimilarityStartAtCutoff()),
+                gte(event_b.startAt, textSimilarityStartAtCutoff()),
                 isNotNull(s.events.description),
                 isNotNull(event_b.description),
-                gte(desc_similarity, descriptionSimilarityThreshold),
+                gte(desc_similarity, args.descriptionSimilarityThreshold),
             )
         )
         .orderBy(
