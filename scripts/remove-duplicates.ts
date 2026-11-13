@@ -33,10 +33,6 @@ export async function main() {
     process.exit(0);
 }
 
-if (import.meta.main) {
-    await main();
-}
-
 async function getDuplicateEventsByImageHash(hammingDistanceThreshold: number) {
     const duplicates: {
         dist: number,
@@ -589,3 +585,7 @@ type FormCreatedDeduplicationPlan<TEvent> =
         eventToSurvive: TEvent,
         eventToDelete: TEvent,
     };
+
+if (import.meta.main) {
+    await main();
+}
