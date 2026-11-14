@@ -9,8 +9,11 @@ import {
 	getPrice,
 	getStartAt,
 	getTags,
+	BROWSER_SESSION_OPTIONS,
+	LISTING_URL,
 	mapMiteinanderseinEvent,
 	parseCliArgs,
+	toFetchUrl,
 } from './scrape-miteinandersein.ts';
 
 const listingHtml = `
@@ -86,6 +89,20 @@ const offlineHtml = `<!doctype html>
 <div class="col-1"><i class="bi bi-cash" aria-hidden="true"></i></div>
 <div class="col-11">730,00 – 795,00 &euro;</div>
 </body></html>`;
+
+describe(`request pacing`, () => {
+	it(`keeps at least 3s between requests and fetches the apex host`, () => {
+		expect(BROWSER_SESSION_OPTIONS.minGapMs).toBeGreaterThanOrEqual(3000);
+		expect(BROWSER_SESSION_OPTIONS.maxGapMs).toBeGreaterThanOrEqual(BROWSER_SESSION_OPTIONS.minGapMs);
+		expect(LISTING_URL).toBe(`https://miteinandersein.net/events/`);
+		expect(toFetchUrl(`https://www.miteinandersein.net/events/24994/`)).toBe(
+			`https://miteinandersein.net/events/24994/`,
+		);
+		expect(toFetchUrl(`https://miteinandersein.net/events/25507/`)).toBe(
+			`https://miteinandersein.net/events/25507/`,
+		);
+	});
+});
 
 describe(`extractEventUrls`, () => {
 	it(`keeps numeric event detail URLs only`, () => {

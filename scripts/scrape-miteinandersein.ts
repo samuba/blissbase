@@ -13,23 +13,34 @@ import type { ScrapedEvent } from '../src/lib/types.ts';
 import {
 	WebsiteScraperInterface,
 	cleanProseHtml,
-	customFetch,
 	dateToIsoStr,
 	isTimeoutError,
 	makeAbsoluteUrl,
 	sleep,
 	superTrim,
 } from './common.ts';
+import { BrowserSession } from './browserSession.ts';
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
+/** Stored links stay on www so existing source URLs do not change. */
 const SITE_BASE = `https://www.miteinandersein.net`;
-const LISTING_URL = `${SITE_BASE}/events/`;
+/**
+ * www 301s to the apex host. BrowserSession follows that hop immediately, outside
+ * its request gap, so every fetch uses the apex URL.
+ */
+const FETCH_ORIGIN = `https://miteinandersein.net`;
+export const LISTING_URL = `${FETCH_ORIGIN}/events/`;
 const DEFAULT_TIMEZONE = `Europe/Berlin` as const;
 const SOURCE = `miteinandersein` as const;
-/** One at a time — small site; avoid hammering detail pages. */
-const DETAIL_CONCURRENCY = 1;
-/** GHA IPs get 429 after ~40 requests at ~1.2s spacing; stay well under that. */
-const DETAIL_DELAY_MS = 3000;
+/**
+ * GitHub-hosted IPs were 429'd after ~40 requests at ~1.2s spacing.
+ * BrowserSession's default 900–2400ms jitter is below that floor.
+ */
+export const BROWSER_SESSION_OPTIONS = {
+	acceptLanguage: `de-DE,de;q=0.9,en;q=0.8`,
+	minGapMs: 3_000,
+	maxGapMs: 4_500,
+} as const;
 const SOFT_BLOCK_COOLDOWN_MS = 60_000;
 const MAX_CONSECUTIVE_SOFT_BLOCKS = 5;
 
@@ -39,36 +50,41 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		console.error(
 			`Fetching MiteinanderSein event listing${resolvedLimit ? ` (limit ${resolvedLimit})` : ``}...`,
 		);
-		let listingHtml: string;
+
+		// The session queue is the only pacing. An extra sleep here would double the gap.
+		const session = new BrowserSession(BROWSER_SESSION_OPTIONS);
 		try {
-			listingHtml = await customFetch(LISTING_URL, { returnType: `text` });
-		} catch (error) {
-			console.error(`Failed to fetch listing:`, error);
-			return [];
-		}
+			let listingHtml: string;
+			try {
+				listingHtml = await session.visit({ url: toFetchUrl(LISTING_URL) });
+			} catch (error) {
+				console.error(`Failed to fetch listing:`, error);
+				return [];
+			}
 
-		const allUrls = extractEventUrls(listingHtml);
-		const urls = resolvedLimit ? allUrls.slice(0, resolvedLimit) : allUrls;
-		console.error(
-			`Found ${allUrls.length} event URLs${resolvedLimit ? `, fetching ${urls.length}` : ``}. Loading detail pages...`,
-		);
+			const allUrls = extractEventUrls(listingHtml);
+			const urls = resolvedLimit ? allUrls.slice(0, resolvedLimit) : allUrls;
+			console.error(
+				`Found ${allUrls.length} event URLs${resolvedLimit ? `, fetching ${urls.length}` : ``}. Loading detail pages...`,
+			);
 
-		let consecutiveSoftBlocks = 0;
-		let abortRemaining = false;
+			let consecutiveSoftBlocks = 0;
+			const events: ScrapedEvent[] = [];
 
-		const results = await mapWithConcurrency({
-			items: urls,
-			concurrency: DETAIL_CONCURRENCY,
-			mapper: async (url) => {
-				if (abortRemaining) return undefined;
+			for (const url of urls) {
+				if (consecutiveSoftBlocks >= MAX_CONSECUTIVE_SOFT_BLOCKS) break;
 
 				try {
-					const html = await customFetch(url, { returnType: `text` });
+					const html = await session.visit({
+						url: toFetchUrl(url),
+						referer: LISTING_URL,
+					});
 					consecutiveSoftBlocks = 0;
-					return await this.extractEventData(html, url);
+					const event = await this.extractEventData(html, url);
+					if (event) events.push(event);
 				} catch (error) {
 					console.error(`Failed to process ${url}:`, error);
-					if (!isSoftBlockError(error)) return undefined;
+					if (!isSoftBlockError(error)) continue;
 
 					consecutiveSoftBlocks += 1;
 					const pauseMs = Math.min(SOFT_BLOCK_COOLDOWN_MS * consecutiveSoftBlocks, 180_000);
@@ -81,21 +97,16 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 						console.error(
 							`Stopping detail fetches after ${consecutiveSoftBlocks} consecutive soft blocks.`,
 						);
-						abortRemaining = true;
 					}
-					return undefined;
 				}
-			},
-		});
+			}
 
-		const events: ScrapedEvent[] = [];
-		for (const event of results) {
-			if (!event) continue;
-			events.push(event);
+			console.error(`--- Scraping finished. Total events collected: ${events.length} ---`);
+			console.error(`Requests sent: ${session.requestCount}`);
+			return events;
+		} finally {
+			await session.close();
 		}
-
-		console.error(`--- Scraping finished. Total events collected: ${events.length} ---`);
-		return events;
 	}
 
 	async scrapeHtmlFiles(filePaths: string[]): Promise<ScrapedEvent[]> {
@@ -664,33 +675,19 @@ function inferFileUrl(filePath: string): string {
 	return filePath;
 }
 
+/** Rewrite the www host to the apex origin so fetches do not 301. */
+export function toFetchUrl(url: string): string {
+	const parsed = new URL(url, FETCH_ORIGIN);
+	const host = parsed.hostname.toLowerCase();
+	if (host !== `miteinandersein.net` && host !== `www.miteinandersein.net`) return url;
+	parsed.protocol = `https:`;
+	parsed.hostname = `miteinandersein.net`;
+	return parsed.toString();
+}
+
 function isSoftBlockError(error: unknown): boolean {
 	if (isTimeoutError(error)) return true;
 	return error instanceof Error && error.message.includes(`429`);
-}
-
-async function mapWithConcurrency<T, R>(args: {
-	items: T[];
-	concurrency: number;
-	mapper: (item: T) => Promise<R>;
-}): Promise<R[]> {
-	const { items, concurrency, mapper } = args;
-	if (!items?.length) return [];
-
-	const results: R[] = new Array(items.length);
-	let nextIndex = 0;
-
-	async function worker() {
-		while (nextIndex < items.length) {
-			const index = nextIndex;
-			nextIndex += 1;
-			results[index] = await mapper(items[index]);
-			if (nextIndex < items.length) await sleep(DETAIL_DELAY_MS);
-		}
-	}
-
-	await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
-	return results;
 }
 
 export function parseCliArgs(argv = process.argv.slice(2)): { limit?: number; files: string[] } {
