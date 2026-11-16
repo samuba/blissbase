@@ -12,8 +12,8 @@
 # previous binary is kept as whatsapp2sqlite.prev and the new one is moved
 # into place.
 #
-# First adoption of an existing directory requires --migrate. That flag does
-# not delete anything; it only acknowledges the directory already has files.
+# An existing directory is adopted in place. That does not delete anything;
+# untracked and runtime files stay where they are.
 #
 # Test hooks (do not set these on the server):
 #   WHATSAPP2SQLITE_REPO_URL    clone this URL instead of `gh repo clone blissbase`
@@ -25,8 +25,8 @@ set -euo pipefail
 
 # From a Mac, send this script to the Linux host and run it there.
 # The server executes this copy, not whatever deploy script is already installed.
-# `--` after -s keeps script args (such as --migrate) from being parsed as bash options.
-# `bash -s --migrate` fails with: bash: --: invalid option.
+# `--` after -s keeps script args from being parsed as bash options.
+# A leading-dash word such as --help is otherwise: bash: --: invalid option.
 if [ "$(uname -s)" = "Darwin" ]; then
     printf '%s\n' "Running deploy on remote server..."
     # shellcheck disable=SC2029
@@ -39,7 +39,6 @@ REPO_URL="${WHATSAPP2SQLITE_REPO_URL:-}"
 TARGET_DIR="${WHATSAPP2SQLITE_TARGET_DIR:-$HOME/whatsapp2sqlite}"
 CLONE_DIR="${WHATSAPP2SQLITE_CLONE_DIR:-$HOME/.local/share/blissbase-whatsapp2sqlite}"
 SYSTEMD_USER_DIR="${WHATSAPP2SQLITE_SYSTEMD_DIR:-$HOME/.config/systemd/user}"
-MIGRATE=0
 BRANCH=""
 TEMPS=()
 LAST_TEMP=""
@@ -76,11 +75,7 @@ die() {
 
 usage() {
     cat <<'EOF'
-Usage: deployWhatsapp2Sqlite.sh [--migrate] [branch]
-
-  --migrate   Required the first time ~/whatsapp2sqlite already has files
-              and no deploy clone exists. Keeps every untracked file.
-              Does not delete anything.
+Usage: deployWhatsapp2Sqlite.sh [branch]
 
   branch      Remote branch to deploy. Default: the repository default branch.
 
@@ -151,10 +146,6 @@ make_temp() {
 parse_args() {
     while [ "$#" -gt 0 ]; do
         case "$1" in
-            --migrate)
-                MIGRATE=1
-                shift
-                ;;
             --help|-h)
                 usage
                 exit 0
@@ -295,21 +286,6 @@ target_nonempty() {
     [ -d "$TARGET_DIR" ] || return 1
     found=$(find "$TARGET_DIR" -mindepth 1 -print -quit)
     [ -n "$found" ]
-}
-
-require_migrate_if_legacy() {
-    if [ "$MIGRATE" -eq 1 ]; then
-        if target_nonempty; then
-            log_info "Adopting existing directory $TARGET_DIR"
-            log_info "Untracked files stay in place. This script does not delete files there."
-        else
-            log_info "--migrate set and $TARGET_DIR is empty or missing"
-        fi
-        return 0
-    fi
-    if target_nonempty && [ ! -d "$CLONE_DIR/.git" ]; then
-        die "Existing installation at $TARGET_DIR has files, and there is no deploy clone yet. Nothing was changed or deleted. Re-run with --migrate to adopt it in place: deployWhatsapp2Sqlite.sh --migrate"
-    fi
 }
 
 verify_origin() {
@@ -816,7 +792,12 @@ main() {
     log_info "Runtime directory: $TARGET_DIR"
     log_info "Deploy clone: $CLONE_DIR"
 
-    require_migrate_if_legacy
+    # No clone yet: keep the live directory and copy tracked files onto it.
+    # ensure_clone only creates the sparse clone; it does not touch TARGET_DIR.
+    if target_nonempty && [ ! -e "$CLONE_DIR" ]; then
+        log_info "Adopting existing directory $TARGET_DIR"
+        log_info "Untracked files stay in place. This script does not delete files there."
+    fi
     ensure_clone
     update_clone
     assert_runtime_gitignored
