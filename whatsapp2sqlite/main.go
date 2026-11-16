@@ -2076,12 +2076,26 @@ func (d *daemon) backfillContactDisplayNames(ctx context.Context) error {
 	}
 	defer rows.Close()
 
+	// Copy the JIDs, then close the cursor before any contact or LID lookup.
+	// Those lookups use this same SQLite pool (one connection). Querying while
+	// the rows are open deadlocks the pool, and WhatsApp node handling waits
+	// on that connection until the process restarts.
+	chatJIDs := make([]string, 0)
 	for rows.Next() {
 		var chatJIDValue string
 		if err := rows.Scan(&chatJIDValue); err != nil {
 			return fmt.Errorf("scan chat missing display name: %w", err)
 		}
+		chatJIDs = append(chatJIDs, chatJIDValue)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate chats missing display names: %w", err)
+	}
+	if err := rows.Close(); err != nil {
+		return fmt.Errorf("close chats missing display names: %w", err)
+	}
 
+	for _, chatJIDValue := range chatJIDs {
 		chatJID, err := types.ParseJID(chatJIDValue)
 		if err != nil {
 			log.Printf("skip contact display name backfill for %q: %v", chatJIDValue, err)
@@ -2104,10 +2118,6 @@ func (d *daemon) backfillContactDisplayNames(ctx context.Context) error {
 		}); err != nil {
 			log.Printf("store contact display name for %s failed: %v", chatJID, err)
 		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("iterate chats missing display names: %w", err)
 	}
 
 	return nil

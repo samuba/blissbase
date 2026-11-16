@@ -210,20 +210,26 @@ func (d *daemon) syncAllNamedChats(ctx context.Context) error {
 	defer rows.Close()
 
 	batch := &pgx.Batch{}
-	count := 0
-
+	chats := make([]namedSyncChat, 0)
 	for rows.Next() {
 		chat, err := scanNamedSyncChat(rows)
 		if err != nil {
 			return err
 		}
-
-		queueWhatsappChatUpsert(batch, chat)
-		count++
+		chats = append(chats, chat)
 	}
-
 	if err := rows.Err(); err != nil {
 		return fmt.Errorf("iterate named sync chats: %w", err)
+	}
+	// Drop the SQLite connection before the Postgres round trip. Incoming
+	// message decrypt uses this same single connection.
+	if err := rows.Close(); err != nil {
+		return fmt.Errorf("close named sync chats: %w", err)
+	}
+
+	count := len(chats)
+	for _, chat := range chats {
+		queueWhatsappChatUpsert(batch, chat)
 	}
 
 	if count == 0 {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"go.mau.fi/whatsmeow"
 	waE2E "go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -136,6 +137,17 @@ func (t *TestDaemon) AwaitGroupIQ(ctx context.Context) error {
 
 func (t *TestDaemon) SetGroupIQLastRequest(at time.Time) {
 	t.d.groupIQLastRequest = at
+}
+
+func (t *TestDaemon) SetClient(client *whatsmeow.Client) {
+	if t == nil || t.d == nil {
+		return
+	}
+	t.d.client = client
+}
+
+func (t *TestDaemon) BackfillContactDisplayNames(ctx context.Context) error {
+	return t.d.backfillContactDisplayNames(ctx)
 }
 
 func (t *TestDaemon) StoreMessage(ctx context.Context, evt *events.Message, source string) error {
