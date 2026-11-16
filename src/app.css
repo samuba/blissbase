@@ -31,6 +31,13 @@
 	transform: translateZ(0);
 }
 
+/* Superellipse outer clip for list cards. Falls back to plain border-radius where unsupported. */
+@utility card-squircle {
+	overflow: hidden;
+	border-radius: 1.25rem;
+	corner-shape: squircle;
+}
+
 @plugin "daisyui" {
 	themes:
 		cupcake --default,
