@@ -1,7 +1,23 @@
+# Local runtime on the deploy host. Never commit these.
+# deployWhatsapp2Sqlite.sh refuses to overwrite or delete them.
+#
+# SQLite session + messages, including WAL/SHM and spare copies
+# (whatsapp.sqlite, whatsapp.sqlite-wal, whatsapp.sqlite-shm,
+# "whatsapp copy.sqlite" and its -wal/-shm).
 *.sqlite*
-/media
-/whatsapp2sqlite
+*.sqlite-wal
+*.sqlite-shm
+
 config.jsonc
 notify.env
 .notify-incident.json
 .notify-incident-*.tmp
+
+/media/
+/group_contacts_phone_numbers.txt
+
+# Binaries written by deploy (live, previous, failed start, build temp).
+/whatsapp2sqlite
+/whatsapp2sqlite.prev
+/whatsapp2sqlite.failed
+/.whatsapp2sqlite.build.*
