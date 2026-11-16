@@ -25,10 +25,12 @@ set -euo pipefail
 
 # From a Mac, send this script to the Linux host and run it there.
 # The server executes this copy, not whatever deploy script is already installed.
+# `--` after -s keeps script args (such as --migrate) from being parsed as bash options.
+# `bash -s --migrate` fails with: bash: --: invalid option.
 if [ "$(uname -s)" = "Darwin" ]; then
     printf '%s\n' "Running deploy on remote server..."
     # shellcheck disable=SC2029
-    exec ssh walter@waltersbox "cd \"\$HOME\" && WHATSAPP2SQLITE_ON_HOST=1 bash -s$(printf ' %q' "$@")" < "$0"
+    exec ssh walter@waltersbox "cd \"\$HOME\" && WHATSAPP2SQLITE_ON_HOST=1 bash -s --$(printf ' %q' "$@")" < "$0"
 fi
 
 GITHUB_REPO="blissbase"

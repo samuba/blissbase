@@ -44,7 +44,7 @@ The live directory stays `/home/walter/whatsapp2sqlite`. It is not a git checkou
 
 A sparse clone of blissbase lives at `/home/walter/.local/share/blissbase-whatsapp2sqlite`. Each deploy fetches and resets **that clone only**, runs tests, and builds `./cmd/whatsapp2sqlite` to a temp file. The file must be an ELF executable. The live directory is not modified if tests or the build fail. After the build succeeds, the script copies git-tracked files onto the live directory, stops the user service `whatsapp2sqlite`, saves the current binary as `whatsapp2sqlite.prev`, moves the new binary into place, and starts the service. If the new process does not stay up, it restores `.prev` and starts that again.
 
-Run it from a Mac checkout of this repo. The script SSHs to the host and runs **this** copy there (the copy already on the server is not used):
+Run it from a Mac checkout of this repo. The script SSHs to the host and runs **this** copy there as `bash -s -- …` (the `--` is required so `--migrate` is a script argument, not a bash option). The copy already on the server is not used:
 
 ```bash
 cd whatsapp2sqlite
