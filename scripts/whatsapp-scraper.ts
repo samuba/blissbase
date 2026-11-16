@@ -26,6 +26,8 @@ const maxSecondsBetweenMessagesForSameEvent = 20 * 60
 const initialMessagesPerChat = 50
 /** Only scrape messages younger than this many months. */
 const maxMessageAgeMonths = 8
+/** Fail the job when no synced WhatsApp message was sent within this window (bridge stall signal). */
+const maxHoursWithoutSentMessage = 24
 const sqliteDownloadTimeoutMs = 20_000
 const sqliteDownloadRetryCount = 3
 
@@ -291,6 +293,52 @@ function getMessagesForTarget(args: { sqliteDb: Database; target: WhatsappScrapi
         lastMessageId: target.lastMessageId
     })
     return rows
+}
+
+/**
+ * Returns the newest send timestamp (unix seconds) among synced messages for the given chats.
+ * @example
+ * getLatestSentMessageUnix({ sqliteDb, chatJids: [`123@g.us`] })
+ */
+function getLatestSentMessageUnix(args: { sqliteDb: Database; chatJids: string[] }) {
+    if (!args.chatJids.length) return undefined
+
+    const placeholders = args.chatJids.map(() => `?`).join(`, `)
+    const row = args.sqliteDb.query(`
+        SELECT MAX(timestamp) AS maxTimestamp
+        FROM sync_messages
+        WHERE chat_jid IN (${placeholders})
+    `).get(...args.chatJids) as { maxTimestamp: number | null } | undefined
+
+    return row?.maxTimestamp ?? undefined
+}
+
+/**
+ * Fails the job when no synced message for configured targets was sent within 24 hours.
+ * That usually means the whatsapp2sqlite bridge stopped updating the SQLite snapshot.
+ * @example
+ * assertRecentSentMessages({ sqliteDb, chatJids: [`123@g.us`] })
+ */
+function assertRecentSentMessages(args: { sqliteDb: Database; chatJids: string[] }) {
+    const latestUnix = getLatestSentMessageUnix(args)
+    const cutoffUnix = Math.floor((Date.now() - maxHoursWithoutSentMessage * 60 * 60 * 1000) / 1000)
+
+    if (latestUnix == null) {
+        throw new Error(
+            `No WhatsApp messages found in SQLite for configured targets — whatsapp2sqlite bridge likely stalled`
+        )
+    }
+
+    if (latestUnix >= cutoffUnix) {
+        console.log(
+            `[whatsapp] Bridge health OK — latest sent message at ${new Date(latestUnix * 1000).toISOString()}`
+        )
+        return
+    }
+
+    throw new Error(
+        `No WhatsApp message sent in the last ${maxHoursWithoutSentMessage} hours (latest: ${new Date(latestUnix * 1000).toISOString()}) — whatsapp2sqlite bridge likely stalled`
+    )
 }
 
 /**
@@ -1448,6 +1496,20 @@ async function main() {
         if (fatalErrors.length > 0) {
             console.error(`[whatsapp] Fatal errors:`, fatalErrors.map((error) => error.message))
             process.exitCode = 1
+        }
+
+        try {
+            assertRecentSentMessages({
+                sqliteDb,
+                chatJids: scrapingTargets.map((target) => target.chatJid)
+            })
+        } catch (error) {
+            console.error(`[whatsapp] ${getErrorMessage(error)}`)
+            process.exitCode = 1
+        }
+
+        if (process.exitCode) {
+            console.error(`[whatsapp] Run finished with failures`)
         } else {
             console.log(`[whatsapp] Run finished successfully`)
         }
