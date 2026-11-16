@@ -44,7 +44,7 @@ The live directory stays `/home/walter/whatsapp2sqlite`. It is not a git checkou
 
 A sparse clone of blissbase lives at `/home/walter/.local/share/blissbase-whatsapp2sqlite`. Each deploy fetches and resets **that clone only**, runs tests, and builds `./cmd/whatsapp2sqlite` to a temp file. The file must be an ELF executable. The live directory is not modified if tests or the build fail. After the build succeeds, the script copies git-tracked files onto the live directory, stops the user service `whatsapp2sqlite`, saves the current binary as `whatsapp2sqlite.prev`, moves the new binary into place, and starts the service. If the new process does not stay up, it restores `.prev` and starts that again.
 
-Run it from a Mac checkout of this repo. The script SSHs to the host and runs **this** copy there as `bash -s -- …` (the `--` is required so `--migrate` is a script argument, not a bash option). The copy already on the server is not used:
+Run it from a Mac checkout of this repo. The script SSHs to the host and runs **this** copy there as `bash -s -- …` (the `--` keeps those words as script arguments). The copy already on the server is not used:
 
 ```bash
 cd whatsapp2sqlite
@@ -55,9 +55,7 @@ Pass a branch to deploy it instead of the default branch: `./deployWhatsapp2Sqli
 
 If the log stops before `Stopping whatsapp2sqlite`, the service was not stopped.
 
-### One-time migration
-
-The directory on the server today is a plain folder (source copied in by the old script, plus the live SQLite session). The first run of this script must be told to adopt it. `--migrate` does not delete anything and does not move the database.
+If `~/whatsapp2sqlite` already has files and there is no deploy clone yet, the script adopts that directory in place. It does not delete anything and does not move the database.
 
 On the Mac, from a checkout that contains this script:
 
@@ -65,15 +63,13 @@ On the Mac, from a checkout that contains this script:
 ssh walter@waltersbox 'gh auth status && go version && git --version && test -f ~/whatsapp2sqlite/whatsapp.sqlite && echo sqlite-ok'
 
 cd whatsapp2sqlite
-./deployWhatsapp2Sqlite.sh --migrate
+./deployWhatsapp2Sqlite.sh
 ```
 
-Without `--migrate`, the script exits before it clones or copies, and tells you to re-run with `--migrate`.
-
-What that run does, as user `walter`:
+What a deploy does, as user `walter`:
 
 1. Leaves `/home/walter/whatsapp2sqlite` in place. It refuses to deploy if that directory contains `.git`.
-2. Creates `/home/walter/.local/share/blissbase-whatsapp2sqlite` as a sparse clone (`whatsapp2sqlite/` only). If that path already exists and is not that clone, the script exits and does not delete it.
+2. Creates `/home/walter/.local/share/blissbase-whatsapp2sqlite` as a sparse clone (`whatsapp2sqlite/` only) when that clone does not exist yet. If that path already exists and is not that clone, the script exits and does not delete it.
 3. Aborts if any tracked file matches a runtime path, or if `.gitignore` does not ignore the runtime names above.
 4. Runs tests and builds `./cmd/whatsapp2sqlite` to a temp file. If either fails, the live directory is not modified and the service is not stopped. The build must be a real ELF binary (building the library package root produces an archive and is rejected).
 5. Copies only tracked files onto the live directory. SQLite, config, `notify.env`, media, and every other untracked file stay byte-for-byte, including files git no longer has.
@@ -85,16 +81,9 @@ Confirm:
 ssh walter@waltersbox 'systemctl --user is-active whatsapp2sqlite; ls -la ~/whatsapp2sqlite/whatsapp.sqlite ~/whatsapp2sqlite/whatsapp.sqlite-wal ~/whatsapp2sqlite/whatsapp.sqlite-shm ~/whatsapp2sqlite/config.jsonc ~/whatsapp2sqlite/notify.env ~/whatsapp2sqlite/.notify-incident.json ~/whatsapp2sqlite/media ~/whatsapp2sqlite/group_contacts_phone_numbers.txt'
 ```
 
-The log lines `Keeping whatsapp.sqlite` and `Deployment completed successfully` are the ones to look for.
+The log lines `Keeping whatsapp.sqlite` and `Deployment completed successfully` are the ones to look for. The first run against an existing directory also logs `Adopting existing directory`.
 
-Later deploys omit `--migrate`:
-
-```bash
-./deployWhatsapp2Sqlite.sh
-./deployWhatsapp2Sqlite.sh my-branch
-```
-
-You can also copy this script to the server and run `~/whatsapp2sqlite/deployWhatsapp2Sqlite.sh --migrate` as `walter`. Do not run an older copy of the script for that first adoption.
+You can also copy this script to the server and run `~/whatsapp2sqlite/deployWhatsapp2Sqlite.sh` as `walter`.
 
 Rollback to the previous binary:
 
