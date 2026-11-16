@@ -34,7 +34,7 @@
 /* Superellipse outer clip for list cards. Falls back to plain border-radius where unsupported. */
 @utility card-squircle {
 	overflow: hidden;
-	border-radius: 1.25rem;
+	border-radius: 2rem;
 	corner-shape: squircle;
 }
 
