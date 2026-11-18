@@ -4,3 +4,6 @@ pnpm-lock.yaml
 yarn.lock
 bun.lock
 bun.lockb
+
+# Saved site HTML. Keep the bytes the scraper saw.
+scripts/fixtures
