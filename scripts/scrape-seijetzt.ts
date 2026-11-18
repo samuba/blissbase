@@ -1,21 +1,23 @@
 /**
  * Scrapes sei.jetzt/events: paginated listings, then detail pages.
  * Recurring series expand to `/event/{slug}/{YYYY-MM-DD}` occurrence URLs.
+ * Start/end come from JSON-LD Event startDate/endDate, then the old Alpine x-data parser.
  *
  * Usage:
  *   bun run scripts/scrape-seijetzt.ts
  *   bun run scripts/scrape-seijetzt.ts <html_file> ...
  */
 import { ScrapedEvent } from "../src/lib/types.ts";
+import { readFile } from "node:fs/promises";
 import * as cheerio from 'cheerio';
 import {
     REQUEST_DELAY_MS,
     WebsiteScraperInterface,
     customFetch,
     dateToIsoStr,
+    sleep,
     superTrim
 } from "./common.ts";
-import { sleep } from "bun";
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
 export class WebsiteScraper implements WebsiteScraperInterface {
@@ -84,14 +86,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     }
 
     extractStartAt(html: string) {
-        const $ = cheerio.load(html);
-
-        const dateElement = $('[x-data]')
-            .toArray()
-            .find(el => $(el).attr('x-data')?.includes('new Date'));
-        if (!dateElement) return undefined;
-
-        return this._extractDateFromXDataElement($, dateElement);
+        return jsonLdDateToIso(readJsonLdEvent(html)?.startDate) ?? this.extractXDataDate(html, 0);
     }
 
     /**
@@ -115,11 +110,14 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     }
 
     extractEndAt(html: string) {
-        const $ = cheerio.load(html);
+        return jsonLdDateToIso(readJsonLdEvent(html)?.endDate) ?? this.extractXDataDate(html, 1);
+    }
 
-        const dateElement = $('[x-data]')
+    private extractXDataDate(html: string, index: number) {
+        const $ = cheerio.load(html);
+        const dateElement = $(`[x-data]`)
             .toArray()
-            .filter(el => $(el).attr('x-data')?.includes('new Date'))[1];
+            .filter(el => $(el).attr(`x-data`)?.includes(`new Date`))[index];
         if (!dateElement) return undefined;
 
         return this._extractDateFromXDataElement($, dateElement);
@@ -259,25 +257,36 @@ export class WebsiteScraper implements WebsiteScraperInterface {
     }
 
     extractHost(html: string): string | undefined {
-        const $ = cheerio.load(html, { decodeEntities: true });
-
-        // find element with href starting with https://sei.jetzt/o/ that contains text
-        const hostLinkElement = $('a[href^="https://sei.jetzt/o/"]')
-            .filter((_i, el) => $(el).text().trim().length > 0)
-            .first();
-
-        return hostLinkElement?.text()?.trim();
+        const fromJsonLd = organizerFrom(readJsonLdEvent(html))?.name;
+        if (fromJsonLd) return fromJsonLd;
+        return this.hostAnchor(html)?.text().trim() || undefined;
     }
 
     extractHostLink(html: string): string | undefined {
+        const fromJsonLd = organizerFrom(readJsonLdEvent(html))?.url;
+        if (fromJsonLd) return fromJsonLd;
+        return this.hostAnchor(html)?.attr(`href`);
+    }
+
+    /** Profile link only. Price blocks link to `/o/{slug}/passes` ("Karten ansehen") ahead of the organizer. */
+    private hostAnchor(html: string) {
         const $ = cheerio.load(html, { decodeEntities: true });
+        const link = $(`a[href^="https://sei.jetzt/o/"]`).filter((_i, el) => {
+            const href = $(el).attr(`href`) ?? ``;
+            if (!/^https:\/\/sei\.jetzt\/o\/[^/#?]+\/?$/.test(href)) return false;
+            return $(el).text().trim().length > 0;
+        }).first();
+        if (!link.length) return undefined;
+        return link;
+    }
 
-        // find element with href starting with https://sei.jetzt/o/ that contains text
-        const hostLinkElement = $('a[href^="https://sei.jetzt/o/"]')
-            .filter((_i, el) => $(el).text().trim().length > 0)
-            .first();
-
-        return hostLinkElement?.attr('href');
+    /** Why extractEventData returned undefined. `missing startAt` when the page has a title but no date. */
+    missingEventReason(html: string) {
+        const missing: string[] = [];
+        if (!this.extractName(html)) missing.push(`name`);
+        if (!this.extractStartAt(html)) missing.push(`startAt`);
+        if (!missing.length) return undefined;
+        return `missing ${missing.join(`, `)}`;
     }
 
     extractTags(html: string): string[] | undefined {
@@ -406,12 +415,11 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                                 }
 
                                 const event = await this.extractEventData(detailHtml, detailUrl);
-                                console.error(event);
-                                if (event) {
-                                    allEvents.push(event);
-                                } else {
-                                    console.warn(`Failed to get complete details for event: ${detailUrl}`);
+                                if (!event) {
+                                    this.logRejectedEvent(detailHtml, detailUrl);
+                                    continue;
                                 }
+                                allEvents.push(event);
                             } catch (error) {
                                 console.error(`Error processing event item "${detailUrl}":`, error);
                             }
@@ -437,7 +445,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         for (const filePath of filePaths) {
             console.error(`Processing local HTML file: ${filePath}...`);
             try {
-                const htmlContent = await Bun.file(filePath).text();
+                const htmlContent = await readFile(filePath, `utf8`);
                 const event = await this.extractEventData(htmlContent, filePath); // Use permalink as file path
                 if (event) {
                     if (!event.name || !event.startAt) {
@@ -445,7 +453,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
                     }
                     allEvents.push(event);
                 } else {
-                    console.error(`Could not extract event data from ${filePath}.`);
+                    this.logRejectedEvent(htmlContent, filePath);
                 }
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
@@ -458,6 +466,78 @@ export class WebsiteScraper implements WebsiteScraperInterface {
         console.error(`--- Processed ${filePaths.length} files. Total events extracted: ${allEvents.length} ---`);
         return allEvents;
     }
+
+    private logRejectedEvent(html: string, url: string) {
+        console.error(`${this.missingEventReason(html) ?? `missing startAt`}: ${url}`);
+        console.warn(`Failed to get complete details for event: ${url}`);
+    }
+}
+
+function readJsonLdEvent(html: string): JsonLdNode | undefined {
+    const $ = cheerio.load(html);
+    for (const el of $(`script[type="application/ld+json"]`).toArray()) {
+        const text = $(el).text();
+        if (!text?.includes(`Event`)) continue;
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(text);
+        } catch (error) {
+            console.error(`Event JSON-LD is not valid JSON:`, error);
+            continue;
+        }
+        const event = jsonLdNodes(parsed).find(node => isEventType(node[`@type`]) && typeof node.startDate === `string`);
+        if (event) return event;
+    }
+    return undefined;
+}
+
+function jsonLdNodes(parsed: unknown): JsonLdNode[] {
+    if (Array.isArray(parsed)) return parsed.filter(isJsonLdNode);
+    if (!isJsonLdNode(parsed)) return [];
+    const graph = parsed[`@graph`];
+    if (Array.isArray(graph)) return graph.filter(isJsonLdNode);
+    return [parsed];
+}
+
+function isJsonLdNode(value: unknown): value is JsonLdNode {
+    return Boolean(value) && typeof value === `object` && !Array.isArray(value);
+}
+
+function isEventType(type: unknown) {
+    if (type === `Event`) return true;
+    return Array.isArray(type) && type.includes(`Event`);
+}
+
+function jsonLdDateToIso(value: unknown) {
+    if (typeof value !== `string`) return undefined;
+    const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    if (!match) return undefined;
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const hour = match[4] === undefined ? 0 : Number(match[4]);
+    const minute = match[5] === undefined ? 0 : Number(match[5]);
+    if ([year, month, day, hour, minute].some(part => Number.isNaN(part))) return undefined;
+    if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59) return undefined;
+
+    return dateToIsoStr(year, month, day, hour, minute, `Europe/Berlin`, false);
+}
+
+function organizerFrom(event: JsonLdNode | undefined) {
+    const organizer = event?.organizer;
+    if (typeof organizer === `string`) {
+        const name = organizer.trim();
+        return name ? { name } : undefined;
+    }
+
+    const node = Array.isArray(organizer) ? organizer.find(isJsonLdNode) : organizer;
+    if (!isJsonLdNode(node)) return undefined;
+
+    const name = typeof node.name === `string` ? node.name.trim() : ``;
+    const url = typeof node.url === `string` ? node.url.trim() : ``;
+    if (!name && !url) return undefined;
+    return { name: name || undefined, url: url || undefined };
 }
 
 if (import.meta.main) {
@@ -468,4 +548,14 @@ if (import.meta.main) {
         console.log(await scraper.scrapeWebsite())
     }
 }
+
+type JsonLdNode = {
+    "@type"?: unknown;
+    "@graph"?: unknown;
+    startDate?: unknown;
+    endDate?: unknown;
+    name?: unknown;
+    url?: unknown;
+    organizer?: unknown;
+};
 
