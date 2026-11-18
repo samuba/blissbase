@@ -37,6 +37,10 @@ export const svelteKitConfig = {
 		runtime: `nodejs24.x`,
 		regions: [`fra1`],
 	}),
+	// Kit 3 defaults to HTML <link rel=modulepreload>; restore Kit 2 SSR Link-header delivery (Vercel-safe).
+	output: {
+		linkHeaderPreload: true,
+	},
 	version: {
 		pollInterval: 60_000 * 1,
 	},
