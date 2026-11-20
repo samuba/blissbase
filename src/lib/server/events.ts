@@ -6,6 +6,7 @@ import { resolveFilterCoordinates } from "#lib/server/locationDistance.ts";
 import { sanitizeLocationParams } from "#lib/locationFilter.ts";
 import type { InsertEvent } from "#lib/types.ts";
 import { escapeRegex, type Modify } from "#lib/common.ts";
+import { isProperDisplayName } from "#lib/displayName.ts";
 import * as v from "valibot";
 import {
 	eventCategorySlugs,
@@ -349,7 +350,7 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 			// })
 			.map((event) => {
 				// hide that we took event from AIN channels. Stop when we have official cooperation with AIN.
-				if (event.host?.includes("Authentic Intimacy Network")) {
+				if (event.host?.includes("Authentic Intimacy Network") || !isProperDisplayName(event.host)) {
 					event.host = null;
 				}
 				return {
@@ -358,6 +359,7 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 					author: event.author
 						? {
 								...event.author,
+								displayName: isProperDisplayName(event.author.displayName) ? event.author.displayName : null,
 								bio: getPublicProfileBioExcerpt({ bio: event.author?.bio }),
 							}
 						: undefined,

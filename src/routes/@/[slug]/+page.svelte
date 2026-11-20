@@ -1,5 +1,6 @@
 <script lang="ts">
 	import EventCard from "#lib/components/EventCard.svelte";
+	import { isProperDisplayName } from "#lib/displayName.ts";
 	import OfferingCard from "#lib/components/OfferingCard.svelte";
 	import ProfileContactButtons from "#lib/components/ProfileContactButtons.svelte";
 	import { hasValidCoordinates } from "#lib/locationFilter.ts";
@@ -11,6 +12,7 @@
 	let { data } = $props();
 	const { profile, upcomingEvents, publicOfferings, userId } = $derived(data);
 	const isOwnProfile = $derived(Boolean(profile.id === userId));
+	const profileName = $derived(isProperDisplayName(profile.displayName) ? profile.displayName.trim() : null);
 	const locationMapsUrl = $derived.by(() => {
 		const label = profile.locationLabel?.trim();
 		if (!label) return null;
@@ -74,9 +76,11 @@
 					>
 						<div class="flex w-full items-start justify-between gap-2">
 							<div class="flex min-w-0 flex-col items-start gap-1">
-								<h1 class="relative inline-block max-w-full text-left text-xl font-bold tracking-tight wrap-break-word">
-									{profile.displayName}
-								</h1>
+								{#if profileName}
+									<h1 class="relative inline-block max-w-full text-left text-xl font-bold tracking-tight wrap-break-word">
+										{profileName}
+									</h1>
+								{/if}
 
 								{#if locationMapsUrl}
 									<a

@@ -8,6 +8,7 @@ import type { MsgAnalysisAnswer } from "./server/ai";
 import type { Context } from "telegraf";
 import type { Api } from "teleproto";
 import { ensureAbsoluteHref } from "./common";
+import { displayNameForStorage } from "./displayName";
 
 export const msgFilters = anyOf(
 	message("text"),
@@ -84,7 +85,7 @@ export function getTelegramEventOriginalAuthor(message: Context["message"]) {
 		name = username;
 	}
 	return {
-		name,
+		name: displayNameForStorage(name) ?? undefined,
 		id: originalAuthorId,
 		link: username ? `tg://resolve?domain=${username}` : undefined,
 		username,

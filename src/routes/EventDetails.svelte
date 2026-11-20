@@ -25,6 +25,7 @@
 	import { resolve } from "$app/paths";
 	import PublicProfileCard from "#lib/components/PublicProfileCard.svelte";
 	import { labelsForTagSlugs } from "#lib/eventCategories.ts";
+	import { isProperDisplayName } from "#lib/displayName.ts";
 
 	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } = $props();
 
@@ -114,7 +115,8 @@
 	});
 
 	const hostNamesToHide = ["todo.today"];
-	const shouldShowHost = $derived(event.host && hostNamesToHide.every((x) => !event.host?.toLowerCase().includes(x)));
+	const hostName = $derived(isProperDisplayName(event.host) ? event.host.trim() : null);
+	const shouldShowHost = $derived(hostName && hostNamesToHide.every((x) => !hostName.toLowerCase().includes(x)));
 
 	function fixTelegramUnsupportedChars(text: string) {
 		return text
@@ -397,17 +399,17 @@
 			</p>
 		{/if}
 
-		{#if event.author?.slug && event.author?.displayName}
+		{#if event.author?.slug && isProperDisplayName(event.author.displayName)}
 			<PublicProfileCard profile={event.author} />
 		{:else if shouldShowHost}
 			<div class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium">
 				<i class="icon-[ph--user-circle] size-6"></i>
 				{#if event.hostLink}
 					<button onclick={() => openLink(event.hostLink!)} class="cursor-pointer underline">
-						{event.host}
+						{hostName}
 					</button>
 				{:else}
-					{event.host}
+					{hostName}
 				{/if}
 			</div>
 		{/if}

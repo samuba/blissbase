@@ -4,6 +4,7 @@ import { and, db, eq, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { InsertEvent } from "../src/lib/types";
 import type { TelegramScrapingTarget } from "../src/lib/server/schema";
 import { addressLinesFromAnalysis, generateSlug, parseTelegramContacts, sleep } from "../src/lib/common";
+import { displayNameForStorage } from "../src/lib/displayName";
 import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 import { lineBreaksToBr } from "../src/lib/server/ai";
 import { resolveMessengerAnalysis } from "../src/lib/server/jev/messengerCheck";
@@ -158,7 +159,7 @@ async function getTelegramEventOriginalAuthor(message: Api.Message, client: Tele
     }
 
     return {
-        name,
+        name: displayNameForStorage(name) ?? undefined,
         id: getTelegramOriginalAuthorId(message),
         link: username ? `tg://resolve?domain=${username}` : undefined,
         username
@@ -495,7 +496,7 @@ async function extractEventDataFromImageMessage(
         message: combinedText,
         messageDate: new Date(message.date * 1000),
         timezone: defaultTimezone,
-        authorName: author?.username,
+        authorName: displayNameForStorage(author?.username) ?? undefined,
         imageInputs: [imageInput],
         eventIsDefinitelyConscious,
         beforeLlmExtract: () => sleep(1000),
@@ -549,7 +550,7 @@ async function extractEventDataFromMessage(
         message: combinedText,
         messageDate: new Date(message.date * 1000),
         timezone: defaultTimezone,
-        authorName: author?.username,
+        authorName: displayNameForStorage(author?.username) ?? undefined,
         imageInputs: adjacentImageInputs,
         eventIsDefinitelyConscious,
         beforeLlmExtract: () => sleep(1000),
