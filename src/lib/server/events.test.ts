@@ -103,6 +103,23 @@ describe("Events Module - Happy Flow Tests", () => {
 			expect(result[0].price).toBe("25€");
 		});
 
+		it("should store null instead of a raw host id or phone number", async () => {
+			const jidEvent = createTestEvent({
+				name: "Raw Host Id",
+				host: "47382582554768@lid",
+			});
+			const phoneEvent = createTestEvent({
+				name: "Phone Host",
+				host: "+49 170 1234567",
+			});
+
+			const jidResult = await upsertEvents([jidEvent]);
+			const phoneResult = await upsertEvents([phoneEvent]);
+
+			expect(jidResult[0].host).toBeNull();
+			expect(phoneResult[0].host).toBeNull();
+		});
+
 		it("should handle events without end time", async () => {
 			const event = createTestEvent({
 				endAt: null,
@@ -666,6 +683,59 @@ describe("Events Module - Happy Flow Tests", () => {
 				hostSecret: undefined, // Should be removed for security
 			});
 			expect(result[0].hostSecret).toBeUndefined();
+		});
+
+		it("should hide raw host and author ids", () => {
+			const [event] = prepareEventsForUi([
+				{
+					id: 1,
+					name: "Test Event",
+					hostSecret: "secret123",
+					sourceChatIdsTelegram: null,
+					sourceChatIdsWhatsapp: null,
+					startAt: new Date(),
+					address: ["Test Street"],
+					imageUrls: [],
+					source: "test",
+					listed: true,
+					contact: [],
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					slug: "test-event",
+					soldOut: false,
+					price: null,
+					priceIsHtml: false,
+					description: null,
+					descriptionOriginal: null,
+					host: "47382582554768@lid",
+					hostLink: null,
+					sourceUrl: null,
+					latitude: null,
+					longitude: null,
+					messageSenderId: "47382582554768@lid",
+					endAt: null,
+					timezone: null,
+					attendanceMode: "offline" as const,
+					structure: null,
+					language: null,
+					authorId: "author-1",
+					spotlight: null,
+					addressNote: null,
+					tagSlugs: [],
+					author: {
+						id: "author-1",
+						slug: "author",
+						displayName: "491701234567",
+						profileImageUrl: null,
+						bio: null,
+						locale: "en",
+					},
+				},
+			]);
+
+			expect(event.host).toBeNull();
+			expect(event.author?.displayName).toBeNull();
+			expect(event.hostSecret).toBeUndefined();
 		});
 
 		it("should handle empty events array", async () => {
