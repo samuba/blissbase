@@ -87,6 +87,7 @@ function isIllustrationMessage(message: WhatsappSyncMessage) {
 
 /**
  * Builds the sender metadata used for host/contact fields.
+ * The display name is the push name only. Phone numbers and JIDs are not a fallback.
  * @example
  * getWhatsappAuthor({ senderJid: `123@s.whatsapp.net`, senderPhoneNumber: `49123`, pushName: `Sam` } as WhatsappSyncMessage)
  */
@@ -95,7 +96,7 @@ function getWhatsappAuthor(message: WhatsappSyncMessage): WhatsappAuthor {
     const link = normalizedPhone ? `https://wa.me/${normalizedPhone}` : undefined
     return {
         id: message.senderJid,
-        name: message.pushName?.trim() || message.senderPhoneNumber?.trim() || message.senderJid,
+        name: message.pushName?.trim() || undefined,
         link,
         phoneNumber: normalizedPhone
     }
@@ -1536,7 +1537,7 @@ async function closeScriptConnections() {
 
 type WhatsappAuthor = {
     id: string
-    name: string
+    name: string | undefined
     link: string | undefined
     phoneNumber: string | undefined
 }

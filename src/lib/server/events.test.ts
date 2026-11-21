@@ -103,6 +103,23 @@ describe("Events Module - Happy Flow Tests", () => {
 			expect(result[0].price).toBe("25€");
 		});
 
+		it("should store null instead of a raw host id or phone number", async () => {
+			const jidEvent = createTestEvent({
+				name: "Raw Host Id",
+				host: "47382582554768@lid",
+			});
+			const phoneEvent = createTestEvent({
+				name: "Phone Host",
+				host: "+49 170 1234567",
+			});
+
+			const jidResult = await upsertEvents([jidEvent]);
+			const phoneResult = await upsertEvents([phoneEvent]);
+
+			expect(jidResult[0].host).toBeNull();
+			expect(phoneResult[0].host).toBeNull();
+		});
+
 		it("should handle events without end time", async () => {
 			const event = createTestEvent({
 				endAt: null,
@@ -666,6 +683,10 @@ describe("Events Module - Happy Flow Tests", () => {
 				hostSecret: undefined, // Should be removed for security
 			});
 			expect(result[0].hostSecret).toBeUndefined();
+			expect(result[0].host).toBe("Test Host");
+
+			const [hidden] = prepareEventsForUi([{ ...mockEvents[0], host: "47382582554768@lid" }]);
+			expect(hidden.host).toBeNull();
 		});
 
 		it("should handle empty events array", async () => {
