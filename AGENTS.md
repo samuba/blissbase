@@ -10,7 +10,7 @@ Always use clsx style (array) when dynamically constructing class names on eleme
 
 ## DB
 Assume drizzle is being used for all database operations and schemas.
-Create db migrations only via drizzle (schema.ts), do not use pure sql migration files.
+Create db migrations only via drizzle changes (schema.ts), do not use pure sql migration files.
 NEVER EVER run db migrations. So never execute this commands: drizzle push, drizzle migrate, db:push, db:migrate.
 NEVER EVER run sql that changes schemas or data.
 User will create and run db migrations himself.
