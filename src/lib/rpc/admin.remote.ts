@@ -3,7 +3,6 @@ import { error } from "@sveltejs/kit";
 import { asc } from "drizzle-orm";
 import * as v from "valibot";
 import { ALL_EVENT_SOURCES_VALUE, loadFiltersFromCookie, saveFiltersToCookie } from "#lib/cookie-utils.ts";
-import { isProperDisplayName } from "#lib/displayName.ts";
 import { parseOfferingsFilterFromUrl } from "#lib/offeringsFilter.ts";
 import { isAdminSession } from "#lib/server/admin.ts";
 import { aiPickEmojisForTitles } from "#lib/server/ai.ts";
@@ -147,9 +146,7 @@ function buildOfferingAnnouncement({
 }) {
 	const header = `Community Offerings that you can book in ${location}.\nCheck them out here or add your own: ${url}`;
 	const parts = offerings.map((offering) => {
-		const title = `${offering.emoji} *${offering.title}*`;
-		if (!isProperDisplayName(offering.author)) return title;
-		return `${title}\nby ${offering.author.trim()}`;
+		return `${offering.emoji} *${offering.title}*\nby ${offering.author}`;
 	});
 	return `${header}\n\n${parts.join(`\n\n`)}`;
 }

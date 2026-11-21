@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { isProperDisplayName } from "#lib/displayName.ts";
 	import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
 	import { routes } from "#lib/routes.ts";
 
@@ -18,7 +17,6 @@
 	} = $props();
 
 	const preview = $derived(htmlToPreviewText(offering.descriptionHtml));
-	const authorName = $derived(isProperDisplayName(offering.profile.displayName) ? offering.profile.displayName.trim() : null);
 	const imageUrl = $derived(offering.imageUrls?.[0]);
 	const isDisabled = $derived(offering.listed === false);
 	const href = $derived(offering.slug ? routes.offeringDetails(offering.slug, { returnTo }) : routes.offeringsList());
@@ -123,8 +121,8 @@
 					</p>
 				{/if}
 
-				<div class={[`mt-auto flex items-center gap-3 pt-2`, showAuthor && authorName ? `justify-between` : `justify-start`]}>
-					{#if showAuthor && authorName}
+				<div class={[`mt-auto flex items-center gap-3 pt-2`, showAuthor ? `justify-between` : `justify-start`]}>
+					{#if showAuthor}
 						<div class="flex min-w-0 items-center gap-2">
 							{#if offering.profile.profileImageUrl}
 								<img src={offering.profile.profileImageUrl} alt="" class="bg-base-200 size-9 shrink-0 rounded-full object-cover" />
@@ -134,7 +132,7 @@
 								</div>
 							{/if}
 							<span class="text-base-content/80 min-w-0 truncate text-sm font-medium">
-								{authorName}
+								{offering.profile.displayName}
 							</span>
 						</div>
 					{/if}

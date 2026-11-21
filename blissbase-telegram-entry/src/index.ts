@@ -2,7 +2,6 @@ import { Telegraf, type Context } from "telegraf";
 import type { Update, MessageEntity, PhotoSize } from "telegraf/types";
 import { aiExtractEventData } from '../../src/lib/server/ai';
 import { getTelegramEventOriginalAuthor, msgFilters, type TelegramCloudflareBody } from '../../src/lib/telegramCommon';
-import { displayNameForStorage } from '../../src/lib/displayName';
 import { detectLanguage, t } from '../../src/lib/telegramBotI18n';
 import { ensureAbsoluteHref } from '../../src/lib/common';
 
@@ -64,7 +63,7 @@ async function handleMessage(ctx: Context, payloadJson: Update) {
 			message: msgTextHtml,
 			messageDate,
 			timezone: `germany`,
-			authorName: displayNameForStorage(author?.username) ?? undefined,
+			authorName: author?.username,
 			imageInputs: [image?.url],
 			eventIsDefinitelyConscious: false,
 		}), !fromGroup)

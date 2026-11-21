@@ -359,7 +359,6 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 					author: event.author
 						? {
 								...event.author,
-								displayName: isProperDisplayName(event.author.displayName) ? event.author.displayName : null,
 								bio: getPublicProfileBioExcerpt({ bio: event.author?.bio }),
 							}
 						: undefined,

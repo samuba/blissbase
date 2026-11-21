@@ -1,5 +1,4 @@
 import { getPageMetaTags } from "#lib/common.ts";
-import { isProperDisplayName } from "#lib/displayName.ts";
 import {
 	getOfferingsForPublicProfile,
 	getPublicProfileBioExcerpt,
@@ -19,7 +18,7 @@ export const load = (async ({ params, url }) => {
 		getUpcomingEventsForPublicProfile({ authorId: profile.id }),
 		getOfferingsForPublicProfile({ profile }),
 	]);
-	const profileDisplayName = isProperDisplayName(profile.displayName) ? profile.displayName.trim() : `Blissbase`;
+	const profileDisplayName = profile.displayName ?? `Blissbase`;
 
 	return {
 		profile,

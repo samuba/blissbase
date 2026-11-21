@@ -9,7 +9,6 @@ import type { InsertEvent } from "../src/lib/types"
 import type { AiImageInput, MsgAnalysisAnswer } from "../src/lib/server/ai"
 import { resolveMessengerAnalysis } from "../src/lib/server/jev/messengerCheck"
 import { addressLinesFromAnalysis, sleep, generateSlug } from "../src/lib/common"
-import { displayNameForStorage } from "../src/lib/displayName"
 import { geocodeAddressCached } from "../src/lib/server/google.script.ts"
 import { resizeCoverImage } from "../src/lib/imageProcessing"
 import type { WhatsappScrapingTarget } from "../src/lib/server/schema" 
@@ -88,7 +87,7 @@ function isIllustrationMessage(message: WhatsappSyncMessage) {
 
 /**
  * Builds the sender metadata used for host/contact fields.
- * Only a real push name is a display name. Phone numbers and JIDs stay on the link and id.
+ * The display name is the push name only. Phone numbers and JIDs are not a fallback.
  * @example
  * getWhatsappAuthor({ senderJid: `123@s.whatsapp.net`, senderPhoneNumber: `49123`, pushName: `Sam` } as WhatsappSyncMessage)
  */
@@ -97,7 +96,7 @@ function getWhatsappAuthor(message: WhatsappSyncMessage): WhatsappAuthor {
     const link = normalizedPhone ? `https://wa.me/${normalizedPhone}` : undefined
     return {
         id: message.senderJid,
-        name: displayNameForStorage(message.pushName),
+        name: message.pushName?.trim() || undefined,
         link,
         phoneNumber: normalizedPhone
     }
@@ -658,7 +657,7 @@ async function extractEventDataFromImageMessage(args: {
         message: combinedText,
         messageDate: new Date(args.message.timestamp * 1000),
         timezone: args.defaultTimezone,
-        authorName: getWhatsappAuthor(args.message).name ?? undefined,
+        authorName: getWhatsappAuthor(args.message).name,
         imageInputs: [imageInput],
         eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
         beforeLlmExtract: () => sleep(1000),
@@ -727,7 +726,7 @@ async function extractEventDataFromMessage(args: {
         message: combinedText,
         messageDate: new Date(args.message.timestamp * 1000),
         timezone: args.defaultTimezone,
-        authorName: getWhatsappAuthor(args.message).name ?? undefined,
+        authorName: getWhatsappAuthor(args.message).name,
         imageInputs: adjacentImageInputs,
         eventIsDefinitelyConscious: args.target.hasOnlyConsciousEvents,
         beforeLlmExtract: () => sleep(1000),
@@ -1538,7 +1537,7 @@ async function closeScriptConnections() {
 
 type WhatsappAuthor = {
     id: string
-    name: string | null
+    name: string | undefined
     link: string | undefined
     phoneNumber: string | undefined
 }

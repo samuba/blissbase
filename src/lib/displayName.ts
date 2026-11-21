@@ -1,8 +1,9 @@
-const WHATSAPP_JID = /\d[\d:-]*@(?:lid|s\.whatsapp\.net|g\.us|c\.us|broadcast|newsletter)\b/i;
+const WHATSAPP_JID = /^\d[\d:-]*@(?:lid|s\.whatsapp\.net|g\.us|c\.us)$/i;
+const MIN_NUMERIC_ID_LENGTH = 8;
 
 /**
  * True when `value` is a username or display name we can show.
- * WhatsApp JIDs, bare phone numbers, and numeric ids are not.
+ * WhatsApp JIDs, bare phone numbers, and long numeric ids are not.
  *
  * @example
  * isProperDisplayName(`Sam`)
@@ -16,21 +17,7 @@ export function isProperDisplayName(value: string | null | undefined): value is 
 	return true;
 }
 
-/**
- * Trimmed display name, or null when the value should not be stored or shown.
- *
- * @example
- * displayNameForStorage(`  Sam  `)
- * displayNameForStorage(`491701234567`)
- */
-export function displayNameForStorage(value: string | null | undefined) {
-	const name = value?.trim();
-	if (!isProperDisplayName(name)) return null;
-	return name;
-}
-
 function isBarePhoneOrNumericId(name: string) {
 	const compact = name.replace(/[\s()+.\-/]/g, ``);
-	if (!compact) return false;
-	return /^\d+$/.test(compact);
+	return /^\d+$/.test(compact) && compact.length >= MIN_NUMERIC_ID_LENGTH;
 }

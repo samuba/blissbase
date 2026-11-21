@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { stripHtml, trimAllWhitespaces } from "#lib/common.ts";
-	import { isProperDisplayName } from "#lib/displayName.ts";
 	import type { Profile } from "#lib/server/schema.ts";
 	import type { Snippet } from "svelte";
 
@@ -16,7 +15,6 @@
 	} = $props();
 
 	const bioPreview = $derived(profile.bio ? trimAllWhitespaces(stripHtml(profile.bio)) : undefined);
-	const displayName = $derived(isProperDisplayName(profile.displayName) ? profile.displayName.trim() : null);
 </script>
 
 <a
@@ -37,9 +35,7 @@
 		{/if}
 
 		<div class="min-w-0 flex-1 text-left">
-			{#if displayName}
-				<p class="text-base-content text-lg leading-tight font-semibold">{displayName}</p>
-			{/if}
+			<p class="text-base-content text-lg leading-tight font-semibold">{profile.displayName}</p>
 			{#if bioPreview}
 				<div class="relative mt-0.5">
 					<p class={[`text-base-content/70 line-clamp-3 text-sm leading-snug sm:line-clamp-2`]}>

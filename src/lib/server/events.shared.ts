@@ -1,6 +1,6 @@
 import { getTableColumns, sql } from "drizzle-orm";
 import { deduplicateItems, generateSlug } from "../common";
-import { displayNameForStorage } from "../displayName";
+import { isProperDisplayName } from "../displayName";
 import type { InsertEvent } from "../types";
 import { buildConflictUpdateColumns, type DB, s } from "./db.shared";
 
@@ -31,8 +31,8 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 			event.sourceUrl = normalizeSourceUrl(event.sourceUrl);
 		}
 
-		if (typeof event.host === `string`) {
-			event.host = displayNameForStorage(event.host);
+		if (typeof event.host === `string` && !isProperDisplayName(event.host)) {
+			event.host = null;
 		}
 
 		event.imageUrls = deduplicateItems(event.imageUrls);

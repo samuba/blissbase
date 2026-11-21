@@ -7,7 +7,6 @@
 	import type { OfferingFormat } from "#lib/rpc/offerings.common.ts";
 	import { deleteOffering, listOffering, unlistOffering } from "#lib/rpc/offerings.remote.ts";
 	import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
-	import { isProperDisplayName } from "#lib/displayName.ts";
 	import { absoluteUrl, routes } from "#lib/routes.ts";
 	import { toast } from "svelte-sonner";
 
@@ -236,7 +235,7 @@
 					</div>
 				{/if}
 
-				{#if offering.profile.slug && isProperDisplayName(offering.profile.displayName)}
+				{#if offering.profile.slug && offering.profile.displayName}
 					<PublicProfileCard profile={offering.profile} class="-mx-4 rounded-none sm:mx-auto sm:rounded-2xl">
 						<ProfileContactButtons socialLinks={offering.profile.socialLinks} class="sm:items-start" />
 					</PublicProfileCard>
