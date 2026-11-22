@@ -11,7 +11,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"mime"
+	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -23,6 +26,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -44,19 +48,22 @@ const (
 	messageRetentionWindow      = 30 * 24 * time.Hour
 	defaultConfigPath           = "./config.jsonc"
 	defaultDatabaseSyncInterval = 30 * time.Second
-	databaseSyncTimeout         = 2 * time.Minute
-	groupMetadataSyncTimeout    = 60 * time.Minute
-	eventPersistTimeout         = 45 * time.Second
-	eventPersistQueueSize       = 2048
-	postgresChatSyncTimeout     = 45 * time.Second
-	postgresChatWakeQueueSize   = 64
-	mediaUploadTimeout          = 2 * time.Minute
-	objectDeleteTimeout         = 30 * time.Second
-	mediaUploadWorkerCount      = 4
-	mediaUploadQueueSize        = 256
-	objectDeleteQueueSize       = 256
-	defaultR2DatabaseObjectKey  = "whatsapp.sqlite"
-	defaultR2MediaPrefix        = "media"
+	// VACUUM INTO plus snapshot PutObject retries. Media uploads keep mediaUploadTimeout.
+	databaseSyncTimeout          = 5 * time.Minute
+	snapshotUploadAttempts       = 4
+	snapshotUploadAttemptTimeout = 75 * time.Second
+	groupMetadataSyncTimeout     = 60 * time.Minute
+	eventPersistTimeout          = 45 * time.Second
+	eventPersistQueueSize        = 2048
+	postgresChatSyncTimeout      = 45 * time.Second
+	postgresChatWakeQueueSize    = 64
+	mediaUploadTimeout           = 2 * time.Minute
+	objectDeleteTimeout          = 30 * time.Second
+	mediaUploadWorkerCount       = 4
+	mediaUploadQueueSize         = 256
+	objectDeleteQueueSize        = 256
+	defaultR2DatabaseObjectKey   = "whatsapp.sqlite"
+	defaultR2MediaPrefix         = "media"
 )
 
 // Ban-safety timings are vars so tests can shrink wall-clock waits without dialing WhatsApp.
@@ -65,6 +72,10 @@ var (
 	groupIQRateLimitCooldown = 30 * time.Minute
 	groupRosterFreshFor      = 24 * time.Hour
 )
+
+// snapshotUploadRetryUnit is the base backoff between snapshot PutObject attempts.
+// Tests shrink it. Media uploads use the same 5s * attempt spacing.
+var snapshotUploadRetryUnit = 5 * time.Second
 
 var errGroupIQCoolingDown = errors.New("group IQ cooling down after rate-overlimit")
 
@@ -3575,7 +3586,7 @@ func (m *r2Manager) syncDatabaseSnapshot(ctx context.Context) error {
 
 	log.Printf("sqlite snapshot: R2 upload start (%s, %d bytes)", m.databaseObjectKey, info.Size())
 	uploadStarted := time.Now()
-	if err := m.uploadObject(syncCtx, m.databaseObjectKey, file, info.Size(), "application/vnd.sqlite3"); err != nil {
+	if err := m.uploadDatabaseSnapshot(syncCtx, file, info.Size()); err != nil {
 		log.Printf("sqlite snapshot: R2 upload failed after %s: %v", time.Since(uploadStarted).Round(time.Millisecond), err)
 		return err
 	}
@@ -3583,25 +3594,108 @@ func (m *r2Manager) syncDatabaseSnapshot(ctx context.Context) error {
 	return nil
 }
 
+// uploadDatabaseSnapshot retries a stalled snapshot PutObject.
+// The caller alerts only when every attempt has failed.
+// Example: `if err := manager.uploadDatabaseSnapshot(ctx, file, size); err != nil { ... }`
+func (m *r2Manager) uploadDatabaseSnapshot(ctx context.Context, file *os.File, size int64) error {
+	var lastErr error
+	for attempt := 1; attempt <= snapshotUploadAttempts; attempt++ {
+		if err := ctx.Err(); err != nil {
+			if lastErr != nil {
+				return lastErr
+			}
+			return err
+		}
+
+		if _, err := file.Seek(0, io.SeekStart); err != nil {
+			return fmt.Errorf("rewind sqlite snapshot: %w", err)
+		}
+
+		lastErr = m.putDatabaseSnapshot(ctx, file, size)
+		if lastErr == nil {
+			return nil
+		}
+		if attempt == snapshotUploadAttempts || ctx.Err() != nil {
+			return lastErr
+		}
+
+		backoff := time.Duration(attempt) * snapshotUploadRetryUnit
+		slog.Warn(fmt.Sprintf("sqlite snapshot: R2 upload attempt %d/%d failed, retrying in %s: %v", attempt, snapshotUploadAttempts, backoff, lastErr))
+		if err := sleepContext(ctx, backoff); err != nil {
+			return lastErr
+		}
+	}
+
+	return lastErr
+}
+
+// putDatabaseSnapshot sends one snapshot attempt.
+// Idle socket time is capped by snapshotUploadAttemptTimeout; a transfer that keeps writing is not.
+// uploadObject is not used here because its media timeout would cut off a slow snapshot.
+func (m *r2Manager) putDatabaseSnapshot(ctx context.Context, body io.Reader, size int64) error {
+	return m.putObject(ctx, m.databaseObjectKey, body, size, "application/vnd.sqlite3", func(options *s3.Options) {
+		options.HTTPClient = snapshotUploadHTTPClient
+		options.Retryer = aws.NopRetryer{}
+	})
+}
+
 // uploadObject writes a stream into R2.
 // Example: `if err := manager.uploadObject(ctx, key, file, size, contentType); err != nil { ... }`
 func (m *r2Manager) uploadObject(ctx context.Context, objectKey string, body io.Reader, contentLength int64, contentType string) error {
 	uploadCtx, cancel := context.WithTimeout(ctx, mediaUploadTimeout)
 	defer cancel()
+	return m.putObject(uploadCtx, objectKey, body, contentLength, contentType)
+}
 
-	_, err := m.client.PutObject(uploadCtx, &s3.PutObjectInput{
+func (m *r2Manager) putObject(ctx context.Context, objectKey string, body io.Reader, contentLength int64, contentType string, optFns ...func(*s3.Options)) error {
+	_, err := m.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:        aws.String(m.bucket),
 		ContentLength: aws.Int64(contentLength),
 		ContentType:   aws.String(contentType),
 		Key:           aws.String(objectKey),
 		Body:          body,
-	})
+	}, optFns...)
 	if err != nil {
 		return fmt.Errorf("put object %s: %w", objectKey, err)
 	}
 
 	return nil
 }
+
+func sleepContext(ctx context.Context, delay time.Duration) error {
+	if delay <= 0 {
+		return ctx.Err()
+	}
+
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
+// newSnapshotUploadHTTPClient fails an attempt that stops writing, or never receives response headers,
+// after idle. Writes that keep completing are left alone so a slow snapshot can finish.
+func newSnapshotUploadHTTPClient(idle time.Duration) *http.Client {
+	base := awshttp.NewBuildableClient()
+	transport := base.GetTransport()
+	dialer := base.GetDialer()
+	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		conn, err := dialer.DialContext(ctx, network, addr)
+		if err != nil {
+			return nil, err
+		}
+		return stallConn{Conn: conn, idle: idle}, nil
+	}
+	transport.ResponseHeaderTimeout = idle
+	return &http.Client{Transport: transport}
+}
+
+var snapshotUploadHTTPClient = newSnapshotUploadHTTPClient(snapshotUploadAttemptTimeout)
 
 // deleteObject removes an existing object from R2.
 // Example: `if err := manager.deleteObject(ctx, key); err != nil { ... }`
@@ -3766,9 +3860,39 @@ type r2ManagerConfig struct {
 	OnCritical        func(error)
 }
 
+type r2ObjectClient interface {
+	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+}
+
+var _ r2ObjectClient = (*s3.Client)(nil)
+
+// stallConn cancels a write that makes no progress for idle.
+// Each completed write clears the deadline, so a slow transfer is not cut off.
+type stallConn struct {
+	net.Conn
+	idle time.Duration
+}
+
+func (c stallConn) Write(p []byte) (int, error) {
+	if c.idle <= 0 {
+		return c.Conn.Write(p)
+	}
+
+	if err := c.SetWriteDeadline(time.Now().Add(c.idle)); err != nil {
+		return 0, err
+	}
+
+	n, err := c.Conn.Write(p)
+	if err == nil {
+		_ = c.SetWriteDeadline(time.Time{})
+	}
+	return n, err
+}
+
 type r2Manager struct {
 	bucket            string
-	client            *s3.Client
+	client            r2ObjectClient
 	closing           atomic.Bool
 	databaseDirty     atomic.Bool
 	onCritical        func(error)
