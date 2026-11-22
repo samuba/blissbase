@@ -17,15 +17,12 @@
 	const bioPreview = $derived(profile.bio ? trimAllWhitespaces(stripHtml(profile.bio)) : undefined);
 </script>
 
-<a
-	href={resolve(`/@/[slug]`, { slug: profile.slug! })}
-	class={[
-		`group bg-base-200 hover:bg-base-200/80 border-base-200 flex flex-col gap-3 rounded-2xl border p-3 transition-colors`,
-		`no-underline`,
-		className,
-	]}
->
-	<div class="flex w-full flex-row items-center gap-3">
+<div class={[`bg-base-200 has-[a:hover]:bg-base-200/80 border-base-200 rounded-2xl border transition-colors`, className]}>
+	<a
+		href={resolve(`/@/[slug]`, { slug: profile.slug! })}
+		class="flex flex-row items-center gap-3 p-3 no-underline"
+		data-testid="public-profile-card-link"
+	>
 		{#if profile.profileImageUrl}
 			<img src={profile.profileImageUrl} alt="" class="border-base-300 size-16 shrink-0 rounded-full border border-2 object-cover" />
 		{:else}
@@ -45,6 +42,8 @@
 			{/if}
 		</div>
 		<i class="icon-[ph--caret-right] text-base-content size-5 shrink-0"></i>
-	</div>
-	{@render children?.()}
-</a>
+	</a>
+	{#if children}
+		<div class="px-3 pb-3">{@render children()}</div>
+	{/if}
+</div>
