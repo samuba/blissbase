@@ -68,7 +68,10 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
 	const title = "Blissbase";
 	const description = "Find conscious events near you.";
 	const faviconUrl = "https://www.blissbase.app/favicon.png?v=2";
-	const posterUrl = "https://www.blissbase.app/og-poster.png?v=3";
+	const posterOrigin = url.origin.startsWith(`https://`) ? url.origin : `https://www.blissbase.app`;
+	const posterUrl = `${posterOrigin}/og-poster.jpg?v=4`;
+	// @wc-ignore
+	const posterAlt = `${title} – ${description}`;
 	const baseMetaTags = Object.freeze({
 		title,
 		description,
@@ -83,13 +86,16 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
 			images: [
 				{
 					url: posterUrl,
-					alt: "Blissbase",
+					alt: posterAlt,
 					width: 1200,
 					height: 630,
 					secureUrl: posterUrl,
-					type: "image/png",
+					type: "image/jpeg",
 				},
 			],
+		},
+		twitter: {
+			cardType: `summary_large_image` as const,
 		},
 		additionalMetaTags: [{ property: "og:logo", content: faviconUrl }],
 	}) satisfies MetaTagsProps;
