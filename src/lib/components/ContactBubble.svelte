@@ -1,28 +1,27 @@
 <script lang="ts" module>
+	import { page } from "$app/state";
+
 	let open = $state(false);
+	let email = $state(``);
 
 	export function showContactDialog() {
 		open = true;
+		if (email) return;
+		email = page.data.jwtClaims?.email ?? ``;
 	}
 </script>
 
 <script lang="ts">
-	import { page } from "$app/state";
 	import { Dialog } from "#lib/components/dialog/index.ts";
-	import { peekFooter } from "#lib/peekFooter.svelte.ts";
 	import { sendContactMessage } from "#lib/rpc/contact.remote.ts";
 	import { toast } from "svelte-sonner";
 
-	let email = $state(``);
 	let message = $state(``);
 
 	const isPending = $derived(sendContactMessage.pending > 0);
 
 	function onOpenChange(nextOpen: boolean) {
 		open = nextOpen;
-		if (!nextOpen) return;
-		if (email) return;
-		email = page.data.jwtClaims?.email ?? ``;
 	}
 
 	function resetForm() {
@@ -48,10 +47,9 @@
 {#if !open}
 	<div
 		class={[
-			`pointer-events-none fixed inset-x-0 z-40`,
-			`bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-11`,
+			`pointer-events-none fixed inset-x-0 z-40 hidden md:block`,
+			`md:bottom-11`,
 			`transition-transform duration-200 ease-out motion-reduce:transition-none`,
-			!peekFooter.shown && `translate-y-[1.75rem] md:translate-y-0`,
 		]}
 	>
 		<div class="mx-auto flex max-w-5xl justify-start px-4">
@@ -59,7 +57,7 @@
 				type="button"
 				data-testid="contact-bubble"
 				aria-label="Nachricht schreiben"
-				onclick={() => onOpenChange(true)}
+				onclick={showContactDialog}
 				class={[
 					`btn btn-circle btn-lg bg-base-100/95 text-base-content border-base-300 pointer-events-auto shadow-lg`,
 					// Hang beside the card column by button width + gap when the viewport has room.
