@@ -6,6 +6,7 @@
 	import { peekFooter } from "#lib/peekFooter.svelte.ts";
 	import { user } from "#lib/user.svelte.ts";
 	import LocaleSwitcher from "#lib/components/LocaleSwitcher.svelte";
+	import { showContactDialog } from "#lib/components/ContactBubble.svelte";
 
 	const SCROLL_THRESHOLD = 8;
 	const TOP_REVEAL_Y = 24;
@@ -45,6 +46,7 @@
 	}
 
 	const links = createLinks().filter((x) => (user.isAdmin ? true : x.href !== routes.admin()));
+	const contactLabel = /* @wc-include */ `Kontakt`;
 
 	function handleScroll() {
 		if (!canAutoHide) return;
@@ -113,6 +115,16 @@
 	<nav class="mx-auto flex min-h-7 max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 py-1">
 		<LocaleSwitcher forceClose={hidden} />
 		<span class="text-base-content/30" aria-hidden="true">·</span>
+		<button
+			type="button"
+			data-testid="footer-contact"
+			onclick={showContactDialog}
+			class="link link-hover text-base-content/50 inline-flex items-center gap-1 text-xs leading-none md:hidden"
+		>
+			<i class="icon-[ph--chat-circle-dots] size-3.5 shrink-0" aria-hidden="true"></i>
+			{contactLabel}
+		</button>
+		<span class="text-base-content/30 md:hidden" aria-hidden="true">·</span>
 		{#each links as link, index (link.href)}
 			{@const hide = link.href === routes.privacyPolicy() || link.href === routes.termsOfService()}
 			{#if index > 0 && !hide}
