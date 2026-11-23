@@ -1,38 +1,21 @@
 <script lang="ts">
-	import { afterNavigate } from "$app/navigation";
-	import { page } from "$app/state";
 	import { onMount } from "svelte";
-	import { isEventOrOfferingListPath, routes } from "#lib/routes.ts";
+	import { routes } from "#lib/routes.ts";
 	import { peekFooter } from "#lib/peekFooter.svelte.ts";
 	import { user } from "#lib/user.svelte.ts";
 	import LocaleSwitcher from "#lib/components/LocaleSwitcher.svelte";
 	import { showContactDialog } from "#lib/components/ContactBubble.svelte";
 
-	const SCROLL_THRESHOLD = 8;
-	const TOP_REVEAL_Y = 24;
 	const NON_TEXT_INPUT_TYPES = new Set([`button`, `checkbox`, `color`, `file`, `hidden`, `image`, `radio`, `range`, `reset`, `submit`]);
 
-	let visible = $state(true);
 	let keyboardInset = $state(0);
 	let textEntryFocused = $state(false);
-	let lastScrollY = 0;
 
-	const canAutoHide = $derived(isEventOrOfferingListPath({ pathname: page.url.pathname, origin: page.url.origin }));
 	const keyboardOpen = $derived(textEntryFocused && keyboardInset > 150);
-	// Auto-hide on mobile events/offerings feeds; other routes keep the footer parked.
-	const hidden = $derived(canAutoHide && (!visible || keyboardOpen));
+	const hidden = $derived(keyboardOpen);
 
 	$effect(() => {
 		peekFooter.shown = !hidden;
-	});
-
-	afterNavigate(({ to, shallow, type }) => {
-		if (shallow && type === "goto") return;
-
-		lastScrollY = window.scrollY;
-		if (!to) return;
-		if (isEventOrOfferingListPath({ pathname: to.url.pathname, origin: to.url.origin })) return;
-		visible = true;
 	});
 
 	function createLinks() {
@@ -48,24 +31,6 @@
 	const links = createLinks().filter((x) => (user.isAdmin ? true : x.href !== routes.admin()));
 	const contactLabel = /* @wc-include */ `Kontakt`;
 
-	function handleScroll() {
-		if (!canAutoHide) return;
-
-		const y = window.scrollY;
-		const delta = y - lastScrollY;
-		if (Math.abs(delta) < SCROLL_THRESHOLD) return;
-
-		if (y < TOP_REVEAL_Y) {
-			visible = true;
-		} else if (delta > 0) {
-			visible = false;
-		} else {
-			visible = true;
-		}
-
-		lastScrollY = y;
-	}
-
 	function isTextEntry(target: EventTarget | null) {
 		if (!(target instanceof HTMLElement)) return false;
 		if (target.isContentEditable || target instanceof HTMLTextAreaElement) return true;
@@ -78,8 +43,6 @@
 	}
 
 	onMount(() => {
-		lastScrollY = window.scrollY;
-
 		const visualViewport = window.visualViewport;
 		if (!visualViewport) return;
 
@@ -98,8 +61,6 @@
 		};
 	});
 </script>
-
-<svelte:window onscroll={handleScroll} />
 
 <svelte:document onfocusin={handleFocusIn} onfocusout={() => (textEntryFocused = false)} />
 
