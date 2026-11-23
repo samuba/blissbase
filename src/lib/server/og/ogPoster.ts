@@ -145,8 +145,8 @@ export async function composeOgPoster({
 
 /**
  * Composes the home page 1200×630 OG image ("Golden Horizon") directly over the
- * event-page hero photography with a sculpted warm-espresso top veil so the
- * wordmark and tagline sit cleanly above the meditating hands and rising sun.
+ * event-page hero photography with the brand lockup and tagline centered
+ * between the meditating hands over a seamless warm-umber dusk cushion.
  */
 export async function composeHomeOgPoster({
 	title,
@@ -167,76 +167,86 @@ export async function composeHomeOgPoster({
 
 	const bg = await sharp(heroBackground)
 		.resize(width, height, { fit: `cover`, position: `south` })
-		.modulate({ brightness: 1, saturation: 1.04 })
+		.modulate({ brightness: 1.03, saturation: 1.08 })
 		.png()
 		.toBuffer();
 
+	const blockCenterY = 305;
+	const cyPct = ((blockCenterY / OG_HEIGHT) * 100).toFixed(1);
 	const scrimSvg = Buffer.from(`
 		<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
 			<defs>
-				<linearGradient id="topScrim" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="#1b0f06" stop-opacity="0.78"/>
-					<stop offset="22%" stop-color="#221308" stop-opacity="0.70"/>
-					<stop offset="40%" stop-color="#2a170a" stop-opacity="0.46"/>
-					<stop offset="56%" stop-color="#2a170a" stop-opacity="0.10"/>
-					<stop offset="68%" stop-color="#2a170a" stop-opacity="0.00"/>
-					<stop offset="100%" stop-color="#1a0e05" stop-opacity="0.14"/>
+				<linearGradient id="ambient" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#221206" stop-opacity="0.33"/>
+					<stop offset="28%" stop-color="#201106" stop-opacity="0.46"/>
+					<stop offset="56%" stop-color="#201106" stop-opacity="0.41"/>
+					<stop offset="72%" stop-color="#241307" stop-opacity="0.12"/>
+					<stop offset="86%" stop-color="#241307" stop-opacity="0.00"/>
+					<stop offset="100%" stop-color="#1c0f05" stop-opacity="0.06"/>
 				</linearGradient>
-				<radialGradient id="textCushion" cx="50%" cy="21%" r="44%">
-					<stop offset="0%" stop-color="#201106" stop-opacity="0.48"/>
-					<stop offset="58%" stop-color="#201106" stop-opacity="0.24"/>
-					<stop offset="100%" stop-color="#201106" stop-opacity="0.00"/>
+				<radialGradient id="centerCushion" cx="50%" cy="${cyPct}%" rx="48%" ry="25%">
+					<stop offset="0%" stop-color="#190c04" stop-opacity="0.46"/>
+					<stop offset="58%" stop-color="#1e0f05" stop-opacity="0.29"/>
+					<stop offset="88%" stop-color="#241307" stop-opacity="0.06"/>
+					<stop offset="100%" stop-color="#241307" stop-opacity="0.00"/>
 				</radialGradient>
 			</defs>
-			<rect width="${width}" height="${height}" fill="url(#topScrim)"/>
-			<rect width="${width}" height="${height}" fill="url(#textCushion)"/>
+			<rect width="${width}" height="${height}" fill="url(#ambient)"/>
+			<rect width="${width}" height="${height}" fill="url(#centerCushion)"/>
 		</svg>
 	`);
 
-	const logoDiameter = px(108);
+	const logoDiameter = px(98);
 	const logo = await prepareAntialiasedLogo({
 		goldLogo,
 		size: logoDiameter,
-		shadow: { dy: px(4), blur: px(9), opacity: 0.55 },
+		shadow: { dy: px(4), blur: px(10), opacity: 0.62 },
 	});
 
 	const titleLayer = await renderCanonicalBrandText({
 		text: title,
 		font: brandFont,
-		fontSize: px(96),
+		fontSize: px(90),
 		fill: `#faf7f5`,
 		letterSpacing: px(-0.8),
-		shadow: { dy: px(4), blur: px(10), color: `rgba(18, 9, 3, 0.55)` },
+		shadow: { dy: px(4), blur: px(12), color: `rgba(14, 7, 2, 0.70)` },
 	});
 	const subtitleLayer = await renderCanonicalBrandText({
 		text: subtitle,
 		font: brandFont,
-		fontSize: px(39),
-		fill: `#f5e8cf`,
+		fontSize: px(38),
+		fill: `#faf2e1`,
 		letterSpacing: px(0.2),
-		shadow: { dy: px(3), blur: px(8), color: `rgba(18, 9, 3, 0.60)` },
+		shadow: { dy: px(3), blur: px(11), color: `rgba(14, 7, 2, 0.78)` },
 	});
 
-	const logoGap = px(26);
+	const logoGap = px(22);
 	const lockupWidth = logoDiameter + logoGap + titleLayer.visualWidth;
+	const lockupHeight = Math.max(logoDiameter, titleLayer.visualHeight);
+	const gapLockupRule = px(18);
+	const ruleHeight = px(3);
+	const gapRuleSubtitle = px(20);
+	const totalBlockHeight = lockupHeight + gapLockupRule + ruleHeight + gapRuleSubtitle + subtitleLayer.visualHeight;
+
+	const blockTop = Math.round(px(blockCenterY) - totalBlockHeight / 2);
+	const lockupCenterY = blockTop + Math.round(lockupHeight / 2);
 	const lockupX = Math.round((width - lockupWidth) / 2);
-	const lockupCenterY = px(112);
 
 	const logoLeft = lockupX - logo.pad;
 	const logoTop = Math.round(lockupCenterY - logoDiameter / 2) - logo.pad;
 	const titleLeft = lockupX + logoDiameter + logoGap - titleLayer.padX;
 	const titleTop = Math.round(lockupCenterY - titleLayer.visualHeight / 2) - titleLayer.padY - px(2);
 
-	const ruleWidth = px(78);
-	const ruleY = px(179);
+	const ruleWidth = px(72);
+	const ruleY = blockTop + lockupHeight + gapLockupRule;
 	const ruleSvg = Buffer.from(`
 		<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-			<rect x="${Math.round((width - ruleWidth) / 2)}" y="${ruleY}" width="${ruleWidth}" height="${px(3)}" rx="${px(1.5)}" fill="${PRIMARY}" fill-opacity="0.92"/>
+			<rect x="${Math.round((width - ruleWidth) / 2)}" y="${ruleY}" width="${ruleWidth}" height="${ruleHeight}" rx="${px(1.5)}" fill="${PRIMARY}" fill-opacity="0.95"/>
 		</svg>
 	`);
 
 	const subtitleLeft = Math.round((width - subtitleLayer.visualWidth) / 2) - subtitleLayer.padX;
-	const subtitleTop = px(201) - subtitleLayer.padY;
+	const subtitleTop = ruleY + ruleHeight + gapRuleSubtitle - subtitleLayer.padY;
 
 	const composed = await sharp(bg)
 		.composite([
