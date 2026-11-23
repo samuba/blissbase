@@ -143,6 +143,276 @@ export async function composeOgPoster({
 	return sharp(composed).resize(OG_WIDTH, OG_HEIGHT, { kernel: `lanczos3` }).png({ compressionLevel: 9 }).toBuffer();
 }
 
+/**
+ * Composes the home page 1200×630 OG image ("Golden Horizon") directly over the
+ * event-page hero photography with a sculpted warm-espresso top veil so the
+ * wordmark and tagline sit cleanly above the meditating hands and rising sun.
+ */
+export async function composeHomeOgPoster({
+	title,
+	subtitle,
+	heroBackground,
+	goldLogo,
+	brandFont,
+}: {
+	title: string;
+	subtitle: string;
+	heroBackground: Buffer;
+	goldLogo: Buffer;
+	brandFont: Font;
+}): Promise<Buffer> {
+	const width = OG_WIDTH * SCALE;
+	const height = OG_HEIGHT * SCALE;
+	const px = (value: number) => Math.round(value * SCALE);
+
+	const bg = await sharp(heroBackground)
+		.resize(width, height, { fit: `cover`, position: `south` })
+		.modulate({ brightness: 1, saturation: 1.04 })
+		.png()
+		.toBuffer();
+
+	const scrimSvg = Buffer.from(`
+		<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+			<defs>
+				<linearGradient id="topScrim" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#1b0f06" stop-opacity="0.78"/>
+					<stop offset="22%" stop-color="#221308" stop-opacity="0.70"/>
+					<stop offset="40%" stop-color="#2a170a" stop-opacity="0.46"/>
+					<stop offset="56%" stop-color="#2a170a" stop-opacity="0.10"/>
+					<stop offset="68%" stop-color="#2a170a" stop-opacity="0.00"/>
+					<stop offset="100%" stop-color="#1a0e05" stop-opacity="0.14"/>
+				</linearGradient>
+				<radialGradient id="textCushion" cx="50%" cy="21%" r="44%">
+					<stop offset="0%" stop-color="#201106" stop-opacity="0.48"/>
+					<stop offset="58%" stop-color="#201106" stop-opacity="0.24"/>
+					<stop offset="100%" stop-color="#201106" stop-opacity="0.00"/>
+				</radialGradient>
+			</defs>
+			<rect width="${width}" height="${height}" fill="url(#topScrim)"/>
+			<rect width="${width}" height="${height}" fill="url(#textCushion)"/>
+		</svg>
+	`);
+
+	const logoDiameter = px(108);
+	const logo = await prepareAntialiasedLogo({
+		goldLogo,
+		size: logoDiameter,
+		shadow: { dy: px(4), blur: px(9), opacity: 0.55 },
+	});
+
+	const titleLayer = await renderCanonicalBrandText({
+		text: title,
+		font: brandFont,
+		fontSize: px(96),
+		fill: `#faf7f5`,
+		letterSpacing: px(-0.8),
+		shadow: { dy: px(4), blur: px(10), color: `rgba(18, 9, 3, 0.55)` },
+	});
+	const subtitleLayer = await renderCanonicalBrandText({
+		text: subtitle,
+		font: brandFont,
+		fontSize: px(39),
+		fill: `#f5e8cf`,
+		letterSpacing: px(0.2),
+		shadow: { dy: px(3), blur: px(8), color: `rgba(18, 9, 3, 0.60)` },
+	});
+
+	const logoGap = px(26);
+	const lockupWidth = logoDiameter + logoGap + titleLayer.visualWidth;
+	const lockupX = Math.round((width - lockupWidth) / 2);
+	const lockupCenterY = px(112);
+
+	const logoLeft = lockupX - logo.pad;
+	const logoTop = Math.round(lockupCenterY - logoDiameter / 2) - logo.pad;
+	const titleLeft = lockupX + logoDiameter + logoGap - titleLayer.padX;
+	const titleTop = Math.round(lockupCenterY - titleLayer.visualHeight / 2) - titleLayer.padY - px(2);
+
+	const ruleWidth = px(78);
+	const ruleY = px(179);
+	const ruleSvg = Buffer.from(`
+		<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+			<rect x="${Math.round((width - ruleWidth) / 2)}" y="${ruleY}" width="${ruleWidth}" height="${px(3)}" rx="${px(1.5)}" fill="${PRIMARY}" fill-opacity="0.92"/>
+		</svg>
+	`);
+
+	const subtitleLeft = Math.round((width - subtitleLayer.visualWidth) / 2) - subtitleLayer.padX;
+	const subtitleTop = px(201) - subtitleLayer.padY;
+
+	const composed = await sharp(bg)
+		.composite([
+			{ input: scrimSvg, blend: `over` },
+			{ input: ruleSvg, blend: `over` },
+			{ input: logo.png, left: logoLeft, top: logoTop },
+			{ input: titleLayer.png, left: titleLeft, top: titleTop },
+			{ input: subtitleLayer.png, left: subtitleLeft, top: subtitleTop },
+		])
+		.png()
+		.toBuffer();
+
+	return sharp(composed)
+		.resize(OG_WIDTH, OG_HEIGHT, { kernel: `lanczos3` })
+		.jpeg({ quality: 90, mozjpeg: true, chromaSubsampling: `4:4:4` })
+		.toBuffer();
+}
+
+async function prepareAntialiasedLogo({
+	goldLogo,
+	size,
+	shadow,
+}: {
+	goldLogo: Buffer;
+	size: number;
+	shadow: { dy: number; blur: number; opacity: number };
+}) {
+	const gold = await sharp(goldLogo)
+		.ensureAlpha()
+		.resize(size, size, {
+			fit: `contain`,
+			kernel: `lanczos3`,
+			background: { r: 0, g: 0, b: 0, alpha: 0 },
+		})
+		.png()
+		.toBuffer();
+
+	const mask = await sharp(
+		Buffer.from(`
+			<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 200 200">
+				<circle cx="100" cy="100" r="82.390" fill="none" stroke="#fff" stroke-width="23.625"/>
+				<circle cx="100" cy="100" r="49.864" fill="none" stroke="#fff" stroke-width="11.427"/>
+				<circle cx="100" cy="100" r="24.888" fill="none" stroke="#fff" stroke-width="8.526"/>
+				<circle cx="100" cy="100" r="5.625" fill="#fff"/>
+			</svg>
+		`),
+	)
+		.ensureAlpha()
+		.png()
+		.toBuffer();
+
+	const cleanLogo = await sharp(gold)
+		.composite([{ input: mask, blend: `dest-in` }])
+		.png()
+		.toBuffer();
+
+	const pad = Math.ceil(shadow.blur * 3 + Math.abs(shadow.dy) + 8);
+	const total = size + pad * 2;
+	const darkMask = await sharp(
+		Buffer.from(`
+			<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${total}" viewBox="${-pad} ${-pad} ${total} ${total}">
+				<g transform="translate(0, ${shadow.dy}) scale(${size / 200})">
+					<circle cx="100" cy="100" r="82.390" fill="none" stroke="rgba(18,10,4,${shadow.opacity})" stroke-width="23.625"/>
+					<circle cx="100" cy="100" r="49.864" fill="none" stroke="rgba(18,10,4,${shadow.opacity})" stroke-width="11.427"/>
+					<circle cx="100" cy="100" r="24.888" fill="none" stroke="rgba(18,10,4,${shadow.opacity})" stroke-width="8.526"/>
+					<circle cx="100" cy="100" r="5.625" fill="rgba(18,10,4,${shadow.opacity})"/>
+				</g>
+			</svg>
+		`),
+	)
+		.blur(Math.max(0.3, shadow.blur))
+		.png()
+		.toBuffer();
+
+	const png = await sharp({
+		create: { width: total, height: total, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+	})
+		.composite([
+			{ input: darkMask, left: 0, top: 0 },
+			{ input: cleanLogo, left: pad, top: pad },
+		])
+		.png()
+		.toBuffer();
+
+	return { png, pad };
+}
+
+/**
+ * Builds SVG glyph outlines at native unitsPerEm inside a scaled viewBox so
+ * librsvg never hits quadratic-curve tessellation bugs at specific pixel sizes.
+ */
+async function renderCanonicalBrandText({
+	text,
+	font,
+	fontSize,
+	fill,
+	letterSpacing = 0,
+	shadow,
+}: {
+	text: string;
+	font: Font;
+	fontSize: number;
+	fill: string;
+	letterSpacing?: number;
+	shadow: { dy: number; blur: number; color: string };
+}) {
+	const em = font.unitsPerEm;
+	const scale = fontSize / em;
+	const letterSpacingEm = letterSpacing / scale;
+	const glyphs = font.stringToGlyphs(text);
+
+	let cursorX = 0;
+	const paths: string[] = [];
+	let minX = Number.POSITIVE_INFINITY;
+	let minY = Number.POSITIVE_INFINITY;
+	let maxX = Number.NEGATIVE_INFINITY;
+	let maxY = Number.NEGATIVE_INFINITY;
+
+	for (let i = 0; i < glyphs.length; i++) {
+		const glyph = glyphs[i]!;
+		if (i > 0) cursorX += font.getKerningValue(glyphs[i - 1]!, glyph) + letterSpacingEm;
+		const path = glyph.getPath(cursorX, 0, em);
+		const box = path.getBoundingBox();
+		if (box.x2 > box.x1 && box.y2 > box.y1) {
+			paths.push(path.toSVG(1));
+			if (box.x1 < minX) minX = box.x1;
+			if (box.y1 < minY) minY = box.y1;
+			if (box.x2 > maxX) maxX = box.x2;
+			if (box.y2 > maxY) maxY = box.y2;
+		}
+		cursorX += glyph.advanceWidth ?? 0;
+	}
+
+	const visualWidth = Math.round((maxX - minX) * scale);
+	const visualHeight = Math.round((maxY - minY) * scale);
+	const padPx = Math.max(10, Math.ceil(shadow.blur * 3 + Math.abs(shadow.dy)) + 6);
+	const padEm = padPx / scale;
+
+	const vbX = minX - padEm;
+	const vbY = minY - padEm;
+	const vbW = maxX - minX + padEm * 2;
+	const vbH = maxY - minY + padEm * 2;
+	const outW = Math.ceil(vbW * scale);
+	const outH = Math.ceil(vbH * scale);
+
+	const crispText = await sharp(
+		Buffer.from(
+			`<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" viewBox="${vbX} ${vbY} ${vbW} ${vbH}"><g fill="${fill}" fill-rule="nonzero">${paths.join(``)}</g></svg>`,
+		),
+	)
+		.png()
+		.toBuffer();
+
+	const dyEm = shadow.dy / scale;
+	const shadowLayer = await sharp(
+		Buffer.from(
+			`<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" viewBox="${vbX} ${vbY} ${vbW} ${vbH}"><g transform="translate(0, ${dyEm.toFixed(1)})" fill="${shadow.color}" fill-rule="nonzero">${paths.join(``)}</g></svg>`,
+		),
+	)
+		.blur(Math.max(0.3, shadow.blur))
+		.png()
+		.toBuffer();
+
+	const png = await sharp({
+		create: { width: outW, height: outH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+	})
+		.composite([
+			{ input: shadowLayer, left: 0, top: 0 },
+			{ input: crispText, left: 0, top: 0 },
+		])
+		.png()
+		.toBuffer();
+
+	return { png, visualWidth, visualHeight, padX: padPx, padY: padPx };
+}
+
 async function prepareLogo({ goldLogo, size }: { goldLogo: Buffer; size: number }) {
 	const gold = await sharp(goldLogo)
 		.ensureAlpha()
