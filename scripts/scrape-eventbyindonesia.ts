@@ -19,6 +19,8 @@ import {
 } from "./common.ts";
 import { hasValidCoordinates } from "../src/lib/locationFilter.ts";
 import { geocodeAddressCached } from "../src/lib/server/google.script.ts";
+import { resizeCoverImage } from "../src/lib/imageProcessing.ts";
+import * as assets from "../src/lib/assets.ts";
 import { parseCliArgs } from "./scrape-eventbrite.ts";
 
 const API_BASE = `https://api-event.kemenpar.go.id`;
@@ -29,6 +31,7 @@ const TIME_ZONE = `Asia/Makassar` as const;
 const BALI_PROVINCE_ID = 51;
 const PER_PAGE = 50;
 const MAX_PAGES = 50;
+const MAX_IMAGES = 3;
 const UPCOMING_GRACE_MS = 24 * 60 * 60 * 1000;
 const GEOCODE_BIAS = [`Bali`, `Indonesia`];
 
@@ -73,6 +76,19 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		}
 
 		kept.sort((a, b) => a.startAt.localeCompare(b.startAt));
+		// Presigned CDN URLs expire in ~1h; other scrapers may still be running when
+		// scrape-websites calls cacheImages, so upload durable copies before return.
+		for (const event of kept) {
+			try {
+				event.imageUrls = await makeImagesDurable({
+					sourceUrl: event.sourceUrl,
+					imageUrls: event.imageUrls,
+				});
+			} catch (error) {
+				console.error(`Durable images failed for ${event.sourceUrl}:`, error);
+			}
+		}
+
 		console.error(`--- Scraping finished. Total events collected: ${kept.length} ---`);
 		return kept;
 	}
@@ -250,14 +266,109 @@ function getDescription(detail: EventDetail): string | undefined {
 	return trimmed || undefined;
 }
 
-function getImageUrls(detail: EventDetail): string[] {
+export function getImageUrls(detail: EventDetail): string[] {
 	const urls: string[] = [];
-	for (const url of [detail.image, detail.thumbnailUrl, ...detail.galleryImages]) {
-		if (!url?.startsWith(`http`)) continue;
-		if (urls.includes(url)) continue;
+	const seenPaths = new Set<string>();
+
+	const push = (url: string | undefined) => {
+		if (!url?.startsWith(`http`)) return;
+		if (urls.length >= MAX_IMAGES) return;
+		const pathKey = imagePathKey(url);
+		if (seenPaths.has(pathKey)) return;
+		seenPaths.add(pathKey);
 		urls.push(url);
-	}
+	};
+
+	// Banner first, then gallery. Thumbnail only if nothing else (same asset, smaller).
+	push(detail.image);
+	for (const url of detail.galleryImages) push(url);
+	if (!urls.length) push(detail.thumbnailUrl);
 	return urls;
+}
+
+/** Strip signed query so cache keys stay stable across refreshes. */
+export function stableImageUrl(url: string): string {
+	try {
+		const parsed = new URL(url);
+		parsed.search = ``;
+		parsed.hash = ``;
+		return parsed.toString();
+	} catch {
+		return url.split(`?`)[0] || url;
+	}
+}
+
+function imagePathKey(url: string): string {
+	try {
+		const path = new URL(stableImageUrl(url)).pathname;
+		return path.replace(/\/thumbnails\/\d+\//, `/`);
+	} catch {
+		return stableImageUrl(url);
+	}
+}
+
+async function makeImagesDurable({
+	sourceUrl,
+	imageUrls,
+}: {
+	sourceUrl: string;
+	imageUrls: string[];
+}): Promise<string[]> {
+	if (!imageUrls?.length) return [];
+
+	const sourceSlug = sourceSlugFromUrl(sourceUrl);
+	const uploadSlug = sourceSlug ? `eventbyindonesia-${sourceSlug}` : `eventbyindonesia`;
+
+	const freshByPath = new Map<string, string>();
+	if (sourceSlug) {
+		try {
+			await sleep(REQUEST_DELAY_MS);
+			const detail = await fetchEventDetail(sourceSlug);
+			if (detail) {
+				for (const url of getImageUrls(detail)) {
+					freshByPath.set(imagePathKey(url), url);
+				}
+			}
+		} catch (error) {
+			console.error(`Fresh detail for images failed (${sourceSlug}):`, error);
+		}
+	}
+
+	const durable: string[] = [];
+	for (const url of imageUrls.slice(0, MAX_IMAGES)) {
+		const pathKey = imagePathKey(url);
+		const signed = freshByPath.get(pathKey) ?? url;
+		try {
+			durable.push(await uploadDurableImage({ signedUrl: signed, uploadSlug }));
+		} catch (error) {
+			console.error(`Upload durable image failed for ${stableImageUrl(signed)}:`, error);
+			// Fresh signature may still work if this source is scraped alone.
+			durable.push(signed);
+		}
+	}
+	return durable;
+}
+
+async function uploadDurableImage({
+	signedUrl,
+	uploadSlug,
+}: {
+	signedUrl: string;
+	uploadSlug: string;
+}): Promise<string> {
+	const bytes = await customFetch(signedUrl, { returnType: `bytes` });
+	const { buffer, phash } = await resizeCoverImage(bytes);
+	return assets.uploadEventImage(buffer, uploadSlug, phash, assets.loadCreds());
+}
+
+function sourceSlugFromUrl(sourceUrl: string): string | undefined {
+	try {
+		const path = new URL(sourceUrl).pathname;
+		const match = /\/event\/([^/]+)\/?$/.exec(path);
+		return match?.[1] || undefined;
+	} catch {
+		return undefined;
+	}
 }
 
 function getHost(detail: EventDetail): string | undefined {

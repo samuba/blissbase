@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+	getImageUrls,
 	isUpcomingStart,
 	parseEventDetail,
 	parseListPage,
+	stableImageUrl,
 } from "./scrape-eventbyindonesia.ts";
+import { stableImageCacheOriginalUrl } from "./imageCacheLookup.ts";
 
 describe(`parseListPage`, () => {
 	it(`reads Bali listings and meta`, () => {
@@ -105,5 +108,49 @@ describe(`isUpcomingStart`, () => {
 		const now = Date.parse(`2026-11-24T12:00:00+08:00`);
 		expect(isUpcomingStart({ startAt: `2026-11-24T08:00:00+08:00`, now })).toBe(true);
 		expect(isUpcomingStart({ startAt: `2026-11-20T08:00:00+08:00`, now })).toBe(false);
+	});
+});
+
+describe(`getImageUrls`, () => {
+	it(`keeps banner plus up to two gallery images and skips thumbnail dupes`, () => {
+		const signed = (path: string) =>
+			`https://api-event.kemenpar.go.id/eventbyid/${path}?X-Amz-Expires=3600&X-Amz-Signature=abc`;
+		const detail = parseEventDetail({
+			data: {
+				name: `Fest`,
+				slug: `fest`,
+				start_event: `2026-11-27`,
+				image: signed(`events/banner/a/cover.jpeg`),
+				thumbnail_url: signed(`thumbnails/800/events/banner/a/cover.jpeg`),
+				images: [
+					{ url: signed(`events/banner/a/cover.jpeg`) },
+					{ url: signed(`events/banner/a/g1.jpeg`) },
+					{ url: signed(`events/banner/a/g2.jpeg`) },
+					{ url: signed(`events/banner/a/g3.jpeg`) },
+				],
+			},
+		});
+		expect(detail).toBeTruthy();
+		const urls = getImageUrls(detail!);
+		expect(urls).toHaveLength(3);
+		expect(urls.map(stableImageUrl)).toEqual([
+			`https://api-event.kemenpar.go.id/eventbyid/events/banner/a/cover.jpeg`,
+			`https://api-event.kemenpar.go.id/eventbyid/events/banner/a/g1.jpeg`,
+			`https://api-event.kemenpar.go.id/eventbyid/events/banner/a/g2.jpeg`,
+		]);
+	});
+});
+
+describe(`stableImageUrl / stableImageCacheOriginalUrl`, () => {
+	it(`strips Amz signature query params`, () => {
+		const signed =
+			`https://api-event.kemenpar.go.id/eventbyid/events/banner/a.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&X-Amz-Signature=deadbeef`;
+		expect(stableImageUrl(signed)).toBe(
+			`https://api-event.kemenpar.go.id/eventbyid/events/banner/a.jpg`,
+		);
+		expect(stableImageCacheOriginalUrl(signed)).toBe(
+			`https://api-event.kemenpar.go.id/eventbyid/events/banner/a.jpg`,
+		);
+		expect(stableImageCacheOriginalUrl(`https://cdn.example/ok.webp`)).toBe(`https://cdn.example/ok.webp`);
 	});
 });
