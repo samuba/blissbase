@@ -397,7 +397,9 @@ function toWhatsappUrl(raw: string | null | undefined) {
 	if (/^https?:\/\/(www\.)?(wa\.me|api\.whatsapp\.com)\//i.test(value)) return value;
 	const digits = value.replace(/\D/g, ``);
 	if (!digits?.length) return undefined;
-	return `https://wa.me/${digits}`;
+	// Indonesian local mobiles are stored as 08… — wa.me needs country code 62…
+	const international = digits.startsWith(`0`) ? `62${digits.slice(1)}` : digits;
+	return `https://wa.me/${international}`;
 }
 
 function escapeHtml(text: string) {
