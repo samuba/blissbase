@@ -8,8 +8,6 @@ import { isAdminSession } from "#lib/server/admin.ts";
 import { aiPickEmojisForTitles } from "#lib/server/ai.ts";
 import { db, s } from "#lib/server/db.ts";
 import { bustOfferingsOgImageCache, loadVisibleListedOfferings, scheduleOfferingsOgWarmForFilter } from "#lib/server/og/offeringsOg.ts";
-import { resolveEventSourceOrigins } from "#lib/server/resolveEventSourceOrigins.ts";
-
 export const getEventSources = query(async () => {
 	assertAdmin();
 
@@ -28,16 +26,12 @@ export const getEventSourceOrigins = query(
 		const event = await db.query.events.findFirst({
 			where: eq(s.events.id, eventId),
 			columns: {
-				source: true,
-				sourceUrl: true,
-				sourceChatIdsTelegram: true,
-				sourceChatIdsWhatsapp: true,
 				sourceOrigins: true,
 			},
 		});
 		if (!event) return [];
 
-		return resolveEventSourceOrigins({ db, event });
+		return event.sourceOrigins ?? [];
 	},
 );
 
