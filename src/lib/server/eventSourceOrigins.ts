@@ -49,52 +49,24 @@ export function mergeSourceOrigins(...lists: Array<EventSourceOrigin[] | null | 
 }
 
 /**
- * Builds origins from the classic single `source` / chat-id columns when callers omit `sourceOrigins`.
+ * Builds scrape/form origins from classic `source` / `sourceUrl` when callers omit them.
+ * Messenger provenance must be supplied via `sourceOrigins` (with chatId).
  */
 export function sourceOriginsFromEventFields(event: {
 	source?: string | null;
 	sourceUrl?: string | null;
-	sourceChatIdsTelegram?: string[] | null;
-	sourceChatIdsWhatsapp?: string[] | null;
 	sourceOrigins?: EventSourceOrigin[] | null;
 }) {
 	const origins: EventSourceOrigin[] = [];
 
 	if (event.source === WEBSITE_FORM_SOURCE) {
 		origins.push({ type: `website-form`, label: WEBSITE_FORM_SOURCE, url: event.sourceUrl ?? null });
-	} else if (event.source === `telegram`) {
-		// Chat rows below cover telegram; keep a bare source only when no chat ids yet.
-		if (!event.sourceChatIdsTelegram?.length) {
-			origins.push({ type: `telegram`, label: `telegram`, url: event.sourceUrl ?? null });
-		}
-	} else if (event.source === `whatsapp`) {
-		if (!event.sourceChatIdsWhatsapp?.length) {
-			origins.push({ type: `whatsapp`, label: `whatsapp`, url: event.sourceUrl ?? null });
-		}
+	} else if (event.source === `telegram` || event.source === `whatsapp`) {
+		// Messenger groups live only in sourceOrigins (chatId required).
 	} else if (event.source?.trim()) {
 		origins.push({
 			type: `scrape`,
 			label: event.source.trim(),
-			url: event.sourceUrl ?? null,
-		});
-	}
-
-	for (const chatId of event.sourceChatIdsTelegram ?? []) {
-		if (!chatId?.trim()) continue;
-		origins.push({
-			type: `telegram`,
-			label: chatId.trim(),
-			chatId: chatId.trim(),
-			url: event.sourceUrl ?? null,
-		});
-	}
-
-	for (const chatId of event.sourceChatIdsWhatsapp ?? []) {
-		if (!chatId?.trim()) continue;
-		origins.push({
-			type: `whatsapp`,
-			label: chatId.trim(),
-			chatId: chatId.trim(),
 			url: event.sourceUrl ?? null,
 		});
 	}
@@ -109,8 +81,6 @@ export function sourceOriginsFromEventFields(event: {
 export function ensureSourceOrigins(event: {
 	source?: string | null;
 	sourceUrl?: string | null;
-	sourceChatIdsTelegram?: string[] | null;
-	sourceChatIdsWhatsapp?: string[] | null;
 	sourceOrigins?: EventSourceOrigin[] | null;
 }) {
 	return sourceOriginsFromEventFields(event);

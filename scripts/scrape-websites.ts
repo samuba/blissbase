@@ -552,14 +552,6 @@ async function main() {
                         ensureSourceOrigins(existing),
                         ensureSourceOrigins(event),
                     ),
-                    sourceChatIdsTelegram: Array.from(new Set([
-                        ...(existing.sourceChatIdsTelegram ?? []),
-                        ...(event.sourceChatIdsTelegram ?? []),
-                    ])),
-                    sourceChatIdsWhatsapp: Array.from(new Set([
-                        ...(existing.sourceChatIdsWhatsapp ?? []),
-                        ...(event.sourceChatIdsWhatsapp ?? []),
-                    ])),
                 });
             });
             const deduplicatedEvents = Array.from(uniqueEvents.values());
@@ -657,8 +649,6 @@ async function cleanupWebsiteScrapeSources(args: {
 			source: true,
 			sourceUrl: true,
 			sourceOrigins: true,
-			sourceChatIdsTelegram: true,
-			sourceChatIdsWhatsapp: true,
 		},
 	});
 

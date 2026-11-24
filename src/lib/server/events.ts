@@ -340,14 +340,6 @@ type FetchEvent = FetchEventsResult["events"][number];
 export function prepareEventsForUi(events: FetchEvent[]) {
 	return (
 		events
-			// filter ASI rooms
-			// .filter(event => {
-			//     const ASI_ROOMS = ['asi_de_at_ch', 'asi_regio_at_by', 'asi_regio_nord', 'asi_regio_ost', 'asi_regio_sw', 'asi_regio_west'];
-			//     if (event.sourceChatIdsTelegram?.every(roomId => ASI_ROOMS.includes(roomId))) {
-			//         return false;
-			//     }
-			//     return true;
-			// })
 			.map((event) => {
 				// hide that we took event from AIN channels. Stop when we have official cooperation with AIN.
 				if (event.host?.includes("Authentic Intimacy Network") || !isProperDisplayName(event.host)) {

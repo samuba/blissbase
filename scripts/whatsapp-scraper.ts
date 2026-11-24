@@ -783,7 +783,6 @@ function mergeDuplicateEvents(events: InsertEvent[]) {
         const imageUrls = mergeUniqueStrings(existing.imageUrls, event.imageUrls)
         const tagSlugs = mergeUniqueStrings(existing.tagSlugs, event.tagSlugs)
         const contact = mergeUniqueStrings(existing.contact, event.contact)
-        const sourceChatIdsWhatsapp = mergeUniqueStrings(existing.sourceChatIdsWhatsapp, event.sourceChatIdsWhatsapp)
         const sourceOrigins = mergeSourceOrigins(existing.sourceOrigins, event.sourceOrigins)
         const coords = mergeCoords({
             preferredLatitude: existing.latitude,
@@ -798,7 +797,6 @@ function mergeDuplicateEvents(events: InsertEvent[]) {
             imageUrls,
             tagSlugs,
             contact,
-            sourceChatIdsWhatsapp,
             sourceOrigins,
             latitude: coords.latitude,
             longitude: coords.longitude,
@@ -831,7 +829,6 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent) {
     merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls)
     merged.tagSlugs = mergeUniqueStrings(existingEvent.tagSlugs, merged.tagSlugs)
     merged.contact = mergeUniqueStrings(existingEvent.contact, merged.contact)
-    merged.sourceChatIdsWhatsapp = mergeUniqueStrings(existingEvent.sourceChatIdsWhatsapp, merged.sourceChatIdsWhatsapp)
     merged.sourceOrigins = mergeSourceOrigins(existingEvent.sourceOrigins, merged.sourceOrigins)
     const coords = mergeCoords({
         preferredLatitude: merged.latitude,
@@ -1150,7 +1147,6 @@ async function processMessages(args: {
 
     events = mergeDuplicateEvents(events)
     events.forEach((x) => {
-        x.sourceChatIdsWhatsapp = Array.from(new Set([args.target.chatJid, ...(x.sourceChatIdsWhatsapp ?? [])]))
         x.sourceOrigins = mergeSourceOrigins(
             x.sourceOrigins,
             [messengerSourceOrigin({

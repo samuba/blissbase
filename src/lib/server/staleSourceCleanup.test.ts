@@ -43,7 +43,6 @@ describe(`planStaleSourceCleanup`, () => {
 		const plan = planStaleSourceCleanup({
 			event: {
 				source: `telegram`,
-				sourceChatIdsTelegram: [`room1`],
 				sourceOrigins: [{ type: `telegram`, label: `Room`, chatId: `room1` }],
 			},
 			staleSources: [`tribehaus`],

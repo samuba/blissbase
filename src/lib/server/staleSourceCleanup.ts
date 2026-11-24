@@ -21,8 +21,6 @@ export function planStaleSourceCleanup(args: {
 		source: string;
 		sourceUrl?: string | null;
 		sourceOrigins?: EventSourceOrigin[] | null;
-		sourceChatIdsTelegram?: string[] | null;
-		sourceChatIdsWhatsapp?: string[] | null;
 	};
 	staleSources: string[];
 }): StaleSourceCleanupPlan {

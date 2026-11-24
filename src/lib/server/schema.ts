@@ -56,8 +56,6 @@ export const events = pgTable(
 		slug: text().notNull().unique(),
 		soldOut: boolean().notNull().default(false),
 		listed: boolean().notNull().default(true),
-		sourceChatIdsTelegram: text().array(),
-		sourceChatIdsWhatsapp: text().array(),
 		/** All places this event was seen (scrape sites, Telegram/WhatsApp groups). Merged on dedupe. */
 		sourceOrigins: jsonb().$type<EventSourceOrigin[]>().notNull().default([]),
 		hostSecret: text(),
