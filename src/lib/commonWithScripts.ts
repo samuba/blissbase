@@ -23,6 +23,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	balievents: { module: "./scrape-balievents.ts", label: "BaliEvents.co", url: "https://www.balievents.co" },
 	cooleventasia: { module: "./scrape-cooleventasia.ts", label: "Cool Event Asia", url: "https://cooleventasia.com" },
 	goers: { module: "./scrape-goers.ts", label: "GOERS", url: "https://www.goersapp.com" },
+	seeevents: { module: "./scrape-seeevents.ts", label: "SEE Events Bali", url: "https://app.see.events" },
 	yogabarn: { module: "./scrape-yogabarn.ts", label: "The Yoga Barn", url: "https://theyogabarn.com", retryOnNewIp: true },
 	tantrakalender: { module: "./scrape-tantrakalender.ts", label: "Tantrakalender", url: "https://tantrakalender.de" },
 	tantrazentrumleipzig: {
