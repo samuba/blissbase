@@ -14,6 +14,11 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	// vortexapp: { module: './scrape-vortexapp.ts', label: 'Vortexapp', url: 'https://vortexapp.dev' },
 	megatix_indonesia: { module: "./scrape-megatix_indonesia.ts", label: "Megatix Indonesia", url: "https://megatix.co.id" },
 	whatsupdanang: { module: "./scrape-whatsupdanang.ts", label: "WhatsUpDaNang", url: "https://whatsupdanang.com" },
+	whatsnewindonesia: {
+		module: "./scrape-whatsnewindonesia.ts",
+		label: "What's New Indonesia",
+		url: "https://whatsnewindonesia.com",
+	},
 	soulwise: { module: "./scrape-soulwise.ts", label: "Soulwise", url: "https://soulwise.io" },
 	balievents: { module: "./scrape-balievents.ts", label: "BaliEvents.co", url: "https://www.balievents.co" },
 	yogabarn: { module: "./scrape-yogabarn.ts", label: "The Yoga Barn", url: "https://theyogabarn.com", retryOnNewIp: true },
