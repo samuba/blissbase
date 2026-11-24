@@ -23,6 +23,7 @@ import { knownTagSlugs } from "../src/lib/eventCategories";
 import { matchesBlackListWords } from "../src/whitelistWords.ts";
 import { extractVideoFrame } from "./extractVideoFrame";
 import { resolveEventImageUrls } from "./ogImageFallback";
+import { mergeSourceOrigins, messengerSourceOrigin } from "../src/lib/server/eventSourceOrigins";
 
 const apiId = Number(process.env.TELEGRAM_APP_ID);
 const apiHash = process.env.TELEGRAM_APP_HASH!;
@@ -596,6 +597,7 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
 
             const tagSlugs = mergeUniqueStrings(existing.tagSlugs, event.tagSlugs);
             const sourceChatIdsTelegram = mergeUniqueStrings(existing.sourceChatIdsTelegram, event.sourceChatIdsTelegram);
+            const sourceOrigins = mergeSourceOrigins(existing.sourceOrigins, event.sourceOrigins);
             const coords = mergeCoords({
                 preferredLatitude: existing.latitude,
                 preferredLongitude: existing.longitude,
@@ -610,6 +612,7 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 imageUrls,
                 tagSlugs,
                 sourceChatIdsTelegram,
+                sourceOrigins,
                 latitude: coords.latitude,
                 longitude: coords.longitude,
                 listed: mergeListedValue({
@@ -639,6 +642,7 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
     merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls);
     merged.tagSlugs = mergeUniqueStrings(existingEvent.tagSlugs, merged.tagSlugs);
     merged.sourceChatIdsTelegram = mergeUniqueStrings(existingEvent.sourceChatIdsTelegram, merged.sourceChatIdsTelegram);
+    merged.sourceOrigins = mergeSourceOrigins(existingEvent.sourceOrigins, merged.sourceOrigins);
     const coords = mergeCoords({
         preferredLatitude: merged.latitude,
         preferredLongitude: merged.longitude,
@@ -905,13 +909,14 @@ async function processScrapingTarget(target: TelegramScrapingTarget, accounts: S
         let lastEventCreatedAt: Date | undefined;
         if (messages.length > 0) {
             if (messagesToProcess.length > 0) {
-                ({ scrapedEventsCount, lastEventCreatedAt } = await processMessages(
-                    messagesToProcess,
-                    resolvedRoomId,
+                ({ scrapedEventsCount, lastEventCreatedAt } = await processMessages({
+                    messages: messagesToProcess,
+                    chatId: resolvedRoomId,
+                    chatName: entityName ?? target.name,
                     client,
-                    target.defaultTimezone,
-                    target.hasOnlyConsciousEvents
-                ));
+                    defaultTimezone: target.defaultTimezone,
+                    eventIsDefinitelyConscious: target.hasOnlyConsciousEvents,
+                }));
             }
             messages.sort((a, b) => b.id - a.id); // necessary cuz we are pulling from multiple topics, highest id first
             const latestMsgId = BigInt(messages[0].id);
@@ -976,13 +981,15 @@ async function processScrapingTarget(target: TelegramScrapingTarget, accounts: S
 /**
  * Processes messages and returns the newest message ID
  */
-async function processMessages(
-    messages: Api.Message[],
-    chatId: string,
-    client: TelegramClient,
-    defaultTimezone: string,
-    eventIsDefinitelyConscious: boolean
-) {
+async function processMessages(args: {
+    messages: Api.Message[];
+    chatId: string;
+    chatName?: string | null;
+    client: TelegramClient;
+    defaultTimezone: string;
+    eventIsDefinitelyConscious: boolean;
+}) {
+    const { messages, chatId, chatName, client, defaultTimezone, eventIsDefinitelyConscious } = args;
     let events: InsertEvent[] = [];
     const processedMessageIds = new Set<number>(); // Track processed messages to avoid duplicates
 
@@ -1029,7 +1036,13 @@ async function processMessages(
     }
 
     events = mergeDuplicateEvents(events);
-    events.forEach(x => x.sourceChatIdsTelegram = Array.from(new Set([chatId, ...(x.sourceChatIdsTelegram ?? [])])))
+    events.forEach((x) => {
+        x.sourceChatIdsTelegram = Array.from(new Set([chatId, ...(x.sourceChatIdsTelegram ?? [])]));
+        x.sourceOrigins = mergeSourceOrigins(
+            x.sourceOrigins,
+            [messengerSourceOrigin({ type: `telegram`, chatId, label: chatName, url: x.sourceUrl })],
+        );
+    });
 
     let lastEventCreatedAt: Date | undefined;
     if (events.length > 0) {

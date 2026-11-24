@@ -11,6 +11,7 @@ import { calculateHammingDistance } from '../src/lib/imageProcessing';
 import { getProcessedImageHashFromUrl } from '../src/lib/imageUpload.shared';
 import type { SelectEvent } from '../src/lib/server/schema';
 import { FORM_CREATED_EVENT_SOURCE, normalizeSourceUrl } from '../src/lib/server/events.shared';
+import { ensureSourceOrigins, mergeSourceOrigins, type EventSourceOrigin } from '../src/lib/server/eventSourceOrigins';
 
 export async function main() {
     const { duplicates, eventsWithSameStart } = await getDuplicateEventsByImageHash(5);
@@ -255,6 +256,11 @@ async function mergeAndDeleteDuplicateEvents(args: {
     eventToSurvive.tagSlugs = mergeArrayDeduplicated(eventToSurvive.tagSlugs, eventToDelete.tagSlugs)
     eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsTelegram, eventToDelete.sourceChatIdsTelegram)
     eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsWhatsapp, eventToDelete.sourceChatIdsWhatsapp)
+    // Derive origins from classic source/chat columns so scrape channels survive messenger winners.
+    eventToSurvive.sourceOrigins = mergeSourceOrigins(
+        ensureSourceOrigins(eventToSurvive),
+        ensureSourceOrigins(eventToDelete),
+    )
     if (eventToDelete.imageUrls?.length) {
         // Keep extra images unless they already look like one on the survivor
         for (const toDelUrl of eventToDelete.imageUrls) {
@@ -535,6 +541,7 @@ export function preparePreferredSourceEventUpdate<TEvent extends {
     tagSlugs: string[] | null
     sourceChatIdsTelegram: string[] | null
     sourceChatIdsWhatsapp: string[] | null
+    sourceOrigins?: EventSourceOrigin[] | null
 }>(args: {
     eventToSurvive: TEvent,
     eventToDelete: TEvent,
@@ -548,11 +555,16 @@ export function preparePreferredSourceEventUpdate<TEvent extends {
         args.eventToSurvive.sourceChatIdsWhatsapp,
         args.eventToDelete.sourceChatIdsWhatsapp,
     );
+    args.eventToSurvive.sourceOrigins = mergeSourceOrigins(
+        ensureSourceOrigins(args.eventToSurvive),
+        ensureSourceOrigins(args.eventToDelete),
+    );
 
     return {
         tagSlugs: args.eventToSurvive.tagSlugs,
         sourceChatIdsTelegram: args.eventToSurvive.sourceChatIdsTelegram,
         sourceChatIdsWhatsapp: args.eventToSurvive.sourceChatIdsWhatsapp,
+        sourceOrigins: args.eventToSurvive.sourceOrigins,
     };
 }
 

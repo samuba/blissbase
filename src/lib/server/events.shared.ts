@@ -3,6 +3,7 @@ import { deduplicateItems, generateSlug } from "../common";
 import { isProperDisplayName } from "../displayName";
 import type { InsertEvent } from "../types";
 import { buildConflictUpdateColumns, type DB, s } from "./db.shared";
+import { ensureSourceOrigins } from "./eventSourceOrigins";
 
 export const FORM_CREATED_EVENT_SOURCE = `website-form`;
 
@@ -36,6 +37,7 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		}
 
 		event.imageUrls = deduplicateItems(event.imageUrls);
+		event.sourceOrigins = ensureSourceOrigins(event);
 
 		event.slug = generateSlug({
 			name: event.name,
@@ -64,15 +66,22 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		.onConflictDoUpdate({
 			target: s.events.slug,
 			set: {
-				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`, `tagSlugs`, `language`, `structure`, `listed`]),
+				...buildConflictUpdateColumns(s.events, [
+					`slug`,
+					`id`,
+					`createdAt`,
+					`tagSlugs`,
+					`language`,
+					`structure`,
+					`listed`,
+					`sourceOrigins`,
+					`source`,
+					`sourceUrl`,
+				]),
 				// Unlisting is sticky so Jev's not-conscious verdict survives rescrapes.
 				listed: sql`${s.events.listed} and excluded.listed`,
-				source: sql`
-					case
-						when ${s.events.source} = ${FORM_CREATED_EVENT_SOURCE} then ${s.events.source}
-						else excluded.source
-					end
-				`,
+				// First writer wins: later scrapes/messengers only enrich origins, not primary source.
+				source: sql`${s.events.source}`,
 				authorId: sql`
 					case
 						when ${s.events.source} = ${FORM_CREATED_EVENT_SOURCE} then ${s.events.authorId}
@@ -85,12 +94,13 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 						else excluded.host_secret
 					end
 				`,
+				// Keep an existing external URL; fill only when missing or a Blissbase placeholder.
 				sourceUrl: sql`
 					case
+						when ${s.events.sourceUrl} is not null and ${s.events.sourceUrl} !~* ${sql.raw(`'${BLISSBASE_HOST_PATTERN}'`)} then ${s.events.sourceUrl}
 						when excluded.source_url is not null and excluded.source_url ~* ${sql.raw(`'${BLISSBASE_HOST_PATTERN}'`)} then null
 						when excluded.source_url is not null then excluded.source_url
-						when ${s.events.sourceUrl} is not null and ${s.events.sourceUrl} ~* ${sql.raw(`'${BLISSBASE_HOST_PATTERN}'`)} then null
-						else excluded.source_url
+						else null
 					end
 				`,
 				// Keep existing catalog tags; fill them from the incoming row when the event is still untagged.
@@ -134,6 +144,39 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 							from unnest(${s.events.sourceChatIdsWhatsapp} || excluded.source_chat_ids_whatsapp) as merged_chat_ids(chat_id)
 						)
 					end
+				`,
+				// Append/merge provenance; later rows win for the same scrape site / chat id.
+				sourceOrigins: sql`
+					(
+						with combined as (
+							select origin, ord
+							from jsonb_array_elements(
+								coalesce(${s.events.sourceOrigins}, '[]'::jsonb) || coalesce(excluded.source_origins, '[]'::jsonb)
+							) with ordinality as t(origin, ord)
+						),
+						keyed as (
+							select
+								case
+									when origin->>'type' in ('telegram', 'whatsapp') then (origin->>'type') || ':' || coalesce(origin->>'chatId', '')
+									when origin->>'type' = 'scrape' then 'scrape:' || coalesce(origin->>'label', '')
+									else coalesce(origin->>'type', 'unknown')
+								end as dedupe_key,
+								origin,
+								ord
+							from combined
+						)
+						select coalesce(
+							(
+								select jsonb_agg(origin order by ord)
+								from (
+									select distinct on (dedupe_key) origin, ord
+									from keyed
+									order by dedupe_key, ord desc
+								) kept
+							),
+							'[]'::jsonb
+						)
+					)
 				`,
 			},
 		})

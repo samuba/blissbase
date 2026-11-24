@@ -18,6 +18,7 @@ import { extractVideoFrame } from "./extractVideoFrame"
 import { resolveEventImageUrls } from "./ogImageFallback"
 import { knownTagSlugs } from "../src/lib/eventCategories"
 import { matchesBlackListWords } from "../src/whitelistWords.ts"
+import { mergeSourceOrigins, messengerSourceOrigin } from "../src/lib/server/eventSourceOrigins"
 
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY!
 const sqliteObjectKey = `whatsapp.sqlite`
@@ -783,6 +784,7 @@ function mergeDuplicateEvents(events: InsertEvent[]) {
         const tagSlugs = mergeUniqueStrings(existing.tagSlugs, event.tagSlugs)
         const contact = mergeUniqueStrings(existing.contact, event.contact)
         const sourceChatIdsWhatsapp = mergeUniqueStrings(existing.sourceChatIdsWhatsapp, event.sourceChatIdsWhatsapp)
+        const sourceOrigins = mergeSourceOrigins(existing.sourceOrigins, event.sourceOrigins)
         const coords = mergeCoords({
             preferredLatitude: existing.latitude,
             preferredLongitude: existing.longitude,
@@ -797,6 +799,7 @@ function mergeDuplicateEvents(events: InsertEvent[]) {
             tagSlugs,
             contact,
             sourceChatIdsWhatsapp,
+            sourceOrigins,
             latitude: coords.latitude,
             longitude: coords.longitude,
             listed: mergeListedValue({
@@ -829,6 +832,7 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent) {
     merged.tagSlugs = mergeUniqueStrings(existingEvent.tagSlugs, merged.tagSlugs)
     merged.contact = mergeUniqueStrings(existingEvent.contact, merged.contact)
     merged.sourceChatIdsWhatsapp = mergeUniqueStrings(existingEvent.sourceChatIdsWhatsapp, merged.sourceChatIdsWhatsapp)
+    merged.sourceOrigins = mergeSourceOrigins(existingEvent.sourceOrigins, merged.sourceOrigins)
     const coords = mergeCoords({
         preferredLatitude: merged.latitude,
         preferredLongitude: merged.longitude,
@@ -1147,6 +1151,15 @@ async function processMessages(args: {
     events = mergeDuplicateEvents(events)
     events.forEach((x) => {
         x.sourceChatIdsWhatsapp = Array.from(new Set([args.target.chatJid, ...(x.sourceChatIdsWhatsapp ?? [])]))
+        x.sourceOrigins = mergeSourceOrigins(
+            x.sourceOrigins,
+            [messengerSourceOrigin({
+                type: `whatsapp`,
+                chatId: args.target.chatJid,
+                label: args.target.name,
+                url: x.sourceUrl,
+            })],
+        )
     })
     const beforePastFilter = events.length
     events = events.filter((eventRow) => {
