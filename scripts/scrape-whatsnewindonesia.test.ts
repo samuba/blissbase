@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
 	addressLinesFromHtml,
+	articlePassesNameLists,
 	formatIdr,
 	getAddress,
 	getEndAt,
@@ -59,6 +60,26 @@ describe(`passesNameLists`, () => {
 		expect(passesNameLists(`Bali Pub Crawl Seminyak`)).toBe(false);
 		expect(passesNameLists(``)).toBe(false);
 		expect(passesNameLists(undefined)).toBe(false);
+	});
+
+	it(`filters on title only — category labels are ignored`, () => {
+		// Category strings contain whitelist words (`concert`, `wellness`) and must not be consulted.
+		expect(passesNameLists(`Music, Concerts and Festivals`)).toBe(true);
+		expect(
+			articlePassesNameLists({
+				title: `BTS Confirms Jakarta Dates for Long-Awaited World Tour 2026`,
+			}),
+		).toBe(false);
+		expect(
+			articlePassesNameLists({
+				title: `NusantaRun Chapter 14`,
+			}),
+		).toBe(false);
+		expect(
+			articlePassesNameLists({
+				title: `A Journey Inward: Four Seasons Resort Bali at Sayan Launches Transformative Silent Retreat Led by Resident Healers`,
+			}),
+		).toBe(true);
 	});
 });
 
@@ -150,7 +171,9 @@ describe(`mapArticle`, () => {
 		});
 		expect(mapped?.description).toContain(`Party Animals continues`);
 		expect(mapped?.imageUrls[0]).toContain(`uploads/cover.webp`);
-		expect(mapped?.contact.some((value) => value.includes(`zumanabali.com`))).toBe(true);
+		// Venue marketing sites are not contacts; phones from the address block are.
+		expect(mapped?.contact.some((value) => value.includes(`zumanabali.com`))).toBe(false);
+		expect(mapped?.contact.some((value) => value.startsWith(`tel:`))).toBe(true);
 	});
 });
 

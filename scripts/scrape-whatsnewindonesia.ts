@@ -57,7 +57,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		);
 
 		const articles = await fetchAllEventArticles();
-		const candidates = articles.filter((article) => passesNameLists(nameHaystack(article)));
+		const candidates = articles.filter((article) => articlePassesNameLists(article));
 		console.error(
 			`Listed ${articles.length} dated events, ${candidates.length} matching the word lists`,
 		);
@@ -215,6 +215,11 @@ export function passesNameLists(text: string | undefined): boolean {
 	if (!text?.trim()) return false;
 	if (matchesBlackListWords(text)) return false;
 	return matchesWhiteListWords(text);
+}
+
+/** Peer scrapers filter on the event name only — never category / meta / subtitle. */
+export function articlePassesNameLists(article: Pick<WniArticle, `title`>): boolean {
+	return passesNameLists(article.title);
 }
 
 export function isUpcomingStart({ startAt, now }: { startAt: string; now: number }): boolean {
@@ -618,12 +623,6 @@ async function resolvePoint({
 	return undefined;
 }
 
-function nameHaystack(article: WniArticle): string {
-	return [article.title, article.sub_title, article.category_name, article.meta_data?.meta_description]
-		.filter(Boolean)
-		.join(` `);
-}
-
 function timezoneForCity(slugCity: string | undefined): TimeZoneString {
 	if (!slugCity) return `Asia/Jakarta`;
 	return CITY_TIMEZONE[slugCity.toLowerCase()] ?? `Asia/Jakarta`;
@@ -741,7 +740,8 @@ function contactsFromSnippet(html: string): string[] {
 			contacts.push(href);
 			return;
 		}
-		if (/instagram\.com|wa\.me|whatsapp|http/i.test(href) && href.startsWith(`http`)) {
+		if (!href.startsWith(`http`)) return;
+		if (/instagram\.com|(?:^|\.)wa\.me|whatsapp\.com|linktr\.ee|megatix\.|eventbrite\.|ticket/i.test(href)) {
 			contacts.push(href);
 		}
 	});
