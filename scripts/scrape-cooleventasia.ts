@@ -239,20 +239,36 @@ export function getName(html: string): string | undefined {
 }
 
 export function getStartAt(html: string): string | undefined {
-	const fromLd = parseLdDate({ value: readEvent(html)?.startDate, role: `start` });
-	if (fromLd && !isDateOnlyIso(readEvent(html)?.startDate)) return fromLd;
-
+	const ldRaw = readEvent(html)?.startDate;
 	const fromLabel = parseWhenLabel(html)?.startAt;
+	const fromLd = parseLdDate({ value: ldRaw, role: `start` });
+
+	// When label carries WITA; prefer it over date-only or timezone-less JSON-LD.
+	if (fromLabel && (!hasExplicitTimezone(ldRaw) || isDateOnlyIso(ldRaw))) return fromLabel;
+	if (fromLd && hasExplicitTimezone(ldRaw)) return fromLd;
 	if (fromLabel) return fromLabel;
 	return fromLd;
 }
 
 export function getEndAt(html: string): string | undefined {
+	const ld = readEvent(html);
+	const ldStartRaw = ld?.startDate;
+	const ldEndRaw = ld?.endDate;
+	const fromLabel = parseWhenLabel(html);
+	const fromLd = parseLdDate({ value: ldEndRaw, role: `end` });
+
+	let endAt = fromLabel?.endAt;
+	if (!endAt && fromLabel?.startAt && !hasExplicitTimezone(ldEndRaw)) {
+		endAt = endFromLdDuration({
+			labelStartAt: fromLabel.startAt,
+			ldStartRaw,
+			ldEndRaw,
+		});
+	}
+	if (!endAt && hasExplicitTimezone(ldEndRaw)) endAt = fromLd;
+	if (!endAt) endAt = fromLd;
+
 	const startAt = getStartAt(html);
-	const ldEnd = readEvent(html)?.endDate;
-	const fromLd = parseLdDate({ value: ldEnd, role: `end` });
-	const fromLabel = isDateOnlyIso(ldEnd) ? parseWhenLabel(html)?.endAt : undefined;
-	const endAt = fromLabel || fromLd;
 	if (!endAt) return undefined;
 	if (startAt && new Date(endAt).getTime() <= new Date(startAt).getTime()) return undefined;
 	return endAt;
@@ -573,6 +589,16 @@ function parseLdDate(args: {
 	}
 
 	if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(raw)) return undefined;
+
+	// Timezone-less LD (e.g. `2026-11-14T10:00`) is often UTC wall-clock, not WITA.
+	// Prefer the When label instead; only attach +08:00 as a last-resort fallback.
+	if (!hasExplicitTimezone(raw)) {
+		const withSeconds = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(raw) ? `${raw}:00` : raw;
+		const iso = `${withSeconds}+08:00`;
+		if (Number.isNaN(new Date(iso).getTime())) return undefined;
+		return iso;
+	}
+
 	const date = new Date(raw);
 	if (Number.isNaN(date.getTime())) return undefined;
 	return raw;
@@ -582,7 +608,59 @@ function isDateOnlyIso(value: unknown): boolean {
 	return typeof value === `string` && /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
 }
 
-/** Parses `.event-info-value` labels like `9 - 29 Nov 2026 08:00 WITA`. */
+function hasExplicitTimezone(value: unknown): boolean {
+	if (typeof value !== `string`) return false;
+	const raw = value.trim();
+	if (!raw || isDateOnlyIso(raw)) return false;
+	return /Z$/i.test(raw) || /[+-]\d{2}:?\d{2}$/.test(raw);
+}
+
+/** Applies LD start→end duration onto a corrected When start (WITA). */
+function endFromLdDuration(args: {
+	labelStartAt: string;
+	ldStartRaw: unknown;
+	ldEndRaw: unknown;
+}): string | undefined {
+	const { labelStartAt, ldStartRaw, ldEndRaw } = args;
+	if (typeof ldStartRaw !== `string` || typeof ldEndRaw !== `string`) return undefined;
+	if (!ldStartRaw.includes(`T`) || !ldEndRaw.includes(`T`)) return undefined;
+
+	const startMs = new Date(normalizeForDuration(ldStartRaw)).getTime();
+	const endMs = new Date(normalizeForDuration(ldEndRaw)).getTime();
+	const labelMs = new Date(labelStartAt).getTime();
+	if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || !Number.isFinite(labelMs)) return undefined;
+	if (endMs <= startMs) return undefined;
+
+	const end = new Date(labelMs + (endMs - startMs));
+	// Rebuild as +08:00 wall clock matching Bali.
+	const parts = new Intl.DateTimeFormat(`en-GB`, {
+		timeZone: DEFAULT_TIMEZONE,
+		year: `numeric`,
+		month: `2-digit`,
+		day: `2-digit`,
+		hour: `2-digit`,
+		minute: `2-digit`,
+		hourCycle: `h23`,
+	}).formatToParts(end);
+	const get = (type: string) => parts.find((part) => part.type === type)?.value;
+	const year = get(`year`);
+	const month = get(`month`);
+	const day = get(`day`);
+	const hour = get(`hour`);
+	const minute = get(`minute`);
+	if (!year || !month || !day || !hour || !minute) return undefined;
+	return `${year}-${month}-${day}T${hour}:${minute}:00+08:00`;
+}
+
+function normalizeForDuration(raw: string): string {
+	const trimmed = raw.trim();
+	if (hasExplicitTimezone(trimmed)) return trimmed;
+	if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) return `${trimmed}:00Z`;
+	if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(trimmed)) return `${trimmed}Z`;
+	return trimmed;
+}
+
+/** Parses `.event-info-value` labels like `14 Nov 2026 18:00 WITA` or `9 - 29 Nov 2026 08:00 WITA`. */
 function parseWhenLabel(html: string): { startAt?: string; endAt?: string } | undefined {
 	const $ = cheerio.load(html);
 	const label = $(`.event-info-label`)
@@ -608,8 +686,9 @@ function parseWhenLabel(html: string): { startAt?: string; endAt?: string } | un
 		};
 	}
 
+	// `14 Nov 2026 18:00 WITA` (live format) or `Sat, 28 Nov 2026, 18:00`
 	const single = text.match(
-		/^[A-Za-z]{3},\s+(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4}),?\s+(\d{1,2}):(\d{2})/,
+		/^(?:[A-Za-z]{3},\s+)?(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4}),?\s+(\d{1,2}):(\d{2})/,
 	);
 	if (!single) return undefined;
 	const month = monthIndex(single[2]);
