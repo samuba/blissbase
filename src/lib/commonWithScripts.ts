@@ -13,6 +13,11 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	todotoday: { module: "./scrape-todotoday.ts", label: "Todo.Today", url: "https://todo.today" },
 	// vortexapp: { module: './scrape-vortexapp.ts', label: 'Vortexapp', url: 'https://vortexapp.dev' },
 	megatix_indonesia: { module: "./scrape-megatix_indonesia.ts", label: "Megatix Indonesia", url: "https://megatix.co.id" },
+	eventbyindonesia: {
+		module: "./scrape-eventbyindonesia.ts",
+		label: "Event by Indonesia",
+		url: "https://eventbyindonesia.id",
+	},
 	whatsupdanang: { module: "./scrape-whatsupdanang.ts", label: "WhatsUpDaNang", url: "https://whatsupdanang.com" },
 	soulwise: { module: "./scrape-soulwise.ts", label: "Soulwise", url: "https://soulwise.io" },
 	balievents: { module: "./scrape-balievents.ts", label: "BaliEvents.co", url: "https://www.balievents.co" },
