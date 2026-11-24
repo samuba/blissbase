@@ -13,10 +13,31 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	todotoday: { module: "./scrape-todotoday.ts", label: "Todo.Today", url: "https://todo.today" },
 	// vortexapp: { module: './scrape-vortexapp.ts', label: 'Vortexapp', url: 'https://vortexapp.dev' },
 	megatix_indonesia: { module: "./scrape-megatix_indonesia.ts", label: "Megatix Indonesia", url: "https://megatix.co.id" },
+	eventbyindonesia: {
+		module: "./scrape-eventbyindonesia.ts",
+		label: "Event by Indonesia",
+		url: "https://eventbyindonesia.id",
+	},
 	whatsupdanang: { module: "./scrape-whatsupdanang.ts", label: "WhatsUpDaNang", url: "https://whatsupdanang.com" },
 	soulwise: { module: "./scrape-soulwise.ts", label: "Soulwise", url: "https://soulwise.io" },
 	balievents: { module: "./scrape-balievents.ts", label: "BaliEvents.co", url: "https://www.balievents.co" },
 	balibuddy: { module: "./scrape-balibuddy.ts", label: "Bali Buddy", url: "https://balibuddy.app" },
+	balibyanilau: { module: "./scrape-balibyanilau.ts", label: "Bali by Anilau", url: "https://bali.anilau.com" },
+	balilive: { module: "./scrape-balilive.ts", label: "Bali Live", url: "https://bali.live" },
+	visitbali: { module: "./scrape-visitbali.ts", label: "VisitBali", url: "https://visitbali.id" },
+	whatsonbali: { module: "./scrape-whatsonbali.ts", label: "What's On Bali", url: "https://whatsonbali.com" },
+	balifolio: { module: "./scrape-balifolio.ts", label: "BaliFolio", url: "https://balifolio.com" },
+	balibuddies: { module: "./scrape-balibuddies.ts", label: "Bali Buddies", url: "https://balibuddies.com" },
+	balicom: { module: "./scrape-balicom.ts", label: "Bali.com", url: "https://bali.com" },
+	balitravelhub: {
+		module: "./scrape-balitravelhub.ts",
+		label: "Bali Travel Hub",
+		url: "https://www.balitravelhub.com",
+	},
+	cooleventasia: { module: "./scrape-cooleventasia.ts", label: "Cool Event Asia", url: "https://cooleventasia.com" },
+	goers: { module: "./scrape-goers.ts", label: "GOERS", url: "https://www.goersapp.com" },
+	nowbali: { module: "./scrape-nowbali.ts", label: "NOW! Bali", url: "https://www.nowbali.co.id" },
+	seeevents: { module: "./scrape-seeevents.ts", label: "SEE Events Bali", url: "https://app.see.events" },
 	yogabarn: { module: "./scrape-yogabarn.ts", label: "The Yoga Barn", url: "https://theyogabarn.com", retryOnNewIp: true },
 	tantrakalender: { module: "./scrape-tantrakalender.ts", label: "Tantrakalender", url: "https://tantrakalender.de" },
 	tantrazentrumleipzig: {
@@ -35,6 +56,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	yogavidya: { module: "./scrape-yoga-vidya.ts", label: "Yoga Vidya", url: "https://www.yoga-vidya.de" },
 	kayana: { module: "./scrape-kayana.ts", label: "Kayana", url: "https://dein-kayana.de" },
 	soulcollective: { module: "./scrape-soulcollective.ts", label: "Soul Collective", url: "https://www.soulcollective.eu" },
+	facebook: { module: "./scrape-facebook.ts", label: "Facebook Events", url: "https://www.facebook.com/events/" },
 	// lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string; label: string; url: string; retryOnNewIp?: boolean }>;
 
