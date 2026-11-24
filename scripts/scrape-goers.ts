@@ -405,15 +405,18 @@ async function gql<T>(args: {
 				const digest = await crypto.subtle.digest(`SHA-1`, new TextEncoder().encode(value));
 				return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, `0`)).join(``);
 			};
-			const cookies = Object.fromEntries(
-				document.cookie
-					.split(`; `)
-					.filter(Boolean)
-					.map((part) => {
-						const i = part.indexOf(`=`);
-						return [part.slice(0, i), decodeURIComponent(part.slice(i + 1))];
-					}),
-			);
+			const cookies: Record<string, string> = {};
+			for (const part of document.cookie.split(`; `).filter(Boolean)) {
+				const i = part.indexOf(`=`);
+				if (i < 0) continue;
+				const key = part.slice(0, i);
+				const raw = part.slice(i + 1);
+				try {
+					cookies[key] = decodeURIComponent(raw);
+				} catch {
+					cookies[key] = raw;
+				}
+			}
 			const timestamp = Date.now();
 			const signature = await sha1Hex(`${origin}${timestamp}${salt}`);
 			const token = cookies.goers_session ?? ``;
@@ -436,7 +439,22 @@ async function gql<T>(args: {
 				},
 				body: JSON.stringify({ operationName, variables, query }),
 			});
-			const json = await response.json();
+			const text = await response.text();
+			let json: any;
+			try {
+				json = text ? JSON.parse(text) : undefined;
+			} catch {
+				return {
+					status: response.status,
+					json: {
+						errors: [
+							{
+								message: `Non-JSON GraphQL response (${response.status}): ${text.slice(0, 120)}`,
+							},
+						],
+					},
+				};
+			}
 			return { status: response.status, json };
 		},
 		{
@@ -493,7 +511,7 @@ async function warmExploreSession(page: Page): Promise<void> {
 	try {
 		await exploreSeen;
 	} catch {
-		// Fall through to DOM polling — in-page gql can still work once the guest cookie exists.
+		// Fall through — we'll probe GraphQL ourselves once the guest cookie exists.
 	}
 
 	const startedAt = Date.now();
@@ -512,9 +530,9 @@ async function warmExploreSession(page: Page): Promise<void> {
 					hasSession: document.cookie.includes(`goers_session=`),
 				};
 			});
-			if (state.ready) return;
-			// Guest JWT is enough for our in-page GraphQL calls once Queue-it settles.
-			if (state.hasSession && Date.now() - startedAt > 8_000) return;
+			if (state.ready || (state.hasSession && Date.now() - startedAt > 8_000)) {
+				if (await probeExploreContents(page)) return;
+			}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			if (!/Execution context was destroyed|navigation/i.test(message)) throw error;
@@ -522,6 +540,31 @@ async function warmExploreSession(page: Page): Promise<void> {
 		await sleep(500);
 	}
 	throw new Error(`GOERS explore page did not become ready in time`);
+}
+
+async function probeExploreContents(page: Page): Promise<boolean> {
+	try {
+		const data = await gql<ExplorePayload>({
+			page,
+			operationName: `exploreContents`,
+			variables: {
+				input: {
+					keywords: null,
+					type: `event`,
+					page: 1,
+					limit: 1,
+					filterRegion: FILTER_REGION,
+				},
+			},
+			query: EXPLORE_QUERY,
+			origin: EXPLORE_URL,
+		});
+		return !!data?.exploreContents;
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`GOERS explore probe not ready yet: ${message}`);
+		return false;
+	}
 }
 
 function eventSchema(payload: ExperiencePayloadContents): EventSchema | undefined {
