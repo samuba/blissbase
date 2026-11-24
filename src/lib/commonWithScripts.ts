@@ -19,6 +19,11 @@ export const WEBSITE_SCRAPER_CONFIG = {
 		url: "https://eventbyindonesia.id",
 	},
 	whatsupdanang: { module: "./scrape-whatsupdanang.ts", label: "WhatsUpDaNang", url: "https://whatsupdanang.com" },
+	whatsnewindonesia: {
+		module: "./scrape-whatsnewindonesia.ts",
+		label: "What's New Indonesia",
+		url: "https://whatsnewindonesia.com",
+	},
 	soulwise: { module: "./scrape-soulwise.ts", label: "Soulwise", url: "https://soulwise.io" },
 	balievents: { module: "./scrape-balievents.ts", label: "BaliEvents.co", url: "https://www.balievents.co" },
 	balibuddy: { module: "./scrape-balibuddy.ts", label: "Bali Buddy", url: "https://balibuddy.app" },
