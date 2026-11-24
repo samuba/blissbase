@@ -28,22 +28,30 @@ describe(`eventSourceOrigins`, () => {
 		]);
 	});
 
-	it(`derives origins from classic event fields`, () => {
-		const origins = ensureSourceOrigins({
-			source: `heilnetz`,
-			sourceUrl: `https://heilnetz.de/e`,
-			sourceChatIdsTelegram: [`room1`],
-			sourceChatIdsWhatsapp: [`120363@g.us`],
-		});
+	it(`derives scrape origins from classic source fields`, () => {
+		expect(
+			ensureSourceOrigins({
+				source: `heilnetz`,
+				sourceUrl: `https://heilnetz.de/e`,
+			}),
+		).toEqual([{ type: `scrape`, label: `heilnetz`, chatId: null, url: `https://heilnetz.de/e` }]);
+	});
 
-		expect(origins).toEqual(
-			expect.arrayContaining([
-				{ type: `scrape`, label: `heilnetz`, chatId: null, url: `https://heilnetz.de/e` },
-				{ type: `telegram`, label: `room1`, chatId: `room1`, url: `https://heilnetz.de/e` },
-				{ type: `whatsapp`, label: `120363@g.us`, chatId: `120363@g.us`, url: `https://heilnetz.de/e` },
-			]),
-		);
-		expect(origins).toHaveLength(3);
+	it(`keeps messenger provenance only from explicit sourceOrigins`, () => {
+		expect(
+			ensureSourceOrigins({
+				source: `telegram`,
+				sourceUrl: `https://example.com`,
+				sourceOrigins: [{ type: `telegram`, label: `Berlin`, chatId: `-1001` }],
+			}),
+		).toEqual([{ type: `telegram`, label: `Berlin`, chatId: `-1001`, url: null }]);
+
+		expect(
+			ensureSourceOrigins({
+				source: `telegram`,
+				sourceUrl: `https://example.com`,
+			}),
+		).toEqual([]);
 	});
 
 	it(`builds named messenger origins`, () => {

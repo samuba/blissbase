@@ -367,154 +367,6 @@ describe("Events Module - Happy Flow Tests", () => {
 			expect(reupserted.listed).toBe(false);
 		});
 
-		it("should preserve existing Telegram chat IDs when a conflicting upsert has none", async () => {
-			const startAt = new Date("2024-12-23T19:00:00Z");
-
-			await upsertEvents([
-				createTestEvent({
-					name: "Conflict Telegram Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-23T22:00:00Z"),
-					slug: "",
-					sourceChatIdsTelegram: ["room1"],
-				}),
-			]);
-
-			const result = await upsertEvents([
-				createTestEvent({
-					name: "Conflict Telegram Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-23T22:00:00Z"),
-					slug: "",
-					sourceChatIdsTelegram: [],
-					description: "Updated by scrape",
-				}),
-			]);
-
-			expect(result).toHaveLength(1);
-			expect(result[0].sourceChatIdsTelegram).toEqual(["room1"]);
-			expect(result[0].description).toBe("Updated by scrape");
-		});
-
-		it("should merge existing and incoming Telegram chat IDs on conflicting upserts", async () => {
-			const startAt = new Date("2024-12-24T19:00:00Z");
-
-			await upsertEvents([
-				createTestEvent({
-					name: "Merged Telegram Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-24T22:00:00Z"),
-					slug: "",
-					sourceChatIdsTelegram: ["room1"],
-				}),
-			]);
-
-			const result = await upsertEvents([
-				createTestEvent({
-					name: "Merged Telegram Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-24T22:00:00Z"),
-					slug: "",
-					sourceChatIdsTelegram: ["room2"],
-					description: "Updated by scrape",
-				}),
-			]);
-
-			expect(result).toHaveLength(1);
-			expect(result[0].sourceChatIdsTelegram).toEqual(expect.arrayContaining(["room1", "room2"]));
-			expect(result[0].sourceChatIdsTelegram).toHaveLength(2);
-		});
-
-		it("should preserve existing WhatsApp chat IDs when a conflicting upsert has none", async () => {
-			const startAt = new Date("2024-12-25T19:00:00Z");
-
-			await upsertEvents([
-				createTestEvent({
-					name: "Conflict Whatsapp Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-25T22:00:00Z"),
-					slug: "",
-					sourceChatIdsWhatsapp: ["120363@g.us"],
-				}),
-			]);
-
-			const result = await upsertEvents([
-				createTestEvent({
-					name: "Conflict Whatsapp Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-25T22:00:00Z"),
-					slug: "",
-					sourceChatIdsWhatsapp: [],
-					description: "Updated by scrape",
-				}),
-			]);
-
-			expect(result).toHaveLength(1);
-			expect(result[0].sourceChatIdsWhatsapp).toEqual(["120363@g.us"]);
-			expect(result[0].description).toBe("Updated by scrape");
-		});
-
-		it("should merge existing and incoming WhatsApp chat IDs on conflicting upserts", async () => {
-			const startAt = new Date("2024-12-26T19:00:00Z");
-
-			await upsertEvents([
-				createTestEvent({
-					name: "Merged Whatsapp Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-26T22:00:00Z"),
-					slug: "",
-					sourceChatIdsWhatsapp: ["120363@g.us"],
-				}),
-			]);
-
-			const result = await upsertEvents([
-				createTestEvent({
-					name: "Merged Whatsapp Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-26T22:00:00Z"),
-					slug: "",
-					sourceChatIdsWhatsapp: ["120364@g.us"],
-					description: "Updated by scrape",
-				}),
-			]);
-
-			expect(result).toHaveLength(1);
-			expect(result[0].sourceChatIdsWhatsapp).toEqual(expect.arrayContaining(["120363@g.us", "120364@g.us"]));
-			expect(result[0].sourceChatIdsWhatsapp).toHaveLength(2);
-		});
-
-		it("should keep Telegram and WhatsApp chat IDs independent on conflicting upserts", async () => {
-			const startAt = new Date("2024-12-27T19:00:00Z");
-
-			await upsertEvents([
-				createTestEvent({
-					name: "Independent Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-27T22:00:00Z"),
-					slug: "",
-					sourceChatIdsTelegram: ["room1"],
-					sourceChatIdsWhatsapp: ["120363@g.us"],
-				}),
-			]);
-
-			const result = await upsertEvents([
-				createTestEvent({
-					name: "Independent Chat Ids Event",
-					startAt,
-					endAt: new Date("2024-12-27T22:00:00Z"),
-					slug: "",
-					sourceChatIdsTelegram: ["room2"],
-					sourceChatIdsWhatsapp: [],
-					description: "Updated by scrape",
-				}),
-			]);
-
-			expect(result).toHaveLength(1);
-			expect(result[0].sourceChatIdsTelegram).toEqual(expect.arrayContaining(["room1", "room2"]));
-			expect(result[0].sourceChatIdsTelegram).toHaveLength(2);
-			expect(result[0].sourceChatIdsWhatsapp).toEqual(["120363@g.us"]);
-		});
-
 		it(`should merge sourceOrigins across conflicting upserts from different channels`, async () => {
 			const startAt = new Date(`2024-12-28T19:00:00Z`);
 			const endAt = new Date(`2024-12-28T22:00:00Z`);
@@ -538,7 +390,6 @@ describe("Events Module - Happy Flow Tests", () => {
 					slug: ``,
 					source: `telegram`,
 					sourceUrl: `https://example.com/from-tg`,
-					sourceChatIdsTelegram: [`room9`],
 					sourceOrigins: [{ type: `telegram`, label: `Berlin Conscious`, chatId: `room9` }],
 				}),
 			]);
@@ -576,7 +427,7 @@ describe("Events Module - Happy Flow Tests", () => {
 					slug: ``,
 					source: `telegram`,
 					sourceUrl: `https://example.com/from-tg`,
-					sourceChatIdsTelegram: [`room1`],
+					sourceOrigins: [{ type: `telegram`, label: `Room`, chatId: `room1` }],
 				}),
 			]);
 
@@ -727,8 +578,6 @@ describe("Events Module - Happy Flow Tests", () => {
 					id: 1,
 					name: "Test Event",
 					hostSecret: "secret123",
-					sourceChatIdsTelegram: ["room1", "room2"],
-					sourceChatIdsWhatsapp: null,
 					startAt: new Date(),
 					address: ["Test Street"],
 					imageUrls: ["https://example.com/image.jpg"],
@@ -785,8 +634,6 @@ describe("Events Module - Happy Flow Tests", () => {
 					name: `Test Event`,
 					hostSecret: `secret123`,
 					sourceOrigins: [{ type: `scrape`, label: `tribehaus`, url: `https://tribehaus.com/e` }],
-					sourceChatIdsTelegram: null,
-					sourceChatIdsWhatsapp: null,
 					startAt: new Date(),
 					address: [`Test Street`],
 					imageUrls: [`https://example.com/image.jpg`],
@@ -839,8 +686,6 @@ describe("Events Module - Happy Flow Tests", () => {
 					source: "test",
 					listed: true,
 					contact: [],
-					sourceChatIdsTelegram: null,
-					sourceChatIdsWhatsapp: null,
 					createdAt: new Date(),
 					updatedAt: new Date(),
 					slug: "event-1",
@@ -876,8 +721,6 @@ describe("Events Module - Happy Flow Tests", () => {
 					source: "test",
 					listed: true,
 					contact: [],
-					sourceChatIdsTelegram: null,
-					sourceChatIdsWhatsapp: null,
 					createdAt: new Date(),
 					updatedAt: new Date(),
 					slug: "event-2",

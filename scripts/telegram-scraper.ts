@@ -596,7 +596,6 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
             const imageUrls = mergeUniqueStrings(existing.imageUrls, event.imageUrls);
 
             const tagSlugs = mergeUniqueStrings(existing.tagSlugs, event.tagSlugs);
-            const sourceChatIdsTelegram = mergeUniqueStrings(existing.sourceChatIdsTelegram, event.sourceChatIdsTelegram);
             const sourceOrigins = mergeSourceOrigins(existing.sourceOrigins, event.sourceOrigins);
             const coords = mergeCoords({
                 preferredLatitude: existing.latitude,
@@ -611,7 +610,6 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 description,
                 imageUrls,
                 tagSlugs,
-                sourceChatIdsTelegram,
                 sourceOrigins,
                 latitude: coords.latitude,
                 longitude: coords.longitude,
@@ -641,7 +639,6 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
     merged.slug = existingEvent.slug;
     merged.imageUrls = mergeUniqueStrings(existingEvent.imageUrls, merged.imageUrls);
     merged.tagSlugs = mergeUniqueStrings(existingEvent.tagSlugs, merged.tagSlugs);
-    merged.sourceChatIdsTelegram = mergeUniqueStrings(existingEvent.sourceChatIdsTelegram, merged.sourceChatIdsTelegram);
     merged.sourceOrigins = mergeSourceOrigins(existingEvent.sourceOrigins, merged.sourceOrigins);
     const coords = mergeCoords({
         preferredLatitude: merged.latitude,
@@ -1037,7 +1034,6 @@ async function processMessages(args: {
 
     events = mergeDuplicateEvents(events);
     events.forEach((x) => {
-        x.sourceChatIdsTelegram = Array.from(new Set([chatId, ...(x.sourceChatIdsTelegram ?? [])]));
         x.sourceOrigins = mergeSourceOrigins(
             x.sourceOrigins,
             [messengerSourceOrigin({ type: `telegram`, chatId, label: chatName, url: x.sourceUrl })],
