@@ -37,7 +37,6 @@ const SITE_BASE = `https://www.facebook.com`;
 const EVENTS_LISTING_URL = `${SITE_BASE}/events/`;
 const GRAPH_BASE = `https://graph.facebook.com/v21.0`;
 const SOURCE = `facebook` as const;
-const DEFAULT_TIMEZONE = `Asia/Makassar` as const;
 const DETAIL_CONCURRENCY = 2;
 const GRAPH_FIELDS = [
 	`id`,
@@ -223,20 +222,30 @@ export async function mapFacebookHtmlEvent(args: {
 	const address = getAddress(html);
 	let latitude = getLatitude(html);
 	let longitude = getLongitude(html);
-	let timezone: string | null = DEFAULT_TIMEZONE;
+	let timezone: string | null = null;
+	const apiKey = process.env.GOOGLE_MAPS_API_KEY || ``;
 
 	if (latitude == null && longitude == null && address?.length && !isOnlineAddress(address)) {
 		try {
 			const { geocodeAddressCached } = await import(`../src/lib/server/google.script.ts`);
 			const geocoded = await geocodeAddressCached({
 				addressLines: address,
-				apiKey: process.env.GOOGLE_MAPS_API_KEY || ``,
+				apiKey,
 			});
 			latitude = geocoded?.lat ?? null;
 			longitude = geocoded?.lng ?? null;
-			timezone = geocoded?.timezone ?? timezone;
+			timezone = geocoded?.timezone ?? null;
 		} catch (error) {
 			console.error(`Geocoding failed for ${url}:`, error);
+		}
+	}
+
+	if (timezone == null && latitude != null && longitude != null) {
+		try {
+			const { getTimezoneForCoordinatesCached } = await import(`../src/lib/server/google.script.ts`);
+			timezone = await getTimezoneForCoordinatesCached({ lat: latitude, lng: longitude, apiKey });
+		} catch (error) {
+			console.error(`Timezone lookup failed for ${url}:`, error);
 		}
 	}
 
@@ -678,6 +687,17 @@ export function canonicalizeEventUrl(raw: string | undefined | null): string | u
 	}
 }
 
+/** Drop access_token from Graph URLs so customFetch logs never print the secret. */
+export function stripAccessToken(raw: string): string {
+	try {
+		const url = new URL(raw);
+		url.searchParams.delete(`access_token`);
+		return url.toString();
+	} catch {
+		return raw.replace(/([?&])access_token=[^&]*/g, `$1`).replace(/\?&/, `?`).replace(/[?&]$/, ``);
+	}
+}
+
 async function fetchGraphPageEvents(args: { limit?: number }): Promise<GraphEvent[]> {
 	const token = process.env.FACEBOOK_ACCESS_TOKEN?.trim();
 	const pageIds = (process.env.FACEBOOK_PAGE_IDS ?? ``)
@@ -695,20 +715,22 @@ async function fetchGraphPageEvents(args: { limit?: number }): Promise<GraphEven
 	const events: GraphEvent[] = [];
 	const seen = new Set<string>();
 
+	const authHeaders = { Authorization: `Bearer ${token}` };
+
 	for (const pageId of pageIds) {
 		if (args.limit != null && events.length >= args.limit) break;
 		try {
 			let nextUrl: string | undefined =
 				`${GRAPH_BASE}/${encodeURIComponent(pageId)}/events` +
 				`?fields=${encodeURIComponent(GRAPH_FIELDS)}` +
-				`&limit=50` +
-				`&access_token=${encodeURIComponent(token)}`;
+				`&limit=50`;
 
 			while (nextUrl) {
 				if (args.limit != null && events.length >= args.limit) break;
-				const payload = (await customFetch(nextUrl, {
+				const payload = (await customFetch(stripAccessToken(nextUrl), {
 					returnType: `json`,
 					maxRetries: 2,
+					headers: authHeaders,
 				})) as GraphListResponse;
 				if (payload?.error?.message) {
 					console.error(`Graph error for page ${pageId}: ${payload.error.message}`);
@@ -720,7 +742,7 @@ async function fetchGraphPageEvents(args: { limit?: number }): Promise<GraphEven
 					events.push(item);
 					if (args.limit != null && events.length >= args.limit) break;
 				}
-				nextUrl = payload?.paging?.next;
+				nextUrl = payload?.paging?.next ? stripAccessToken(payload.paging.next) : undefined;
 				if (nextUrl) await sleep(REQUEST_DELAY_MS);
 			}
 		} catch (error) {

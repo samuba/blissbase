@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { getTimezoneForCoordinatesCached } from "../src/lib/server/google.script.ts";
 import {
 	canonicalizeEventUrl,
 	extractEventUrls,
@@ -16,10 +17,12 @@ import {
 	mapGraphEvent,
 	parseCliArgs,
 	parseGraphPayload,
+	stripAccessToken,
 } from "./scrape-facebook.ts";
 
 vi.mock(`../src/lib/server/google.script.ts`, () => ({
 	geocodeAddressCached: vi.fn(async () => null),
+	getTimezoneForCoordinatesCached: vi.fn(async () => null),
 }));
 
 const START_TS = Date.parse(`2027-06-01T07:00:00.000Z`) / 1000;
@@ -138,8 +141,20 @@ describe(`HTML field getters`, () => {
 			host: `Yoga Barn`,
 			latitude: -8.519,
 			longitude: 115.265,
+			timezone: null,
 		});
 		expect(event?.startAt).toBe(new Date(START_TS * 1000).toISOString());
+	});
+
+	it(`resolves timezone from coords when the lookup returns one`, async () => {
+		const timezoneFn = getTimezoneForCoordinatesCached as unknown as ReturnType<typeof vi.fn>;
+		timezoneFn.mockResolvedValueOnce(`Asia/Makassar`);
+		const event = await mapFacebookHtmlEvent({
+			html: fixtureHtml,
+			url: `https://www.facebook.com/events/123456789012345/`,
+		});
+		expect(event?.timezone).toBe(`Asia/Makassar`);
+		timezoneFn.mockResolvedValue(null);
 	});
 
 	it(`skips blocked HTML`, async () => {
@@ -165,7 +180,19 @@ describe(`Graph mapping`, () => {
 			latitude: -8.6478,
 			longitude: 115.1385,
 			contact: [`https://example.com/tickets`],
+			timezone: undefined,
 		});
 		expect(mapped?.startAt).toContain(`2027-07-10`);
+	});
+
+	it(`strips access_token from Graph URLs before fetch/logs`, () => {
+		expect(
+			stripAccessToken(
+				`https://graph.facebook.com/v21.0/1/events?fields=id&access_token=SECRET&limit=50`,
+			),
+		).toBe(`https://graph.facebook.com/v21.0/1/events?fields=id&limit=50`);
+		expect(stripAccessToken(`https://graph.facebook.com/v21.0/1/events?access_token=SECRET`)).toBe(
+			`https://graph.facebook.com/v21.0/1/events`,
+		);
 	});
 });
