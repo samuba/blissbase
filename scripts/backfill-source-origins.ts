@@ -5,7 +5,7 @@ import {
 } from "../src/lib/server/eventSourceOrigins";
 
 const applyFlag = `--apply`;
-const batchSize = 200;
+const batchSize = 500;
 
 /**
  * Builds the origins that should be stored for an event, enriching messenger
@@ -59,7 +59,7 @@ export function sourceOriginsNeedBackfill(args: {
  * bun run scripts/backfill-source-origins.ts --limit=50
  */
 async function backfillSourceOrigins(args: { apply: boolean; limit: number | null }) {
-	const { db, eq, s } = await import("../src/lib/server/db.script");
+	const { db, eq, s, sql } = await import("../src/lib/server/db.script");
 	const mode = args.apply ? `apply` : `dry run`;
 	console.log(`Backfilling events.source_origins (${mode})`);
 
@@ -137,24 +137,56 @@ async function backfillSourceOrigins(args: { apply: boolean; limit: number | nul
 	}
 
 	let updated = 0;
-	for (const batch of chunk(toUpdate, batchSize)) {
-		for (const row of batch) {
-			try {
-				await db
-					.update(s.events)
-					.set({ sourceOrigins: row.sourceOrigins })
-					.where(eq(s.events.id, row.id));
-				updated += 1;
-			} catch (error) {
-				failed += 1;
-				console.error(`Failed updating event ${row.id}:`, error);
+	const batches = chunk(toUpdate, batchSize);
+	for (const [batchIndex, batch] of batches.entries()) {
+		try {
+			updated += await applyBatch({ db, sql, rows: batch });
+		} catch (error) {
+			console.error(`Failed batch ${batchIndex + 1}/${batches.length}:`, error);
+			for (const row of batch) {
+				try {
+					await db
+						.update(s.events)
+						.set({ sourceOrigins: row.sourceOrigins })
+						.where(eq(s.events.id, row.id));
+					updated += 1;
+				} catch (rowError) {
+					failed += 1;
+					console.error(`Failed updating event ${row.id}:`, rowError);
+				}
 			}
+		}
+		if ((batchIndex + 1) % 10 === 0 || batchIndex + 1 === batches.length) {
+			console.log(`Applied ${batchIndex + 1}/${batches.length} batches (${updated} rows)`);
 		}
 	}
 
 	console.log(`Updated ${updated} events`);
 	if (failed) console.log(`Failed updates/plans: ${failed}`);
 	console.log(`Re-run without ${applyFlag} and confirm that 0 events need backfill.`);
+}
+
+async function applyBatch(args: {
+	db: { execute: <T>(query: unknown) => Promise<T[]> };
+	sql: typeof import("drizzle-orm").sql;
+	rows: BackfillUpdate[];
+}) {
+	if (!args.rows.length) return 0;
+
+	const values = args.rows.map(
+		(row) => args.sql`(
+			${row.id}::int,
+			${JSON.stringify(row.sourceOrigins)}::jsonb
+		)`,
+	);
+	const result = await args.db.execute<{ id: number }>(args.sql`
+		UPDATE events AS e
+		SET source_origins = v.source_origins
+		FROM (VALUES ${args.sql.join(values, args.sql`, `)}) AS v(id, source_origins)
+		WHERE e.id = v.id
+		RETURNING e.id
+	`);
+	return result.length;
 }
 
 function enrichMessengerLabel(args: {
