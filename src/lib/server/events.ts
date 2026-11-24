@@ -356,6 +356,8 @@ export function prepareEventsForUi(events: FetchEvent[]) {
 				return {
 					...event,
 					hostSecret: undefined, // never leak this to the ui
+					// Admin UI loads provenance via getEventSourceOrigins — never ship it in list/detail payloads.
+					sourceOrigins: undefined,
 					author: event.author
 						? {
 								...event.author,
