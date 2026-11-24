@@ -16,7 +16,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	whatsupdanang: { module: "./scrape-whatsupdanang.ts", label: "WhatsUpDaNang", url: "https://whatsupdanang.com" },
 	soulwise: { module: "./scrape-soulwise.ts", label: "Soulwise", url: "https://soulwise.io" },
 	balievents: { module: "./scrape-balievents.ts", label: "BaliEvents.co", url: "https://www.balievents.co" },
-	goers: { module: "./scrape-goers.ts", label: "GOERS", url: "https://www.goersapp.com", retryOnNewIp: true },
+	goers: { module: "./scrape-goers.ts", label: "GOERS", url: "https://www.goersapp.com" },
 	yogabarn: { module: "./scrape-yogabarn.ts", label: "The Yoga Barn", url: "https://theyogabarn.com", retryOnNewIp: true },
 	tantrakalender: { module: "./scrape-tantrakalender.ts", label: "Tantrakalender", url: "https://tantrakalender.de" },
 	tantrazentrumleipzig: {
