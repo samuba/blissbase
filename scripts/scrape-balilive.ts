@@ -233,14 +233,15 @@ export function getImageUrls(event: BaliLiveEvent | undefined): string[] {
 	};
 
 	for (const media of event?.media?.content ?? []) {
-		push(media.originalUrl);
-		push(media.previewUrl);
+		push(media.originalUrl ?? media.previewUrl);
 	}
 	for (const image of event?.images ?? []) {
 		push(image.previewUrl);
 	}
-	push(event?.desktopPreview?.previewUrl);
-	push(event?.mobilePreview?.previewUrl);
+	if (!urls?.length) {
+		push(event?.desktopPreview?.previewUrl);
+		push(event?.mobilePreview?.previewUrl);
+	}
 	return urls;
 }
 
@@ -252,9 +253,9 @@ export function getHost(event: BaliLiveEvent | undefined): string | undefined {
 }
 
 export function getHostLink(event: BaliLiveEvent | undefined): string | undefined {
-	const slug = event?.place?.slug?.trim();
-	if (!slug) return undefined;
-	return `${SITE_BASE}/places/${slug}`;
+	// createdBy has no public profile URL; place URLs would mismatch a real host name.
+	void event;
+	return undefined;
 }
 
 export function getContact(event: BaliLiveEvent | undefined): string[] {
@@ -396,10 +397,17 @@ async function fetchEventListings({
 		url.searchParams.set(`dateEnd`, dateEnd);
 		url.searchParams.set(`page`, String(page));
 
-		const body = (await customFetch(url.toString(), {
-			returnType: `json`,
-			headers: { Accept: `application/json` },
-		})) as BaliLiveListResponse;
+		let body: BaliLiveListResponse;
+		try {
+			body = (await customFetch(url.toString(), {
+				returnType: `json`,
+				headers: { Accept: `application/json` },
+			})) as BaliLiveListResponse;
+		} catch (error) {
+			console.error(`Listing page ${page} failed:`, error);
+			if (!events?.length) throw error;
+			break;
+		}
 
 		const pageItems = Array.isArray(body?.data) ? body.data : [];
 		for (const item of pageItems) {

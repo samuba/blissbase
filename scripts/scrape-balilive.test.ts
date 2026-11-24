@@ -83,7 +83,7 @@ describe(`mapBaliLiveEvent`, () => {
 			endAt: `2026-12-01T20:00:00+08:00`,
 			price: `Free`,
 			host: `Maya Healing`,
-			hostLink: `https://bali.live/places/sacred-space-ubud`,
+			hostLink: undefined,
 			sourceUrl: `https://bali.live/events/cacao-ceremony-sound-healing`,
 			source: `balilive`,
 			timezone: `Asia/Makassar`,
@@ -135,7 +135,7 @@ describe(`field helpers`, () => {
 		expect(getPrice({ ...detail, entry: `paid` })).toBe(`Paid`);
 		expect(getPrice({ ...detail, entry: `all` })).toBeUndefined();
 		expect(getTags(detail)).toEqual([`Wellness`, `Music`]);
-		expect(getImageUrls(detail)).toContain(`https://static.bali.live/uploads/1/cover.webp`);
+		expect(getImageUrls(detail)).toEqual([`https://static.bali.live/uploads/1/cover.webp`]);
 		expect(getDescription(detail)).toContain(`<p>`);
 		expect(getContact(detail)).toHaveLength(2);
 	});
