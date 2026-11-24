@@ -14,6 +14,7 @@ export type EventSourceOrigin = {
 export type EventSourceOriginType = `scrape` | `telegram` | `whatsapp` | `website-form`;
 
 const WEBSITE_FORM_SOURCE = `website-form`;
+
 /**
  * Stable identity for merging origins across scrapes.
  * @example
@@ -98,7 +99,8 @@ export function sourceOriginsFromEventFields(event: {
 		});
 	}
 
-	return mergeSourceOrigins(event.sourceOrigins, origins);
+	// Explicit origins win over field-derived ones (e.g. named Telegram groups).
+	return mergeSourceOrigins(origins, event.sourceOrigins);
 }
 
 /**

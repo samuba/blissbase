@@ -38,6 +38,7 @@ import { evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type Scr
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
+import { mergeSourceOrigins } from '../src/lib/server/eventSourceOrigins.ts';
 import { imageCacheMapKey, loadImageCacheByKeys, lookupImageCacheRows } from './imageCacheLookup.ts';
 
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
@@ -527,10 +528,26 @@ async function main() {
                 });
             });
 
-            // Deduplicate by keeping only the last occurrence of each slug
+            // Keep last occurrence for scalar fields, but merge provenance from every duplicate.
             const uniqueEvents = new Map<string, typeof eventsToInsert[number]>();
-            events.forEach(event => {
-                uniqueEvents.set(event.slug, event);
+            events.forEach((event) => {
+                const existing = uniqueEvents.get(event.slug);
+                if (!existing) {
+                    uniqueEvents.set(event.slug, event);
+                    return;
+                }
+                uniqueEvents.set(event.slug, {
+                    ...event,
+                    sourceOrigins: mergeSourceOrigins(existing.sourceOrigins, event.sourceOrigins),
+                    sourceChatIdsTelegram: Array.from(new Set([
+                        ...(existing.sourceChatIdsTelegram ?? []),
+                        ...(event.sourceChatIdsTelegram ?? []),
+                    ])),
+                    sourceChatIdsWhatsapp: Array.from(new Set([
+                        ...(existing.sourceChatIdsWhatsapp ?? []),
+                        ...(event.sourceChatIdsWhatsapp ?? []),
+                    ])),
+                });
             });
             const deduplicatedEvents = Array.from(uniqueEvents.values());
             console.warn(`Deduplicated events. Reduced from ${events.length} to ${deduplicatedEvents.length} events`);

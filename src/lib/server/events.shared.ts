@@ -3,6 +3,7 @@ import { deduplicateItems, generateSlug } from "../common";
 import { isProperDisplayName } from "../displayName";
 import type { InsertEvent } from "../types";
 import { buildConflictUpdateColumns, type DB, s } from "./db.shared";
+import { ensureSourceOrigins } from "./eventSourceOrigins";
 
 export const FORM_CREATED_EVENT_SOURCE = `website-form`;
 
@@ -36,6 +37,7 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		}
 
 		event.imageUrls = deduplicateItems(event.imageUrls);
+		event.sourceOrigins = ensureSourceOrigins(event);
 
 		event.slug = generateSlug({
 			name: event.name,
@@ -64,7 +66,16 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 		.onConflictDoUpdate({
 			target: s.events.slug,
 			set: {
-				...buildConflictUpdateColumns(s.events, [`slug`, `id`, `createdAt`, `tagSlugs`, `language`, `structure`, `listed`]),
+				...buildConflictUpdateColumns(s.events, [
+					`slug`,
+					`id`,
+					`createdAt`,
+					`tagSlugs`,
+					`language`,
+					`structure`,
+					`listed`,
+					`sourceOrigins`,
+				]),
 				// Unlisting is sticky so Jev's not-conscious verdict survives rescrapes.
 				listed: sql`${s.events.listed} and excluded.listed`,
 				source: sql`
@@ -134,6 +145,39 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 							from unnest(${s.events.sourceChatIdsWhatsapp} || excluded.source_chat_ids_whatsapp) as merged_chat_ids(chat_id)
 						)
 					end
+				`,
+				// Append/merge provenance; later rows win for the same scrape site / chat id.
+				sourceOrigins: sql`
+					(
+						with combined as (
+							select origin, ord
+							from jsonb_array_elements(
+								coalesce(${s.events.sourceOrigins}, '[]'::jsonb) || coalesce(excluded.source_origins, '[]'::jsonb)
+							) with ordinality as t(origin, ord)
+						),
+						keyed as (
+							select
+								case
+									when origin->>'type' in ('telegram', 'whatsapp') then (origin->>'type') || ':' || coalesce(origin->>'chatId', '')
+									when origin->>'type' = 'scrape' then 'scrape:' || coalesce(origin->>'label', '')
+									else coalesce(origin->>'type', 'unknown')
+								end as dedupe_key,
+								origin,
+								ord
+							from combined
+						)
+						select coalesce(
+							(
+								select jsonb_agg(origin order by ord)
+								from (
+									select distinct on (dedupe_key) origin, ord
+									from keyed
+									order by dedupe_key, ord desc
+								) kept
+							),
+							'[]'::jsonb
+						)
+					)
 				`,
 			},
 		})

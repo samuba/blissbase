@@ -515,6 +515,44 @@ describe("Events Module - Happy Flow Tests", () => {
 			expect(result[0].sourceChatIdsWhatsapp).toEqual(["120363@g.us"]);
 		});
 
+		it(`should merge sourceOrigins across conflicting upserts from different channels`, async () => {
+			const startAt = new Date(`2024-12-28T19:00:00Z`);
+			const endAt = new Date(`2024-12-28T22:00:00Z`);
+
+			await upsertEvents([
+				createTestEvent({
+					name: `Merged Source Origins Event`,
+					startAt,
+					endAt,
+					slug: ``,
+					source: `tribehaus`,
+					sourceUrl: `https://tribehaus.app/event`,
+				}),
+			]);
+
+			const result = await upsertEvents([
+				createTestEvent({
+					name: `Merged Source Origins Event`,
+					startAt,
+					endAt,
+					slug: ``,
+					source: `telegram`,
+					sourceUrl: `https://example.com/from-tg`,
+					sourceChatIdsTelegram: [`room9`],
+					sourceOrigins: [{ type: `telegram`, label: `Berlin Conscious`, chatId: `room9` }],
+				}),
+			]);
+
+			expect(result).toHaveLength(1);
+			expect(result[0].sourceOrigins).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ type: `scrape`, label: `tribehaus` }),
+					expect.objectContaining({ type: `telegram`, label: `Berlin Conscious`, chatId: `room9` }),
+				]),
+			);
+			expect(result[0].sourceOrigins).toHaveLength(2);
+		});
+
 		it(`should replace a legacy Blissbase source URL with an incoming external source URL`, async () => {
 			const startAt = new Date(`2024-12-22T19:00:00Z`);
 			const endAt = new Date(`2024-12-22T22:00:00Z`);
