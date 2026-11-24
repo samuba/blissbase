@@ -40,7 +40,7 @@ import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
 import { ensureSourceOrigins, mergeSourceOrigins } from '../src/lib/server/eventSourceOrigins.ts';
 import { planStaleSourceCleanup } from '../src/lib/server/staleSourceCleanup.ts';
-import { imageCacheMapKey, loadImageCacheByKeys, lookupImageCacheRows } from './imageCacheLookup.ts';
+import { imageCacheMapKey, loadImageCacheByKeys, lookupImageCacheRows, stableImageCacheOriginalUrl } from './imageCacheLookup.ts';
 
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
 const errorsLoggedByStream = new WeakMap<WriteStream, number>();
@@ -394,7 +394,10 @@ async function main() {
         }
 
         const cacheByKey = await loadImageCacheByKeys({
-            keys: jobs.map((job) => ({ originalUrl: job.originalUrl, eventSlug: job.event.slug })),
+            keys: jobs.map((job) => ({
+                originalUrl: stableImageCacheOriginalUrl(job.originalUrl),
+                eventSlug: job.event.slug,
+            })),
             lookup: (keys) => lookupImageCacheRows({ db, keys }),
         });
         console.log("image cache key lookups", jobs.length, "hits", cacheByKey.size);
@@ -411,7 +414,8 @@ async function main() {
             const eventResults = resultsByEvent.get(job.event);
             if (!eventResults) return;
 
-            const cacheKey = imageCacheMapKey({ eventSlug: job.event.slug, originalUrl: job.originalUrl });
+            const cacheOriginalUrl = stableImageCacheOriginalUrl(job.originalUrl);
+            const cacheKey = imageCacheMapKey({ eventSlug: job.event.slug, originalUrl: cacheOriginalUrl });
             const cachedUrl = cacheByKey.get(cacheKey);
             if (cachedUrl) {
                 eventResults[job.index] = cachedUrl;
@@ -429,7 +433,7 @@ async function main() {
                 const { buffer, phash } = await resizeCoverImage(bytes);
                 const imageUrl = await assets.uploadEventImage(buffer, job.event.slug, phash, assetCreds);
                 eventResults[job.index] = imageUrl;
-                const newCacheEntry = { originalUrl: job.originalUrl, eventSlug: job.event.slug, url: imageUrl };
+                const newCacheEntry = { originalUrl: cacheOriginalUrl, eventSlug: job.event.slug, url: imageUrl };
                 newlyCachedImages.push(newCacheEntry);
                 cacheByKey.set(cacheKey, imageUrl);
                 await customFetch(imageUrl, { returnType: 'bytes' });
