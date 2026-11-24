@@ -100,4 +100,41 @@ describe(`mapBaliFolioEvent`, () => {
 			})?.imageUrls,
 		).toEqual([`https://cdn.example/poster.jpg`]);
 	});
+
+	it(`uses short endDate-only spans as occurrence end`, () => {
+		const mapped = mapBaliFolioEvent({
+			row: {
+				...row,
+				time: null,
+				endTime: null,
+				endDate: `2026-11-29T00:00:00.000Z`,
+				frequency: `one-off`,
+			},
+		});
+		expect(mapped?.endAt).toBe(`2026-11-29T23:59:00+08:00`);
+	});
+
+	it(`ignores long endDate windows without endTime`, () => {
+		const mapped = mapBaliFolioEvent({
+			row: {
+				...row,
+				endTime: null,
+				endDate: `2027-01-27T00:00:00.000Z`,
+				frequency: `one-off`,
+			},
+		});
+		expect(mapped?.endAt).toBeUndefined();
+	});
+
+	it(`ignores endDate without endTime for recurring frequencies`, () => {
+		const mapped = mapBaliFolioEvent({
+			row: {
+				...row,
+				endTime: null,
+				endDate: `2026-12-11T00:00:00.000Z`,
+				frequency: `weekly`,
+			},
+		});
+		expect(mapped?.endAt).toBeUndefined();
+	});
 });

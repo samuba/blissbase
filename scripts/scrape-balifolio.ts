@@ -157,12 +157,9 @@ function getEndAt(row: BaliFolioEvent): string | undefined {
 	const startTime = parseTime(row.time);
 	const endTime = parseTime(row.endTime);
 	if (!endTime) {
-		const endDay = parseDateOnly(row.endDate);
-		if (!endDay) return undefined;
-		if (endDay.year === day.year && endDay.month === day.month && endDay.day === day.day) {
-			return undefined;
-		}
-		return dateToIsoStr(endDay.year, endDay.month, endDay.day, 23, 59, TIMEZONE, false);
+		// Without endTime, endDate is often a series/availability window (weeks/months),
+		// not the occurrence end. Only trust short one-off spans (e.g. festivals).
+		return endAtFromEndDateOnly({ row, day });
 	}
 
 	let endYear = day.year;
@@ -173,7 +170,7 @@ function getEndAt(row: BaliFolioEvent): string | undefined {
 
 	if (startTime) {
 		const endsBeforeStart =
-			endHour < startTime.hour || (endHour === startTime.hour && endMinute <= startTime.minute);
+			endHour < startTime.hour || (endHour === startTime.hour && endMinute < startTime.minute);
 		if (endsBeforeStart) {
 			const rolled = addCalendarDays({ year: day.year, month: day.month, day: day.day }, 1);
 			endYear = rolled.year;
@@ -183,6 +180,43 @@ function getEndAt(row: BaliFolioEvent): string | undefined {
 	}
 
 	return dateToIsoStr(endYear, endMonth, endDayNum, endHour, endMinute, TIMEZONE, false);
+}
+
+/** Max calendar-day span for trusting endDate without endTime as a real occurrence end. */
+const MAX_END_DATE_ONLY_SPAN_DAYS = 7;
+
+function endAtFromEndDateOnly({
+	row,
+	day,
+}: {
+	row: BaliFolioEvent;
+	day: { year: number; month: number; day: number };
+}): string | undefined {
+	const endDay = parseDateOnly(row.endDate);
+	if (!endDay) return undefined;
+
+	const frequency = row.frequency?.trim().toLowerCase();
+	if (frequency === `weekly` || frequency === `monthly` || frequency === `yearly`) {
+		return undefined;
+	}
+
+	const spanDays = calendarDayDiff({ from: day, to: endDay });
+	if (spanDays == null || spanDays <= 0) return undefined;
+	if (spanDays > MAX_END_DATE_ONLY_SPAN_DAYS) return undefined;
+
+	return dateToIsoStr(endDay.year, endDay.month, endDay.day, 23, 59, TIMEZONE, false);
+}
+
+function calendarDayDiff({
+	from,
+	to,
+}: {
+	from: { year: number; month: number; day: number };
+	to: { year: number; month: number; day: number };
+}) {
+	const fromMs = Date.UTC(from.year, from.month - 1, from.day);
+	const toMs = Date.UTC(to.year, to.month - 1, to.day);
+	return Math.round((toMs - fromMs) / (24 * 60 * 60 * 1000));
 }
 
 function getAddress({
