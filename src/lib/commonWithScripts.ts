@@ -21,6 +21,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	whatsupdanang: { module: "./scrape-whatsupdanang.ts", label: "WhatsUpDaNang", url: "https://whatsupdanang.com" },
 	soulwise: { module: "./scrape-soulwise.ts", label: "Soulwise", url: "https://soulwise.io" },
 	balievents: { module: "./scrape-balievents.ts", label: "BaliEvents.co", url: "https://www.balievents.co" },
+	visitbali: { module: "./scrape-visitbali.ts", label: "VisitBali", url: "https://visitbali.id" },
 	whatsonbali: { module: "./scrape-whatsonbali.ts", label: "What's On Bali", url: "https://whatsonbali.com" },
 	balifolio: { module: "./scrape-balifolio.ts", label: "BaliFolio", url: "https://balifolio.com" },
 	balibuddies: { module: "./scrape-balibuddies.ts", label: "Bali Buddies", url: "https://balibuddies.com" },
