@@ -66,6 +66,16 @@ describe(`field extractors`, () => {
 	it(`reads recurrence from the repeats row`, () => {
 		expect(getRecurrence(recurringHtml)).toBe(`Every Wednesday`);
 	});
+
+	it(`keeps category tags and omits areaName`, () => {
+		expect(
+			getTags(detailHtml, {
+				link: `https://whatsonbali.com/events/trauma-release-training/`,
+				categoryName: `Wellness & Yoga`,
+				areaName: `Ubud`,
+			}),
+		).toEqual([`Wellness & Yoga`]);
+	});
 });
 
 describe(`expandOccurrences`, () => {

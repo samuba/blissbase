@@ -166,11 +166,11 @@ export async function mapDetailHtml({
 		endAt,
 		timezone: TIMEZONE,
 		address: getAddress(html, listing),
-		price: getPrice(html) || listing?.priceLabel || undefined,
+		price: listing?.priceLabel || getPrice(html) || undefined,
 		priceIsHtml: false,
 		description: getDescription(html),
 		imageUrls: getImageUrls(html) || (listing?.imageUrl ? [listing.imageUrl] : []),
-		host: getHost(html) || listing?.venue || undefined,
+		host: getHost(html) || undefined,
 		hostLink: getHostLink(html),
 		contact: getContact(html, listing),
 		latitude: null,
@@ -183,18 +183,27 @@ export async function mapDetailHtml({
 	await fillCoordinates(base);
 
 	const recurrence = getRecurrence(html) || listing?.recurring;
+	const isRecurring = parseRecurrence(recurrence) != null;
+	const upcomingCutoffMs = Date.now() - 12 * 60 * 60 * 1000;
 	const occurrences = expandOccurrences({
 		startAt: base.startAt,
 		endAt: base.endAt,
 		recurrence,
 		daysAhead: OCCURRENCE_DAYS_AHEAD,
+	}).filter((occurrence) => {
+		const ms = Date.parse(occurrence.startAt);
+		return Number.isFinite(ms) && ms >= upcomingCutoffMs;
 	});
 
 	return occurrences.map((occurrence) => ({
 		...base,
 		startAt: occurrence.startAt,
 		endAt: occurrence.endAt,
-		sourceUrl: occurrenceSourceUrl({ sourceUrl: base.sourceUrl, startAt: occurrence.startAt, recurring: !!recurrence }),
+		sourceUrl: occurrenceSourceUrl({
+			sourceUrl: base.sourceUrl,
+			startAt: occurrence.startAt,
+			recurring: isRecurring,
+		}),
 	}));
 }
 
@@ -349,7 +358,6 @@ export function getTags(html: string, listing?: WobListing): string[] {
 	const pill = cleanText($(`.wob-hero-d .wob-pill`).first().text());
 	if (pill) tags.add(pill);
 	if (listing?.categoryName) tags.add(listing.categoryName);
-	if (listing?.areaName) tags.add(listing.areaName);
 	return [...tags];
 }
 
