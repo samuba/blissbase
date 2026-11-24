@@ -1,9 +1,10 @@
 /**
  * Scrapes Bali Travel Hub events (`/events/` WP posts).
  *
- * Listing: WP REST `posts?categories=6` (Events category).
+ * Listing: WP REST `posts?categories=6` (Events), excluding Public Holidays (`categories_exclude=598`).
  * Detail: each `/events/{slug}/` page — prefer `#hp-event` Festival/Event JSON-LD,
  * fall back to `article:published_time` in Asia/Jakarta when schema dates are missing or past.
+ * Public Holidays posts are skipped (Christmas, Labour Day, …).
  *
  * Usage:
  *   bun run scripts/scrape-balitravelhub.ts
@@ -24,6 +25,8 @@ import { geocodeAddressCached } from '../src/lib/server/google.script.ts';
 
 const SITE_BASE = `https://www.balitravelhub.com`;
 const EVENTS_CATEGORY_ID = 6;
+/** WP category for national/religious public holidays (Christmas, Labour Day, …). */
+const PUBLIC_HOLIDAYS_CATEGORY_ID = 598;
 const WP_POSTS_URL = `${SITE_BASE}/wp-json/wp/v2/posts`;
 const DEFAULT_TIMEZONE = `Asia/Jakarta` as const;
 const SOURCE = `balitravelhub` as const;
@@ -144,6 +147,11 @@ export async function mapBaliTravelHubEvent(args: {
 	url: string;
 }): Promise<ScrapedEvent | undefined> {
 	const { html, url } = args;
+	if (isPublicHoliday(html)) {
+		console.error(`Skipping ${url} (Public Holidays category).`);
+		return undefined;
+	}
+
 	const name = getName(html);
 	const startAt = getStartAt(html);
 	const sourceUrl = getSourceUrl({ html, url });
@@ -217,11 +225,13 @@ export async function fetchEventUrls({ limit }: { limit?: number } = {}): Promis
 
 		const apiUrl =
 			`${WP_POSTS_URL}?categories=${EVENTS_CATEGORY_ID}` +
-			`&per_page=${perPage}&page=${page}&orderby=date&order=asc&_fields=link,slug`;
+			`&categories_exclude=${PUBLIC_HOLIDAYS_CATEGORY_ID}` +
+			`&per_page=${perPage}&page=${page}&orderby=date&order=asc&_fields=link,slug,categories`;
 		const posts = (await customFetch(apiUrl, { returnType: `json` })) as WpPostListItem[];
 		if (!Array.isArray(posts) || !posts?.length) break;
 
 		for (const post of posts) {
+			if (post.categories?.includes(PUBLIC_HOLIDAYS_CATEGORY_ID)) continue;
 			const link = canonicalizeEventUrl(post?.link);
 			if (!link) continue;
 			urls.push(link);
@@ -375,6 +385,23 @@ export function getHostLink(_html: string): string | undefined {
 	return undefined;
 }
 
+export function isPublicHoliday(html: string): boolean {
+	const article = readLdNode(html, (node) => node[`@type`] === `Article`);
+	const sections = article?.articleSection;
+	if (Array.isArray(sections)) {
+		if (sections.some((section) => isPublicHolidayLabel(section))) return true;
+	} else if (isPublicHolidayLabel(sections)) {
+		return true;
+	}
+
+	const $ = cheerio.load(html);
+	if ($(`.meta-category a, a[rel="category tag"]`).toArray().some((el) => isPublicHolidayLabel($(el).text()))) {
+		return true;
+	}
+	const bodyClass = $(`body`).attr(`class`) || ``;
+	return /\bcategory-public-holidays\b/i.test(bodyClass);
+}
+
 export function getTags(html: string): string[] {
 	const tags: string[] = [];
 	const seen = new Set<string>();
@@ -382,6 +409,7 @@ export function getTags(html: string): string[] {
 		const text = superTrim(raw);
 		if (!text) return;
 		if (/^events?$/i.test(text)) return;
+		if (isPublicHolidayLabel(text)) return;
 		const key = text.toLowerCase();
 		if (seen.has(key)) return;
 		seen.add(key);
@@ -616,6 +644,11 @@ function isGenericBaliAddress(address: string[]): boolean {
 	return /^(bali(,?\s*indonesia)?|indonesia)$/i.test(joined.trim());
 }
 
+function isPublicHolidayLabel(value: unknown): boolean {
+	if (typeof value !== `string`) return false;
+	return /^public[- ]holidays?$/i.test(value.trim());
+}
+
 function canonicalizeEventUrl(raw: string | undefined): string | undefined {
 	if (!raw?.trim()) return undefined;
 	try {
@@ -673,6 +706,7 @@ if (import.meta.main) {
 type WpPostListItem = {
 	link?: string;
 	slug?: string;
+	categories?: number[];
 };
 
 type LdGeo = {

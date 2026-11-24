@@ -6,6 +6,7 @@ import {
 	getName,
 	getStartAt,
 	getTags,
+	isPublicHoliday,
 	mapBaliTravelHubEvent,
 	parseCliArgs,
 } from './scrape-balitravelhub.ts';
@@ -22,7 +23,7 @@ const festivalHtml = `<!doctype html>
     {
       "@type": "Article",
       "headline": "Bali Spirit Festival",
-      "articleSection": ["Events", "Public Holidays"]
+      "articleSection": ["Events"]
     },
     {
       "@type": "Festival",
@@ -71,9 +72,10 @@ const holidayHtml = `<!doctype html>
   ]
 }
 </script>
-</head><body>
+</head><body class="archive category category-events category-public-holidays">
 <article>
   <h1 class="entry-title">Nyepi</h1>
+  <div class="meta-category"><a rel="category tag" href="/events/public-holidays/">Public Holidays</a></div>
   <div class="entry-content herald-entry-content">
     <p>Nyepi, Bali's Day of Silence, falls on Monday, 8 March 2027.</p>
   </div>
@@ -121,7 +123,8 @@ describe(`scrape-balitravelhub`, () => {
 			`Ubud`,
 		]);
 		expect(getImageUrls(festivalHtml)[0]).toContain(`Bali-Spirit-Festival.jpg`);
-		expect(getTags(festivalHtml)).toContain(`Public Holidays`);
+		expect(getTags(festivalHtml)).not.toContain(`Public Holidays`);
+		expect(isPublicHoliday(festivalHtml)).toBe(false);
 
 		const event = await mapBaliTravelHubEvent({
 			html: festivalHtml,
@@ -133,11 +136,26 @@ describe(`scrape-balitravelhub`, () => {
 		expect(event?.description).toContain(`yoga`);
 	});
 
-	it(`falls back to article:published_time in Asia/Jakarta when Event schema is missing`, () => {
-		expect(getName(holidayHtml)).toBe(`Nyepi`);
+	it(`skips Public Holidays posts even when dates parse`, async () => {
+		expect(isPublicHoliday(holidayHtml)).toBe(true);
 		expect(getStartAt(holidayHtml)).toBe(`2027-03-08T00:00:00+07:00`);
-		expect(getEndAt(holidayHtml)).toBeUndefined();
-		expect(getAddress(holidayHtml)).toEqual([`Bali`, `Indonesia`]);
+		const event = await mapBaliTravelHubEvent({
+			html: holidayHtml,
+			url: `https://www.balitravelhub.com/events/nyepi/`,
+		});
+		expect(event).toBeUndefined();
+	});
+
+	it(`falls back to article:published_time in Asia/Jakarta when Event schema is missing`, () => {
+		const noSchemaHtml = holidayHtml.replace(`"Public Holidays"`, `"Events"`).replace(
+			`category-public-holidays`,
+			`category-events`,
+		).replace(`Public Holidays`, `Events`);
+		expect(isPublicHoliday(noSchemaHtml)).toBe(false);
+		expect(getName(noSchemaHtml)).toBe(`Nyepi`);
+		expect(getStartAt(noSchemaHtml)).toBe(`2027-03-08T00:00:00+07:00`);
+		expect(getEndAt(noSchemaHtml)).toBeUndefined();
+		expect(getAddress(noSchemaHtml)).toEqual([`Bali`, `Indonesia`]);
 	});
 
 	it(`ignores past schema dates and uses published_time instead`, () => {
