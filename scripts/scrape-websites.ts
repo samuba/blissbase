@@ -38,7 +38,7 @@ import { evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type Scr
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
-import { mergeSourceOrigins } from '../src/lib/server/eventSourceOrigins.ts';
+import { ensureSourceOrigins, mergeSourceOrigins } from '../src/lib/server/eventSourceOrigins.ts';
 import { imageCacheMapKey, loadImageCacheByKeys, lookupImageCacheRows } from './imageCacheLookup.ts';
 
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
@@ -538,7 +538,10 @@ async function main() {
                 }
                 uniqueEvents.set(event.slug, {
                     ...event,
-                    sourceOrigins: mergeSourceOrigins(existing.sourceOrigins, event.sourceOrigins),
+                    sourceOrigins: mergeSourceOrigins(
+                        ensureSourceOrigins(existing),
+                        ensureSourceOrigins(event),
+                    ),
                     sourceChatIdsTelegram: Array.from(new Set([
                         ...(existing.sourceChatIdsTelegram ?? []),
                         ...(event.sourceChatIdsTelegram ?? []),

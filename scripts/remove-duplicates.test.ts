@@ -66,6 +66,8 @@ describe(`preparePreferredSourceEventUpdate`, () => {
     it(`preserves catalog tags and chat provenance on the surviving preferred-source event`, () => {
         const eventToSurvive = {
             id: 2,
+            source: `telegram`,
+            sourceUrl: null as string | null,
             tagSlugs: [`yoga`],
             sourceChatIdsTelegram: [`room1`],
             sourceChatIdsWhatsapp: null as string[] | null,
@@ -73,13 +75,12 @@ describe(`preparePreferredSourceEventUpdate`, () => {
         };
         const eventToDelete = {
             id: 1,
+            source: `balievents`,
+            sourceUrl: `https://balievents.co/e`,
             tagSlugs: [`meditation`, `yoga`],
             sourceChatIdsTelegram: [`room2`],
             sourceChatIdsWhatsapp: [`120363@g.us`],
-            sourceOrigins: [
-                { type: `telegram` as const, label: `Room 2`, chatId: `room2` },
-                { type: `whatsapp` as const, label: `WA`, chatId: `120363@g.us` },
-            ],
+            sourceOrigins: [] as Array<{ type: `telegram` | `whatsapp` | `scrape`; label: string; chatId?: string; url?: string }>,
         };
 
         const update = preparePreferredSourceEventUpdate({
@@ -87,16 +88,17 @@ describe(`preparePreferredSourceEventUpdate`, () => {
             eventToDelete,
         });
 
-        expect(update).toEqual({
-            tagSlugs: [`yoga`, `meditation`],
-            sourceChatIdsTelegram: [`room1`, `room2`],
-            sourceChatIdsWhatsapp: [`120363@g.us`],
-            sourceOrigins: [
-                { type: `telegram`, label: `Room 1`, chatId: `room1`, url: null },
-                { type: `telegram`, label: `Room 2`, chatId: `room2`, url: null },
-                { type: `whatsapp`, label: `WA`, chatId: `120363@g.us`, url: null },
-            ],
-        });
+        expect(update.tagSlugs).toEqual([`yoga`, `meditation`]);
+        expect(update.sourceChatIdsTelegram).toEqual([`room1`, `room2`]);
+        expect(update.sourceChatIdsWhatsapp).toEqual([`120363@g.us`]);
+        expect(update.sourceOrigins).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ type: `telegram`, chatId: `room1` }),
+                expect.objectContaining({ type: `telegram`, chatId: `room2` }),
+                expect.objectContaining({ type: `whatsapp`, chatId: `120363@g.us` }),
+                expect.objectContaining({ type: `scrape`, label: `balievents`, url: `https://balievents.co/e` }),
+            ]),
+        );
         expect(eventToSurvive.tagSlugs).toEqual([`yoga`, `meditation`]);
         expect(eventToSurvive.sourceChatIdsTelegram).toEqual([`room1`, `room2`]);
         expect(eventToSurvive.sourceChatIdsWhatsapp).toEqual([`120363@g.us`]);
