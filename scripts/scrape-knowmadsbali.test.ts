@@ -135,6 +135,7 @@ describe(`field getters`, () => {
 			`https://wa.me/6285975213567`,
 		]);
 		expect(getPrice(weeklyEvent)).toBe(`Free`);
+		expect(getPrice({ ...weeklyEvent, priceInfo: `Free entry` })).toBe(`Free`);
 		expect(getPrice({ ...weeklyEvent, priceInfo: `Paid` })).toBeUndefined();
 		expect(getHost(datedEvent)).toBe(`Knowmads Bali`);
 		expect(getHostLink(datedEvent)).toBe(`https://knowmadsbali.com`);
@@ -175,6 +176,25 @@ describe(`mapKnowmadsRowSync`, () => {
 				slug: `all-you-can-eat-bbq-night`,
 			}),
 		).toEqual([]);
+	});
+
+	it(`prefers dated mapping when startDate is present alongside openingHours`, () => {
+		const [event] = mapKnowmadsRowSync({
+			...datedEvent,
+			openingHours: weeklyEvent.openingHours,
+		});
+		expect(event?.startAt).toBe(`2026-11-24T18:00:00+08:00`);
+		expect(event?.sourceUrl).not.toContain(`?date=`);
+	});
+
+	it(`rolls overnight endTime past midnight on the same calendar day`, () => {
+		const [event] = mapKnowmadsRowSync({
+			...datedEvent,
+			startTime: `18:30`,
+			endTime: `02:20`,
+			endDate: `2026-11-24T00:00:00.000Z`,
+		});
+		expect(event?.endAt).toBe(`2026-11-25T02:20:00+08:00`);
 	});
 
 	it(`skips unpublished rows`, () => {

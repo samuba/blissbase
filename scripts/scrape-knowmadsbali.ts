@@ -5,6 +5,7 @@
  * - Dated rows → one occurrence from startDate/startTime (+ endDate/endTime).
  * - Rows with only `openingHours` → weekly occurrences for the next 90 days
  *   (whitelist title filter; recurring venue spam otherwise).
+ * - If both dated and weekly fields exist, prefer the concrete startDate.
  * - Spans longer than 60 days without weekly hours are skipped (ongoing listings).
  * - Blacklisted titles are dropped; dated rows are not whitelist-gated (listing
  *   still happens later in scrape-websites).
@@ -166,23 +167,29 @@ export function mapKnowmadsRowSync(row: KnowmadsEvent | undefined): ScrapedEvent
 		return [];
 	}
 
-	const weeklySlots = getWeeklySlots(row);
-	if (weeklySlots?.length) {
-		// Recurring listings are mostly permanent venues; only expand conscious-ish titles.
-		if (matchesBlackListWords(name) || !matchesWhiteListWords(name)) {
-			console.error(`Skipping weekly ${sourceUrl} (title failed whitelist/blacklist)`);
-			return [];
-		}
-		return expandWeeklyOccurrences({ row, name, sourceUrl, weeklySlots });
-	}
-
 	if (matchesBlackListWords(name)) {
 		console.error(`Skipping ${sourceUrl} (title matched blacklist)`);
 		return [];
 	}
 
-	const dated = mapDatedOccurrence({ row, name, sourceUrl });
-	return dated ? [dated] : [];
+	// Prefer concrete dates when present; live catalog currently never sets both.
+	if (parseDateOnly(row.startDate)) {
+		const dated = mapDatedOccurrence({ row, name, sourceUrl });
+		return dated ? [dated] : [];
+	}
+
+	const weeklySlots = getWeeklySlots(row);
+	if (weeklySlots?.length) {
+		// Recurring listings are mostly permanent venues; only expand conscious-ish titles.
+		if (!matchesWhiteListWords(name)) {
+			console.error(`Skipping weekly ${sourceUrl} (title failed whitelist)`);
+			return [];
+		}
+		return expandWeeklyOccurrences({ row, name, sourceUrl, weeklySlots });
+	}
+
+	console.error(`Skipping ${sourceUrl}: no startDate and no openingHours`);
+	return [];
 }
 
 export async function fetchKnowmadsEvents(): Promise<KnowmadsEvent[]> {
@@ -263,7 +270,7 @@ export function getPrice(row: KnowmadsEvent | undefined): string | undefined {
 	const price = superTrim(row.priceInfo);
 	if (!price) return undefined;
 	if (/^paid$/i.test(price)) return undefined;
-	if (/^(free|gratis|kostenlos)$/i.test(price)) return `Free`;
+	if (/^(free|gratis|kostenlos)\b/i.test(price)) return `Free`;
 	return price;
 }
 
@@ -368,10 +375,7 @@ function mapDatedOccurrence({
 	sourceUrl: string;
 }): ScrapedEvent | undefined {
 	const startDate = parseDateOnly(row.startDate);
-	if (!startDate) {
-		console.error(`Skipping ${sourceUrl}: no startDate and no openingHours`);
-		return undefined;
-	}
+	if (!startDate) return undefined;
 
 	const endDate = parseDateOnly(row.endDate);
 	if (endDate) {
@@ -510,8 +514,9 @@ function buildDatedEndAt({
 	}
 
 	let endDay = day;
+	const sameCalendarDay = !endDate || compareYmd(endDate, startDate) === 0;
 	if (
-		!endDate &&
+		sameCalendarDay &&
 		(endTime.hour < startTime.hour ||
 			(endTime.hour === startTime.hour && endTime.minute <= startTime.minute))
 	) {
