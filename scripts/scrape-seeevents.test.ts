@@ -37,6 +37,7 @@ const baseRow = {
 	whatsapp_number_override: `+62 813 1234 5678`,
 	review_status: `published`,
 	market: `bali`,
+	venues: null,
 };
 
 describe(`getName`, () => {
@@ -47,8 +48,22 @@ describe(`getName`, () => {
 });
 
 describe(`getAddress`, () => {
-	it(`pulls venue from title and always ends with Bali`, () => {
+	it(`pulls venue from title when venues embed is missing`, () => {
 		expect(getAddress(baseRow)).toEqual([`Jiwa Garden`, `Bali`]);
+	});
+
+	it(`prefers venues embed over title at-parsing`, () => {
+		expect(
+			getAddress({
+				...baseRow,
+				title: `SONANCE`,
+				venues: {
+					name: `Dragon Tea Temple`,
+					address: `Jl. Raya Seminyak`,
+					area: `Seminyak`,
+				},
+			}),
+		).toEqual([`Jl. Raya Seminyak`, `Dragon Tea Temple`, `Seminyak`, `Bali`]);
 	});
 
 	it(`prefers address_override and keeps area`, () => {
@@ -60,6 +75,19 @@ describe(`getAddress`, () => {
 				area: `Canggu`,
 			}),
 		).toEqual([`Jl. Example 1`, `Canggu`, `Bali`]);
+	});
+});
+
+describe(`getHost`, () => {
+	it(`uses venues.name when there is no artist and title has no at`, () => {
+		expect(
+			getHost({
+				...baseRow,
+				title: `TABU Wednesdays`,
+				artists_links: null,
+				venues: { name: `Miss Fish Bali`, address: `Berawa`, area: `Berawa` },
+			}),
+		).toBe(`Miss Fish Bali`);
 	});
 });
 
@@ -105,6 +133,21 @@ describe(`rowToEvent`, () => {
 		expect(event?.timezone).toBe(`Asia/Makassar`);
 		expect(event?.latitude).toBeCloseTo(-8.631727);
 		expect(event?.description).toContain(`<p>`);
+	});
+
+	it(`maps venues embed when title has no at`, () => {
+		const event = rowToEvent({
+			...baseRow,
+			title: `Echoes of Stillness Meditation & Soundhealing Experience`,
+			artists_links: null,
+			venues: {
+				name: `Jiwa Community Garden`,
+				address: `Canggu`,
+				area: `Canggu`,
+			},
+		});
+		expect(event?.address).toEqual([`Canggu`, `Jiwa Community Garden`, `Bali`]);
+		expect(event?.host).toBe(`Jiwa Community Garden`);
 	});
 
 	it(`drops blacklist titles`, () => {

@@ -1,7 +1,7 @@
 /**
  * Scrapes SEE Events Bali via their public Supabase PostgREST API
- * (`events` table). Venue table is RLS-blocked for anon; venue/address
- * are derived from title (`… at Venue`) and optional address_override/area.
+ * (`events` + embedded `venues`). Title `… at Venue` is only a fallback
+ * when the venue embed is missing.
  *
  * Usage:
  *   bun run scripts/scrape-seeevents.ts
@@ -46,6 +46,8 @@ const EVENT_COLUMNS = [
 	`review_status`,
 	`market`,
 ] as const;
+
+const EVENT_SELECT = `${EVENT_COLUMNS.join(`,`)},venues(name,address,area)`;
 
 export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
@@ -112,7 +114,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 
 	private async assertExpectedSchema() {
 		const params = new URLSearchParams({
-			select: EVENT_COLUMNS.join(`,`),
+			select: EVENT_SELECT,
 			limit: `0`,
 		});
 		const res = await fetch(`${SUPABASE_URL}/rest/v1/events?${params}`, {
@@ -120,10 +122,10 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		});
 		if (!res.ok) {
 			throw new Error(
-				`SEE Events schema check failed for events: expected columns missing or unreadable. ${res.status} ${await res.text()}`,
+				`SEE Events schema check failed for events+venues embed: expected columns missing or unreadable. ${res.status} ${await res.text()}`,
 			);
 		}
-		console.error(`Schema check passed for events.`);
+		console.error(`Schema check passed for events+venues.`);
 	}
 
 	private async fetchFutureEvents(): Promise<SeeEventRow[]> {
@@ -132,7 +134,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 		const nowIso = new Date().toISOString();
 
 		const paramsBase = {
-			select: EVENT_COLUMNS.join(`,`),
+			select: EVENT_SELECT,
 			review_status: `eq.published`,
 			market: `eq.bali`,
 			date_time: `gte.${nowIso}`,
@@ -227,18 +229,16 @@ export function getEndAt(row: SeeEventRow): string | undefined {
 
 export function getAddress(row: SeeEventRow): string[] {
 	const lines: string[] = [];
-	const override = nonempty(row.address_override);
-	if (override) lines.push(override);
+	const pushUnique = (value: string | undefined) => {
+		if (!value) return;
+		if (lines.some((line) => line.toLowerCase() === value.toLowerCase())) return;
+		lines.push(value);
+	};
 
-	const venueFromTitle = venueNameFromTitle(row.title);
-	if (venueFromTitle && !lines.some((line) => line.toLowerCase() === venueFromTitle.toLowerCase())) {
-		lines.push(venueFromTitle);
-	}
-
-	const area = nonempty(row.area);
-	if (area && !lines.some((line) => line.toLowerCase() === area.toLowerCase())) {
-		lines.push(area);
-	}
+	pushUnique(nonempty(row.address_override));
+	pushUnique(nonempty(row.venues?.address));
+	pushUnique(nonempty(row.venues?.name) || venueNameFromTitle(row.title));
+	pushUnique(nonempty(row.venues?.area) || nonempty(row.area));
 
 	if (!lines.some((line) => /\bbali\b/i.test(line))) lines.push(`Bali`);
 	return lines;
@@ -286,7 +286,7 @@ export function getImageUrls(row: SeeEventRow): string[] {
 export function getHost(row: SeeEventRow): string | undefined {
 	const artist = firstArtistHandle(row.artists_links);
 	if (artist) return artist;
-	return venueNameFromTitle(row.title);
+	return nonempty(row.venues?.name) || venueNameFromTitle(row.title);
 }
 
 export function getHostLink(row: SeeEventRow): string | undefined {
@@ -457,6 +457,12 @@ if (import.meta.main) {
 	}
 }
 
+type SeeVenue = {
+	name: string | null;
+	address: string | null;
+	area: string | null;
+};
+
 type SeeEventRow = {
 	id_event: string;
 	title: string | null;
@@ -480,4 +486,5 @@ type SeeEventRow = {
 	whatsapp_number_override: string | null;
 	review_status: string | null;
 	market: string | null;
+	venues: SeeVenue | null;
 };
