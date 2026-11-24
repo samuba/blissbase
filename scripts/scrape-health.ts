@@ -12,7 +12,8 @@
  */
 import type { ScrapedEvent } from '../src/lib/types.ts';
 
-export const ALLOW_EMPTY_SOURCES = [`vortexapp`];
+/** Sources that may legitimately return 0 events (login walls / missing secrets). */
+export const ALLOW_EMPTY_SOURCES = [`vortexapp`, `facebook`];
 export const MAX_INVALID_SHARE = 0.2;
 export const MIN_BASELINE_RATE = 0.5;
 export const MAX_COVERAGE_DROP = 0.5;
