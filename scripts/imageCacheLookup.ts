@@ -35,6 +35,23 @@ export function imageCacheMapKey(args: ImageCacheKey) {
     return `${args.eventSlug}\0${args.originalUrl}`;
 }
 
+/**
+ * Presigned S3/R2 query params rotate; strip them so cache hits survive URL refreshes.
+ * Non-signed URLs are returned unchanged.
+ */
+export function stableImageCacheOriginalUrl(url: string) {
+    try {
+        const parsed = new URL(url);
+        const hasAmz = [...parsed.searchParams.keys()].some((key) => key.startsWith(`X-Amz-`));
+        if (!hasAmz) return url;
+        parsed.search = ``;
+        parsed.hash = ``;
+        return parsed.toString();
+    } catch {
+        return url.split(`?`)[0] || url;
+    }
+}
+
 export function imageCacheKeysIn(keys: ImageCacheKey[]) {
     return sql`(${s.imageCacheMap.originalUrl}, ${s.imageCacheMap.eventSlug}) in (${sql.join(
         keys.map((key) => sql`(${key.originalUrl}, ${key.eventSlug})`),
