@@ -47,6 +47,7 @@ describe(`evaluateScrapeHealth`, () => {
 	it(`allows empty results for whitelisted sources`, () => {
 		expect(evaluateScrapeHealth({ source: `vortexapp`, events: [] }).ok).toBe(true);
 		expect(evaluateScrapeHealth({ source: `visitbali`, events: [] }).ok).toBe(true);
+		expect(evaluateScrapeHealth({ source: `facebook`, events: [] }).ok).toBe(true);
 	});
 
 	it(`drops invalid events but stays healthy under the threshold`, () => {

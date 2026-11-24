@@ -153,6 +153,7 @@ export const createEvent = form(createEventSchema, async (data, issue) => {
 		.values({
 			...event,
 			source: `website-form`,
+			sourceOrigins: [{ type: `website-form`, label: `website-form` }],
 			slug,
 			imageUrls: deduplicateItems(imageUrls),
 			latitude: coords?.lat,
