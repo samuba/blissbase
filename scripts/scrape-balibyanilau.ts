@@ -391,12 +391,8 @@ export function getPrice(html: string): string | undefined {
 		$(`.service-page__teaser`).text(),
 		event?.description ?? ``,
 	].join(` `);
-	const idr = bodyText.match(/\bIDR\s*([\d.,]+)\s*(k)?/i);
-	if (idr) {
-		const raw = idr[1].replace(/,/g, ``);
-		const amount = Number(raw) * (idr[2] ? 1000 : 1);
-		if (!Number.isNaN(amount)) return formatMoney({ amount, currency: `IDR` });
-	}
+	const fromBody = priceFromBodyText(bodyText);
+	if (fromBody) return fromBody;
 
 	if (admission && /paid/i.test(admission)) return `Paid`;
 	return undefined;
@@ -631,6 +627,23 @@ function preferFullImageUrl(raw: string | undefined): string | undefined {
 	const url = superTrim(raw);
 	if (!url) return undefined;
 	return url.replace(/\/thumb_/i, `/`);
+}
+
+function priceFromBodyText(bodyText: string): string | undefined {
+	const idr = bodyText.match(/\bIDR\s*([\d.,]+)\s*(k)?/i);
+	if (idr) {
+		const raw = idr[1].replace(/,/g, ``);
+		const amount = Number(raw) * (idr[2] ? 1000 : 1);
+		if (!Number.isNaN(amount)) return formatMoney({ amount, currency: `IDR` });
+	}
+
+	const usd = bodyText.match(/(?:US\s*\$|USD\s*|\$)\s*([\d.,]+)/i);
+	if (usd) {
+		const amount = Number(usd[1].replace(/,/g, ``));
+		if (!Number.isNaN(amount)) return formatMoney({ amount, currency: `USD` });
+	}
+
+	return undefined;
 }
 
 function geocodeAddressLines(address: string[]): string[] {
