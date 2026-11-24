@@ -68,7 +68,9 @@ const PHONE_RE = /\+?\d[\d\s\-()]{7,}\d/;
 const PRICE_TICKET_RE =
 	/\b(?:tickets?\s+(?:are\s+)?priced\s+at|ticket\s+is\s+priced\s+at|priced\s+at)\s*(IDR\s*[\d.,]+(?:\+\+)?(?:\s*per\s+\w+)?)/i;
 const PRICE_IDR_RE = /\bIDR\s*[\d.,]{4,}(?:\+\+)?(?:\s*per\s+\w+)?(?!\s*(?:million|billion))/i;
-const FREE_PRICE_RE = /\b(free(?:\s+to\s+(?:view|enter|attend))?|complimentary|no\s+charge)\b/i;
+/** Admission-only free signals — not bare “free” / “complimentary” in prose. */
+const FREE_PRICE_RE =
+	/\b(?:free\s+to\s+(?:view|enter|attend)|free\s+entry|admission\s+is\s+free|no\s+charge|complimentary\s+(?:admission|entry))\b/i;
 const RUNNER_FLAGS = new Set([`--clean`, `--dry-run`, `--write-baseline`, `--exclude`, `--log-dir`]);
 
 export class WebsiteScraper implements WebsiteScraperInterface {

@@ -106,6 +106,34 @@ describe(`scrape-nowbali parsers`, () => {
 		expect(getPrice(priced)).toBe(`IDR 1,500,000++ per person`);
 	});
 
+	it(`only treats admission-shaped free phrases as Free`, () => {
+		expect(
+			getPrice(`
+				<article><div class="post-entry">
+					<p>• Free to View</p>
+				</div></article>`),
+		).toBe(`Free`);
+		expect(
+			getPrice(`
+				<article><div class="post-entry">
+					<p>Admission is free. No charge for children.</p>
+				</div></article>`),
+		).toBe(`Free`);
+		expect(
+			getPrice(`
+				<article><div class="post-entry">
+					<p>100 guests will be invited to share a complimentary dinner.</p>
+					<p>Feel free to explore the market. Powered by Font Awesome Free.</p>
+				</div></article>`),
+		).toBeUndefined();
+		expect(
+			getPrice(`
+				<article><div class="post-entry">
+					<p>Complimentary admission for hotel guests.</p>
+				</div></article>`),
+		).toBe(`Free`);
+	});
+
 	it(`keeps upcoming events that are still running`, () => {
 		expect(
 			isUpcoming({
