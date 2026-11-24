@@ -12,7 +12,7 @@
  */
 import type { ScrapedEvent } from '../src/lib/types.ts';
 
-export const ALLOW_EMPTY_SOURCES = [`vortexapp`];
+export const ALLOW_EMPTY_SOURCES = [`vortexapp`, `visitbali`];
 export const MAX_INVALID_SHARE = 0.2;
 export const MIN_BASELINE_RATE = 0.5;
 export const MAX_COVERAGE_DROP = 0.5;
