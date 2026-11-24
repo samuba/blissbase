@@ -93,6 +93,7 @@ export const whiteListSources = [
 	"kuschelraum",
 	"ciglobalcalendar",
 	"soulwise",
+	"balitravelhub",
 	"yogabarn",
 	"tantrakalender",
 	"tantrazentrumleipzig",
