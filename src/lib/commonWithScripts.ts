@@ -63,6 +63,7 @@ export const WEBSITE_SCRAPER_CONFIG = {
 	yogavidya: { module: "./scrape-yoga-vidya.ts", label: "Yoga Vidya", url: "https://www.yoga-vidya.de" },
 	kayana: { module: "./scrape-kayana.ts", label: "Kayana", url: "https://dein-kayana.de" },
 	soulcollective: { module: "./scrape-soulcollective.ts", label: "Soul Collective", url: "https://www.soulcollective.eu" },
+	fitra: { module: "./scrape-fitra.ts", label: "FITRA", url: "https://fitra.asia" },
 	facebook: { module: "./scrape-facebook.ts", label: "Facebook Events", url: "https://www.facebook.com/events/" },
 	// lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<string, { module: string; label: string; url: string; retryOnNewIp?: boolean }>;
