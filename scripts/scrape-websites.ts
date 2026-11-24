@@ -288,18 +288,26 @@ async function main() {
     });
     eventsToInsert = deduplicateEvents(eventsToInsert);
 
-    // Drop stale website provenance for successful scrapes. Multi-website events only lose
-    // the missing site's origin; messenger-only leftovers are deleted (messenger does not protect).
+    // Drop stale website provenance per successful scrape. Keep-slugs are per source so an
+    // event that left site A but remains on site B still loses origin A in the same run.
     if (successfulSources.length > 0) {
-        const result = await cleanupWebsiteScrapeSources({
-            staleSources: successfulSources,
-            keepSlugs: eventsToInsert.map((event) => event.slug),
-            onlyFuture: true,
-        });
-        console.log(
-            `Stale website cleanup: deleted ${result.deletedCount}, stripped origins on ${result.updatedCount}`,
-            result.deletedSlugs,
-        );
+        let deletedCount = 0;
+        let updatedCount = 0;
+        const deletedSlugs: string[] = [];
+        for (const source of successfulSources) {
+            const keepSlugsForSource = eventsToInsert
+                .filter((event) => eventBelongsToWebsiteSource({ event, source }))
+                .map((event) => event.slug);
+            const result = await cleanupWebsiteScrapeSources({
+                staleSources: [source],
+                keepSlugs: keepSlugsForSource,
+                onlyFuture: true,
+            });
+            deletedCount += result.deletedCount;
+            updatedCount += result.updatedCount;
+            deletedSlugs.push(...result.deletedSlugs);
+        }
+        console.log(`Stale website cleanup: deleted ${deletedCount}, stripped origins on ${updatedCount}`, deletedSlugs);
     } else {
         console.log(`Skipping stale-event delete because no sources scraped successfully.`);
     }
@@ -605,6 +613,16 @@ async function main() {
 
         return `offline`;
     }
+}
+
+function eventBelongsToWebsiteSource(args: {
+	event: { source: string; sourceOrigins?: InsertEvent[`sourceOrigins`] };
+	source: string;
+}) {
+	if (args.event.source === args.source) return true;
+	return ensureSourceOrigins(args.event).some(
+		(origin) => origin.type === `scrape` && origin.label === args.source,
+	);
 }
 
 /**
