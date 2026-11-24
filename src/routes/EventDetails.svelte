@@ -25,16 +25,13 @@
 	import { resolve } from "$app/paths";
 	import PublicProfileCard from "#lib/components/PublicProfileCard.svelte";
 	import { labelsForTagSlugs } from "#lib/eventCategories.ts";
-	import type { EventSourceOrigin } from "#lib/server/eventSourceOrigins.ts";
 
 	let {
 		event,
 		onShowEventForTag,
-		sourceOrigins,
 	}: {
 		event: UiEvent;
 		onShowEventForTag: (tag: string) => void;
-		sourceOrigins?: EventSourceOrigin[];
 	} = $props();
 
 	const isAuthor = $derived(user.id && event.authorId && user.id === event.authorId);
@@ -455,7 +452,7 @@
 			</div>
 		{/if} -->
 
-		<EventAdminSection {event} {sourceOrigins} />
+		<EventAdminSection {event} />
 	</div>
 {:else}
 	<div class="py-10 text-center">

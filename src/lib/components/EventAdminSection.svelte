@@ -1,19 +1,21 @@
 <script lang="ts">
 	import type { UiEvent } from "#lib/server/events.ts";
 	import { deleteEvent } from "#lib/rpc/eventDelete.remote.ts";
+	import { getEventSourceOrigins } from "#lib/rpc/admin.remote.ts";
 	import { routes } from "#lib/routes.ts";
 	import { user } from "#lib/user.svelte.ts";
-	import type { EventSourceOrigin, EventSourceOriginType } from "#lib/server/eventSourceOrigins.ts";
+	import type { EventSourceOriginType } from "#lib/server/eventSourceOrigins.ts";
 
 	let {
 		event,
-		sourceOrigins,
 	}: {
 		event: UiEvent;
-		sourceOrigins?: EventSourceOrigin[];
 	} = $props();
 
 	let showJson = $state(false);
+
+	const sourceOriginsQuery = $derived(user.isAdmin ? getEventSourceOrigins({ eventId: event.id }) : undefined);
+	const sourceOrigins = $derived(sourceOriginsQuery?.current ?? []);
 
 	const typeLabels: Record<EventSourceOriginType, string> = {
 		scrape: `Website`,
@@ -61,7 +63,12 @@
 			{/if}
 		</div>
 
-		{#if sourceOrigins?.length}
+		{#if sourceOriginsQuery?.loading && !sourceOriginsQuery.current}
+			<div class="flex items-center gap-2 text-sm text-base-content/60">
+				<span class="loading loading-spinner loading-xs"></span>
+				Quellen werden geladen…
+			</div>
+		{:else if sourceOrigins.length}
 			<div>
 				<h4 class="mb-2 text-sm font-semibold">Quellen</h4>
 				<ul class="flex flex-col gap-2" data-testid="event-source-origins">

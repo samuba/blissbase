@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from "$app/server";
 import { error } from "@sveltejs/kit";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import * as v from "valibot";
 import { ALL_EVENT_SOURCES_VALUE, loadFiltersFromCookie, saveFiltersToCookie } from "#lib/cookie-utils.ts";
 import { parseOfferingsFilterFromUrl } from "#lib/offeringsFilter.ts";
@@ -8,6 +8,7 @@ import { isAdminSession } from "#lib/server/admin.ts";
 import { aiPickEmojisForTitles } from "#lib/server/ai.ts";
 import { db, s } from "#lib/server/db.ts";
 import { bustOfferingsOgImageCache, loadVisibleListedOfferings, scheduleOfferingsOgWarmForFilter } from "#lib/server/og/offeringsOg.ts";
+import { resolveEventSourceOrigins } from "#lib/server/resolveEventSourceOrigins.ts";
 
 export const getEventSources = query(async () => {
 	assertAdmin();
@@ -16,6 +17,29 @@ export const getEventSources = query(async () => {
 
 	return rows.map((row) => row.source).filter((source) => source.trim());
 });
+
+export const getEventSourceOrigins = query(
+	v.object({
+		eventId: v.number(),
+	}),
+	async ({ eventId }) => {
+		assertAdmin();
+
+		const event = await db.query.events.findFirst({
+			where: eq(s.events.id, eventId),
+			columns: {
+				source: true,
+				sourceUrl: true,
+				sourceChatIdsTelegram: true,
+				sourceChatIdsWhatsapp: true,
+				sourceOrigins: true,
+			},
+		});
+		if (!event) return [];
+
+		return resolveEventSourceOrigins({ db, event });
+	},
+);
 
 export const getEventSourceFilter = query(async () => {
 	assertAdmin();
