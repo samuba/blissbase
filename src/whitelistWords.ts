@@ -93,7 +93,6 @@ export const whiteListSources = [
 	"kuschelraum",
 	"ciglobalcalendar",
 	"soulwise",
-	"balitravelhub",
 	"yogabarn",
 	"tantrakalender",
 	"tantrazentrumleipzig",
@@ -102,5 +101,4 @@ export const whiteListSources = [
 	"wimhofmethod",
 	"kayana",
 	"soulcollective",
-	"fitra",
 ] satisfies WebsiteScrapeSourceName[];
