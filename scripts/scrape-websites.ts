@@ -25,7 +25,7 @@ import type { InsertEvent, ScrapedEvent } from '../src/lib/types.ts';
 import { db, s, upsertEvents } from '../src/lib/server/db.script.ts';
 import { generateSlug } from '../src/lib/common.ts';
 import { fillMissingEventAttributes } from './fillScrapedEventAttributes.ts';
-import { and, gte, inArray, notInArray } from 'drizzle-orm';
+import { and, eq, gte, inArray, notInArray, or, sql } from 'drizzle-orm';
 import { format } from 'util';
 import { AsyncLocalStorage } from 'async_hooks';
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, type WriteStream } from 'fs';
@@ -39,6 +39,7 @@ import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
 import { ensureSourceOrigins, mergeSourceOrigins } from '../src/lib/server/eventSourceOrigins.ts';
+import { planStaleSourceCleanup } from '../src/lib/server/staleSourceCleanup.ts';
 import { imageCacheMapKey, loadImageCacheByKeys, lookupImageCacheRows } from './imageCacheLookup.ts';
 
 const scrapeLogContext = new AsyncLocalStorage<WriteStream>();
@@ -236,18 +237,17 @@ async function main() {
         process.exit(1); // Stop if we can't confirm table existence
     }
 
-    // --- Clear existing events if requested ---
+    // --- Clear existing website provenance if requested ---
     if (shouldClean) {
         if (!successfulSources.length) {
             console.log(`Skipping --clean because no sources scraped successfully.`);
         } else {
-            console.log(`Clearing existing events from successfully scraped sources...`);
-            console.log(` -> Deleting events from sources: ${successfulSources.join(`, `)}`);
-
+            console.log(`Clearing website provenance for sources: ${successfulSources.join(`, `)}`);
             try {
-                await db.delete(s.events).where(inArray(s.events.source, successfulSources));
-
-                console.log(` -> Successfully cleared existing events from ${successfulSources.length} source(s)`);
+                const result = await cleanupWebsiteScrapeSources({
+                    staleSources: successfulSources,
+                });
+                console.log(` -> --clean deleted ${result.deletedCount}, stripped origins on ${result.updatedCount}`);
             } catch (error) {
                 console.error('Error clearing existing events:', error);
                 throw error;
@@ -288,16 +288,18 @@ async function main() {
     });
     eventsToInsert = deduplicateEvents(eventsToInsert);
 
-    // delete all events that are not in sources and are in the future. So that would be events that were deleted by the organizer
-    // Only touch sources that scraped successfully — a failed source must not wipe its existing events.
+    // Drop stale website provenance for successful scrapes. Multi-website events only lose
+    // the missing site's origin; messenger-only leftovers are deleted (messenger does not protect).
     if (successfulSources.length > 0) {
-        const deletedEvents = await db.delete(s.events)
-            .where(and(
-                inArray(s.events.source, successfulSources),
-                notInArray(s.events.slug, eventsToInsert.map(e => e.slug)),
-                gte(s.events.startAt, new Date())
-            )).returning();
-        console.log("Deleted these events cuz they are not in the current scrape anymore:", deletedEvents.map(e => [e.slug, e.sourceUrl]));
+        const result = await cleanupWebsiteScrapeSources({
+            staleSources: successfulSources,
+            keepSlugs: eventsToInsert.map((event) => event.slug),
+            onlyFuture: true,
+        });
+        console.log(
+            `Stale website cleanup: deleted ${result.deletedCount}, stripped origins on ${result.updatedCount}`,
+            result.deletedSlugs,
+        );
     } else {
         console.log(`Skipping stale-event delete because no sources scraped successfully.`);
     }
@@ -604,6 +606,76 @@ async function main() {
         return `offline`;
     }
 }
+
+/**
+ * Removes stale website scrape provenance. Deletes the row when no non-messenger
+ * origins remain; otherwise strips the stale scrape origin(s) and retargets source.
+ */
+async function cleanupWebsiteScrapeSources(args: {
+	staleSources: string[];
+	keepSlugs?: string[];
+	onlyFuture?: boolean;
+}) {
+	if (!args.staleSources.length) {
+		return { deletedCount: 0, updatedCount: 0, deletedSlugs: [] as string[] };
+	}
+
+	const originMatchers = args.staleSources.map(
+		(label) => sql`${s.events.sourceOrigins} @> ${JSON.stringify([{ type: `scrape`, label }])}::jsonb`,
+	);
+	const tiedToStaleSource = or(inArray(s.events.source, args.staleSources), ...originMatchers)!;
+
+	const filters = [tiedToStaleSource];
+	if (args.onlyFuture) filters.push(gte(s.events.startAt, new Date()));
+	if (args.keepSlugs) {
+		if (args.keepSlugs.length) filters.push(notInArray(s.events.slug, args.keepSlugs));
+	}
+
+	const candidates = await db.query.events.findMany({
+		where: and(...filters),
+		columns: {
+			id: true,
+			slug: true,
+			source: true,
+			sourceUrl: true,
+			sourceOrigins: true,
+			sourceChatIdsTelegram: true,
+			sourceChatIdsWhatsapp: true,
+		},
+	});
+
+	const deletedSlugs: string[] = [];
+	let updatedCount = 0;
+
+	for (const event of candidates) {
+		const plan = planStaleSourceCleanup({
+			event,
+			staleSources: args.staleSources,
+		});
+		if (plan.action === `noop`) continue;
+		if (plan.action === `delete`) {
+			await db.delete(s.events).where(eq(s.events.id, event.id));
+			deletedSlugs.push(event.slug);
+			continue;
+		}
+		await db
+			.update(s.events)
+			.set({
+				source: plan.source,
+				sourceUrl: plan.sourceUrl,
+				sourceOrigins: plan.sourceOrigins,
+			})
+			.where(eq(s.events.id, event.id));
+		updatedCount += 1;
+	}
+
+	return {
+		deletedCount: deletedSlugs.length,
+		updatedCount,
+		deletedSlugs,
+	};
+}
+
 await main();
 
 

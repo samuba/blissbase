@@ -553,7 +553,45 @@ describe("Events Module - Happy Flow Tests", () => {
 			expect(result[0].sourceOrigins).toHaveLength(2);
 		});
 
-		it(`should replace a legacy Blissbase source URL with an incoming external source URL`, async () => {
+		it(`should keep the original source and sourceUrl on conflicting upserts`, async () => {
+			const startAt = new Date(`2024-12-29T19:00:00Z`);
+			const endAt = new Date(`2024-12-29T22:00:00Z`);
+
+			await upsertEvents([
+				createTestEvent({
+					name: `Sticky Source Event`,
+					startAt,
+					endAt,
+					slug: ``,
+					source: `tribehaus`,
+					sourceUrl: `https://tribehaus.app/sticky-source`,
+				}),
+			]);
+
+			const result = await upsertEvents([
+				createTestEvent({
+					name: `Sticky Source Event`,
+					startAt,
+					endAt,
+					slug: ``,
+					source: `telegram`,
+					sourceUrl: `https://example.com/from-tg`,
+					sourceChatIdsTelegram: [`room1`],
+				}),
+			]);
+
+			expect(result).toHaveLength(1);
+			expect(result[0].source).toBe(`tribehaus`);
+			expect(result[0].sourceUrl).toBe(`https://tribehaus.app/sticky-source`);
+			expect(result[0].sourceOrigins).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ type: `scrape`, label: `tribehaus` }),
+					expect.objectContaining({ type: `telegram`, chatId: `room1` }),
+				]),
+			);
+		});
+
+		it(`should fill a missing sourceUrl on conflict but not overwrite an existing external one`, async () => {
 			const startAt = new Date(`2024-12-22T19:00:00Z`);
 			const endAt = new Date(`2024-12-22T22:00:00Z`);
 
@@ -567,7 +605,7 @@ describe("Events Module - Happy Flow Tests", () => {
 				}),
 			]);
 
-			const result = await upsertEvents([
+			const filled = await upsertEvents([
 				createTestEvent({
 					name: `Conflict Source Url Event`,
 					startAt,
@@ -577,8 +615,20 @@ describe("Events Module - Happy Flow Tests", () => {
 				}),
 			]);
 
-			expect(result).toHaveLength(1);
-			expect(result[0].sourceUrl).toBe(`https://sei.jetzt/event/conflict-source-url-event`);
+			expect(filled).toHaveLength(1);
+			expect(filled[0].sourceUrl).toBe(`https://sei.jetzt/event/conflict-source-url-event`);
+
+			const preserved = await upsertEvents([
+				createTestEvent({
+					name: `Conflict Source Url Event`,
+					startAt,
+					endAt,
+					slug: ``,
+					sourceUrl: `https://example.com/should-not-win`,
+				}),
+			]);
+
+			expect(preserved[0].sourceUrl).toBe(`https://sei.jetzt/event/conflict-source-url-event`);
 		});
 
 		it("should handle events with special characters in names", async () => {
