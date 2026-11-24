@@ -27,8 +27,9 @@ export async function load({ url, params: { id } }) {
 	const userIsAuthor = event.authorId === userId;
 
 	if (hostSecretCorrect || userIsAuthor || (await isAdminSession())) {
+		const { sourceOrigins: _sourceOrigins, ...eventWithoutOrigins } = event;
 		return {
-			event,
+			event: eventWithoutOrigins,
 			editFormValues: getEditEventInitialValues(event),
 			pageMetaTags: noindexPageMetaTags,
 		};
