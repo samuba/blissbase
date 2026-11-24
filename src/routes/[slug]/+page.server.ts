@@ -5,6 +5,7 @@ import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { getPageMetaTags } from "#lib/common.ts";
 import { eventWith, prepareEventsForUi } from "#lib/server/events.ts";
+import { resolveEventSourceOrigins } from "#lib/server/resolveEventSourceOrigins.ts";
 
 export const load = (async ({ params: { slug }, url }) => {
 	const event = await db.query.events.findFirst({
@@ -16,8 +17,11 @@ export const load = (async ({ params: { slug }, url }) => {
 		throw error(404, "Event not found");
 	}
 
+	const sourceOrigins = await resolveEventSourceOrigins({ db, event });
+
 	return {
 		event: prepareEventsForUi([event])[0],
+		sourceOrigins,
 		pageMetaTags: getPageMetaTags({
 			name: event.name,
 			description:

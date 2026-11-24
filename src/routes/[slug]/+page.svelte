@@ -5,13 +5,14 @@
 	import EventDetails from "../EventDetails.svelte";
 
 	let { data } = $props();
-	const { event } = $derived(data);
+	const { event, sourceOrigins } = $derived(data);
 </script>
 
 <div class="container mx-auto max-w-3xl">
 	<div class="bg-base-100 sm:rounded-box overflow-hidden shadow">
 		<EventDetails
 			{event}
+			{sourceOrigins}
 			onShowEventForTag={(tag) => {
 				eventsStore.handleSearchTermChange(tag);
 				goto(resolve("#header-controls"));
