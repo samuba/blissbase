@@ -26,7 +26,13 @@
 	import PublicProfileCard from "#lib/components/PublicProfileCard.svelte";
 	import { labelsForTagSlugs } from "#lib/eventCategories.ts";
 
-	let { event, onShowEventForTag }: { event: UiEvent; onShowEventForTag: (tag: string) => void } = $props();
+	let {
+		event,
+		onShowEventForTag,
+	}: {
+		event: UiEvent;
+		onShowEventForTag: (tag: string) => void;
+	} = $props();
 
 	const isAuthor = $derived(user.id && event.authorId && user.id === event.authorId);
 

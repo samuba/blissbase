@@ -17,6 +17,7 @@ import {
 import type { PublicProfileSocialLinks } from "#lib/rpc/profile.common.ts";
 import { eventStructureSlugs } from "#lib/eventCategories.ts";
 import { OFFERING_FORMATS } from "#lib/rpc/offerings.common.ts";
+import type { EventSourceOrigin } from "./eventSourceOrigins";
 
 export const eventAttendanceModeEnum = pgEnum("attendance_mode", ["online", "offline", "offline+online"]);
 export type AttendanceMode = (typeof eventAttendanceModeEnum.enumValues)[number];
@@ -55,8 +56,8 @@ export const events = pgTable(
 		slug: text().notNull().unique(),
 		soldOut: boolean().notNull().default(false),
 		listed: boolean().notNull().default(true),
-		sourceChatIdsTelegram: text().array(),
-		sourceChatIdsWhatsapp: text().array(),
+		/** All places this event was seen (scrape sites, Telegram/WhatsApp groups). Merged on dedupe. */
+		sourceOrigins: jsonb().$type<EventSourceOrigin[]>().notNull().default([]),
 		hostSecret: text(),
 		attendanceMode: eventAttendanceModeEnum().notNull().default("offline"),
 		structure: eventStructureEnum(),

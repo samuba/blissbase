@@ -11,6 +11,7 @@ import { calculateHammingDistance } from '../src/lib/imageProcessing';
 import { getProcessedImageHashFromUrl } from '../src/lib/imageUpload.shared';
 import type { SelectEvent } from '../src/lib/server/schema';
 import { FORM_CREATED_EVENT_SOURCE, normalizeSourceUrl } from '../src/lib/server/events.shared';
+import { ensureSourceOrigins, mergeSourceOrigins, type EventSourceOrigin } from '../src/lib/server/eventSourceOrigins';
 
 export async function main() {
     const { duplicates, eventsWithSameStart } = await getDuplicateEventsByImageHash(5);
@@ -253,8 +254,11 @@ async function mergeAndDeleteDuplicateEvents(args: {
     }
     // merge array properties
     eventToSurvive.tagSlugs = mergeArrayDeduplicated(eventToSurvive.tagSlugs, eventToDelete.tagSlugs)
-    eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsTelegram, eventToDelete.sourceChatIdsTelegram)
-    eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(eventToSurvive.sourceChatIdsWhatsapp, eventToDelete.sourceChatIdsWhatsapp)
+    // Derive scrape/form origins from classic source so they survive messenger winners.
+    eventToSurvive.sourceOrigins = mergeSourceOrigins(
+        ensureSourceOrigins(eventToSurvive),
+        ensureSourceOrigins(eventToDelete),
+    )
     if (eventToDelete.imageUrls?.length) {
         // Keep extra images unless they already look like one on the survivor
         for (const toDelUrl of eventToDelete.imageUrls) {
@@ -523,36 +527,32 @@ export function mergeArrayDeduplicated(arrayA: string[] | null, arrayB: string[]
 
 /**
  * Builds the update payload for the preferred-source fast path while keeping
- * catalog tags and chat provenance in sync with the deleted event.
+ * catalog tags and sourceOrigins in sync with the deleted event.
  *
  * @example
  * preparePreferredSourceEventUpdate({
- *   eventToSurvive: { tagSlugs: [`yoga`], sourceChatIdsTelegram: null, sourceChatIdsWhatsapp: null },
- *   eventToDelete: { tagSlugs: [`meditation`], sourceChatIdsTelegram: [`room1`], sourceChatIdsWhatsapp: null },
+ *   eventToSurvive: { tagSlugs: [`yoga`], sourceOrigins: [] },
+ *   eventToDelete: { tagSlugs: [`meditation`], source: `balievents`, sourceOrigins: [] },
  * });
  */
 export function preparePreferredSourceEventUpdate<TEvent extends {
     tagSlugs: string[] | null
-    sourceChatIdsTelegram: string[] | null
-    sourceChatIdsWhatsapp: string[] | null
+    source?: string | null
+    sourceUrl?: string | null
+    sourceOrigins?: EventSourceOrigin[] | null
 }>(args: {
     eventToSurvive: TEvent,
     eventToDelete: TEvent,
 }) {
     args.eventToSurvive.tagSlugs = mergeArrayDeduplicated(args.eventToSurvive.tagSlugs, args.eventToDelete.tagSlugs);
-    args.eventToSurvive.sourceChatIdsTelegram = mergeArrayDeduplicated(
-        args.eventToSurvive.sourceChatIdsTelegram,
-        args.eventToDelete.sourceChatIdsTelegram,
-    );
-    args.eventToSurvive.sourceChatIdsWhatsapp = mergeArrayDeduplicated(
-        args.eventToSurvive.sourceChatIdsWhatsapp,
-        args.eventToDelete.sourceChatIdsWhatsapp,
+    args.eventToSurvive.sourceOrigins = mergeSourceOrigins(
+        ensureSourceOrigins(args.eventToSurvive),
+        ensureSourceOrigins(args.eventToDelete),
     );
 
     return {
         tagSlugs: args.eventToSurvive.tagSlugs,
-        sourceChatIdsTelegram: args.eventToSurvive.sourceChatIdsTelegram,
-        sourceChatIdsWhatsapp: args.eventToSurvive.sourceChatIdsWhatsapp,
+        sourceOrigins: args.eventToSurvive.sourceOrigins,
     };
 }
 
