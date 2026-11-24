@@ -129,6 +129,19 @@
         "contact": 0,
         "tags": 0
     },
+    "knowmadsbali": {
+        "sourceUrl": 1,
+        "description": 1,
+        "address": 1,
+        "coordinates": 0,
+        "imageUrls": 0.97,
+        "price": 0.71,
+        "endAt": 0.98,
+        "host": 1,
+        "hostLink": 1,
+        "contact": 1,
+        "tags": 1
+    },
     "kuschelraum": {
         "sourceUrl": 1,
         "description": 1,
