@@ -771,10 +771,55 @@ describe("Events Module - Happy Flow Tests", () => {
 				hostSecret: undefined, // Should be removed for security
 			});
 			expect(result[0].hostSecret).toBeUndefined();
+			expect(result[0].sourceOrigins).toBeUndefined();
 			expect(result[0].host).toBe("Test Host");
 
 			const [hidden] = prepareEventsForUi([{ ...mockEvents[0], host: "47382582554768@lid" }]);
 			expect(hidden.host).toBeNull();
+		});
+
+		it(`should omit sourceOrigins from UI payloads`, () => {
+			const [prepared] = prepareEventsForUi([
+				{
+					id: 1,
+					name: `Test Event`,
+					hostSecret: `secret123`,
+					sourceOrigins: [{ type: `scrape`, label: `tribehaus`, url: `https://tribehaus.com/e` }],
+					sourceChatIdsTelegram: null,
+					sourceChatIdsWhatsapp: null,
+					startAt: new Date(),
+					address: [`Test Street`],
+					imageUrls: [`https://example.com/image.jpg`],
+					source: `tribehaus`,
+					listed: true,
+					contact: [],
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					slug: `test-event`,
+					soldOut: false,
+					price: null,
+					priceIsHtml: false,
+					description: null,
+					descriptionOriginal: null,
+					host: null,
+					hostLink: null,
+					sourceUrl: `https://tribehaus.com/e`,
+					latitude: null,
+					longitude: null,
+					messageSenderId: null,
+					endAt: null,
+					timezone: null,
+					attendanceMode: `offline` as const,
+					structure: null,
+					language: null,
+					authorId: null,
+					spotlight: null,
+					addressNote: null,
+					tagSlugs: [],
+					author: null,
+				},
+			]);
+			expect(prepared.sourceOrigins).toBeUndefined();
 		});
 
 		it("should handle empty events array", async () => {
