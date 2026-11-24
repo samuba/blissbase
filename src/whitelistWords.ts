@@ -101,4 +101,5 @@ export const whiteListSources = [
 	"wimhofmethod",
 	"kayana",
 	"soulcollective",
+	"fitra",
 ] satisfies WebsiteScrapeSourceName[];
