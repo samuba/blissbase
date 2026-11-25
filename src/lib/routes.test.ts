@@ -50,6 +50,13 @@ describe(`legal routes`, () => {
 	});
 });
 
+describe(`admin telegram split routes`, () => {
+	it(`returns absolute pathnames without $app/paths resolve`, () => {
+		expect(routes.adminTelegramDialogs()).toBe(`/admin/telegram/dialogs`);
+		expect(routes.adminTelegramResolve()).toBe(`/admin/telegram/resolve`);
+	});
+});
+
 describe(`auth routes`, () => {
 	it(`builds login and callback paths`, () => {
 		expect(routes.login()).toBe(`/auth/login`);
