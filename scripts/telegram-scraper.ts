@@ -21,6 +21,7 @@ import {
 } from "../src/lib/server/telegramAccounts";
 import { knownTagSlugs } from "../src/lib/eventCategories";
 import { matchesBlackListWords } from "../src/whitelistWords.ts";
+import { unlistReasons } from "../src/lib/unlistReasons.ts";
 import { extractVideoFrame } from "./extractVideoFrame";
 import { resolveEventImageUrls } from "./ogImageFallback";
 import { mergeSourceOrigins, messengerSourceOrigin } from "../src/lib/server/eventSourceOrigins";
@@ -613,7 +614,7 @@ function mergeDuplicateEvents(events: InsertEvent[]): InsertEvent[] {
                 sourceOrigins,
                 latitude: coords.latitude,
                 longitude: coords.longitude,
-                listed: mergeListedValue({
+                ...mergeListingFields({
                     preferred: existing,
                     fallback: event,
                     mergedCoords: coords
@@ -648,11 +649,11 @@ async function mergeWithExistingEventBySlug(eventRow: InsertEvent): Promise<Inse
     });
     merged.latitude = coords.latitude;
     merged.longitude = coords.longitude;
-    merged.listed = mergeListedValue({
+    Object.assign(merged, mergeListingFields({
         preferred: merged,
         fallback: existingEvent,
         mergedCoords: coords
-    });
+    }));
     return merged;
 }
 
@@ -692,24 +693,40 @@ function mergeCoords(args: {
 
 /**
  * Allows a richer duplicate with resolved coordinates to relist an unresolved event.
+ * Clears `unlistReason` when the merge relists.
  * @example
- * mergeListedValue({ preferred: { listed: false }, fallback: { listed: true }, mergedCoords: { latitude: 1, longitude: 2 } })
+ * mergeListingFields({ preferred: { listed: false }, fallback: { listed: true }, mergedCoords: { latitude: 1, longitude: 2 } })
  */
-function mergeListedValue(args: {
-    preferred: { listed?: boolean | null; latitude?: number | null; longitude?: number | null };
-    fallback: { listed?: boolean | null; latitude?: number | null; longitude?: number | null };
+function mergeListingFields(args: {
+    preferred: {
+        listed?: boolean | null;
+        unlistReason?: string | null;
+        latitude?: number | null;
+        longitude?: number | null;
+    };
+    fallback: {
+        listed?: boolean | null;
+        unlistReason?: string | null;
+        latitude?: number | null;
+        longitude?: number | null;
+    };
     mergedCoords: { latitude: number | null; longitude: number | null };
 }) {
-    if (args.preferred.listed === true) return true;
+    if (args.preferred.listed === true) {
+        return { listed: true, unlistReason: null };
+    }
 
     const preferredHasCoords = args.preferred.latitude != null && args.preferred.longitude != null;
     const fallbackHasCoords = args.fallback.latitude != null && args.fallback.longitude != null;
     const mergedHasCoords = args.mergedCoords.latitude != null && args.mergedCoords.longitude != null;
     if (!preferredHasCoords && fallbackHasCoords && args.fallback.listed === true && mergedHasCoords) {
-        return true;
+        return { listed: true, unlistReason: null };
     }
 
-    return false;
+    return {
+        listed: false,
+        unlistReason: args.preferred.unlistReason ?? args.fallback.unlistReason ?? null,
+    };
 }
 
 async function normalizeAddress(args: { aiAnswer: MsgAnalysisAnswer; chatId: string }): Promise<string[] | undefined> {
@@ -792,14 +809,17 @@ async function validateAndBuildEventBase(args: {
     let latitude = coords?.lat
     let longitude = coords?.lng
     let listed = true
+    let unlistReason: string | null = null
     if (matchesBlackListWords(name)) {
         listed = false
+        unlistReason = unlistReasons.blacklist
         console.log(`Title matched blacklist - marking event as unlisted: ${name}`);
     }
 
     if (addressArr?.length && (latitude == null || longitude == null)) {
         if (!contact?.length) {
             listed = false
+            unlistReason ??= unlistReasons.unresolvedAddress
             console.log(`Unresolved address without contact - marking event as unlisted`);
         } else if (targetConfig?.defaultAddress?.length) {
             const defaultCoords = await geocodeAddressCached({
@@ -837,6 +857,7 @@ async function validateAndBuildEventBase(args: {
         messageSenderId: getTelegramOriginalAuthorId(message),
         contact,
         listed,
+        unlistReason,
         source: "telegram",
         slug,
     } satisfies InsertEvent;

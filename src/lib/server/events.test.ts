@@ -361,10 +361,43 @@ describe("Events Module - Happy Flow Tests", () => {
 			const event = { name: "Conflict Listed Event", startAt, endAt: new Date("2024-12-22T22:00:00Z"), slug: "" };
 
 			const [inserted] = await upsertEvents([createTestEvent({ ...event, listed: true })]);
-			await db.update(s.events).set({ listed: false }).where(eq(s.events.id, inserted.id));
+			await db
+				.update(s.events)
+				.set({ listed: false, unlistReason: `jev_not_conscious` })
+				.where(eq(s.events.id, inserted.id));
 
-			const [reupserted] = await upsertEvents([createTestEvent({ ...event, listed: true })]);
+			const [reupserted] = await upsertEvents([
+				createTestEvent({ ...event, listed: true, unlistReason: null }),
+			]);
 			expect(reupserted.listed).toBe(false);
+			expect(reupserted.unlistReason).toBe(`jev_not_conscious`);
+		});
+
+		it("should set unlistReason when upserting an unlisted event and clear it when listed", async () => {
+			const startAt = new Date("2024-12-23T19:00:00Z");
+			const event = {
+				name: "Unlist Reason Event",
+				startAt,
+				endAt: new Date("2024-12-23T22:00:00Z"),
+				slug: "",
+			};
+
+			const [unlisted] = await upsertEvents([
+				createTestEvent({ ...event, listed: false, unlistReason: `blacklist` }),
+			]);
+			expect(unlisted.listed).toBe(false);
+			expect(unlisted.unlistReason).toBe(`blacklist`);
+
+			await db
+				.update(s.events)
+				.set({ listed: true, unlistReason: null })
+				.where(eq(s.events.id, unlisted.id));
+
+			const [relisted] = await upsertEvents([
+				createTestEvent({ ...event, listed: true, unlistReason: null }),
+			]);
+			expect(relisted.listed).toBe(true);
+			expect(relisted.unlistReason).toBeNull();
 		});
 
 		it(`should merge sourceOrigins across conflicting upserts from different channels`, async () => {

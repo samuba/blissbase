@@ -17,6 +17,7 @@ import { loadCreds, uploadEventImage } from "#lib/assets.ts";
 import { detectLanguage, t, type BotLanguage } from "#lib/telegramBotI18n.ts";
 import { knownTagSlugs } from "#lib/eventCategories.ts";
 import { matchesBlackListWords } from "../../../whitelistWords";
+import { unlistReasons } from "#lib/unlistReasons.ts";
 
 const assetsCreds = loadCreds({ S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID });
 
@@ -90,6 +91,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 		const name = aiAnswer.name.trim();
 		const slug = generateSlug({ name: aiAnswer.name, startAt, endAt: endAt ?? undefined });
 		const listed = !matchesBlackListWords(name);
+		const unlistReason = listed ? null : unlistReasons.blacklist;
 
 		if (!listed) console.log(`Title matched blacklist - marking event as unlisted: ${name}`);
 
@@ -131,6 +133,7 @@ export async function handleMessage(ctx: Context, { aiAnswer, msgTextHtml, image
 			messageSenderId: getTelegramSenderId(ctx.message),
 			contact,
 			listed,
+			unlistReason,
 			source: "telegram",
 			slug,
 		} satisfies InsertEvent;
