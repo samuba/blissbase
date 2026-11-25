@@ -1,6 +1,11 @@
 <script lang="ts">
 	import Select from "#lib/components/Select.svelte";
-	import { WEBSITE_SCRAPER_CONFIG } from "#lib/commonWithScripts.ts";
+	import {
+		getEventSourceFilterLabel,
+		getPopulatedScraperCountryGroups,
+		scraperCountryGroupFilterValue,
+		SCRAPER_COUNTRY_GROUPS,
+	} from "#lib/commonWithScripts.ts";
 	import { eventsStore } from "#lib/eventsStore.svelte.ts";
 	import { ALL_EVENT_SOURCES_VALUE } from "#lib/cookie-utils.ts";
 	import { setEventSourceFilter } from "#lib/rpc/admin.remote.ts";
@@ -19,9 +24,13 @@
 
 	const sourceOptions = $derived([
 		{ value: ALL_EVENT_SOURCES_VALUE, html: `All` },
+		...getPopulatedScraperCountryGroups().map((country) => ({
+			value: scraperCountryGroupFilterValue(country),
+			html: SCRAPER_COUNTRY_GROUPS[country].label,
+		})),
 		...sources.map((source) => ({
 			value: source,
-			html: getSourceLabel(source),
+			html: getEventSourceFilterLabel(source),
 		})),
 	]);
 
@@ -49,13 +58,6 @@
 			isSaving = false;
 		}
 	}
-
-	function getSourceLabel(source: string) {
-		if (source in WEBSITE_SCRAPER_CONFIG) {
-			return WEBSITE_SCRAPER_CONFIG[source as keyof typeof WEBSITE_SCRAPER_CONFIG].label;
-		}
-		return source;
-	}
 </script>
 
 <div class="bg-warning text-warning-content rounded-box flex w-full flex-col items-start gap-3 p-4">
@@ -82,7 +84,7 @@
 				{#if selectedSource === ALL_EVENT_SOURCES_VALUE}
 					Es werden Events aus allen Quellen angezeigt.
 				{:else}
-					Es werden nur Events aus „{getSourceLabel(selectedSource)}“ angezeigt.
+					Es werden nur Events aus „{getEventSourceFilterLabel(selectedSource)}“ angezeigt.
 				{/if}
 			</p>
 		{/if}
