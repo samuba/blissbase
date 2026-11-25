@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScrapedEvent } from '../src/lib/types.ts';
-import { evaluateScrapeHealth, fieldFillRates, formatScrapeHealthLine, missingRequiredFields } from './scrape-health.ts';
+import { emptyScrapeExitCode, evaluateScrapeHealth, fieldFillRates, formatScrapeHealthLine, missingRequiredFields } from './scrape-health.ts';
 
 describe(`missingRequiredFields`, () => {
 	it(`accepts a complete event`, () => {
@@ -48,6 +48,11 @@ describe(`evaluateScrapeHealth`, () => {
 		expect(evaluateScrapeHealth({ source: `vortexapp`, events: [] }).ok).toBe(true);
 		expect(evaluateScrapeHealth({ source: `visitbali`, events: [] }).ok).toBe(true);
 		expect(evaluateScrapeHealth({ source: `facebook`, events: [] }).ok).toBe(true);
+	});
+
+	it(`exits 0 on empty insert when no sources failed (ALLOW_EMPTY)`, () => {
+		expect(emptyScrapeExitCode({ failedCount: 0 })).toBe(0);
+		expect(emptyScrapeExitCode({ failedCount: 1 })).toBe(1);
 	});
 
 	it(`drops invalid events but stays healthy under the threshold`, () => {

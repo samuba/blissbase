@@ -34,7 +34,7 @@ import { cleanProseHtml, customFetch } from './common.ts';
 import { toCalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date';
 import { WEBSITE_SCRAPER_CONFIG, WebsiteScrapeSourceName } from '../src/lib/commonWithScripts.ts';
 import { resolveWebsiteScrapePlan } from './website-scrape-plan.ts';
-import { evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type ScrapeHealth, type ScrapeHealthBaseline } from './scrape-health.ts';
+import { emptyScrapeExitCode, evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type ScrapeHealth, type ScrapeHealthBaseline } from './scrape-health.ts';
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
@@ -220,7 +220,7 @@ async function main() {
 
     if (allEvents.length === 0) {
         console.log('No events to process. Exiting.');
-        process.exit(1);
+        process.exit(emptyScrapeExitCode({ failedCount: failedSources.length }));
     }
 
     // --- Connect to Database and Insert Data ---
