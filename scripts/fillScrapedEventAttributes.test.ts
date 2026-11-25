@@ -86,6 +86,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: `german`,
 			structure: `session`,
 			listed: undefined,
+			unlistReason: undefined,
 		});
 	});
 
@@ -115,6 +116,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: undefined,
 			structure: undefined,
 			listed: false,
+			unlistReason: `jev_not_conscious`,
 		});
 	});
 
@@ -187,6 +189,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: `english`,
 			structure: `session`,
 			listed: undefined,
+			unlistReason: undefined,
 		});
 		expect(errorSpy).toHaveBeenCalled();
 		expect(warnSpy).toHaveBeenCalledTimes(5);
@@ -232,6 +235,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: `german`,
 			structure: `course`,
 			listed: undefined,
+			unlistReason: undefined,
 		});
 	});
 
@@ -316,6 +320,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: `german`,
 			structure: `session`,
 			listed: undefined,
+			unlistReason: undefined,
 		});
 	});
 
@@ -392,6 +397,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: `german`,
 			structure: `session`,
 			listed: false,
+			unlistReason: `fake_venue_online`,
 		});
 	});
 
@@ -427,6 +433,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: undefined,
 			structure: undefined,
 			listed: false,
+			unlistReason: `fake_venue_online`,
 		});
 	});
 
@@ -460,6 +467,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: undefined,
 			structure: undefined,
 			listed: undefined,
+			unlistReason: undefined,
 		});
 	});
 
@@ -493,6 +501,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: undefined,
 			structure: undefined,
 			listed: undefined,
+			unlistReason: undefined,
 		});
 	});
 
@@ -525,6 +534,7 @@ describe(`fillMissingEventAttributes`, () => {
 			language: undefined,
 			structure: undefined,
 			listed: undefined,
+			unlistReason: undefined,
 		});
 	});
 });

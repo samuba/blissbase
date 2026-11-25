@@ -3,6 +3,7 @@ import type { EventStructure } from '../src/lib/eventCategories.ts';
 import type { EventLanguage } from '../src/lib/server/ai.ts';
 import { askJevEventAttributes, interpretEventAttributes } from '../src/lib/server/jev/messengerCheck.ts';
 import type { AttendanceMode } from '../src/lib/server/schema.ts';
+import { unlistReasons, type UnlistReason } from '../src/lib/unlistReasons.ts';
 import { sleep as defaultSleep } from './common.ts';
 
 const AI_JUDGE_MAX_RETRIES = 5;
@@ -117,17 +118,38 @@ function attributesToUpdate({
 	attendanceMode?: AttendanceMode | null;
 }): EventAttributesUpdate | undefined {
 	const { tags, language, structure, isConscious, descriptionSaysOnline } = attributes;
-	const shouldUnlist =
-		!isConscious ||
-		(descriptionSaysOnline === `yes` && hasAddress && claimsNotOnline(attendanceMode));
-	if (!tags.length && language == null && structure == null && !shouldUnlist) return;
+	const unlistReason = resolveUnlistReason({
+		isConscious,
+		descriptionSaysOnline,
+		hasAddress,
+		attendanceMode,
+	});
+	if (!tags.length && language == null && structure == null && !unlistReason) return;
 	return {
 		ids,
 		tagSlugs: tags,
 		language,
 		structure,
-		listed: shouldUnlist ? false : undefined,
+		listed: unlistReason ? false : undefined,
+		unlistReason,
 	};
+}
+
+function resolveUnlistReason({
+	isConscious,
+	descriptionSaysOnline,
+	hasAddress,
+	attendanceMode,
+}: {
+	isConscious: boolean;
+	descriptionSaysOnline?: `yes` | `no` | `unknown`;
+	hasAddress: boolean;
+	attendanceMode?: AttendanceMode | null;
+}): UnlistReason | undefined {
+	if (!isConscious) return unlistReasons.jevNotConscious;
+	if (descriptionSaysOnline === `yes` && hasAddress && claimsNotOnline(attendanceMode)) {
+		return unlistReasons.fakeVenueOnline;
+	}
 }
 
 function isFakeVenueCandidate(event: EventToJudge) {
@@ -227,6 +249,7 @@ type EventAttributesUpdate = {
 	language?: EventLanguage;
 	structure?: EventStructure;
 	listed?: false;
+	unlistReason?: UnlistReason;
 };
 
 type EventToJudge = {

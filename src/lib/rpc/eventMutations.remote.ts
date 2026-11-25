@@ -17,6 +17,7 @@ import { verifySubmitAuthToken } from "#lib/server/submitAuth.ts";
 import { getMyPublicProfile } from "#lib/rpc/profile.remote.ts";
 import { setFlash } from "#lib/server/flash.ts";
 import type { InsertEvent } from "#lib/types.ts";
+import { unlistReasons } from "#lib/unlistReasons.ts";
 import { error, invalid, redirect } from "@sveltejs/kit";
 import * as v from "valibot";
 
@@ -227,6 +228,7 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 	const endAt = args.data.endAt ? utcDate(args.data.endAt, args.timezone) : undefined;
 	const attendanceMode = args.data.isOnline ? `online` : `offline`;
 	const listed = !args.data.isNotListed;
+	const unlistReason = listed ? null : unlistReasons.author;
 	let contact: string[] = [];
 	const contactMethod = args.data.contactMethod as ContactMethod;
 	if (contactMethod === `email`) {
@@ -270,6 +272,7 @@ function formDataToDbData(args: FormDataToDbDataArgs) {
 	return {
 		...eventFields,
 		listed,
+		unlistReason,
 		startAt,
 		endAt,
 		timezone: args.timezone,

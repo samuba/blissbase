@@ -56,6 +56,8 @@ export const events = pgTable(
 		slug: text().notNull().unique(),
 		soldOut: boolean().notNull().default(false),
 		listed: boolean().notNull().default(true),
+		/** Why `listed` is false — stable short code; null when listed. */
+		unlistReason: text(),
 		/** All places this event was seen (scrape sites, Telegram/WhatsApp groups). Merged on dedupe. */
 		sourceOrigins: jsonb().$type<EventSourceOrigin[]>().notNull().default([]),
 		hostSecret: text(),

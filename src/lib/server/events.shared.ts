@@ -74,12 +74,21 @@ export async function upsertEvents(db: DB, events: InsertEvent[]) {
 					`language`,
 					`structure`,
 					`listed`,
+					`unlistReason`,
 					`sourceOrigins`,
 					`source`,
 					`sourceUrl`,
 				]),
 				// Unlisting is sticky so Jev's not-conscious verdict survives rescrapes.
 				listed: sql`${s.events.listed} and excluded.listed`,
+				// Keep existing reason while sticky-unlisted; take incoming when newly unlisted; clear when listed.
+				unlistReason: sql`
+					case
+						when (${s.events.listed} and excluded.listed) then null
+						when not ${s.events.listed} then ${s.events.unlistReason}
+						else excluded.unlist_reason
+					end
+				`,
 				// First writer wins: later scrapes/messengers only enrich origins, not primary source.
 				source: sql`${s.events.source}`,
 				authorId: sql`

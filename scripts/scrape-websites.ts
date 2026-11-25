@@ -38,6 +38,7 @@ import { evaluateScrapeHealth, formatFillRates, formatScrapeHealthLine, type Scr
 import * as assets from '../src/lib/assets.ts';
 import { resizeCoverImage } from '../src/lib/imageProcessing.ts';
 import { matchesBlackListWords, matchesWhiteListWords, whiteListSources } from '../src/whitelistWords.ts';
+import { unlistReasons } from '../src/lib/unlistReasons.ts';
 import { ensureSourceOrigins, mergeSourceOrigins } from '../src/lib/server/eventSourceOrigins.ts';
 import { planStaleSourceCleanup } from '../src/lib/server/staleSourceCleanup.ts';
 import { imageCacheMapKey, loadImageCacheByKeys, lookupImageCacheRows, stableImageCacheOriginalUrl } from './imageCacheLookup.ts';
@@ -271,7 +272,7 @@ async function main() {
             endAt: x.endAt ? new Date(x.endAt) : undefined,
             imageUrls: x.imageUrls?.filter(x => x),
             description: cleanProseHtml(x.description),
-            listed: shouldBeListed({ name: cleanedName, source: x.source }),
+            ...listingFromNameAndSource({ name: cleanedName, source: x.source }),
             attendanceMode: detectAttendanceModeFromAddress({ address: x.address }),
         } satisfies InsertEvent;
     });
@@ -332,12 +333,12 @@ async function main() {
             try {
                 await fillMissingEventAttributes({
                     events: upserted,
-                    updateEventAttributes: async ({ ids, tagSlugs, language, structure, listed }) => {
+                    updateEventAttributes: async ({ ids, tagSlugs, language, structure, listed, unlistReason }) => {
                         await db.update(s.events).set({
                             tagSlugs,
                             ...(language != null ? { language } : {}),
                             ...(structure != null ? { structure } : {}),
-                            ...(listed === false ? { listed: false } : {}),
+                            ...(listed === false ? { listed: false, unlistReason: unlistReason ?? null } : {}),
                         }).where(inArray(s.events.id, ids));
                     },
                 });
@@ -567,10 +568,17 @@ async function main() {
         }
     }
 
-    function shouldBeListed({ name, source }: { name: string, source: WebsiteScrapeSourceName }): boolean {
-        if (matchesBlackListWords(name)) return false;
-        if (whiteListSources.includes(source)) return true; // these sources only have conscious events
-        return matchesWhiteListWords(name);
+    function listingFromNameAndSource({ name, source }: { name: string; source: WebsiteScrapeSourceName }) {
+        if (matchesBlackListWords(name)) {
+            return { listed: false, unlistReason: unlistReasons.blacklist };
+        }
+        if (whiteListSources.includes(source)) {
+            return { listed: true, unlistReason: null }; // these sources only have conscious events
+        }
+        if (matchesWhiteListWords(name)) {
+            return { listed: true, unlistReason: null };
+        }
+        return { listed: false, unlistReason: unlistReasons.whitelist };
     }
 
     /**
