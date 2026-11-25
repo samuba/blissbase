@@ -35,7 +35,7 @@
 		{/if}
 
 		<div class="min-w-0 flex-1 text-left">
-			<p class={["text-base-content truncate text-lg leading-tight font-semibold"]} title={profile.displayName}>{profile.displayName}</p>
+			<p class={["text-base-content text-lg leading-tight font-semibold wrap-break-word"]}>{profile.displayName}</p>
 			{#if bioPreview}
 				<div class="relative mt-0.5">
 					<p class={[`text-base-content/70 line-clamp-3 text-sm leading-snug sm:line-clamp-2`]}>
