@@ -184,3 +184,42 @@ export function getEventSourceFilterLabel(value: string) {
 
 	return value;
 }
+
+/**
+ * Builds admin filter select options: All, then sources under group headers
+ * (display order), alphabetical by label within each group. Unknown sources
+ * land under "Other".
+ */
+export function buildAdminEventSourceFilterOptions(sources: string[]) {
+	const byGroup = new Map<ScraperSourceGroup | `other`, string[]>();
+
+	for (const source of sources) {
+		const group =
+			source in WEBSITE_SCRAPER_CONFIG
+				? WEBSITE_SCRAPER_CONFIG[source as WebsiteScrapeSourceName].group
+				: (`other` as const);
+		const list = byGroup.get(group) ?? [];
+		list.push(source);
+		byGroup.set(group, list);
+	}
+
+	for (const list of byGroup.values()) {
+		list.sort((a, b) => getEventSourceFilterLabel(a).localeCompare(getEventSourceFilterLabel(b), `en`, { sensitivity: `base` }));
+	}
+
+	const options: { value: string; html: string; disabled?: boolean }[] = [{ value: `all`, html: `All` }];
+	const groupOrder = [...(Object.keys(SCRAPER_SOURCE_GROUPS) as ScraperSourceGroup[]), `other` as const];
+
+	for (const group of groupOrder) {
+		const groupSources = byGroup.get(group);
+		if (!groupSources?.length) continue;
+
+		const label = group === `other` ? `Other` : SCRAPER_SOURCE_GROUPS[group].label;
+		options.push({ value: `__section-${group}__`, html: `── ${label} ──`, disabled: true });
+		for (const source of groupSources) {
+			options.push({ value: source, html: getEventSourceFilterLabel(source) });
+		}
+	}
+
+	return options;
+}

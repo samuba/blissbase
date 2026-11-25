@@ -1,11 +1,6 @@
 <script lang="ts">
 	import Select from "#lib/components/Select.svelte";
-	import {
-		getEventSourceFilterLabel,
-		getPopulatedScraperSourceGroups,
-		scraperSourceGroupFilterValue,
-		SCRAPER_SOURCE_GROUPS,
-	} from "#lib/commonWithScripts.ts";
+	import { buildAdminEventSourceFilterOptions, getEventSourceFilterLabel } from "#lib/commonWithScripts.ts";
 	import { eventsStore } from "#lib/eventsStore.svelte.ts";
 	import { ALL_EVENT_SOURCES_VALUE } from "#lib/cookie-utils.ts";
 	import { setEventSourceFilter } from "#lib/rpc/admin.remote.ts";
@@ -22,25 +17,7 @@
 	let isSaving = $state(false);
 	let saveError = $state<string | null>(null);
 
-	const populatedGroups = $derived(getPopulatedScraperSourceGroups());
-
-	const sourceOptions = $derived([
-		{ value: ALL_EVENT_SOURCES_VALUE, html: `All` },
-		...(populatedGroups.length
-			? [
-					{ value: `__section-groups__`, html: `── Gruppen ──`, disabled: true },
-					...populatedGroups.map((group) => ({
-						value: scraperSourceGroupFilterValue(group),
-						html: `<span class="font-semibold">${SCRAPER_SOURCE_GROUPS[group].label}</span>`,
-					})),
-					{ value: `__section-sources__`, html: `── Quellen ──`, disabled: true },
-				]
-			: []),
-		...sources.map((source) => ({
-			value: source,
-			html: getEventSourceFilterLabel(source),
-		})),
-	]);
+	const sourceOptions = $derived(buildAdminEventSourceFilterOptions(sources));
 
 	async function handleSourceChange(value: string | undefined) {
 		if (!value || isSaving) return;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	buildAdminEventSourceFilterOptions,
 	getPopulatedScraperSourceGroups,
 	getSourcesForScraperSourceGroup,
 	parseScraperSourceGroupFilter,
@@ -29,7 +30,7 @@ describe(`scraper source groups`, () => {
 		expect(getSourcesForScraperSourceGroup(`vietnam`)).toEqual([`whatsupdanang`]);
 	});
 
-	it(`only lists populated groups in the admin dropdown order`, () => {
+	it(`only lists populated groups in display order`, () => {
 		const groups = getPopulatedScraperSourceGroups();
 		expect(groups).toContain(`bali`);
 		expect(groups).toContain(`germany`);
@@ -47,5 +48,36 @@ describe(`scraper source groups`, () => {
 		const baliFilter = scraperSourceGroupFilterValue(`bali`);
 		expect(parseScraperSourceGroupFilter(baliFilter)).toBe(`bali`);
 		expect(resolveEventSourceFilter(baliFilter)).toEqual(getSourcesForScraperSourceGroup(`bali`));
+	});
+
+	it(`builds admin options with sources under group headers, alphabetical within group`, () => {
+		const options = buildAdminEventSourceFilterOptions([
+			`tribehaus`,
+			`heilnetz`,
+			`meetup`,
+			`whatsupdanang`,
+			`balievents`,
+			`telegram`,
+			`yogabarn`,
+		]);
+
+		expect(options.map((o) => o.value)).toEqual([
+			`all`,
+			`__section-bali__`,
+			`balievents`,
+			`yogabarn`,
+			`__section-germany__`,
+			`heilnetz`,
+			`tribehaus`,
+			`__section-vietnam__`,
+			`whatsupdanang`,
+			`__section-global__`,
+			`meetup`,
+			`__section-other__`,
+			`telegram`,
+		]);
+		expect(options.find((o) => o.value === `__section-bali__`)?.disabled).toBe(true);
+		expect(options.find((o) => o.value === `balievents`)?.html).toBe(`BaliEvents.co`);
+		expect(options.find((o) => o.value === `yogabarn`)?.html).toBe(`The Yoga Barn`);
 	});
 });
