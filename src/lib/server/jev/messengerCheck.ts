@@ -135,13 +135,21 @@ export function interpretJevAnswer(args: { answers: JevAnswers; eventIsDefinitel
 }
 
 /**
- * Tags + is_conscious + language + event_structure — same question semantics as askJev,
- * without messenger-only gates (is_event, has_start_date, contact_author, attendance).
+ * Tags + is_conscious + language + event_structure + description_says_online — same question
+ * semantics as askJev for shared fields, without messenger-only gates
+ * (is_event, has_start_date, contact_author, attendance).
  */
 export async function askJevEventAttributes(text: string) {
 	const result = await jevClient().systemOne({
 		state: { message: text },
-		questions: eventAttributeQuestions(),
+		questions: {
+			...eventAttributeQuestions(),
+			description_says_online: choice(`Does the description make clear this is an online event?`, {
+				yes: `The text clearly says online, Zoom, livestream, virtual, or similar.`,
+				no: `The text describes an in-person event, or does not say it is online.`,
+				unknown: `Unclear whether people meet online or in person.`,
+			}),
+		},
 	});
 	console.log(`[jev] ${result.model} (${result.usage?.input_tokens ?? 0} input tokens)`);
 	return result;
@@ -153,6 +161,8 @@ export function interpretEventAttributes(answers: EventAttributeAnswers) {
 		structure: chosenEventStructure(answers.event_structure),
 		language: chosenEventLanguage(answers.language),
 		isConscious: isTrue(answers.is_conscious),
+		// only asked by askJevEventAttributes; messenger askJev omits it
+		descriptionSaysOnline: chosenDescriptionSaysOnline(answers.description_says_online),
 	};
 }
 
@@ -230,6 +240,14 @@ function chosenEventLanguage(answer: { choice: string; confidence: number }): Ev
 	if (answer.confidence < 0.5) return;
 	if (!eventLanguageSlugSet.has(answer.choice)) return;
 	return answer.choice as EventLanguage;
+}
+
+function chosenDescriptionSaysOnline(
+	answer?: { choice: string; confidence: number },
+): `yes` | `no` | `unknown` {
+	if (!answer || answer.confidence < 0.5) return `unknown`;
+	if (answer.choice === `yes` || answer.choice === `no`) return answer.choice;
+	return `unknown`;
 }
 
 function isTrue(answer: NoulResponse) {

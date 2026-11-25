@@ -2,14 +2,18 @@ import { stripHtml, trimAllWhitespaces } from '../src/lib/common.ts';
 import type { EventStructure } from '../src/lib/eventCategories.ts';
 import type { EventLanguage } from '../src/lib/server/ai.ts';
 import { askJevEventAttributes, interpretEventAttributes } from '../src/lib/server/jev/messengerCheck.ts';
+import type { AttendanceMode } from '../src/lib/server/schema.ts';
 import { sleep as defaultSleep } from './common.ts';
 
 const AI_JUDGE_MAX_RETRIES = 5;
 const AI_JUDGE_BACKOFF_CAP_MS = 10_000;
 
 /**
- * Fills missing Jev attributes on scraped events: tagSlugs, language, structure, listed (from is_conscious).
- * Already tagged or unlisted rows are skipped. Events that share name, host, source, and address share one Jev call.
+ * Fills missing Jev attributes on scraped events: tagSlugs, language, structure,
+ * listed (from is_conscious, or descriptionSaysOnline=yes with a false offline address).
+ * Unlisted rows are skipped. Already tagged rows are skipped unless they look like
+ * fake-venue candidates (address set + attendanceMode not online).
+ * Events that share name, host, source, and address share one Jev call.
  * @example
  * fillMissingEventAttributes({ events: upserted, updateEventAttributes })
  */
@@ -35,7 +39,11 @@ export async function fillMissingEventAttributes({
 
 	const needingJudgment: EventToJudge[] = [];
 	for (const event of events) {
-		if (event.tagSlugs?.length || event.listed === false) {
+		if (event.listed === false) {
+			skipped += 1;
+			continue;
+		}
+		if (event.tagSlugs?.length && !isFakeVenueCandidate(event)) {
 			skipped += 1;
 			continue;
 		}
@@ -56,7 +64,12 @@ export async function fillMissingEventAttributes({
 						description: representative.description,
 						sleep,
 					});
-					const update = attributesToUpdate({ ids, attributes });
+					const update = attributesToUpdate({
+						ids,
+						attributes,
+						hasAddress: groupHasAddress(group),
+						attendanceMode: representative.attendanceMode,
+					});
 					if (!update) return;
 					await updateEventAttributes(update);
 					filled += ids.length;
@@ -95,19 +108,38 @@ async function defaultJudgeEventAttributes({
 function attributesToUpdate({
 	ids,
 	attributes,
+	hasAddress,
+	attendanceMode,
 }: {
 	ids: number[];
 	attributes: EventAttributes;
+	hasAddress: boolean;
+	attendanceMode?: AttendanceMode | null;
 }): EventAttributesUpdate | undefined {
-	const { tags, language, structure, isConscious } = attributes;
-	if (!tags.length && language == null && structure == null && isConscious) return;
+	const { tags, language, structure, isConscious, descriptionSaysOnline } = attributes;
+	const shouldUnlist =
+		!isConscious ||
+		(descriptionSaysOnline === `yes` && hasAddress && claimsNotOnline(attendanceMode));
+	if (!tags.length && language == null && structure == null && !shouldUnlist) return;
 	return {
 		ids,
 		tagSlugs: tags,
 		language,
 		structure,
-		listed: isConscious ? undefined : false,
+		listed: shouldUnlist ? false : undefined,
 	};
+}
+
+function isFakeVenueCandidate(event: EventToJudge) {
+	return !!event.address?.length && claimsNotOnline(event.attendanceMode);
+}
+
+function claimsNotOnline(attendanceMode?: AttendanceMode | null) {
+	return attendanceMode !== `online`;
+}
+
+function groupHasAddress(events: EventToJudge[]) {
+	return events.some((event) => !!event.address?.length);
 }
 
 async function judgeEventAttributesWithRetry({
@@ -186,6 +218,7 @@ type EventAttributes = {
 	language?: EventLanguage;
 	structure?: EventStructure;
 	isConscious: boolean;
+	descriptionSaysOnline?: `yes` | `no` | `unknown`;
 };
 
 type EventAttributesUpdate = {
@@ -203,6 +236,7 @@ type EventToJudge = {
 	host?: string | null;
 	source?: string | null;
 	address?: string[] | null;
+	attendanceMode?: AttendanceMode | null;
 	tagSlugs?: string[] | null;
 	listed?: boolean;
 };

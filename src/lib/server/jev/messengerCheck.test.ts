@@ -130,6 +130,7 @@ describe(`interpretEventAttributes`, () => {
 			language: `german`,
 			structure: `retreat`,
 			isConscious: false,
+			descriptionSaysOnline: `unknown`,
 		});
 	});
 
@@ -147,7 +148,31 @@ describe(`interpretEventAttributes`, () => {
 			language: undefined,
 			structure: undefined,
 			isConscious: true,
+			descriptionSaysOnline: `unknown`,
 		});
+	});
+
+	it(`maps description_says_online yes, no, and unknown`, () => {
+		expect(
+			interpretEventAttributes(
+				attributeAnswers({ description_says_online: { type: `choice`, choice: `yes`, confidence: 0.9 } }),
+			).descriptionSaysOnline,
+		).toBe(`yes`);
+		expect(
+			interpretEventAttributes(
+				attributeAnswers({ description_says_online: { type: `choice`, choice: `no`, confidence: 0.9 } }),
+			).descriptionSaysOnline,
+		).toBe(`no`);
+		expect(
+			interpretEventAttributes(
+				attributeAnswers({ description_says_online: { type: `choice`, choice: `unknown`, confidence: 0.9 } }),
+			).descriptionSaysOnline,
+		).toBe(`unknown`);
+		expect(
+			interpretEventAttributes(
+				attributeAnswers({ description_says_online: { type: `choice`, choice: `yes`, confidence: 0.2 } }),
+			).descriptionSaysOnline,
+		).toBe(`unknown`);
 	});
 });
 
@@ -307,6 +332,7 @@ function answers(overrides: Record<string, number | Record<string, unknown>>) {
 function attributeAnswers(overrides: Record<string, number | Record<string, unknown>>) {
 	const built: Record<string, unknown> = {
 		is_conscious: { type: `noul`, noul: 0.9 },
+		description_says_online: { type: `choice`, choice: `unknown`, confidence: 0.8 },
 		language: { type: `choice`, choice: `other`, confidence: 0.8 },
 		event_structure: { type: `choice`, choice: `none`, confidence: 0.8 },
 	};

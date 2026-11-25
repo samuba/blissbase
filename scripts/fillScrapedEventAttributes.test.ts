@@ -353,4 +353,178 @@ describe(`fillMissingEventAttributes`, () => {
 		expect(judgeEventAttributes).toHaveBeenCalledTimes(2);
 		expect(updateEventAttributes).toHaveBeenCalledTimes(2);
 	});
+
+	it(`unlists when attendance claims offline, address is set, and descriptionSaysOnline is yes`, async () => {
+		const judgeEventAttributes = vi.fn(async () => ({
+			tags: [`meditation`],
+			language: `german` as const,
+			structure: `session` as const,
+			isConscious: true,
+			descriptionSaysOnline: `yes` as const,
+		}));
+		const updateEventAttributes = vi.fn(async () => {});
+
+		const result = await fillMissingEventAttributes({
+			events: [
+				{
+					id: 15,
+					name: `Online Sit`,
+					description: `Join via Zoom only`,
+					host: `Temple`,
+					source: `heilnetz`,
+					address: [`Berlin`, `Some Street 1`],
+					attendanceMode: `offline`,
+					tagSlugs: [],
+				},
+			],
+			judgeEventAttributes,
+			updateEventAttributes,
+		});
+
+		expect(result).toEqual({ filled: 1, skipped: 0, failed: 0 });
+		expect(judgeEventAttributes).toHaveBeenCalledWith({
+			name: `Online Sit`,
+			description: `Join via Zoom only`,
+		});
+		expect(updateEventAttributes).toHaveBeenCalledWith({
+			ids: [15],
+			tagSlugs: [`meditation`],
+			language: `german`,
+			structure: `session`,
+			listed: false,
+		});
+	});
+
+	it(`re-judges already tagged fake-venue candidates so they can be unlisted`, async () => {
+		const judgeEventAttributes = vi.fn(async () => ({
+			tags: [`spirituality`],
+			isConscious: true,
+			descriptionSaysOnline: `yes` as const,
+		}));
+		const updateEventAttributes = vi.fn(async () => {});
+
+		const result = await fillMissingEventAttributes({
+			events: [
+				{
+					id: 1955817,
+					name: `Prayer Practice - Wiesbaden`,
+					description: `THIS IS A PAID ONLINE MEETING!`,
+					source: `meetup`,
+					address: [`Wiesbaden`, `Wiesbaden, Germany`, `Wiesbaden, HE`],
+					attendanceMode: `offline`,
+					tagSlugs: [`spirituality`, `voice`],
+				},
+			],
+			judgeEventAttributes,
+			updateEventAttributes,
+		});
+
+		expect(result).toEqual({ filled: 1, skipped: 0, failed: 0 });
+		expect(judgeEventAttributes).toHaveBeenCalledTimes(1);
+		expect(updateEventAttributes).toHaveBeenCalledWith({
+			ids: [1955817],
+			tagSlugs: [`spirituality`],
+			language: undefined,
+			structure: undefined,
+			listed: false,
+		});
+	});
+
+	it(`does not unlist when descriptionSaysOnline is unknown`, async () => {
+		const judgeEventAttributes = vi.fn(async () => ({
+			tags: [`meditation`],
+			isConscious: true,
+			descriptionSaysOnline: `unknown` as const,
+		}));
+		const updateEventAttributes = vi.fn(async () => {});
+
+		const result = await fillMissingEventAttributes({
+			events: [
+				{
+					id: 18,
+					name: `Maybe Online`,
+					description: `Join us`,
+					address: [`Berlin`],
+					attendanceMode: `offline`,
+					tagSlugs: [],
+				},
+			],
+			judgeEventAttributes,
+			updateEventAttributes,
+		});
+
+		expect(result).toEqual({ filled: 1, skipped: 0, failed: 0 });
+		expect(updateEventAttributes).toHaveBeenCalledWith({
+			ids: [18],
+			tagSlugs: [`meditation`],
+			language: undefined,
+			structure: undefined,
+			listed: undefined,
+		});
+	});
+
+	it(`does not unlist when attendanceMode is already online`, async () => {
+		const judgeEventAttributes = vi.fn(async () => ({
+			tags: [`meditation`],
+			isConscious: true,
+			descriptionSaysOnline: `yes` as const,
+		}));
+		const updateEventAttributes = vi.fn(async () => {});
+
+		const result = await fillMissingEventAttributes({
+			events: [
+				{
+					id: 17,
+					name: `Online Sit`,
+					description: `Join via Zoom only`,
+					address: [`Berlin`],
+					attendanceMode: `online`,
+					tagSlugs: [],
+				},
+			],
+			judgeEventAttributes,
+			updateEventAttributes,
+		});
+
+		expect(result).toEqual({ filled: 1, skipped: 0, failed: 0 });
+		expect(updateEventAttributes).toHaveBeenCalledWith({
+			ids: [17],
+			tagSlugs: [`meditation`],
+			language: undefined,
+			structure: undefined,
+			listed: undefined,
+		});
+	});
+
+	it(`does not unlist when no address is set`, async () => {
+		const judgeEventAttributes = vi.fn(async () => ({
+			tags: [`meditation`],
+			isConscious: true,
+			descriptionSaysOnline: `yes` as const,
+		}));
+		const updateEventAttributes = vi.fn(async () => {});
+
+		const result = await fillMissingEventAttributes({
+			events: [
+				{
+					id: 16,
+					name: `Online Sit`,
+					description: `Join via Zoom only`,
+					attendanceMode: `offline`,
+					tagSlugs: [],
+				},
+			],
+			judgeEventAttributes,
+			updateEventAttributes,
+		});
+
+		expect(result).toEqual({ filled: 1, skipped: 0, failed: 0 });
+		expect(updateEventAttributes).toHaveBeenCalledWith({
+			ids: [16],
+			tagSlugs: [`meditation`],
+			language: undefined,
+			structure: undefined,
+			listed: undefined,
+		});
+	});
 });
