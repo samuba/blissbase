@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { resolve } from "$app/paths";
 	import { stripHtml, trimAllWhitespaces } from "#lib/common.ts";
+	import { routes } from "#lib/routes.ts";
 	import type { Profile } from "#lib/server/schema.ts";
 	import type { Snippet } from "svelte";
 
@@ -18,7 +18,7 @@
 </script>
 
 <a
-	href={resolve(`/@/[slug]`, { slug: profile.slug! })}
+	href={routes.publicProfile(profile.slug!)}
 	class={[
 		`group bg-base-200 hover:bg-base-200/80 border-base-200 flex flex-col gap-3 rounded-2xl border p-3 transition-colors`,
 		`no-underline`,
@@ -35,7 +35,7 @@
 		{/if}
 
 		<div class="min-w-0 flex-1 text-left">
-			<p class="text-base-content text-lg leading-tight font-semibold">{profile.displayName}</p>
+			<p class={["text-base-content truncate text-lg leading-tight font-semibold"]} title={profile.displayName}>{profile.displayName}</p>
 			{#if bioPreview}
 				<div class="relative mt-0.5">
 					<p class={[`text-base-content/70 line-clamp-3 text-sm leading-snug sm:line-clamp-2`]}>

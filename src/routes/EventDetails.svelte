@@ -406,14 +406,14 @@
 		{#if event.author?.slug && event.author?.displayName}
 			<PublicProfileCard profile={event.author} />
 		{:else if shouldShowHost}
-			<div class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium">
-				<i class="icon-[ph--user-circle] size-6"></i>
+			<div class={["bg-base-200 inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"]} data-testid="event-host-pill">
+				<i class="icon-[ph--user-circle] size-6 shrink-0"></i>
 				{#if event.hostLink}
-					<button onclick={() => openLink(event.hostLink!)} class="cursor-pointer underline">
+					<button onclick={() => openLink(event.hostLink!)} class={["min-w-0 truncate cursor-pointer underline"]} title={event.host}>
 						{event.host}
 					</button>
 				{:else}
-					{event.host}
+					<span class={["min-w-0 truncate"]} title={event.host}>{event.host}</span>
 				{/if}
 			</div>
 		{/if}
