@@ -2,8 +2,9 @@
  * Scrapes GOERS Bali events via their public GraphQL API at
  * graph.goersapp.com/v2 (`exploreContents` + `experienceContents`).
  *
- * Needs a headed Chromium (Playwright `channel: "chrome"`). Under SSH/CI
- * wrap with xvfb-run. Headless-shell alone is Queue-it blocked.
+ * Needs a headed Chromium (Playwright `channel: "chrome"`). Under SSH wrap with
+ * xvfb-run; CI does that in scrape-source.yml. Headless (incl. channel-chrome
+ * headless) is Queue-it / Cloudflare blocked.
  *
  * Usage:
  *   bun run scripts/scrape-goers.ts
@@ -477,10 +478,17 @@ async function gql<T>(args: {
 }
 
 async function launchChrome(): Promise<Browser> {
+	// Headed Chrome is required: Playwright headless-shell / channel-chrome
+	// headless both get Queue-it / Cloudflare challenged. On CI wrap the process
+	// with xvfb-run (see scrape-source.yml) so $DISPLAY exists.
 	return await chromium.launch({
 		channel: `chrome`,
 		headless: false,
-		args: [`--disable-blink-features=AutomationControlled`, `--no-sandbox`],
+		args: [
+			`--disable-blink-features=AutomationControlled`,
+			`--no-sandbox`,
+			`--disable-dev-shm-usage`,
+		],
 	});
 }
 
