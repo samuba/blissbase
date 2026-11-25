@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Select from "#lib/components/Select.svelte";
-	import { WEBSITE_SCRAPER_CONFIG } from "#lib/commonWithScripts.ts";
+	import { buildAdminEventSourceFilterOptions, getEventSourceFilterLabel } from "#lib/commonWithScripts.ts";
 	import { eventsStore } from "#lib/eventsStore.svelte.ts";
 	import { ALL_EVENT_SOURCES_VALUE } from "#lib/cookie-utils.ts";
 	import { setEventSourceFilter } from "#lib/rpc/admin.remote.ts";
@@ -17,16 +17,11 @@
 	let isSaving = $state(false);
 	let saveError = $state<string | null>(null);
 
-	const sourceOptions = $derived([
-		{ value: ALL_EVENT_SOURCES_VALUE, html: `All` },
-		...sources.map((source) => ({
-			value: source,
-			html: getSourceLabel(source),
-		})),
-	]);
+	const sourceOptions = $derived(buildAdminEventSourceFilterOptions(sources));
 
 	async function handleSourceChange(value: string | undefined) {
 		if (!value || isSaving) return;
+		if (value.startsWith(`__section-`)) return;
 
 		const previous = selectedSource;
 		selectedSource = value;
@@ -49,16 +44,9 @@
 			isSaving = false;
 		}
 	}
-
-	function getSourceLabel(source: string) {
-		if (source in WEBSITE_SCRAPER_CONFIG) {
-			return WEBSITE_SCRAPER_CONFIG[source as keyof typeof WEBSITE_SCRAPER_CONFIG].label;
-		}
-		return source;
-	}
 </script>
 
-<div class="bg-warning text-warning-content rounded-box flex w-full flex-col items-start gap-3 p-4">
+<div class="bg-warning text-warning-content rounded-box flex w-full flex-col items-start gap-3 p-4" data-testid="admin-event-source-filter">
 	<h3 class="flex items-center gap-2">
 		<i class="icon-[ph--shield-star] size-5"></i>
 		Admin Zeug
@@ -71,18 +59,18 @@
 			options={sourceOptions}
 			onValueChange={handleSourceChange}
 			disabled={isSaving}
-			triggerProps={{ class: `w-full` }}
+			triggerProps={{ class: `w-full`, "data-testid": `admin-event-source-select` }}
 		/>
 		{#if isSaving}
 			<p class="label opacity-70">Wird gespeichert...</p>
 		{:else if saveError}
 			<p class="label text-error">{saveError}</p>
 		{:else}
-			<p class="label">
+			<p class="label" data-testid="admin-event-source-status">
 				{#if selectedSource === ALL_EVENT_SOURCES_VALUE}
 					Es werden Events aus allen Quellen angezeigt.
 				{:else}
-					Es werden nur Events aus „{getSourceLabel(selectedSource)}“ angezeigt.
+					Es werden nur Events aus „{getEventSourceFilterLabel(selectedSource)}“ angezeigt.
 				{/if}
 			</p>
 		{/if}

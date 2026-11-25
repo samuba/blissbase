@@ -1,11 +1,12 @@
 import { db, s } from "#lib/server/db.ts";
-import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, desc, eq, arrayOverlaps } from "drizzle-orm";
+import { asc, count, gte, or, and, lt, isNotNull, lte, gt, sql, desc, eq, inArray, arrayOverlaps } from "drizzle-orm";
 import { today as getToday, parseDate, CalendarDate } from "@internationalized/date";
 import { reverseGeocodeCityCached } from "#lib/server/google.ts";
 import { resolveFilterCoordinates } from "#lib/server/locationDistance.ts";
 import { sanitizeLocationParams } from "#lib/locationFilter.ts";
 import type { InsertEvent } from "#lib/types.ts";
 import { escapeRegex, type Modify } from "#lib/common.ts";
+import { resolveEventSourceFilter } from "#lib/commonWithScripts.ts";
 import { isProperDisplayName } from "#lib/displayName.ts";
 import * as v from "valibot";
 import {
@@ -84,6 +85,7 @@ export async function fetchEvents(params: LoadEventsParams) {
 	const sortOrder = params.sortOrder === "desc" ? "desc" : "asc";
 	const offset = params.offset != null && Number.isFinite(params.offset) ? Math.max(0, Math.floor(params.offset)) : (page - 1) * limit;
 	const source = params.source?.trim() || null;
+	const sourceFilter = resolveEventSourceFilter(source);
 
 	const relevanceAt = parseRelevanceAt(params.relevanceAt);
 	const relevanceAtIso = relevanceAt.toISOString();
@@ -129,8 +131,10 @@ export async function fetchEvents(params: LoadEventsParams) {
 	const relevantStartBound = isHistoricalRange ? undefined : gte(s.events.startAt, new Date(relevanceAt.getTime() - 32 * 60 * 60 * 1000));
 	const allConditions = [and(s.events.listed), dateCondition, relevantStartBound];
 
-	if (source) {
-		allConditions.push(eq(s.events.source, source));
+	if (sourceFilter?.length === 1) {
+		allConditions.push(eq(s.events.source, sourceFilter[0]!));
+	} else if (sourceFilter?.length) {
+		allConditions.push(inArray(s.events.source, sourceFilter));
 	}
 
 	if (!attendanceMode || attendanceMode === "offline+online") {
