@@ -229,8 +229,9 @@ function refreshTelegramScrapingTargets() {
  * lands in the shared remotes/catchall bundle.
  */
 async function resolveTelegramRoom({ roomId }: { roomId: string }) {
-	const { fetch, url } = getRequestEvent();
-	const res = await fetch(new URL(routes.adminTelegramResolve(), url.origin), {
+	const { fetch } = getRequestEvent();
+	// Relative path only — queries must not read event.url (remote_request_property).
+	const res = await fetch(routes.adminTelegramResolve(), {
 		method: `POST`,
 		headers: {
 			"content-type": `application/json`,
@@ -252,8 +253,9 @@ async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 }
 
 async function fetchPrimaryTelegramDialogs() {
-	const { fetch, url } = getRequestEvent();
-	const res = await fetch(new URL(routes.adminTelegramDialogs(), url.origin), {
+	const { fetch } = getRequestEvent();
+	// Relative path only — queries must not read event.url (remote_request_property).
+	const res = await fetch(routes.adminTelegramDialogs(), {
 		headers: { accept: `application/json` },
 	});
 
