@@ -165,6 +165,7 @@ async function launch(flags: Flags) {
 				S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || `test-bucket`,
 				CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID || `test-account`,
 				ADMIN_EMAILS: process.env.ADMIN_EMAILS || `test@admin.de`,
+				RESEND_API_KEY: process.env.RESEND_API_KEY || `test-resend-api-key`,
 			},
 			// Redirect to a file so this CLI can exit without holding open pipes.
 			stdio: [`ignore`, logFd, logFd],
@@ -463,6 +464,12 @@ async function runBrowserAction(args: {
 		}
 		case `click`: {
 			await locate(page, flags).click();
+			break;
+		}
+		case `click-role`: {
+			const role = requireFlag(flags, `role`) as Parameters<typeof page.getByRole>[0];
+			const name = requireFlag(flags, `name`);
+			await page.getByRole(role, { name, exact: flags.exact !== `0` }).click();
 			break;
 		}
 		case `fill`: {

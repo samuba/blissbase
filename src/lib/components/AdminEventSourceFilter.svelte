@@ -2,9 +2,9 @@
 	import Select from "#lib/components/Select.svelte";
 	import {
 		getEventSourceFilterLabel,
-		getPopulatedScraperCountryGroups,
-		scraperCountryGroupFilterValue,
-		SCRAPER_COUNTRY_GROUPS,
+		getPopulatedScraperSourceGroups,
+		scraperSourceGroupFilterValue,
+		SCRAPER_SOURCE_GROUPS,
 	} from "#lib/commonWithScripts.ts";
 	import { eventsStore } from "#lib/eventsStore.svelte.ts";
 	import { ALL_EVENT_SOURCES_VALUE } from "#lib/cookie-utils.ts";
@@ -22,12 +22,20 @@
 	let isSaving = $state(false);
 	let saveError = $state<string | null>(null);
 
+	const populatedGroups = $derived(getPopulatedScraperSourceGroups());
+
 	const sourceOptions = $derived([
 		{ value: ALL_EVENT_SOURCES_VALUE, html: `All` },
-		...getPopulatedScraperCountryGroups().map((country) => ({
-			value: scraperCountryGroupFilterValue(country),
-			html: SCRAPER_COUNTRY_GROUPS[country].label,
-		})),
+		...(populatedGroups.length
+			? [
+					{ value: `__section-groups__`, html: `── Gruppen ──`, disabled: true },
+					...populatedGroups.map((group) => ({
+						value: scraperSourceGroupFilterValue(group),
+						html: `<span class="font-semibold">${SCRAPER_SOURCE_GROUPS[group].label}</span>`,
+					})),
+					{ value: `__section-sources__`, html: `── Quellen ──`, disabled: true },
+				]
+			: []),
 		...sources.map((source) => ({
 			value: source,
 			html: getEventSourceFilterLabel(source),
@@ -36,6 +44,7 @@
 
 	async function handleSourceChange(value: string | undefined) {
 		if (!value || isSaving) return;
+		if (value.startsWith(`__section-`)) return;
 
 		const previous = selectedSource;
 		selectedSource = value;
@@ -60,7 +69,7 @@
 	}
 </script>
 
-<div class="bg-warning text-warning-content rounded-box flex w-full flex-col items-start gap-3 p-4">
+<div class="bg-warning text-warning-content rounded-box flex w-full flex-col items-start gap-3 p-4" data-testid="admin-event-source-filter">
 	<h3 class="flex items-center gap-2">
 		<i class="icon-[ph--shield-star] size-5"></i>
 		Admin Zeug
@@ -73,14 +82,14 @@
 			options={sourceOptions}
 			onValueChange={handleSourceChange}
 			disabled={isSaving}
-			triggerProps={{ class: `w-full` }}
+			triggerProps={{ class: `w-full`, "data-testid": `admin-event-source-select` }}
 		/>
 		{#if isSaving}
 			<p class="label opacity-70">Wird gespeichert...</p>
 		{:else if saveError}
 			<p class="label text-error">{saveError}</p>
 		{:else}
-			<p class="label">
+			<p class="label" data-testid="admin-event-source-status">
 				{#if selectedSource === ALL_EVENT_SOURCES_VALUE}
 					Es werden Events aus allen Quellen angezeigt.
 				{:else}
