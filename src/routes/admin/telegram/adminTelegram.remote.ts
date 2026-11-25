@@ -230,7 +230,6 @@ function refreshTelegramScrapingTargets() {
  */
 async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 	const { fetch } = getRequestEvent();
-	// Relative path only — queries must not read event.url (remote_request_property).
 	const res = await fetch(routes.adminTelegramResolve(), {
 		method: `POST`,
 		headers: {
@@ -254,7 +253,6 @@ async function resolveTelegramRoom({ roomId }: { roomId: string }) {
 
 async function fetchPrimaryTelegramDialogs() {
 	const { fetch } = getRequestEvent();
-	// Relative path only — queries must not read event.url (remote_request_property).
 	const res = await fetch(routes.adminTelegramDialogs(), {
 		headers: { accept: `application/json` },
 	});
