@@ -60,7 +60,7 @@
 		};
 	}
 
-	/** sm+: portrait ≤15% vertical crop, landscape ≤40% horizontal; else cover fills. */
+	/** sm+: portrait ≤15% vertical crop, landscape ≤60% horizontal; else cover fills. */
 	function fitImageCrop(node: HTMLImageElement) {
 		const column = node.closest(`[data-event-image-column]`) as HTMLElement | null;
 		if (!column) return;
@@ -101,11 +101,11 @@
 
 			if (naturalWidth > naturalHeight) {
 				const fullW = h * (naturalWidth / naturalHeight);
-				if (w >= fullW * 0.6) {
+				if (w >= fullW * 0.4) {
 					if (sized) apply();
 					return;
 				}
-				const sizedW = w / 0.6;
+				const sizedW = w / 0.4;
 				apply(`${sizedW}px`, `${sizedW * (naturalHeight / naturalWidth)}px`);
 				return;
 			}
