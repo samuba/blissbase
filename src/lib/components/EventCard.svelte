@@ -22,7 +22,6 @@
 	} = $props();
 
 	let imageLoadError = $state(false);
-	let imageIsLandscape = $state(true);
 	const imageUrl = $derived(event.imageUrls?.[0]);
 
 	const isPast = $derived((event.endAt ?? addHours(event.startAt, 4)) < now.value);
@@ -31,12 +30,6 @@
 	function handleClick(e: MouseEvent) {
 		e.preventDefault();
 		showEventDetailsDialog(event);
-	}
-
-	function handleImageLoad(e: Event) {
-		const img = e.currentTarget as HTMLImageElement;
-		if (!img.naturalWidth || !img.naturalHeight) return;
-		imageIsLandscape = img.naturalWidth >= img.naturalHeight;
 	}
 
 	const tags = $derived(labelsForTagSlugs(event.tagSlugs));
@@ -90,7 +83,7 @@
 		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
 			<div
 				class={[
-					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:flex sm:max-w-42 sm:min-w-42 sm:items-center sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
 					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 				]}
 			>
@@ -106,18 +99,14 @@
 					>
 						<figure
 							class={[
-								`flex h-full w-full items-center justify-center backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
+								`h-full w-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
 								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 							]}
 						>
 							<img
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
-								class={[
-									`h-full max-h-72 max-w-full object-cover sm:max-h-54 sm:w-full`,
-									imageIsLandscape ? `sm:h-full sm:object-cover` : `sm:h-auto sm:object-contain`,
-								]}
-								onload={handleImageLoad}
+								class="block h-full max-h-72 max-w-full object-cover sm:max-h-54 sm:w-full"
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
@@ -126,7 +115,7 @@
 					<RandomPlaceholderImg
 						seed={event.name}
 						class={[
-							`h-full max-h-38 sm:max-h-54 sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 					/>
