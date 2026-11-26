@@ -60,13 +60,27 @@
 		};
 	}
 
-	/** sm+: portrait ≤15% vertical crop, landscape ≤60% horizontal; else cover fills. */
+	/**
+	 * sm+: portrait ≤15% vertical crop (may grow card ≤20% past text/equal-height base);
+	 * landscape ≤60% horizontal crop; else cover fills.
+	 */
 	function fitImageCrop(node: HTMLImageElement) {
 		const column = node.closest(`[data-event-image-column]`) as HTMLElement | null;
 		if (!column) return;
 
+		const body = column.parentElement?.querySelector(`[data-event-card-body]`) as HTMLElement | null;
 		const desktop = window.matchMedia(`(min-width: 640px)`);
 		let sized = false;
+		let baseH = 0;
+
+		const contentHeight = (el: HTMLElement) => {
+			const cs = getComputedStyle(el);
+			const pad = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+			const gap = parseFloat(cs.rowGap || cs.gap) || 0;
+			let kids = 0;
+			for (const kid of el.children) kids += (kid as HTMLElement).offsetHeight;
+			return pad + kids + gap * Math.max(0, el.children.length - 1);
+		};
 
 		const apply = (width = ``, height = ``) => {
 			const maxWidth = width ? `none` : ``;
@@ -77,10 +91,17 @@
 			sized = Boolean(width);
 		};
 
+		const setMinHeight = (value: string) => {
+			if (column.style.minHeight === value) return;
+			column.style.minHeight = value;
+		};
+
 		const update = () => {
 			const { naturalWidth, naturalHeight } = node;
 			if (!desktop.matches || !naturalWidth || !naturalHeight) {
 				if (sized) apply();
+				setMinHeight(``);
+				baseH = 0;
 				return;
 			}
 
@@ -89,15 +110,28 @@
 			if (!w || !h) return;
 
 			if (naturalHeight > naturalWidth) {
+				const contentH = body ? contentHeight(body) : 0;
+				if (!column.style.minHeight) baseH = Math.max(contentH, h);
+				else baseH = Math.max(baseH, contentH);
+
 				const fullH = w * (naturalHeight / naturalWidth);
-				if (h >= fullH * 0.85) {
+				const neededH = fullH * 0.85;
+				const maxH = baseH * 1.2;
+				const targetH = Math.min(Math.max(baseH, neededH), maxH);
+				setMinHeight(targetH > baseH + 0.5 ? `${targetH}px` : ``);
+
+				const effectiveH = Math.max(h, targetH);
+				if (effectiveH >= fullH * 0.85) {
 					if (sized) apply();
 					return;
 				}
-				const sizedH = h / 0.85;
+				const sizedH = effectiveH / 0.85;
 				apply(`${sizedH * (naturalWidth / naturalHeight)}px`, `${sizedH}px`);
 				return;
 			}
+
+			setMinHeight(``);
+			baseH = 0;
 
 			if (naturalWidth > naturalHeight) {
 				const fullW = h * (naturalWidth / naturalHeight);
@@ -115,6 +149,7 @@
 
 		const resizeObserver = new ResizeObserver(update);
 		resizeObserver.observe(column);
+		if (body) resizeObserver.observe(body);
 		node.addEventListener(`load`, update);
 		if (node.complete) update();
 
@@ -122,6 +157,7 @@
 			resizeObserver.disconnect();
 			node.removeEventListener(`load`, update);
 			apply();
+			setMinHeight(``);
 		};
 	}
 </script>
@@ -189,7 +225,7 @@
 				{/if}
 			</div>
 
-			<div class="card-body flex min-w-0 flex-1 flex-col gap-2 pt-4.5 md:pt-6">
+			<div class="card-body flex min-w-0 flex-1 flex-col gap-2 pt-4.5 md:pt-6" data-event-card-body>
 				<h3 class="card-title min-w-0 items-start leading-snug tracking-tight" data-testid="event-card-title">
 					<span class="line-clamp-3 min-w-0 wrap-break-word" title={event.name}>{event.name}</span>
 
