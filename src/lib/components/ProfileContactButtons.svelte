@@ -61,7 +61,12 @@
 </script>
 
 {#snippet socialLinkButton(link: PublicProfileSocialLink)}
-	<button type="button" class={[`btn btn-sm gap-1.5 hover:cursor-pointer`]} onclick={() => openLink(link)}>
+	<button
+		type="button"
+		class={[`btn btn-sm gap-1.5 hover:cursor-pointer`]}
+		onclick={() => openLink(link)}
+		data-testid={`profile-contact-${link.type}`}
+	>
 		<i class={[socialIconClass(link.type), socialIconColorClass(link.type), `size-5`]}></i>
 		{#if link.type === `website`}
 			{websiteLabel(link.value)}
