@@ -60,14 +60,17 @@
 		};
 	}
 
-	/** On sm+, portraits may crop at most 15% vertically when covering the column. */
-	function fitPortraitCrop(node: HTMLImageElement) {
+	/**
+	 * On sm+: portraits crop ≤15% vertically; landscapes crop ≤40% horizontally.
+	 * When cover would exceed that, size the image so the cap holds (blur fills the rest).
+	 */
+	function fitImageCrop(node: HTMLImageElement) {
 		const column = node.closest(`[data-event-image-column]`) as HTMLElement | null;
 		if (!column) return;
 
 		const desktop = window.matchMedia(`(min-width: 640px)`);
-		const maxCrop = 0.15;
-		const minVisible = 1 - maxCrop;
+		const portraitMinVisible = 0.85;
+		const landscapeMinVisible = 0.6;
 
 		const clearSized = () => {
 			node.style.width = ``;
@@ -75,23 +78,37 @@
 			node.style.maxWidth = ``;
 		};
 
+		const sizeTo = ({ width, height }: { width: number; height: number }) => {
+			node.style.width = `${width}px`;
+			node.style.height = `${height}px`;
+			node.style.maxWidth = `none`;
+		};
+
 		const update = () => {
 			clearSized();
 			if (!desktop.matches || !node.naturalWidth || !node.naturalHeight) return;
-			if (node.naturalHeight <= node.naturalWidth) return;
 
 			const columnWidth = column.clientWidth;
 			const columnHeight = column.clientHeight;
 			if (!columnWidth || !columnHeight) return;
 
-			const fullHeightAtWidth = columnWidth * (node.naturalHeight / node.naturalWidth);
-			if (columnHeight >= fullHeightAtWidth * minVisible) return;
+			const { naturalWidth, naturalHeight } = node;
+			const isPortrait = naturalHeight > naturalWidth;
+			const isLandscape = naturalWidth > naturalHeight;
+			if (!isPortrait && !isLandscape) return;
 
-			const sizedHeight = columnHeight / minVisible;
-			const sizedWidth = sizedHeight * (node.naturalWidth / node.naturalHeight);
-			node.style.width = `${sizedWidth}px`;
-			node.style.height = `${sizedHeight}px`;
-			node.style.maxWidth = `none`;
+			if (isPortrait) {
+				const fullHeightAtWidth = columnWidth * (naturalHeight / naturalWidth);
+				if (columnHeight >= fullHeightAtWidth * portraitMinVisible) return;
+				const sizedHeight = columnHeight / portraitMinVisible;
+				sizeTo({ width: sizedHeight * (naturalWidth / naturalHeight), height: sizedHeight });
+				return;
+			}
+
+			const fullWidthAtHeight = columnHeight * (naturalWidth / naturalHeight);
+			if (columnWidth >= fullWidthAtHeight * landscapeMinVisible) return;
+			const sizedWidth = columnWidth / landscapeMinVisible;
+			sizeTo({ width: sizedWidth, height: sizedWidth * (naturalHeight / naturalWidth) });
 		};
 
 		const resizeObserver = new ResizeObserver(update);
@@ -156,7 +173,7 @@
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
 								class="block h-full max-h-72 w-full object-cover sm:max-h-none"
-								{@attach fitPortraitCrop}
+								{@attach fitImageCrop}
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
