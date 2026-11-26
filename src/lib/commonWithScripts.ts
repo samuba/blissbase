@@ -119,6 +119,12 @@ export const WEBSITE_SCRAPER_CONFIG = {
 		group: `germany`,
 	},
 	fitra: { module: "./scrape-fitra.ts", label: "FITRA", url: "https://fitra.asia", group: `bali` },
+	everyevent: {
+		module: "./scrape-everyevent.ts",
+		label: "EveryEvent Bali",
+		url: "https://www.brightstarevents.com",
+		group: `bali`,
+	},
 	facebook: { module: "./scrape-facebook.ts", label: "Facebook Events", url: "https://www.facebook.com/events/", group: `global` },
 	// lumaya: { module: './scrape-lumaya.ts' } wollen die mich verklagen?
 } as const satisfies Record<
