@@ -106,7 +106,7 @@
 							<img
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
-								class="h-full max-h-72 max-w-full object-cover sm:h-auto sm:max-h-full sm:w-full sm:object-contain"
+								class="h-full max-h-72 max-w-full object-cover sm:h-auto sm:max-h-54 sm:w-full sm:object-contain"
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
@@ -115,7 +115,7 @@
 					<RandomPlaceholderImg
 						seed={event.name}
 						class={[
-							`h-full max-h-38 sm:max-h-full sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							`h-full max-h-38 sm:max-h-54 sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 					/>
