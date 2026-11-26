@@ -22,6 +22,7 @@
 	} = $props();
 
 	let imageLoadError = $state(false);
+	let imageIsLandscape = $state(true);
 	const imageUrl = $derived(event.imageUrls?.[0]);
 
 	const isPast = $derived((event.endAt ?? addHours(event.startAt, 4)) < now.value);
@@ -30,6 +31,12 @@
 	function handleClick(e: MouseEvent) {
 		e.preventDefault();
 		showEventDetailsDialog(event);
+	}
+
+	function handleImageLoad(e: Event) {
+		const img = e.currentTarget as HTMLImageElement;
+		if (!img.naturalWidth || !img.naturalHeight) return;
+		imageIsLandscape = img.naturalWidth >= img.naturalHeight;
 	}
 
 	const tags = $derived(labelsForTagSlugs(event.tagSlugs));
@@ -106,7 +113,11 @@
 							<img
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
-								class="h-full max-h-72 max-w-full object-cover sm:h-auto sm:max-h-54 sm:w-full sm:object-contain"
+								class={[
+									`h-full max-h-72 max-w-full object-cover sm:max-h-54 sm:w-full`,
+									imageIsLandscape ? `sm:h-full sm:object-cover` : `sm:h-auto sm:object-contain`,
+								]}
+								onload={handleImageLoad}
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
