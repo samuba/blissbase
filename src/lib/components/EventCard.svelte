@@ -60,68 +60,68 @@
 		};
 	}
 
-	/**
-	 * On sm+: portraits crop ≤15% vertically; landscapes crop ≤40% horizontally.
-	 * When cover would exceed that, size the image so the cap holds (blur fills the rest).
-	 */
+	/** sm+: portrait ≤15% vertical crop, landscape ≤40% horizontal; else cover fills. */
 	function fitImageCrop(node: HTMLImageElement) {
 		const column = node.closest(`[data-event-image-column]`) as HTMLElement | null;
 		if (!column) return;
 
 		const desktop = window.matchMedia(`(min-width: 640px)`);
-		const portraitMinVisible = 0.85;
-		const landscapeMinVisible = 0.6;
+		let sized = false;
 
-		const clearSized = () => {
-			node.style.width = ``;
-			node.style.height = ``;
-			node.style.maxWidth = ``;
-		};
-
-		const sizeTo = ({ width, height }: { width: number; height: number }) => {
-			node.style.width = `${width}px`;
-			node.style.height = `${height}px`;
-			node.style.maxWidth = `none`;
+		const apply = (width = ``, height = ``) => {
+			const maxWidth = width ? `none` : ``;
+			if (node.style.width === width && node.style.height === height && node.style.maxWidth === maxWidth) return;
+			node.style.width = width;
+			node.style.height = height;
+			node.style.maxWidth = maxWidth;
+			sized = Boolean(width);
 		};
 
 		const update = () => {
-			clearSized();
-			if (!desktop.matches || !node.naturalWidth || !node.naturalHeight) return;
-
-			const columnWidth = column.clientWidth;
-			const columnHeight = column.clientHeight;
-			if (!columnWidth || !columnHeight) return;
-
 			const { naturalWidth, naturalHeight } = node;
-			const isPortrait = naturalHeight > naturalWidth;
-			const isLandscape = naturalWidth > naturalHeight;
-			if (!isPortrait && !isLandscape) return;
-
-			if (isPortrait) {
-				const fullHeightAtWidth = columnWidth * (naturalHeight / naturalWidth);
-				if (columnHeight >= fullHeightAtWidth * portraitMinVisible) return;
-				const sizedHeight = columnHeight / portraitMinVisible;
-				sizeTo({ width: sizedHeight * (naturalWidth / naturalHeight), height: sizedHeight });
+			if (!desktop.matches || !naturalWidth || !naturalHeight) {
+				if (sized) apply();
 				return;
 			}
 
-			const fullWidthAtHeight = columnHeight * (naturalWidth / naturalHeight);
-			if (columnWidth >= fullWidthAtHeight * landscapeMinVisible) return;
-			const sizedWidth = columnWidth / landscapeMinVisible;
-			sizeTo({ width: sizedWidth, height: sizedWidth * (naturalHeight / naturalWidth) });
+			const w = column.clientWidth;
+			const h = column.clientHeight;
+			if (!w || !h) return;
+
+			if (naturalHeight > naturalWidth) {
+				const fullH = w * (naturalHeight / naturalWidth);
+				if (h >= fullH * 0.85) {
+					if (sized) apply();
+					return;
+				}
+				const sizedH = h / 0.85;
+				apply(`${sizedH * (naturalWidth / naturalHeight)}px`, `${sizedH}px`);
+				return;
+			}
+
+			if (naturalWidth > naturalHeight) {
+				const fullW = h * (naturalWidth / naturalHeight);
+				if (w >= fullW * 0.6) {
+					if (sized) apply();
+					return;
+				}
+				const sizedW = w / 0.6;
+				apply(`${sizedW}px`, `${sizedW * (naturalHeight / naturalWidth)}px`);
+				return;
+			}
+
+			if (sized) apply();
 		};
 
 		const resizeObserver = new ResizeObserver(update);
 		resizeObserver.observe(column);
 		node.addEventListener(`load`, update);
-		desktop.addEventListener(`change`, update);
 		if (node.complete) update();
 
 		return () => {
 			resizeObserver.disconnect();
 			node.removeEventListener(`load`, update);
-			desktop.removeEventListener(`change`, update);
-			clearSized();
+			apply();
 		};
 	}
 </script>
@@ -148,7 +148,7 @@
 		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
 			<div
 				class={[
-					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:w-42 sm:min-w-42 sm:max-w-42 sm:shrink-0 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:w-42 sm:shrink-0 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
 					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 				]}
 				data-event-image-column
