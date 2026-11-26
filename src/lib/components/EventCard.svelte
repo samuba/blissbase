@@ -83,7 +83,7 @@
 		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
 			<div
 				class={[
-					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:w-42 sm:min-w-42 sm:max-w-42 sm:shrink-0 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
 					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 				]}
 			>
@@ -92,7 +92,7 @@
 				{#if imageUrl}
 					<div
 						class={[
-							`h-full w-full bg-cover bg-center`,
+							`h-full w-full bg-cover bg-center sm:absolute sm:inset-0`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 						style="background-image: url({imageUrl})"
@@ -106,7 +106,7 @@
 							<img
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
-								class="block h-full max-h-72 max-w-full object-cover sm:max-h-54 sm:w-full"
+								class="block h-full max-h-72 w-full object-cover sm:max-h-none"
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
@@ -115,14 +115,14 @@
 					<RandomPlaceholderImg
 						seed={event.name}
 						class={[
-							`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							`h-full max-h-38 sm:absolute sm:inset-0 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 					/>
 				{/if}
 			</div>
 
-			<div class="card-body flex min-w-0 flex-col gap-2 pt-4.5 md:pt-6">
+			<div class="card-body flex min-w-0 flex-1 flex-col gap-2 pt-4.5 md:pt-6">
 				<h3 class="card-title min-w-0 items-start leading-snug tracking-tight" data-testid="event-card-title">
 					<span class="line-clamp-3 min-w-0 wrap-break-word" title={event.name}>{event.name}</span>
 
