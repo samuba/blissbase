@@ -224,13 +224,13 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 }
 
-function getName(row: BaliComEventRow): string | undefined {
+export function getName(row: BaliComEventRow): string | undefined {
 	const name = row.event_name?.replace(/\s+/g, ` `).trim();
 	if (!name) return undefined;
 	return name;
 }
 
-function getDescription(row: BaliComEventRow): string | undefined {
+export function getDescription(row: BaliComEventRow): string | undefined {
 	const raw = row.event_descr?.trim();
 	if (!raw) return undefined;
 
@@ -247,7 +247,7 @@ function getDescription(row: BaliComEventRow): string | undefined {
 	return cleanProseHtml(html) || undefined;
 }
 
-function getAddress(row: BaliComEventRow): string[] {
+export function getAddress(row: BaliComEventRow): string[] {
 	const lines: string[] = [];
 	const placeName = row.places?.place_name?.trim();
 	const placeArea = row.places?.place_area?.trim();
@@ -266,14 +266,14 @@ function getAddress(row: BaliComEventRow): string[] {
 	return lines;
 }
 
-function getPrice(row: BaliComEventRow): string | undefined {
+export function getPrice(row: BaliComEventRow): string | undefined {
 	const price = row.event_price?.trim();
 	if (!price) return undefined;
 	if (/^free$/i.test(price)) return `Free`;
 	return price;
 }
 
-function getImageUrls(row: BaliComEventRow): string[] {
+export function getImageUrls(row: BaliComEventRow): string[] {
 	const urls: string[] = [];
 	const hero = row.event_image_url?.trim();
 	if (hero?.startsWith(`http`)) urls.push(hero);
@@ -285,11 +285,11 @@ function getImageUrls(row: BaliComEventRow): string[] {
 	return urls;
 }
 
-function getHost(row: BaliComEventRow): string | undefined {
+export function getHost(row: BaliComEventRow): string | undefined {
 	return row.places?.place_name?.trim() || undefined;
 }
 
-function getHostLink(row: BaliComEventRow): string | undefined {
+export function getHostLink(row: BaliComEventRow): string | undefined {
 	const website = row.places?.place_website?.trim();
 	if (website?.startsWith(`http`)) return website;
 
@@ -302,7 +302,7 @@ function getHostLink(row: BaliComEventRow): string | undefined {
 	return undefined;
 }
 
-function getContact(row: BaliComEventRow): string[] {
+export function getContact(row: BaliComEventRow): string[] {
 	const contact: string[] = [];
 
 	for (const candidate of [
@@ -321,20 +321,20 @@ function getContact(row: BaliComEventRow): string[] {
 	return contact;
 }
 
-function getTags(row: BaliComEventRow): string[] {
+export function getTags(row: BaliComEventRow): string[] {
 	const tags = new Set<string>();
 	if (row.event_category?.trim()) tags.add(row.event_category.trim());
 	if (row.event_area?.trim()) tags.add(row.event_area.trim());
 	return [...tags];
 }
 
-function getSourceUrl(row: BaliComEventRow): string {
+export function getSourceUrl(row: BaliComEventRow): string {
 	const slug = row.event_slug?.trim();
 	if (slug) return `${SITE_BASE}/events/${slug}`;
 	return `${SITE_BASE}/events/${row.id}`;
 }
 
-function getStartAt(args: { row: BaliComEventRow; occurrenceDate: Date }): string | undefined {
+export function getStartAt(args: { row: BaliComEventRow; occurrenceDate: Date }): string | undefined {
 	const { row, occurrenceDate } = args;
 	if (row.event_fullday) {
 		return dateToIsoStr(
@@ -360,7 +360,7 @@ function getStartAt(args: { row: BaliComEventRow; occurrenceDate: Date }): strin
 	);
 }
 
-function getEndAt(args: {
+export function getEndAt(args: {
 	row: BaliComEventRow;
 	occurrenceDate: Date;
 }): string | undefined {
@@ -400,7 +400,12 @@ function getEndAt(args: {
 	);
 }
 
-function getOccurrenceDates(args: {
+/**
+ * Occurrence dates for an event row.
+ * Prefer materialized `event_dates` (union with `event_date`, like app.bali.com).
+ * If those are empty, expand `weekly`/`monthly` from `event_date`…`event_last_date`.
+ */
+export function getOccurrenceDates(args: {
 	row: BaliComEventRow;
 	rangeStart: Date;
 	rangeEnd: Date;
@@ -408,7 +413,10 @@ function getOccurrenceDates(args: {
 	const { row, rangeStart, rangeEnd } = args;
 
 	if (row.event_dates?.length) {
-		return row.event_dates
+		return uniqueSortedDates([
+			...(row.event_date ? [row.event_date] : []),
+			...row.event_dates,
+		])
 			.map((value) => parseDateOnly(value))
 			.filter((date): date is Date => {
 				if (!date) return false;
@@ -418,10 +426,45 @@ function getOccurrenceDates(args: {
 			});
 	}
 
+	const recurrence = row.event_recurrence_type?.toLowerCase();
+	if (recurrence === `weekly` || recurrence === `monthly`) {
+		const start = parseDateOnly(row.event_date);
+		if (!start) return [];
+
+		const last = parseDateOnly(row.event_last_date);
+		const hardEnd = last && last < rangeEnd ? last : rangeEnd;
+		const dates: Date[] = [];
+		let cursor = new Date(start);
+
+		while (cursor < rangeStart) {
+			cursor = advanceOccurrence({ cursor, recurrence });
+			if (cursor > hardEnd) return [];
+		}
+
+		while (cursor <= hardEnd && dates.length < 30) {
+			dates.push(new Date(cursor));
+			cursor = advanceOccurrence({ cursor, recurrence });
+		}
+
+		return dates;
+	}
+
 	const onceDate = parseDateOnly(row.event_date);
 	if (!onceDate) return [];
 	if (onceDate < rangeStart || onceDate > rangeEnd) return [];
 	return [onceDate];
+}
+
+function advanceOccurrence(args: { cursor: Date; recurrence: `weekly` | `monthly` }) {
+	const { cursor, recurrence } = args;
+	if (recurrence === `weekly`) return addDays(cursor, 7);
+	const next = new Date(cursor);
+	next.setMonth(next.getMonth() + 1);
+	return next;
+}
+
+function uniqueSortedDates(values: string[]) {
+	return [...new Set(values.map((value) => value.trim()).filter(Boolean))].sort();
 }
 
 function supabaseHeaders() {
@@ -506,7 +549,7 @@ if (import.meta.main) {
 	}
 }
 
-type BaliComPlace = {
+export type BaliComPlace = {
 	id: string;
 	place_name: string | null;
 	place_area: string | null;
@@ -519,7 +562,7 @@ type BaliComPlace = {
 	place_image_url_wp: string | null;
 };
 
-type BaliComEventRow = {
+export type BaliComEventRow = {
 	id: string;
 	event_status: string | null;
 	event_name: string | null;
