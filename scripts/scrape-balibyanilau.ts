@@ -728,15 +728,14 @@ function escapeHtml(value: string): string {
 		.replaceAll(`"`, `&quot;`);
 }
 
-function parseCliArgs(): { limit?: number; files: string[] } {
-	const args = process.argv.slice(2);
+export function parseCliArgs(argv = process.argv.slice(2)): { limit?: number; files: string[] } {
 	let limit: number | undefined;
 	const files: string[] = [];
 
-	for (let i = 0; i < args.length; i++) {
-		const arg = args[i];
+	for (let i = 0; i < argv.length; i++) {
+		const arg = argv[i];
 		if (arg === `--limit`) {
-			const value = Number(args[i + 1]);
+			const value = Number(argv[i + 1]);
 			if (!Number.isNaN(value) && value > 0) limit = value;
 			i++;
 			continue;
