@@ -59,12 +59,77 @@
 			return () => resizeObserver.disconnect();
 		};
 	}
+
+	/** sm+: portrait ≤15% vertical crop, landscape ≤60% horizontal; else cover fills. */
+	function fitImageCrop(node: HTMLImageElement) {
+		const column = node.closest(`[data-event-image-column]`) as HTMLElement | null;
+		if (!column) return;
+
+		const desktop = window.matchMedia(`(min-width: 640px)`);
+		let sized = false;
+
+		const apply = (width = ``, height = ``) => {
+			const maxWidth = width ? `none` : ``;
+			if (node.style.width === width && node.style.height === height && node.style.maxWidth === maxWidth) return;
+			node.style.width = width;
+			node.style.height = height;
+			node.style.maxWidth = maxWidth;
+			sized = Boolean(width);
+		};
+
+		const update = () => {
+			const { naturalWidth, naturalHeight } = node;
+			if (!desktop.matches || !naturalWidth || !naturalHeight) {
+				if (sized) apply();
+				return;
+			}
+
+			const w = column.clientWidth;
+			const h = column.clientHeight;
+			if (!w || !h) return;
+
+			if (naturalHeight > naturalWidth) {
+				const fullH = w * (naturalHeight / naturalWidth);
+				if (h >= fullH * 0.85) {
+					if (sized) apply();
+					return;
+				}
+				const sizedH = h / 0.85;
+				apply(`${sizedH * (naturalWidth / naturalHeight)}px`, `${sizedH}px`);
+				return;
+			}
+
+			if (naturalWidth > naturalHeight) {
+				const fullW = h * (naturalWidth / naturalHeight);
+				if (w >= fullW * 0.4) {
+					if (sized) apply();
+					return;
+				}
+				const sizedW = w / 0.4;
+				apply(`${sizedW}px`, `${sizedW * (naturalHeight / naturalWidth)}px`);
+				return;
+			}
+
+			if (sized) apply();
+		};
+
+		const resizeObserver = new ResizeObserver(update);
+		resizeObserver.observe(column);
+		node.addEventListener(`load`, update);
+		if (node.complete) update();
+
+		return () => {
+			resizeObserver.disconnect();
+			node.removeEventListener(`load`, update);
+			apply();
+		};
+	}
 </script>
 
-<a href={resolve("/[slug]", { slug: event.slug })} class="w-full cursor-pointer" data-sveltekit-preload-data="false" onclick={handleClick}>
+<a href={resolve("/[slug]", { slug: event.slug })} class="block w-full cursor-pointer sm:h-full" data-sveltekit-preload-data="false" onclick={handleClick}>
 	<article
 		class={[
-			`card bg-base-100 fade-out-0 flex flex-col rounded-lg transition-all hover:-translate-y-1`,
+			`card bg-base-100 fade-out-0 flex w-full flex-col rounded-lg transition-all hover:-translate-y-1 sm:h-full`,
 			event.spotlight
 				? [`ring-primary/60 ring-1`, `shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`]
 				: `shadow-sm hover:shadow-md`,
@@ -83,27 +148,32 @@
 		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
 			<div
 				class={[
-					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:w-42 sm:shrink-0 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
 					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 				]}
+				data-event-image-column
 			>
 				<FavoriteButton eventId={event.id} class="absolute right-2 bottom-2 z-5" {onAddFavorite} {onRemoveFavorite} />
 
 				{#if imageUrl}
 					<div
-						class={[`h-full bg-cover bg-center`, event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`]}
+						class={[
+							`h-full w-full bg-cover bg-center sm:absolute sm:inset-0`,
+							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+						]}
 						style="background-image: url({imageUrl})"
 					>
 						<figure
 							class={[
-								`h-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
+								`flex h-full w-full items-center justify-center overflow-hidden backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
 								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 							]}
 						>
 							<img
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
-								class="h-full max-h-72 max-w-full object-cover sm:max-h-54"
+								class="block h-full max-h-72 w-full object-cover sm:max-h-none"
+								{@attach fitImageCrop}
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
@@ -112,14 +182,14 @@
 					<RandomPlaceholderImg
 						seed={event.name}
 						class={[
-							`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							`h-full max-h-38 sm:absolute sm:inset-0 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 					/>
 				{/if}
 			</div>
 
-			<div class="card-body flex min-w-0 flex-col gap-2 pt-4.5 md:pt-6">
+			<div class="card-body flex min-w-0 flex-1 flex-col gap-2 pt-4.5 md:pt-6">
 				<h3 class="card-title min-w-0 items-start leading-snug tracking-tight" data-testid="event-card-title">
 					<span class="line-clamp-3 min-w-0 wrap-break-word" title={event.name}>{event.name}</span>
 
