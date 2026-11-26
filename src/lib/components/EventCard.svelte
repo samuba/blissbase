@@ -59,6 +59,53 @@
 			return () => resizeObserver.disconnect();
 		};
 	}
+
+	/** On sm+, portraits may crop at most 20% vertically when covering the column. */
+	function fitPortraitCrop(node: HTMLImageElement) {
+		const column = node.closest(`[data-event-image-column]`) as HTMLElement | null;
+		if (!column) return;
+
+		const desktop = window.matchMedia(`(min-width: 640px)`);
+
+		const clearSized = () => {
+			node.style.width = ``;
+			node.style.height = ``;
+			node.style.maxWidth = ``;
+		};
+
+		const update = () => {
+			clearSized();
+			if (!desktop.matches || !node.naturalWidth || !node.naturalHeight) return;
+			if (node.naturalHeight <= node.naturalWidth) return;
+
+			const columnWidth = column.clientWidth;
+			const columnHeight = column.clientHeight;
+			if (!columnWidth || !columnHeight) return;
+
+			const fullHeightAtWidth = columnWidth * (node.naturalHeight / node.naturalWidth);
+			const minHeightForMax20Crop = fullHeightAtWidth * 0.8;
+			if (columnHeight >= minHeightForMax20Crop) return;
+
+			const sizedHeight = columnHeight / 0.8;
+			const sizedWidth = sizedHeight * (node.naturalWidth / node.naturalHeight);
+			node.style.width = `${sizedWidth}px`;
+			node.style.height = `${sizedHeight}px`;
+			node.style.maxWidth = `none`;
+		};
+
+		const resizeObserver = new ResizeObserver(update);
+		resizeObserver.observe(column);
+		node.addEventListener(`load`, update);
+		desktop.addEventListener(`change`, update);
+		if (node.complete) update();
+
+		return () => {
+			resizeObserver.disconnect();
+			node.removeEventListener(`load`, update);
+			desktop.removeEventListener(`change`, update);
+			clearSized();
+		};
+	}
 </script>
 
 <a href={resolve("/[slug]", { slug: event.slug })} class="block w-full cursor-pointer sm:h-full" data-sveltekit-preload-data="false" onclick={handleClick}>
@@ -86,6 +133,7 @@
 					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:w-42 sm:min-w-42 sm:max-w-42 sm:shrink-0 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
 					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 				]}
+				data-event-image-column
 			>
 				<FavoriteButton eventId={event.id} class="absolute right-2 bottom-2 z-5" {onAddFavorite} {onRemoveFavorite} />
 
@@ -99,7 +147,7 @@
 					>
 						<figure
 							class={[
-								`h-full w-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
+								`flex h-full w-full items-center justify-center overflow-hidden backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
 								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 							]}
 						>
@@ -107,6 +155,7 @@
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
 								class="block h-full max-h-72 w-full object-cover sm:max-h-none"
+								{@attach fitPortraitCrop}
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
