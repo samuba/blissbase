@@ -92,14 +92,14 @@
 				{#if imageUrl}
 					<div
 						class={[
-							`h-full bg-cover bg-center sm:h-auto sm:max-h-full sm:w-full`,
+							`h-full w-full bg-cover bg-center`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 						style="background-image: url({imageUrl})"
 					>
 						<figure
 							class={[
-								`h-full backdrop-blur-md backdrop-brightness-85 sm:h-auto sm:max-h-full sm:w-full sm:rounded-tr-none sm:rounded-bl-lg`,
+								`flex h-full w-full items-center justify-center backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
 								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 							]}
 						>
@@ -115,7 +115,7 @@
 					<RandomPlaceholderImg
 						seed={event.name}
 						class={[
-							`h-full max-h-38 sm:h-auto sm:max-h-full sm:w-full sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							`h-full max-h-38 sm:max-h-full sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 					/>
