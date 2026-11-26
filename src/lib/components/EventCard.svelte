@@ -60,12 +60,14 @@
 		};
 	}
 
-	/** On sm+, portraits may crop at most 20% vertically when covering the column. */
+	/** On sm+, portraits may crop at most 15% vertically when covering the column. */
 	function fitPortraitCrop(node: HTMLImageElement) {
 		const column = node.closest(`[data-event-image-column]`) as HTMLElement | null;
 		if (!column) return;
 
 		const desktop = window.matchMedia(`(min-width: 640px)`);
+		const maxCrop = 0.15;
+		const minVisible = 1 - maxCrop;
 
 		const clearSized = () => {
 			node.style.width = ``;
@@ -83,10 +85,9 @@
 			if (!columnWidth || !columnHeight) return;
 
 			const fullHeightAtWidth = columnWidth * (node.naturalHeight / node.naturalWidth);
-			const minHeightForMax20Crop = fullHeightAtWidth * 0.8;
-			if (columnHeight >= minHeightForMax20Crop) return;
+			if (columnHeight >= fullHeightAtWidth * minVisible) return;
 
-			const sizedHeight = columnHeight / 0.8;
+			const sizedHeight = columnHeight / minVisible;
 			const sizedWidth = sizedHeight * (node.naturalWidth / node.naturalHeight);
 			node.style.width = `${sizedWidth}px`;
 			node.style.height = `${sizedHeight}px`;
