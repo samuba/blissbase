@@ -61,10 +61,10 @@
 	}
 </script>
 
-<a href={resolve("/[slug]", { slug: event.slug })} class="w-full cursor-pointer" data-sveltekit-preload-data="false" onclick={handleClick}>
+<a href={resolve("/[slug]", { slug: event.slug })} class="block w-full cursor-pointer sm:h-full" data-sveltekit-preload-data="false" onclick={handleClick}>
 	<article
 		class={[
-			`card bg-base-100 fade-out-0 flex flex-col rounded-lg transition-all hover:-translate-y-1`,
+			`card bg-base-100 fade-out-0 flex w-full flex-col rounded-lg transition-all hover:-translate-y-1 sm:h-full`,
 			event.spotlight
 				? [`ring-primary/60 ring-1`, `shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`]
 				: `shadow-sm hover:shadow-md`,
@@ -83,7 +83,7 @@
 		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
 			<div
 				class={[
-					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:max-w-42 sm:min-w-42 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:flex sm:max-w-42 sm:min-w-42 sm:items-center sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
 					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 				]}
 			>
@@ -91,19 +91,22 @@
 
 				{#if imageUrl}
 					<div
-						class={[`h-full bg-cover bg-center`, event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`]}
+						class={[
+							`h-full bg-cover bg-center sm:h-auto sm:max-h-full sm:w-full`,
+							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+						]}
 						style="background-image: url({imageUrl})"
 					>
 						<figure
 							class={[
-								`h-full backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
+								`h-full backdrop-blur-md backdrop-brightness-85 sm:h-auto sm:max-h-full sm:w-full sm:rounded-tr-none sm:rounded-bl-lg`,
 								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 							]}
 						>
 							<img
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
-								class="h-full max-h-72 max-w-full object-cover sm:max-h-54"
+								class="h-full max-h-72 max-w-full object-cover sm:h-auto sm:max-h-full sm:w-full sm:object-contain"
 								onerror={() => (imageLoadError = true)}
 							/>
 						</figure>
@@ -112,7 +115,7 @@
 					<RandomPlaceholderImg
 						seed={event.name}
 						class={[
-							`h-full max-h-38 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							`h-full max-h-38 sm:h-auto sm:max-h-full sm:w-full sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
 							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
 						]}
 					/>
