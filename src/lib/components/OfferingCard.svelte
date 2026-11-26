@@ -59,7 +59,7 @@
 <a
 	{href}
 	class={[
-		`card bg-base-100 group h-full w-full min-w-0 cursor-pointer overflow-hidden rounded-2xl text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`,
+		`card card-squircle bg-base-100 group h-full w-full min-w-0 cursor-pointer text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`,
 		isDisabled && `opacity-75`,
 		className,
 	]}
