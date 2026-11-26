@@ -129,16 +129,18 @@
 				</h3>
 
 				<div class="flex flex-wrap items-center gap-1">
-					<i class="icon-[ph--calendar-dots] size-4 min-w-4"></i>
-					<span>
-						{formatDatesStr(event.startAt, event.endAt, localeStore.locale, true)}
-					</span>
-					{#if formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
-						<i class="icon-[ph--clock] ml-2 inline-block size-4 min-w-4"></i>
+					<div class="flex shrink-0 flex-nowrap items-center gap-1">
+						<i class="icon-[ph--calendar-dots] size-4 min-w-4"></i>
 						<span>
-							{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+							{formatDatesStr(event.startAt, event.endAt, localeStore.locale, true)}
 						</span>
-					{/if}
+						{#if formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+							<i class="icon-[ph--clock] ml-2 inline-block size-4 min-w-4"></i>
+							<span>
+								{formatTimesStr(event.startAt, event.endAt, localeStore.locale)}
+							</span>
+						{/if}
+					</div>
 
 					{#if isPast}
 						<div class="badge badge-secondary badge-sm ml-2">Vorbei</div>
@@ -164,13 +166,13 @@
 							<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
 						</div>
 
-						<div class="leading-tight">
+						<div class="leading-tight min-w-0">
 							{#if event.distanceKm}
 								<span class="font-medium">
 									{event.distanceKm} km entfernt
 								</span>
 							{/if}
-							<div title={event.address?.join(", ")} class="truncate-2lines">
+							<div title={event.address?.join(", ")} class="truncate">
 								{formatAddress(event.address)}
 							</div>
 						</div>
