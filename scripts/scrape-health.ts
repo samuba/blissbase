@@ -102,6 +102,11 @@ export function formatScrapeHealthLine(health: ScrapeHealth) {
     return `FAIL ${health.source}: ${health.problems.join(`; `)} (${counts})`;
 }
 
+/** Exit code when there is nothing to insert: 0 if every targeted source was healthy (incl. ALLOW_EMPTY). */
+export function emptyScrapeExitCode({ failedCount }: { failedCount: number }) {
+    return failedCount > 0 ? 1 : 0;
+}
+
 export function formatFillRates(rates: FieldFillRates) {
     return Object.entries(rates).map(([field, rate]) => `${field} ${percent(rate)}`).join(`, `);
 }
