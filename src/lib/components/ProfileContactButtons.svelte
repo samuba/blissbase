@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { withBlissbaseUtm } from "#lib/common.ts";
 	import type { PublicProfileSocialLink } from "#lib/rpc/profile.common.ts";
 	import { socialIconClass, socialIconColorClass, socialLabel, usernameUrlPrefix } from "#lib/socialLinks.ts";
 
@@ -24,6 +25,7 @@
 		if (link.type === `whatsapp`) prefix = `https://wa.me/`;
 		if (link.type === `telegram`) prefix = `https://t.me/`;
 		if (prefix) url = `${prefix}${url}`;
+		if (link.type === `website`) url = withBlissbaseUtm(url);
 		window.open(url, `_blank`, `noopener,noreferrer`);
 	}
 
