@@ -1,7 +1,10 @@
 /**
- * Scrapes visitbali.id events from `sitemap_events.xml` and the `/events`
- * listing (when it has cards), then enriches each `/events/details/{slug}` page.
- * Upcoming calendar is often empty; past sitemap entries are skipped.
+ * Scrapes visitbali.id upcoming events from the `/events` listing (HTML + AJAX
+ * pages), then enriches each `/events/details/{slug}` page.
+ *
+ * The events sitemap is a historical archive (currently all 2019) and is only
+ * used when the listing fetch itself fails — an empty calendar is not a fetch
+ * failure and must not pull past sitemap entries.
  *
  * Usage:
  *   bun run scripts/scrape-visitbali.ts
@@ -26,7 +29,7 @@ const EVENTS_LIST_URL = `${SITE_BASE}/events`;
 const EVENTS_SITEMAP_URL = `${SITE_BASE}/sitemap_events.xml`;
 const SOURCE = `visitbali` as const;
 const TIMEZONE = `Asia/Makassar` as const;
-const UPCOMING_GRACE_MS = 6 * 60 * 60 * 1000;
+export const UPCOMING_GRACE_MS = 6 * 60 * 60 * 1000;
 const DETAIL_PATH = `/events/details/`;
 const MAX_LIST_PAGES = 30;
 
@@ -49,16 +52,21 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	async scrapeWebsite(): Promise<ScrapedEvent[]> {
 		const allEvents: ScrapedEvent[] = [];
 		const urls = await this.collectEventUrls();
+		if (!urls?.length) {
+			console.error(`VisitBali listing has no upcoming event cards; nothing to scrape.`);
+			return allEvents;
+		}
 		console.error(`Fetching ${urls.length} VisitBali event detail pages...`);
 
+		const now = Date.now();
 		for (const url of urls) {
 			try {
 				await sleep(REQUEST_DELAY_MS);
 				const html = await customFetch(url, { returnType: `text` });
 				const event = await this.extractEventData(html, url);
 				if (!event) continue;
-				if (!isUpcomingStart(event.startAt)) {
-					console.error(`Skipping past event ${url}`);
+				if (!isUpcomingEvent({ startAt: event.startAt, endAt: event.endAt, now })) {
+					console.error(`Skipping past event ${url} (startAt=${event.startAt}, endAt=${event.endAt ?? `none`})`);
 					continue;
 				}
 				allEvents.push(event);
@@ -238,27 +246,26 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 
 	private async collectEventUrls(): Promise<string[]> {
-		const urls = new Set<string>();
-
-		try {
-			console.error(`Fetching VisitBali events sitemap...`);
-			const sitemapXml = await customFetch(EVENTS_SITEMAP_URL, { returnType: `text` });
-			for (const url of parseSitemapEventUrls(sitemapXml)) urls.add(url);
-			console.error(`  sitemap urls: ${urls.size}`);
-		} catch (error) {
-			console.error(`Failed to fetch events sitemap:`, error);
-		}
-
 		try {
 			console.error(`Fetching VisitBali events listing...`);
 			const listingUrls = await this.fetchListingEventUrls();
-			for (const url of listingUrls) urls.add(url);
 			console.error(`  listing urls: ${listingUrls.length}`);
+			return listingUrls;
 		} catch (error) {
 			console.error(`Failed to fetch events listing:`, error);
 		}
 
-		return [...urls];
+		// Listing fetch failed — fall back to sitemap (may include past archive entries).
+		try {
+			console.error(`Falling back to VisitBali events sitemap...`);
+			const sitemapXml = await customFetch(EVENTS_SITEMAP_URL, { returnType: `text` });
+			const urls = parseSitemapEventUrls(sitemapXml);
+			console.error(`  sitemap urls: ${urls.length}`);
+			return urls;
+		} catch (error) {
+			console.error(`Failed to fetch events sitemap:`, error);
+			return [];
+		}
 	}
 
 	private async fetchListingEventUrls(): Promise<string[]> {
@@ -286,7 +293,7 @@ export class WebsiteScraper implements WebsiteScraperInterface {
 	}
 }
 
-function parseSitemapEventUrls(xml: string): string[] {
+export function parseSitemapEventUrls(xml: string): string[] {
 	const urls: string[] = [];
 	const re = /<loc>\s*(https?:\/\/[^<]+)\s*<\/loc>/gi;
 	let match: RegExpExecArray | null;
@@ -297,7 +304,7 @@ function parseSitemapEventUrls(xml: string): string[] {
 	return urls;
 }
 
-function parseListingEventUrls(html: string): string[] {
+export function parseListingEventUrls(html: string): string[] {
 	const $ = cheerio.load(html);
 	const urls: string[] = [];
 	$(`.home-events__card a[href*="/events/details/"]`).each((_, el) => {
@@ -328,7 +335,7 @@ function labeledSidebarValue({
 	return superTrim(span.next(`p`).first().text()) || undefined;
 }
 
-function parseTimes(timesText: string | undefined): {
+export function parseTimes(timesText: string | undefined): {
 	startTime: ClockTime | undefined;
 	endTime: ClockTime | undefined;
 } {
@@ -340,7 +347,7 @@ function parseTimes(timesText: string | undefined): {
 	};
 }
 
-function parseClock(value: string | undefined): ClockTime | undefined {
+export function parseClock(value: string | undefined): ClockTime | undefined {
 	if (!value) return undefined;
 	const match = value.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
 	if (!match) return undefined;
@@ -352,7 +359,7 @@ function parseClock(value: string | undefined): ClockTime | undefined {
 	return { hour, minute };
 }
 
-function parseEnglishDate(dateText: string | undefined): { year: number; month: number; day: number } | undefined {
+export function parseEnglishDate(dateText: string | undefined): { year: number; month: number; day: number } | undefined {
 	if (!dateText) return undefined;
 	const match = dateText.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
 	if (!match) return undefined;
@@ -363,7 +370,7 @@ function parseEnglishDate(dateText: string | undefined): { year: number; month: 
 	return { year, month, day };
 }
 
-function combineDateAndTime({
+export function combineDateAndTime({
 	dateText,
 	time,
 }: {
@@ -380,7 +387,7 @@ function makeAbsoluteUrl(url: string | undefined): string | undefined {
 	return commonMakeAbsoluteUrl(url, SITE_BASE);
 }
 
-function canonicalizeDetailUrl(url: string): string {
+export function canonicalizeDetailUrl(url: string): string {
 	try {
 		const parsed = new URL(url, SITE_BASE);
 		parsed.hash = ``;
@@ -392,10 +399,21 @@ function canonicalizeDetailUrl(url: string): string {
 	}
 }
 
-function isUpcomingStart(startAt: string): boolean {
-	const ms = Date.parse(startAt);
-	if (Number.isNaN(ms)) return false;
-	return ms >= Date.now() - UPCOMING_GRACE_MS;
+/** Keep events that have not fully ended yet (endAt if present, else startAt). */
+export function isUpcomingEvent({
+	startAt,
+	endAt,
+	now,
+}: {
+	startAt: string;
+	endAt?: string | null;
+	now: number;
+}): boolean {
+	const endMs = endAt ? Date.parse(endAt) : Number.NaN;
+	const startMs = Date.parse(startAt);
+	const relevant = !Number.isNaN(endMs) ? endMs : startMs;
+	if (Number.isNaN(relevant)) return false;
+	return relevant >= now - UPCOMING_GRACE_MS;
 }
 
 if (import.meta.main) {
