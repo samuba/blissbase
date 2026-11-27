@@ -1,11 +1,10 @@
 import type { MetaTagsProps } from "svelte-meta-tags";
-import posthog from "posthog-js";
 import { browser, dev } from "$app/env";
 import { createBrowserClient, createServerClient, isBrowser } from "@supabase/ssr";
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$app/env/public";
 import type { LayoutLoad } from "./$types";
 import { user } from "#lib/user.svelte.ts";
-import { filterPosthogBrowserNoise, syncPosthogIdentity } from "#lib/posthog.ts";
+import { syncPosthogIdentity } from "#lib/posthog.ts";
 
 import { loadLocale } from "wuchale/load-utils";
 // so that the loaders are registered, only here, not required in nested ones (below)
@@ -13,9 +12,6 @@ import "../locales/main.loader.svelte.js";
 import "../locales/js.loader.js";
 import { localeStore } from "../locales/localeStore.svelte";
 import { resolveLocale } from "../locales/resolveLocale";
-
-/** PostHog init must run once per tab; root layout load re-runs on navigation. */
-let posthogClientInitialized = false;
 
 export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId, isAdminSession }, depends, fetch }) => {
 	// Declare a dependency so the layout can be invalidated, for example, on session refresh.
@@ -45,16 +41,6 @@ export const load: LayoutLoad = async ({ url, data: { jwtClaims, cookies, userId
 	}
 
 	if (browser && !dev && !url.host.endsWith(".vercel.app")) {
-		if (!posthogClientInitialized) {
-			posthog.init("phc_B5MC1SXojC0n2fXhIf9WCDk6O2cqhdLk7SQCT7eldqZ", {
-				api_host: "https://igel.blissbase.app",
-				defaults: "2025-05-24",
-				person_profiles: "always",
-				before_send: filterPosthogBrowserNoise,
-			});
-			posthogClientInitialized = true;
-		}
-
 		syncPosthogIdentity({
 			userId,
 			email: jwtClaims?.email,
