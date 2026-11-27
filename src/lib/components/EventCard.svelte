@@ -61,7 +61,8 @@
 	}
 
 	/**
-	 * Below sm: portraits object-contain (full image, letterbox); landscapes keep cover.
+	 * Below sm: tall portraits and near-square (≤10% from 1:1) object-contain within
+	 * max-h-72 (full image, letterbox, no grow); other landscapes keep cover.
 	 * sm+: portrait ≤15% vertical crop (may grow card ≤20% past text/equal-height base);
 	 * landscape ≤60% horizontal crop; else cover fills.
 	 */
@@ -71,6 +72,7 @@
 
 		const body = column.parentElement?.querySelector(`[data-event-card-body]`) as HTMLElement | null;
 		const desktop = window.matchMedia(`(min-width: 640px)`);
+		const squareSlack = 0.1;
 		let sized = false;
 		let baseH = 0;
 
@@ -81,6 +83,11 @@
 			let kids = 0;
 			for (const kid of el.children) kids += (kid as HTMLElement).offsetHeight;
 			return pad + kids + gap * Math.max(0, el.children.length - 1);
+		};
+
+		const nearSquare = (width: number, height: number) => {
+			const ratio = width / height;
+			return ratio >= 1 - squareSlack && ratio <= 1 + squareSlack;
 		};
 
 		const apply = (width = ``, height = ``) => {
@@ -108,7 +115,8 @@
 			if (!naturalWidth || !naturalHeight) return;
 
 			if (!desktop.matches) {
-				setObjectFit(naturalHeight > naturalWidth);
+				// Tall or near-square → contain (full image); other landscapes → cover
+				setObjectFit(naturalHeight > naturalWidth || nearSquare(naturalWidth, naturalHeight));
 				if (sized) apply();
 				setMinHeight(``);
 				baseH = 0;
