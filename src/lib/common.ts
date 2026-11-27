@@ -378,6 +378,48 @@ export function ensureAbsoluteHref(href: string) {
 	return `https://${trimmed}`;
 }
 
+const BLISSBASE_UTM_SOURCE = `blissbase`;
+const BLISSBASE_UTM_MEDIUM = `referral`;
+
+/**
+ * Appends Blissbase referral UTMs to http(s) website URLs.
+ * Merges with existing query params; skips mailto/tel/tg and messaging hosts.
+ *
+ * @example
+ * withBlissbaseUtm(`https://example.com/page?ref=1`)
+ * // `https://example.com/page?ref=1&utm_source=blissbase&utm_medium=referral`
+ */
+export function withBlissbaseUtm(url: string) {
+	const trimmed = url.trim();
+	if (!trimmed) return trimmed;
+
+	const absolute = ensureAbsoluteHref(trimmed);
+	if (!/^https?:\/\//i.test(absolute)) return trimmed;
+
+	try {
+		const parsed = new URL(absolute);
+		const host = parsed.hostname.toLowerCase();
+		if (isMessagingOutboundHost(host)) return absolute;
+
+		parsed.searchParams.set(`utm_source`, BLISSBASE_UTM_SOURCE);
+		parsed.searchParams.set(`utm_medium`, BLISSBASE_UTM_MEDIUM);
+		return parsed.toString();
+	} catch {
+		return trimmed;
+	}
+}
+
+function isMessagingOutboundHost(host: string) {
+	return (
+		host === `wa.me` ||
+		host === `api.whatsapp.com` ||
+		host === `t.me` ||
+		host === `telegram.me` ||
+		host === `telegram.org` ||
+		host.endsWith(`.t.me`)
+	);
+}
+
 /**
  * Rewrites `<a href>` values that lack an absolute scheme to `https://...`.
  *

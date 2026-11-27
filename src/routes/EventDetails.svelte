@@ -10,6 +10,7 @@
 		resolveSupportedLocale,
 		formatDatesStr,
 		formatTimesStr,
+		withBlissbaseUtm,
 	} from "#lib/common.ts";
 	import PopOver from "#lib/components/PopOver.svelte";
 	import AddToCalendarButton from "#lib/components/AddToCalendarButton.svelte";
@@ -104,6 +105,10 @@
 			contact = `mailto:${contact}?subject=${contactSubject}&body=${contactMessage}`;
 		}
 
+		if (contact && getContactMethod(contact) === `Website`) {
+			return withBlissbaseUtm(contact);
+		}
+
 		return contact;
 	}
 
@@ -115,8 +120,8 @@
 
 	let sourceUrl = $derived.by(() => {
 		if (!event.sourceUrl) return undefined;
-		if (!event.sourceUrl?.startsWith("http")) return `https://${event.sourceUrl}`;
-		return event.sourceUrl;
+		const absolute = event.sourceUrl.startsWith(`http`) ? event.sourceUrl : `https://${event.sourceUrl}`;
+		return withBlissbaseUtm(absolute);
 	});
 
 	const hostNamesToHide = ["todo.today"];
@@ -413,7 +418,7 @@
 				<i class="icon-[ph--user-circle] size-6 shrink-0"></i>
 				{#if event.hostLink}
 					<button
-						onclick={() => openLink(event.hostLink!)}
+						onclick={() => openLink(withBlissbaseUtm(event.hostLink!))}
 						class={["min-w-0 cursor-pointer text-left leading-[1.1] wrap-break-word underline"]}
 					>
 						{event.host}
@@ -438,13 +443,13 @@
 			</div>
 		{/if}
 
-		{#if !hideSource && event.sourceUrl}
+		{#if !hideSource && sourceUrl}
 			<div
 				class="bg-base-200 flex w-fit flex-wrap items-center gap-1.5 rounded-full px-4 py-1.5 font-medium"
 				data-testid="event-source-label"
 			>
 				Quelle:
-				<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="cursor-pointer underline">
+				<a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="cursor-pointer underline">
 					{WEBSITE_SCRAPER_CONFIG[event.source as keyof typeof WEBSITE_SCRAPER_CONFIG]?.label}
 				</a>
 			</div>
