@@ -61,6 +61,7 @@
 	}
 
 	/**
+	 * Below sm: portraits object-contain (full image, letterbox); landscapes keep cover.
 	 * sm+: portrait ≤15% vertical crop (may grow card ≤20% past text/equal-height base);
 	 * landscape ≤60% horizontal crop; else cover fills.
 	 */
@@ -96,14 +97,25 @@
 			column.style.minHeight = value;
 		};
 
+		const setObjectFit = (contain: boolean) => {
+			if (node.classList.contains(`object-contain`) === contain && node.classList.contains(`object-cover`) === !contain) return;
+			node.classList.toggle(`object-contain`, contain);
+			node.classList.toggle(`object-cover`, !contain);
+		};
+
 		const update = () => {
 			const { naturalWidth, naturalHeight } = node;
-			if (!desktop.matches || !naturalWidth || !naturalHeight) {
+			if (!naturalWidth || !naturalHeight) return;
+
+			if (!desktop.matches) {
+				setObjectFit(naturalHeight > naturalWidth);
 				if (sized) apply();
 				setMinHeight(``);
 				baseH = 0;
 				return;
 			}
+
+			setObjectFit(false);
 
 			const w = column.clientWidth;
 			const h = column.clientHeight;
@@ -158,6 +170,7 @@
 			node.removeEventListener(`load`, update);
 			apply();
 			setMinHeight(``);
+			setObjectFit(false);
 		};
 	}
 </script>
