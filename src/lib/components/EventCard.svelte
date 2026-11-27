@@ -61,8 +61,8 @@
 	}
 
 	/**
-	 * Below sm: tall portraits object-contain; near-square (≤10% from 1:1) and landscapes
-	 * keep cover within max-h-72 (no card grow — top/bottom crop).
+	 * Below sm: tall portraits and near-square (≤10% from 1:1) object-contain within
+	 * max-h-72 (full image, letterbox, no grow); other landscapes keep cover.
 	 * sm+: portrait ≤15% vertical crop (may grow card ≤20% past text/equal-height base);
 	 * landscape ≤60% horizontal crop; else cover fills.
 	 */
@@ -115,8 +115,8 @@
 			if (!naturalWidth || !naturalHeight) return;
 
 			if (!desktop.matches) {
-				// Tall (not near-square) → contain; near-square/landscape → cover within max-h-72
-				setObjectFit(naturalHeight > naturalWidth && !nearSquare(naturalWidth, naturalHeight));
+				// Tall or near-square → contain (full image); other landscapes → cover
+				setObjectFit(naturalHeight > naturalWidth || nearSquare(naturalWidth, naturalHeight));
 				if (sized) apply();
 				setMinHeight(``);
 				baseH = 0;
