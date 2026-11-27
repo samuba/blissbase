@@ -61,8 +61,8 @@
 	}
 
 	/**
-	 * Below sm: near-square (≤10% from 1:1) cover + grow to full width; other portraits
-	 * object-contain; landscapes keep cover.
+	 * Below sm: tall portraits object-contain; near-square (≤10% from 1:1) and landscapes
+	 * keep cover within max-h-72 (no card grow — top/bottom crop).
 	 * sm+: portrait ≤15% vertical crop (may grow card ≤20% past text/equal-height base);
 	 * landscape ≤60% horizontal crop; else cover fills.
 	 */
@@ -104,11 +104,6 @@
 			column.style.minHeight = value;
 		};
 
-		const setMaxHeight = (value: string) => {
-			if (node.style.maxHeight === value) return;
-			node.style.maxHeight = value;
-		};
-
 		const setObjectFit = (contain: boolean) => {
 			if (node.classList.contains(`object-contain`) === contain && node.classList.contains(`object-cover`) === !contain) return;
 			node.classList.toggle(`object-contain`, contain);
@@ -120,20 +115,8 @@
 			if (!naturalWidth || !naturalHeight) return;
 
 			if (!desktop.matches) {
-				if (nearSquare(naturalWidth, naturalHeight)) {
-					setObjectFit(false);
-					const w = column.clientWidth;
-					if (w) {
-						setMaxHeight(`none`);
-						setMinHeight(`${w * (naturalHeight / naturalWidth)}px`);
-					}
-					if (sized) apply();
-					baseH = 0;
-					return;
-				}
-
-				setObjectFit(naturalHeight > naturalWidth);
-				setMaxHeight(``);
+				// Tall (not near-square) → contain; near-square/landscape → cover within max-h-72
+				setObjectFit(naturalHeight > naturalWidth && !nearSquare(naturalWidth, naturalHeight));
 				if (sized) apply();
 				setMinHeight(``);
 				baseH = 0;
@@ -141,7 +124,6 @@
 			}
 
 			setObjectFit(false);
-			setMaxHeight(``);
 
 			const w = column.clientWidth;
 			const h = column.clientHeight;
@@ -196,7 +178,6 @@
 			node.removeEventListener(`load`, update);
 			apply();
 			setMinHeight(``);
-			setMaxHeight(``);
 			setObjectFit(false);
 		};
 	}
