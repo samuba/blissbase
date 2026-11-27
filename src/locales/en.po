@@ -15,7 +15,6 @@ msgstr ""
 #: src/routes/+error.svelte
 #: src/routes/+error.svelte
 #: src/routes/+layout.ts
-#: src/routes/+layout.ts
 #: src/routes/+page.svelte
 #: src/routes/@/[slug]/+page.server.ts
 msgid "Blissbase"
@@ -34,11 +33,13 @@ msgstr "Loading Blissbase"
 msgid "Lade..."
 msgstr "Loading..."
 
+#: src/lib/components/EventAdminSection.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/sources/+page.svelte
 msgid "Telegram"
 msgstr "Telegram"
 
+#: src/lib/components/EventAdminSection.svelte
 #: src/routes/EventDetails.svelte
 msgid "WhatsApp"
 msgstr "WhatsApp"
@@ -52,6 +53,7 @@ msgstr "Phone"
 msgid "Email"
 msgstr "Email"
 
+#: src/lib/components/EventAdminSection.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
 #: src/routes/EventDetails.svelte
@@ -1640,7 +1642,6 @@ msgid "Admin"
 msgstr "Admin"
 
 #: src/lib/components/AdminEventSourceFilter.svelte
-#: src/lib/components/AdminEventSourceFilter.svelte
 msgid "All"
 msgstr "All"
 
@@ -1656,7 +1657,7 @@ msgstr "Saving..."
 msgid "Es werden Events aus allen Quellen angezeigt."
 msgstr "Events from all sources are displayed."
 
-#. 0: getSourceLabel(selectedSource)
+#. 0: getEventSourceFilterLabel(selectedSource)
 #: src/lib/components/AdminEventSourceFilter.svelte
 msgid "Es werden nur Events aus „{0}“ angezeigt."
 msgstr "Only events from “{0}” are displayed."
@@ -3958,6 +3959,7 @@ msgstr "I want people to find events happening around them, connect with others 
 #~ msgstr "My vision is for Blissbase to become a portal for growth and connection, wherever you are in the world and on your personal journey. ✨"
 
 #: src/routes/about/+page.svelte
+#: src/routes/hosts/+page.svelte
 msgid "Sam"
 msgstr "Sam"
 
@@ -4587,3 +4589,542 @@ msgstr "Outside"
 #, ai
 msgid "<0>Folgt der Seite</0> Seiten-Anker"
 msgstr "<0>Follows the page</0> Page anchor"
+
+#: src/lib/components/PeekFooter.svelte
+#, ai
+msgid "Für Hosts"
+msgstr "For hosts"
+
+#: src/lib/components/PeekFooter.svelte
+#, ai
+msgid "Kontakt"
+msgstr "Contact"
+
+#: src/lib/components/EventAdminSection.svelte
+#, ai
+msgid "Formular"
+msgstr "Form"
+
+#: src/lib/components/EventAdminSection.svelte
+#, ai
+msgid "<0/> Quellen werden geladen…"
+msgstr "Loading sources… <0/>"
+
+#: src/lib/components/EventAdminSection.svelte
+#, ai
+msgid "Quellen"
+msgstr "Sources"
+
+#, ai
+#~ msgid "Mach deinen Workshop, Tanzabend oder Retreat auf Blissbase sichtbar und erreiche Menschen, die nach achtsamen Events suchen."
+#~ msgstr "Make your workshop, dance evening, or retreat visible on Blissbase and reach people looking for mindful events."
+
+#, ai
+#~ msgid "Für Hosts · Events kostenlos veröffentlichen | Blissbase"
+#~ msgstr "For Hosts · Publish Events for Free | Blissbase"
+
+#, ai
+#~ msgid "<0/>Blissbase für Hosts"
+#~ msgstr "<0/>Blissbase for Hosts"
+
+#, ai
+#~ msgid "Wer sucht gerade nach deinem <0>Event?</0>"
+#~ msgstr "Who’s looking for your <0>event?</0>"
+
+#, ai
+#~ msgid "Ob Ecstatic Dance, Atemsession oder Wochenendretreat – auf Blissbase finden dich Menschen, die genau so etwas erleben möchten."
+#~ msgstr "Whether it’s Ecstatic Dance, a breathwork session, or a weekend retreat, people looking for just that kind of experience can find you on Blissbase."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Event kostenlos eintragen <0/>"
+msgstr "Add your event for free <0/>"
+
+#, ai
+#~ msgid "Dein Event erscheint neben vielen weiteren achtsamen Events in Deutschland, Österreich, der Schweiz und Südostasien."
+#~ msgstr "Your event appears alongside many other mindful events in Germany, Austria, Switzerland, and Southeast Asia."
+
+#, ai
+#~ msgid "In der Nähe auftauchen"
+#~ msgstr "Get found nearby"
+
+#, ai
+#~ msgid "Wer einen Tanzabend in der eigenen Stadt oder einen Workshop am Urlaubsort sucht, kann nach Ort, Zeitraum und Kategorie filtern."
+#~ msgstr "People looking for a dance evening in their city or a workshop at their holiday destination can filter by location, date range, and category."
+
+#, ai
+#~ msgid "Mit einem Link einladen"
+#~ msgstr "Invite people with a link"
+
+#, ai
+#~ msgid "Teile deine Eventseite im Gruppenchat oder Newsletter. Gäste finden Termin, Ort und Beschreibung zusammen und können sich das Event merken."
+#~ msgstr "Share your event page in a group chat or newsletter. Guests can find the date, location, and description all in one place and save the event."
+
+#, ai
+#~ msgid "Über ein Event hinaus"
+#~ msgstr "Beyond a single event"
+
+#, ai
+#~ msgid "Auf deinem öffentlichen Profil sehen Gäste, wer hinter dem Event steht. Wer deinen Workshop mag, entdeckt hier auch deine nächsten Termine und Angebote."
+#~ msgstr "Your public profile lets guests see who’s behind the event. If they enjoy your workshop, they can also discover your upcoming events and offerings."
+
+#, ai
+#~ msgid "So finden Menschen den Weg zu dir"
+#~ msgstr "How people find their way to you"
+
+#, ai
+#~ msgid "Wann geht dein nächstes Event los?"
+#~ msgstr "When does your next event start?"
+
+#, ai
+#~ msgid "Event erstellen <0/>"
+#~ msgstr "Create an event <0/>"
+
+#, ai
+#~ msgid "Blissbase für Hosts"
+#~ msgstr "Blissbase for Hosts"
+
+#, ai
+#~ msgid "Lade auch die ein, die dich noch nicht kennen."
+#~ msgstr "Invite people who don’t know you yet."
+
+#, ai
+#~ msgid "Vielleicht ist jemand gerade neu in deiner Stadt und sucht einen Tanzabend. Oder jemand möchte zum ersten Mal zu einem Frauenkreis und kennt niemanden, der schon dort war. Mit einem Eintrag auf Blissbase machst du deine Einladung auch für diese Menschen sichtbar."
+#~ msgstr "Maybe someone has just moved to your city and is looking for a dance night. Or someone wants to attend a women’s circle for the first time and doesn’t know anyone who’s been before. A listing on Blissbase makes your invitation visible to these people, too."
+
+#, ai
+#~ msgid "Auf Reisen habe ich an jedem neuen Ort nach achtsamen Events gesucht, um Menschen kennenzulernen. Mit Blissbase möchte ich es leichter machen, an einem neuen Ort Anschluss zu finden. Schön, wenn dein Event dazugehört."
+#~ msgstr "When I travel, I look for mindful events in every new place to meet people. With Blissbase, I want to make it easier to find a sense of community in a new place. I’d love for your event to be part of it."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Sam, Gründer von Blissbase"
+msgstr "Sam, founder of Blissbase"
+
+#, ai
+#~ msgid "gelistete Events in sechs Ländern"
+#~ msgstr "listed events across six countries"
+
+#, ai
+#~ msgid "davon bevorstehende Events"
+#~ msgstr "of which are upcoming events"
+
+#, ai
+#~ msgid "Zusammengezählt für Deutschland, Österreich, die Schweiz, Indonesien, Thailand und Vietnam. Stand November 2026. <0>Aktuelle Zahlen je Land</0>"
+#~ msgstr "Totals for Germany, Austria, Switzerland, Indonesia, Thailand, and Vietnam. As of November 2026. <0>Current figures by country</0>"
+
+#, ai
+#~ msgid "Dein Flyer reicht für den Anfang"
+#~ msgstr "Your flyer is all you need to get started"
+
+#, ai
+#~ msgid "Lade deinen Flyer hoch oder füge deinen Einladungstext ein. Blissbase füllt die Felder für dich aus. Lies kurz drüber und ergänze, was deine Gäste vorab wissen sollten."
+#~ msgstr "Upload your flyer or paste in your invitation text. Blissbase will fill in the fields for you. Give it a quick read and add anything your guests should know beforehand."
+
+#, ai
+#~ msgid "Die Anmeldung bleibt bei dir"
+#~ msgstr "You stay in control of registration"
+
+#, ai
+#~ msgid "Du klärst Fragen gern persönlich per WhatsApp? Oder nutzt du schon eine Ticketseite? Hinterlege deinen Kontakt oder Link. Du bestimmst den Preis und wie deine Gäste buchen."
+#~ msgstr "Do you prefer to answer questions in person via WhatsApp? Or are you already using a ticketing site? Add your contact details or a link. You set the price and decide how your guests book."
+
+#, ai
+#~ msgid "Nach dem ersten Abend in Kontakt bleiben"
+#~ msgstr "Stay in touch after the first evening"
+
+#, ai
+#~ msgid "Teile dein kostenloses Profil mit der Gruppe. Wer nach deinem Workshop wiederkommen möchte, findet dort deine nächsten Termine, deine 1:1-Angebote und den Weg zu deiner Website."
+#~ msgstr "Share your free profile with the group. Anyone who wants to come back after your workshop can find your upcoming dates, your 1:1 offerings, and a link to your website there."
+
+#, ai
+#~ msgid "Was dir ein Eintrag abnimmt"
+#~ msgstr "What a listing takes off your plate"
+
+#, ai
+#~ msgid "Wozu möchtest du einladen?"
+#~ msgstr "What would you like to invite people to?"
+
+#, ai
+#~ msgid "Mein Event eintragen <0/>"
+#~ msgstr "List my event <0/>"
+
+#, ai
+#~ msgid "Wer sucht gerade nach einem Event wie deinem?"
+#~ msgstr "Who’s looking for an event like yours right now?"
+
+#, ai
+#~ msgid "Manchmal steht der Abend fest, manchmal nur der Wunsch zu tanzen. Auf Blissbase können Menschen nach Ort, Termin und Thema stöbern. So entdecken sie deinen Tanzabend oder Workshop genau dort, wo sie gerade sind."
+#~ msgstr "Sometimes the evening is already planned; sometimes there’s just a desire to dance. On Blissbase, people can browse by location, date, and topic. That way, they can discover your dance evening or workshop right where they are."
+
+#, ai
+#~ msgid "Gründer von Blissbase"
+#~ msgstr "Blissbase founder"
+
+#, ai
+#~ msgid "Ich wünsche mir, dass du einen Kreis, einen Workshop oder einen Tanzabend finden kannst, der zu dir passt. Gleich um die Ecke oder auf Reisen. Mit deiner Einladung wird ein Stück mehr von dem sichtbar, was Menschen vor Ort zusammenbringt."
+#~ msgstr "I hope you can find a circle, workshop, or dance evening that’s right for you. Just around the corner or while traveling. With your invitation, a little more of what brings people together locally becomes visible."
+
+#, ai
+#~ msgid "Trag deinen Workshop, Tanzabend oder dein Retreat kostenlos auf Blissbase ein und erreiche Menschen, die genau nach solchen Events suchen."
+#~ msgstr "List your workshop, dance evening, or retreat on Blissbase for free and reach people who are looking for exactly these kinds of events."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Für Hosts · Events kostenlos eintragen | Blissbase"
+msgstr "For hosts · List events for free | Blissbase"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Bring dein Event dorthin, wo deine Leute schon suchen"
+msgstr "Bring your event to where your people are already looking"
+
+#, ai
+#~ msgid "Auf Blissbase laufen tausende Events zusammen – genau deshalb stöbern hier Menschen nach Ort, Datum und Thema, wenn sie Lust auf Workshops, Tanzabende, Retreats oder echte Begegnungen haben. Trag deins kostenlos ein und erreiche die Crowd, die zu dir passt."
+#~ msgstr "Thousands of events come together on Blissbase—which is exactly why people browse here by location, date, and topic when they’re in the mood for workshops, dance evenings, retreats, or genuine connections. List yours for free and reach the crowd that’s right for you."
+
+#, ai
+#~ msgid "Gute Events verschwinden viel zu oft in irgendwelchen WhatsApp-Gruppen oder Instagram-Stories. Ich baue Blissbase, damit deine Arbeit nicht untergeht – und genau die Menschen zu dir finden, die wirklich Lust darauf haben. Schön, wenn du dabei bist."
+#~ msgstr "Great events disappear far too often into random WhatsApp groups or Instagram stories. I’m building Blissbase so your work doesn’t get lost—and so the people who are genuinely interested can find you. I’m glad to have you on board."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Events insgesamt – auf Blissbase ist wirklich was los"
+msgstr "Events in total – there’s always something happening on Blissbase"
+
+#, ai
+#~ msgid "anstehende Events – genau hier stöbern Leute nach ihrem nächsten Termin"
+#~ msgstr "upcoming events – this is where people browse for their next date"
+
+#, ai
+#~ msgid "Deutschland, Österreich, Schweiz, Indonesien, Thailand und Vietnam (Stand November 2026). <0>Aktuelle Zahlen pro Land</0>"
+#~ msgstr "Germany, Austria, Switzerland, Indonesia, Thailand, and Vietnam (as of November 2026). <0>Current figures by country</0>"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "In Minuten online – dein Flyer reicht"
+msgstr "Online in minutes – your flyer is all you need"
+
+#, ai
+#~ msgid "Lad einfach deinen Flyer hoch oder kopier deinen Text rein. Blissbase füllt die Felder automatisch für dich aus – kurz drüberschauen, veröffentlichen, fertig."
+#~ msgstr "Simply upload your flyer or paste in your text. Blissbase fills in the fields for you automatically—give it a quick check, publish, and you’re done."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Anmeldung & Preise bleiben ganz bei dir"
+msgstr "You set the registration process and prices"
+
+#, ai
+#~ msgid "Ob persönlich per WhatsApp, Telegram, E-Mail oder über deine eigene Ticketseite: Hinterleg einfach deinen Kontakt oder Link. Keine Gebühren, kein Umweg – deine Gäste landen direkt bei dir."
+#~ msgstr "Whether it’s in person via WhatsApp, Telegram, email, or through your own ticketing page: just add your contact details or link. No fees, no detours—your guests come straight to you."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Ein Profil für alles, was du anbietest"
+msgstr "One profile for everything you offer"
+
+#, ai
+#~ msgid "Aus einem guten Abend werden oft Stammgäste. Auf deiner kostenlosen Profilseite finden Menschen deine nächsten Termine, deine 1:1-Angebote und alle Links zu deiner Website oder Socials – an einem Ort."
+#~ msgstr "A great evening often turns guests into regulars. On your free profile page, people can find your upcoming events, your 1:1 offerings, and all your links to your website or social media—in one place."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Warum Hosts gern auf Blissbase teilen"
+msgstr "Why hosts love sharing on Blissbase"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Lust, dein nächstes Event zu teilen?"
+msgstr "Ready to share your next event?"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Jetzt kostenlos eintragen <0/>"
+msgstr "List it for free now <0/>"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Trag deinen Workshop, Ecstatic Dance, Breathwork oder dein Retreat kostenlos auf Blissbase ein und erreiche Menschen, die genau nach solchen Events suchen."
+msgstr "List your workshop, Ecstatic Dance, Breathwork session, or retreat on Blissbase for free and reach people who are looking for exactly these kinds of events."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "1:1-Angebot erstellen"
+msgstr "Create a 1:1 offering"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "<0/> 100 % kostenlos"
+msgstr "<0/> 100% free"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "<0/> Keine Provision"
+msgstr "<0/> No commission"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "<0/> In 2 Minuten live"
+msgstr "<0/> Live in 2 minutes"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "<0/> Blissbase für Hosts"
+msgstr "<0/> Blissbase for hosts"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Ob Ecstatic Dance, Breathwork, Workshop, Kakaozeremonie oder Retreat – auf Blissbase stöbern Menschen gezielt nach Ort, Datum und Thema. Trag dein Event kostenlos ein und werde genau dort gefunden."
+msgstr "Whether it’s Ecstatic Dance, Breathwork, a workshop, cacao ceremony, or retreat, people browse Blissbase by location, date, and topic. List your event for free and get discovered by exactly the right people."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "So erscheint dein Event"
+msgstr "How your event will appear"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Beispiel"
+msgstr "Example"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Ecstatic Dance & Kakao"
+msgstr "Ecstatic Dance & Cacao"
+
+#, ai
+#~ msgid "mit Lena & Studio Raumklang"
+#~ msgstr "with Lena & Studio Raumklang"
+
+#, ai
+#~ msgid "Fr, 14. Nov · 19:30 – 22:30"
+#~ msgstr "Fri, Nov 14 · 7:30–10:30 pm"
+
+#, ai
+#~ msgid "Berlin-Kreuzberg · Vor Ort"
+#~ msgstr "Berlin-Kreuzberg · In person"
+
+#, ai
+#~ msgid "<0/> Anmeldung direkt über deinen Link"
+#~ msgstr "<0/> Sign up directly via your link"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Flyer hochladen oder Text einfügen – Blissbase füllt die Felder automatisch aus."
+msgstr "Upload a flyer or paste in text—Blissbase fills in the fields automatically."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "anstehende Events – hier stöbern Menschen nach ihrem nächsten Termin"
+msgstr "upcoming events – where people browse for their next event"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "DACH & Hotspots"
+msgstr "DACH & hotspots"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Deutschland, Österreich, Schweiz, Indonesien, Thailand & Vietnam"
+msgstr "Germany, Austria, Switzerland, Indonesia, Thailand & Vietnam"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Stand November 2026 · <0>Aktuelle Zahlen pro Land ansehen</0>"
+msgstr "As of November 2026 · <0>View current figures by country</0>"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Gebaut für Menschen, die Räume halten – nicht für Marketing-Abteilungen. Wenig Aufwand, volle Kontrolle über deine Buchungen."
+msgstr "Built for people who hold space—not marketing departments. Minimal effort, full control over your bookings."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Lad deinen Flyer hoch oder kopier deinen Ausschreibungstext rein. Blissbase füllt Titel, Datum, Ort und passende Tags automatisch für dich aus – kurz drüberschauen, veröffentlichen, fertig."
+msgstr "Upload your flyer or paste in your event description. Blissbase automatically fills in the title, date, location, and relevant tags for you—give it a quick review, publish, and you’re done."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Ob persönlich per WhatsApp, Telegram, E-Mail oder über deine eigene Ticketseite: Hinterleg einfach deinen gewohnten Weg. Keine Gebühren, keine Provision – deine Gäste landen direkt bei dir."
+msgstr "Whether you prefer WhatsApp, Telegram, email, or your own ticketing page, just add the method you normally use. No fees, no commission—your guests come straight to you."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Aus einem guten Abend werden oft Stammgäste. Auf deiner kostenlosen Profilseite finden Menschen deine nächsten Termine, deine 1:1-Angebote sowie Website und Socials – übersichtlich an einem Ort."
+msgstr "A great evening often brings people back. On your free profile page, people can find your upcoming events, 1:1 offerings, website, and social media—all in one convenient place."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Oder einfach per Telegram schicken"
+msgstr "Or simply send it via Telegram"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Du postest deine Events sowieso in Telegram-Gruppen? Schick Bild, Beschreibung, Ort und Datum zusammen in einer Nachricht an <0>@blissbase_bot</0> – fertig."
+msgstr "Already posting your events in Telegram groups? Send an image, description, location, and date together in one message to <0>@blissbase_bot</0>—and you’re done."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "In drei Schritten live"
+msgstr "Go live in three steps"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Du brauchst kein Konto im Voraus – du kannst direkt loslegen und dein Event in einem Rutsch veröffentlichen."
+msgstr "No need to create an account in advance—you can get started right away and publish your event in one go."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Schritt 1"
+msgstr "Step 1"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Flyer oder Text einfügen"
+msgstr "Add a flyer or text"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Mit „Automatisch ausfüllen“ zieht Blissbase Titel, Zeiten, Ort und Tags direkt aus deinem Flyer oder Ankündigungstext."
+msgstr "Click “Fill in automatically” and Blissbase will pull the title, times, location, and tags directly from your flyer or event description."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Schritt 2"
+msgstr "Step 2"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Buchungsweg hinterlegen"
+msgstr "Add your booking method"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Verlink deine Ticketseite, Website, WhatsApp, Telegram oder E-Mail – so melden sich Gäste genau dort an, wo du sie haben willst."
+msgstr "Link your ticketing page, website, WhatsApp, Telegram, or email—so guests can sign up exactly where you want them to."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Schritt 3"
+msgstr "Step 3"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Bestätigen & gefunden werden"
+msgstr "Confirm & get discovered"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Kurz per Google oder E-Mail-Code bestätigen – dein Event ist sofort in der Suche und auf deiner öffentlichen Profilseite live."
+msgstr "Confirm quickly with Google or an email code—your event will immediately be live in search and on your public profile page."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Du möchtest ein Event nur im kleinen Kreis teilen? Im Formular kannst du es auch auf „Nicht in der Suche anzeigen“ stellen und nur per Direktlink weitergeben."
+msgstr "Want to share an event with a small group only? You can also select “Hide from search” in the form and share it using a direct link."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Nachricht vom Gründer"
+msgstr "A message from the founder"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "· Gründer von Blissbase"
+msgstr "· Founder of Blissbase"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Mehr über die Idee hinter Blissbase"
+msgstr "More about the idea behind Blissbase"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "„Gute Events verschwinden viel zu oft in irgendwelchen WhatsApp-Gruppen oder Instagram-Stories. Ich baue Blissbase, damit deine Arbeit nicht untergeht – und genau die Menschen zu dir finden, die wirklich Lust darauf haben. Schön, wenn du dabei bist.“"
+msgstr "“Great events get lost far too often in random WhatsApp groups or Instagram stories. I’m building Blissbase so your work doesn’t get overlooked—and so the people who are genuinely excited about it can find you. I’m glad you’re here.”"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Kostet mich das wirklich nichts?"
+msgstr "Does it really cost me nothing?"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Ja. Events eintragen, ein öffentliches Profil anlegen und 1:1-Angebote listen ist komplett kostenlos. Wir nehmen keine Provision auf deine Tickets."
+msgstr "Yes. Listing events, creating a public profile, and listing 1:1 offerings are completely free. We don’t charge commission on your tickets."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Welche Events passen auf Blissbase?"
+msgstr "What kinds of events are right for Blissbase?"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Alles rund um bewusstes Erleben, Bewegung und echte Begegnung: Ecstatic Dance, Breathwork, Yoga, Sound Healing, Zeremonien, Workshops, Retreats und Community-Treffen – vor Ort oder online."
+msgstr "Everything related to mindful experiences, movement, and genuine connection: Ecstatic Dance, Breathwork, yoga, sound healing, ceremonies, workshops, retreats, and community gatherings—in person or online."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Ich biete vor allem 1:1-Sessions an – geht das?"
+msgstr "I mainly offer 1:1 sessions—is that possible?"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Klar. Coaching, Bodywork, Massagen oder andere Einzelsessions kannst du dauerhaft unter <0>Angebote</0> eintragen – sichtbar in der Suche und auf deinem Profil."
+msgstr "Absolutely. You can list coaching, bodywork, massages, or other individual sessions under <0>Offerings</0> at any time—they’ll be visible in search and on your profile."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Kurz geklärt"
+msgstr "Quick answers"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "In wenigen Minuten online – kostenlos, ohne Provision und direkt bei Menschen, die genau danach suchen."
+msgstr "Online in just a few minutes—free, with no commission, and directly in front of people who are looking for exactly what you offer."
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Erst mal stöbern"
+msgstr "Browse first"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Europe/Berlin"
+msgstr "Europe/Berlin"
+
+#, ai
+#~ msgid "Studio Raumklang"
+#~ msgstr "Studio Raumklang"
+
+#, ai
+#~ msgid "Oranienstraße 42"
+#~ msgstr "Oranienstraße 42"
+
+#, ai
+#~ msgid "Berlin-Kreuzberg"
+#~ msgstr "Berlin-Kreuzberg"
+
+#, ai
+#~ msgid "Lena & Studio Raumklang"
+#~ msgstr "Lena & Studio Raumklang"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Bamboo Shala"
+msgstr "Bamboo Shala"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Ubud, Bali"
+msgstr "Ubud, Bali"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Lena & Bamboo Shala"
+msgstr "Lena & Bamboo Shala"
+
+#: src/routes/hosts/+page.svelte
+#, ai
+msgid "Reichweite von Blissbase"
+msgstr "Blissbase’s reach"

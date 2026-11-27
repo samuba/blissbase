@@ -12,11 +12,13 @@
 	const {
 		event,
 		class: className,
+		mobileLayout = false,
 		onAddFavorite,
 		onRemoveFavorite,
 	}: {
 		event: UiEvent;
 		class?: string;
+		mobileLayout?: boolean;
 		onAddFavorite?: (eventId: number) => void | undefined;
 		onRemoveFavorite?: (eventId: number) => void | undefined;
 	} = $props();
@@ -114,7 +116,7 @@
 			const { naturalWidth, naturalHeight } = node;
 			if (!naturalWidth || !naturalHeight) return;
 
-			if (!desktop.matches) {
+			if (mobileLayout || !desktop.matches) {
 				// Tall or near-square → contain (full image); other landscapes → cover
 				setObjectFit(naturalHeight > naturalWidth || nearSquare(naturalWidth, naturalHeight));
 				if (sized) apply();
@@ -183,10 +185,16 @@
 	}
 </script>
 
-<a href={resolve("/[slug]", { slug: event.slug })} class="block w-full cursor-pointer sm:h-full" data-sveltekit-preload-data="false" onclick={handleClick}>
+<a
+	href={resolve("/[slug]", { slug: event.slug })}
+	class={[`block w-full cursor-pointer`, !mobileLayout && `sm:h-full`]}
+	data-sveltekit-preload-data="false"
+	onclick={handleClick}
+>
 	<article
 		class={[
-			`card bg-base-100 fade-out-0 flex w-full flex-col rounded-lg transition-all hover:-translate-y-1 sm:h-full`,
+			`card bg-base-100 fade-out-0 flex w-full flex-col rounded-lg transition-all hover:-translate-y-1`,
+			!mobileLayout && `sm:h-full`,
 			event.spotlight
 				? [`ring-primary/60 ring-1`, `shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]`]
 				: `shadow-sm hover:shadow-md`,
@@ -202,11 +210,14 @@
 				Empfohlener Event
 			</div>
 		{/if}
-		<div class="flex min-w-0 flex-1 flex-col sm:flex-row">
+		<div class={[`flex min-w-0 flex-1 flex-col`, !mobileLayout && `sm:flex-row`]}>
 			<div
 				class={[
-					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center sm:w-42 sm:shrink-0 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
-					event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+					`from-base-200/50 to-base-300 relative min-w-32 bg-gradient-to-br bg-cover bg-center`,
+					!mobileLayout && `sm:w-42 sm:shrink-0 sm:overflow-hidden sm:rounded-tr-none sm:rounded-bl-lg`,
+					event.spotlight
+						? [`rounded-t-none`, !mobileLayout && `sm:rounded-tl-none`]
+						: [`rounded-t-lg`, !mobileLayout && `sm:rounded-tl-lg`],
 				]}
 				data-event-image-column
 			>
@@ -215,21 +226,27 @@
 				{#if imageUrl}
 					<div
 						class={[
-							`h-full w-full bg-cover bg-center sm:absolute sm:inset-0`,
-							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+							`h-full w-full bg-cover bg-center`,
+							!mobileLayout && `sm:absolute sm:inset-0`,
+							event.spotlight
+								? [`rounded-t-none`, !mobileLayout && `sm:rounded-tl-none`]
+								: [`rounded-t-lg`, !mobileLayout && `sm:rounded-tl-lg`],
 						]}
 						style="background-image: url({imageUrl})"
 					>
 						<figure
 							class={[
-								`flex h-full w-full items-center justify-center overflow-hidden backdrop-blur-md backdrop-brightness-85 sm:rounded-tr-none sm:rounded-bl-lg`,
-								event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+								`flex h-full w-full items-center justify-center overflow-hidden backdrop-blur-md backdrop-brightness-85`,
+								!mobileLayout && `sm:rounded-tr-none sm:rounded-bl-lg`,
+								event.spotlight
+									? [`rounded-t-none`, !mobileLayout && `sm:rounded-tl-none`]
+									: [`rounded-t-lg`, !mobileLayout && `sm:rounded-tl-lg`],
 							]}
 						>
 							<img
 								src={imageUrl}
 								alt="illustration for event: {event.name}"
-								class="block h-full max-h-72 w-full object-cover sm:max-h-none"
+								class={[`block h-full max-h-72 w-full object-cover`, !mobileLayout && `sm:max-h-none`]}
 								{@attach fitImageCrop}
 								onerror={() => (imageLoadError = true)}
 							/>
@@ -239,14 +256,17 @@
 					<RandomPlaceholderImg
 						seed={event.name}
 						class={[
-							`h-full max-h-38 sm:absolute sm:inset-0 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
-							event.spotlight ? `rounded-t-none sm:rounded-tl-none` : `rounded-t-lg sm:rounded-tl-lg`,
+							`h-full max-h-38`,
+							!mobileLayout && `sm:absolute sm:inset-0 sm:max-h-none sm:scale-170 sm:rounded-tr-none sm:rounded-bl-lg`,
+							event.spotlight
+								? [`rounded-t-none`, !mobileLayout && `sm:rounded-tl-none`]
+								: [`rounded-t-lg`, !mobileLayout && `sm:rounded-tl-lg`],
 						]}
 					/>
 				{/if}
 			</div>
 
-			<div class="card-body flex min-w-0 flex-1 flex-col gap-2 pt-4.5 md:pt-6" data-event-card-body>
+			<div class={[`card-body flex min-w-0 flex-1 flex-col gap-2 pt-4.5`, !mobileLayout && `md:pt-6`]} data-event-card-body>
 				<h3 class="card-title min-w-0 items-start leading-snug tracking-tight" data-testid="event-card-title">
 					<span class="line-clamp-3 min-w-0 wrap-break-word" title={event.name}>{event.name}</span>
 
@@ -293,7 +313,7 @@
 							<i class="icon-[ph--map-pin] size-4 min-w-4"></i>
 						</div>
 
-						<div class="leading-tight min-w-0">
+						<div class="min-w-0 leading-tight">
 							{#if event.distanceKm}
 								<span class="font-medium">
 									{event.distanceKm} km entfernt

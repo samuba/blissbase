@@ -21,6 +21,7 @@
 	function createLinks() {
 		return [
 			{ label: /* @wc-include */ `Über`, href: routes.about(), testId: `footer-about` },
+			{ label: /* @wc-include */ `Für Hosts`, href: routes.hosts(), testId: `footer-hosts` },
 			{ label: /* @wc-include */ `FAQ`, href: routes.faq(), testId: `footer-faq` },
 			{ label: /* @wc-include */ `Datenschutz`, href: routes.privacyPolicy(), testId: `footer-privacy-policy` },
 			{ label: /* @wc-include */ `AGB`, href: routes.termsOfService(), testId: `footer-terms-of-service` },

@@ -12,6 +12,7 @@ export const routes = {
 	eventDetails: (slug: string) => resolve("/[slug]", { slug }),
 	sources: () => resolve(`sources`),
 	about: () => resolve(`about`),
+	hosts: () => resolve(`hosts`),
 	faq: () => resolve(`faq`),
 	privacyPolicy: () => resolve(`legal/privacy-policy`),
 	termsOfService: () => resolve(`legal/terms-of-service`),
