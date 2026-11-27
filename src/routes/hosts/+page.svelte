@@ -115,8 +115,8 @@
 				<span class="text-base-content/55 text-xs">Beispiel</span>
 			</div>
 
-			<div class="pointer-events-none select-none" inert>
-				<EventCard event={previewEvent} mobileLayout class="shadow-md" />
+			<div class="hosts-event-card-preview pointer-events-none select-none" inert>
+				<EventCard event={previewEvent} class="shadow-md" />
 			</div>
 
 			<p class="text-base-content/70 mt-3 flex items-center gap-2 px-0.5 text-xs">
@@ -330,3 +330,33 @@
 		</div>
 	</section>
 </div>
+
+<style>
+	.hosts-event-card-preview :global {
+		[data-testid="event-card"] > div {
+			flex-direction: column;
+		}
+
+		[data-event-image-column] {
+			width: 100%;
+			border-radius: 0.5rem 0.5rem 0 0;
+		}
+
+		[data-event-image-column] > div:last-child {
+			position: static;
+			border-radius: 0.5rem 0.5rem 0 0;
+		}
+
+		[data-event-image-column] figure {
+			border-radius: 0.5rem 0.5rem 0 0;
+		}
+
+		[data-event-image-column] img {
+			max-height: 18rem;
+		}
+
+		[data-event-card-body] {
+			padding-top: 1.125rem;
+		}
+	}
+</style>
