@@ -61,7 +61,8 @@
 	}
 
 	/**
-	 * Below sm: portraits object-contain (full image, letterbox); landscapes keep cover.
+	 * Below sm: near-square (≤10% from 1:1) cover + grow to full width; other portraits
+	 * object-contain; landscapes keep cover.
 	 * sm+: portrait ≤15% vertical crop (may grow card ≤20% past text/equal-height base);
 	 * landscape ≤60% horizontal crop; else cover fills.
 	 */
@@ -71,6 +72,7 @@
 
 		const body = column.parentElement?.querySelector(`[data-event-card-body]`) as HTMLElement | null;
 		const desktop = window.matchMedia(`(min-width: 640px)`);
+		const squareSlack = 0.1;
 		let sized = false;
 		let baseH = 0;
 
@@ -81,6 +83,11 @@
 			let kids = 0;
 			for (const kid of el.children) kids += (kid as HTMLElement).offsetHeight;
 			return pad + kids + gap * Math.max(0, el.children.length - 1);
+		};
+
+		const nearSquare = (width: number, height: number) => {
+			const ratio = width / height;
+			return ratio >= 1 - squareSlack && ratio <= 1 + squareSlack;
 		};
 
 		const apply = (width = ``, height = ``) => {
@@ -97,6 +104,11 @@
 			column.style.minHeight = value;
 		};
 
+		const setMaxHeight = (value: string) => {
+			if (node.style.maxHeight === value) return;
+			node.style.maxHeight = value;
+		};
+
 		const setObjectFit = (contain: boolean) => {
 			if (node.classList.contains(`object-contain`) === contain && node.classList.contains(`object-cover`) === !contain) return;
 			node.classList.toggle(`object-contain`, contain);
@@ -108,7 +120,20 @@
 			if (!naturalWidth || !naturalHeight) return;
 
 			if (!desktop.matches) {
+				if (nearSquare(naturalWidth, naturalHeight)) {
+					setObjectFit(false);
+					const w = column.clientWidth;
+					if (w) {
+						setMaxHeight(`none`);
+						setMinHeight(`${w * (naturalHeight / naturalWidth)}px`);
+					}
+					if (sized) apply();
+					baseH = 0;
+					return;
+				}
+
 				setObjectFit(naturalHeight > naturalWidth);
+				setMaxHeight(``);
 				if (sized) apply();
 				setMinHeight(``);
 				baseH = 0;
@@ -116,6 +141,7 @@
 			}
 
 			setObjectFit(false);
+			setMaxHeight(``);
 
 			const w = column.clientWidth;
 			const h = column.clientHeight;
@@ -170,6 +196,7 @@
 			node.removeEventListener(`load`, update);
 			apply();
 			setMinHeight(``);
+			setMaxHeight(``);
 			setObjectFit(false);
 		};
 	}
